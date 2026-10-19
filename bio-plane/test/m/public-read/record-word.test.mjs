@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket, SIG } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -77,7 +78,7 @@ test("R3 (K899 (1)) the Worker's published case says each finding's signature co
   const { w, env, pin } = published();
   const c = await (await call(w, env, "publishedcase", { id: "CASE-2026-0001" })).json();
   assert.equal(c.ok, true);
-  assert.match(c.verification.detail, /EACH FINDING's signature covers that finding's own record sha\./);
+  assert.equal(c.verification.detail, localize("public-read.worker.tamper_evident_not_tamper_proof", "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith."));
   /* the identifiers are unchanged */
   assert.deepEqual([c.findings[0].bundle_id, c.findings[0].bundle_sha, c.verification.findings[0].bundle_id], [F, pin, F]);
   noWord(c, "the published case");

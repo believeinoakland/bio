@@ -22,6 +22,7 @@ import { rowOf } from "../../../src/public-read/checks.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { CONTAINER_MAX_BYTES } from "../../../src/container.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 /* The control plane's helpers, bound as the plane binds them (publication's worker.test's binding). */
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -108,7 +109,7 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.equal("strength" in s, false, "no case-level strength anywhere at the case's altitude");
   assert.deepEqual(["opened" in s, "ratified_at" in s, s.ratified_at], [false, true, T1], "`opened` is not published");
   assert.deepEqual([s.scope, s.project !== null, s.bar, s.bias_acknowledgement], ["The question.", true, BAR, "none declared"]);
-  assert.match(s.bar_detail, /standard of evidence this case was held to/);
+  assert.equal(s.bar_detail, localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it."));
   assert.deepEqual(s.completeness, COMPLETENESS1, "completeness travels as recorded, with its position and justification");
   assert.deepEqual([s.complete, s.awaiting], [true, []]);
   assert.equal(s.document.doc_sha, w.row(`SELECT doc_sha FROM case_documents`).doc_sha, "the signed case document is served");
@@ -155,13 +156,12 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.deepEqual(Object.keys(wf.body.authored).sort(), ["conclusion", "falsifier", "falsifier_override"]);
   assert.deepEqual(wf.basis.map((l) => [l.target, l.served]), [[DOC_CAP, false], [DOC_CONN, true]],
                    "a leg on unpublished material is NAMED, a leg on a published edition is served");
-  assert.match(wf.basis[0].detail, /can hand over nothing of it/);
+  assert.equal(wf.basis[0].detail, localize("public-read.worker.this_leg_is_named_and", "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it."));
   assert.deepEqual([wf.basis[0].cited_edition, wf.basis[1].cited_edition.bundle_sha], [null, w.head(DOC_CONN)]);
   assert.deepEqual(c.verification.findings, [{ bundle_id: F, bytes: `op=publishedbytes&sha256=${pin}` }]);
   assert.deepEqual([c.verification.container, c.verification.manifest],
                    [`op=publishedbytes&sha256=${manifestSha}&format=zip`, `op=publishedbytes&sha256=${manifestSha}`]);
-  assert.match(c.verification.detail, /tamper-EVIDENT/);
-  assert.match(c.verification.detail, /Nothing here prevents a modified copy/, "never claimed tamper-proof");
+  assert.equal(c.verification.detail, localize("public-read.worker.tamper_evident_not_tamper_proof", "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith."), "never claimed tamper-proof");
   /* Every per-finding store field reaches the stranger unchanged. */
   for (const k of Object.keys(f)) assert.deepEqual(wf[k], f[k], `the Worker relays the finding's ${k}`);
 });
@@ -255,7 +255,7 @@ test("R3 (block 6) a division disclosure: a finding names its parent and sibling
   for (const c of [w.read("publishedcase", { id: KID }), await anonCase(w, env, { id: KID })]) {
     const kid = c.findings[0];
     assert.deepEqual([kid.division.parent, kid.division.siblings], [PARENT, [SIB]], "names its parent and every sibling");
-    assert.match(kid.division.detail, /the other half exists/, "and says why it is a name and not a door");
+    assert.equal(kid.division.detail, localize("public-read.index.a_divisions_parent_and_siblings", "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."), "and says why it is a name and not a door");
     assert.deepEqual(kid.serves.filter((e) => e.to === PARENT || e.to === SIB), [], "serves neither");
     assert.deepEqual(kid.serves.map((e) => e.to), [DOC_CONN]);
     assert.ok(kid.serves.every((e) => Number.isInteger(e.edition)), "every served edge names a published edition");
@@ -285,7 +285,7 @@ test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, wi
                      [null, null, null, null, null, null, null], `${label}: no case identity, scope, completeness, bias, document, project or bar`);
     assert.ok(["caseId", "scope", "completeness", "bias_acknowledgement", "document", "project", "bar"].every((k) => k in c),
               `${label}: stated null, never omitted`);
-    assert.match(c.bar_detail, /NO BAR IS RECORDED/);
+    assert.equal(c.bar_detail, word("public-read.bar_recorded_case"));
     assert.deepEqual([c.manifest_sha, c.manifest, c.files], [null, null, []], `${label}: no container`);
     assert.deepEqual([c.complete, c.awaiting], [true, []], `${label}: complete says nothing is awaited, and completeness stays null`);
     assert.equal("strength" in c, false);
@@ -296,8 +296,8 @@ test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, wi
     assert.deepEqual([f0.attestor, f0.delivered_by], [{ member: "olive", key_b64: KEY }, { kind: "member", member: "olive" }]);
     assert.deepEqual([f0.serves, f0.names, f0.unresolved, f0.tensions], [[], [], [], null]);
     assert.deepEqual([c.tensions, c.highlighted, c.tensions_unread, c.captures, c.sources], [null, null, null, null, null]);
-    assert.match(c.tensions_detail, /this is not a case/);
-    assert.match(c.blocks_detail, /this is not a case/);
+    assert.equal(c.tensions_detail, localize("public-read.index.not_a_case_discloses", "this is not a case, so it discloses no contradiction"));
+    assert.equal(c.blocks_detail, localize("public-read.index.not_a_case_capture", "this is not a case, so it states no capture or source"));
     assert.deepEqual(c.edition_index.map((e) => Object.keys(e).sort()), [["edition", "ratified_at"]],
                      `${label}: a loose edition row has no manifest_sha key`);
     assert.deepEqual([c.editions, c.latest_edition, c.edition_index[0].ratified_at], [[1], 1, T0]);
@@ -312,7 +312,7 @@ test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, wi
                    "a case edition's row carries its withdrawal stamp or null (R20) and its two dates (R29)");
   assert.deepEqual([c.withdrawn, c.docket_last_entry], [null, null], "a loose bundle is not a case and has no docket (R20)");
   assert.deepEqual([c.case_detail === caseAns.case_detail, c.graph_detail === caseAns.graph_detail], [true, true]);
-  assert.match(c.graph_detail, /serves\[\] is what this surface may hand over/);
+  assert.equal(c.graph_detail, localize("public-read.index.each_finding_serves", "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty."));
   assert.deepEqual([c.verification.container, c.verification.manifest], [null, null]);
   assert.deepEqual([f0.object_type, f0.body.state, f0.body.from_sha], ["information", "published", LOOSE_SHA],
                    "the body from the bundle's own published bytes");
@@ -373,7 +373,7 @@ test("R5 (block 3) published bytes stream by hash with their headers; a planted 
   try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
   assert.notEqual(body, null, `the planted object must not stream (served sha ${body ? "" : sha(Buffer.from(raw))})`);
   assert.deepEqual([planted.status, body.reason, body.check], [404, "NO_PUBLISHED_PART", "C-98.1"]);
-  assert.match(body.detail, /never existed are the same answer/);
+  assert.equal(body.detail, localize("public-read.worker.no_published_part_answers_to", "no published part answers to that hash. A hash that was never ratified and a hash that never existed are the same answer here, deliberately."));
   assert.deepEqual({ ...body, sha256: "X" }, { ...bj, sha256: "X" }, "planted answers exactly as never-existed");
   assert.equal(w.read("verify", { sha256: WORKING }).published, false);
   assert.equal(planted.headers.get("x-published-kind"), null, "and no part header is sent");
@@ -420,7 +420,7 @@ test("R6, R5 (block 4) the container: a zip served by the manifest's hash with i
   assert.deepEqual([notc.status, (await notc.json()).reason], [400, "NOT_A_CONTAINER"], "a part asked as a container is refused by name");
   assert.match(manifest.verify, /tamper-EVIDENT/);
   assert.match(manifest.verify, /nothing here prevents/);
-  assert.match(manifest.layout.note, /Renderings \(REC-22\) join parts\[\] as kind: rendering/);
+  assert.equal(manifest.layout.note, localize("public-read.worker.the_zip_carries_every_part", "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."));
 });
 
 test("R5 (D-561) CONTAINER_TOO_LARGE answers 413 through the op, with C-98.7's row; the genuine container serialises again after", async () => {

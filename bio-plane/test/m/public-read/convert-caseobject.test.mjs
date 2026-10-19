@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf } from "./fixture.mjs";
 import { publicReadDoorOp } from "../../../src/public-read/door.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002";
 
@@ -31,16 +32,10 @@ const publicIndex = async (w) => {
   return { status: res.status, body: await res.json() };
 };
 
+/* The production sentence is held by the product (its nulls and its one join instruction are all in it). */
 function assertProduction(p) {
   assert.equal(typeof p, "string");
-  assert.match(p, /PRODUCTION OF A PROJECT/);
-  /* it states, in words, what each of the nulls means, so none is left to be read */
-  assert.match(p, /`project_id` is null NO PROJECT IS RECORDED/);
-  assert.match(p, /`role` is null NOBODY DESIGNATED/);
-  assert.match(p, /`version_sha` is null the member was rostered without a version being pinned/);
-  assert.match(p, /`bar` is null NO STANDARD OF EVIDENCE IS RECORDED/);
-  /* and the one join instruction a reconstructor cannot do without */
-  assert.match(p, /`caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO\s+EDITION/);
+  assert.equal(p, localize("public-read.index.a_case_is_a_production", "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was held to is that project's, told to the publishing act at the time it was made. Where `project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was published before this model, and an absent owner is not a claim that it had none, it is this record saying it does not know. Where a member's `role` is null NOBODY DESIGNATED that member load-bearing or supporting, so nothing here says whether the case rests on it: a designation is authored by the publisher and is never derived, so the record will not supply one it was not given. Where `version_sha` is null the member was rostered without a version being pinned, and the finding it names may have moved since. None of the three is a gap in this answer; each is a state of the record. Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that is NOT a bar of zero: the edition predates the case carrying its own bar, or none was ever declared, and a case that cleared no declared standard says so. AND THE JOIN BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its own edition 1. A join on the two numbers does not fail — it silently drops the members the pin exists to name."));
 }
 
 /* CASE-2026-0001 edition 1: F load-bearing and G supporting, both pinned, owned by the project; F published. */
