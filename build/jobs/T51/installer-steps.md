@@ -122,3 +122,13 @@ B7 applied; pushed on job/T51/installer-steps, tranche/T51 merged in (DEC-365's 
 Checks: steps suite 88 pass, 0 fail; format 0 failures; architecture "24 product files, 91 relative imports; 0 failures"; words 0 failures (inline 0, missingkey 0); coverage 34 of 36 (R26, R31 unbuilt by design); ownership as above. The `words-reads.json` entry for `installer-steps` needs `installer.fleet.why.pullfailed` added (the design's file, yours to carry).
 
 Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 6, module lines 1953
+
+## J9 · REPORT
+
+Found in other modules, for CR-23 and the release (none of these is mine to edit).
+
+1. installer's `newgroup/test/t50.test.mjs` fails two tests after R37: R59 (line 72, the install's upload carries SEGMENTS and CHECKS with both migrations) and R69 (line 408, the update's migration read). Cause: installer's test release gives agent-worker no `Worker` part, so the upload now carries no Durable Objects, as R37 requires. Fix for CR-23: its release fixture states agent-worker's objects in `worker.json` (`durable_objects` with the SEGMENTS/CHECKS bindings and the v1/v2 migrations), as the bundler now writes them. The steps suite's fixture (`newgroup/test/steps/world.mjs`, `AGENT_WORKER`) is the model.
+2. `newgroup/src/index.mjs`:86 re-exports `MEMBER_OBJECTS`. I kept it as an empty frozen export in `steps/members.mjs` so installer's build still links; CR-23 removes it and the export-list name in `t51.test.mjs`:191.
+3. `objectMigrations` now takes `(heldTag, objects)` and no longer a member name. `t50.test.mjs`:103 calls `installer.objectMigrations("pdf-worker", null)`; it still returns null, but CR-23 should drop the stale first argument.
+4. `newgroup/dist/newgroup.bundled.mjs` (tracked generated artifact) is stale against this change. Not regenerated; BOB regenerates it.
+5. `build/requirements/installer-steps.md` R37 still reads "(not yet met: T51)". The test named R37 now meets it; the marker is BOB's to change.
