@@ -4,12 +4,8 @@
 
 ## Entries applied
 
-- **T51-186 · sources** (W, words, K3949; K3962): the 3 findings `build/plan/words-pass/sources.md` left, and its 2 test copies of code sentences, each fixed by the words rule.
-  - `invariants.test.mjs` (the op list, was line 105): the hand-listed op names are now the module's own declaration, `SOURCES_OP_NAMES`, exported from `src/sources/index.mjs` beside `sourcesOps` (the keys the router answers). The test asserts the router's keys equal that declaration.
-  - `keyed.test.mjs` (the op list, was line 145): the "no bulk path" check now takes the other ops from `SOURCES_OP_NAMES`, so the only op outside them is `sourcekeyed`.
-  - `disclose.test.mjs` (line 119): the hand-written "not confirmed by the team" sentence is now `claimSentence(...)`, the module's own reading of `sources.named_confirmed_group`. The same literal at lines 113 and 126 (and 119's template twin) is now the same reading, so no copy of the sentence remains in the test.
-  - `invariants.test.mjs` (lines 80 and 81; the two `C-121.6` and `C-121.7` translations): compared with `localize(id, en)` under the module's own ids `sources.checks.that_secret_was_not_recognised` and `sources.checks.only_a_member_acting_for`, not as bare copies.
-- No requirement text changed. No requirement id added or removed. `sources` R1 to R20 are unchanged in meaning.
+- **T51-186 (B1 · words, K3949; K3962)**: the three findings and two test copies from the first words pass, applied in an earlier session (record J2).
+- **B2 · the words round RW (K4015)**: the two findings `checks/words.mjs` lists for `sources` after the `+`-chain check (civicos-process `main` @ e8ac153, which carries the check), both in `bio-plane/src/sources/checks.mjs`. The `BAD_DISCLOSURE` and `NO_SERVICE` translations were literals joined by `+`; each is now one `localize` call with its own id: `sources.checks.a_disclosure_names_what_was_revealed` and `sources.checks.a_result_names_the_service`. The sentence text is unchanged. No requirement text, requirement id or service changed.
 
 ## Deferred
 
@@ -17,20 +13,21 @@ None.
 
 ## Found in another module, or in a requirement
 
-- **R3's quoted claim sentence differs from the word table.** `build/requirements/sources.md` R3 reads "not confirmed by the group". The design's word row `sources.named_confirmed_group` (`docs/development/ux-substrate/screens/words.json`) reads "not confirmed by the team", and the code reads that row. The module follows the row, as the words rule requires. Requirement text is BOB's to fold; BOB decides whether R3 quotes "team" or "group", and the row is the design stream's to change. Reporting to BOB as a REPORT.
+- The R3 wording (J1 REPORT) is unchanged and still BOB's to decide.
+- `checks/run.mjs` shows one `testcopy` finding outside this module: `bio-plane/test/m/screens-investigate/fixtures.mjs:175`, "the sources date them no closer", a fixture sentence of `screens-investigate`. Not mine; reported to BOB in a REPORT.
 
 ## Tests and checks run
 
-- `node --test bio-plane/test/m/sources/`: 38 tests, 38 pass, 0 fail (after the change).
-- `node checks/words.mjs /home/user/bio sources`: 0 failures for `sources` (before the change: 5 failures; 3 testcopy, 2 handlist).
-- `node checks/format.mjs /home/user/bio`: 175 modules, 174 requirements files; 0 failures.
-- `node checks/architecture.mjs /home/user/bio sources`: 13 product files, 39 relative imports; 0 failures.
-- `node checks/coverage.mjs /home/user/bio sources`: 20 of 20 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs /home/user/bio sources tranche/T51 job/T51/sources`: 1 file changed by sources; 0 failures.
-- `node bio-plane/src/setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match words.json and the source.
-- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; no finding names the `sources` module in the words output or the coverage output. The run's red is in other modules (words: 4,122 findings across the product, mostly other modules' open work; coverage: 30 failures, none in `sources`). Not mine to change.
+- `node --test bio-plane/test/m/sources/*.test.mjs`: 38 tests, 38 pass, 0 fail.
+- `node checks/words.mjs /home/user/bio sources`: 0 failures (before: 2 `inline`; after: 0).
+- `node checks/format.mjs /home/user/bio` (via `checks/run.mjs`): 176 modules, 175 requirements files, 0 failures.
+- `node checks/architecture.mjs` (via `checks/run.mjs`): 0 failures.
+- `node checks/coverage.mjs` (via `checks/run.mjs`): no finding names `sources`; the run's failures are in other modules.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note names `sources.checks.a_disclosure_names_what_was_revealed` (new ids, not yet in `rows.mjs`; BOB regenerates it at the layer close). No refusal names `sources`.
+- `node checks/ownership.mjs /home/user/bio sources tranche/T51 job/T51/sources`: 1 file changed by `sources`; 0 failures.
 
-Size (session_014Mxhs1WG5npAbZAfSdGnLi): test runs 1, module lines 1080
+Size (session_01WG9setBbZFc6ABChv97kKy): test runs 2, module lines 1077
+
 
 ## J1 · REPORT
 
