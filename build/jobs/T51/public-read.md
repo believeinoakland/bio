@@ -80,3 +80,14 @@ Tests and checks:
 - setup-words build --check: stale-rows note only (expected), no refusal naming public-read.
 
 Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 4, module lines 3663
+
+## J8 · COMPLETE
+
+**COMPLETE again (after CHANGE B6, K4026).** Applied:
+- (4) The container manifest's `verify`, `layout.note` and the two in-band `over` texts are plain constants again (`LAYOUT_NOTE`, `VERIFY_TEXT`, `VERIFY_MEMBER_PAIR`, `OVER_CONTAINER`, `OVER_CASE_FILE` in `publication/worker.mjs`), same bytes, pushed. They are on the design's unkeyed list with R8's batch.
+- (1)-(3): the registration and API-caller details stay inline and go to the unkeyed list with R8's batch, accepted by name until then.
+- Every other R13 conversion stands.
+
+Tests and checks: `node --test test/m/public-read/`: 227 pass, 0 fail. format: 0 failures. architecture public-read: 0 failures. words public-read: inline 5 (the 4 manifest constants and 1 registration detail, all accepted by name in B6), plain 2 (the registration details), testcopy 0.
+
+Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 5, module lines 3663
