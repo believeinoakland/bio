@@ -1,12 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
-import { compile, FIELDS, MEANING, MACHINE_READ_KINDS } from "../../../src/query.mjs";
+import { compile, FIELDS, MEANING, MACHINE_READ_KINDS, CAP_DOES_NOT_APPLY, CHAIN_DOES_NOT_APPLY } from "../../../src/query.mjs";
 import { CONTENT_EXTENT_KINDS } from "../../../src/content/index.mjs";
 import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS as TEXT_CHAIN_MACHINE_READ_KINDS } from "../../../src/textchain.mjs";
 import { normalizeType } from "../../../src/record-grammar/types.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
+const UNDETERMINED = "undetermined";
 const sorted = (a) => [...a].sort();
 
 /* A small corpus over which every operator of R1 has a distinguishable answer. */
@@ -201,9 +203,9 @@ test("R6 the content: arm's sub-fields over the content table, and passage: over
   assert.deepEqual(ids("content:cap=B"), ["D2"]);
   assert.deepEqual(ids("content:cap<C"), ["D2", "D5"], "a comparison never matches undetermined or does-not-apply");
   assert.deepEqual(ids("content:cap=undetermined"), ["D4"], "a null cap over text rows");
-  assert.deepEqual(ids("content:cap=does-not-apply"), ["D3"], "the rows cited as bytes");
-  assert.deepEqual(ids("content:chain=undetermined"), ["D4"]);
-  assert.deepEqual(ids("content:chain=does-not-apply"), ["D3"]);
+  assert.deepEqual(ids(`content:cap=${CAP_DOES_NOT_APPLY}`), ["D3"], "the rows cited as bytes");
+  assert.deepEqual(ids(`content:chain=${UNDETERMINED}`), ["D4"]);
+  assert.deepEqual(ids(`content:chain=${CHAIN_DOES_NOT_APPLY}`), ["D3"]);
   assert.deepEqual(ids("content:chain=*"), ["D1", "D2", "D5"], "presence");
   assert.deepEqual(ids("content:layer"), [], "a kind no row holds");
   /* content R14, DEC-4: a machine reading also finds the units read in more than one way. */
@@ -262,13 +264,16 @@ test("R24 NEAR: proximity in free text, text: and passage:, capitals only, with 
   assert.ok(clamp.warnings.some((x) => /distance 500 is outside 0–100; read as 100/.test(x)));
   assert.deepEqual(ids("NEAR(alpha beta, 500)"), ["A", "B"]);
   assert.ok(compile({ q: "NEAR(alpha beta, -2)", viewer: V }).warnings.some((x) => /read as 0/.test(x)));
-  for (const [q, why] of [["NEAR(alpha)", /one term/], ["NEAR(alpha beta, 2.5)", /not a whole number/],
-                          ["NEAR(alpha beta, x)", /not a whole number/], ["NEAR(alpha beta", /no closing parenthesis/],
-                          ["NEAR(alpha --- , 3)", /one term/]]) {
+  for (const [q, whyKey, vars] of [["NEAR(alpha)", "query.why.proximity_needs_two", { kept: "one term" }],
+                                   ["NEAR(alpha beta, 2.5)", "query.why.distance_whole_number", { dist: '"2.5"' }],
+                                   ["NEAR(alpha beta, x)", "query.why.distance_whole_number", { dist: '"x"' }],
+                                   ["NEAR(alpha beta", "query.why.closing_parenthesis", {}],
+                                   ["NEAR(alpha --- , 3)", "query.why.proximity_needs_two", { kept: "one term" }]]) {
     const c = compile({ q, viewer: V });
-    assert.ok(c.warnings.some((x) => /read as its terms joined by AND/.test(x) && why.test(x)), `${q}: ${c.warnings}`);
+    assert.ok(hasWord("query.read_terms_joined"), "the joined-by-AND wrapper is held");
+    assert.ok(c.warnings.some((x) => x.endsWith(word(whyKey, vars))), `${q}: ${c.warnings}`);
   }
-  assert.deepEqual(ids("NEAR(alpha beta, 2.5)"), ["A", "B"], "read as its terms joined by AND");
+  assert.deepEqual(ids("NEAR(alpha beta, 2.5)"), ["A", "B"], "distance reads as AND");
   assert.deepEqual(ids("NEAR(alpha beta, 2.5)"), ids("alpha AND beta"));
   /* passage: over the indexed text of captures. */
   w.insert("capture_text", { capture_sha: "s1", bundle_id: "A", extent_kind: "pdf-page", extent: "{\"page\":0}",
