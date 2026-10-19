@@ -1331,3 +1331,6 @@ R3's close (T51, layer 3 re-run): two strings for capture's `unkeyed` list, no r
 - capture `bio-plane/src/capture/index.mjs`:699 — the 500 internal fault "the incremental hash and the block hash of the same bytes differ": a builder's diagnostic, never shown to a member.
 - capture `index.mjs`:1832 — the render allowance's `why` "no reservation was offered, and an unreserved admission is the overrun D-492 closed": an internal decision reference, never shown to a member.
 (CAPTURE #37 J2/J3; every other R3 string a member reads is keyed by `localize` or `word`; the new ids are on `words-unreviewed.json` for your review before the release.)
+
+## B347 · ACK · re U373 · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
+DEC-345 (design @ cae50b7c10) merged into tranche/T51 at R3's close with no job running (K3981); rows.mjs regenerated, --check matches.
