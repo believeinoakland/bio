@@ -1,0 +1,435 @@
+/* installer-steps R16 to R25: the fleet, verified in full, held as hashes, and installed beside the plane. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
+  vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, MEMBER_OBJECTS, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
+  CONTAINER_PART, WORKER_PART } from "../../src/steps/index.mjs";
+import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
+import { session, sink, immediateTimers, account, heldCopy, sequence, release, chosen, sha, armWith, restoreSigners, SIGNER, STRANGER, VERSION,
+  RUNNER, SCANNER, DESCRIPTOR, SCANNER_CLASSES, SCANNER_WORKER, IMAGE, VPC_ID, realFetch, jres, cferr, MEMBER_SRC, WASM } from "./world.mjs";
+
+const NAMES = namesFor("grp");
+const ALL = FLEET_BINDINGS.map(([m]) => m);
+const CTX = { names: NAMES, scope: "containers.write", plan: { plan: "paid" } };
+let restoreTimers;
+test.beforeEach(() => { restoreTimers = immediateTimers(); armWith(SIGNER.line); });
+test.afterEach(() => { restoreTimers(); restoreSigners(); globalThis.fetch = realFetch; });
+
+/* A fleet world: the account serving `rel`, the plane held; the chosen release; the loaded fleet and its install. */
+async function fleet({ rel: relOpts = {}, acct = {}, ctx = {}, install = true, relOverride = {} } = {}) {
+  const rel = await release(relOpts);
+  const w = account({ pre: { grp: [] }, rel, ...acct });
+  const release_ = await chosen(rel, relOverride);
+  const out = { w, rel, release_ };
+  out.loaded = await loadFleet(release_);
+  if (install) { out.emit = sink(); out.result = await installFleet(out.emit, session(), "A1", "grp", release_, out.loaded, { ...CTX, ...ctx }); }
+  return out;
+}
+const uploadOf = (w, name) => w.puts.find((p) => p.name === name);
+const byName = (meta, name) => meta.bindings.find((b) => b.name === name);
+
+test("R16: 503 three times then 200 answers the bytes; 503 for the whole bound throws SourceUnavailable naming what; a 404 throws as a 404; a changed byte throws the integrity error", async () => {
+  const want = await sha("abc");
+  const waits = [];
+  const down = new Response("unavailable", { status: 503 });
+  let calls = sequence([down, down, down, new Response("abc")]);
+  assert.equal(new TextDecoder().decode(await fetchVerified("https://x.test/f", want, "pdf-worker", (w) => waits.push(w))), "abc");
+  assert.equal(calls.length, 4);
+  assert.equal(waits.length, 3);
+  assert.equal(calls[0].init.headers["user-agent"], "bio-installer");
+  assert.equal(calls[0].init.redirect, "follow");
+  sequence([down]);
+  await assert.rejects(fetchVerified("https://x.test/f", want, "pdf-worker x"), (e) => e instanceof SourceUnavailable && e.source === true && e.message.startsWith("pdf-worker x") && e.cause.lasting === true);
+  sequence([new Error("ENOTFOUND")]);
+  await assert.rejects(fetchVerified("https://x.test/f", want, "m"), (e) => e.source === true);
+  sequence([new Response("nope", { status: 404 })]);
+  await assert.rejects(fetchVerified("https://x.test/f", want, "m"), (e) => !e.source && e.status === 404);
+  sequence([new Response("abd")]);
+  await assert.rejects(fetchVerified("https://x.test/f", want, "ocr-worker"), (e) => !e.source && e.message.includes("ocr-worker"));
+});
+
+test("R17: a signed fleet installs every member, container members first, and answers {done, left, imageLags, completed}", async () => {
+  const f = await fleet({ rel: { container: true, scanner: true } });
+  assert.deepEqual(Object.keys(f.result).sort(), ["completed", "done", "imageLags", "left"]);
+  assert.deepEqual([...f.result.done].sort(), [...ALL].sort());
+  assert.deepEqual(f.result.left, []);
+  assert.deepEqual(f.result.done.slice(0, 2).sort(), [RUNNER, SCANNER].sort(), "container members first: a member bound to a class is refused while the class is not there");
+  assert.deepEqual(f.loaded.fleet, new Set(ALL));
+  for (const m of ALL) assert.ok(uploadOf(f.w, `${m}-grp`), m);
+  assert.equal(byName(uploadOf(f.w, "agent-worker-grp").meta, "PLANE").service, "grp", "a bio-plane service is bound to the slug");
+  assert.equal(f.emit.last("fleet").k, "ok");
+  assert.equal(f.emit.events[0].k, "step");
+  f.w.restore();
+});
+
+const skipCases = async () => {
+  const cases = {};
+  cases.nomanifest = { relOverride: { man: null } };
+  cases.nofleet = { rel: { fleet: false } };
+  cases.nosigner = { before: () => armWith() };
+  cases.nostatement = {};
+  cases.tampered = { rel: { signedMembers: ["pdf-worker"] } };
+  cases.otherplane = { relOverride: { sha: "0".repeat(64) } };
+  cases.otherversion = { relOverride: { version: "0.0.1" } };
+  cases.nosig = { rel: { fleetSig: "none" } };
+  return cases;
+};
+
+test("R17: each failing condition installs none and says which; the install is not failed over it", async () => {
+  const cases = await skipCases();
+  const skips = new Map();
+  for (const [name, c] of Object.entries(cases)) {
+    c.before?.();
+    const rel = await release(c.rel || {});
+    if (name === "nostatement") delete rel.manifest.fleet[0].compat;
+    const w = account({ pre: { grp: [] }, rel });
+    const release_ = await chosen(rel, c.relOverride || {});
+    const loaded = await loadFleet(release_);
+    assert.equal(typeof loaded.skip, "string", name);
+    assert.ok(loaded.skip.length > 10, name);
+    skips.set(name, loaded.skip);
+    const emit = sink();
+    assert.equal(await installFleet(emit, session(), "A1", "grp", release_, loaded, CTX), undefined, name);
+    assert.equal(w.puts.length, 0, `${name}: no member is installed`);
+    assert.equal(emit.last("fleet").k, "ok", `${name}: the fleet step ends ok, never failed`);
+    assert.equal(emit.last("fleet").label, loaded.skip);
+    w.restore();
+    armWith(SIGNER.line);
+  }
+  /* "says which": every cause names itself, and no two share a sentence unless they are the same cause (an unarmed list and no signature are different) */
+  assert.ok(new Set(skips.values()).size >= 6, "the causes are told apart");
+});
+
+test("R17: an unknown part type leaves that member out alone; a failing member degrades alone and is named; a fleet statement with a member dropped does not verify", async () => {
+  let f = await fleet({ rel: { badType: "ocr-worker" } });
+  assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
+  assert.ok(f.result.left[0].why.includes("assets/x.wasm"));
+  assert.deepEqual([...f.result.done].sort(), ALL.filter((m) => m !== "ocr-worker").sort());
+  f.w.restore();
+  f = await fleet({ rel: { missing: "pdf-worker" } });
+  assert.deepEqual(f.result.left.map((l) => l.member), ["pdf-worker"]);
+  assert.ok(f.result.left[0].why.includes("pdf-worker"));
+  assert.equal(f.result.done.length, ALL.length - 1);
+  assert.match(f.emit.last("fleet").label, /pdf-worker/);
+  f.w.restore();
+  f = await fleet({ rel: { signedMembers: ALL.slice(1) }, install: false });
+  assert.equal(typeof f.loaded.skip, "string");
+  assert.equal(f.w.puts.length, 0);
+  f.w.restore();
+});
+
+test("R17: installFleet throws only for an approveAgain or a lasting error", async () => {
+  const rel = await release();
+  const w = account({ pre: { grp: [] }, rel, expireAfter: 2 });
+  const release_ = await chosen(rel);
+  const loaded = await loadFleet(release_);
+  await assert.rejects(installFleet(sink(), session(), "A1", "grp", release_, loaded, CTX), (e) => e.approveAgain === true);
+  w.restore();
+  const lasting = account({ pre: { grp: [] }, rel, cfFlaky: { status: 503, times: 1000 } });
+  await assert.rejects(installFleet(sink(), session(), "A1", "grp", release_, loaded, CTX), (e) => e.lasting === true);
+  lasting.restore();
+});
+
+const bigSrc = (n) => MEMBER_SRC + "/*" + "x".repeat(n) + "*/";
+function bigBytes(value, seen = new Set(), path = "$") {
+  if (value === null || typeof value !== "object" && typeof value !== "function") return [];
+  if (seen.has(value)) return [];
+  seen.add(value);
+  if (value instanceof Uint8Array || value instanceof ArrayBuffer) return value.byteLength > 1024 ? [path] : [];
+  if (typeof Blob !== "undefined" && value instanceof Blob) return value.size > 1024 ? [path] : [];
+  if (typeof value === "function") return [];
+  return Object.entries(value instanceof Map ? Object.fromEntries(value) : value instanceof Set ? [...value] : value)
+    .flatMap(([k, v]) => bigBytes(v, seen, `${path}.${k}`));
+}
+
+test("R18: after loadFleet the result holds no Uint8Array, ArrayBuffer or Blob of more than 1 KB anywhere in its graph, and nothing was created", async () => {
+  const f = await fleet({ rel: { container: true, scanner: true, memberSrc: Object.fromEntries(ALL.map((m) => [m, bigSrc(5000)])) }, install: false });
+  assert.ok(f.loaded.members.length === ALL.length);
+  assert.deepEqual(bigBytes(f.loaded), []);
+  assert.equal(typeof f.loaded.members[0].bytes, "function");
+  assert.equal(f.w.puts.length, 0, "the whole fleet is verified before anything is created");
+  assert.equal(f.w.calls.filter((c) => c.method !== "GET").length, 0);
+  /* control: the walk does see a held byte array */
+  assert.deepEqual(bigBytes({ a: { b: new Uint8Array(2048) } }), ["$.a.b"]);
+  f.w.restore();
+});
+
+test("R18: the source is asked twice for each bundle and each non-description part and once for each description; the second read is the one just before that member's upload", async () => {
+  const f = await fleet({ rel: { container: true, scanner: true, memberSrc: Object.fromEntries(ALL.map((m) => [m, bigSrc(2000)])) } });
+  const asked = (p) => f.w.sourceRequests.filter((x) => x === p).length;
+  for (const m of ALL) assert.equal(asked(`${m}.bundled.mjs`), 2, m);
+  assert.equal(asked("ocr-worker/assets/x.wasm"), 2);
+  assert.equal(asked("agent-runner/container.json"), 1);
+  for (const p of ["container/FileScanner.json", "container/SafeViewRenderer.json", "worker.json"]) assert.equal(asked(`file-scanner/${p}`), 1, p);
+  assert.equal(asked("bio-plane.bundled.mjs"), 0);
+  /* order: every first read precedes every upload; each second read follows the first and precedes its member's own upload */
+  const idx = (pred) => f.w.calls.map((c, i) => (pred(c) ? i : -1)).filter((i) => i >= 0);
+  const firstPut = Math.min(...idx((c) => c.method === "PUT" && /\/workers\/scripts\//.test(c.u)));
+  for (const m of ALL) {
+    const reads = idx((c) => c.u.endsWith(`/${m}.bundled.mjs`));
+    const put = idx((c) => c.method === "PUT" && c.u.endsWith(`/workers/scripts/${m}-grp`))[0];
+    assert.ok(reads[0] < firstPut, `${m}: first read before any creation`);
+    assert.ok(reads[1] > reads[0] && reads[1] < put, `${m}: second read before its upload`);
+  }
+  /* the bytes uploaded are the second read's (equal to the signed ones, or the hash check would have left the member out) */
+  for (const m of ALL) assert.equal(await uploadOf(f.w, `${m}-grp`).form.get("index.mjs").text(), bigSrc(2000));
+  assert.equal(await uploadOf(f.w, "ocr-worker-grp").form.get("assets/x.wasm").arrayBuffer().then((b) => b.byteLength), WASM.length);
+  assert.equal(uploadOf(f.w, "agent-runner-grp").form.get("container.json"), null, "a description is never uploaded as a module");
+  f.w.restore();
+});
+
+test("R18 control: a bundle that changes between the two reads leaves that member out (failed its integrity check) and uploads nothing of it while the others install", async () => {
+  const f = await fleet({ acct: { sourceChange: (p, n) => (p === "ocr-worker.bundled.mjs" && n >= 2 ? new Response("changed") : null) } });
+  assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
+  assert.match(f.result.left[0].why, /failed its integrity check/);
+  assert.equal(uploadOf(f.w, "ocr-worker-grp"), undefined);
+  assert.equal(f.result.done.length, ALL.length - 1);
+  assert.equal(f.emit.last("fleet").k, "ok");
+  f.w.restore();
+});
+
+test("R18 control: a source that fails at the second read leaves that member out, named, and installFleet throws nothing; one that fails at the first still throws SourceUnavailable with nothing created", async () => {
+  const f = await fleet({ acct: { sourceChange: (p, n) => (p === "pdf-worker.bundled.mjs" && n >= 2 ? new Response("unavailable", { status: 503 }) : null) } });
+  assert.deepEqual(f.result.left.map((l) => l.member), ["pdf-worker"]);
+  assert.match(f.result.left[0].why, /pdf-worker/);
+  assert.equal(uploadOf(f.w, "pdf-worker-grp"), undefined);
+  assert.equal(f.result.done.length, ALL.length - 1);
+  f.w.restore();
+  const rel = await release();
+  const w = account({ pre: { grp: [] }, rel, sourceDown: true });
+  await assert.rejects(loadFleet(await chosen(rel)), (e) => e instanceof SourceUnavailable);
+  assert.equal(w.puts.length, 0);
+  w.restore();
+});
+
+test("R18: a part that cannot be completed at the first read ends the run; the ocr part is read twice and a changed part is left out like a bundle", async () => {
+  const f = await fleet({ acct: { sourceChange: (p, n) => (p === "ocr-worker/assets/x.wasm" && n >= 2 ? new Response("other") : null) } });
+  assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
+  assert.equal(uploadOf(f.w, "ocr-worker-grp"), undefined);
+  f.w.restore();
+});
+
+test("R19: a member added gives one re-upload bound to all; none added and no hosts, none; hosts alone give one upload carrying OWN_HOSTS; a refused re-upload is named and the members stay", async () => {
+  const held = heldCopy({ slug: "grp", version: VERSION, members: ["agent-worker", "pdf-worker", "ocr-worker"] });
+  const rel = await release({ fleet: false });
+  const release_ = await chosen(rel);
+  const opts = { withR2: true, names: NAMES, daemon: "d", ownHosts: ["grp.pfx.workers.dev"] };
+  let w = account({ ...held, preClasses: {} });
+  const emit = sink();
+  const r = await bindMembers(emit, session(), "A1", "grp", release_, ["agent-worker"], { done: ["pdf-worker"] }, { ...opts, writeHosts: false });
+  assert.deepEqual(r, { bound: ["agent-worker", "pdf-worker"], unbound: [], put: true, hosts: false });
+  assert.equal(w.puts.length, 1);
+  assert.deepEqual(w.puts[0].meta.bindings.filter((b) => b.type === "service" && b.name !== "SELF").map((b) => b.name), ["AGENT_WORKER", "PDF_WORKER"]);
+  assert.equal(emit.events[0].id, "bind");
+  assert.equal(emit.last("bind").k, "ok");
+  w.puts.length = 0;
+  const none = sink();
+  assert.deepEqual(await bindMembers(none, session(), "A1", "grp", release_, ["agent-worker"], { done: [] }, { ...opts, writeHosts: false }), { bound: ["agent-worker"], unbound: [] });
+  assert.equal(w.puts.length, 0);
+  assert.equal(none.events.length, 0, "no upload, no step");
+  const hosts = await bindMembers(sink(), session(), "A1", "grp", release_, ["agent-worker"], { done: [] }, { ...opts, writeHosts: true });
+  assert.deepEqual([hosts.put, hosts.hosts], [true, true]);
+  assert.equal(w.puts.length, 1);
+  assert.equal(byName(w.puts[0].meta, "OWN_HOSTS").text, "grp.pfx.workers.dev");
+  w.restore();
+  w = account({ ...held, preClasses: {}, refuseAllPlane: true });
+  const refused = sink();
+  const bad = await bindMembers(refused, session(), "A1", "grp", release_, ["agent-worker"], { done: ["pdf-worker"] }, { ...opts, writeHosts: true });
+  assert.deepEqual([bad.bound, bad.unbound, bad.hosts], [["agent-worker"], ["pdf-worker"], false]);
+  assert.equal(refused.last("bind").k, "no");
+  assert.ok(w.scripts.has("pdf-worker-grp"), "the members stay installed");
+  w.restore();
+});
+
+test("R20: a release whose container descriptors name ghcr.io images installs every other member and leaves both out as 'out', never a lag", async () => {
+  const ghcr = "ghcr.io/civicos/agent-runner@sha256:" + "a".repeat(64);
+  const f = await fleet({ rel: { container: true, scanner: true, descriptor: { ...DESCRIPTOR, image: ghcr }, scannerParts: Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, { ...c, image: "ghcr.io/civicos/" + c.class_name.toLowerCase() + "@sha256:" + "d".repeat(64) }])) } });
+  assert.deepEqual(f.result.left.map((l) => l.member).sort(), [RUNNER, SCANNER].sort());
+  assert.ok(f.result.left.every((l) => l.out === true && l.why.includes(IMAGE_UNPULLABLE)));
+  assert.equal(imageWhy(ghcr), IMAGE_UNPULLABLE);
+  assert.ok(f.result.left.find((l) => l.member === SCANNER).why.includes(lacksOf(SCANNER)), "what the copy then lacks is said beside the reason");
+  assert.ok(!f.result.left.find((l) => l.member === RUNNER).why.includes(lacksOf(RUNNER) || "\u0000"));
+  assert.equal(f.result.done.length, ALL.length - 2);
+  assert.equal(f.result.imageLags.length, 0);
+  f.w.restore();
+});
+
+test("R20 control: a docker.io descriptor installs; each container class gets an application under the copy's names and the class is bound cross-script into agent-worker", async () => {
+  const f = await fleet({ rel: { container: true, scanner: true } });
+  assert.deepEqual(f.w.apps.map((a) => a.name).sort(), ["agent-runner-grp", "file-scanner-filescanner-grp", "file-scanner-safeviewrenderer-grp"]);
+  for (const a of f.w.apps) assert.deepEqual([a.scheduling_policy, a.instances], ["default", 0]);
+  assert.equal(f.w.apps.find((a) => a.name === "agent-runner-grp").configuration.image, IMAGE);
+  const runner = uploadOf(f.w, "agent-runner-grp").meta;
+  assert.deepEqual(runner.migrations, { new_tag: "v1", new_sqlite_classes: ["AgentRunner"] });
+  const worker = uploadOf(f.w, "agent-worker-grp").meta;
+  assert.deepEqual(byName(worker, "RUNNER"), { type: "durable_object_namespace", name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner-grp" });
+  const scanner = uploadOf(f.w, "file-scanner-grp").meta;
+  assert.deepEqual(scanner.migrations.new_sqlite_classes, ["FileScanner", "SafeViewRenderer"]);
+  assert.deepEqual(byName(scanner, "SCANNER"), { type: "durable_object_namespace", name: "SCANNER", class_name: "FileScanner" });
+  assert.deepEqual(byName(scanner, "RENDERER"), { type: "durable_object_namespace", name: "RENDERER", class_name: "SafeViewRenderer" });
+  f.w.restore();
+});
+
+test("R20: each condition in turn leaves the container members out: no Containers scope, an unreadable Containers API, Workers Free, a plan not verified", async () => {
+  const cases = [
+    { ctx: { scope: "workers-scripts.write" } },
+    { ctx: { scope: null }, acct: { containers: "read" } },
+    { ctx: { plan: { plan: "free" } } },
+    { ctx: { plan: { plan: "unknown", detail: "no answer" } } },
+  ];
+  for (const c of cases) {
+    const f = await fleet({ rel: { container: true, scanner: true }, ctx: c.ctx, acct: c.acct });
+    assert.deepEqual(f.result.left.map((l) => l.member).sort(), [RUNNER, SCANNER].sort(), JSON.stringify(c.ctx));
+    assert.ok(f.result.left.every((l) => l.out === true));
+    assert.equal(f.w.apps.length, 0);
+    f.w.restore();
+  }
+  const f = await fleet({ rel: { container: true }, ctx: { scope: null, plan: null } });
+  assert.ok(f.result.done.includes(RUNNER), "one read of the Containers API decides when the token response states no scope, and the plan is established by the probe");
+  f.w.restore();
+});
+
+test("R20: a descriptor that does not read, a part not named for its class, or a class described twice leaves the member out; an attempted upload that fails is not 'out'", async () => {
+  let f = await fleet({ rel: { container: true, descriptor: "{not json" } });
+  assert.deepEqual(f.result.left.map((l) => l.member), [RUNNER]);
+  assert.equal(f.result.left[0].out, true);
+  f.w.restore();
+  f = await fleet({ rel: { container: true }, acct: { containers: "create" } });
+  const failed = f.result.left.find((l) => l.member === RUNNER);
+  assert.ok(failed && failed.out === undefined, "an upload attempted and failed is a failure of the verdict, not a part left out");
+  f.w.restore();
+  const enc = (o) => new TextEncoder().encode(JSON.stringify(o));
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, scheduling_policy: "other" })).ok, false);
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, max_instances: 0 })).ok, false);
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, class_name: "1bad" })).ok, false);
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, bind: [{ member: "m", binding: "lower" }] })).ok, false);
+  assert.equal(containerDescriptor(enc([])).ok, false);
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, image: "docker.io/x/y:latest" })).ok, false);
+  assert.deepEqual(containerDescriptor(enc(DESCRIPTOR)).d.bind, DESCRIPTOR.bind);
+  const parts = SCANNER_CLASSES.map((c) => ({ path: `container/${c.class_name}.json` }));
+  const bytes = Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, enc(c)]));
+  assert.equal(containerClasses(parts, (p) => bytes[p]).classes.length, 2);
+  assert.equal(containerClasses([{ path: "container/Other.json" }, parts[1]], (p) => bytes[p] ?? bytes["container/FileScanner.json"]).ok, false);
+  assert.equal(containerClasses([{ path: "x.json" }, parts[1]], (p) => bytes[p]).ok, false);
+  assert.equal(containerClasses([parts[0], parts[0]], (p) => bytes[p]).ok, false);
+  assert.equal(CONTAINER_PART, "Container"); assert.equal(WORKER_PART, "Worker");
+});
+
+test("R20: a rollout that keeps the old image is asked once more and then reported as a lag naming the container", async () => {
+  const old = "docker.io/civicos/agent-runner@sha256:" + "b".repeat(64);
+  const f = await fleet({ rel: { container: true }, acct: { rolloutKeepsImage: true, preClasses: { "agent-runner-grp": ["AgentRunner"] }, pre: { grp: [], "agent-runner-grp": [] },
+    preApps: [{ id: "app1", name: "agent-runner-grp", durable_objects: { namespace_id: "ns-agent-runner-grp-AgentRunner" }, configuration: { image: old } }] } });
+  assert.equal(f.w.rollouts.length, 2);
+  assert.equal(f.result.imageLags.length, 1);
+  assert.ok(f.result.imageLags[0].includes("agent-runner-grp"));
+  assert.ok(f.result.done.includes(RUNNER), "the member is installed; the image lag goes to the verdict, not to success");
+  f.w.restore();
+  const ok = await fleet({ rel: { container: true }, acct: { preClasses: { "agent-runner-grp": ["AgentRunner"] }, pre: { grp: [], "agent-runner-grp": [] },
+    preApps: [{ id: "app1", name: "agent-runner-grp", durable_objects: { namespace_id: "ns-agent-runner-grp-AgentRunner" }, configuration: { image: old } }] } });
+  assert.equal(ok.w.rollouts.length, 1);
+  assert.deepEqual(ok.result.imageLags, []);
+  assert.deepEqual(ok.result.completed.includes(RUNNER), true);
+  ok.w.restore();
+});
+
+test("R21: a member whose bundle states its limits is uploaded with exactly those; none stated, none sent; an unreadable statement leaves it out and names it", async () => {
+  const f = await fleet({ rel: { memberSrc: { "sheet-worker": MEMBER_SRC + ` const L = "bio-member-limits/1 cpu_ms=300000";`, "pdf-worker": MEMBER_SRC + ` const L = "bio-member-limits/1 Z=1";` } } });
+  assert.deepEqual(uploadOf(f.w, "sheet-worker-grp").meta.limits, { cpu_ms: 300000 });
+  assert.equal("limits" in uploadOf(f.w, "agent-worker-grp").meta, false);
+  assert.deepEqual(f.result.left.map((l) => l.member), ["pdf-worker"]);
+  assert.equal(uploadOf(f.w, "pdf-worker-grp"), undefined);
+  f.w.restore();
+});
+
+test("R22: file-scanner is installed with its CAPTURES bucket, its two classes, its schedule from the Worker part, and SECURITY_VPC only as R23 says", async () => {
+  const f = await fleet({ rel: { scanner: true } });
+  const meta = uploadOf(f.w, "file-scanner-grp").meta;
+  assert.deepEqual(byName(meta, "CAPTURES"), { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures-grp" });
+  assert.equal(byName(meta, VPC_BINDING), undefined);
+  assert.deepEqual(f.w.schedules.get("file-scanner-grp"), ["17 4 * * *"]);
+  assert.equal(f.w.schedules.size, 1, "no other member is given a schedule");
+  assert.deepEqual(byName(uploadOf(f.w, "agent-worker-grp").meta, "FILE_SCANNER"), undefined, "the plane, not agent-worker, is bound to the scanner");
+  assert.equal(BINDING_OF.get("file-scanner"), "FILE_SCANNER");
+  f.w.restore();
+});
+
+test("R22: a release without the Worker part installs the member without bucket or schedule and the step names what it lacks; a refused schedule is named and the member stays", async () => {
+  let f = await fleet({ rel: { scanner: true, scannerWorker: null } });
+  assert.ok(f.result.done.includes(SCANNER));
+  assert.equal(byName(uploadOf(f.w, "file-scanner-grp").meta, "CAPTURES"), undefined);
+  assert.equal(f.w.schedules.size, 0);
+  assert.match(f.emit.last("fleet").label, /file-scanner/);
+  const withPart = await fleet({ rel: { scanner: true } });
+  assert.ok(f.emit.last("fleet").label.length > withPart.emit.last("fleet").label.length, "what it lacks is said");
+  f.w.restore(); withPart.w.restore();
+  f = await fleet({ rel: { scanner: true }, acct: { refuseSchedules: true } });
+  assert.ok(f.result.done.includes(SCANNER));
+  assert.ok(f.emit.last("fleet").label.includes("17 4 * * *"), "the refused schedule is named");
+  f.w.restore();
+  const enc = (o) => new TextEncoder().encode(typeof o === "string" ? o : JSON.stringify(o));
+  assert.deepEqual(workerDescriptor(enc(SCANNER_WORKER)), { ok: true, d: { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"] } });
+  for (const bad of ["{x", "[]", { r2_buckets: [{ binding: "CAPTURES", bucket: "evidence" }] }, { r2_buckets: [{ binding: "lower", bucket: "captures" }] },
+    { crons: ["* * * *"] }, { crons: ["* * * * *", "* * * * *", "* * * * *", "* * * * *"] }, { crons: "nope" }]) {
+    assert.equal(workerDescriptor(enc(bad)).ok, false, JSON.stringify(bad));
+  }
+  assert.deepEqual(workerDescriptor(enc({})), { ok: true, d: { r2_buckets: [], crons: [] } });
+});
+
+test("R23: a good VPC id binds SECURITY_VPC; a refused one installs the member without it and says REACH_NOT_BOUND; an id with no scanner installed is said; no id, no binding and no note", async () => {
+  assert.equal(vpcServiceOk(VPC_ID), true);
+  assert.equal(vpcServiceOk("01234567-89ab-cdef-0123-456789abcdef"), true);
+  for (const bad of [undefined, "", "xyz", VPC_ID + "0", 5]) assert.equal(vpcServiceOk(bad), false);
+  assert.equal(VPC_MEMBER, SCANNER);
+  let f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID } });
+  assert.deepEqual(byName(uploadOf(f.w, "file-scanner-grp").meta, VPC_BINDING), { type: "vpc_service", name: VPC_BINDING, service_id: VPC_ID });
+  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  f.w.restore();
+  f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID }, acct: { refuseVpc: true } });
+  assert.ok(f.result.done.includes(SCANNER));
+  assert.equal(byName(f.w.puts.filter((p) => p.name === "file-scanner-grp").at(-1).meta, VPC_BINDING), undefined);
+  assert.equal(f.w.puts.filter((p) => p.name === "file-scanner-grp").length, 2, "uploaded again without it");
+  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  f.w.restore();
+  f = await fleet({ rel: { members: ALL.filter((m) => m !== SCANNER) }, ctx: { vpc: VPC_ID } });
+  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"), "an id named when no scanner was installed is said");
+  assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
+  f.w.restore();
+  f = await fleet({ rel: { scanner: true } });
+  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
+  f.w.restore();
+});
+
+test("R24: the upload of agent-worker carries SEGMENTS and CHECKS with both migrations, in order; a script holding v1 gets v2 alone", async () => {
+  const f = await fleet();
+  const meta = uploadOf(f.w, "agent-worker-grp").meta;
+  assert.deepEqual(byName(meta, "SEGMENTS"), { type: "durable_object_namespace", name: "SEGMENTS", class_name: "SegmentDriver" });
+  assert.deepEqual(byName(meta, "CHECKS"), { type: "durable_object_namespace", name: "CHECKS", class_name: "CheckRecord" });
+  assert.deepEqual(meta.migrations, { new_tag: "v2", steps: [{ new_sqlite_classes: ["SegmentDriver"] }, { new_sqlite_classes: ["CheckRecord"] }] });
+  for (const m of ALL.filter((x) => x !== "agent-worker")) assert.equal(uploadOf(f.w, `${m}-grp`).meta.migrations, undefined, m);
+  f.w.restore();
+  const held = await fleet({ acct: { pre: { grp: [], "agent-worker-grp": [] }, preTags: { "agent-worker-grp": "v1" }, preClasses: { "agent-worker-grp": ["SegmentDriver"] } } });
+  assert.deepEqual(uploadOf(held.w, "agent-worker-grp").meta.migrations, { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["CheckRecord"] }] });
+  held.w.restore();
+  assert.deepEqual(objectMigrations("agent-worker", "v2"), null);
+  assert.deepEqual(objectMigrations("pdf-worker", null), null);
+  assert.deepEqual(objectMigrations("agent-worker", null).steps.length, 2);
+  assert.equal(Object.isFrozen(MEMBER_OBJECTS), true);
+});
+
+test("R25: an instance_type in container.json is passed to the create call and to a rollout; none is created without the field; an unreadable one leaves the member out", async () => {
+  let f = await fleet({ rel: { container: true, descriptor: { ...DESCRIPTOR, instance_type: "standard-1" } } });
+  assert.equal(f.w.apps[0].configuration.instance_type, "standard-1");
+  f.w.restore();
+  f = await fleet({ rel: { container: true } });
+  assert.equal("instance_type" in f.w.apps[0].configuration, false);
+  f.w.restore();
+  f = await fleet({ rel: { container: true, descriptor: { ...DESCRIPTOR, instance_type: "standard-1" } }, acct: { pre: { grp: [], "agent-runner-grp": [] }, preClasses: { "agent-runner-grp": ["AgentRunner"] },
+    preApps: [{ id: "app1", name: "agent-runner-grp", durable_objects: { namespace_id: "ns-agent-runner-grp-AgentRunner" }, configuration: { image: IMAGE } }] } });
+  assert.equal(f.w.rollouts[0].target_configuration.instance_type, "standard-1");
+  f.w.restore();
+  f = await fleet({ rel: { container: true, descriptor: { ...DESCRIPTOR, instance_type: "Standard 1" } } });
+  assert.deepEqual(f.result.left.map((l) => l.member), [RUNNER]);
+  assert.equal(f.w.apps.length, 0);
+  f.w.restore();
+});
