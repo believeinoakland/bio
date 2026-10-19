@@ -31,3 +31,25 @@ Tests and checks (run from civicos-process against /home/user/bio):
 - setup-words build.mjs --check: stale rows.mjs only, as expected.
 
 Size (session_01W8n89yfSFWhfBxwhhKKJLr): test runs 5, module lines 2237
+
+## J3 · COMPLETE
+
+CHANGE B2 (K4015) done. Commit c6815681ed on job/T51/run-productions, pushed; tranche/T51 merged in first.
+
+The new words check found four more member-read sentences, all converted by localize with run-productions.index.<slug> ids, each a single literal:
+- EXTRACT_PROPOSALS_SAYS (index.mjs:76): extract_proposals_says
+- EXTRACT_PROPOSAL_ROW_SAYS (:79): extract_proposal_row_says
+- READ_PAGES_SAYS (:86): read_pages_says
+- CONNECTION_PERSON_NO_ROLE detail (:928): connection_person_no_role
+
+Nothing judged as text no person reads, so nothing is listed for the unkeyed list.
+
+Tests and checks, from civicos-process against /home/user/bio:
+- node --test bio-plane/test/m/run-productions/: 62 pass, 0 fail.
+- checks/words.mjs run-productions: 0 failures (was 4 after the CHANGE).
+- checks/format.mjs: 0 failures. checks/architecture.mjs run-productions: 0 failures.
+- checks/coverage.mjs run-productions: 26 of 26 live ids named, 0 failures.
+- checks/ownership.mjs run-productions tranche/T51 job/T51/run-productions: 4 files, 0 failures.
+- setup-words build.mjs --check: rows.mjs stale, the expected note (BOB regenerates at layer close).
+
+Size (session_01W8n89yfSFWhfBxwhhKKJLr): test runs 6, module lines 2237
