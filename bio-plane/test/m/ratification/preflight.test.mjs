@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmText, CASE_BODY, V } from "./fixture.mjs";
 import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines } from "../../../src/ratification/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001", OBS = "INFO-2026-0009-observation";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -293,7 +294,7 @@ test("R2, R18, R14: an off-the-record capture whose attesting member chose no le
   const un = entry(s.preflight(), "ATTRIBUTION_UNCHOSEN");
   assert.deepEqual(un.unchosen, [{ capture: CAP, why: "no choice made" }]);
   assert.match(un.detail, /attesting member/);
-  assert.equal(un.translation, R14_C92_10, "R14's re-worded translation");
+  assert.equal(un.translation, word("refusal.ATTRIBUTION_UNCHOSEN"), "R14's re-worded translation");
   const steps = [
     ["ATTRIBUTION_UNCHOSEN", "C-92.10", () => { attr = { ...attr, current: [{ capture: CAP, level: "project", shown: null, why: null }] }; }],
     ["ATTRIBUTION_STATEMENT_STALE", "C-92.11", () => { attr = { ...attr, stated: [{ capture: CAP, level: "project", shown: null }] }; }],
@@ -328,7 +329,7 @@ test("R35, R2, R18, R14: a member resting on a document whose off-the-record cap
     assert.deepEqual(got.uncorroborated, [{ member: Q1, document: DOC }]);
     assert.match(got.detail, new RegExp(`${Q1} on ${DOC}`));
     assert.match(got.detail, /unnamed source.*independent leg.*attesting member to choose cover or name.*drop the finding/s);
-    assert.equal(got.translation, R14_C58_5, "R14's re-worded translation");
+    assert.equal(got.translation, word("refusal.ANONYMOUS_TESTIMONY_UNCORROBORATED"), "R14's re-worded translation");
     assert.ok(!/alice|eve|author_id|"author"|source_id/.test(JSON.stringify(got)), "never the member or the source");
     assert.deepEqual(s.w.corroborationAsked.at(-1).levels, { [CAP]: level }, "the capture's level is handed to strength");
     const r = await s.act();
@@ -356,15 +357,6 @@ test("R35, R2, R18, R14: a member resting on a document whose off-the-record cap
   }
 });
 
-const R14_C92_10 = "This case edition uses a member's firsthand observation, or material from an unnamed source a member "
-  + "attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing it at any "
-  + "level would be choosing for them. Ask that member to choose, or prepare the edition without the finding that "
-  + "rests on it.";
-const R14_C58_5 = "This edition rests on testimony, or on material from an unnamed source attested by a member, credited "
-  + "only to the team or the project, with no independent leg corroborating it. Such testimony or evidence counts as "
-  + "an anonymous tip and supports a finding only beside an independent corroborating leg. Each such member, "
-  + "observation and document is named. Corroborate the claim with an independent leg, ask the author or the "
-  + "attesting member to choose cover or name, or drop the finding that rests on it. Nothing was signed.";
 
 test("R8, R2, R18: C-41.16 — edition 2 with no \"What changed\" statement, or a blank one, is refused GATE_REFUSED naming C-41.16 by the act and the pre-flight, byte for byte; edition 1 without one, and edition 2 with one, pass", async () => {
   const NO_WC = "# Case\n\n## What This Excludes\n\nNothing named.\n";

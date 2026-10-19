@@ -19,6 +19,8 @@
  * The case document's grammar (`CASE_DOCUMENT_FORMAT` … and its four predicates) is `case-grammar`'s since K651 (its
  * R1, which was this module's R20), re-exported here unchanged so every importer of this file reads what it read. */
 
+import { word, WORD_ROWS } from "../setup-words/index.mjs";
+
 export { WORDS, caseWordsOf, lensClosingSentencesOf } from "../case-grammar/index.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2,
@@ -26,15 +28,17 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          caseDocumentRequiresTensionSection } from "../case-grammar/index.mjs";
 
+/* A key's English with its placeholders left as written: `word` fills each `{name}` with `{name}` itself. */
+function wordAsWritten(key) {
+  const en = WORD_ROWS.find((r) => r[0] === key)[1];
+  return word(key, Object.fromEntries([...en.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map(([, name]) => [name, `{${name}}`])));
+}
+
 /* R33 (DEC-187 (4), DEC-188 (7); K2483): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`)
-   this module's rows answer, each `en` verbatim (protected), read by key; `{photo}` is left for the screen, the answer
-   naming the photos. */
-export const PUBLICATION_WORDS = Object.freeze({
-  'photo.refused.changed.signed': 'This case wasn\'t published: a mark on {photo} changed after it was prepared. Prepare it '
-    + 'again, and sign it again.',
-  'document.refused.changed': 'A document a member supplied now needs a different publication copy from the one this '
-    + 'case was prepared with. Prepare the case again. Nothing was published.',
-});
+   this module's rows answer, each read by key from `setup-words`' list (protected); `{photo}` is left for the screen,
+   the answer naming the photos. */
+export const PUBLICATION_WORDS = Object.freeze(Object.fromEntries(
+  ["photo.refused.changed.signed", "document.refused.changed"].map((key) => [key, wordAsWritten(key)])));
 
 /* C-122 — A CASE'S SOURCES (R51; N364, DEC-78 item 5(d)), a new family held here: the one refusal of the commit that
    re-reads, at the signature, what the public may be told of each source the case document states. A consent withdrawn
@@ -44,8 +48,7 @@ export const CASE_SOURCES_CHECKS = {
   SOURCE_CONSENT_WITHDRAWN: {
     check: 'C-122.1',
     where: 'src/publication/index.mjs commitCaseEdition > is-source-consent-withdrawn',
-    translation: 'A source withdrew consent for a detail this case states, after the case was prepared. Prepare the '
-      + 'case again, and it will leave that detail out. Nothing was published.',
+    translation: word('refusal.SOURCE_CONSENT_WITHDRAWN'),
   },
   /* C-122.2 (R58; DEC-112, K1268 BOB's decision 5): a preparation made before published cases carried their method and
      materials (any format but `bio-case-document/6` or `/7`, which is `/6` in every field: N538, K1365 (1)) is never
@@ -53,22 +56,19 @@ export const CASE_SOURCES_CHECKS = {
   CASE_FORMAT_SUPERSEDED: {
     check: 'C-122.2',
     where: 'src/publication/index.mjs commitCaseEdition > is-case-format-current',
-    translation: 'This case was prepared before published cases carried everything they rest on. Prepare it again, '
-      + 'and sign the new preparation. Nothing was published.',
+    translation: word('refusal.CASE_FORMAT_SUPERSEDED'),
   },
   /* C-122.3, C-122.4 (R59; DEC-96 items 1, 4, N522): another group's work the case rests on is re-read at the commit,
      as R51 re-reads a source's consent. */
   ACCEPTANCE_WITHDRAWN_SINCE: {
     check: 'C-122.3',
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
-    translation: "This team's acceptance of another team's work this case rests on was withdrawn after the case was "
-      + 'prepared. Prepare the case again. Nothing was published.',
+    translation: word('refusal.ACCEPTANCE_WITHDRAWN_SINCE'),
   },
   FLAG_OPENED_SINCE: {
     check: 'C-122.4',
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
-    translation: "A flag was raised on another team's work this case rests on after the case was prepared, and the case "
-      + 'must disclose it. Prepare the case again. Nothing was published.',
+    translation: word('refusal.FLAG_OPENED_SINCE'),
   },
   /* C-122.6 (R33, R57; N757, DEC-180 (4), K2206): a photo the case carries no longer matches its marks (its copy no
      longer the photo's current copy, a mark withdrawn since the case was prepared among them (case-carriage R14), a
@@ -98,7 +98,7 @@ export const CASE_SOURCES_CHECKS = {
   COUNSEL_MATTER_NOT_PUBLISHED: {
     check: 'C-122.8',
     where: 'src/publication/index.mjs commitCaseEdition > is-counsel-matter-published',
-    translation: 'This case rests on a counsel matter, and a counsel matter is never published. Nothing was published.',
+    translation: word('refusal.COUNSEL_MATTER_NOT_PUBLISHED'),
   },
 };
 

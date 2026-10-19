@@ -198,6 +198,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 ### Uses
 
+- (T51; K4027) `setup-words`: `localize` (the `case-grammar.casefile.*` reasons of `caseFileManifestCheck`).
 - `record-grammar`: `parseFrontmatter` (R1's blocks and tension section, R4).
 - `strength`: `gradingMethodText` (its R31, with the product name; R14). Index 47 is before 57 (DEC-112; K1268).
 - `calc-grammar` (T33-60): `resultKey` and the recipe's canonical form (R18).

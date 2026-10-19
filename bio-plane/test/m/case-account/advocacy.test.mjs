@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { CaseAccount, CASE_ACCOUNT_CHECKS, ADVOCACY_RESULTS, ADVOCACY_CHECKS_MAX } from "../../../src/case-account/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", OPEN = "INQ-2026-0002-q", MET = "CNT-2026-0001";
 const CLAIM = "the award followed the minutes";
@@ -99,7 +100,8 @@ test("R13: refusals in order, each writing nothing — MACHINE_CANNOT_CHECK_ADVO
     if (CASE_ACCOUNT_CHECKS[reason]) assert.deepEqual([r.code, r.check, r.translation], [reason, ...row(reason)]);
     if (reason === "NO_SUCH_PROJECT") assert.deepEqual(r, noSuchProject(a.project ?? null), "membership's one answer, byte for byte");
     if (field) assert.equal(r.field, field);
-    assert.match(r.detail, /\./);
+    if (["MACHINE_CANNOT_CHECK_ADVOCACY", "ADVOCACY_NOT_OWN_PROJECT"].includes(reason)) assert.equal(r.detail, word(`refusal.${reason}`), "R17: the key's words");
+    else if (reason === "BAD_ACCOUNT") assert.equal(typeof r.detail, "string");
   }
   assert.deepEqual(w.snapshot(), before, "nothing written by any refusal");
   /* controls: each refused act, its fault mended, lands in the member's own project */

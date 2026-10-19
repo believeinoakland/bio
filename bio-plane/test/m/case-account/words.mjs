@@ -3,7 +3,7 @@
    says whether the list holds it. */
 import { readFileSync } from "node:fs";
 
-const LIST = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
+export const LIST = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const BY_KEY = new Map(LIST.words.map((w) => [w.key, w.en]));
 
 export const HAS = (key) => BY_KEY.has(key);

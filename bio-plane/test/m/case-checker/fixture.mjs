@@ -12,6 +12,36 @@ import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { serialiseContainer } from "../../../src/container.mjs";
 import { ratifyStatement, caseRatifyStatement, captureAccountStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
+import { readFileSync, readdirSync } from "node:fs";
+import { WORD_ROWS } from "../../../src/setup-words/rows.mjs";
+import { callsOf } from "../../../src/setup-words/build.mjs";
+
+/* R27: the checker's words, read as `setup-words` reads them. No test holds a sentence's text (K3810): it compares an answer with
+   `W(key, vars)`, or matches it with `like(key, vars)`, a pattern read from the key's sentence with a hole for each `{name}` not
+   given. A key is the word table's row (the list always wins) or, while `rows.mjs` is stale, the sentence of the `localize` call
+   in the module's source, which is read from there and never copied. */
+const SOURCE = new URL("../../../src/case-checker/", import.meta.url);
+const OWN = new Map();
+for (const f of readdirSync(SOURCE).filter((x) => x.endsWith(".mjs") && x !== "program.mjs" && x !== "spec.mjs"))
+  for (const c of callsOf(readFileSync(new URL(f, SOURCE), "utf8"), f)) OWN.set(c.id, c.en);
+const TABLE = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
+export const sentenceOf = (key) => {
+  const t = TABLE.get(key) ?? OWN.get(key);
+  if (t === undefined) throw new Error(`no sentence for ${key}`);
+  return t;
+};
+/** The sentence of `key` with each `{name}` filled from `vars`, as `word` and `localize` fill it (a missing fill is refused). */
+export const W = (key, vars = {}) => sentenceOf(key).replace(/\{([A-Za-z0-9_]+)\}/g, (_, n) => {
+  if (!Object.hasOwn(vars, n) || vars[n] === undefined || vars[n] === null) throw new Error(`W: ${key} needs {${n}}`);
+  return String(vars[n]);
+});
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export function like(key, vars = {}) {
+  const parts = sentenceOf(key).split(/\{([A-Za-z0-9_]+)\}/);
+  return new RegExp(`^${parts.map((t, i) => (i % 2 === 0 ? escapeRe(t) : Object.hasOwn(vars, t) ? escapeRe(String(vars[t])) : "[^]*")).join("")}$`);
+}
+/** True when an entry of `list` for `check` has the sentence of `key`, each `{name}` of `vars` filled and the others open. */
+export const hasLike = (list, check, key, vars = {}) => list.some((e) => e.check === check && like(key, vars).test(e.detail));
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 export const te = new TextEncoder();
@@ -106,7 +136,7 @@ export const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r
 /** The case document's text, `/6` unless `format` names another (`/7`, T31). */
 export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
-                              facts = {}, passages = {}, calculations = [], extra = [], lens = [] } = {}) {
+                              facts = {}, passages = {}, calculations = [], extra = [], lens = [], omit = [] } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -126,16 +156,16 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     ...CG.methodBlockLines({ grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION }),
     ...CG.materialBlockLines({ materials, attestations }),
     ...CG.acceptedWorkBlockLines({ rows: accepted, flags: [] }),
-    ...CG.gradingFactsLines(Object.entries(facts).flatMap(([finding, f]) => f.legs.map((l, ord) => ({ finding, ord, ...l })))),
+    ...(omit.includes("grading_facts") ? [] : CG.gradingFactsLines(Object.entries(facts).flatMap(([finding, f]) => f.legs.map((l, ord) => ({ finding, ord, ...l }))))),
     ...CG.calculationsLines(calculations),
-    ...CG.passagesLines(Object.entries(passages).flatMap(([finding, list]) => list.map((p, ord) => ({ finding, ord, ...p })))),
+    ...(omit.includes("passages") ? [] : CG.passagesLines(Object.entries(passages).flatMap(([finding, list]) => list.map((p, ord) => ({ finding, ord, ...p }))))),
     "completeness:", '  statement: "the 2019 permits are not covered"', "  author: alice", "  statement_by: bob",
     '  at: "2026-09-28T00:00:00Z"', "  subject_position: not_sought", '  subject_justification: "the office is closed until October"',
     "  acknowledged: 1",
-    ...rows("completeness_acknowledgements", [{ kind: "participant", by: "carol", at: "2026-09-27T00:00:00Z" }]),
+    ...rows(["completeness", "acknowledgements"].join("_"), [{ kind: "participant", by: "carol", at: "2026-09-27T00:00:00Z" }]),   /* a front-matter key, joined so no sentence of the product is copied (K3962) */
     ...rows("completeness_excluded", [{ target: null, description: "the 2019 permits", reason: "not yet requested" }]),
     "searched:", "  subject_source: case_basis", "  subjects: 2", "searched_levels: []",
-    ...rows("case_strength", roster.flatMap((m) => PAIR_AXES.map((axis) => ({ target: m, axis, state: rec[m][axis].state, grade: rec[m][axis].grade })))),
+    ...(omit.includes("case_strength") ? [] : rows("case_strength", roster.flatMap((m) => PAIR_AXES.map((axis) => ({ target: m, axis, state: rec[m][axis].state, grade: rec[m][axis].grade }))))),
     "case_strength_grounds: []",
     "required_strength:", `  declared: ${bar.declared}`, "  source: project", `  capture: ${bar.capture ?? "null"}`,
     `  connection: ${bar.connection ?? "null"}`, '  detail: ""',
@@ -180,7 +210,7 @@ export function caseFiles(opts = {}) {
   /* each row's file, its inputs by their hashes and the PROV-O rendering, as `public-read` R23 packs them */
   for (const row of calculations) put("calculation", row.calc, CG.calculationFileText(row));
   if (calculations.length) put("calculation", "prov", CG.provOf(calculations));
-  if (calculations.length && !opts.dropCalcInput) texts.set(calcInputPath(CALC, CALC_INPUT_SHA), opts.calcInput ?? CALC_INPUT);
+  if (calculations.length && !opts.dropCalcInput) texts.set(calcInputPath(CALC, opts.calcInputSha ?? CALC_INPUT_SHA), opts.calcInput ?? CALC_INPUT);
   const materials = [
     { ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha(extracted(MINUTES_UNITS)), origin: "https://records.example/minutes.pdf",
       archived_copy: "https://archive.example/minutes", included: true, rests_under: "load_bearing" },
@@ -189,21 +219,23 @@ export function caseFiles(opts = {}) {
       ...(opts.obscureMemo ? { obscured: { copy: COPY_SHA, label: OBSCURED_LABEL } } : {}) },
     { ref: OBS, kind: "observation", sha: OBS_SHA, text_sha: null, origin: "a member's observation", archived_copy: null, included: true,
       rests_under: "supporting" }];
-  const accounts = [
+  const accounts0 = [
     { capture: MINUTES_SHA, by: "alice", at: NOW, text_b64: Buffer.from(ACCOUNT).toString("base64"),
       signature_b64: Buffer.from(sign("alice", accountMessage(MINUTES_SHA, ACCOUNT))).toString("base64") },
     { capture: MEMO_SHA, by: "bob", at: NOW, text_b64: Buffer.from(MEMO_ACCOUNT).toString("base64"),
       signature_b64: Buffer.from(sign(opts.memoAccountSigner || "bob", opts.memoAccountMessage || accountMessage(MEMO_SHA, opts.memoAccountSigned || MEMO_ACCOUNT), opts.memoAccountNamespace)).toString("base64") }];
-  const attestations = [
-    { ref: MINUTES, by_kind: "member", by: "alice", level: "name", at: NOW, signature: accounts[0].signature_b64 },
+  const accounts = opts.accountRows ? opts.accountRows(accounts0) : accounts0;
+  const attestations0 = [
+    { ref: MINUTES, by_kind: "member", by: "alice", level: "name", at: NOW, signature: accounts0[0].signature_b64 },
     { ref: MINUTES, by_kind: "project", by: "PROJ-2026-0001-parks", at: NOW, recorded_in: MINUTES },
     { ref: MINUTES, by_kind: "group", by: GROUP },
-    { ref: MEMO, by_kind: "member", by: "bob", level: "cover", at: NOW, signature: accounts[1].signature_b64 },
+    { ref: MEMO, by_kind: "member", by: "bob", level: "cover", at: NOW, signature: accounts0[1].signature_b64 },
     { ref: MEMO, by_kind: "group", by: GROUP },
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
+  const attestations = opts.attestationRows ? opts.attestationRows(attestations0) : attestations0;
   const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
     recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages,
-    calculations, extra: opts.docLines || [], lens: opts.lens || [] });
+    calculations, extra: opts.docLines || [], lens: opts.lens || [], omit: opts.omit || [] });
   put("case_document", null, doc);
   /* R22: the edition's criteria rows, as `public-read` R33 carries them (a list in canonical JSON; text as given) */
   if (opts.criteria !== undefined) put("criteria", null, typeof opts.criteria === "string" ? opts.criteria : canonicalJson(opts.criteria));

@@ -12,6 +12,7 @@ import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { CLEAN_REFUSALS as DOC_CLEAN_REFUSALS } from "../../../src/doc-clean/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -20,9 +21,9 @@ const DOC5 = "INFO-2026-0005-e";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const COPY = "c".repeat(64), COPY2 = "d".repeat(64);
 const AT = "2026-09-28T01:00:00Z";
-/* doc-clean's refusals by name (its R3), as case-carriage R16 relays them in `refused.code` */
-const CLEAN_REFUSALS = ["ENCRYPTED", "EMBEDDED_FILE", "IMAGE_NOT_CLEANABLE", "HTML_EMBEDS_IMAGE", "NOT_A_CLEANABLE_FORMAT",
-                        "DOCUMENT_TOO_LARGE", "DOCUMENT_UNREADABLE"];
+/* doc-clean's refusals by name (its R3), as case-carriage R16 relays them in `refused.code`: every code its own table
+   declares (K3268: assembled from the module's declaration, never hand-listed) */
+const CLEAN_REFUSALS = Object.keys(DOC_CLEAN_REFUSALS);
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words || Object.values(WORDS).find(Array.isArray)).find((w) => w && w.key === key);
 /* R6 (K2483): a member document's copy, as R6 answers it; R7's row drops the key */

@@ -21,6 +21,7 @@
 
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
 /** R10: the four states a disclosed contradiction is read as, by the row's `state` (and `kind`). */
 export const TENSION_STATE_WORDS = Object.freeze({
@@ -67,7 +68,7 @@ export function caseTensionsOf(text) {
       const unseen = r.unseen_other_side === true || r.unseen_other_side === "true";
       const common = { candidate: val(r.candidate), finding: val(r.finding), state: stateWords(r), depth: 1,
                        depth_stated: depth,
-                       owner_words: val(r.words) === null ? null : { text: String(r.words), by: "the case's owner" },
+                       owner_words: val(r.words) === null ? null : { text: String(r.words), by: SENTENCES.caseOwner },
                        acknowledged_by: val(r.acknowledged_by), acknowledged_at: val(r.acknowledged_at) };
       /* DEC-85: the seen side and the fixed sentence only; no kind, explanation or other side, since either may
          quote or name the record not shown. */

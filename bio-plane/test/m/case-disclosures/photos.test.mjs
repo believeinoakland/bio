@@ -15,6 +15,7 @@ import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
          photoRead } from "../../../src/case-disclosures/index.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { COVER_REFUSALS } from "../../../src/image-cover/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -22,8 +23,11 @@ const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-000
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const COPY = "c".repeat(64), COPY2 = "d".repeat(64);
 const AT = "2026-09-28T01:00:00Z";
-const COVER_REFUSALS = ["NOT_A_COVERABLE_FORMAT", "UNSUPPORTED_JPEG_PROCESS", "PNG_INTERLACED", "PHOTO_TOO_LARGE",
-                        "TRUNCATED_IMAGE_DATA", "IMAGE_DATA_CORRUPT"];
+/* image-cover's refusals by name (its R3) that are about the photo's own format and bytes, as `case-carriage` relays them in
+   `refused.code`: every code its own table declares but the two that fault the marked areas (K3268: assembled from the
+   module's declaration, never hand-listed) */
+const AREA_REFUSALS = ["AREA_MALFORMED", "AREA_OUTSIDE"];
+const FORMAT_REFUSALS = Object.keys(COVER_REFUSALS).filter((code) => !AREA_REFUSALS.includes(code));
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words || Object.values(WORDS).find(Array.isArray)).find((w) => w && w.key === key);
 const AREA = [{ rect: [0, 0, 8, 8], kind: "person" }];
@@ -61,8 +65,8 @@ test("R22: PHOTO_NOT_COVERABLE's and PHOTO_UNCHECKED's translations are words.js
   assert.equal(CASE_DISCLOSURE_CHECKS.PHOTO_UNCHECKED.check, "C-120.19");
   assert.equal(OBSCURED_LABEL, wordOf("photo.obscured.label").en, "the label is case-carriage's, the same words");
   assert.equal(PUBLISHED_LABEL, wordOf("photo.published.label").en, "every other photo's label, case-carriage's (T40)");
-  assert.notEqual(PHOTO_WORDS["photo.refused.unchecked"], "Signing waits until every photo the case relies on is checked: {photo}.",
-    "negative control: T38's words are gone");
+  assert.equal(PHOTO_WORDS["photo.refused.unchecked"], word("photo.refused.unchecked", { photo: "{photo}" }), "read by key");
+  assert.notEqual(PHOTO_WORDS["photo.refused.unchecked"], PHOTO_WORDS["photo.refused.format"], "negative control: each key its own words");
 });
 
 test("R6: a photo never travels whole — a marked photo with a copy is answered included: false with obscured {copy, label: OBSCURED_LABEL, marked: true, label_key: photo.obscured.label}, a nothing_to_obscure photo with a copy obscured {copy, label: PUBLISHED_LABEL, marked: false, label_key: photo.published.label} (every photo carried is labelled), held whole or not; each is presentable through its copy and never RELIED_ON_NOT_PRESENTABLE; photoMarks is asked as the viewer", () => {
@@ -120,7 +124,7 @@ test("R6 (PHOTO_UNCHECKED): an unchecked photo (no standing mark) that any membe
 });
 
 test("R6 (PHOTO_NOT_COVERABLE): a photo whose cover image-cover refused, for every code it refuses by name, marked or nothing_to_obscure, is neither carried whole nor left out: a load-bearing member's chain reaching it is refused, naming each photo and member, with photo filling {photo}; one only supporting members reach is listed included: false with no obscured and never refused; it writes nothing", () => {
-  for (const code of COVER_REFUSALS) for (const state of ["marked", "nothing_to_obscure"]) {
+  for (const code of FORMAT_REFUSALS) for (const state of ["marked", "nothing_to_obscure"]) {
     const w = setup();
     const p = w.doc(DOC), p2 = w.doc(DOC2, {}, { indexed: false });
     w.marks.photo(p, { state, refused: code });
@@ -301,10 +305,11 @@ test("R29: photosOf answers the ceremony's Photos step over R6's materials — o
   const marked = w.marks.photoMarks({ captureSha: pm }).marks;
   assert.deepEqual(out.photos.map((p) => [p.ref, p.sha]), [[DOC, pm], [DOC2, pr], [DOC3, pu], ["INFO-2026-0005-e", pn]],
     "a document that is no photo is not listed");
-  assert.deepEqual(out.photos[0], { ref: DOC, sha: pm, taken_by: "bo",
+  assert.deepEqual(out.photos[0], { ref: DOC, sha: pm, taken_by: "bo", dated: "2026-09-27",
     relied_on_by: [{ target: Q, role: "load_bearing" }, { target: Q2, role: "supporting" }],
     state: "marked", marks: marked, copy: COPY, refused: null, words: OBSCURED_LABEL, unread: false });
   assert.deepEqual(marked, withdrawn, "the withdrawn mark shown with its withdrawal");
+  assert.deepEqual(out.photos.map((p) => p.dated), ["2026-09-27", null, "2026-09-27", null], "R33: the day each was taken, none where no one is held to have taken it");
   assert.deepEqual([out.photos[1].state, out.photos[1].copy, out.photos[1].refused.code, out.photos[1].words, out.photos[1].taken_by],
     ["marked", null, "UNSUPPORTED_JPEG_PROCESS", PHOTO_NOT_COVERABLE_WORDS, null]);
   assert.deepEqual([out.photos[2].state, out.photos[2].words, out.photos[2].taken_by, out.photos[2].relied_on_by],
@@ -336,7 +341,7 @@ test("R29: a photo whose marks cannot be read is listed state: null, unread: tru
   const reached = judged(w, [Q]);
   refused(reached.refusals[0], "PHOTO_MARKS_UNDETERMINED");
   const out = w.cd.photosOf(reached.materials, w.roles([Q]), V("alice"));
-  assert.deepEqual(out, { photos: [{ ref: DOC, sha: p, taken_by: null, relied_on_by: [{ target: Q, role: "load_bearing" }],
+  assert.deepEqual(out, { photos: [{ ref: DOC, sha: p, taken_by: null, dated: null, relied_on_by: [{ target: Q, role: "load_bearing" }],
     state: null, marks: null, copy: null, refused: null, words: null, unread: true }], unchecked: 0 });
   for (const args of [[], [null, null, null], ["x", 3, {}], [[null, 1, { kind: "document" }, { kind: "document", sha: 5 }], [null]]])
     assert.deepEqual(w.cd.photosOf(...args), { photos: [], unchecked: 0 }, JSON.stringify(args));
@@ -345,6 +350,45 @@ test("R29: a photo whose marks cannot be read is listed state: null, unread: tru
   assert.deepEqual(cap.cd.photosOf(judged(cap, [Q]).materials, cap.roles([Q]), V("alice")).photos.map((x) => [x.taken_by, x.state]),
     [[null, "unchecked"]], "a failed actor read states less");
   void sha;
+});
+
+/* a capture's actor at an instant (`capture_actors`), as `actor` but at any instant, and a malformed one */
+const actorAt = (w, capture, who, at) => w.st.sql.exec(`INSERT INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`, capture, who, at);
+
+test("R33: photosOf answers `dated`, the local day, in the team's zone, of the instant the attesting capture was made — 2026-10-12T23:30:00Z in a Pacific zone is 2026-10-12, and 2026-10-13T03:30:00Z there is still 2026-10-12, never the UTC day; the same instant in another zone is that zone's day; null when there is no zone, no readable instant or no attesting member, and nothing else of the entry changes", () => {
+  const w = setup();
+  const p1 = w.doc(DOC), p2 = w.doc(DOC2), p3 = w.doc(DOC3), p4 = w.doc(DOC4), p5 = w.doc("INFO-2026-0005-e");
+  for (const c of [p1, p2, p3, p4, p5]) w.marks.photo(c, { state: "nothing_to_obscure", copy: COPY });
+  actorAt(w, p1, "alice", "2026-10-12T23:30:00Z");
+  actorAt(w, p2, "alice", "2026-10-13T03:30:00Z");
+  actorAt(w, p3, "bo", "2026-10-12T02:00:00Z");
+  actorAt(w, p4, "bo", "not an instant");
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: DOC3 }, { target: DOC4 }, { target: "INFO-2026-0005-e" }]);
+  const reached = judged(w, [Q]);
+  const day = () => w.cd.photosOf(reached.materials, w.roles([Q]), V("alice")).photos.map((x) => x.dated);
+  const before = w.snapshot();
+  assert.equal(w.team.zone, "America/Los_Angeles");
+  assert.deepEqual(day(), ["2026-10-12", "2026-10-12", "2026-10-11", null, null], "the team's day: the UTC day of the second and third is the next one");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* control: the zone governs — the same instants in a zone ahead of UTC are the next day */
+  w.team.zone = "Pacific/Auckland";
+  assert.deepEqual(day(), ["2026-10-13", "2026-10-13", "2026-10-12", null, null]);
+  /* control: no zone, an unknown zone and a zone read that fails answer null, never a UTC day */
+  for (const zone of [null, "", "Not/A_Zone", 7]) {
+    w.team.zone = zone;
+    assert.deepEqual(day(), [null, null, null, null, null], String(zone));
+  }
+  const down = world({ deps: { retrieval: { zone: () => { throw new Error("down"); } } } });
+  down.member("alice"); const dp = down.doc(DOC); down.marks.photo(dp, { state: "nothing_to_obscure", copy: COPY });
+  actorAt(down, dp, "alice", "2026-10-12T23:30:00Z"); down.finding(Q, [{ target: DOC }]);
+  assert.deepEqual(down.cd.photosOf(judged(down, [Q]).materials, down.roles([Q]), V("alice")).photos.map((x) => [x.taken_by, x.dated]), [["alice", null]]);
+  /* the rest of each entry is R29's, as before */
+  w.team.zone = "America/Los_Angeles";
+  const out = w.cd.photosOf(reached.materials, w.roles([Q]), V("alice"));
+  assert.deepEqual(out.photos.map((x) => [x.taken_by, x.state, x.copy, x.words, x.unread]),
+    [["alice", "nothing_to_obscure", COPY, PUBLISHED_LABEL, false], ["alice", "nothing_to_obscure", COPY, PUBLISHED_LABEL, false],
+     ["bo", "nothing_to_obscure", COPY, PUBLISHED_LABEL, false], ["bo", "nothing_to_obscure", COPY, PUBLISHED_LABEL, false],
+     [null, "nothing_to_obscure", COPY, PUBLISHED_LABEL, false]]);
 });
 
 test("R6, R29 over the real case-carriage (its R10–R14): an unchecked photo is refused PHOTO_UNCHECKED; once marked it travels as its labelled copy; a withdrawn mark counts as withdrawn, so withdrawing the only mark makes it unchecked again; marked as having nothing to obscure it travels as its copy labelled PUBLISHED_LABEL; a refused cover, marked or not, is PHOTO_NOT_COVERABLE; a document that is no image travels whole", async () => {
@@ -411,9 +455,9 @@ test("R7 (K2541; DEC-185 (1)): the case document's body prints a material carrie
   const lines = carriesBodyLines(w.cd.methodOf(), out.materials, out.group);
   const line = (ref) => lines.find((l) => l.startsWith(`- ${ref},`));
   for (const [ref, copy, label] of [[DOC, COPY, OBSCURED_LABEL], [DOC2, COPY2, PUBLISHED_LABEL], [DOC3, "e".repeat(64), COPY_CLEANED_LABEL]]) {
-    assert.ok(line(ref).includes(`travels with this case as its copy, fingerprint ${copy}`), ref);
-    assert.ok(line(ref).includes(`shown with the label "${label}"`), ref);
-    assert.equal(line(ref).includes("NOT INCLUDED"), false, ref);
+    assert.ok(line(ref).includes(word("case-disclosures.travels_case_copy", { copy, label: "" })), ref);
+    assert.ok(line(ref).includes(word("case-disclosures.shown_label", { label })), ref);
+    assert.equal(line(ref).includes(word("case-disclosures.included_fingerprint_origin")), false, ref);
   }
   /* negative control: supporting-only material not held whole, with no copy, is still NOT INCLUDED; a whole one travels whole */
   assert.ok(line(DOC4).includes(word("case-disclosures.included_fingerprint_origin")));

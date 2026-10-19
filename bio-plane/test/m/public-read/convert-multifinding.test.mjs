@@ -19,6 +19,7 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, sha, SIG } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 class StoreSilent extends Error { constructor(op) { super(op); this.op = op; } }
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -235,7 +236,7 @@ test("R6 (multi-finding container) each finding's parts are namespaced <case>/<f
   const mr = await route(w, env, "publishedbytes", { sha256: out.manifest_sha });
   assert.equal(mr.status, 200);
   const mBytes = new Uint8Array(await mr.arrayBuffer());
-  assert.equal(sha(Buffer.from(mBytes)), out.manifest_sha, "the manifest answers by its own sha256");
+  assert.equal(sha(Buffer.from(mBytes)), out.manifest_sha, "the manifest is served under its own digest");
   const manifest = JSON.parse(new TextDecoder().decode(mBytes));
   assert.deepEqual([manifest.format, manifest.case, manifest.edition, manifest.findings.map((f) => f.bundle_id)],
                    ["bio-case-container/6", CASE, 1, [FIND_A, FIND_B]]);
@@ -330,7 +331,6 @@ test("R4 (awaiting window, caseMembers, altitudes) publishedmanifest carries a r
                    "every case edition on the index has a roster");
   for (const c of now.cases) assert.equal("strength" in c, false, "no case row carries a pair");
   /* the answer states the rule it keeps */
-  assert.match(now.altitudes, /frozen strength pair belongs to a FINDING/);
-  assert.match(now.altitudes, /DECLARED AND NOT YET RATIFIED/);
-  assert.match(now.production, /`version_sha` TO `bundle_sha`, NEVER EDITION TO\s+EDITION/);
+  assert.equal(now.altitudes, localize("public-read.index.a_frozen_strength_pair", "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer. Since the frozen pair is stated in each CASE's document (a case's reading of the finding at that hash), a finding several cases pin may carry several pairs: where their documents disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and `strengthByCase` lists every ratified case edition's own pair, named by its case and edition. None of them is the finding's pair; each is that case's."));
+  assert.equal(now.production, localize("public-read.index.a_case_is_a_production", "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was held to is that project's, told to the publishing act at the time it was made. Where `project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was published before this model, and an absent owner is not a claim that it had none, it is this record saying it does not know. Where a member's `role` is null NOBODY DESIGNATED that member load-bearing or supporting, so nothing here says whether the case rests on it: a designation is authored by the publisher and is never derived, so the record will not supply one it was not given. Where `version_sha` is null the member was rostered without a version being pinned, and the finding it names may have moved since. None of the three is a gap in this answer; each is a state of the record. Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that is NOT a bar of zero: the edition predates the case carrying its own bar, or none was ever declared, and a case that cleared no declared standard says so. AND THE JOIN BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its own edition 1. A join on the two numbers does not fail — it silently drops the members the pin exists to name."));
 });

@@ -217,7 +217,7 @@ test("R1 a /6 document states every /5 block and R11's, R12's and R16's, each re
 
 test("R1 DEC-119 a source whose identity is withheld is stated as Withheld with its reason and the receipt, never what was withheld; sourceRowsStanding holds it, and the older unnamed statement, as the capture's", () => {
   assert.equal(CG.WITHHELD_SOURCE_LABEL, "Withheld");
-  assert.equal(CG.WITHHELD_SOURCE_REASON, "the source has not consented to being named, and no public record names them");
+  assert.equal(sha(CG.WITHHELD_SOURCE_REASON), "fe04f4e5dace936d4477351b47f5da136b5c1215014a814b365a0b04eaff97ea", "the bytes are pinned");
   assert.equal(CG.withheldSourceStatement({ capture: DOC_SHA, received: NOW }),
                `Withheld: the source has not consented to being named, and no public record names them; received as ${DOC_SHA} at ${NOW}`);
   assert.equal(CG.withheldSourceStatement(), "Withheld: the source has not consented to being named, and no public record "

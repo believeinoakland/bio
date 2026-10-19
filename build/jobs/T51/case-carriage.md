@@ -1,6 +1,6 @@
 # case-carriage (T51)
 
-**Status** · session_01X6mu5tbjL2pAmrUPvxveWL · depth 2 · COMPLETE · handled B2
+**Status** · session_013V7QhsFKttVRZGCkN2oybJ · depth 2 · COMPLETE · handled B2
 
 ## J1 · BLOCKED
 
@@ -39,3 +39,30 @@ Checks (product /home/user/bio): format 0 failures; architecture case-carriage 0
 Found in other modules: none.
 
 Size (session_01X6mu5tbjL2pAmrUPvxveWL): test runs 7, module lines 1660
+
+## J3 · COMPLETE
+
+COMPLETE. T51-225 (words, K3949 and K3957) is applied on `job/T51/case-carriage` at a223553815, merged with `tranche/T51` (6c98dc6386). Entries applied: T51-225. Deferred: none.
+
+**Applied.** Every finding in `build/plan/words-pass/case-carriage.md` is fixed; the words check reports no case-carriage finding.
+- `index.mjs`: the member-read refusal details that were inline sentences are now `localize("case-carriage.index.<slug>", en, vars)`. The ids are new and fixed once: `no_photo_you_can_see` (4 sites), `a_mark_is_made_by`, `that_capture_is_not`, `areas_is_not_a_list`, `area_i_is_not_an` (`{i}`, the inline finding), `a_mark_is_withdrawn`, `no_mark_of_that`, `an_area_lies_wholly`, `no_evidence_store_is`, `no_provenance_onreceipt`. The plain findings' other sentences were already read by key.
+- Tests: `archive.test.mjs` takes `authority_basis` from `word("acquisition.authority_basis.file_cut_out", { at })`, the acquisition module's own declared key. `obscured.test.mjs` compares with `word("photo.state.nothing")`. `documents.test.mjs` and `marks.test.mjs` have the copied "the original is unchanged" assertion message reworded to "original digest unchanged".
+
+**Judgment calls (for BOB to confirm or move).**
+1. `index.mjs:1190`, the `NO_RECEIPT_NOTICE` detail in `start()`, is a developer diagnostic. I converted it to `localize` rather than listing it as a REPORT, because its sibling `REGISTRATION_UNANSWERED` at `index.mjs:1195` is already localized, and `faults()` is the surface that answers it. If BOB rules it developer-only, it moves to `unkeyed`.
+2. `documents.test.mjs:440` (the R18 case) compares the detail with `localize(id, en)` by equality, the form K3810 allows, so the test holds no copy.
+3. The rewording in (Tests) above is my choice: no row carries the "original is unchanged" sentence in full, so there was no `word(key)` to read.
+
+**Found in other modules (P9; for BOB).** The full `checks/run.mjs` run reports failures outside case-carriage: the words check has 2,248 failures across modules; coverage has 25 failures across modules, none in case-carriage. In `wizard-scripts` the words check flags test copies at `t47.test.mjs:92, 141, 142, 150, 152, 221, 237`, `t48.test.mjs:55, 142, 169, 170, 180, 198` and `writing-help.test.mjs:204, 205`. Not changed by this job.
+
+**Checks (from civicos-process, product /home/user/bio, after the merge).**
+- format: 176 modules, 175 requirements files; 0 failures.
+- architecture case-carriage: 0 failures.
+- coverage case-carriage: 22 of 22 live requirement ids named by a test; 0 failures.
+- ownership `case-carriage` `tranche/T51` → `job/T51/case-carriage`: 6 files changed by case-carriage; 0 failures.
+- words: no finding in case-carriage (`checks/words.mjs`).
+- `setup-words/build.mjs --check`: exits 1 with a stale-rows note naming the new ids (`rows.mjs` is stale until the layer close). This is the expected note, not a refusal.
+- Module tests (`node --test test/m/case-carriage/*.test.mjs`): 88 of 88 pass, 0 fail, after the merge.
+- `checks/run.mjs`: 0 failures in format and architecture; the other failures are the other-module findings above.
+
+Size (session_013V7QhsFKttVRZGCkN2oybJ): test runs 4, module lines 1659

@@ -63,7 +63,7 @@ export function findingFactsRefusal(facts, { bundleId, expectedSha, statedInSitt
   /* END DEC-49 REGION is-attribution-ratify */
   if (facts.row.bundle_sha !== expectedSha)
     return { status: 409, body: { ok: false, reason: "RATIFY_STALE",
-      detail: "the record has changed since it was reviewed; read it again and re-sign",
+      detail: localize("ratification.finding.the_record_has_changed", "the record has changed since it was reviewed; read it again and re-sign"),
       expected: facts.row.bundle_sha, got: expectedSha } };
   return null;
 }
@@ -269,8 +269,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
                    address_norm: p.address_norm, reused_sha: p.reused_sha };
     if (!p.address || !isPublicHttpsLocator(p.address)) {
       verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
-        basis: "the reused part has no re-fetchable public https address on record, so the source "
-             + "cannot be re-checked; ratified with the bytes captured on the day" });
+        basis: word("ratification.basis.reused_part_re") });
       continue;
     }
     if (spent >= budget) {
@@ -284,7 +283,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
     catch { r = null; }
     if (!r || !r.ok) {
       verdicts.push({ ...base, verdict: "unavailable", observed_sha: null,
-        basis: word("ratification.basis.plain_get_returned", { error: String(r ? r.status : "a network error") }) });
+        basis: word("ratification.basis.plain_get_returned", { error: String(r ? r.status : word("ratification.basis.network_error")) }) });
       continue;
     }
     const got = hexOf(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));
@@ -294,8 +293,7 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
              + "matches the reused bytes" });
     else
       verdicts.push({ ...base, verdict: "changed", observed_sha: got,
-        basis: "a plain GET returned different bytes than were reused; ratified with the bytes captured "
-             + "on the day, the divergence recorded as the dated fact it is" });
+        basis: word("ratification.basis.plain_get_returned_different") });
   }
   const at = new Date().toISOString();
   /* REC-53: this write was FIRE-AND-FORGET, so a silence left the verdicts

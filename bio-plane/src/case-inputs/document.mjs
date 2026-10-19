@@ -64,12 +64,10 @@ function ackBodyHeadLines(acks, project) {
   return acks.rows.length
     ? [word("case-inputs.document.acknowledged_second_reader", { ack_prose_head: String(ACK_PROSE_HEAD) }), "",
        ...acks.rows.map((a) => (a.kind === "recipient"
-         ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${fmSafe(a.recipient)}', `
-           + `on ${a.at}`
-         : `- ${a.by}, a participant of ${project}, on ${a.at}`)
-           + (a.draft ? ` — given on draft ${a.draft}` : "")),
-       ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
-                              + "document lists)"] : [])]
+         ? localize("case-inputs.document.recipient_row", "- the recipient of review grant {by}, addressed by its issuer as '{recipient}', on {at}", { by: String(a.by), recipient: String(fmSafe(a.recipient)), at: String(a.at) })
+         : localize("case-inputs.document.participant_row", "- {by}, a participant of {project}, on {at}", { by: String(a.by), project: String(project), at: String(a.at) }))
+           + (a.draft ? ` ${localize("case-inputs.document.given_on_draft", "— given on draft {draft}", { draft: String(a.draft) })}` : "")),
+       ...(acks.truncated ? [localize("case-inputs.document.list_stops_here", "- (the list stops here; more acknowledgements are recorded than this document lists)")] : [])]
     : (acks.unbound || acks.unboundWriterUndetermined)
       ? [localize("case-inputs.document.ack_prose_head_nobody_acknowledged", "{ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never required to publish — a team may be one person — and its absence is stated rather than left for a reader to infer.", { ACK_PROSE_HEAD: String(ACK_PROSE_HEAD) })]
       : [localize("case-inputs.document.ack_prose_head_nobody_but", "{ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never required to publish — a team may be one person — and its absence is stated rather than left for a reader to infer.", { ACK_PROSE_HEAD: String(ACK_PROSE_HEAD) })];

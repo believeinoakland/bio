@@ -8,8 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as R from "../../../src/case-catalogue/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
-import { isNoticeReference, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V7 } from "../../../src/case-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { isNoticeReference, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMATS_ACCEPTED } from "../../../src/case-grammar/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 
 const PIN = "a".repeat(64);
@@ -111,8 +111,7 @@ test("R1: the case arms of C-2.8 (each member's frozen blocks, as the document s
 });
 
 test("R1, R4: C-41.16 — an edition above 1 with no \"What changed\" statement, a blank one, or one its block's hash disowns is refused with R1's translation word for word; edition 1 without one, and edition 2 with one, pass", () => {
-  const msg = "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the "
-            + "statement, then sign. Nothing was signed.";
+  const msg = localize("case-catalogue.checks.a_new_edition_of_a", "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.");
   const wc = (body) => R.checkCaseDocument(doc(), { ...CTX, body }).filter((x) => x.check === "C-41.16");
   for (const body of [NO_WC, `${NO_WC}\n## What Changed in This Edition, and Why\n\n   \n`]) {
     const got = wc(body);
@@ -295,16 +294,20 @@ test("R1, R4 (N538): a /7 case document is read as /6 and a /8 one as /7: each d
     const [m] = run(mutate(as("bio-case-document/6")), CTX).filter((x) => x.check === num).map((x) => x.message);
     assert.ok(m.startsWith(before[num]), `${key}: ${m.slice(0, 120)}`);
   }
-  /* an earlier format is named as itself, never as the current one */
+  /* an earlier format is named as itself, never as the current one: the sentence for the declared format, whole */
   for (const fmt of ["bio-case-document/3", "bio-case-document/4", "bio-case-document/5"]) {
     const [m] = run({ ...as(fmt), completeness: { ...doc().completeness, statement_by: undefined } }, CTX)
       .filter((x) => x.check === "C-41.13").map((x) => x.message);
-    assert.ok(m.startsWith(`a ${fmt} case document requires completeness.statement_by`), m.slice(0, 80));
+    assert.equal(m, localize("case-catalogue.checks.a_declared_case_document_requires_5",
+      "a {declared} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got {v1}{v2})",
+      { declared: fmt, v1: "null", v2: "" }));
   }
   /* C-41.1 names the current format (CASE_DOCUMENT_FORMAT, in force) and every format accepted as written */
   const [bad] = run(as("bio-case-document/9"), CTX).filter((x) => x.check === "C-41.1");
   for (const fmt of ["/8", "/7", "/6", "/5", "/4", "/3", "/2", "/1"]) assert.ok(bad.message.includes(`'bio-case-document${fmt}'`), fmt);
-  assert.ok(bad.message.startsWith(`a case document declares format '${CASE_DOCUMENT_FORMAT}', or one of the earlier`), bad.message.slice(0, 90));
+  assert.equal(bad.message, localize("case-catalogue.checks.a_case_document_declares_format",
+    "a case document declares format '{CASE_DOCUMENT_FORMAT}', or one of the earlier formats accepted as written ({map}) (got '{format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one",
+    { CASE_DOCUMENT_FORMAT, map: CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(", "), format: "bio-case-document/9" }));
 });
 
 test("R4: the family is declared gate findings, not refusal rows: no export is named *_CHECKS, no row carries a where or a code, and each row names its check and what it asks", () => {

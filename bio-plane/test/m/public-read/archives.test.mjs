@@ -130,7 +130,7 @@ const blobFile = (w, bundleId, path, blob, bytes) =>
                 bundleId, path, blob, bytes, blob);
 const unpacked = (container, s) => ({ file: `snapshots/zip-${container.archive_sha256}-${container.index}`,
   locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW, authority_state: "undetermined",
-  authority_basis: "a file cut out of an archive", capture: { method: "unpacked", grade: "B", actor_class: "daemon",
+  authority_basis: word("acquisition.authority_basis.file_cut_out", { at: NOW }), capture: { method: "unpacked", grade: "B", actor_class: "daemon",
   sha256: s, encoding: "binary", bytes: container.uncompressed }, container, origin: { kind: "named_request" } });
 /* An archive held in the evidence store on its own bundle, its token beside it, its provenance naming the token; `entry`
    is the archive's own entry when it is itself a member. Its bytes and token are put in the published bucket, as

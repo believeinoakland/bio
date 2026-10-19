@@ -14,7 +14,7 @@ import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, extractedTextOf, materialBlockLines, methodBlockLines, materialsOf, methodOf, GRADING_FACT_FIELDS,
          gradingFactsLines, passagesLines, gradingFactsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -50,8 +50,9 @@ test("R5: methodOf answers strength's GRADING_METHOD_VERSION and promotion's CAT
   const fm = fmOf(w, methodBlockLines(m));
   assert.deepEqual(methodOf(fm), m);
   const body = carriesBodyLines(m, { rows: [], attestations: [] }, "g").join("\n");
-  assert.ok(body.includes(`by the grading method ${GRADING_METHOD_VERSION}, and the case was checked under the publication checks ${CATALOG_VERSION}.`));
-  assert.ok(carriesBodyLines(null, { rows: [] }, null).join("\n").includes("grading method (not stated)"));
+  assert.ok(body.includes(word("case-disclosures.grade_case_reached", { method: GRADING_METHOD_VERSION, method_2: CATALOG_VERSION })));
+  const none = localize("case-disclosures.document.not_stated_bracketed", "(not stated)");
+  assert.ok(carriesBodyLines(null, { rows: [] }, null).join("\n").includes(word("case-disclosures.grade_case_reached", { method: none, method_2: none })));
 });
 
 test("R6, R7: materialsJudged lists every document a member's chain reaches with what this copy holds — bytes and extracted text, its fingerprint — included when whole; material only a supporting member reaches, not held whole, is listed included: false and never refused", () => {
@@ -76,8 +77,10 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
   assert.ok(body.includes(word("case-disclosures.case_carries")));
-  assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
-  assert.ok(body.includes(`- ${DOC}, a document, fingerprint ${a}: travels whole with this case; relied on by a load-bearing finding`));
+  const line = (ref) => body.split("\n").find((l) => l.startsWith(`- ${ref}, `));
+  assert.ok(line(DOC2).includes(`fingerprint ${b}: ${word("case-disclosures.included_fingerprint_origin")}`));
+  assert.ok(line(DOC).includes(`fingerprint ${a}: ${word("case-disclosures.travels_whole_case")}`));
+  assert.ok(line(DOC).includes(localize("case-disclosures.document.a_load_bearing", "a load-bearing")));
 });
 
 test("R6 (C-120.8): a load-bearing member resting on material not held whole — text not indexed, indexed in part, a unit cut, or its bytes gone — is RELIED_ON_NOT_PRESENTABLE, naming each member and material and what it lacks; it writes nothing", () => {
@@ -157,16 +160,21 @@ test("R7: material_attestations states, per material, the attesting member's sig
   assert.equal(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length, tables, "no new table");
   assert.deepEqual(w.snapshot(), before, "nothing written");
   const body = carriesBodyLines(w.cd.methodOf(), out.materials, out.group).join("\n");
-  for (const s of ["  - Attested: test-group vouches for it by signing this case.", `  - Attested: the record of PROJ-team holds it, registered ${reg.registered}, in ${reg.bundle_id}.`,
-                   "  - Attested: a third party's co-archive at https://archive.example/web/x.",
-                   "  - Attested: alice, credited at the name level as they chose, on 2026-09-27T12:00:00Z, with their signature."])
+  const attested = (attester) => localize("case-disclosures.document.attested_by", "  - Attested: {attester}.", { attester });
+  for (const s of [attested(word("case-disclosures.vouches_signing_case", { group: "test-group" })),
+                   attested(word("case-disclosures.record_holds_registered", { by: "PROJ-team", at: reg.registered, recorded_in: reg.bundle_id })),
+                   attested(word("case-disclosures.third_party_archive", { by: "https://archive.example/web/x" })),
+                   attested(["alice", word("case-disclosures.credited_level_chose", { level: "name" }),
+                             localize("case-disclosures.document.attested_on", "on {at}", { at: "2026-09-27T12:00:00Z" }),
+                             word("case-disclosures.with_their_signature")].join(", "))])
     assert.ok(body.includes(s), s);
   /* no producing group: the group row names none, and the words say "the group" */
   const g = world({ deps: { promotion: { fact: () => ({ ok: false, reason: "NO_SUCH_FACT" }) } } });
   g.member("alice"); g.doc(DOC); g.finding(Q, [{ target: DOC }]);
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
-  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes("the team vouches for it by signing this case"));
+  assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes(word("case-disclosures.vouches_signing_case",
+    { group: localize("case-disclosures.document.the_team", "the team") })));
   /* negative control for "no new table": a table created inside the same read is counted (T42-23b) */
   let made = null;
   const n = world({ deps: { promotion: { fact: () => { made.st.sql.exec(`CREATE TABLE IF NOT EXISTS added_by_read (x)`); return { ok: true, value: "g" }; } } } });

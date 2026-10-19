@@ -27,6 +27,7 @@
 
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { checkSentences, VERDICT_WORDS, CAUSE_MARKERS } from "../answers/sentences.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R24: the arms' codes, in `case-disclosures` R30's order. */
 export const ACCOUNT_CODES = Object.freeze(["ACCOUNT_SENTENCE_UNSUPPORTED", "ACCOUNT_FACT_NOT_IN_CITED",
@@ -163,15 +164,16 @@ export function listOfField(v) {
  *  `materials:` ref; `ord` null but for a leg. Answers the one key this module holds it by (a leg's `<finding>#<ord>`),
  *  and the words a refusal names it in; a bare string is read as a key. */
 export const CITE_KINDS = Object.freeze(["finding", "leg", "passage", "material"]);
+const legWords = (finding, ord) => localize("case-checker.account.leg_of", "leg {ord} of {finding}", { ord, finding });
 export function citeOf(c) {
   if (typeof c === "string" && c.trim()) {
     const m = /^(.+)#(\d+)$/.exec(c.trim());
-    return { key: c.trim(), words: m ? `leg ${m[2]} of ${m[1]}` : c.trim() };
+    return { key: c.trim(), words: m ? legWords(m[1], m[2]) : c.trim() };
   }
   if (!plain(c) || !filled(c.ref) || (c.kind !== undefined && !CITE_KINDS.includes(c.kind))) return null;
   if (c.kind === "leg") {
     const ord = Number.isInteger(c.ord) ? c.ord : typeof c.ord === "string" && /^\d+$/.test(c.ord) ? Number(c.ord) : null;
-    return ord === null ? null : { key: `${c.ref}#${ord}`, words: `leg ${ord} of ${c.ref}` };
+    return ord === null ? null : { key: `${c.ref}#${ord}`, words: legWords(c.ref, ord) };
   }
   return { key: c.ref, words: c.ref };
 }
@@ -257,6 +259,12 @@ function legOf(cite, cited, concl) {
   return { finding: m[1], ord: Number(m[2]), role };
 }
 
+/* A fact a sentence states, named by its kind (`figure`, `date`, `name`, `quotation`) and as the sentence says it. */
+const factWords = (kind, said) => (kind === "figure" ? localize("case-checker.account.the_figure", "the figure {said}", { said })
+  : kind === "date" ? localize("case-checker.account.the_date", "the date {said}", { said })
+  : kind === "name" ? localize("case-checker.account.the_name", "the name {said}", { said })
+  : localize("case-checker.account.the_quotation", "the quotation \"{said}\"", { said }));
+
 /* Without its negations: `not`, `no`, `never` and `n't`. */
 const unnegated = (s) => lower(s).replace(/n['’]t\b/g, "").replace(/\b(?:not|never|no)\b/g, " ").replace(/\s+/g, " ").trim();
 
@@ -284,22 +292,23 @@ function judgeSentence(row, cited, printed, concl) {
     if (!row.cites.length) {
       /* (K2965) a statement's or outcome's sentence citing nothing: arm 1 is not asked, and arm 2, judged against what
          a sentence cites, has nothing to judge it against (J4); arms 3 to 5 below still judge it */
-      if (row.account) say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites nothing, and is not marked as following a printed bias statement`);
+      if (row.account) say("ACCOUNT_SENTENCE_UNSUPPORTED", word("case-checker.say.sentence_cites_marked", { ord: row.ord }));
     } else if (code === "ANSWER_CITES_UNREAD" || (j && !j.ok))
-      say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites ${(unread.length ? unread : row.cites).map(w).join(", ")}, which is not among what it may cite`);
+      say("ACCOUNT_SENTENCE_UNSUPPORTED", word("case-checker.say.sentence_cites_among", { ord: row.ord, w: (unread.length ? unread : row.cites).map(w).join(", ") }));
     else {
       /* arm 2: a figure, date, name or quotation not in what it cites */
       const missing = [];
       if (code === "ANSWER_FIGURE_UNSOURCED") {
         for (const f of facts.figures) if (!figureIn(f, texts)) missing.push({ kind: "figure", said: f });
-        if (!missing.length) missing.push({ kind: "figure", said: "it states" });
+        if (!missing.length) missing.push({ kind: "figure", said: localize("case-checker.account.it_states", "it states") });
       }
       const keys = new Set(texts.flatMap((x) => [...dateKeysOf(x)]));
       for (const d of datesIn(unquoted(row.text))) if (!keys.has(d.key) && !texts.some((x) => lower(x).includes(lower(d.said)))) missing.push({ kind: "date", said: d.said });
       for (const n of facts.names) if (!texts.some((x) => lower(x).includes(lower(n)))) missing.push({ kind: "name", said: n });
       for (const q of facts.quotations) if (!texts.some((x) => squash(x).includes(squash(q)))) missing.push({ kind: "quotation", said: q });
       if (missing.length)
-        say("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row.ord} states ${missing.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing.length === 1 ? "is" : "are"} not in what it cites`);
+        say("ACCOUNT_FACT_NOT_IN_CITED", word("case-checker.say.sentence_states_cites", { ord: row.ord, said: missing.map((m) => factWords(m.kind, m.said)).join(", "),
+          are: missing.length === 1 ? localize("case-checker.account.is", "is") : localize("case-checker.account.are", "are") }));
     }
   }
 
@@ -307,28 +316,28 @@ function judgeSentence(row, cited, printed, concl) {
   for (const cite of row.cites) {
     const k = concl.get(cite);
     if (k && !k.adopted && DETERMINATION_RE.test(unquoted(row.text)))
-      say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`);
+      say("ACCOUNT_CONTRADICTED_BY_RECORD", word("case-checker.say.sentence_states_finding", { ord: row.ord, cite }));
     else if (k && k.adopted && k.claim) {
       const s = lower(unquoted(row.text)), claim = lower(k.claim);
       if (!s.includes(claim) && unnegated(s).includes(unnegated(claim)) && unnegated(claim))
-        say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`);
+        say("ACCOUNT_CONTRADICTED_BY_RECORD", word("case-checker.say.sentence_states_finding_conclusion", { ord: row.ord, cite, claim: k.claim }));
     }
     const leg = legOf(cite, cited, concl);
     if (leg && leg.role === "cuts_against" && SUPPORT_RE.test(unquoted(row.text)) && !CONTRARY_RE.test(unquoted(row.text)))
-      say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} reads ${w(cite)} as supporting finding ${leg.finding}, where it cuts against it`);
+      say("ACCOUNT_CONTRADICTED_BY_RECORD", word("case-checker.say.sentence_reads_supporting", { ord: row.ord, cite: w(cite), finding: leg.finding }));
   }
 
   if (row.bias) {
     /* arm 4: its statement printed in this case's lens */
     if (!printed.has(row.bias))
-      say("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row.ord} is marked as following bias statement ${row.bias}, which this case does not print in its lens`);
+      say("ACCOUNT_BIAS_NOT_PRINTED", word("case-checker.say.sentence_marked_following", { ord: row.ord, bias: row.bias }));
     /* arm 5: a bias-marked sentence states no fact */
-    const stated = [...facts.figures.map((f) => `the figure ${f}`), ...facts.dates.map((d) => `the date ${d}`),
-                    ...facts.names.map((n) => `the name ${n}`), ...facts.quotations.map((q) => `the quotation "${q}"`)];
-    if (DETERMINATION_RE.test(unquoted(row.text))) stated.push("a finding's outcome");
-    else for (const [f, k] of concl) if (k.claim && unnegated(k.claim).split(" ").length >= 3 && unnegated(row.text).includes(unnegated(k.claim))) { stated.push(`finding ${f}'s outcome`); break; }
+    const stated = [...facts.figures.map((f) => factWords("figure", f)), ...facts.dates.map((d) => factWords("date", d)),
+                    ...facts.names.map((n) => factWords("name", n)), ...facts.quotations.map((q) => factWords("quotation", q))];
+    if (DETERMINATION_RE.test(unquoted(row.text))) stated.push(word("case-checker.push.finding_outcome"));
+    else for (const [f, k] of concl) if (k.claim && unnegated(k.claim).split(" ").length >= 3 && unnegated(row.text).includes(unnegated(k.claim))) { stated.push(word("case-checker.push.finding_outcome_2", { f })); break; }
     if (stated.length)
-      say("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row.ord} is marked as bias and states ${stated.join(", ")}: a fact is never bias`);
+      say("ACCOUNT_CLAIM_NOT_BIAS", word("case-checker.say.sentence_marked_bias", { ord: row.ord, stated: stated.join(", ") }));
   }
   return out;
 }

@@ -782,7 +782,7 @@ export class CaseCarriage {
      told by the `capture.content_type` its home's provenance records, else its register path's extension. */
   #photo(captureSha, viewer) {
     const sha = digestOf(captureSha);
-    const none = () => refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: HEX64.test(sha) ? sha : null });
+    const none = () => refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: HEX64.test(sha) ? sha : null });
     if (!HEX64.test(sha) || typeof viewer !== "string" || !viewer.trim()) return none();
     let homes = [];
     try {
@@ -839,7 +839,7 @@ export class CaseCarriage {
       const { marks, last } = this.#marksOf(p.sha);
       return { ok: true, capture: p.sha, photo: true, ...CaseCarriage.#view(marks, last), marks };
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -851,16 +851,16 @@ export class CaseCarriage {
   async obscureMark({ captureSha, areas, by } = {}) {
     try {
       if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
-        return refusal("MACHINE_CANNOT_MARK_PHOTO", "a mark is made by a member; an assistant's proposal of areas is not a mark");
+        return refusal("MACHINE_CANNOT_MARK_PHOTO", localize("case-carriage.index.a_mark_is_made_by", "a mark is made by a member; an assistant's proposal of areas is not a mark"));
       const p = this.#photo(captureSha, by);
       if (!p.ok) return p;
-      if (!p.photo) return refusal("NOT_A_PHOTO", "that capture is not an image", { capture: p.sha });
+      if (!p.photo) return refusal("NOT_A_PHOTO", localize("case-carriage.index.that_capture_is_not", "that capture is not an image"), { capture: p.sha });
       const bad = (area, detail) => refusal("MARK_MALFORMED", detail, { capture: p.sha, area });
-      if (!Array.isArray(areas)) return bad(null, "areas is not a list");
+      if (!Array.isArray(areas)) return bad(null, localize("case-carriage.index.areas_is_not_a_list", "areas is not a list"));
       if (areas.length > MARK_AREAS_MAX) return bad(null, localize("case-carriage.index.a_mark_holds_at_most", "a mark holds at most {MARK_AREAS_MAX} areas", { MARK_AREAS_MAX: String(MARK_AREAS_MAX) }));
       const clean = [];
       for (const [i, a] of areas.entries()) {
-        if (!a || typeof a !== "object" || Array.isArray(a)) return bad(i, `area ${i} is not an object {rect, kind, reason?}`);
+        if (!a || typeof a !== "object" || Array.isArray(a)) return bad(i, localize("case-carriage.index.area_i_is_not_an", "area {i} is not an object {rect, kind, reason?}", { i: String(i) }));
         const r = a.rect;
         if (!Array.isArray(r) || r.length !== 4 || !r.every((v) => Number.isSafeInteger(v)) || !(r[0] < r[2] && r[1] < r[3]))
           return bad(i, `area ${i}'s rect is not four integers [x0, y0, x1, y1] with x0 < x1 and y0 < y1`);
@@ -874,7 +874,7 @@ export class CaseCarriage {
       for (const a of clean) if (a.kind !== "staff") delete a.reason;
       return await this.#serially(p.sha, () => this.#mark(p.sha, clean, by.trim()));
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -886,13 +886,13 @@ export class CaseCarriage {
   async obscureMarkWithdraw({ captureSha, mark, reason, by } = {}) {
     try {
       if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
-        return refusal("MACHINE_CANNOT_WITHDRAW_MARK", "a mark is withdrawn by a member, never by an assistant or the daemon");
+        return refusal("MACHINE_CANNOT_WITHDRAW_MARK", localize("case-carriage.index.a_mark_is_withdrawn", "a mark is withdrawn by a member, never by an assistant or the daemon"));
       const p = this.#photo(captureSha, by);
       if (!p.ok) return p;
       const id = typeof mark === "string" && /^\d+$/.test(mark.trim()) ? Number(mark.trim()) : mark;
       return await this.#serially(p.sha, () => this.#withdraw(p.sha, id, reason, by.trim()));
     } catch {
-      return refusal("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: null });
+      return refusal("NO_SUCH_PHOTO", localize("case-carriage.index.no_photo_you_can_see", "no photo you can see is held under that digest"), { capture: null });
     }
   }
 
@@ -902,7 +902,7 @@ export class CaseCarriage {
     const own = Number.isSafeInteger(id) && id > 0
       ? this.#one(`SELECT mark FROM photo_marks WHERE capture=? AND mark=?`, sha, id) : null;
     /* (T40; DEC-187 (3)) the words' `{photo}` is the photo named, carried beside them */
-    if (!own) return refusal("NO_SUCH_MARK", "no mark of that number is on that photo",
+    if (!own) return refusal("NO_SUCH_MARK", localize("case-carriage.index.no_mark_of_that", "no mark of that number is on that photo"),
                              { capture: sha, mark: Number.isSafeInteger(id) ? id : null, photo: sha });
     const prior = this.#one(`SELECT withdrawal, by, at FROM photo_mark_withdrawals WHERE mark=?`, id);
     if (prior) return refusal("MARK_ALREADY_WITHDRAWN", localize("case-carriage.index.mark_id_was_withdrawn_at", "mark {id} was withdrawn at {at} by {by}", { id: String(id), at: String(prior.at), by: String(prior.by) }),
@@ -965,7 +965,7 @@ export class CaseCarriage {
       let c = null;
       try { c = await this.cover(original.bytes, { areas: rects }); } catch { c = null; }
       if (c && c.ok === false && c.code === "AREA_OUTSIDE" && rects.length > before)
-        return { refusal: refusal("AREA_OUTSIDE", typeof c.detail === "string" ? c.detail : "an area lies wholly outside the picture",
+        return { refusal: refusal("AREA_OUTSIDE", typeof c.detail === "string" ? c.detail : localize("case-carriage.index.an_area_lies_wholly", "an area lies wholly outside the picture"),
                                   { capture: sha, ...areaOf(c.detail, before) }) };
       if (c && c.ok === false && COVER_REFUSED.has(c.code)) {
         row.refused_code = c.code;
@@ -1187,7 +1187,7 @@ export class CaseCarriage {
     try {
       const p = this.provenance;
       r = p && typeof p.onReceipt === "function" ? p.onReceipt("case-carriage", (e) => this.#onReceipt(e))
-        : { ok: false, reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" };
+        : { ok: false, reason: "NO_RECEIPT_NOTICE", detail: localize("case-carriage.index.no_provenance_onreceipt", "no provenance onReceipt to register the receipt listener with") };
     } catch (e) {
       r = { ok: false, reason: "REGISTRATION_THREW", detail: String((e && e.message) || e) };
     }
@@ -1254,7 +1254,7 @@ export class CaseCarriage {
     let ev = null;
     try { ev = this.record.evidenceStore(); } catch { ev = null; }
     if (!ev || !this.bucket)
-      return refusal("DOCUMENT_COPY_NO_STORE", "no evidence store is bound to read a member's document from and hold its copy in");
+      return refusal("DOCUMENT_COPY_NO_STORE", localize("case-carriage.index.no_evidence_store_is", "no evidence store is bound to read a member's document from and hold its copy in"));
     const n = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, DOCUMENT_COPY_BATCH_MAX) : DOCUMENT_COPY_BATCH_MAX;
     const now = this.#nowMs();
     const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)

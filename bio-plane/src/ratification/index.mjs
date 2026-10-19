@@ -540,7 +540,7 @@ export class Ratification {
     if (!facts || !facts.ok) return facts || { ok: false, reason: "NO_CASE_DOCUMENT" };
     if (facts.doc.doc_sha !== docSha)
       return { ok: false, reason: "CASE_RATIFY_STALE", expected: facts.doc.doc_sha, got: docSha ?? null,
-               detail: "the case document has changed since it was reviewed; read it again and re-sign" };
+               detail: localize("ratification.index.the_case_document_has_changed_since", "the case document has changed since it was reviewed; read it again and re-sign") };
     /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (d): the body (C-3.1's section) and each member's basis at the
        pinned bytes (C-2.8's testimony and per-ground arms), both from the one facts read. */
     return this.#caseGateOver(facts.doc.case_id, Number(facts.doc.edition), parseFrontmatter(facts.doc.text),
@@ -722,7 +722,7 @@ export class Ratification {
   registerApprovalReader(reader) {
     if (this.#approvalReader)
       return { ok: false, reason: "APPROVAL_READER_DECLARED",
-               detail: "a reader of the team's approvals is already registered; there is one, registered once at start" };
+               detail: localize("ratification.index.a_reader_of_the_teams_approvals", "a reader of the team's approvals is already registered; there is one, registered once at start") };
     if (!reader || typeof reader.rule !== "function" || typeof reader.approvals !== "function")
       return { ok: false, reason: "MALFORMED", detail: "registerApprovalReader takes {rule(), approvals({case, edition, docSha})}" };
     this.#approvalReader = reader;
@@ -777,7 +777,7 @@ export class Ratification {
   registerHoldReader(reader) {
     if (this.#holdReader)
       return { ok: false, reason: "HOLD_READER_DECLARED",
-               detail: "a reader of litigation holds is already registered; there is one, registered once at start" };
+               detail: localize("ratification.index.a_reader_of_litigation_holds", "a reader of litigation holds is already registered; there is one, registered once at start") };
     if (!reader || typeof reader.holdsOn !== "function")
       return { ok: false, reason: "MALFORMED", detail: "registerHoldReader takes {holdsOn({project})}" };
     this.#holdReader = reader;
@@ -908,7 +908,7 @@ export class Ratification {
     const signers = this.credentials.attestingKeys();
     let attestor = null, keyB64 = null;
     if (!signers.length)
-      stopped.push(refusedStop({ reason: "NO_SIGNERS", detail: "no active registered signing keys" }));
+      stopped.push(refusedStop({ reason: "NO_SIGNERS", detail: localize("ratification.index.no_active_registered_signing_keys", "no active registered signing keys") }));
     else {
       const sv = await verifySshsig(sig, caseRatifyStatement(id, ed, docSha), NS_RATIFY, signers.map((k) => k.key_b64));
       if (!sv.ok) stopped.push(refusedStop({ reason: `SIG_${sv.reason}`, detail: sv.detail }));

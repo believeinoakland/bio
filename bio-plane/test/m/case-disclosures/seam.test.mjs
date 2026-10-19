@@ -8,7 +8,7 @@ import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { world, storage, V, T0 } from "./fixture.mjs";
 import * as CD from "../../../src/case-disclosures/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const { CASE_DISCLOSURE_CHECKS, caseDisclosuresOf } = CD;
 const Q = "INQ-2026-0001-q", DOC = "INFO-2026-0001-a";
@@ -24,7 +24,7 @@ const ROWS = [
   ["TENSIONS_UNDETERMINED", "C-120.3", "tensionsUndetermined", word("refusal.TENSIONS_UNDETERMINED")],
   ["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4", "selfAttestedJudged", word("refusal.CO_ATTESTATION_UNACKNOWLEDGED")],
   ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", word("refusal.SELF_ATTESTED_NO_REASON")],
-  ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."],
+  ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", localize("case-disclosures.checks.a_document_acknowledged_as_self", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.")],
   ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", word("refusal.UNCLEARED_HUNCH")],
   ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", word("refusal.RELIED_ON_NOT_PRESENTABLE")],
   ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", word("refusal.ACCEPTED_WORK_NOT_IN_FORCE")],
@@ -37,15 +37,15 @@ const ROWS = [
   ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", word("refusal.TIE_ATTESTATION_MISSING")],
   /* R22's new rows (T37; N757, K2206), R6's, numbered provisionally until their stamp; the translations are BOB's drafts */
   /* T38 (DEC-183; K2220, K2303): C-120.17 re-worded to `words.json`'s `photo.refused.format`, verbatim */
-  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it."],
+  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", word("photo.refused.format", { photo: "{photo}" })],
   ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", word("refusal.PHOTO_MARKS_UNDETERMINED")],
   /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, `photo.refused.unchecked` verbatim, re-worded by DEC-187 (1) (T40) */
-  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}."],
+  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", word("photo.refused.unchecked", { photo: "{photo}" })],
   /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp; .21 and .22 `words.json`'s
      `document.refused.pending` and `document.refused.clean` verbatim (T41; DEC-188 (7)) */
   ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", word("refusal.DOCUMENT_COPY_UNDETERMINED")],
-  ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes."],
-  ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."],
+  ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", word("document.refused.pending", { document: "{document}" })],
+  ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", word("document.refused.clean", { document: "{document}" })],
   /* T41 (N820; D56–D58, D63; K2471): R30's rows, in its order, numbered provisionally until T42's stamp; drafts */
   ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", word("refusal.ACCOUNT_SENTENCE_UNSUPPORTED")],
   ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", word("refusal.ACCOUNT_FACT_NOT_IN_CITED")],
@@ -403,17 +403,16 @@ const DEC149_OLD = /\b(this|the) (instance|copy|plane)\b/i;
 
 test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group's Civicsmith \"this copy\" says \"your group's Civicsmith\" or needs no name — C-120.8's translation, RELIED_ON_NOT_PRESENTABLE's detail, and the case document's supporting-material sentence; and none of this module's member-facing text says \"this instance\", \"this copy\", \"this plane\" or \"the plane\" (negative control: the old wording matches)", () => {
   /* C-120.8's translation (checks.mjs) */
-  assert.match(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation,
-    /^A finding this case relies on rests on material your team's Civicsmith does not hold whole, and everything /);
+  assert.equal(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation, word("refusal.RELIED_ON_NOT_PRESENTABLE"));
+  assert.equal(DEC149_OLD.exec(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation), null);
   /* RELIED_ON_NOT_PRESENTABLE's detail, raised (index.mjs) */
   const m = world(); m.member("alice"); m.doc(DOC, {}, { indexed: false }); m.finding(Q, [{ target: DOC }]);
   const r = m.cd.materialsJudged(m.prepared([Q]), m.roles([Q]), V("alice")).refusals[0];
-  assert.match(r.detail, /^1 document\(s\) or observation\(s\) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith \(/);
+  assert.equal(DEC149_OLD.exec(r.detail), null);
+  assert.ok(r.detail.includes(r.not_presentable[0].materials[0].sha), "the material is named");
   /* the case document's sentence (document.mjs, carriesBodyLines) */
   const body = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
-  assert.ok(body.includes("Every document and observation this case's findings reach. One a load-bearing finding relies on travels "
-    + "whole with the case. One that only a supporting finding reaches, and that is not held whole, is listed with its fingerprint, "
-    + "origin and archived copy."));
+  assert.ok(body.includes(word("case-disclosures.document_observation_case")));
   /* the whole member-facing surface: rows, fixed sentences, refusals raised, every renderer's lines */
   const said = [JSON.stringify(Object.values(CASE_DISCLOSURE_CHECKS).map((x) => x.translation)), JSON.stringify(r),
                 CD.SELF_ATTESTED_SENTENCE, CD.HIGHLIGHT_SENTENCE, CD.NOT_SHOWN_WORDS, CD.TENSIONS_DEPTH_STATED,
@@ -428,8 +427,8 @@ test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group'
 
 test("R7 (DEC-149): carriesBodyLines changed in one sentence only — with \"that this copy does not hold whole\" put back, the section is byte for byte what it was before T34-87", () => {
   const lines = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
-  const now = "and that is not held whole, is listed";
-  assert.equal(lines.filter((l) => l.includes(now)).length, 1, "the changed sentence, once");
-  assert.equal(hash(lines.map((l) => l.replace(now, "and that this copy does not hold whole, is listed"))), CARRIES_BEFORE_DEC149);
+  const now = word("case-disclosures.document_observation_case");
+  assert.equal(lines.filter((l) => l === now).length, 1, "the changed sentence, once");
+  assert.equal(hash(lines.map((l) => (l === now ? l.replace("is not held whole", "this copy does not hold whole") : l))), CARRIES_BEFORE_DEC149);
   assert.notEqual(hash(lines), CARRIES_BEFORE_DEC149, "negative control: the new bytes differ");
 });

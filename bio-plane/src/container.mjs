@@ -185,9 +185,7 @@ export async function containerEntries(manifest, manifestBytes, read) {
       /* DEC-49 REGION is-part-missing
        * D-561 (C-98.5): the code a STRING LITERAL; translated by the control plane's `json()` by code. */
       return { ok: false, reason: "PART_MISSING", path: part.path, sha256: part.sha256,
-               detail: "a part named in the manifest is not in the published object store, so this "
-                     + "container cannot be assembled whole. Its other parts are still answerable "
-                     + "individually by hash." };
+               detail: localize("public-read.container.a_part_named_in_the_manifest", "a part named in the manifest is not in the published object store, so this container cannot be assembled whole. Its other parts are still answerable individually by hash.") };
       /* END DEC-49 REGION is-part-missing */
     }
     entries.push({ name: layout.root + part.path, bytes });
