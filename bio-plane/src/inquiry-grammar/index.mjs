@@ -11,7 +11,7 @@ export { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLe
          importedFindingRef, parseImportedFindingRef, importedLegFindings, CALCULATION_REF_RE, calculationLegFindings,
          OCCURRENCE_REF_RE, OCCURRENCE_KEY_RE, occurrenceRef, parseOccurrenceRef, occurrenceLegFindings, DERIVED_CONNECTION_ID_RE,
          DERIVATION_FIELDS, derivedConnectionLegFindings, BIAS_EFFECTS, biasAppliedFindings,
-         flattenBiasApplied, readBiasApplied } from "./grammar.mjs";
+         flattenBiasApplied, readBiasApplied, standardLegFindings } from "./grammar.mjs";
 export { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
 /** R6 (C-6.1): the supersession and division arm, record-grammar R28's `checkSupersession` slot: for every document, at

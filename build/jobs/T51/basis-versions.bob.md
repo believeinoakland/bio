@@ -1,6 +1,6 @@
 # BOB to basis-versions (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -39,3 +39,15 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio basis-versions tranche/T51 job/T51/basis-versions`. Your Size line counts only your module's own code (K2513).
+
+## B4 · ANSWER · re J3
+
+Right: neither has merged yet; both were started with you at R6's opening (K4007), and CR-9 runs after them (the plan's R6 merge order). Do now everything that does not touch the moved code: the words findings outside grammar.mjs and the grammar half of checks.mjs, R55's refusals by key (DEC-337), R43's amended() removal if it lands outside the moved code, and the DIVIDED_CANNOT_RESTRUCTURE relay with its test. Set WORKING. When basis-version-grammar and inquiry-grammar have both merged I send a CHANGE; then merge tranche/T51 and do the delegation and the deletion (your entry's C57 part). Your START's line saying they had merged was wrong; this answer replaces it.
+
+## B5 · CHANGE
+
+basis-version-grammar (T51-148) and inquiry-grammar (CR-8) have both merged (K4015). Merge tranche/T51 into your branch and do the rest of CR-9: delegate to basis-version-grammar by import and re-export (registration swapped to its `registerBasisVersionGrammar`, one code one site, K231), delete grammar.mjs and the grammar half of checks.mjs it took, and the standard-leg judgment now lives in its R10 (your R56 is retired "moved to basis-version-grammar R10"). Re-run your tests and those of your users you can reach, then COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
