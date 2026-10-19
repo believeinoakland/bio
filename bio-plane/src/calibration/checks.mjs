@@ -34,10 +34,7 @@ export const CALIBRATION_CHECKS = {
   CAL_UNNAMED: {
     check: 'C-42.2',
     where: 'src/calibration.mjs checkCalibration > is-calibration-shape',
-    translation: 'A measurement has to say exactly what it measured — which engine, and which '
-      + 'version of it. Services are retrained and re-released under the same name, so the name '
-      + 'alone cannot tell a later reader whether the thing you measured is the thing that read '
-      + 'their document.',
+    translation: word('refusal.CAL_UNNAMED'),
   },
   CAL_UNDATED: {
     check: 'C-42.3',
