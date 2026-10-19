@@ -47,3 +47,7 @@ I wait for the three providers' merges and the CHANGE for item 1.
 - **Found in other modules:** none beyond what J1–J3 reported (all answered).
 - **Tests and checks:** module suite 177 pass, 0 fail against the merged providers; format 0 failures; architecture 0; coverage 60 of 60; ownership 0; `checks/words.mjs` over every module names none of this module; setup-words `--check` reports only the expected stale-rows note from other modules' words.
 - Size (session_017yqdpyhi5axta4sFg6PFUd): test runs 30, module lines 4285
+
+## J4 · COMPLETE
+
+COMPLETE: T51-116 screens-settings met; 177 module tests pass against the merged providers; format, architecture, coverage (60 of 60), ownership and the words check clean. Record: build/jobs/T51/screens-settings.md.
