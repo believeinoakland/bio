@@ -2,7 +2,7 @@
    fixture page in a real browser, each with a control that holds. */
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { browser } from "../../../src/journey-check/run.mjs";
@@ -115,8 +115,8 @@ test("R23: a page numbered 0 is found by the scan, and fails the step that draws
 });
 
 test("R27 (K4086, K4111): values read from the Oakland profile and a vendor's name are data and are not reported; a hard-coded sentence beside them still is; the document step requires document.read.title", async () => {
-  const profile = (await import("../../../../jurisdictions/profiles/oakland-alameda.mjs")).default;
-  const name = profile.name;
+  /* the profile's display name, read as data from the file (nothing is imported from jurisdictions) */
+  const name = /\bname:\s*"([^"]+)"/.exec(readFileSync(join(import.meta.dirname, "..", "..", "..", "..", "jurisdictions", "profiles", "oakland-alameda.mjs"), "utf8"))?.[1] || "City of Oakland and Alameda County";
   const dirs = `<main id="cs-main" data-screen="elsewhere"><ul><li><b>Rent Adjustment Program</b> <span class="meta">Takes a tenant's petition challenging certain rent increases</span> <span>Frank Ogawa Plaza, Suite 5313</span></li></ul></main>`;
   assert.deepEqual(await on(dirs, (p) => escapedOnPage(p)), [], "the directory's profile values");
   const places = `<main id="cs-main" data-screen="places"><ul><li>${name}</li><li>City of Oakland, Alameda County</li></ul></main>`;
