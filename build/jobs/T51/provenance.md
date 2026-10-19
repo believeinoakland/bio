@@ -40,3 +40,20 @@ Checks (from civicos-process):
 - `setup-words/build.mjs --check`: the stale-rows note names `provenance.index.capture_axis_authored` (expected; BOB regenerates rows.mjs at the layer close). No refusal naming provenance.
 
 Size (session_01RpNUgdyt5VkXqp8Ksfx3zR): test runs 2, module lines 2819
+
+## J3 · COMPLETE
+
+CHANGE B2 (K3985) applied. Merged tranche/T51 (never rebased); commit on job/T51/provenance after c9df90b413.
+
+- register-checks.test.mjs: the knock fixture's evidence is now `knock receipt <id>: digest and instant`; its capture.method is the neutral token `knock-received-fixture` (was the owner's sentence).
+- upload.test.mjs: the upload fixture's evidence is `upload receipt <sha>: digest and instant`; the method assertion uses the same neutral token, so the refusal check still names the value.
+
+Checks, run from civicos-process after this commit:
+- `checks/words.mjs` on the whole product (`run.mjs`): no finding in provenance. The module-only words run reads 0 failures; the remaining findings are in other modules (strength, case-carriage, case-checker, provenance-routes, already reported in J1).
+- Module tests `node --test bio-plane/test/m/provenance/*.test.mjs`: 134 pass, 0 fail. The three other listed tests: 3 pass, 0 fail.
+- `format` 0 failures; `architecture` (module) 0; `coverage` provenance 48 of 48 live ids; `ownership` provenance: 2 files, 0 failures.
+- `setup-words --check`: stale-rows note only (expected).
+
+Deferred: none.
+
+Size (session_01RpNUgdyt5VkXqp8Ksfx3zR): test runs 4, module lines 2819
