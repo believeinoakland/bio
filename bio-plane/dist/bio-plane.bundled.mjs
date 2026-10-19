@@ -19258,43 +19258,60 @@ var WORD_ROWS = Object.freeze([
   ["file-safety.index.your_teams_civicsmith_has_no_5", "Your team's Civicsmith has no file scanner installed, so no tool can be asked.", null, null, false, "code"],
   ["file-safety.index.your_teams_civicsmith_has_no_6", "Your team's Civicsmith has no file scanner installed, so no list was refreshed.", null, null, false, "code"],
   ["file-safety.index.your_teams_civicsmith_holds_no", "Your team's Civicsmith holds no evidence store, so no bytes can be served.", null, null, false, "code"],
+  ["file-scanner.catalogue.any_https_endpoint_taking_a_json", "any HTTPS endpoint taking a JSON POST", null, null, false, "code"],
+  ["file-scanner.catalogue.any_icap_server_rfc_3507", "any ICAP server (RFC 3507)", null, null, false, "code"],
+  ["file-scanner.catalogue.any_syslog_collector_rfc_5424", "any syslog collector (RFC 5424 over TLS)", null, null, false, "code"],
   ["file-scanner.catalogue.azure_storage_account_name", "Azure storage account name", null, null, false, "code"],
   ["file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in", null, null, false, "code"],
   ["file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours", null, null, false, "code"],
   ["file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_account_id", "Cloudflare account ID", null, null, false, "code"],
   ["file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_intel_cloudflares_network", "Cloudflare's network", null, null, false, "code"],
   ["file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read", null, null, false, "code"],
   ["file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)", null, null, false, "code"],
   ["file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host", null, null, false, "code"],
   ["file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID", null, null, false, "code"],
   ["file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)", null, null, false, "code"],
   ["file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_opswat_inc_cloud_or", "OPSWAT, Inc. (Cloud), or the organization's own Core server", null, null, false, "code"],
   ["file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them", null, null, false, "code"],
   ["file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned", null, null, false, "code"],
   ["file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result", null, null, false, "code"],
   ["file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it", null, null, false, "code"],
   ["file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
   ["file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_the_organizations_own_deployment", "the organization's own deployment", null, null, false, "code"],
   ["file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_get_settings_before_each", "GET /falconx/entities/settings/v1 before each send: community access is off for the API client", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_the_falcon_cloud_chosen", "the Falcon cloud chosen", null, null, false, "code"],
   ["file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it", null, null, false, "code"],
   ["file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_where_that_deployment_runs", "where that deployment runs", null, null, false, "code"],
   ["file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID", null, null, false, "code"],
   ["file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)", null, null, false, "code"],
   ["file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_the_instances_region", "the instance's region", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_the_organizations_own_instance", "the organization's own instance", null, null, false, "code"],
   ["file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)", null, null, false, "code"],
   ["file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match", null, null, false, "code"],
   ["file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed", null, null, false, "code"],
+  ["file-scanner.catalogue.https_webhook_the_organizations_own_endpoint", "the organization's own endpoint", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_server_address_host_or_host", "ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_service_name_default_avscan", "ICAP service name (default avscan)", null, null, false, "code"],
   ["file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence", null, null, false, "code"],
   ["file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)", null, null, false, "code"],
+  ["file-scanner.catalogue.instance_customer_id", "Instance (customer) ID", null, null, false, "code"],
+  ["file-scanner.catalogue.instance_location", "Instance location", null, null, false, "code"],
   ["file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)", null, null, false, "code"],
   ["file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research", null, null, false, "code"],
   ["file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)", null, null, false, "code"],
@@ -19303,53 +19320,75 @@ var WORD_ROWS = Object.freeze([
   ["file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)", null, null, false, "code"],
   ["file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time", null, null, false, "code"],
   ["file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_post_account_info_before_each", "POST /api/v2/account/info before each send: the account is not of the Basic edition", null, null, false, "code"],
   ["file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription", null, null, false, "code"],
   ["file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_the_organizations_own_paid", `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`, null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)", null, null, false, "code"],
   ["file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_the_organizations_own_servers", "the organization's own servers", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_get_v4_apikey_before_each", "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)", null, null, false, "code"],
   ["file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)", null, null, false, "code"],
+  ["file-scanner.catalogue.no_file_is_sent", "no file is sent", null, null, false, "code"],
   ["file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc.", null, null, false, "code"],
   ["file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc.", null, null, false, "code"],
   ["file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)", null, null, false, "code"],
   ["file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)", null, null, false, "code"],
   ["file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", null, null, false, "code"],
+  ["file-scanner.catalogue.sandbox_environment_id_default_160", "Sandbox environment ID (default 160, Windows 10 64-bit)", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_chosen_by_the_team", "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it", null, null, false, "code"],
   ["file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis", null, null, false, "code"],
   ["file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients", null, null, false, "code"],
   ["file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region", null, null, false, "code"],
   ["file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs", null, null, false, "code"],
   ["file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_the_workspaces_region", "the workspace's region", null, null, false, "code"],
   ["file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk", "the organization's own Splunk", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_the_organizations_own_splunk_2", "the organization's own Splunk", null, null, false, "code"],
   ["file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector", null, null, false, "code"],
   ["file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)", null, null, false, "code"],
+  ["file-scanner.catalogue.stated_by_the_administrator", "stated by the administrator", null, null, false, "code"],
   ["file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule", null, null, false, "code"],
   ["file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)", null, null, false, "code"],
+  ["file-scanner.catalogue.syslog_tls_the_organizations_own_collector", "the organization's own collector", null, null, false, "code"],
   ["file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them", null, null, false, "code"],
+  ["file-scanner.catalogue.the_organizations_own_licence", "the organization's own licence", null, null, false, "code"],
   ["file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_kept_in_the_account", "kept in the account", null, null, false, "code"],
   ["file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_the_organizations_own_subscription", "the organization's own subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_us_or_germany_as_the", "US or Germany, as the account is hosted", null, null, false, "code"],
   ["file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)", null, null, false, "code"],
+  ["file-scanner.catalogue.where_it_runs", "where it runs", null, null, false, "code"],
   ["file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_benign_14_days_malicious", "benign 14 days; malicious 10 years", null, null, false, "code"],
   ["file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_the_organizations_own_wildfire_api", "the organization's own WildFire API subscription (150 submissions a day base)", null, null, false, "code"],
   ["file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds", null, null, false, "code"],
   ["file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", null, null, false, "code"],
   ["file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", null, null, false, "code"],
   ["file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", null, null, false, "code"],
   ["file-scanner.render.the_renderer_could_not", "the renderer could not be reached", null, null, false, "code"],
   ["file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted", null, null, false, "code"],
+  ["file-scanner.routes.no_safe_view", "no safe view", null, null, false, "code"],
+  ["file-scanner.routes.removed_names", "removed: {names}", null, null, false, "code"],
+  ["file-scanner.routes.the_eicar_test_file_answered", "the EICAR test file answered found", null, null, false, "code"],
+  ["file-scanner.routes.the_eicar_test_file_did", "the EICAR test file did not answer found", null, null, false, "code"],
   ["file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed", null, null, false, "code"],
   ["file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", null, null, false, "code"],
   ["file-scanner.routes.the_test_address_answered", "the test address answered listed", null, null, false, "code"],
   ["file-scanner.routes.the_test_address_did", "the test address did not answer listed", null, null, false, "code"],
-  ["file-scanner.scanners.malware_scanning_scan_result", "Malware Scanning scan result", null, null, false, "code"],
   ["filing-templates.index.a_comment_is_1_to", "a comment is 1 to {COMMENT_MAX} characters", null, null, false, "code"],
   ["filing-templates.index.a_comment_names_who_wrote_it", "a comment names who wrote it: this call carries nobody", null, null, false, "code"],
   ["filing-templates.index.a_draft_is_revised_by_a_joined_participant", "a draft is revised by a joined participant of its project", null, null, false, "code"],
@@ -22607,6 +22646,7 @@ function fill(key2, text8, vars) {
   return text8.replace(PLACEHOLDER, (_, name3) => {
     const v = vars?.[name3];
     if (!Object.hasOwn(vars ?? {}, name3) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key2} needs {${name3}}`);
+    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
     return String(v);
   });
 }
@@ -325575,6 +325615,7 @@ var SENDS = Object.freeze(["file_bytes", "url", "hostname", "hash_prefix", "coun
 var NEVER_SENDS_REQUIRED = Object.freeze(["file_name", "member_identity", "ip_address"]);
 var NOT_STATED3 = "not stated";
 var HANDLING_FIELDS = [
+  "on_own",
   "sends",
   "never_sends",
   "recipient",
@@ -325650,6 +325691,7 @@ function malformed5(d) {
   const h = d.handling;
   if (!h || typeof h !== "object" || Array.isArray(h)) return "handling";
   for (const k of Object.keys(h)) if (!HANDLING_FIELDS.includes(k)) return `handling.${k}`;
+  if (typeof h.on_own !== "boolean") return "handling.on_own";
   if (!stated2(h.sends, (v) => strList(v, true) && v.every((s) => SENDS.includes(s)))) return "handling.sends";
   if (!stated2(h.never_sends, (v) => strList(v, false))) return "handling.never_sends";
   for (const k of ["recipient", "region", "file_retention", "result_retention"]) if (!str53(h[k])) return `handling.${k}`;
@@ -325695,7 +325737,11 @@ var hostPart = (h) => String(h).replace(/^[a-z]+:\/\//i, "").split("/")[0].repla
 // ../file-scanner/src/providers/catalogue.mjs
 var READ_ON = "2026-10-07";
 var NEVER = Object.freeze(["file_name", "member_identity", "ip_address"]);
-var ADMIN = "stated by the administrator";
+var ADMIN = localize("file-scanner.catalogue.stated_by_the_administrator", "stated by the administrator");
+var ADMIN_FAMILY = "stated by the administrator";
+var NO_FILE = localize("file-scanner.catalogue.no_file_is_sent", "no file is sent");
+var WHERE_IT_RUNS = localize("file-scanner.catalogue.where_it_runs", "where it runs");
+var ORG_LICENCE = localize("file-scanner.catalogue.the_organizations_own_licence", "the organization's own licence");
 var descriptor = (d) => Object.freeze({
   mode_required: null,
   mode_check: null,
@@ -325750,7 +325796,7 @@ var MD_PRIVATE = Object.freeze({
   params: Object.freeze({ samplesharing: "0", privateprocessing: "1" }),
   description: localize("file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)")
 });
-var MD_CHECK = "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on";
+var MD_CHECK = localize("file-scanner.catalogue.metadefender_get_v4_apikey_before_each", "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on");
 var MD_URLS = [
   "https://www.opswat.com/docs/mdcloud/operation/private-scanning-with-metadefender-cloud-apis",
   "https://www.opswat.com/docs/mdcloud/metadefender-cloud-api-v4",
@@ -325770,6 +325816,7 @@ var INTELIX = {
   credentials: ["client_id", "client_secret"],
   config: [REGION2],
   handling: {
+    on_own: false,
     sends: ["file_bytes"],
     recipient: "Sophos Ltd",
     sub_processors: [],
@@ -325805,10 +325852,11 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [REGION2],
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: "Uva Software, LLC",
       sub_processors: ["Amazon Web Services"],
-      region: "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it",
+      region: localize("file-scanner.catalogue.scanii_chosen_by_the_team", "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it"),
       file_retention: localize("file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis"),
       result_retention: localize("file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region"),
       sample_sharing: "none"
@@ -325836,6 +325884,7 @@ var PROVIDERS = Object.freeze([
     mode_required: MD_PRIVATE,
     mode_check: MD_CHECK,
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: "OPSWAT, Inc.",
       sub_processors: "not stated",
@@ -325844,7 +325893,7 @@ var PROVIDERS = Object.freeze([
       result_retention: localize("file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter"),
       sample_sharing: "none"
     },
-    licence_note: `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`,
+    licence_note: localize("file-scanner.catalogue.metadefender_cloud_the_organizations_own_paid", `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`),
     source_urls: MD_URLS
   }),
   descriptor({
@@ -325862,33 +325911,35 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [HOST(localize("file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)"))],
     handling: {
+      on_own: true,
       sends: ["file_bytes"],
       recipient: localize("file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server"),
-      region: "the organization's own servers",
+      region: localize("file-scanner.catalogue.metadefender_core_the_organizations_own_servers", "the organization's own servers"),
       file_retention: localize("file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server"),
       result_retention: localize("file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own licence",
+    licence_note: ORG_LICENCE,
     source_urls: ["https://www.opswat.com/docs/mdcore/metadefender-core"]
   }),
   descriptor({
     provider_id: "icap",
     vendor: ADMIN,
-    product: "any ICAP server (RFC 3507)",
+    product: localize("file-scanner.catalogue.any_icap_server_rfc_3507", "any ICAP server (RFC 3507)"),
     kinds: ["scan"],
     transport: "icap",
     reach: "public",
     hosts: [],
     template: true,
-    engine_family: [ADMIN],
+    engine_family: [ADMIN_FAMILY],
     test_probe: { kind: "eicar" },
     config: [
-      ...TEMPLATE_CONFIG("ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)"),
-      field2("service", "ICAP service name (default avscan)", false),
+      ...TEMPLATE_CONFIG(localize("file-scanner.catalogue.icap_server_address_host_or_host", "ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)")),
+      field2("service", localize("file-scanner.catalogue.icap_service_name_default_avscan", "ICAP service name (default avscan)"), false),
       field2("tls", localize("file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)"), false)
     ],
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: ADMIN,
       region: ADMIN,
@@ -325917,6 +325968,7 @@ var PROVIDERS = Object.freeze([
       field2("container", localize("file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in"), true)
     ],
     handling: {
+      on_own: true,
       sends: ["file_bytes"],
       recipient: localize("file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)"),
       region: localize("file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it"),
@@ -325952,15 +326004,16 @@ var PROVIDERS = Object.freeze([
     mode_required: MD_PRIVATE,
     mode_check: MD_CHECK,
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
-      recipient: "OPSWAT, Inc. (Cloud), or the organization's own Core server",
+      recipient: localize("file-scanner.catalogue.deep_cdr_opswat_inc_cloud_or", "OPSWAT, Inc. (Cloud), or the organization's own Core server"),
       sub_processors: "not stated",
       region: localize("file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)"),
       file_retention: localize("file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours"),
       result_retention: localize("file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own licence",
+    licence_note: ORG_LICENCE,
     source_urls: [
       "https://www.opswat.com/docs/mdcloud/operation/data-sanitization-on-metadefender-cloud",
       "https://www.opswat.com/docs/mdcore/metadefender-core"
@@ -325981,9 +326034,10 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "macro_document" },
     config: [HOST(localize("file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)"))],
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: localize("file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to"),
-      region: "where that deployment runs",
+      region: localize("file-scanner.catalogue.glasswall_where_that_deployment_runs", "where that deployment runs"),
       file_retention: localize("file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy"),
       result_retention: localize("file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it"),
       sample_sharing: "none"
@@ -326008,8 +326062,9 @@ var PROVIDERS = Object.freeze([
       params: Object.freeze({ "accept-tac": "1" }),
       description: localize("file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private")
     }),
-    mode_check: "POST /api/v2/account/info before each send: the account is not of the Basic edition",
+    mode_check: localize("file-scanner.catalogue.joe_sandbox_post_account_info_before_each", "POST /api/v2/account/info before each send: the account is not of the Basic edition"),
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: "Joe Security LLC",
       region: "not stated",
@@ -326034,14 +326089,15 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [REGION2],
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: "VMRay GmbH",
-      region: "US or Germany, as the account is hosted",
+      region: localize("file-scanner.catalogue.vmray_us_or_germany_as_the", "US or Germany, as the account is hosted"),
       file_retention: localize("file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account"),
-      result_retention: "kept in the account",
+      result_retention: localize("file-scanner.catalogue.vmray_kept_in_the_account", "kept in the account"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own subscription",
+    licence_note: localize("file-scanner.catalogue.vmray_the_organizations_own_subscription", "the organization's own subscription"),
     source_urls: ["https://www.vmray.com/?p=3550"]
   }),
   descriptor({
@@ -326058,17 +326114,18 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [
       REGION2,
-      field2("environment_id", "Sandbox environment ID (default 160, Windows 10 64-bit)", false)
+      field2("environment_id", localize("file-scanner.catalogue.sandbox_environment_id_default_160", "Sandbox environment ID (default 160, Windows 10 64-bit)"), false)
     ],
     mode_required: Object.freeze({
       params: Object.freeze({ is_confidential: "true" }),
       description: localize("file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential")
     }),
-    mode_check: "GET /falconx/entities/settings/v1 before each send: community access is off for the API client",
+    mode_check: localize("file-scanner.catalogue.falcon_sandbox_get_settings_before_each", "GET /falconx/entities/settings/v1 before each send: community access is off for the API client"),
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: "CrowdStrike, Inc.",
-      region: "the Falcon cloud chosen",
+      region: localize("file-scanner.catalogue.falcon_sandbox_the_falcon_cloud_chosen", "the Falcon cloud chosen"),
       file_retention: localize("file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated"),
       result_retention: localize("file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform"),
       sample_sharing: "none"
@@ -326098,14 +326155,15 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [REGION2],
     handling: {
+      on_own: false,
       sends: ["file_bytes"],
       recipient: localize("file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc."),
       region: localize("file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds"),
-      file_retention: "benign 14 days; malicious 10 years",
+      file_retention: localize("file-scanner.catalogue.wildfire_benign_14_days_malicious", "benign 14 days; malicious 10 years"),
       result_retention: localize("file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely"),
       sample_sharing: "vendor_internal_research"
     },
-    licence_note: "the organization's own WildFire API subscription (150 submissions a day base)",
+    licence_note: localize("file-scanner.catalogue.wildfire_the_organizations_own_wildfire_api", "the organization's own WildFire API subscription (150 submissions a day base)"),
     source_urls: [
       "https://docs.paloaltonetworks.com/wildfire/u-v/wildfire-whats-new/latest-wildfire-cloud-features/standalone-wildfire-api-subscription",
       "https://docs.paloaltonetworks.com/wildfire/u-v/wildfire-whats-new/latest-wildfire-cloud-features/updated-wildfire-retention-period"
@@ -326122,13 +326180,14 @@ var PROVIDERS = Object.freeze([
     hosts: ["api.cloudflare.com"],
     engine_family: ["cloudflare-intel"],
     credentials: ["api_token"],
-    config: [field2("account_id", "Cloudflare account ID", true)],
+    config: [field2("account_id", localize("file-scanner.catalogue.cloudflare_account_id", "Cloudflare account ID"), true)],
     test_probe: { kind: "test_address", address: "https://malware.testcategory.com/" },
     handling: {
+      on_own: false,
       sends: ["url"],
       recipient: localize("file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)"),
-      region: "Cloudflare's network",
-      file_retention: "no file is sent",
+      region: localize("file-scanner.catalogue.cloudflare_intel_cloudflares_network", "Cloudflare's network"),
+      file_retention: NO_FILE,
       result_retention: "not stated",
       sample_sharing: "none"
     },
@@ -326147,6 +326206,7 @@ var PROVIDERS = Object.freeze([
     credentials: ["api_key"],
     test_probe: { kind: "test_address", address: "http://testsafebrowsing.appspot.com/s/malware.html" },
     handling: {
+      on_own: false,
       sends: ["hash_prefix"],
       recipient: "Google LLC",
       region: "not stated",
@@ -326172,14 +326232,15 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "zero_counts" },
     config: [HOST(localize("file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)"))],
     handling: {
+      on_own: true,
       sends: ["counts"],
-      recipient: "the organization's own Splunk",
-      region: "where it runs",
-      file_retention: "no file is sent",
+      recipient: localize("file-scanner.catalogue.splunk_hec_the_organizations_own_splunk", "the organization's own Splunk"),
+      region: WHERE_IT_RUNS,
+      file_retention: NO_FILE,
       result_retention: localize("file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own Splunk",
+    licence_note: localize("file-scanner.catalogue.splunk_hec_the_organizations_own_splunk_2", "the organization's own Splunk"),
     source_urls: ["https://help.splunk.com/en/splunk-enterprise/get-data-in/collect-http-event-data/use-curl-to-manage-http-event-collector-tokens-events-and-services"]
   }),
   descriptor({
@@ -326200,10 +326261,11 @@ var PROVIDERS = Object.freeze([
       field2("stream", localize("file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule"), true)
     ],
     handling: {
+      on_own: true,
       sends: ["counts"],
       recipient: localize("file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)"),
-      region: "the workspace's region",
-      file_retention: "no file is sent",
+      region: localize("file-scanner.catalogue.sentinel_the_workspaces_region", "the workspace's region"),
+      file_retention: NO_FILE,
       result_retention: localize("file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs"),
       sample_sharing: "none"
     },
@@ -326228,19 +326290,20 @@ var PROVIDERS = Object.freeze([
     config: [
       REGION2,
       field2("project", localize("file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID"), true),
-      field2("location", "Instance location", true),
-      field2("instance", "Instance (customer) ID", true),
+      field2("location", localize("file-scanner.catalogue.instance_location", "Instance location"), true),
+      field2("instance", localize("file-scanner.catalogue.instance_customer_id", "Instance (customer) ID"), true),
       field2("log_type", localize("file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as"), true)
     ],
     handling: {
+      on_own: true,
       sends: ["counts"],
       recipient: localize("file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)"),
-      region: "the instance's region",
-      file_retention: "no file is sent",
+      region: localize("file-scanner.catalogue.google_secops_the_instances_region", "the instance's region"),
+      file_retention: NO_FILE,
       result_retention: localize("file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own instance",
+    licence_note: localize("file-scanner.catalogue.google_secops_the_organizations_own_instance", "the organization's own instance"),
     source_urls: ["https://docs.cloud.google.com/chronicle/docs/reference/ingestion-methods"]
   }),
   descriptor({
@@ -326260,20 +326323,21 @@ var PROVIDERS = Object.freeze([
       field2("index", localize("file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)"), false)
     ],
     handling: {
+      on_own: true,
       sends: ["counts"],
       recipient: localize("file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment"),
-      region: "where it runs",
-      file_retention: "no file is sent",
+      region: WHERE_IT_RUNS,
+      file_retention: NO_FILE,
       result_retention: localize("file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own deployment",
+    licence_note: localize("file-scanner.catalogue.elastic_the_organizations_own_deployment", "the organization's own deployment"),
     source_urls: ["https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-bulk"]
   }),
   descriptor({
     provider_id: "syslog-tls",
     vendor: ADMIN,
-    product: "any syslog collector (RFC 5424 over TLS)",
+    product: localize("file-scanner.catalogue.any_syslog_collector_rfc_5424", "any syslog collector (RFC 5424 over TLS)"),
     kinds: ["log_sink"],
     transport: "syslog_tls",
     reach: "public",
@@ -326283,20 +326347,21 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "zero_counts" },
     config: TEMPLATE_CONFIG(localize("file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)")),
     handling: {
+      on_own: false,
       sends: ["counts"],
       recipient: ADMIN,
       region: ADMIN,
-      file_retention: "no file is sent",
+      file_retention: NO_FILE,
       result_retention: ADMIN,
       sample_sharing: "none"
     },
-    licence_note: "the organization's own collector",
+    licence_note: localize("file-scanner.catalogue.syslog_tls_the_organizations_own_collector", "the organization's own collector"),
     source_urls: []
   }),
   descriptor({
     provider_id: "https-webhook",
     vendor: ADMIN,
-    product: "any HTTPS endpoint taking a JSON POST",
+    product: localize("file-scanner.catalogue.any_https_endpoint_taking_a_json", "any HTTPS endpoint taking a JSON POST"),
     kinds: ["log_sink"],
     transport: "https",
     reach: "public",
@@ -326307,14 +326372,15 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "zero_counts" },
     config: [...TEMPLATE_CONFIG(localize("file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)")), field2("path", localize("file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)"), false)],
     handling: {
+      on_own: false,
       sends: ["counts"],
       recipient: ADMIN,
       region: ADMIN,
-      file_retention: "no file is sent",
+      file_retention: NO_FILE,
       result_retention: ADMIN,
       sample_sharing: "none"
     },
-    licence_note: "the organization's own endpoint",
+    licence_note: localize("file-scanner.catalogue.https_webhook_the_organizations_own_endpoint", "the organization's own endpoint"),
     source_urls: []
   })
 ]);

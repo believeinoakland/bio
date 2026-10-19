@@ -173,6 +173,7 @@ function fill(key, text, vars) {
   return text.replace(PLACEHOLDER, (_, name) => {
     const v = vars?.[name];
     if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
     return String(v);
   });
 }
