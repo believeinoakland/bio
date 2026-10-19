@@ -52,7 +52,7 @@ test("R71 the fold sets the question aside for the project: nothing preselected;
   /* the receipt, read from the set-aside list; the fold gives way to "Change your decision" */
   const r = main(p).querySelector('[data-aside="deferred"]');
   assert.ok(r && says(r, "screen.question.say000", { project: "Pothole repairs", date: day("2026-10-18") }));
-  assert.ok(r.textContent.includes("waiting for the 2026 log") && says(r, "shell.reason") && says(r, "screen.question.say001", { project: "Pothole repairs" }) && says(r, "screen.question.say002"));
+  assert.ok(r.textContent.includes("waiting for the 2026 log") && says(r, "shell.reason.lead") && says(r, "screen.question.say001", { project: "Pothole repairs" }) && says(r, "screen.question.say002"));
   assert.equal(main(p).querySelector('details[data-aside="set"]'), null);
   /* "Change your decision": the same choice (nothing preselected), a reason that replaces the earlier one */
   const change = r.querySelector('details[data-aside="change"]');
@@ -75,6 +75,7 @@ test("R71 what this touches: the reading the project stands on, its plan, a ques
   assert.ok(says(t, "screen.question.say067", { plan: "Repairs plan" }) && says(t, "screen.question.say068"), "its plan");
   assert.ok(says(t, "screen.question.say069") && says(t, "screen.question.say070"), "a question that cites it");
   assert.ok(says(t, "screen.question.say071", { title: "Street safety" }) && says(t, "screen.question.say072"), "a published case");
+  assert.ok(says(t, "screen.question.touches.heading"), "headed What this touches, by its key");
   assert.ok(says(t, "screen.question.tip078") && says(t, "screen.question.tip079"), "the note that the list is of what she can see");
   assert.ok(!t.textContent.includes("Elsewhere") && !t.textContent.includes("PROJ-2026-0042"), "no other project is named");
   assert.equal(p.byOp("plans").find((r) => r.query.subject).query.subject, Q);
@@ -106,6 +107,7 @@ test("R71 states k and l: the project's decision is read from the set-aside list
   const r = m.querySelector('[data-aside="dismissed"]');
   assert.ok(says(r, "screen.question.say008.bymember", { project: "Pothole repairs", member: "dev", date: day("2026-10-18") }));
   assert.ok(!says(r, "screen.question.say001", { project: "Pothole repairs" }), "the 'with your name' line is hers alone");
+  assert.ok(says(r, "shell.reason.lead") && r.textContent.includes("retired"), "her reason is led by its key");
   assert.equal(m.querySelector('details[data-aside="set"]'), null, "in states k and l the fold gives way to Change your decision");
   assert.ok(r.querySelector('details[data-aside="change"]'));
   assert.ok(section(p, "screen.question.supports.head") && section(p, "screen.question.against.head"), "drawn whole beneath");
@@ -151,12 +153,15 @@ test("R72 what each published case froze for the question: one entry for each ca
   assert.equal(p.byOp("publishedfrozen")[0].query.id, Q);
   const s = section(p, "screen.question.say045");
   assert.ok(s && says(s, "screen.question.say046") && says(s, "screen.question.say047"));
+  assert.ok(says(s, "screen.question.frozen.count", { n: "5" }), "the question is in n published cases, n the cases the answer holds");
+  assert.ok(!says(s, "screen.question.frozen.count.one"));
   /* the case as a reference of kind published, titled as the case states it, never its id */
   const a = entry(p, "CASE-A:2");
   /* a reference of kind published (a link where the published screen is served, its card either way) */
   assert.equal(a.querySelector("b").textContent, "Street safety");
   assert.ok((a.querySelector("b .cs-card") || a.querySelector("b a.cs-ref")).getAttribute("data-tip").includes(word("shell.card.published")));
-  assert.ok(a.textContent.includes(word("screen.timeline.datekind.published")) && a.textContent.includes(day("2026-10-01")));
+  assert.ok(says(a.querySelector("[data-published]"), "screen.question.frozen.published", { date: day("2026-10-01"), n: "2" }), "Published <date>, edition n");
+  assert.ok(says(entry(p, "CASE-B:1").querySelector("[data-published]"), "screen.question.frozen.published", { date: day("2026-03-12"), n: "1" }));
   const b = entry(p, "CASE-B:1");
   assert.ok(b.querySelector("b").textContent.startsWith(lead("state.undetermined")) && !b.textContent.includes("CASE-B"), "a case that states no title is undetermined, never its id");
   /* frozen beside today, each its own; the same or, axis by axis, stronger or weaker (today: capture B, connection C) */
@@ -166,6 +171,9 @@ test("R72 what each published case froze for the question: one entry for each ca
   assert.deepEqual(grades(b.querySelector("[data-frozen]")), ["C", "C"], "each case its own pair, never combined");
   assert.deepEqual(grades(b.querySelector("[data-today]")), ["B", "C"]);
   assert.deepEqual([a, b].map((e) => ["capture", "connection"].map((x) => e.querySelector(`[data-axis="${x}"]`).getAttribute("data-relation"))), [["same", "same"], ["stronger", "same"]]);
+  assert.ok(says(a.querySelector("[data-today]"), "screen.question.frozen.today") && says(b.querySelector("[data-today]"), "screen.question.frozen.today"), "Today:");
+  assert.ok(says(a.querySelector("[data-axis=capture]"), "screen.question.word.same") && says(a.querySelector("[data-axis=connection]"), "screen.question.word.same"));
+  assert.ok(says(b.querySelector("[data-axis=capture]"), "screen.question.word.stronger") && says(b.querySelector("[data-axis=connection]"), "screen.question.word.same"), "axis by axis");
   assert.ok(says(a.querySelector("[data-axis=capture] .cs-card"), "mark.scale.capture.name") && a.querySelector("[data-axis=capture] .cs-card").getAttribute("data-tip").includes(word("screen.question.compare.captured.explain")));
   assert.ok(says(a, "screen.question.say048") && says(a, "screen.question.say050") && says(a, "screen.question.say051"), "stated in the signed case");
   assert.ok(says(b, "screen.question.say055") && !says(b, "screen.question.say050"), "stated in the member's own bytes");
@@ -180,6 +188,7 @@ test("R72 what each published case froze for the question: one entry for each ca
   assert.ok(w.hasAttribute("data-withheld") && says(w, "mark.gap.withheld.name") && w.querySelectorAll(".cs-grade").length === 0);
   /* pinned: null says nothing of a pin; a pair with no record is not filled in */
   const e = entry(p, "CASE-E:1");
+  assert.ok(says(e, "screen.question.frozen.unpinned") && !says(a, "screen.question.frozen.unpinned") && !says(c, "screen.question.frozen.unpinned"), "pinned: null says nothing was pinned");
   assert.ok(!says(e, "screen.question.say052") && !says(e, "screen.question.say056") && says(e, "public-read.frozen.strength_detail.none") && e.querySelectorAll(".cs-grade").length === 0);
   /* its place: after Readings and the themes and what relies on this, before Concluding */
   const t = main(p).textContent, at1 = (k) => t.indexOf(word(k));
@@ -233,7 +242,8 @@ test("R73 compare two readings: choosing one sends versioncompare (a: the readin
   const refsOf = (k) => g.querySelectorAll(`[data-legs="${k}"] a.cs-ref`).map((a) => a.textContent);
   assert.deepEqual(refsOf("taken_up"), ["The seven-day standard"]);
   assert.deepEqual(refsOf("kept"), ["The count", "The audit"]);
-  assert.equal(g.querySelector('[data-legs="let_go"]'), null);
+  assert.ok(says(g.querySelector('[data-legs="taken_up"]'), "screen.question.compare.takenup") && says(g.querySelector('[data-legs="let_go"]'), "screen.question.compare.letgo") && says(g.querySelector('[data-legs="kept"]'), "screen.question.compare.kept"));
+  assert.ok(says(g.querySelector('[data-legs="let_go"]'), "screen.question.compare.none") && !says(g.querySelector('[data-legs="taken_up"]'), "screen.question.compare.none"), "none when empty");
   assert.equal(g.querySelector(`[data-legs="taken_up"] a.cs-ref`).getAttribute("href"), "/app/document/" + STD);
   /* the five dimensions in the fixed order, the count of those that differ the sentence's n */
   const dims = g.querySelectorAll("[data-dim]");
@@ -241,6 +251,9 @@ test("R73 compare two readings: choosing one sends versioncompare (a: the readin
   assert.equal(dims.filter((d) => d.getAttribute("data-same") === "no").length, 4);
   for (const [k, key] of [["claim", "screen.question.say027"], ["legs", "screen.question.say028"], ["relationship", "screen.question.say029"], ["decision", "screen.question.say032"]]) assert.ok(says(g.querySelector(`[data-dim="${k}"]`), key), k);
   const claim = g.querySelector('[data-dim="claim"]');
+  assert.ok(says(claim.querySelector('[data-side="was"]'), "screen.question.compare.was", { value: "Either count is enough." }) && says(claim.querySelector('[data-side="now"]'), "screen.question.compare.now", { value: "The standard is needed." }), "Was and Now by their keys");
+  assert.ok(g.querySelectorAll("[data-dim]").every((d) => says(d, d.getAttribute("data-same") === "yes" ? "screen.question.word.same" : "screen.question.word.different")), "each dimension says different or the same");
+  assert.ok(says(g.querySelector('[data-dim="origin"]'), "screen.question.compare.origin"));
   assert.ok(claim.querySelector('[data-side="was"]').textContent.includes("Either count is enough.") && claim.querySelector('[data-side="now"]').textContent.includes("The standard is needed."));
   assert.ok(g.querySelector('[data-dim="legs"] [data-side="now"]').textContent.includes("The seven-day standard"));
   const dec = g.querySelector('[data-dim="decision"]');
@@ -312,6 +325,7 @@ test("R74 on a reading the assistant composed that is not yet accepted: the bias
     assert.ok(says(f, "screen.question.say014") && says(f, "screen.question.say015"), "not a comparison with a bias of her own");
     assert.equal(f.querySelector("[data-bias]").getAttribute("data-bias"), kind);
     for (const k of yes) assert.ok(says(f.querySelector("[data-bias]"), k), kind + " " + k);
+    assert.equal(says(f.querySelector("[data-bias]"), "screen.question.bias.moved"), kind === "moved", kind + " It has moved.");
     for (const k of no) assert.ok(!says(f.querySelector("[data-bias]"), k), kind + " never " + k);
     assert.ok(!/\d/.test(f.querySelector("[data-bias]").textContent), "whether it moved, never statement counts");
     /* it repeats the acts, so she can accept, weigh or reject from it */

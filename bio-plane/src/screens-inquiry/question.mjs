@@ -213,7 +213,7 @@ function render(cs, view) {
     if (backs.some((x) => x && x.from_type === "inquiry")) rows.push(cs.row("", W("screen.question.say069"), "", W("screen.question.say070")));
     for (const x of backs.filter((y) => y && (y.from_type === "published" || (y.from_type === "case" && y.from_state === "published"))))
       rows.push(cs.row("", W("screen.question.say071", { title: String(x.from_title || T("state.undetermined", { reason: "" })) }), "", W("screen.question.say072")));
-    return rows.length ? `<div data-touches="1"><p class="mk-small"><b>${W("screen.question.tip078")}</b> ${W("screen.question.tip079")}</p>${cs.sheet(rows.join(""))}</div>` : "";
+    return rows.length ? `<div data-touches="1"><p class="mk-small"><b data-touches-heading="1">${W("screen.question.touches.heading")}</b></p><p class="mk-small"><b>${W("screen.question.tip078")}</b> ${W("screen.question.tip079")}</p>${cs.sheet(rows.join(""))}</div>` : "";
   };
   /* R71: the fold in state a; the refusals the design holds are told before the act */
   const asideFold = () => `<details class="mk-details" data-aside="set"><summary>${W("screen.question.say058", { project: projectWord })}</summary>`
@@ -229,7 +229,7 @@ function render(cs, view) {
     const said = mine ? W(key, { project: projectWord, date: { html: decision.at ? cs.date(String(decision.at), { year: true }) : "" } })
       : W(key + ".bymember", { project: projectWord, member: P.who(cs, by), date: { html: decision.at ? cs.date(String(decision.at), { year: true }) : "" } });
     return `<div data-aside="${decision.state === "dismissed" ? "dismissed" : "deferred"}">`
-      + cs.sheet(cs.row("", `<b>${said}</b>`, "", `<b>${W("shell.reason")}</b> <span class="rec">“${cs.esc(String(decision.reason || ""))}”</span>`))
+      + cs.sheet(cs.row("", `<b>${said}</b>`, "", `<b>${W("shell.reason.lead")}</b> <span class="rec">“${cs.esc(String(decision.reason || ""))}”</span>`))
       + `<p class="mk-note">${mine ? W("screen.question.say001", { project: projectWord }) + " " : ""}${W("screen.question.say002")}</p>`
       + `<details class="mk-details" data-aside="change"><summary>${W("screen.question.say003")}</summary>${asideForm("2")}</details></div>`;
   })();
@@ -572,7 +572,7 @@ function render(cs, view) {
       if (rr && rr.state === "loading") lens = cs.state(rr, () => "");
       else if (rr && rr.state === "failed") lens = cs.state(rr, () => "");
       else if (!bias) lens = gap("undetermined", T("state.undetermined", { reason: "" }));
-      else if (bias.moved === true) lens = gap("moved", W("screen.question.say013"));
+      else if (bias.moved === true) lens = gap("moved", `<b>${W("screen.question.bias.moved")}</b> ${W("screen.question.say013")}`);
       else if (bias.in_force === false) lens = gap("noneinforce", W("screen.question.say021"));
       else if (bias.moved === false) lens = gap("notmoved", W("screen.question.say017") + " " + W("screen.question.say018"));
       else lens = gap("unknown", W("screen.question.say019") + " " + W("screen.question.say020"));
@@ -610,8 +610,8 @@ function render(cs, view) {
           answer = known.includes(code) ? `<p class="cs-gap" data-gap="refused" role="alert" data-compare="refused">${said}</p>` : cs.state(cr, () => "");
         } else if (cr.value && cr.value.dimensions && typeof cr.value.dimensions === "object") {
           const r = cr.value, dm = r.dimensions, lg = r.legs || {};
-          const leg = (k) => (Array.isArray(lg[k]) && lg[k].length ? `<div class="cs-row" data-legs="${k}">${cs.icon(k === "taken_up" ? "add" : k === "let_go" ? "sever" : "connection")}<span>${refs(lg[k])}</span></div>` : "");
-          const vals = (a, b) => `<span class="mk-small" data-side="was">${a}</span> <span class="mk-small" data-side="now">${b}</span>`;
+          const leg = (k, labelKey) => `<div class="cs-row" data-legs="${k}">${cs.icon(k === "taken_up" ? "add" : k === "let_go" ? "sever" : "connection")}<span><b>${W(labelKey)}</b> ${Array.isArray(lg[k]) && lg[k].length ? refs(lg[k]) : W("screen.question.compare.none")}</span></div>`;
+          const vals = (a, b) => `<span class="mk-small" data-side="was">${W("screen.question.compare.was", { value: { html: a } })}</span> <span class="mk-small" data-side="now">${W("screen.question.compare.now", { value: { html: b } })}</span>`;
           const claimText = (x) => (x && typeof x === "object" ? String(x.text || "") : String(x == null ? "" : x));
           const stateSide = (x, now) => {
             const m = x && x.moved && typeof x.moved === "object" ? x.moved : {};
@@ -620,7 +620,7 @@ function render(cs, view) {
             const k = x && x.state === "considering" ? "question.reading.weighing" : "question.reading.suggested";
             return W(k, { who: P.who(cs, m.by || ""), date, reason: String(m.reason || "") });
           };
-          const row = (kind, labelKey, inner) => `<div class="cs-row" data-dim="${kind}" data-same="${dm[kind] && dm[kind].same === true ? "yes" : "no"}"><span>${labelKey ? `<b>${W(labelKey)}</b> ` : ""}${inner}</span></div>`;
+          const row = (kind, labelKey, inner) => `<div class="cs-row" data-dim="${kind}" data-same="${dm[kind] && dm[kind].same === true ? "yes" : "no"}"><span><b>${W(labelKey)}</b> · ${dm[kind] && dm[kind].same === true ? W("screen.question.word.same") : W("screen.question.word.different")} ${inner}</span></div>`;
           const dimRow = (kind, labelKey, show) => {
             const x = dm[kind];
             if (!x) return "";
@@ -629,12 +629,12 @@ function render(cs, view) {
           };
           const partsOf = (x) => (x && Array.isArray(x.partition) ? x.partition.map((g) => (Array.isArray(g) && Array.isArray(g[1]) ? g[1].map(titleOf).join(", ") : "")).filter(Boolean).join("; ") : "");
           answer = `<p class="mk-small" data-compare="sentence">${W("screen.question.say026", { against: mkData(against), shown: mkData(shownName), n: String(r.differs), total: String(r.of) })}</p>`
-            + (leg("taken_up") || leg("let_go") || leg("kept") ? cs.sheet(leg("taken_up") + leg("let_go") + leg("kept")) : "")
+            + cs.sheet(leg("taken_up", "screen.question.compare.takenup") + leg("let_go", "screen.question.compare.letgo") + leg("kept", "screen.question.compare.kept"))
             + cs.sheet(dimRow("claim", "screen.question.say027", (x) => `<span class="rec">${cs.esc(claimText(x))}</span>`)
               + dimRow("legs", "screen.question.say028", (x) => `<span class="rec">${(Array.isArray(x) ? x : []).map((y) => cs.esc(titleOf(y))).join(", ")}</span>`)
               + dimRow("relationship", "screen.question.say029", (x) => `<span class="rec">${cs.esc(String((x && x.relationship) || ""))} ${cs.esc(partsOf(x))}</span>`)
               + dimRow("decision", "screen.question.say032", () => "")
-              + dimRow("origin", "", (x) => `<span class="rec">${cs.esc(P.who(cs, (x && x.author) || ""))}</span>`));
+              + dimRow("origin", "screen.question.compare.origin", (x) => `<span class="rec">${cs.esc(P.who(cs, (x && x.author) || ""))}</span>`));
         }
       }
       /* the tree: each reading's source (`derived_from`) and origin, the roots first, each child indented under its source */
@@ -720,7 +720,7 @@ function render(cs, view) {
         const pc = later("pc:" + c.case_id + ":" + c.edition, "publishedcase", { caseId: String(c.case_id), edition: String(c.edition) });
         const named = pc.state === "ok" && pc.value && (pc.value.scope || pc.value.title) ? String(pc.value.scope || pc.value.title) : "";
         const ref = cs.ref("published", String(c.case_id), named || T("state.undetermined", { reason: "" }), []);
-        const head = `<b>${ref}</b><span class="mk-small" data-published="${cs.esc(String(c.edition))}"><b>${W("screen.timeline.datekind.published")}</b> ${c.published_at ? cs.date(String(c.published_at), { year: true }) : ""}</span>`;
+        const head = `<b>${ref}</b><span class="mk-small" data-published="${cs.esc(String(c.edition))}">${W("screen.question.frozen.published", { date: { html: c.published_at ? cs.date(String(c.published_at), { year: true }) : T("state.undetermined", { reason: "" }) }, n: String(c.edition) })}</span>`;
         if (c.withheld) return `<div class="mk-ev" data-case-edition="${cs.esc(String(c.case_id))}:${cs.esc(String(c.edition))}" data-withheld="1">${head}${cs.mark("gap", "withheld", { reason: "" })}</div>`;
         if (c.pinned === false) return `<div class="mk-ev" data-case-edition="${cs.esc(String(c.case_id))}:${cs.esc(String(c.edition))}" data-pinned="no">${head}<p class="cs-gap" data-gap="refused">${W("screen.question.say056")} ${W("screen.question.say057")}</p></div>`;
         const froze = c.strength && typeof c.strength === "object" ? { capture: sOf(c.strength.capture), connection: sOf(c.strength.connection), ...(c.strength.testimony ? { testimony: sOf(c.strength.testimony) } : {}) } : null;
@@ -728,14 +728,17 @@ function render(cs, view) {
           const f = froze && froze[a] && froze[a].state === "graded" ? rank[froze[a].grade] : null, t = todayS && todayS[a] && todayS[a].state === "graded" ? rank[todayS[a].grade] : null;
           return f === null || t === null ? "unknown" : t === f ? "same" : t > f ? "stronger" : "weaker";
         };
-        const axisCard = (a) => `<span class="mk-small" data-axis="${a}" data-relation="${rel(a)}"><span class="cs-card" tabindex="0" data-tip="${cs.esc(W(a === "capture" ? "screen.question.compare.captured.explain" : "screen.question.compare.connected.explain"))}">${W("mark.scale." + a + ".name")}</span></span>`;
+        const relWord = (r) => (r === "same" ? W("screen.question.word.same") : r === "stronger" ? W("screen.question.word.stronger")
+          : r === "weaker" ? W("screen.question.word.weaker") : W("screen.question.word.unknown"));
+        const axisCard = (a) => `<span class="mk-small" data-axis="${a}" data-relation="${rel(a)}"><span class="cs-card" tabindex="0" data-tip="${cs.esc(W(a === "capture" ? "screen.question.compare.captured.explain" : "screen.question.compare.connected.explain"))}">${W("mark.scale." + a + ".name")}</span>: ${relWord(rel(a))}</span>`;
         return `<div class="mk-ev" data-case-edition="${cs.esc(String(c.case_id))}:${cs.esc(String(c.edition))}" data-pinned="${c.pinned === true ? "yes" : "none"}">${head}`
           + (froze ? `<span class="mk-small" data-frozen="1">${W("screen.question.say048")} ${grades(froze)}</span>` : `<p class="mk-small" data-frozen="none">${W("public-read.frozen.strength_detail.none")}</p>`)
-          + (todayS && froze ? `<span class="mk-small" data-today="1"><span class="cs-strength">${axes(todayS)}</span></span>` + axisCard("capture") + axisCard("connection") : "")
+          + (todayS && froze ? `<span class="mk-small" data-today="1">${W("screen.question.frozen.today")} <span class="cs-strength">${axes(todayS)}</span></span>` + axisCard("capture") + axisCard("connection") : "")
           + (froze ? `<span class="mk-small muted">${c.strength_from === "member_bytes" ? W("screen.question.say055") : W("screen.question.say050") + " " + W("screen.question.say051")}</span>` : "")
-          + (c.pinned === true ? `<span class="mk-small" data-pin="1">${W("screen.question.say052")}</span>` : "") + "</div>";
+          + (c.pinned === true ? `<span class="mk-small" data-pin="1">${W("screen.question.say052")}</span>` : `<span class="mk-small" data-pin="none">${W("screen.question.frozen.unpinned")}</span>`) + "</div>";
       };
-      out.push(cs.sec("screen.question.say045", `<p class="mk-note">${W("screen.question.say046")} ${W("screen.question.say047")}</p><div class="mk-versions">${fr.value.cases.map(entry).join("")}</div>`, { help: "screen.question.tip076" }));
+      const nCases = new Set(fr.value.cases.map((c) => String(c.case_id))).size;
+      out.push(cs.sec("screen.question.say045", `<p class="mk-note">${nCases === 1 ? W("screen.question.frozen.count.one") : W("screen.question.frozen.count", { n: String(nCases) })} ${W("screen.question.say046")} ${W("screen.question.say047")}</p><div class="mk-versions">${fr.value.cases.map(entry).join("")}</div>`, { help: "screen.question.tip076" }));
     }
   }
 
@@ -1081,9 +1084,13 @@ const words = Object.freeze([
   /* T51 (R71–R74, R78) */
   "screen.question.say000", "screen.question.say001", "screen.question.say002", "screen.question.say003", "screen.question.say004", "screen.question.say005", "screen.question.say006", "screen.question.say008", "screen.question.say009", "screen.question.say010", "screen.question.say011", "screen.question.say012", "screen.question.say013", "screen.question.say014", "screen.question.say015", "screen.question.say017", "screen.question.say018", "screen.question.say019", "screen.question.say020", "screen.question.say021", "screen.question.say022", "screen.question.say023", "screen.question.say024", "screen.question.say025", "screen.question.say026", "screen.question.say027", "screen.question.say028", "screen.question.say029", "screen.question.say032", "screen.question.say033", "screen.question.say034", "screen.question.say035", "screen.question.say036", "screen.question.say037", "screen.question.say038", "screen.question.say039", "screen.question.say040", "screen.question.say041", "screen.question.say042", "screen.question.say043", "screen.question.say044", "screen.question.say045", "screen.question.say046", "screen.question.say047", "screen.question.say048", "screen.question.say050", "screen.question.say051", "screen.question.say052", "screen.question.say055", "screen.question.say056", "screen.question.say057", "screen.question.say058", "screen.question.say059", "screen.question.say060", "screen.question.say061", "screen.question.say062", "screen.question.say063", "screen.question.say064", "screen.question.say065", "screen.question.say066", "screen.question.say067", "screen.question.say068", "screen.question.say069", "screen.question.say070", "screen.question.say071", "screen.question.say072", "screen.question.say073", "screen.question.say074", "screen.question.say075",
   "screen.question.say000.bymember", "screen.question.say008.bymember", "screen.question.tip076", "screen.question.tip078", "screen.question.tip079",
-  "shell.reason", "screen.timeline.datekind.published", "public-read.frozen.strength_detail.none", "mark.gap.withheld.name", "mark.gap.withheld.means",
+  "shell.reason", "shell.reason.lead", "public-read.frozen.strength_detail.none", "mark.gap.withheld.name", "mark.gap.withheld.means",
   "screen.question.compare.captured.explain", "screen.question.compare.connected.explain",
   "refusal.VERSION_COMPARE_NO_SUCH_VERSION", "refusal.VERSION_COMPARE_NO_VERSION", "refusal.VERSION_COMPARE_NO_INQUIRY",
+  "screen.question.touches.heading", "screen.question.frozen.count", "screen.question.frozen.count.one", "screen.question.frozen.published",
+  "screen.question.frozen.today", "screen.question.frozen.unpinned", "screen.question.bias.moved",
+  ...["same", "different", "stronger", "weaker", "unknown"].map((k) => "screen.question.word." + k),
+  ...["takenup", "letgo", "kept", "none", "was", "now", "origin"].map((k) => "screen.question.compare." + k),
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */
