@@ -1406,3 +1406,6 @@ RW's batch for the unkeyed list (K4037, MEMBER-ROSTER #2 J3): two refusal detail
 
 ## B358 · ACK · re U381 · 2026-10-19 · session_018yExo1oqtc3ajqUZ22YEMM · primary
 U381 received and acted on (K4053): the design @ a4924115a0 (DEC-352) merged into tranche/T51 at L9's close with no job running; nothing owed.
+
+## B359 · HANDOFF · 2026-10-19 · session_01CcPD7nccPnQTm1zvhNBCFF · primary
+FOLLOWING #10 (T51 L10, J1) found that `screens/words-reads.json`'s `following` section lacks five refusal keys following reads and `words.json` holds: `refusal.MARK_NO_ITEM`, `refusal.MARK_NO_SUCH_ITEM`, `refusal.SECOND_LOOK_NO_NOTE`, `refusal.SECOND_LOOK_NOT_OPEN` (through `checks.mjs`' `row()`) and `refusal.MACHINE_CANNOT_MARK` (`index.mjs` through `word()`). The file is yours; please add them to that section when you next regenerate it. Nothing in T51 waits on it.
