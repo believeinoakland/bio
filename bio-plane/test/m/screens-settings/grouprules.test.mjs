@@ -16,7 +16,7 @@ test("R61 reads the rules and the roster; Waiting for a second member lists each
   for (const k of ["screen.grouprules.sub1", "screen.grouprules.sub2", "screen.grouprules.note", "screen.grouprules.note2", "screen.grouprules.inprofile", "screen.grouprules.inprofile2"]) has(a, k);
   const one = item(a, "GR-0001"), t = textOf(one);
   assert.ok(t.includes("Parks Commission: written comments close five days before the meeting"), "the rule's own words, as data");
-  assert.ok(t.includes(said("screen.grouprules.deadline.for", { kind: "request for comment" })), "what it is for");
+  assert.ok(t.includes(said("screen.grouprules.deadline.for", { kind: said("screen.start-send.kind.request_for_comment") })), "what it is for");
   assert.ok(t.includes(said("screen.grouprules.drafted", { member: "ana", date: day("2026-10-09T00:00:00Z") })));
   assert.ok(t.includes(said("screen.grouprules.row.trigger", { trigger: said("screen.grouprules.trigger.start.hearing") })));
   assert.ok(t.includes(said("screen.grouprules.row.cite", { citation: "Parks Commission Rule 4(b)" })));
@@ -26,7 +26,7 @@ test("R61 reads the rules and the roster; Waiting for a second member lists each
   assert.ok(src, "its source is a reference to the document");
   // a legal fact for a kind names it, with its trigger and what it requires
   const fact = textOf(item(a, "GR-0003"));
-  assert.ok(fact.includes(said("screen.grouprules.fact.for", { kind: "public comment" })));
+  assert.ok(fact.includes(said("screen.grouprules.fact.for", { kind: said("screen.start-send.kind.public_comment") })));
   assert.ok(fact.includes(said("screen.grouprules.row.requires", { requires: "Speakers register by noon on the meeting day" })));
   assert.ok(fact.includes(said("screen.grouprules.row.trigger", { trigger: said("screen.grouprules.trigger.fact.pending_measure_or_candidate") })));
   // a withdrawn rule is not drawn

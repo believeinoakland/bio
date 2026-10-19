@@ -300,7 +300,7 @@ export const CATALOGUE_ENTRY = { provider_id: "acme-scan", vendor: "Acme", produ
   handling: { sends: ["file_bytes"], never_sends: ["member_identity"], recipient: "Acme Inc.", sub_processors: [], region: "EU", file_retention: "30 days", result_retention: "1 year", sample_sharing: "vendor_internal_research" },
   handling_digest: "d".repeat(64) };
 export const OWN_ENTRY = { ...CATALOGUE_ENTRY, provider_id: "own-scan", vendor: "Our", product: "Scanner", credentials: [], config: [],
-  handling: { ...CATALOGUE_ENTRY.handling, recipient: "the organization's own servers", sample_sharing: "none" }, handling_digest: "e".repeat(64) };
+  handling: { ...CATALOGUE_ENTRY.handling, recipient: "the organization (our own hosting)", sample_sharing: "none" }, handling_digest: "e".repeat(64) };
 /** security (credentials R45; file-safety R5, R27–R31; instance-setup R82). */
 export function securityTable(over = {}) {
   return {
