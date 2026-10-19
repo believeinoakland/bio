@@ -165,7 +165,7 @@ export async function firstPage(walk, page, document) {
     if (bar !== null && bar !== 1) throw new Error(`the page bar reads page ${bar} first, not Page 1 (document.read.page)`);
     if (place !== null && place !== 1) throw new Error(`the first passage's place reads page ${place}, not Page 1 (screen.document.passage.where)`);
     if (bar === null && place === null) walk.notes.push("document: the capture states no page, so none is drawn");
-  });
+  }, { expect: READING_EXPECTS });
 }
 
 /* Steps 7 and 8: the document opened and its words seen in its Passages (extraction R76, K3399); the passage found with
