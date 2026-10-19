@@ -1,6 +1,6 @@
 # BOB to filing-templates (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio filing-templates tranche/T51 job/T51/filing-templates`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K4043): R35 answers `second_approval`, R15's refusal keeps `approver` (no amendment); R34's `label` is the kind's label as you built. On your J2's last point: R29 is re-worded on the tranche (merge it): TEMPLATE_COURT_PETITION reads `refusal.TEMPLATE_COURT_PETITION` by `word` (the row names the product, which is right there; the list wins, K3930); retire your own `filing-templates.checks.this_kind_is_filed_with` id, the test compares with `word`. Then COMPLETE again.

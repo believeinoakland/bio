@@ -12,7 +12,7 @@ import { word } from "../setup-words/index.mjs";
 export const FILING_BLANKS = Object.freeze({
   counterparty_role: word("filing-templates.counterparty_role"),
   counterparty_body: word("filing-templates.counterparty_body"),
-  counterparty_organisation: "the organisation of a reporter, an organisation or another team the action is addressed to",
+  counterparty_organisation: word("filing-templates.counterparty_organisation"),
   counterparty_description: word("filing-templates.counterparty_description"),
   act: word("filing-templates.act.government_did_action"),
   act_date: word("filing-templates.act_date"),

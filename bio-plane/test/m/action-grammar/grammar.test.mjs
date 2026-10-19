@@ -3,13 +3,13 @@
    K585 (2)): the same in check, severity, message, repairs and code, and in order. Negative controls state each arm's
    answer by hand. Pure functions, driven with documents; the time is handed in. */
 import test from "node:test";
-import { word as tableWord } from "../../../src/setup-words/index.mjs";
+import { word as tableWord, localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import * as AG from "../../../src/action-grammar/index.mjs";
 import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
-import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS, ZONE } from "./fixture.mjs";
+import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, RECORDED, ZONE } from "./fixture.mjs";
 import { ROWS_NOW } from "./t45-rows.mjs";
 
 const S = suite(AG);
@@ -209,7 +209,7 @@ const HOLD_ROWS = {
   MACHINE_CANNOT_SET_HOLD: {
     check: "C-117.20",
     where: "src/actions/index.mjs actionHold > is-hold",
-    translation: "Saying whether a litigation hold is in place is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.",
+    translation: tableWord("refusal.MACHINE_CANNOT_SET_HOLD"),
   },
   HOLD_REFUSED: {
     check: "C-117.21",
@@ -330,7 +330,7 @@ test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–
 });
 
 test("R6, R8 (K899 (1)): text a member reads says record, never bundle: actionBasisFindings' target finding and respondsToEdgeFindings' repair are re-worded, and no row, finding, repair or reading over the corpus holds the word", () => {
-  assert.ok(REWORDED_COUNTS.every((n) => n > 0), "each old phrase was in the recorded answer");
+  assert.ok(REWORDED.every((was) => !RECORDED.includes(was)), "the recorded answer holds the words the product holds");
   const legs = pushed((f) => AG.actionBasisFindings(DOCS["leg-bad-target"], f)).findings;
   assert.deepEqual(legs.map((x) => x.message), ["action_basis[0].target 'not-an-id' is not a canonical record id"]);
   const refs = pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings;
@@ -341,7 +341,7 @@ test("R6, R8 (K899 (1)): text a member reads says record, never bundle: actionBa
   walk({ rows: S.rows, docs: S.docs, scalars: S.scalars, values: S.values });
   const text = words.join("\n");
   assert.doesNotMatch(text, /\bbundles?\b/i);
-  for (const [was] of REWORDED) assert.ok(!text.includes(was), was);
+  for (const was of REWORDED) assert.ok(!text.includes(was), was);
 });
 
 test("R10: pure: deeply frozen inputs are read without change, and the same inputs give the same answers", () => {
@@ -408,7 +408,7 @@ test("R12: every entity id the module tests (counterparty.entity_id, under every
     assert.equal(atArm.length, want ? 1 : 0, `${cp.kind ?? "office"} ${id}`);
     assert.deepEqual(inAudit, atArm, `${cp.kind ?? "office"} ${id}`);
     if (want) assert.deepEqual(atArm[0], { check: "C-2.10", severity: "error", repairable: true,
-      message: `counterparty.entity_id '${String(id).trim().slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+      message: localize("action-grammar.checks.counterparty_entity_id_string_is", "counterparty.entity_id '{String}' is not a subject registry key (ENT-YYYY-NNNN)", { String: String(id).trim().slice(0, 40) }),
       repairs: ["point entity_id at the office in the subject registry, or omit it: it is optional"] });
   }
   assert.deepEqual(audit({ ...DOCS["cp-office-explicit"], counterparty: { ...DOCS["cp-office-explicit"].counterparty, entity_id: "ENT-2026-10000" } }).findings, []);
@@ -451,17 +451,13 @@ test("R7 (K1444 (iii)): a pending clock entry is past its date only once the off
 
 test("R7, R8, R9 (T34-87; DEC-149, K1811): a member reads \"your group's Civicsmith\", never \"this instance\" or \"the plane\": requestLifecycleOf's says (R8), C-2.10's kind finding (R7) and C-101.1 ACTION_KIND_UNKNOWN's translation (R9) are re-worded, and no row, finding, repair or reading over the corpus holds the old names", () => {
   const says = AG.requestLifecycleOf(DOCS["lifecycle-clean"], TODAY).says;
-  assert.equal(says, "Each entry is dated as recorded and names the entry it follows. Your team's Civicsmith derives only the days "
-    + "between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no "
-    + "judgement about the body.");
+  assert.equal(says, tableWord("action-grammar.checks.each_entry_is_dated_as"));
   assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: "petition" }).findings,
     [{ check: "C-2.10", severity: "error", message: "action_kind 'petition' is not a kind your team's Civicsmith offers" }]);
   assert.deepEqual(AG.ACTION_CATALOGUE_CHECKS.ACTION_KIND_UNKNOWN, {
     check: "C-101.1",
     where: "src/actions/index.mjs #writeArms > is-promote-action-kind",
-    translation: "An action is one of the kinds your team's Civicsmith offers: a records request, a request for comment, "
-      + "\"other\", and the kinds the team's jurisdiction profile lists. This write named another kind, so nothing was written. "
-      + "Choose one of the listed kinds, or \"other\".",
+    translation: tableWord("refusal.ACTION_KIND_UNKNOWN"),
   });
   const words = [];
   const walk = (v) => { if (typeof v === "string") words.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); };

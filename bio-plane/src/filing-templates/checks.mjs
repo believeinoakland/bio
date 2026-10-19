@@ -1,4 +1,4 @@
-import { word, localize } from "../setup-words/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* filing-templates' refusal rows (requirements: `build/requirements/filing-templates.md`, R23; K921, K927, K933).
  * DEC-49: every refusal this module answers carries its code, its row and the member's translation.
@@ -28,7 +28,7 @@ const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
    from the refusal's `lacks` (R15). `refusal.TEMPLATE_COURT_PETITION` is not taken in T46: its sentence names
    "Civicsmith" bare, where DEC-149 says "your group's Civicsmith" (R29). */
 export const FILING_TEMPLATES_WORDS = Object.freeze({
-  "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
+  "refusal.TEMPLATE_NOT_REVIEWED": word("refusal.TEMPLATE_NOT_REVIEWED", { missing: "{missing}" }),
   /* R33 (T48; by key since T50, N1130): `words.json`'s word, read through setup-words (DEC-260) */
   "refusal.RFC_QUOTING_MISSING": word("refusal.RFC_QUOTING_MISSING"),
 });
@@ -45,7 +45,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_KIND_REFUSED: {
     check: "C-115.33", where: at("#shapeRefusal", "is-template-shape"),
-    translation: localize("filing-templates.checks.a_templates_kind_is_written", "A template's kind is written as a kind is: lower-case letters, digits and underscores."),
+    translation: word("refusal.TEMPLATE_KIND_REFUSED"),
   },
   TEMPLATE_TEXT_REFUSED: {
     check: "C-115.35", where: at("#textRefusal", "is-template-text"),
@@ -92,7 +92,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_BLANK_UNKNOWN: {
     check: "C-125.4", where: at("blankUnknownRefusal", "is-template-blank"),
-    translation: "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.",
+    translation: word("refusal.TEMPLATE_BLANK_UNKNOWN"),
   },
   TEMPLATE_SCOPE_REFUSED: {
     check: "C-125.5", where: at("#scope", "is-template-scope"),
@@ -128,12 +128,11 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   NO_REVIEWERS: {
     check: "C-125.13", where: at("templateSubmit", "is-template-submit"),
-    translation: "A version goes to review with someone to review it: name a member, or open a review grant for a "
-      + "professional first.",
+    translation: word("refusal.NO_REVIEWERS"),
   },
   GRANT_RECIPIENT_REFUSED: {
     check: "C-125.14", where: at("templateReviewGrant", "is-template-grant"),
-    translation: localize("filing-templates.checks.name_the_reviewer_and_their", "Name the reviewer and their organisation, each in one line of at most 200 characters."),
+    translation: word("refusal.GRANT_RECIPIENT_REFUSED"),
   },
   GRANT_NO_SECRET: {
     check: "C-125.15", where: at("templateReviewGrant", "is-template-grant"),
@@ -215,7 +214,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_COURT_PETITION: {
     check: "C-125.34", where: at("#courtPetition", "is-court-petition"),
-    translation: localize("filing-templates.checks.this_kind_is_filed_with", "This kind is filed with a court, so no template the team files in its own name is kept for it until a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it."),
+    translation: word("refusal.TEMPLATE_COURT_PETITION"),
   },
 });
 

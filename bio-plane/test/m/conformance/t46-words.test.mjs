@@ -47,18 +47,12 @@ const T45 = {
   CURE_NOT_LATER: "A cure comes after the act it cures. The act named as the cure is not shown to be later, or the date "
     + "of one of the two acts is not known. Nothing was written.",
 };
-/* The three R38 keeps in T46, each with its present translation (returned to BOB until sentence and requirement agree). */
+/* The three R38 keeps in T46, each with its present translation (returned to BOB until sentence and requirement agree).
+   Their sentences are not copied here: the KEPT hash below pins each row's translation as it stood. */
 const KEPT_THREE = {
-  FINDING_NOT_PUBLISHED: ["C-113.7", AT("#pinFindings", "is-finding-published"), "A determination rests on findings of "
-    + "three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by "
-    + "this project; or another team's finding this team has accepted at the edition named. The finding named is none "
-    + "of these. Nothing was written."],
-  DETERMINATION_VOID: ["C-113.37", AT("determinationVoided", "is-determination-standing"), "That determination reads "
-    + "undetermined: a finding it rests on no longer stands (its check was voided, or the other team withdrew or revised "
-    + "the edition accepted). A member re-evaluates it by superseding it with a determination resting on findings that "
-    + "stand. Nothing was written."],
-  CURE_LINKED: ["C-113.44", AT("#cureRefusal", "is-cure-unlinked"), "A cure is already recorded for that breach against "
-    + "that standard. End that link first, saying why. Nothing was written."],
+  FINDING_NOT_PUBLISHED: ["C-113.7", AT("#pinFindings", "is-finding-published")],
+  DETERMINATION_VOID: ["C-113.37", AT("determinationVoided", "is-determination-standing")],
+  CURE_LINKED: ["C-113.44", AT("#cureRefusal", "is-cure-unlinked")],
 };
 /* Every row R38 does not re-word (34: the three above among them; not C-113.6, R40), as T45 left them: their canonical JSON's sha256, so
    no check, where or translation of theirs moves. */
@@ -86,9 +80,9 @@ test("R38 R40 C-113.38–C-113.43 and C-113.6 read words.json's refusal.<CODE> b
 });
 
 test("R38 C-113.7 FINDING_NOT_PUBLISHED, C-113.37 DETERMINATION_VOID and C-113.44 CURE_LINKED keep their present translations, not words.json's (each sentence and its requirement do not yet agree); every other row keeps its own", () => {
-  for (const [code, [check, where, translation]] of Object.entries(KEPT_THREE)) {
+  for (const [code, [check, where]] of Object.entries(KEPT_THREE)) {
     const row = CONFORMANCE_CHECKS[code];
-    assert.deepEqual([row.check, row.where, row.translation], [check, where, translation], code);
+    assert.deepEqual([row.check, row.where], [check, where], code);
     assert.ok(!(`refusal.${code}` in CONFORMANCE_WORDS), `${code}: not taken in T46`);
     assert.notEqual(row.translation, en(`refusal.${code}`), `${code}: words.json's sentence and R38 do not yet agree`);
   }
@@ -100,9 +94,9 @@ test("R38 C-113.7 FINDING_NOT_PUBLISHED, C-113.37 DETERMINATION_VOID and C-113.4
   const { w, input } = scene();
   const unpublished = w.c.determine(input({ findings: ["INQ-2026-0999-nowhere"] }));
   assert.deepEqual([unpublished.code, unpublished.check, unpublished.translation],
-    ["FINDING_NOT_PUBLISHED", "C-113.7", KEPT_THREE.FINDING_NOT_PUBLISHED[2]]);
+    ["FINDING_NOT_PUBLISHED", "C-113.7", CONFORMANCE_CHECKS.FINDING_NOT_PUBLISHED.translation]);
   const v = determinationVoided("CONF-2026-0001-determination", []);
-  assert.deepEqual([v.code, v.check, v.translation], ["DETERMINATION_VOID", "C-113.37", KEPT_THREE.DETERMINATION_VOID[2]]);
+  assert.deepEqual([v.code, v.check, v.translation], ["DETERMINATION_VOID", "C-113.37", CONFORMANCE_CHECKS.DETERMINATION_VOID.translation]);
 });
 
 /* The answer of a re-worded refusal: its code, its row and words.json's sentence, never T45's. */
@@ -169,7 +163,7 @@ test("R38 C-113.39–C-113.43: cureLink's and cureUnlink's re-worded refusals ar
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
   const twice = nothing(w, () => w.c.cureLink(link()));
   answers(twice, "CURE_LINKED");
-  assert.equal(twice.translation, KEPT_THREE.CURE_LINKED[2]);
+  assert.equal(twice.translation, CONFORMANCE_CHECKS.CURE_LINKED.translation);
   /* a member ends the link (the control of cureUnlink's machine refusal) */
   assert.equal(w.c.cureUnlink({ link: ok.link, reason: "recorded in error", author: V("olive"), viewer: V("olive") }).ok, true);
 });

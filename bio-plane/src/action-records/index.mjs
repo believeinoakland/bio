@@ -99,7 +99,7 @@ const findingsOf = (list) => list.filter((x) => x.severity === "error")
    answers through it, and so does every later module answering that condition. The detail is one fixed sentence, the same
    for every caller, so an absent id and a hidden one can never be told apart by it. `extra` adds a caller's own fields
    beside these and never replaces one of them. Writes nothing and never throws. */
-const NO_SUCH_ACTION_DETAIL = localize("action-records.index.no_action_answers_to_that", "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.");
+export const NO_SUCH_ACTION_DETAIL = localize("action-records.index.no_action_answers_to_that", "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.");
 const NO_SUCH_ACTION_FIXED = new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
 export function noSuchAction(actionId, extra = null) {
   let own = [];
@@ -140,13 +140,12 @@ function correspondRefusal(reason, fields, detail, extra) {
   return withRow({ ok: false, reason, ...fields, ...own, detail: typeof said === "string" && said ? said : detail });
 }
 /* R4's sentences for the five conditions, field for field as `actionReceipt` answered them before R16. */
-const RECEIPT_DETAIL = Object.freeze({
-  MACHINE_CANNOT_CORRESPOND: "a receipt is a named member's record that the team's sending reached its addressee. A machine "
-    + "credential may not record one. Sign in as a member.",
-  BAD_DATE: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
-  CAPTURE_AND_TESTIMONY: "a receipt is held as the captured bytes OR a named member's account, never both.",
-  NEITHER_CAPTURE_NOR_TESTIMONY: "a receipt is held as captured bytes the register holds, or as a named member's account.",
-  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture it first, or record a named account instead.",
+export const RECEIPT_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: localize("action-records.index.receipt_machine_cannot_correspond", "a receipt is a named member's record that the team's sending reached its addressee. A machine credential may not record one. Sign in as a member."),
+  BAD_DATE: localize("action-records.index.receipt_bad_date", "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"),
+  CAPTURE_AND_TESTIMONY: localize("action-records.index.receipt_capture_and_testimony", "a receipt is held as the captured bytes OR a named member's account, never both."),
+  NEITHER_CAPTURE_NOR_TESTIMONY: localize("action-records.index.receipt_neither_capture_nor", "a receipt is held as captured bytes the register holds, or as a named member's account."),
+  UNREGISTERED_ARTIFACT: localize("action-records.index.receipt_unregistered_artifact", "this hash names no capture in this store. Capture it first, or record a named account instead."),
 });
 const shaOf = (v) => String(v ?? "").trim().replace(/^sha256:/, "").toLowerCase();
 
@@ -156,8 +155,7 @@ export function correspondFence(author, extra) {
   /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
   if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
     return correspondRefusal("MACHINE_CANNOT_CORRESPOND", {},
-      "a correspondence entry is a named member's statement that this exchange happened — and on the testimony arm it IS "
-      + "the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member.", extra);
+      localize("action-records.index.correspond_machine_fence", "a correspondence entry is a named member's statement that this exchange happened — and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member."), extra);
   /* END DEC-49 REGION is-machine-correspond */
   return null;
 }
@@ -173,16 +171,15 @@ export function correspondEntryRefusal({ at = "", artifactSha = "", account = ""
   const m = dateTime ? LOCAL_DT_RE.exec(day) : null;
   if (!(isCalendarDate(day) || (m && isCalendarDate(m[1]))))
     return correspondRefusal("BAD_DATE", { at: day },
-      dateTime ? "an entry is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"
-               : "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has", extra);
+      dateTime ? localize("action-records.index.entry_bad_date_time", "an entry is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has")
+               : localize("action-records.index.ledger_bad_date", "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has"), extra);
   const sha = shaOf(artifactSha), acct = String(account ?? "").trim();
   if (sha && acct)
     return correspondRefusal("CAPTURE_AND_TESTIMONY", {},
-      "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised "
-      + "(DEC-13).", extra);
+      localize("action-records.index.entry_capture_and_account", "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13)."), extra);
   if (!sha && !acct)
     return correspondRefusal("NEITHER_CAPTURE_NOR_TESTIMONY", {},
-      "an entry carries either an artifact_sha that resolves in the register or an account with an author.", extra);
+      localize("action-records.index.entry_neither_capture_nor", "an entry carries either an artifact_sha that resolves in the register or an account with an author."), extra);
   /* END DEC-49 REGION is-correspond-entry */
   return null;
 }
@@ -409,7 +406,7 @@ export class ActionRecords {
                      + "asked, and a proposal nobody can be named for is one the record could say nothing "
                      + "about: the label IS the act." };
     if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+      return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const read = this.lawEntries(laws);
     if (!read.ok) return read;
     const entries = read.entries;
@@ -439,7 +436,7 @@ export class ActionRecords {
     return { ok: true, target, weight: "single",
              proposal: { ...lawProposalLabel(who), at, laws: entries },
              governing_laws: listed, evidence: false,
-             says: word("action-records.says.citation_proposed_action", { entries: String(entries.length), entries_2: String(entries.length === 1 ? " is" : "s are"), state: String(listed.state === "stated" ? `is ${listed.laws.length} law(s) stated by a member` : "is UNDETERMINED") }) };
+             says: word("action-records.says.citation_proposed_action", { entries: String(entries.length), entries_2: String(entries.length === 1 ? " is" : "s are"), state: String(listed.state === "stated" ? localize("action-records.index.is_n_laws_stated_by", "is {n} law(s) stated by a member", { n: String(listed.laws.length) }) : localize("action-records.index.is_undetermined", "is UNDETERMINED")) }) };
   }
 
   /** R2 (was `actions` R28; REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its
@@ -447,7 +444,7 @@ export class ActionRecords {
   actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
     if (asked !== 1 && asked !== 2 && asked !== 3) return this.badRiskTier(target, tier, "a proposal");
     const why = typeof basis === "string" ? basis.trim() : "";
@@ -475,7 +472,7 @@ export class ActionRecords {
   actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const held = this.#heldFm(target) || {};
     let list = seeks;
@@ -494,8 +491,7 @@ export class ActionRecords {
     return { ok: true, target, weight: "single", evidence: false,
              proposal: { ...proposalLabelFor(who, "seeks"), at, seeks: items },
              seeks: stated,
-             says: word("action-records.says.stage_proposed_request", { items: String(items.length), items_2: String(items.length === 1 ? " is" : "s are"), stated: String(stated.length ? `it names ${stated.length} stage(s) a `
-                 + "member stated" : "no member has stated what it seeks") }) };
+             says: word("action-records.says.stage_proposed_request", { items: String(items.length), items_2: String(items.length === 1 ? " is" : "s are"), stated: String(stated.length ? localize("action-records.index.it_names_n_stages_a", "it names {n} stage(s) a member stated", { n: String(stated.length) }) : localize("action-records.index.no_member_has_stated", "no member has stated what it seeks")) }) };
   }
 
   /** R1 (was `actions` R19, R25's share): the standing law proposals, newest first, at most `LAW_PROPOSALS_READ_MAX`
@@ -534,8 +530,7 @@ export class ActionRecords {
     return { proposals, limit: cap, truncated: rows.length > cap,
              says: proposals.length
                ? word("action-records.says.proposal_action_risk", { proposals: String(proposals.length), plural: String(proposals.length === 1 ? "" : "s") })
-               : "no proposal of this action's risk tier stands in the record. That is a statement about proposals and "
-                 + "about nothing else." };
+               : word("action-records.says.proposal_action_risk_tier") };
   }
 
   /** R3 (was `actions` R73): the standing proposals of what the request seeks, newest first, at most
@@ -554,8 +549,7 @@ export class ActionRecords {
     return { proposals, limit: cap, truncated: all.length > cap,
              says: proposals.length
                ? word("action-records.says.proposal_request_seeks", { proposals: String(proposals.length), plural: String(proposals.length === 1 ? "" : "s") })
-               : "no proposal of what this request seeks stands in the record. That is a statement about proposals and "
-                 + "about nothing else." };
+               : word("action-records.says.proposal_request_seeks_stands") };
   }
 
   /* ================================================================ members' side records (R4–R6) */
@@ -570,7 +564,7 @@ export class ActionRecords {
     const asked = { target: target ?? null, detail: RECEIPT_DETAIL };
     const fenced = correspondFence(who, asked);
     if (fenced) return fenced;
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const when = String(at ?? "").trim();
     const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account, dateTime: true }, asked);
     if (entryRefused) return entryRefused;
@@ -626,7 +620,7 @@ export class ActionRecords {
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential "
         + "may not set or remove it. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
     if (want === null) return { ok: false, reason: "BAD_SCOPE", target, legal: [true, false],
                                 detail: "confidential is true (set the scope) or false (remove it)" };
@@ -674,9 +668,8 @@ export class ActionRecords {
       { target: target ?? null, legal: [...kinds], max: PROMISE_TEXT_MAX });
     /* DEC-49 REGION is-promise */
     if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_RECORD_PROMISE", "a promise the team made to a person is recorded by a member; a "
-        + "machine credential may not record one. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+      return refuse("MACHINE_CANNOT_RECORD_PROMISE", localize("action-records.index.promise_machine_cannot_record", "a promise the team made to a person is recorded by a member; a machine credential may not record one. Nothing was written."), { target: target ?? null });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
       return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds.join(", ")}, the text 1 to `
         + `${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
@@ -719,7 +712,7 @@ export class ActionRecords {
     const faulted = () => { const { project, ...rest } = fault; return { ...rest, target: target ?? null }; };
     /* DEC-49 REGION is-action-stake */
     if (fault && fault.reason === "MACHINE_CANNOT_SET_STAKE") return faulted();
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (fault) return faulted();
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     /* END DEC-49 REGION is-action-stake */
@@ -772,15 +765,14 @@ export class ActionRecords {
     /* DEC-49 REGION is-action-inquiry */
     if (!who || isMachineIdentity(who))
       return worded("MACHINE_CANNOT_OPEN_FROM_ACTION", localize("action-records.index.a_question_is_opened_from", "a question is opened from an action by a member; a machine credential may not open one. Nothing was written."), { action: action ?? null });
-    if (!action) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass action=<action id>" };
+    if (!action) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_action_one_action", "one action at a time: pass action=<action id>") };
     if (!asked || asked.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked))
       return worded("ACTION_INQUIRY_NO_QUESTION", localize("action-records.index.the_question_is_1_to", "the question is 1 to {ACTION_QUESTION_MAX} characters on one line. Nothing was written.", { ACTION_QUESTION_MAX: String(ACTION_QUESTION_MAX) }), { action, max: ACTION_QUESTION_MAX });
     const b = this.#seenAction(action, viewer);
     if (!b) return noSuchAction(action);
     const project = typeof b.project === "string" ? b.project.trim() : "";
     if (!project)
-      return worded("ACTION_NO_PROJECT", "this action belongs to no project, so there is nowhere to open a question from "
-        + "it. Nothing was written.", { action });
+      return worded("ACTION_NO_PROJECT", localize("action-records.index.action_no_project", "this action belongs to no project, so there is nowhere to open a question from it. Nothing was written."), { action });
     /* END DEC-49 REGION is-action-inquiry */
     /* Seeing the project is not working in it (`membership` R122's position): an invited member who has not joined sees
        the action and opens nothing. The refusal is membership's own row, answered as given, as `conformance` R6 asks it. */
@@ -820,19 +812,13 @@ for (const m of ["actionLawsPropose", "actionRiskPropose", "actionSeeksPropose",
    `lawProposalLabel` (REC-195); the tier's and the seeks' says, in each state, what the proposal is not. */
 const PROPOSAL_SAYS = {
   risk_tier: {
-    machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it "
-      + "can set a tier beside the action for members to weigh and it can never set the tier. Nothing here is this "
-      + "action's risk tier, and nothing becomes it until a member states it themselves",
-    member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the "
-      + "risk-tier act sets that, and the record holds who made the proposal",
+    machine_proposed: word("action-records.machine_credential_proposed"),
+    member_proposed: word("action-records.member_proposed_risk"),
     unstated: word("action-records.record_say_proposed"),
   },
   seeks: {
-    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as "
-      + "machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing "
-      + "becomes it until a member states it themselves",
-    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not "
-      + "the action's seeks: only a member's own write states that, and the record holds who made the proposal",
+    machine_proposed: word("action-records.machine_credential_proposed_records"),
+    member_proposed: word("action-records.member_proposed_records"),
     unstated: word("action-records.record_say_proposed_records"),
   },
 };
