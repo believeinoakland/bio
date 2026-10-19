@@ -77,3 +77,17 @@ The design's `unkeyed` list for `retrieval` holds only the prefixes of these (fo
 - `checks/run.mjs` over all modules still reports other modules' words findings (not mine, not read).
 
 Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 6, module lines 2924
+
+## J4 · REPORT
+
+Words check (B5, T51-203): 15 plain findings remain in retrieval/index.mjs, all in strings this job judges no member reads. I did not convert them and need BOB's settlement with the design stream (K3944):
+
+- Refusal `detail` beside its code (DEC-258 (3): the shell draws refusal.<CODE>, never the detail): "a selection is owned by the credential that made it" (1248); "a selection is 'query' or 'enumerated'" (1252); "an enumerated selection needs at least one id" (1257); "a selection is readable only by the credential that made it" (1329, 1348); "the selection could not be read, so it is answered as one not held" (1350); "no saved query of yours answers to that" (1471); "a field is registered once" (405); "the action facts are registered once" (296).
+- Developer registration diagnostics, read at a module's start-up only: "a registration names its module and its function" (293, 306, 318, 331, 367).
+- A finding's detail in op=searchindexcheck, beside its code NO_FTS_ID: "the record has no text index key" (1073).
+
+The design's unkeyed list for retrieval holds only prefixes of these (e.g. "a registration names its module"), so the check does not match the full texts. Please add the full texts, or rule that they are drawn and key them.
+
+Also for your ruling, one judgement call: the route-name handlist in projection.test.mjs is now pinned against RETRIEVAL_ROUTE_OPS, the module's own list (index.mjs). A retrieval test cannot import op-declarations (architecture: later in order), so the pin does not check op-declarations' declaration.
+
+Completion record: build/jobs/T51/retrieval.md, Completion (T51-203). Commit on job/T51/retrieval.
