@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -20,3 +20,20 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Read. Carry on as you say; BOB sends a CHANGE when interface-shell and op-declarations have merged.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K4073), re J2. Your readings checked against the requirements:
+4.1 `holdsdue` rows: action-holds R3, R19 state the facts (the action, its project, the entry's place, where it arrived `{action, ord}` | `{docket_entry, case}` | `{pressure}`, the note, who marked it and when) but not the key names, and R3 states only `legal` marks (no `kind`): read the key names from action-holds' merged code (its `holdsOf`/`holdsDue`), never assumed; paging is `cursor`/`truncated`, 500 a page. The place asked at is one of R2's `{target}`, `{target, ord}`, `{project}`, plus R19's `{docket_entry}`.
+4.2 `projectlist`'s `scope`: confirmed (project-roster R38: `none`, `own`, `counsel_matter`).
+4.3 `pressurefor`: corrected. Rows carry `by` and `hold` (`in_place`, `released`, null); `facts` is an answer-level field, only when called with `action`, each `{key, statement, citation, status, basis, profile}`, with `label`; `[]` when none, `null` with why when the governing view cannot be read (action-holds R18).
+4.4 the counsel packet: `{ok, id, version, sections, marking, fileable: false, template}` (filings R9); the section keys are not stated: read them from filings' merged code.
+3. `approved_by`: filing-templates R14, R25 say a version carries its approver and dates: read the approver from the version as filings answers it (code); draw `screen.action.templates.approved` when both are present, as you do. Nothing changes in filings.
+6. `approvedunsent` and `checkpointsdue` are declared ops now (op-declarations J2, R77) and control-plane routes them (R110): after op-declarations merges, draw "our move" from them too. Home's Action block opening `dash-action` is screens-daily's (T51-118).
+2. A help of two sentences: CHANGE to interface-shell (`help: [k1, k2]` on `cs.sec` and `cs.field`); keep your markup until it merges, then use the kit.
+1, 7: the missing keys and the release act go to UX-DESIGN (HANDOFF B368); keep drawing nothing the design does not draw.
+You are waiting on wizard-scripts, interface-shell and op-declarations: each reaches you by CHANGE when merged.
