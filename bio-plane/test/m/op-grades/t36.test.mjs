@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
+import { declaredOps } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]) && NON_ACTS[op].length > 30;
@@ -42,8 +43,7 @@ const R24_WRITES = { releasescanhold: "reasoned", deepercheck: "observational", 
   openoriginal: "observational", openwithwarning: "observational", scanbatch: "observational", deeperbatch: "observational",
   renderbatch: "substrate", securityforward: "substrate", securitytooladd: "credential", securitytoolremove: "credential",
   securitytooltest: "substrate" };
-const R24_READS = ["verdictnotes", "threatof", "originalstate", "safeview", "safecopy", "scanstatus", "scanfindings",
-  "findingkind", "securitytools", "securitytoolcatalogue", "securitytoolevents"];
+const R24_READS = declaredOps("file-safety").filter((op) => Object.hasOwn(T36_NON_ACTS, op) && T36_NON_ACTS[op].startsWith("read: "));
 const FILE_ASKED = "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records "
   + "no one";
 const TOOLS = "setting: the group's security tools, an administrator's act; moves no bundle";
@@ -123,7 +123,7 @@ test("R25: aikeepaway `reasoned` on AI_KEEP_AWAY_NO_REASON (T37: credentials R51
 
 test("R23 R24 R25: T36's tables hold exactly these ops, none both graded and stated absent", () => {
   assert.deepEqual(Object.keys(T36_RUNGS).sort(),
-    ["aikeepaway", "releasescanhold", "spotcheckvisit", "standardinforcethrough", "standardinforcethroughwithdraw"]);
+    declaredOps("ai-accounts", "file-safety", "calculations", "standards").filter((op) => Object.hasOwn(T36_RUNGS, op)));
   assert.deepEqual([...Object.keys(T36_RUNGS), ...Object.keys(T36_RUNG_ABSENT)].sort(),
     [...Object.keys(R23_WRITES), ...Object.keys(R24_WRITES), "aikeepaway"].sort());
   assert.deepEqual(Object.keys(T36_NON_ACTS).sort(), [...Object.keys(R23_WRITES), ...R23_READS, ...Object.keys(R24_WRITES),

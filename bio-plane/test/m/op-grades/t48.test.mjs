@@ -11,6 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
+import { declaredOps } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -22,8 +23,11 @@ const WRITES = { actionreplyquoting: "reversible", updateskip: "reasoned", updat
   updatestart: "reversible", planask: "reversible", stepsource: "reasoned", stepsourcewithdraw: "reasoned",
   lookedsince: "caller-owned" };
 const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned", securitymap: "caller-owned" };
-const READS = ["proceedingdates", "updatenotice", "aiuseovertime", "exploregraph", "standardproposals", "filingread",
-  "pressurefor"];
+const READS = declaredOps("following", "instance-setup", "ai-use", "explore", "standards", "filings", "action-holds")
+  .filter((op) => Object.hasOwn(T48.T48_NON_ACTS, op) && T48.T48_NON_ACTS[op].startsWith("read: "));
+const R41_READS = READS.filter((op) => op !== "proceedingdates" && op !== "updatenotice");
+const R41_CONTROL = [...declaredOps("action-plans", "connections", "membership")
+  .filter((op) => Object.hasOwn(T48.T48_RUNGS, op) || Object.hasOwn(T48.T48_RUNG_ABSENT, op)), ...R41_READS];
 const UPDATE = "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
   + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
   + "installs, with Cloudflare's consent)";
@@ -126,7 +130,7 @@ test("R40: updateskip `reasoned`, UPDATE_SKIP_NO_REASON joining JUSTIFICATION_RE
 /* ---- R41 ----------------------------------------------------------------------------------------------------------- */
 test("R41: aiuseovertime, exploregraph, standardproposals, filingread and pressurefor are reads, `read: …`, ungraded, no "
    + "machine refusal, phone acts; control: planask is not a read", () => {
-  for (const op of ["aiuseovertime", "exploregraph", "standardproposals", "filingread", "pressurefor"]) {
+  for (const op of R41_READS) {
     assert.ok(isRead(op), op);
     assert.equal(gradeOf(op), null, op);
     assert.equal(phoneOf(op), true, op);
@@ -151,8 +155,7 @@ test("R41 (K3297): planask `reversible` as airunopen; not an ACTS row (its subje
   assert.equal(phoneOf("planask"), true);
   assert.equal(RUNG_ABSENT.optionpropose.ground, "undetermined", "optionpropose keeps its grade");
   /* control: no op of R41 enters MACHINE_REFUSALS */
-  for (const op of ["planask", "stepsource", "stepsourcewithdraw", "lookedsince", "aiuseovertime", "exploregraph", "standardproposals",
-    "filingread", "pressurefor"]) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
+  for (const op of R41_CONTROL) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
 });
 
 test("R41: stepsource `reasoned` as connectionassert, STEP_SOURCE_NO_BASIS joining JUSTIFICATION_REFUSALS once; "

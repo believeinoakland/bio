@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
          phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
+import { declaredOps } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -69,10 +70,8 @@ const B3_CODES = { standardforce: "STANDARD_NO_REASON", standardforcewithdraw: "
   standardrelease: "STANDARD_NO_REASON", standardadoption: "STANDARD_NO_REASON", standardimpose: "STANDARD_NO_REASON",
   standardbenchmark: "STANDARD_NO_REASON", usewithdraw: "NO_REASON", uselink: "DUTY_NO_REASON",
   useunlink: "DUTY_NO_REASON" };
-const B3_READS = ["bindsat", "editioninforce", "forcesof", "overridesof", "usesof", "applicationrecipes", "poweruses",
-  "recordsrequests"];
-const R22_READS = ["archivelist", "coarchivestate", "findin", "entitieskind", "securitymap", "recoverycodesstate",
-  "adminrecoverystep"];
+const B3_READS = declaredOps("standards", "events", "calculations", "duties", "capture-requests").filter((op) => Object.hasOwn(T35_NON_ACTS, op) && T35_NON_ACTS[op].startsWith("read: "));
+const R22_READS = declaredOps("acquisition", "retrieval", "entities", "credentials", "instance-setup").filter((op) => Object.hasOwn(T35_NON_ACTS, op) && T35_NON_ACTS[op].startsWith("read: "));
 
 test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `reversible`, unpack `undetermined`, the "
    + "note revise and delete and both sign-outs `caller-owned`, the recovery acts `credential` — each with R22's reason, "
