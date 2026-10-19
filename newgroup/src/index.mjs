@@ -23,8 +23,8 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, updateHtml, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS, pageHead, pageMark,
-  ASSET_PREFIX, UPDATE_KEEPS, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN, existsPanel, removePanel, removedPanel } from "./ui.mjs";
+import { WIZARD_HTML, updateHtml, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS, pageHead, pageMark, around, SLOT,
+  ASSET_PREFIX, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN, NO_RELEASE_BEGIN, existsPanel, removePanel, removedPanel } from "./ui.mjs";
 /* R72: every sentence a key holds is read by key; R66, R71: the way to Cloudflare waits out what waiting can mend. */
 import { word } from "./words.mjs";
 import { cf as cfCall, Session, patiently, sleep, WAIT_BOUND_MINUTES } from "./cfx.mjs";
@@ -145,55 +145,43 @@ const builtInBase = (repoMan) => (repoMan && String(repoMan.version) === RELEASE
    anything that failed verification, and it always says which copy it used
    and why, in words a person can act on. */
 async function selectRelease(emit) {
-  await emit.step("rel", "Checking the public repository for the newest release");
+  await emit.step("rel", word("installer.step.release.install"));
   /* The manifest travels with the selection (IC-82): the fleet half reads
      `fleet[]`/`fleetSig` from it. null means the repository was unreachable —
      a STATED absence the fleet step reports, never rounds to "no members". */
   let man = null, said = "";
+  const builtin = RELEASE_VERSION;
   try {
     man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
       const { limits: lim, ...asset } = await fetchRepoAsset(man);
       /* R20: verified bytes that state no readable limits are not used either; the built-in stands in, and the page says why. */
       if (lim.ok) {
-        emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
-          + RELEASE_VERSION + ". "
-          + (ARMED_SIGNERS.length
-              ? "It carries a valid signature from a key this installer trusts, so that is what installs."
-              : "Its integrity checked out, so that is what installs."));
+        emit.ok("rel", ARMED_SIGNERS.length
+          ? word("installer.release.newer.signed", { version: man.version, builtin })
+          : word("installer.release.newer.checked", { version: man.version, builtin }));
         return { version: String(man.version), ...asset, from: "repository", man, limits: lim.limits };
       }
-      said = "The repository has " + man.version + ", but it " + LIMITS_NOT_STATED[lim.why]
-        + (lim.detail ? " (" + lim.detail + ")" : "") + ", so it was NOT used. The installer's own built-in release ("
-        + RELEASE_VERSION + ") installs instead.";
-    } else said = "The built-in release (" + RELEASE_VERSION + ") is current.";
+      said = lim.why === "none" ? word("installer.release.nolimits", { version: man.version, builtin })
+        : word("installer.release.badlimits", { version: man.version, builtin });
+    } else said = word("installer.release.current", { builtin });
   } catch (e) {
     /* R11: a repository that answered, but whose plane failed verification, was REACHABLE: its manifest stays, so the
        fleet step names the true reason its members are left out (they are signed against a plane this act did not
        install) rather than "not reachable". Only a repository that did not answer leaves no manifest. */
     if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
-    const fallback = " The installer's own built-in release (" + RELEASE_VERSION
-      + ") installs instead, which is safe. This is worth mentioning to the publisher of " + PRODUCT + " releases.";
-    said = (
-      e && e.integrity
-        ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback
-      : e && e.unsigned
-        ? "The repository's copy carries no signature, and this installer only accepts signed releases, "
-          + "so it was NOT used." + fallback
-      : e && e.signature
-        ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid")
-          + "), so it was NOT used." + fallback
-        : "The public repository was not reachable just now, so the built-in release ("
-          + RELEASE_VERSION + ") is used. That is fine.");
+    const tail = " " + word("installer.release.fallback.tail", { builtin });
+    said = e && e.integrity ? word("installer.release.fallback.integrity") + tail
+      : e && e.unsigned ? word("installer.release.fallback.unsigned") + tail
+      : e && e.signature ? word("installer.release.fallback.wrongsigner", { reason: e.reason || "invalid" }) + tail
+      : word("installer.release.fallback.unreachable", { builtin });
   }
   /* R20: the built-in is held to the same rule. One that states no readable limits is refused by name, before any plane
      upload; the caller stops the act (`refused`) and nothing installs. */
   const lim = planeLimits(RELEASE_BINARY);
   if (!lim.ok) {
     emit.no("rel", said);
-    return { refused: "This installer's built-in release (" + RELEASE_VERSION + ") " + LIMITS_NOT_STATED[lim.why]
-      + (lim.detail ? " (" + lim.detail + ")" : "") + ". The limits your team's Civicsmith runs under are a decision the signed release states, and "
-      + "this installer holds no value of its own to send in their place." };
+    return { refused: lim.why === "none" ? word("installer.release.refused.none", { builtin }) : word("installer.release.refused.unreadable", { builtin }) };
   }
   emit.ok("rel", said);
   return { version: RELEASE_VERSION, ...builtInRelease(), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
@@ -207,31 +195,32 @@ async function selectRelease(emit) {
    built-in" does not choose: V does. A release of any other version, or one failing a check, is not installed, and the answer
    says why in words; nothing is uploaded. Answers `{version, blob, capable, sha?, from, man, limits}` like selectRelease, or `{stop}`. */
 async function selectChosen(emit, V) {
-  await emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
-  const stop = (why) => { emit.no("rel"); return { stop: why }; };
+  await emit.step("rel", word("installer.step.release.update", { version: V }));
+  const stop = (said) => { emit.no("rel"); return { stop: said }; };
+  const unlimited = (lim) => stop(lim.why === "none" ? word("installer.update.stopped.nolimits", { version: V }) : word("installer.update.stopped.badlimits", { version: V }));
   let man = null, unreachable = false;
   try { man = await fetchRepoManifest(); } catch { unreachable = true; }
   const builtIn = V === RELEASE_VERSION;
   /* An update is never installed on hashes alone: with no key to verify against, nothing is a signed release. */
-  if (!ARMED_SIGNERS.length) return stop(`this installer lists no keys to check release ${V}'s signature against`);
+  if (!ARMED_SIGNERS.length) return stop(word("installer.update.stopped.nokeys", { version: V }));
   if (!builtIn) {
-    if (unreachable) return stop(`the public repository was not reachable just now, so release ${V} could not be fetched`);
-    if (!man || String(man.version) !== V) return stop(`the public repository holds no release ${V}`);
+    if (unreachable) return stop(word("installer.update.stopped.unreachable", { version: V }));
+    if (!man || String(man.version) !== V) return stop(word("installer.update.stopped.norelease", { version: V }));
     let asset;
     try { asset = await fetchRepoAsset(man); }
     catch (e) {
-      return stop(e && e.integrity ? `release ${V} did not pass its integrity check, so it was not used`
-        : e && e.unsigned ? `release ${V} carries no signature, and this installer only installs signed releases`
-        : e && e.signature ? `release ${V} is signed, but not by a key ${PRODUCT} releases are signed with (${e.reason || "invalid"})`
-        : `release ${V} could not be fetched`);
+      return stop(e && e.integrity ? word("installer.update.stopped.integrity", { version: V })
+        : e && e.unsigned ? word("installer.update.stopped.unsigned", { version: V })
+        : e && e.signature ? word("installer.update.stopped.wrongsigner", { version: V })
+        : word("installer.update.stopped.unreachable", { version: V }));
     }
     const { limits: lim, ...rest } = asset;
-    if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
+    if (!lim.ok) return unlimited(lim);
     emit.ok("rel", UPDATE_WORDS.progressVerified(V));
     return { version: V, ...rest, from: "repository", man, limits: lim.limits };
   }
   const lim = planeLimits(RELEASE_BINARY);
-  if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
+  if (!lim.ok) return unlimited(lim);
   emit.ok("rel", UPDATE_WORDS.progressVerified(V));
   return { version: V, ...builtInRelease(), from: "built-in", man: RELEASE_MANIFEST, base: builtInBase(man), limits: lim.limits };
 }
@@ -540,14 +529,14 @@ async function heldBindings(token, acct, slug) {
    the assistant (its two settings are made in your team's Civicsmith at its setup, setup-page R18) and generates no
    shared member key (R9). An update leaves neither behind, as it leaves no INSTANCE_CLAUDE_TOKEN (R36): each held
    before the update is removed, a secret by its own deletion and a plain value by the update's upload (which keeps no
-   plain value it does not restate), and a refused deletion is named. `RETIRED_BINDINGS` is every such name, with what
-   the page says it was. */
+   plain value it does not restate), and a refused deletion is named. `RETIRED_BINDINGS` is every such name, with the
+   suffix of the `installer.keys.retired.*` key that says what it was. */
 export const ASSISTANT_BINDING = "ASSISTANT_ENABLED";
 export const MEMBER_BINDING = "MEMBER_TOKEN";
 export const RETIRED_BINDINGS = Object.freeze([
-  [RETIRED_CLAUDE_BINDING, "the Claude credential an earlier installer bound into your team's Civicsmith"],
-  [MEMBER_BINDING, "the shared member key an earlier installer bound into your team's Civicsmith (members now sign in with their own sessions)"],
-  [ASSISTANT_BINDING, "the assistant choice an earlier installer bound into your team's Civicsmith (the assistant's settings are made inside it, at its setup)"],
+  [RETIRED_CLAUDE_BINDING, "claude"],
+  [MEMBER_BINDING, "member"],
+  [ASSISTANT_BINDING, "assistant"],
 ]);
 
 /* R47 (T36; N745, K2038) — THE COPY'S OWN HOSTS. `OWN_HOSTS`, plain text, the host names the copy answers at,
@@ -640,11 +629,11 @@ const profilesBinding = (ids) => Array.isArray(ids) && ids.length
 /* The refusal for a `profiles` value /begin cannot bind, or null. */
 function profilesRefusal(v, mode) {
   if (v === undefined) return null;
-  if (mode === "update") return "An update never changes which jurisdiction profiles your team's Civicsmith reads; an administrator changes them in its settings, under Places and offices.";
-  if (!Array.isArray(v)) return "The jurisdiction profiles must be a list of the profiles offered.";
+  if (mode === "update") return word("installer.profiles.refused.update");
+  if (!Array.isArray(v)) return word("installer.profiles.refused.notalist");
   const bad = v.filter((id) => typeof id !== "string" || !HELD_CHOICES.has(id));
-  if (bad.length) return "Not a jurisdiction profile this installer offers: " + bad.map((x) => JSON.stringify(x)).join(", ") + ".";
-  if (new Set(v).size !== v.length) return "A jurisdiction profile was chosen twice.";
+  if (bad.length) return word("installer.profiles.refused.unknown", { list: bad.map((x) => JSON.stringify(x)).join(", ") });
+  if (new Set(v).size !== v.length) return word("installer.profiles.refused.twice");
   return null;
 }
 
@@ -1519,8 +1508,7 @@ async function logsStep(emit, token, acct, names) {
 }
 
 const lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
-const UNDETERMINED_BUILDS = "This release cannot report which version the record store of your team's Civicsmith or its capability "
-  + "workers are running, so only its address was checked; those parts are not confirmed either way.";
+const UNDETERMINED_BUILDS = word("installer.verify.undetermined");
 
 /* -------------------------------------------------------- the progress page
    The callback streams HTML: the shell renders immediately, then each
@@ -1528,22 +1516,22 @@ const UNDETERMINED_BUILDS = "This release cannot report which version the record
    with the token never leaving this Worker, and nothing to poll.
 
    R51 (DEC-201 (4)): one plain line per step, drawn as it starts and redrawn as it ends (`cs-row`, its state in a word
-   beside it). A stop names the step it stopped at (the line in progress, carried as `fail`'s fourth argument), what
-   happened, and what to do; "nothing was created" is in what happened wherever R4 holds, and on an update (R52) that
-   your team's Civicsmith keeps running as it was. The shell holds exactly one script, before every streamed one. */
+   beside it). A stop (R75) is one sentence by key, which says the cause, what was or was not changed ("nothing was
+   created", R4; the copy keeps running as it was, R52) and what to do; the step it stopped at (the line in progress,
+   carried as `fail`'s third argument) is named beside it. The shell holds exactly one script, before every streamed one. */
 
-const STATE_WORD = Object.freeze({ go: "Now", ok: "Done", no: "Not done" });
+const STATE_WORD = Object.freeze({ go: word("installer.state.go"), ok: word("installer.state.ok"), no: word("installer.state.no") });
 function progressShell(title, slug, retry = null) {
-  return `${pageHead(esc(title), { noindex: true })}
+  return `${pageHead(title, { noindex: true })}
 <body class="cs"><main class="cs-frame ng">
 ${pageMark()}
 <h1>${esc(title)}</h1>
-<p class="small">For the team <b class="mono" id="group">${esc(slug)}</b>. This takes a few minutes; leave this page open.</p>
+<p class="small">${around(word("installer.progress.forteam", { name: SLOT }), `<b class="mono" id="group">${esc(slug)}</b>`)}</p>
 <p class="small" id="says" hidden></p>
 <div id="log" class="cs-sheet ng-log"></div>
 <p class="small" id="waiting" role="status" hidden></p>
-<div id="fail" class="ng-stop" role="alert" hidden><h2 id="fail-h"></h2><p class="small" id="fail-s"></p><p id="fail-p"></p><p id="fail-d"></p>${retry
-  ? `<div class="ng-acts" id="fail-acts"><a class="cs-btn" data-tone="primary" id="try-again" href="${esc(retry)}">${UPDATE_WORDS.tryAgain}</a></div>` : ""}</div>
+<div id="fail" class="ng-stop" role="alert" hidden><p id="fail-p"></p><p id="fail-d"></p><p class="small" id="fail-s"></p>${retry
+  ? `<div class="ng-acts" id="fail-acts"><a class="cs-btn" data-tone="primary" id="try-again" href="${esc(retry)}">${esc(UPDATE_WORDS.tryAgain)}</a></div>` : ""}</div>
 <div id="done" class="ng-stage" hidden></div>
 ${publisherFooter()}
 <script>
@@ -1555,8 +1543,7 @@ function says(t){$("#says").textContent=t;$("#says").hidden=false;}
 function waiting(t){$("#waiting").textContent=t;$("#waiting").hidden=false;}
 function ok(id,label){const d=rows[id];if(d){mark(d,"ok",label);$("#waiting").hidden=true;}}
 function no(id,label){const d=rows[id];if(d)mark(d,"no",label);}
-function fail(h,p,d,s){$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-h").textContent=h;$("#fail-s").textContent=s?"Stopped at the step: "+s:"";
- $("#fail-p").textContent=p;$("#fail-d").textContent=d||"";}
+function fail(p,d,s){$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";$("#fail-s").textContent=s||"";}
 async function go(body,err){try{const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
  const j=await r.json();if(!j.ok){err.textContent=j.error||"";return;}location.href=j.authorize;}catch(e){err.textContent=String(e.message||e);}}
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
@@ -1576,7 +1563,7 @@ function wire(){
 function done(html){$("#done").innerHTML=html;$("#done").hidden=false;wire();
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
   await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent);
-  const t=b.textContent;b.textContent="Copied";setTimeout(()=>b.textContent=t,1400);}));
+  const t=b.textContent;b.textContent=${jsLit(word("installer.copy.done"))};setTimeout(()=>b.textContent=t,1400);}));
  const h=$("#handover");if(h)h.addEventListener("click",()=>{location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent);});}
 </script>`;
 }
@@ -1603,7 +1590,7 @@ function streamPage(headers, shell, run, again = null) {
     no:   (id, label) => { if (label) lines.set(id, label);
       return write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`); },
     /* `at`: the step a stop names when it is not the line in progress (a stop said after later lines were drawn). */
-    fail: (h, p, d, at = current) => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)},${jsStr(at ? lines.get(at) : "")})</script>\n`),
+    fail: (said, d = "", at = current) => write(`<script>no();fail(${jsStr(said)},${jsStr(d)},${jsStr(at && lines.get(at) ? word("installer.stopped.at", { step: lines.get(at) }) : "")})</script>\n`),
     says: (text)      => write(`<script>says(${jsStr(text)})</script>\n`),
     /* R66: the line drawn while a wait on Cloudflare or the address goes on. */
     wait: (text)      => write(`<script>waiting(${jsStr(text)})</script>\n`),
@@ -1616,17 +1603,14 @@ function streamPage(headers, shell, run, again = null) {
       /* R71 (F6): a permission that expired or was revoked asks for approval again, and the run continues from where it
          stopped (R69). R66: what waiting did not mend is a lasting failure, named, with one action. */
       if (e && e.approveAgain && again) {
-        await emit.fail(word("screen.install.approveagain"), "", "");
+        await emit.fail(word("screen.install.approveagain"));
         await emit.done(approvePanel(again));
       } else if (e && e.lasting) {
-        await emit.fail(word("screen.install.stopped.lasting"), "", word("screen.install.stopped.lasting.do"));
+        await emit.fail(word("screen.install.stopped.lasting"), word("screen.install.stopped.lasting.do"));
       } else if (e && e.source) {
-        await emit.fail(word("screen.install.stopped.source"), "", word("screen.install.stopped.source.do"));
+        await emit.fail(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
       } else
-      await emit.fail("Something went wrong that this page did not anticipate",
-        "The step in progress did not finish. Nothing secret was stored anywhere.",
-        "Start again from the installer's first page; if it happens again, tell the publisher of " + PRODUCT
-          + " releases what it said: " + String(e && e.message || e));
+      await emit.fail(word("installer.stopped.unexpected", { said: String(e && e.message || e) }));
     }
     await write("</body></html>");
     await w.close();
@@ -1643,50 +1627,34 @@ function approvePanel(body) {
 
 /* ---------------------------------------------------------- provisioning */
 
-/* R51: a stop's last line is what to do. Where the cause is Cloudflare's answer, that is to start again, with its words. */
-const tryAgain = (mode, said) => (mode === "update"
-  ? "To continue: run the update again in a minute from the update page; this is usually temporary."
-  : "To continue: start again from the installer's first page in a minute; this is usually temporary.")
-  + " (Cloudflare said: " + said + ")";
 
 /* DIST-9: say which way the organisation `ai` credential went — never its value. */
 async function instanceAiNotice(emit, mode, carried) {
-  await emit.step("ai", "Your organisation's AI credential");
-  if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your team's Civicsmith as a secret "
-    + "(it is not shown here). It uses it to resume assistant runs that credential opened.");
-  emit.ok("ai", mode === "update"
-    ? "No organisation AI credential was given, so none was sent. One your team's Civicsmith already holds is kept unchanged; "
-      + "this installer never creates one."
-    : "No organisation AI credential was given, so your team's Civicsmith has none: it will not resume paused assistant runs on its "
-      + "own. A member mints one inside your team's Civicsmith; running the updater with it adds it. This installer never creates one.");
+  await emit.step("ai", word("installer.step.aikey"));
+  if (carried) return emit.ok("ai", word("installer.ai.given"));
+  emit.ok("ai", mode === "update" ? word("installer.ai.none.update") : word("installer.ai.none.install"));
 }
 
 /* K1541, R36 and R17 (T36) on an update: the seal secret added only where none was held, and every retired binding an
    earlier installer left (RETIRED_BINDINGS: a team-wide Claude credential, the shared member key, the assistant choice)
    removed. Each outcome is said; an unread settings page is said as unread, never as "none". */
-const cap = (x) => x[0].toUpperCase() + x.slice(1);
 async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
-  await emit.step("keys", "Your members' own accounts, and what earlier installers left behind");
-  if (!held) return emit.no("keys", "The settings of your team's Civicsmith could not be read, so the installer could not tell whether it "
-    + "holds the secret that seals each member's own Claude account or API key, or anything an earlier installer bound that is now "
-    + "retired (a team-wide Claude credential, the shared member key, the assistant choice). Nothing was sent or removed. "
-    + "Running this update again checks once more.");
-  const said = [seal
-    ? "Your team's Civicsmith now holds the secret that seals each member's own Claude account or API key (it is not shown here)."
-    : "Your team's Civicsmith already held the secret that seals each member's own Claude account or API key; it is kept unchanged."];
+  await emit.step("keys", word("installer.step.memberkeys"));
+  if (!held) return emit.no("keys", word("installer.keys.unread"));
+  const said = [seal ? word("installer.keys.sealed.new") : word("installer.keys.sealed.kept")];
   let ok = true;
-  for (const [name, what] of RETIRED_BINDINGS) {
+  for (const [name, kind] of RETIRED_BINDINGS) {
     const type = held.get(name);
     if (!type) continue;
+    const what = word(`installer.keys.retired.${kind}`);
     /* A plain value is not kept by the update's upload, which did not restate it: it is gone already. */
-    if (type !== "secret_text") { said.push(cap(what) + " was removed by this update: the installer binds none now."); continue; }
+    if (type !== "secret_text") { said.push(word("installer.keys.retired.gone", { what })); continue; }
     try {
       await cf(token, `/accounts/${acct}/workers/scripts/${slug}/secrets/${name}`, { method: "DELETE" });
-      said.push(cap(what) + " was removed: the installer binds none now.");
+      said.push(word("installer.keys.retired.removed", { what }));
     } catch (e) {
       ok = false;
-      said.push(cap(what) + " is still held, and removing it was refused (Cloudflare said: "
-        + e.message + "). Remove the secret " + name + " from your worker's settings on Cloudflare.");
+      said.push(word("installer.keys.retired.refused", { what, said: e.message, name }));
     }
   }
   said.push(ASSISTANT_OWN_ACCOUNTS);
@@ -1697,7 +1665,7 @@ async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
    (R36); the page says where its two settings are made, in the install page's own words (ui.mjs, ASSISTANT_OFFER). */
 export const ASSISTANT_OWN_ACCOUNTS = ASSISTANT_OFFER.replace(/\s+/g, " ").trim();
 async function assistantNotice(emit) {
-  await emit.step("assist", "The assistant");
+  await emit.step("assist", word("installer.step.assistant"));
   emit.ok("assist", ASSISTANT_OWN_ACCOUNTS);
 }
 
@@ -1706,15 +1674,15 @@ async function assistantNotice(emit) {
 /* F3: the account limits the install could run into, with the number of each the install needs. The ceilings are Cloudflare's
    published defaults for a Workers Paid account; they are stated here once, with what the install needs of each. */
 const ACCOUNT_LIMITS = Object.freeze({
-  workers: { ceiling: 500, noun: "Workers", need: 1 + RELEASE_MANIFEST.fleet.length + 2 },
-  classes: { ceiling: 500, noun: "Durable Object classes", need: 1 + 2 + RELEASE_CONTAINERS.length },
-  buckets: { ceiling: 1000, noun: "R2 buckets", need: 2 },
-  containers: { ceiling: 100, noun: "container applications", need: RELEASE_CONTAINERS.length },
+  workers: { ceiling: 500, need: 1 + RELEASE_MANIFEST.fleet.length + 2 },
+  classes: { ceiling: 500, need: 1 + 2 + RELEASE_CONTAINERS.length },
+  buckets: { ceiling: 1000, need: 2 },
+  containers: { ceiling: 100, need: RELEASE_CONTAINERS.length },
 });
 async function limitReached(api) {
   const [scripts, spaces, buckets, apps] = await Promise.all([listScripts(api), listNamespaces(api), listBuckets(api), listApps(api).catch((e) => { if (special(e)) throw e; return []; })]);
   const have = { workers: scripts.size, classes: spaces.length, buckets: buckets.length, containers: apps.length };
-  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) if (have[k] + l.need > l.ceiling) return `${l.ceiling} ${l.noun}`;
+  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) if (have[k] + l.need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
   return null;
 }
 /* F2: whether Containers are turned on for the account. The platform answers a list of applications when they are, and a
@@ -1776,39 +1744,35 @@ async function installRun(emit0, code, saved, guard) {
   };
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
 
-  await emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
-    return emit.fail("Cloudflare did not confirm the permission",
-      "The sign-in came back but the final handshake failed, so nothing was created.",
-      tryAgain("install", e.message));
+    return emit.fail(word("installer.install.stopped.permission", { said: e.message }));
   }
 
-  await emit.step("acct", "Finding your account");
+  await emit.step("acct", word("installer.step.acct"));
   let acct;
   try {
     const accts = await cf(token, "/accounts");
-    if (!accts?.length) throw new Error("no accounts on this sign-in");
+    if (!accts?.length) throw new Error(word("installer.account.none"));
     acct = accts[0];
-    emit.ok("acct", `Using the account "${acct.name}"`);
+    emit.ok("acct", word("installer.account.using", { account: acct.name }));
   } catch (e) {
     if (special(e)) throw e;
     emit.no("acct");
-    return emit.fail("Could not read your account",
-      "Permission was granted but the account list came back empty or refused. Nothing was created.",
-      tryAgain("install", e.message));
+    return emit.fail(word("installer.install.stopped.account", { said: e.message }));
   }
   api = apiOf(token, acct.id);
 
   /* R69 (F9): one run at a time. */
   try {
-    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!(await takeLock(api, saved.lock))) return emit.fail(word("installer.stopped.running"));
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; /* a lock that cannot be taken is not a reason to refuse the install */ }
 
   /* R62, R64, R69, R70 (F7): what the account already holds, read before anything is created. */
-  await emit.step("fresh", "Checking the name is free and what your account holds");
+  await emit.step("fresh", word("installer.step.fresh"));
   const memberNames = memberNamesOf(null);
   let resumed = false;
   try {
@@ -1818,7 +1782,7 @@ async function installRun(emit0, code, saved, guard) {
     const taken = new Set([...inv.scripts.keys(), ...inv.planes.map((p) => p.slug), ...inv.orphans.slugged.keys()]);
     const nametaken = () => { const free = freeName(slug, taken, slugOk);
       emit.no("fresh");
-      return emit.fail(word("screen.install.stopped.nametaken", { name: slug }), "", free ? word("screen.install.stopped.nametaken.do", { free }) : ""); };
+      return emit.fail(word("screen.install.stopped.nametaken", { name: slug }), free ? word("screen.install.stopped.nametaken.do", { free }) : ""); };
     /* A Worker by this name that is not a Civicsmith's (the lookup, R5: one that fails is a refusal, caught below). */
     if (!ours && (inv.scripts.has(slug) || await scriptExists(token, acct.id, slug))) return nametaken();
     if (ours && ours.finished) {
@@ -1830,13 +1794,11 @@ async function installRun(emit0, code, saved, guard) {
       const held = await describeHeld(token, acct.id, inv, memberNames);
       return emit.done(existsPanel({ copies: held, version: await newestVersion(), slug }));
     }
-    emit.ok("fresh", alongside ? "The name is free; the Civicsmith already in your account is not touched" : word("screen.install.progress.single"));
+    emit.ok("fresh", alongside ? word("installer.install.fresh.alongside") : word("screen.install.progress.single"));
   } catch (e) {
     if (special(e)) throw e;
     emit.no("fresh");
-    return emit.fail("Could not check your account",
-      "The check for an existing installation failed, so to be safe nothing was created.",
-      tryAgain("install", e.message));
+    return emit.fail(word("installer.install.stopped.lookup", { said: e.message }));
   }
   if (resumed) await emit.says(word("screen.install.resumed"));
 
@@ -1844,47 +1806,37 @@ async function installRun(emit0, code, saved, guard) {
      Free-plan account is refused while there is genuinely nothing to clean up. Refusing IS the fix: the D-106 failure this
      guards is a group getting something quietly different from every description of it — a copy that looks installed and
      degrades under load it was told it could carry. */
-  await emit.step("plan", "Checking your account's Workers plan");
+  await emit.step("plan", word("installer.step.plan"));
   let planAnswer;
   try { planAnswer = await establishPlan(token, acct.id); }
   catch (e) { if (special(e)) throw e; planAnswer = { plan: "unknown", detail: e.message }; }
   if (planAnswer.plan === "free") {
     emit.no("plan");
-    return emit.fail(word("screen.install.stopped.plan"), "Your team's Civicsmith runs on Cloudflare Workers, and the work it does needs the processing "
-      + "allowance that comes with Cloudflare's Workers Paid plan ($5/month), paid with a payment method on the account, which the evidence "
-      + "storage this installer sets up needs as well. Nothing was created, so there is nothing to clean up.",
-      word("screen.install.stopped.plan.do"));
+    return emit.fail(word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do"));
   }
   if (planAnswer.plan === "unknown") {
     emit.no("plan");
-    return emit.fail("Could not verify your account's Workers plan",
-      "The check that establishes your plan did not get a readable answer, and an unverified "
-      + "plan is not a verified one — installing anyway could hand you an installation that quietly "
-      + "degrades. Nothing was created, so there is nothing to clean up.",
-      "To continue: run the installer again in a minute; this is usually temporary. (Cloudflare said: "
-      + planAnswer.detail + ")");
+    return emit.fail(word("installer.install.stopped.planunknown", { said: planAnswer.detail }));
   }
-  emit.ok("plan", word("screen.install.progress.plan") + (planAnswer.leftover
-    ? ". One cleanup note: the tiny probe script \"" + PLAN_PROBE + "\" could not be deleted "
-      + "automatically — it is harmless, and you can remove it from Workers & Pages any time." : ""));
+  emit.ok("plan", word("screen.install.progress.plan") + (planAnswer.leftover ? ". " + word("installer.probe.leftover", { name: PLAN_PROBE }) : ""));
 
   /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
-  await emit.step("room", "Checking that Containers are on and that nothing in your account is at its limit");
+  await emit.step("room", word("installer.step.room"));
   try {
     if (!(await containersOn(api))) {
       emit.no("room");
-      return emit.fail(word("screen.install.stopped.containers"), "Nothing was created.", word("screen.install.stopped.containers.do"));
+      return emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
     }
     const limit = await limitReached(api);
     if (limit) {
       emit.no("room");
-      return emit.fail(word("screen.install.stopped.limit", { limit }), "", word("screen.install.stopped.limit.do"));
+      return emit.fail(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
     }
     emit.ok("room");
   } catch (e) {
     if (special(e)) throw e;
     emit.no("room");
-    return emit.fail("Could not check your account", "The check of what your account holds failed, so to be safe nothing was created.", tryAgain("install", e.message));
+    return emit.fail(word("installer.install.stopped.lookup", { said: e.message }));
   }
 
 
@@ -1892,37 +1844,29 @@ async function installRun(emit0, code, saved, guard) {
      refuses the install while there is genuinely nothing to clean up. */
   const release = await selectRelease(emit);
   if (release.refused) {
-    return emit.fail("This installer cannot say which limits your team's Civicsmith runs under",
-      "Nothing was created, so there is nothing to clean up. " + release.refused,
-      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`);
+    return emit.fail(word("installer.install.stopped.nolimits", { refusal: release.refused }));
   }
   /* R71 (F5), R61: the whole fleet of this release verified and fetched now; a source that stays down ends the run here. */
   let loaded;
   try { loaded = await loadFleet(release, onWait); }
   catch (e) {
-    if (e && e.source) return emit.fail(word("screen.install.stopped.source"), "Nothing was created.", word("screen.install.stopped.source.do"));
+    if (e && e.source) return emit.fail(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
   }
 
   /* Evidence storage is part of what a team's copy IS: captured documents, web pages, and their timestamp certificates
      live there. If storage cannot be created, nothing is installed, and the page explains the one Cloudflare prerequisite in
      plain terms. */
-  await emit.step("r2", "Setting up your evidence storage");
+  await emit.step("r2", word("installer.step.storage"));
   const completed = [];
-  try { const there = await ensureBuckets(token, acct.id, names); if (there.length) completed.push("the evidence storage"); emit.ok("r2", word("screen.install.progress.storage")); }
+  try { const there = await ensureBuckets(token, acct.id, names); if (there.length) completed.push(word("installer.partial.what.storage")); emit.ok("r2", word("screen.install.progress.storage")); }
   catch (e) {
     if (special(e)) throw e;
     emit.no("r2");
-    return emit.fail("One Cloudflare setting is needed first",
-      "Your team's Civicsmith keeps captured documents (PDFs, web pages, timestamp certificates) in Cloudflare's file "
-      + "storage, and Cloudflare requires a payment method on the account before that storage can be turned "
-      + "on. Usage at a community team's size stays inside the free tier; the card is Cloudflare's "
-      + "requirement, not a charge. Nothing was created, so there is nothing to clean up.",
-      "To continue: sign in at dash.cloudflare.com with this same account, open Billing, add a card or "
-      + "PayPal, then come back here and run the installer again. (Cloudflare said: " + e.message + ")");
+    return emit.fail(word("installer.install.stopped.storage", { said: e.message }));
   }
 
-  await emit.step("gen", "Generating your credentials");
+  await emit.step("gen", word("installer.step.credentials"));
   /* R9 (T36): four credentials; no shared member key. */
   const secrets = { boot: rand(32), probe: rand(32), daemon: rand(32), seal: rand(32),
                     ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
@@ -1930,7 +1874,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* DIST-6, step 1: bind only the members this account already holds (see BINDING_OF for the order). */
   const present = await membersPresent(token, acct.id, names);
-  if (present.length) completed.push(`${present.length} capability worker${present.length === 1 ? "" : "s"}`);
+  if (present.length) completed.push(present.length === 1 ? word("installer.partial.what.programs.one") : word("installer.partial.what.programs.other", { n: present.length }));
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
   let selfRefused = false;
   await emit.step("install", word("screen.install.progress.placing"));
@@ -1940,11 +1884,11 @@ async function installRun(emit0, code, saved, guard) {
   const sync = held ? await planeInSync(token, acct.id, slug, release, held, { names, members: present, profiles }) : false;
   try {
     if (held && sync) {
-      completed.push("the software");
+      completed.push(word("installer.partial.what.software"));
       await rotateSecrets(token, acct.id, slug, secrets, held);
-      emit.ok("install", "Your team's Civicsmith's software is already in place, exactly as this release has it");
+      emit.ok("install", word("installer.install.inplace"));
     } else if (held) {
-      completed.push("the software's connections");
+      completed.push(word("installer.partial.what.connections"));
       await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles });
       emit.ok("install");
     } else {
@@ -1970,14 +1914,9 @@ async function installRun(emit0, code, saved, guard) {
     selfRefused = degraded;
     if (!degraded) {
       emit.no("install");
-      return emit.fail("The software did not install",
-        "Your account was reachable but the install was refused, so there is nothing left behind to clean up.",
-        tryAgain("install", e.message));
+      return emit.fail(word("installer.install.stopped.refused", { said: e.message }));
     }
-    emit.ok("install", "Your team's Civicsmith is installed. One optional part — the part that lets it re-check "
-      + "documents on its own schedule — was refused by Cloudflare and was left out, so nothing else "
-      + "was held up. Running the updater later turns it on. (Cloudflare said: "
-      + e.message + ")");
+    emit.ok("install", word("installer.install.noschedule", { said: e.message }));
   }
 
   /* R33: the plane just uploaded, read back and hashed against the release; a mismatch is a lag the verdict names. */
@@ -1988,18 +1927,16 @@ async function installRun(emit0, code, saved, guard) {
 
   /* IC-82/D-297: the fleet rides the same act. Per-member degradation lives inside installFleet — it never fails the install. */
   const fleet = await installFleet(emit, token, acct.id, slug, release, loaded, { scope, plan: { plan: "paid" }, vpc: saved.vpc, names });
-  if (fleet) completed.push(...fleet.completed.filter((m) => !present.includes(m)));
+  if (fleet) completed.push(...fleet.completed.filter((m) => !present.includes(m)).map((name) => word("installer.partial.what.helper", { name })));
 
   /* R14, then R47: the address is enabled before the plane's last upload, so that upload can tell the copy its own
      hosts; with no address the copy is told none, and the page says so. */
-  await emit.step("addr", "Turning on your web address");
+  await emit.step("addr", word("installer.step.address.install"));
   let base = null, addrError = null;
   try {
     const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
     base = `https://${slug}.${sub}.workers.dev`;
-    emit.ok("addr", registered
-      ? `Your account had no web address prefix yet, so it is now "${registered}". Every future worker on this account shares that prefix.`
-      : word("screen.install.progress.address"));
+    emit.ok("addr", registered ? word("installer.address.prefix", { prefix: registered }) : word("screen.install.progress.address"));
   } catch (e) { if (special(e)) throw e; addrError = e; emit.no("addr"); }
   const ownHosts = base ? [hostOf(base)] : null;
 
@@ -2014,12 +1951,7 @@ async function installRun(emit0, code, saved, guard) {
   await assistantNotice(emit);
 
   if (addrError) {
-    return emit.fail("Your team's Civicsmith installed but has no address yet",
-      "The software is on your account. Only the public web address failed, which is fixable from the "
-      + "Cloudflare dashboard under Workers, without starting over. Until it has one, your team's Civicsmith is not told an "
-      + "address of its own; running the updater once the address works tells it.",
-      "To continue: in the Cloudflare dashboard, open Workers & Pages, then this worker, and turn on its workers.dev address; "
-        + "then run the updater. (Cloudflare said: " + addrError.message + ")", "addr");
+    return emit.fail(word("installer.install.stopped.noaddress", { said: addrError.message }), "", "addr");
   }
 
   /* R69 (F8): what an earlier run left, completed, said. */
@@ -2044,32 +1976,35 @@ async function installRun(emit0, code, saved, guard) {
     : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
   /* R33's read-back, R46's named jobs and R68's container images: each a lag, and no success while one stands. */
   const verdict = withByteLags(served, [...byteLags, ...logLags, ...(fleet?.imageLags || [])], capable);
-  if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : "Your team's Civicsmith answers. " + UNDETERMINED_BUILDS);
-  else if (st) emit.no("verify", "Your team's Civicsmith answers, but not everything is confirmed yet: the list below names what is not");
+  if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.verify.answers") + " " + UNDETERMINED_BUILDS);
+  else if (st) emit.no("verify", word("installer.verify.unconfirmed"));
   else emit.no("verify", word("screen.install.stopped.lasting") + " " + word("screen.install.stopped.lasting.do"));
+
+  /* R78: with the address answering, the installer records the team's short name itself; where it could not, the telling is drawn (R18). */
+  const recorded = st ? await recordTeam(emit, base, secrets.boot, slug) : "refused";
+  const told = recorded === "recorded" ? "" : groupNotice("refused", slug);
 
   /* R51: the checks the finished panel shows, each as it came out. */
   const servingLags = served ? served.lags.length : null;
   const checks = [
-    { r: st ? "ok" : "no", text: st ? word("screen.install.ready.answers") + "." : "Its address has not answered yet." },
-    !st ? { r: "no", text: "Which release each part runs: not checked yet, as its address has not answered." }
-      : !capable ? { r: "und", text: "Which release its record store and capability workers run: undetermined, as this release cannot report it." }
-      : servingLags === 0 ? { r: "ok", text: `Every part runs release ${release.version}: its address, its record store and each capability worker it is connected to.` }
-      : { r: "no", text: "Not every part is confirmed to run this release yet: the list above names what is not." },
-    { r: byteLags.length ? "no" : "ok", text: byteLags.length ? "Its software did not read back as the release's own bytes: the list above says how."
-      : `Its software reads back as release ${release.version}'s own bytes.` },
+    { r: st ? "ok" : "no", text: st ? word("screen.install.ready.answers") + "." : word("installer.check.noanswer") },
+    !st ? { r: "no", text: word("installer.check.builds.notchecked") }
+      : !capable ? { r: "und", text: word("installer.check.builds.undetermined") }
+      : servingLags === 0 ? { r: "ok", text: word("installer.check.builds.all", { version: release.version }) }
+      : { r: "no", text: word("installer.check.builds.some") },
+    { r: byteLags.length ? "no" : "ok", text: byteLags.length ? word("installer.check.bytes.no") : word("installer.check.bytes.ok", { version: release.version }) },
     { r: logs.state === "clear" ? "ok" : logs.state === "named" ? "no" : "und",
       text: logs.state === "clear" ? word("screen.install.ready.nolog") + "."
-        : logs.state === "named" ? "A log on your Cloudflare account would record who opens which file: the list above names it."
-        : "Whether a log on your Cloudflare account records who opens which file: undetermined; the step above says how to check it yourself." },
+        : logs.state === "named" ? word("installer.check.log.no")
+        : word("installer.check.log.undetermined") },
   ];
   /* R61: every part and its version, from the one release's own statement. */
   const parts = [{ name: "civicsmith", version: release.version }, ...((fleet?.done || []).map((m) => ({ name: m, version: String(release.man?.version ?? release.version) })))];
   /* R69 (K3747): the mark written last. Without it a later run takes this copy for one this installer did not finish. */
   let markLag = null;
   try { await putSecret(token, acct.id, slug, MARK, release.version); }
-  catch (e) { if (approve(e)) throw e; markLag = "the installer could not mark this installation finished (Cloudflare said: " + e.message + "), so a later run under this short name will continue it rather than treat it as complete"; }
-  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts, markLag ? [markLag] : []));
+  catch (e) { if (approve(e)) throw e; markLag = word("installer.mark.failed", { said: e.message }); }
+  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts, markLag ? [markLag] : [], told));
 }
 
 /* R67 — IS THE PLANE ALREADY AS THIS RELEASE WANTS IT? "Already done" is judged by the whole deployed state: the bytes the
@@ -2104,53 +2039,50 @@ function copyWorkers(slug, release, names) {
   return [...new Set(out)];
 }
 
-const NO_KEY = `No one else holds a key to it, the publisher of ${PRODUCT} releases included.`;
+const NO_KEY = word("installer.success.nokey");
 /* R45 (T36): the security-tools paragraph of the final panel and the update's last screen: where the organization's own
    tools are added (setup-page R30), that the installer takes none, and what the operator's VPC choice did. */
 function securityToolsNote(vpc) {
-  return `<div class="card" id="security-tools"><p style="margin:0">${esc(SECURITY_TOOLS.replace(/\s+/g, " ").trim())} ${vpcServiceOk(vpc)
-    ? "You named a Workers VPC service, so the installer connected the file scanner to it where it could (the capability workers step says whether it did)."
-    : "You named no Workers VPC service, so none is connected: a tool reached through a tunnel answers REACH_NOT_BOUND in your team&#39;s Civicsmith until the updater is run with one."}</p></div>`;
+  return `<div class="card" id="security-tools"><p style="margin:0">${esc(SECURITY_TOOLS.replace(/\s+/g, " ").trim())} ${esc(vpcServiceOk(vpc)
+    ? word("installer.security.note.named")
+    : word("installer.security.note.none"))}</p></div>`;
 }
 /* R51 (DEC-201 (4)): the finished panel. What the checks found (R15's head and lags, then each check as a line), the
    one-time password and the address, once, the probe key folded behind "most teams never need it", R45's security-tools
    note, R34's block, and the hand-over to `<address>/app/setup#boot=<password>` (screens-entry's setup reads it there;
    the page's script reads the password from `out-boot` at the click, so it is written into the page once). */
-const CHECK_WORD = Object.freeze({ ok: "Passed", no: "Not yet", und: "Undetermined" });
-const checkRows = (checks) => `<div class="cs-sheet ng-log" id="checks">${checks.map((c) =>
+const CHECK_WORD = Object.freeze({ ok: word("installer.check.passed"), no: word("installer.check.notyet"), und: word("installer.check.undetermined") });
+const checkRows = (checks) => `<h2 id="checks-heading">${esc(word("installer.checks.heading"))}</h2><div class="cs-sheet ng-log" id="checks">${checks.map((c) =>
   `<div class="cs-row" data-r="${c.r === "und" ? "go" : c.r}"><span class="mk">${CHECK_WORD[c.r]}</span><span>${esc(c.text)}</span><span></span></div>`).join("")}</div>`;
 export const HANDOVER_PATH = "/app/setup";
-function successPanel(base, secrets, verified, verdict = null, vpc = null, checks = [], parts = [], notes = []) {
+function successPanel(base, secrets, verified, verdict = null, vpc = null, checks = [], parts = [], notes = [], told = "") {
   const lagging = !!(verdict && !verdict.confirmed);
+  const lives = word("installer.success.lives");
   const head = verified && !lagging
-    ? `<b>Your team's Civicsmith is running.</b> It answered its own checks. One step is left: you become its first
-administrator. It lives in your Cloudflare account, under your control. ${NO_KEY}`
+    ? `<b>${esc(word("installer.success.running"))}</b> ${esc(word("screen.install.ready.sub"))} ${esc(lives)} ${esc(NO_KEY)}`
       + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "")
     : lagging
-    ? `<b>Your team's Civicsmith is installed${verified ? " and answering" : ""}, but not everything about it is confirmed yet.</b>
-${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the one-time password below now either way. It lives in your Cloudflare
-account, under your control. ${NO_KEY}`
-    : `<b>Your team's Civicsmith is installed. Its new address has not woken up yet.</b> Brand-new
-addresses can take a few minutes to start answering; everything else finished. Save the
-one-time password below now, then continue. It lives in your Cloudflare account, under
-your control. ${NO_KEY}`;
-  return `<h2>${verified && !lagging ? "Your team&#39;s Civicsmith is ready" : "Your team&#39;s Civicsmith is installed"}</h2>
+    ? `<b>${esc(verified ? word("installer.success.lagging.answering") : word("installer.success.lagging"))}</b>
+${esc(verified ? word("installer.success.lagging.asked") : word("installer.success.lagging.asleep"))}${lagList(verdict)}${esc(word("installer.success.save"))} ${esc(lives)} ${esc(NO_KEY)}`
+    : `<b>${esc(word("installer.success.asleep"))}</b> ${esc(word("installer.success.asleep.why"))} ${esc(lives)} ${esc(NO_KEY)}`;
+  return `<h2>${esc(verified && !lagging ? word("installer.success.title.ready") : word("installer.success.title.installed"))}</h2>
 <div class="${lagging ? "notice" : "okbox"}"><p>${head}</p></div>
 ${checks.length ? checkRows(checks) : ""}
 ${parts.length ? partRows(parts) : ""}
 ${notes.map((n) => `<div class="notice"><p>${esc(n)}</p></div>`).join("")}
+${told}
 <section class="cs-section ng-sec" id="one-time">
 <h2 id="otp-head">${esc(word("screen.install.otp.head"))}</h2>
 <p id="otp-what">${esc(word("screen.install.otp.what"))}</p>
 <div class="card">
- <div class="kv"><span class="k">One-time password</span><span class="v" id="out-boot">${secrets.boot}</span><button class="copy" data-copy="out-boot">Copy</button></div>
- <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
+ <div class="kv"><span class="k">${esc(word("installer.success.otp"))}</span><span class="v" id="out-boot">${secrets.boot}</span><button class="copy" data-copy="out-boot">${esc(word("installer.success.copy"))}</button></div>
+ <div class="kv"><span class="k">${esc(word("installer.success.address"))}</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">${esc(word("installer.success.copy"))}</button></div>
 </div>
 <p class="help" id="otp-help">${esc(word("screen.install.otp.help"))}</p>
 <p class="help">${esc(word("screen.install.address.help"))}</p>
 </section>
 <details class="ng-fold" id="probe-fold"><summary>${esc(word("screen.install.probe.summary"))}</summary>
-<div class="card"><div class="kv"><span class="k">Probe key</span><span class="v" id="out-probe">${secrets.probe}</span><button class="copy" data-copy="out-probe">${esc(word("screen.install.probe.copy"))}</button></div></div>
+<div class="card"><div class="kv"><span class="k">${esc(word("installer.success.probe"))}</span><span class="v" id="out-probe">${secrets.probe}</span><button class="copy" data-copy="out-probe">${esc(word("screen.install.probe.copy"))}</button></div></div>
 <p class="help">${esc(word("screen.install.probe.help"))}</p></details>
 ${securityToolsNote(vpc)}
 ${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls your team's
@@ -2160,70 +2092,82 @@ ${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a p
 }
 
 /* R61: every part the release installed, with its version, from the release's own statement. */
-const partRows = (parts) => `<div class="cs-sheet ng-log" id="parts">${parts.map((p) =>
+const partRows = (parts) => `<h2 id="parts-heading">${esc(word("installer.parts.heading"))}</h2><div class="cs-sheet ng-log" id="parts">${parts.map((p) =>
   `<div class="cs-row" data-r="ok"><span class="mk"></span><span class="mono">${esc(p.name)} ${esc(p.version)}</span><span></span></div>`).join("")}</div>`;
 
-/* D-436 / IC-172 — THE ONE ACT AN UPDATE LEAVES TO THE OPERATOR: recording which team produces the record.
+/* D-436 / IC-172, R18, R78 — RECORDING WHICH TEAM PRODUCES THE RECORD, AND WHAT IS SAID WHEN IT IS NOT RECORDED.
  *
- * A copy records its producing team ONCE: at its store's first boot, from the INSTANCE_NAME `uploadInstall`
- * binds in the same PUT that creates the worker (so a copy installed on a release carrying IC-172 records it
- * with nobody's act), or, for a store that already held a record when the value arrived, by one act of its
- * root of trust, op=instancegroupseed. THIS INSTALLER NEVER PERFORMS THAT ACT (D-436's decision (b); BOB #24
- * confirmed an automatic seed is not ruled in): which team produces a record is a person's to say, and a
- * copy's worker name need not be its group's slug. So an update TELLS the operator, and never seeds.
- *
- * WHY IT TELLS FROM THE RULE AND NOT FROM A READ (DIST #4, 2026-09-22, refining DIST #3's route of 2026-09-21
- * in CLAIMS.md). That route read op=instancegroup after the update. The op answers the admin, member and probe
- * classes only (its OPS row, today `op-declarations`' `bio-plane/src/op-declarations/index.mjs`), and an update holds none of them: it holds the operator's
- * Cloudflare permission, and a copy's secrets are write-only there. What an update CAN read, with no credential,
- * is op=bootstrap's version BEFORE the upload (`before` below) — and a copy that ran a release older than
- * FIRST_GROUP_RELEASE records no group after this update, by the rule itself: its store already held the schema,
- * and no older release had the op to seed it. That case is told plainly. When the version before is unknown the
- * telling is conditional and says why. When the copy already ran FIRST_GROUP_RELEASE or later nothing is said:
- * the update that crossed the line told it then, and a copy installed since recorded its group at first boot. */
+ * A copy records its producing team ONCE: at its store's first boot, from the INSTANCE_NAME `uploadInstall` binds in the
+ * same PUT that creates the worker, or, for a store that already held a record when the value arrived, by one act of its
+ * root of trust, op=instancegroupseed (the ADMIN_TOKEN credential held in the hosting account: no session of any role
+ * reaches it, `UNATTENDED_BY_DECISION`). A run that holds the ADMIN_TOKEN it generated (an install, a resumed install: R9, R69)
+ * makes that act itself with the run's own short name (R78, K3868); an update binds no new ADMIN_TOKEN (it would re-arm the
+ * claim step, Membership §4.6, §9, K3892), so it reads what the copy records, with no credential (op=instancegroup answers
+ * the public projection), and tells the operator when the copy records none (R18). The telling is drawn only for a copy the
+ * run could not record, and says to run the installer again: it records the name it was installed under. */
 const FIRST_GROUP_RELEASE = "0.71.0";
 const SEMVER = /^\d+\.\d+\.\d+$/;
-function groupUnrecorded(before, releaseVersion, noop) {
-  if (noop || vcmp(releaseVersion, FIRST_GROUP_RELEASE) < 0) return null;
-  if (before === null || !SEMVER.test(String(before))) return "unknown";
-  return vcmp(before, FIRST_GROUP_RELEASE) < 0 ? "certain" : null;
+/* What an update says of the team's recording: nothing when the copy records a group; the telling when it records none, or
+   when the read was not answered. `recorded` is `readGroup`'s answer. `before` (the version read before the upload) says which
+   paragraph explains it. */
+function groupUnrecorded(recorded, before) {
+  if (recorded === "recorded") return null;
+  if (recorded === "unread" || before === null || !SEMVER.test(String(before))) return "unknown";
+  return vcmp(before, FIRST_GROUP_RELEASE) < 0 ? "certain" : "unknown";
 }
-function groupNotice(kind, slug, before, base) {
+function groupNotice(kind, slug, before) {
   if (!kind) return "";
-  const at = base ? esc(base) : "the address of your team&#39;s Civicsmith";
-  const why = kind === "certain"
-    ? `Your team&#39;s Civicsmith ran ${esc(before)} before this update, and an installation that held a record before ${FIRST_GROUP_RELEASE}
-does not know which team produces it: it records that once, and one that already held a record when the
-value arrived is not given a name nobody told it.`
-    : `The installer could not read which version your team&#39;s Civicsmith ran before this update, so it cannot tell whether this
-applies to you. It does if it held a record before ${FIRST_GROUP_RELEASE}: it then does not know which
-team produces its record, and is not given a name nobody told it.`;
-  return `<div class="notice"><p style="margin:0 0 .6em"><b>One thing this update does not do for you: record which
-team produces your record.</b></p>
-<p>${why} Until it is recorded, your team&#39;s Civicsmith refuses the writes that must name their producing team &mdash; testimony,
-the setup page&#39;s saves, and a new document that names none &mdash; with <span class="mono">GROUP_UNDETERMINED</span>.
-A document that states its own team is kept as it says, and nothing already in your record changes.</p>
-<p>To record it, send one request carrying the ADMIN_TOKEN of your team&#39;s Civicsmith (the one-time password the installer showed you,
-if you kept it; otherwise put a new ADMIN_TOKEN value in your worker&#39;s settings on Cloudflare, which also starts the
-claim step over) in its header, never in the address: <span class="mono">POST ${at}/api/?op=instancegroupseed</span> with the
-header <span class="mono">Authorization: Bearer &hellip;</span> and the body
-<span class="mono">{"slug":"your-team-slug"}</span>, then the same request with <span class="mono">&amp;store=scratch</span>
-added to the address, for your scratch record. Each records it once and never again, so check the spelling first;
-<span class="mono">op=instancegroup</span> shows what is recorded.</p>
-<p class="small">A suggestion, not a default: your team&#39;s Civicsmith was installed under the name <span class="mono">${esc(slug)}</span>.
-Your team&#39;s slug may differ from it: the name an installation is given and the name of the team producing its record need not be
-the same. The installer does not record it for you: which team produces your record is yours to say.</p></div>`;
+  const why = kind === "certain" ? word("installer.team.unrecorded.certain", { before, first: FIRST_GROUP_RELEASE })
+    : kind === "unknown" ? word("installer.team.unrecorded.unknown", { first: FIRST_GROUP_RELEASE }) : "";
+  return `<div class="notice" id="team-unrecorded"><p style="margin:0 0 .6em"><b>${esc(word("installer.team.unrecorded.head"))}</b></p>
+<p>${esc(why ? why + " " : "")}${esc(word("installer.team.unrecorded.effect"))}</p>
+<p>${esc(word("installer.team.unrecorded.how"))}</p>
+<p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
+}
+
+/* R78 (K3868, K3878): the copy's own answer about its producing team, read with `Authorization: Bearer` only when a
+   credential is given (never in an address, R15, `admission` R20). "recorded" (a group), "none" (`group: null`), or
+   "unread" (no address, no answer, an answer that is no object). */
+async function readGroup(base, credential = null) {
+  if (!base) return "unread";
+  try {
+    const r = await fetch(`${base}/api/?op=instancegroup`, credential ? { headers: { authorization: `Bearer ${credential}` } } : undefined);
+    const j = await r.json();
+    if (!r.ok || !j || typeof j !== "object") return "unread";
+    return typeof j.group === "string" && j.group ? "recorded" : j.group === null ? "none" : "unread";
+  } catch { return "unread"; }
+}
+/* R78: the install's step that records the short name. Already recorded: nothing is done and nothing is said. */
+async function recordTeam(emit, base, boot, slug) {
+  const seen = await readGroup(base, boot);
+  if (seen === "recorded") return "recorded";
+  await emit.step("record", word("installer.step.record"));
+  let said = null;
+  if (seen === "unread") said = word("installer.fact.unknown.silent");
+  else {
+    try {
+      const r = await fetch(`${base}/api/?op=instancegroupseed`, { method: "POST",
+        headers: { authorization: `Bearer ${boot}`, "content-type": "application/json" }, body: JSON.stringify({ slug }) });
+      const j = await r.json().catch(() => null);
+      if (!j || !(j.ok === true || j.code === "GROUP_ALREADY_RECORDED")) said = String((j && (j.code || j.error || j.detail)) || r.status);
+    } catch (e) { said = String(e && e.message || e); }
+  }
+  if (said === null && (await readGroup(base, boot)) !== "recorded") said = word("installer.fact.unknown.silent");
+  if (said === null) { emit.ok("record", word("installer.step.record.done", { slug })); return "recorded"; }
+  emit.no("record", word("installer.step.record.refused", { slug, said }));
+  return "refused";
 }
 
 /* R52 (DEC-201 (8)): the version before and after, as two lines, on the update's last screen; the version before is the
    one `op=bootstrap` answered before the upload (R17), or said unread. */
 function versionLines(before, after) {
-  const signed = ARMED_SIGNERS.length ? ", signed by Civicsmith" : "";
+  const signed = ARMED_SIGNERS.length ? word("installer.update.after.signed") : "";
+  const bold = (v) => `<b class="id">${esc(v)}</b>`;
   return `<div class="cs-sheet ng-log" id="versions">`
-    + `<div class="cs-row" data-r="ok"><span class="mk">Before</span><span>${before
-      ? `Your team&#39;s Civicsmith ran release <b class="id">${esc(before)}</b>.`
-      : "The release your team&#39;s Civicsmith ran before could not be read."}</span><span></span></div>`
-    + `<div class="cs-row" data-r="ok"><span class="mk">After</span><span>This update: release <b class="id">${esc(after)}</b>${signed}.</span><span></span></div></div>`;
+    + `<div class="cs-row" data-r="ok"><span class="mk">${esc(word("installer.update.label.before"))}</span><span>${before
+      ? around(word("installer.update.before.known", { version: SLOT }), bold(before))
+      : esc(word("installer.update.before.unknown"))}</span><span></span></div>`
+    + `<div class="cs-row" data-r="ok"><span class="mk">${esc(word("installer.update.label.after"))}</span><span>${around(word("installer.update.after", { version: SLOT, signed: "\u0002" }), bold(after)).replace("\u0002", esc(signed))}</span><span></span></div></div>`;
 }
 
 async function runUpdate(emit0, code, saved) {
@@ -2240,62 +2184,50 @@ async function updateRun(emit00, code, saved, guard) {
     if (api) touchLock(api, saved.lock.id).catch(() => {});
     if (waited === 0) await emit00.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
-  const emit0 = { ...emit00, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit00.step(id, label); } };
-  /* R52 (DEC-201 (8)): every stop of an update, each before its upload changed anything, says your team's Civicsmith
-     keeps running as it was. */
-  const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, p === "" || /nothing changed\.$/.test(p) ? p : p + " " + UPDATE_KEEPS, d, ...at) };
-  /* R55: a stop of the update, in `installer.update.stopped`'s three parts; what is said of the release running is said only
-     once it has been read. */
-  const stopped = (why, running = null, detail = "") => emit.fail(UPDATE_WORDS.stoppedWhy(why), UPDATE_WORDS.stoppedKept(running),
-    UPDATE_WORDS.stoppedDo + detail);
+  const emit = { ...emit00, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit00.step(id, label); } };
+  /* R52, R55, R75: every stop of an update is one sentence by key, and each says that your team's Civicsmith keeps running as it
+     was, before its upload changed anything. */
+  const stopped = (said, d = "") => emit.fail(said, d);
   let token, scope;
 
-  await emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
-    return emit.fail("Cloudflare did not confirm the permission",
-      "The sign-in came back but the final handshake failed. Your team's Civicsmith is untouched.",
-      tryAgain("update", e.message));
+    return stopped(word("installer.update.stopped.permission", { said: e.message }));
   }
 
-  await emit.step("acct", "Finding your account");
+  await emit.step("acct", word("installer.step.acct"));
   let acct;
   try {
     const accts = await cf(token, "/accounts");
-    if (!accts?.length) throw new Error("no accounts on this sign-in");
+    if (!accts?.length) throw new Error(word("installer.account.none"));
     acct = accts[0];
-    emit.ok("acct", `Using the account "${acct.name}"`);
+    emit.ok("acct", word("installer.account.using", { account: acct.name }));
   } catch (e) {
     if (special(e)) throw e;
     emit.no("acct");
-    return emit.fail("Could not read your account",
-      "Permission was granted but the account list came back empty or refused. Your team's Civicsmith is untouched.",
-      tryAgain("update", e.message));
+    return stopped(word("installer.update.stopped.account", { said: e.message }));
   }
   api = apiOf(token, acct.id);
 
   /* R69 (F9): one run at a time. */
   try {
-    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!(await takeLock(api, saved.lock))) return stopped(word("installer.stopped.running"));
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
 
-  await emit.step("find", `Finding your team's Civicsmith, installed as "${slug}"`);
+  await emit.step("find", word("installer.step.find", { slug }));
   try {
     if (!(await scriptExists(token, acct.id, slug))) {
       emit.no("find");
-      return emit.fail(`No installation named "${slug}" exists on your account`,
-        "Nothing was changed.",
-        "To continue: check the name against your team's address (it is the first part, before the first dot) and start again.");
+      return stopped(word("installer.update.stopped.noteam", { slug }));
     }
     emit.ok("find");
   } catch (e) {
     if (special(e)) throw e;
     emit.no("find");
-    return emit.fail("Could not check your account",
-      "The lookup failed, so to be safe nothing was changed.",
-      tryAgain("update", e.message));
+    return stopped(word("installer.update.stopped.lookup", { said: e.message }));
   }
 
   /* R64: a copy installed under the fixed names keeps them; any other is named by its slug. Its own plane's bindings say which. */
@@ -2322,7 +2254,7 @@ async function updateRun(emit00, code, saved, guard) {
   let loaded;
   try { loaded = await loadFleet(release, onWait); }
   catch (e) {
-    if (e && e.source) return emit.fail(word("screen.install.stopped.source"), "Nothing was changed.", word("screen.install.stopped.source.do"));
+    if (e && e.source) return stopped(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
   }
 
@@ -2332,7 +2264,7 @@ async function updateRun(emit00, code, saved, guard) {
      work happened and moves on. Observed live on 2026-07-24, a 0.3.10 over
      0.3.10 update where the only honest line was easy to skim past. */
   let before = null, sub0 = null;
-  await emit.step("read", "Reading the release your team's Civicsmith runs");
+  await emit.step("read", word("installer.step.read"));
   try {
     sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain || null;
     if (sub0) {
@@ -2342,8 +2274,9 @@ async function updateRun(emit00, code, saved, guard) {
   } catch { /* not knowing is fine; it only costs the comparison */ }
   if (before !== null && !SEMVER.test(String(before))) before = null;
   if (before) emit.ok("read", UPDATE_WORDS.progressRead(before));
-  else emit.no("read", "The release your team's Civicsmith runs could not be read, so it is not compared with release " + release.version + ".");
-  await emit.says(UPDATE_WORDS.progressSays(before || "(not read)", release.version, acct.name));
+  else emit.no("read", word("installer.update.read.failed", { version: release.version }));
+  const beforeText = before || word("installer.update.unread");
+  await emit.says(UPDATE_WORDS.progressSays(beforeText, release.version, acct.name));
   const noop = before !== null && before === release.version;
 
   /* R17: the buckets are created where possible. After every check that can stop the update (R55), so a stop changes nothing. */
@@ -2352,9 +2285,7 @@ async function updateRun(emit00, code, saved, guard) {
   /* R47: the copy's own hosts, restated from the address found; none found, none written (and the page says so). */
   const ownHosts = sub0 ? [`${slug}.${sub0}.workers.dev`] : null;
 
-  await emit.step("up", noop
-    ? `Your team's Civicsmith already runs ${release.version}. Re-uploading the same version`
-    : UPDATE_WORDS.progressPlacing(release.version));
+  await emit.step("up", noop ? word("installer.step.same", { version: release.version }) : UPDATE_WORDS.progressPlacing(release.version));
   /* DIST-6, step 1: restate the members the account already holds, so the update never un-binds a working copy's
      members — not for its duration, and not for good when the fleet step below cannot run. */
   const present = await membersPresent(token, acct.id, names);
@@ -2367,7 +2298,7 @@ async function updateRun(emit00, code, saved, guard) {
   catch (e) {
     if (special(e)) throw e;
     emit.no("up");
-    return emit.fail(word("installer.update.stopped", { version: before || "(not read)" }), "", ` (Cloudflare said: ${e.message})`);
+    return stopped(word("installer.update.stopped", { version: beforeText }), word("installer.cfsaid", { said: e.message }));
   }
 
   /* R33: as on install, the uploaded plane is read back and hashed against the release. */
@@ -2387,16 +2318,13 @@ async function updateRun(emit00, code, saved, guard) {
   await instanceAiNotice(emit, "update", !!instanceAi);
   await accountSecretsNotice(emit, token, acct.id, slug, held, seal);
 
-  await emit.step("addr", "Finding the address of your team's Civicsmith");
+  await emit.step("addr", word("installer.step.address.update"));
   let base = null;
   try {
     const sub = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
     if (sub) base = `https://${slug}.${sub}.workers.dev`;
   } catch { /* said below: an address not found is not told to the copy */ }
-  emit.ok("addr", ownHosts
-    ? `Your team's Civicsmith is at ${ownHosts.join(", ")}, and this update told it that address is its own.`
-    : "No web address was found for your team's Civicsmith, so it was not told one of its own. Once its address works, "
-      + "running this update again tells it.");
+  emit.ok("addr", ownHosts ? word("installer.update.address.found", { hosts: ownHosts.join(", ") }) : word("installer.update.address.none"));
 
   /* R46: as on install, before `verify` can succeed. */
   const logs = await logsStep(emit, token, acct.id, copyWorkers(slug, release, names));
@@ -2415,49 +2343,42 @@ async function updateRun(emit00, code, saved, guard) {
     if (!answered && previous && !noop) {
       const back = await rollBack(token, acct.id, slug, previous);
       emit.no("verify");
-      return emit.fail(back ? word("installer.update.stopped.noanswer", { version: before || "(not read)" })
-        : word("screen.install.stopped.lasting"), "", back ? "" : word("screen.install.stopped.lasting.do"));
+      return back ? stopped(word("installer.update.stopped.noanswer", { version: beforeText }))
+        : stopped(word("screen.install.stopped.lasting"), word("screen.install.stopped.lasting.do"));
     }
     verdict = withByteLags(await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || [], onWait),
       [...byteLags, ...logLags], capable);
-    if (verdict.confirmed) emit.ok("verify", capable ? undefined : "The address of your team's Civicsmith answers " + release.version
-      + ". " + UNDETERMINED_BUILDS);
-    else emit.no("verify", "Not everything about your team's Civicsmith is confirmed yet: the list below names what is not. A part "
-      + "still running the old version is normal for a few minutes after an update.");
+    if (verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.update.verify.answers", { version: release.version }) + " " + UNDETERMINED_BUILDS);
+    else emit.no("verify", word("installer.update.verify.unconfirmed"));
   }
   /* R33: with no address to ask, a read-back lag is still named, and no success is claimed over it. */
   if (!verdict) verdict = withByteLags(null, [...byteLags, ...logLags], capable);
   const confirmed = !!(verdict && verdict.confirmed);
   const lagging = !!(verdict && !verdict.confirmed);
 
-  /* D-436: told, never done — see FIRST_GROUP_RELEASE above. */
-  const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
+  /* R18, R78: this run holds no credential to record the team's short name with (an update binds no new ADMIN_TOKEN, K3892), so it
+     reads what the copy records and tells the operator when it records none, or when the copy did not answer. */
+  const told = groupNotice(groupUnrecorded(await readGroup(base), before), slug, before);
 
-  emit.done(versionLines(before, release.version) + (noop
-    ? `<div class="notice"><p style="margin:0"><b>Nothing changed: ${esc(UPDATE_WORDS.running(release.version))}, so release ${esc(release.version)} was already in place.</b>
-The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
-If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
-verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
-running this again.</p></div>`
-      + (lagging ? `<div class="notice"><p style="margin:0">Not everything about your team&#39;s Civicsmith running ${esc(release.version)} is confirmed:</p>${lagList(verdict)}</div>` : "")
+  const version = release.version;
+  emit.done(versionLines(before, version) + (noop
+    ? `<div class="notice"><p style="margin:0"><b>${esc(word("installer.update.noop.head", { running: UPDATE_WORDS.running(version), version }))}</b>
+${esc(word("installer.update.noop.body", { version }))}</p></div>`
+      + (lagging ? `<div class="notice"><p style="margin:0">${esc(word("installer.update.lagging.noop", { version }))}</p>${lagList(verdict)}</div>` : "")
     : (lagging
     /* D-116: the upload happened, and is said; an UPDATE is not claimed while a named part runs another build. */
-    ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed.</b>
-The upload finished, but not everything about your team&#39;s Civicsmith running the new version is confirmed:</p>
-${lagList(verdict)}<p>A part can take a few minutes to start running a new version after an update, so
-open your team&#39;s Civicsmith a little later and check again; if the same part is still named, run this update again. Your
-passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>`
+    ? `<div class="notice"><p style="margin:0"><b>${esc(before ? word("installer.update.lagging.head.over", { version, before }) : word("installer.update.lagging.head", { version }))}</b>
+${esc(word("installer.update.lagging.body"))}</p>
+${lagList(verdict)}<p>${esc(word("installer.update.lagging.after"))}</p></div>`
     /* R55: finished, in `installer.update.done.*`: the release now running, what is as it was, and the way back. Said only
        once every part answers the release (a part not yet confirmed is the notice above, never this). */
     : `<div class="okbox" id="update-done"><h2 style="margin:0">${esc(UPDATE_WORDS.doneTitle)}</h2>
-<p style="margin:0">${esc(UPDATE_WORDS.doneSays(release.version, before || "(not read)"))}</p>
+<p style="margin:0">${esc(UPDATE_WORDS.doneSays(version, beforeText))}</p>
 <p style="margin:0">${confirmed
-  ? esc(UPDATE_WORDS.doneAnswers(release.version)) + ". " + (capable
-    ? "Every part of your team's Civicsmith answers " + esc(release.version) + ": its address, its record store, and each capability worker it is connected to."
-    : esc(UNDETERMINED_BUILDS))
-  : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your team&#39;s Civicsmith a little later and its page will show " + esc(release.version) + "."}</p>
+  ? esc(UPDATE_WORDS.doneAnswers(version)) + ". " + (capable ? esc(word("installer.update.done.allanswer", { version })) : esc(UNDETERMINED_BUILDS))
+  : esc(word("installer.update.done.unconfirmed", { version }))}</p>
 <p style="margin:0">${esc(UPDATE_WORDS.doneKept)}.</p>
-<p style="margin:0" class="small">${esc(UPDATE_WORDS.doneNote(release.version))}</p></div>`)
+<p style="margin:0" class="small">${esc(UPDATE_WORDS.doneNote(version))}</p></div>`)
     + told
     + securityToolsNote(saved.vpc)
     + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" id="update-back" href="${esc(base)}/">${esc(UPDATE_WORDS.back)}</a></div>` : "")));
@@ -2470,23 +2391,23 @@ passwords, your credentials, and everything in the record are exactly as they we
 async function runRemoveView(emit, code, saved) {
   const slug = saved.slug;
   let token, acct;
-  await emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail("Cloudflare did not confirm the permission", "Nothing was deleted.", tryAgain("install", e.message)); }
-  await emit.step("acct", "Finding your account");
-  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error("no accounts on this sign-in"); acct = accts[0]; emit.ok("acct", `Using the account "${acct.name}"`); }
-  catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail("Could not read your account", "Nothing was deleted.", tryAgain("install", e.message)); }
-  await emit.step("read", "Reading what is in your account");
+  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  await emit.step("acct", word("installer.step.acct"));
+  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
+  catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
+  await emit.step("read", word("installer.step.remove.read"));
   let held;
   try {
     const memberNames = memberNamesOf(null);
     const inv = await inventory(apiOf(token, acct.id), memberNames);
     held = (await describeHeld(token, acct.id, inv, memberNames, slug))[0] || null;
-    if (!held) { emit.no("read"); return emit.fail(`No installation named "${slug}" exists on your account`, "Nothing was deleted.", ""); }
+    if (!held) { emit.no("read"); return emit.fail(word("installer.remove.refused.none", { slug })); }
   } catch (e) {
     if (special(e)) throw e;
     emit.no("read");
-    return emit.fail("Could not check your account", "The lookup failed, so nothing was deleted.", tryAgain("install", e.message));
+    return emit.fail(word("installer.remove.refused.lookup", { said: e.message }));
   }
   emit.ok("read");
   emit.done(removePanel({ copy: held, slug }));
@@ -2503,40 +2424,45 @@ async function runRemove(emit0, code, saved, guard) {
   const slug = saved.slug;
   let token, acct, api;
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
-  await emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail("Cloudflare did not confirm the permission", "Nothing was deleted.", tryAgain("install", e.message)); }
-  await emit.step("acct", "Finding your account");
-  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error("no accounts on this sign-in"); acct = accts[0]; emit.ok("acct", `Using the account "${acct.name}"`); }
-  catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail("Could not read your account", "Nothing was deleted.", tryAgain("install", e.message)); }
+  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  await emit.step("acct", word("installer.step.acct"));
+  try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
+  catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
   api = apiOf(token, acct.id);
-  if (saved.ty !== slug) return emit.fail(word("screen.install.remove.type.label"), "Nothing was deleted.", word("screen.install.remove.type.help", { slug }));
+  if (saved.ty !== slug) return emit.fail(word("installer.remove.refused.typed", { slug }));
   try {
-    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
+    if (!(await takeLock(api, saved.lock))) return emit.fail(word("installer.remove.refused.running"));
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
-  await emit.step("list", "Listing everything this Civicsmith holds in your account");
+  await emit.step("list", word("installer.step.remove.list"));
   let resources;
   try {
     const memberNames = memberNamesOf(null);
     const inv = await inventory(api, memberNames);
     const copy = allCopies(inv).find((c) => c.slug === slug);
-    if (!copy) { emit.no("list"); return emit.fail(`No installation named "${slug}" exists on your account`, "Nothing was deleted.", ""); }
+    if (!copy) { emit.no("list"); return emit.fail(word("installer.remove.refused.none", { slug })); }
     resources = await resourcesOf(api, copy, memberNames);
     emit.ok("list");
   } catch (e) {
     if (special(e)) throw e;
     emit.no("list");
-    return emit.fail("Could not check your account", "The lookup failed, so nothing was deleted.", tryAgain("install", e.message));
+    return emit.fail(word("installer.remove.refused.lookup", { said: e.message }));
   }
   let n = 0;
   try {
-    await deleteResources(api, resources, async (r) => { const id = "del" + (++n); await emit.step(id, r.name); return emit.ok(id, word("installer.remove.progress", { what: r.name })); });
+    await deleteResources(api, resources, async (r) => {
+      const id = "del" + (++n), name = r.name;
+      await emit.step(id, r.kind === "app" ? word("installer.step.remove.app", { name }) : r.kind === "worker" ? word("installer.step.remove.worker", { name })
+        : word("installer.step.remove.bucket", { name }));
+      return emit.ok(id, word("installer.remove.progress", { what: name }));
+    });
   } catch (e) {
     if (special(e)) throw e;
-    return emit.fail(word("installer.remove.refused.remains", { remaining: (e.remaining || []).join(", ") }), "", `(Cloudflare said: ${e.message})`);
+    return emit.fail(word("installer.remove.refused.remains", { remaining: (e.remaining || []).join(", ") }), word("installer.cfsaid", { said: e.message }));
   }
-  emit.done(removedPanel());
+  emit.done(removedPanel({ team: slug, done: n }));
 }
 
 /* ---------------------------------------------------------------- routes */
@@ -2582,15 +2508,15 @@ export default {
       /* R2: a slug is a string in the grammar; a number or anything else is refused, never coerced into one. */
       const slug = typeof body.slug === "string" ? body.slug.trim() : "";
       if (!slugOk(slug))
-        return json({ ok: false, error: "The name needs 3 to 40 characters: lower-case letters, digits, and hyphens, starting and ending with a letter or digit." }, 400);
+        return json({ ok: false, error: word("installer.begin.slug") }, 400);
       /* R55: an update is of the one release chosen, V of `signatures`' R47 form; none, or any other value, is refused by
          name before any sign-in. An install takes no version. */
       const chosen = typeof body.version === "string" ? body.version : "";
       /* R65: a removal is confirmed by the short name typed, exactly; any other draws nothing and deletes nothing. */
       if (mode === "removeconfirm" && body.typed !== slug)
-        return json({ ok: false, error: word("screen.install.remove.type.help", { slug }) }, 400);
+        return json({ ok: false, error: word("installer.remove.refused.typed", { slug }) }, 400);
       if (mode === "update" && !versionOk(chosen))
-        return json({ ok: false, error: NO_RELEASE_CHOSEN + " Open your team's Civicsmith, go to Settings \u203a Updates and choose Update there; it brings you back with the release chosen." }, 400);
+        return json({ ok: false, error: NO_RELEASE_CHOSEN + " " + NO_RELEASE_BEGIN }, 400);
       const v = rand(32), s = rand(16);
       const q = new URLSearchParams({
         response_type: "code", client_id: CFG.CLIENT_ID, redirect_uri: CFG.REDIRECT,
@@ -2601,7 +2527,7 @@ export default {
          but not credential-shaped is REFUSED by name here, before any sign-in, rather than silently dropped. */
       const ai = typeof body.instanceAi === "string" ? body.instanceAi.trim() : "";
       if (ai && !instanceAiOk(ai))
-        return json({ ok: false, error: "The organisation AI credential does not look like one: paste it exactly as it was shown when it was minted (16 to 512 characters, no spaces), or leave the box empty." }, 400);
+        return json({ ok: false, error: word("installer.begin.ai") }, 400);
       /* R21: the chosen jurisdiction profiles (install only), refused by name when not offered, never silently dropped. */
       const profilesWhy = profilesRefusal(body.profiles, mode);
       if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
@@ -2610,7 +2536,7 @@ export default {
          and the update alike; a value present but not a service id is refused by name, never dropped. */
       const vpc = typeof body.securityVpc === "string" ? body.securityVpc.trim().toLowerCase() : "";
       if (vpc && !vpcServiceOk(vpc))
-        return json({ ok: false, error: "The Workers VPC service does not look like one: paste its ID as Cloudflare shows it (32 hexadecimal digits, with or without dashes), or leave the box empty." }, 400);
+        return json({ ok: false, error: word("installer.begin.vpc") }, 400);
       /* R36, R37 (T36): nothing else /begin is sent is kept: no field carries a Claude credential, and the install takes no
          choice about the assistant (an `assistant` field is taken nowhere). */
       const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}),
@@ -2637,22 +2563,22 @@ export default {
       }
 
       if (err)
-        return html(plainPage("Permission was not granted",
-          "Cloudflare did not approve the request, so nothing was created.",
+        return html(plainPage(word("installer.callback.denied.title"),
+          word("installer.callback.denied.what"),
           url.searchParams.get("error_description") || err, saved?.slug), 200, clear);
 
       if (!code || !saved || saved.s !== state
           || typeof saved.t !== "number" || Date.now() - saved.t > CFG.COOKIE_MAX_AGE_S * 1000)
-        return html(plainPage("This sign-in could not be verified",
-          "The reply from Cloudflare does not match a request this browser made recently. Nothing was created. "
-          + "Start again from the beginning, in this same tab.", ""), 200, clear);
+        return html(plainPage(word("installer.callback.unverified.title"),
+          word("installer.callback.unverified.what"), ""), 200, clear);
 
       /* R55: a cookie that names no release for an update is not one /begin wrote. */
       if (saved.mode === "update" && !versionOk(saved.r))
-        return html(plainPage(NO_RELEASE_CHOSEN, "Nothing was changed. Open your team's Civicsmith, go to Settings \u203a Updates and choose Update there.", ""), 200, clear);
+        return html(plainPage(NO_RELEASE_CHOSEN, word("installer.update.nothing.changed") + " " + NO_RELEASE_BEGIN, ""), 200, clear);
 
       const title = saved.mode === "update" ? UPDATE_WORDS.progressTitle
-        : saved.mode === "remove" || saved.mode === "removeconfirm" ? word("screen.install.remove.title") : word("screen.install.progress.title");
+        : saved.mode === "remove" ? word("screen.install.remove.title") : saved.mode === "removeconfirm" ? word("installer.remove.running.title")
+        : word("screen.install.progress.title");
       /* R69, R71: this run's own place on the account's lock, and the run it continues when the founder approved again. */
       saved.lock = { id: rand(8), again: typeof saved.lk === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(saved.lk) ? saved.lk : null };
       /* R71 (F6): what a new approval begins again, never a credential. */
@@ -2666,8 +2592,7 @@ export default {
           : runInstall(emit, code, saved), again);
     }
 
-    return html(plainPage("Nothing lives at this address",
-      "The installer starts at the front page.", ""), 404);
+    return html(plainPage(word("installer.notfound.title"), word("installer.notfound.what"), ""), 404);
   },
 };
 
@@ -2675,14 +2600,14 @@ export default {
    one; before a group has chosen a name (the 404, an unverifiable return) it speaks to "your team". */
 function plainPage(head, what, detail, slug) {
   const group = typeof slug === "string" && slugOk(slug)
-    ? `For the team <b class="mono" id="group">${esc(slug)}</b>.` : `Setting up your team&#39;s ${PRODUCT}.`;
-  return `${pageHead(esc(head), { noindex: true })}
+    ? around(word("installer.plain.forteam", { name: SLOT }), `<b class="mono" id="group">${esc(slug)}</b>`) : esc(word("installer.plain.team"));
+  return `${pageHead(head, { noindex: true })}
 <body class="cs"><main class="cs-frame ng">
 ${pageMark()}
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
 <p class="small">${group}</p>
-<div class="ng-acts"><a class="cs-btn" href="/">Back to the start</a></div>
+<div class="ng-acts"><a class="cs-btn" href="/">${esc(word("installer.plain.back"))}</a></div>
 ${publisherFooter()}
 </main></body></html>`;
 }
