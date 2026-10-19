@@ -40,14 +40,10 @@ export function checkConnectionPairCovers(pair, side, extentKind, extent, covers
   const ref = p ? (side === 'b' ? p.b_ref : p.a_ref) : null;
   if (!position)
     return refusal("CONNECTION_PAIR_UNPLACED",
-      `the determining reference on end ${side === 'b' ? 'B' : 'A'}`
-      + `${ref ? ` (${ref})` : ''} carries no position, so whether it was read inside `
-      + `${describeExtent({ kind: extentKind, ...(extent || {}) })} is undetermined`);
+      localize("connections.pair.end_carries_no_position", "the determining reference on end {side}{ref} carries no position, so whether it was read inside {part} is undetermined", { side: side === 'b' ? 'B' : 'A', ref: ref ? ` (${ref})` : '', part: describeExtent({ kind: extentKind, ...(extent || {}) }) }));
   if (typeof covers !== 'function' || !covers(position, extentKind, extent))
     return refusal("CONNECTION_PAIR_OUTSIDE_EXTENT",
-      `the determining reference on end ${side === 'b' ? 'B' : 'A'}`
-      + `${ref ? ` (${ref})` : ''} was read at ${position.ref}, which is outside `
-      + `${describeExtent({ kind: extentKind, ...(extent || {}) })}`);
+      localize("connections.pair.end_read_outside", "the determining reference on end {side}{ref} was read at {position}, which is outside {part}", { side: side === 'b' ? 'B' : 'A', ref: ref ? ` (${ref})` : '', position: String(position.ref), part: describeExtent({ kind: extentKind, ...(extent || {}) }) }));
   /* END DEC-49 REGION is-connection-pair-covering */
   return null;
 }
@@ -98,25 +94,26 @@ export function checkConnectionMentionUnchosen({ pairRef = null, pairOccurrence 
                    grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
   const part = describeExtent({ kind: extentKind, ...(extent || {}) });
   const name = (list) => list.map((m) => `${m.ref} (${m.position
-    ? `read at ${m.position.ref}` : 'where it was read is not recorded'})`).join(', ');
+    ? localize("connections.pair.read_at_place", "read at {ref}", { ref: String(m.position.ref) })
+    : localize("connections.pair.where_not_recorded", "where it was read is not recorded")})`).join(', ');
   if (!pairReached) {
     const bearing = others.filter((m) => m.inside !== false);
     if (!bearing.length && !cut) return null;
     const inside = bearing.filter((m) => m.inside === true);
     return refusal("CONNECTION_PAIR_MENTION_UNCHOSEN",
       localize('connections.pair.the_connections_pair_v1_is', 'the connection\'s pair ({v1}) is this document\'s strongest-graded mention of the subject and was read outside {part}, but {v2}. Nobody chose which mention is on point, so whether this connection reaches the citation is undetermined', { v1: String(pairRef ?? 'unnamed'), part: String(part), v2: String(inside.length
-          ? `another mention of the same subject, ${name(inside)}, was read inside it`
+          ? localize("connections.pair.another_mention_inside", "another mention of the same subject, {mentions}, was read inside it", { mentions: name(inside) })
           : bearing.length
-            ? `another mention of the same subject, ${name(bearing)}, cannot be placed and may be inside it`
-            : `not every mention of the subject in this document was read, and one may be inside it`) }),
+            ? localize("connections.pair.another_mention_unplaced", "another mention of the same subject, {mentions}, cannot be placed and may be inside it", { mentions: name(bearing) })
+            : localize("connections.pair.not_every_mention_read", "not every mention of the subject in this document was read, and one may be inside it")) }),
       { mentions: bearing });
   }
   const tied = others.filter((m) => r(m.grade) >= r(pairGrade) && m.inside !== true);
   if (!tied.length && !cut) return null;
   return refusal("CONNECTION_PAIR_MENTION_UNCHOSEN",
     localize('connections.pair.the_connections_pair_v1_was', 'the connection\'s pair ({v1}) was read inside {part}, but it was kept over {v2} by a tie-break — sort order, which says nothing about which mention is on point — so whether this connection reaches the citation is undetermined', { v1: String(pairRef ?? 'unnamed'), part: String(part), v2: String(tied.length
-        ? `an equal-grade mention of the same subject, ${name(tied)}, that is not inside it,`
-        : `mentions of the subject that were not all read,`) }),
+        ? localize("connections.pair.equal_grade_mention", "an equal-grade mention of the same subject, {mentions}, that is not inside it,", { mentions: name(tied) })
+        : localize("connections.pair.mentions_not_all_read", "mentions of the subject that were not all read,")) }),
     { mentions: tied });
   /* END DEC-49 REGION is-mention-unchosen */
 }

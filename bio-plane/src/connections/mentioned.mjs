@@ -9,12 +9,12 @@
  * entity), its id `derivedId` of the pair in sorted order, the derivation time and the pair rule through the entity;
  * a capped derivation is read from `connection_derivations` (R64). */
 import { BOUNDS, derivedId } from "../connection-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 /** R62: the owner, its one kind, the members' word (K1486) and its class. */
 export const MENTIONED_OWNER = "connections";
 export const MENTIONED_KIND = "mentioned_together";
-export const MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: "mentioned together", class: "derived" })]);
+export const MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: localize("connections.mentioned.kind_word", "mentioned together"), class: "derived" })]);
 /** R62 (N560; K1563 (2); connection-grammar R9): what this owner declares to its conformance battery. Co-mention
  *  states no dates (R63), so R6's `at` rule cannot be shown and is answered inapplicable. It is not group-wide: a
  *  co-mention with a document the viewer may not see is fenced (R33), so R7's sight check runs whole. */
@@ -28,8 +28,10 @@ export const WARN_BAND = 250;
 /* A co-mention states no dates (R63): `valid` unstated. The zone names no place (R37); with no bound stated it is
    never read. */
 const VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
-const UNDATED = "a co-mention states no dates: when the two documents came to concern the same subject is not "
-  + "stated, so whether this connection holds at the date asked is undetermined, never out";
+/** R63: the reason a co-mention is undetermined, a key with its fills (connection-grammar R6; the words rule). The
+ *  reason is read by its key; its sentence is written here, at its id, so the list holds it (localize, R14). */
+export const MENTIONED_UNDATED = Object.freeze({ key: "connections.mentioned.co_mention_undated", vars: Object.freeze({}) });
+export const MENTIONED_UNDATED_SAYS = localize("connections.mentioned.co_mention_undated", "a co-mention states no dates: when the two documents came to concern the same subject is not stated, so whether this connection holds at the date asked is undetermined, never out");
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -48,7 +50,7 @@ export function mentionedNeighbours(k, args, { positionOf = () => null } = {}) {
   const { node, kinds, page, viewer } = a;
   /* connection-grammar R7: a read names its viewer; an absent one is neither an administrator nor the public. */
   if (viewer === undefined || viewer === null || viewer === "")
-    return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+    return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
   if (Array.isArray(kinds) && !kinds.includes(MENTIONED_KIND)) return { items: [] };
   /* R33: a node the viewer may not see answers as one the record does not hold. */
   if (typeof node !== "string" || !node || !k.sees(node, viewer)) return { items: [] };
@@ -128,7 +130,7 @@ function item(r, d, positionOf) {
     derived: { method, as_of: asOf,
                inputs: [{ entity: r.entity_id }, ...[f, t].map((x) => ({ end: x.bundle, capture: x.capture, ref: x.ref }))] },
     established: !!r.established, asserted_by: r.asserted_by, basis: r.basis,
-    undetermined: { why: UNDATED },
+    undetermined: { why: { ...MENTIONED_UNDATED } },
     ...(d && d.truncated ? { truncated: true } : {}),
   };
 }

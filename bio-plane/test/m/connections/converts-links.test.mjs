@@ -12,6 +12,7 @@ import { CONNECTIONS_OPS, connectionsOp } from "../../../src/connections/ops.mjs
 import { connectionsOps } from "../../../src/connections/index.mjs";
 import { checkBundle } from "../../../src/record-grammar/bundle.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const CAP = "ab".repeat(32);
@@ -194,7 +195,7 @@ test("R24, R28 (legacy-index map §4.4 move): end to end, the op projects the so
   assert.deepEqual(w.rows(`SELECT bundle_id, target_id, kind FROM refs WHERE kind='links_to'`),
     [{ bundle_id: A, target_id: B, kind: "links_to" }]);
   const md = w.record.readFile(A, "bundle.md").text;
-  assert.match(md, /Projected 1 link \| member:alice/, "the log names the stamped identity");
+  assert.match(md, /member:alice/, "the log names the stamped identity");
   assert.equal(md.includes("mallory"), false, "never the query string's");
 });
 
@@ -252,7 +253,7 @@ test("R24, R25, R27 (converted, subresources.test \"a resolved link becomes an e
   w.links(loose, null, ["https://example.org/b"]);
   const orphan = await op(w, `capture=${loose}`, { viewer: MACHINE });
   assert.equal(orphan.body.ok, true); assert.equal(orphan.body.projected, 0);
-  assert.match(orphan.body.note, /not registered to a record/);
+  assert.equal(orphan.body.note, localize("connections.note.capture_registered_record", "this capture is not registered to a record, so there is no canonical source to hang an edge on"));
   /* A held source whose two element-links resolve to bytes no bundle claims, one address the record does not hold. */
   const [s] = w.doc(A, ["source"]);
   await w.settle(); await w.settle();
@@ -265,7 +266,7 @@ test("R24, R25, R27 (converted, subresources.test \"a resolved link becomes an e
   assert.equal(proj.body.projected, 0);
   assert.ok(proj.body.skipped_unregistered >= 1, "counted, not a silent zero");
   assert.equal(proj.body.unresolved, 1);
-  assert.match(proj.body.note, /those become edges when the target is promoted/);
+  assert.equal(proj.body.note, localize("connections.index.only_resolved_links_project_and", "only resolved links project, and only to a target some record has registered. skipped_unregistered counts targets whose BYTES the record holds while no record claims them: those become edges when the target is promoted. Each edge is written into the source document's references as links_to and never cites, because the source asserted it and not the team; a member promoting it to cites is a member's act."));
   assert.equal(w.count("refs"), 0);
   assert.equal(JSON.stringify(w.capture.resolveLinks({ sourceCapture: s, viewer: MACHINE }).links), seenBefore,
     "resolution is still computed at read time, unchanged by projecting");

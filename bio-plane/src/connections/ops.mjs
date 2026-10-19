@@ -4,6 +4,8 @@
  * `storeRefusal` (control-plane R23's relay of the store's own refusal) and `storeSilent` are passed in, with the stamps
  * it decided (the viewer and the positional identity). `getStore` answers the Durable Object stub the op is scoped to. */
 
+import { localize } from "../setup-words/index.mjs";
+
 /* The ops `connectionsOp` answers, which the control plane routes here (host-governor's `GOVERNOR_OPS` precedent). */
 export const CONNECTIONS_OPS = Object.freeze(["linkproject"]);
 
@@ -20,7 +22,7 @@ export const CONNECTIONS_OPS = Object.freeze(["linkproject"]);
 export async function linkProjectOp(url, store, { json, doAnswer, storeRefusal, storeSilent, viewer, identity }) {
   const capture = url.searchParams.get("capture");
   if (!/^[0-9a-f]{64}$/.test(capture || ""))
-    return json({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
+    return json({ ok: false, reason: "NEED_CAPTURE", detail: localize("connections.ops.pass_capture_digest", "pass capture=<sha256>") }, 400);
   const bundle = url.searchParams.get("bundle");
   const p = await doAnswer(store.fetch(`http://x/projectlinks?capture=${capture}`
     + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(viewer)}`

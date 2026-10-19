@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, projMd, V, MACHINE } from "./fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", D = "INFO-2026-0004-d";
 const E1 = "ENT-2026-0001", E2 = "ENT-2026-0002";
@@ -66,7 +66,7 @@ test("R7, R10, R13, R52 (converts content-reads): a document-extent row is reach
   }
   assert.equal(g.connection_grade, "B", "the strongest reaching grade");
   assert.equal(g.established, true); assert.equal(g.needs_confirmation, false);
-  assert.match(g.why, /^3 connection\(s\) were established .*the strongest of them \(B\)/);
+  assert.equal(g.why, localize("connections.index.connection_established_reference", "{reaching} connection(s) were established by a reference read inside {ref}; the grade is the strongest of them ({grade}), which states how that connection was established and nothing about how credible either document is", { reaching: "3", ref: g.why.match(/read inside (.+?); the grade/)[1], grade: "B" }));
   assert.equal(g.truncated, false);
   /* Bounded like every read: the first `limit` by grade, truncated measured by one more. */
   const two = w.k.portionGrade({ contentId: doc, limit: 2, viewer: MACHINE });
@@ -102,7 +102,7 @@ test("R10, R11, R13, R52 (converts content-reads): a document that is an end of 
     const why = word("connections.document_end_connection", { ref: String(one.ref) });
     /* The whole axis, key for key: no grade, no document grade, the level that is empty named. */
     assert.deepEqual(axes[id], { determined: false, grain: "portion", grade: null, undetermined_because: "NO_CONNECTION",
-      empty_level: "connection — this document is an end of no connection through this subject", why });
+      empty_level: localize("connections.index.empty_level_no_connection", "connection — this document is an end of no connection through this subject"), why });
     assert.deepEqual(plain[id], axes[id], "narrowing to the subject changes nothing here");
     assert.equal(one.connection_grade, null, "R11: the resolution's A is not a connection grade");
     assert.equal(one.established, false); assert.equal(one.needs_confirmation, false);
@@ -125,9 +125,9 @@ test("R10, R11, R13, R52 (converts content-reads): a document that is an end of 
     { determined: true, grain: "portion", mode: "value", grade: "A", established: true, why: 0 });
   assert.equal(after[rows.doc].grade, "A");
   assert.equal(after[rows.p1].undetermined_because, "CONNECTION_OUTSIDE_PORTION");
-  assert.equal(after[rows.p1].empty_level, "connection — every connection of this document was established outside this portion");
+  assert.equal(after[rows.p1].empty_level, localize("connections.index.empty_level_outside", "connection — every connection of this document was established outside this portion"));
   assert.equal(after[bRow].undetermined_because, "CONNECTION_PORTION_UNDETERMINED");
-  assert.equal(after[bRow].empty_level, "where in the document the determining reference was read, or which mention is on point");
+  assert.equal(after[bRow].empty_level, localize("connections.index.empty_level_where_read", "where in the document the determining reference was read, or which mention is on point"));
   for (const id of [rows.p1, bRow]) {
     assert.equal(after[id].grade, null); assert.equal(after[id].determined, false);
     assert.equal(after[id].why, w.k.portionGrade({ contentId: id, viewer: V("x") }).why);

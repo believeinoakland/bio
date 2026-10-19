@@ -286,16 +286,14 @@ export function themeLegFindings(label, leg, findings) {
   const l = leg && typeof leg === 'object' ? leg : {};
   /* The family helper, by name: DEC-49's form, `refusal("CODE"` at the site. */
   const refusal = (code, message, repairs) => f(THEME_CHECKS[code].check, 'error', message, repairs, code);
-  const REPAIRS = ['cite the document or the passage itself — the theme is how you found it, not what it shows',
-                   'or leave the theme out of the leg: membership in a theme is never a reason a leg counts'];
+  const REPAIRS = [localize('connections.checks.repair_cite_document', 'cite the document or the passage itself — the theme is how you found it, not what it shows'),
+                   localize('connections.checks.repair_leave_theme_out', 'or leave the theme out of the leg: membership in a theme is never a reason a leg counts')];
   /* DEC-49 REGION is-theme-not-evidence */
   for (const field of ['target', 'content_id']) {
     const v = typeof l[field] === 'string' ? l[field].trim() : '';
     if (v && THEME_REF_RE.test(v)) {
       findings.push(refusal("THEME_NOT_EVIDENCE",
-        `${label}.${field} '${v.slice(0, 80)}' names a THEME${THEME_ID_RE.test(v) ? '' : ' membership'}, and a theme `
-        + `is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's `
-        + `declared lens, not evidence, so no leg can rest on it or on membership in it`, REPAIRS));
+        localize('connections.checks.names_a_theme', "{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it", { label: String(label), field: String(field), value: String(v.slice(0, 80)), membership: THEME_ID_RE.test(v) ? '' : ' membership' }), REPAIRS));
       return true;
     }
   }
@@ -304,8 +302,7 @@ export function themeLegFindings(label, leg, findings) {
     const named = typeof v === 'string' ? v.trim() !== '' : Array.isArray(v) ? v.length > 0 : v != null && v !== false;
     if (named) {
       findings.push(refusal("THEME_NOT_EVIDENCE",
-        `${label}.${key} claims the leg through a THEME, and membership in a theme is never a reason a leg `
-        + `counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing`,
+        localize('connections.checks.claims_leg_through_theme', "{label}.{key} claims the leg through a THEME, and membership in a theme is never a reason a leg counts (BIO_Content_Framework_v0_10.md §8.4, fence 4): the leg rests on its target or on nothing", { label: String(label), key: String(key) }),
         REPAIRS));
       return true;
     }

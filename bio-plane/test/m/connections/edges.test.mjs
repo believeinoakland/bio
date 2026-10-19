@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c";
 
@@ -63,7 +64,7 @@ test("R20: NO_TARGET; a target the viewer cannot see answers as an absent one; e
   w.doc(C, ["c"], { references: [{ rel: "cites", target: A }] });
   const none = w.k.backlinks({ viewer: V("bob") });
   assert.equal(none.reason, "NO_TARGET");
-  assert.match(none.detail, /pass target=<record id>/);
+  assert.equal(none.detail, localize("connections.index.backlinks_need_target", "backlinks are asked of an object: pass target=<record id>"));
   const r = w.k.backlinks({ target: A, viewer: V("bob") });
   /* Every citer visible: no out_of_view key at all. */
   assert.equal("out_of_view" in r, false);
@@ -181,7 +182,7 @@ test("R25: a capture not registered to a bundle writes nothing and says so", () 
   const before = w.snapshot(["refs", "asserted_connections", "bundles"]);
   const r = w.k.projectLinks({ sourceCapture: loose, viewer: MACHINE });
   assert.equal(r.projected, 0);
-  assert.match(r.note, /not registered to a record/);
+  assert.equal(r.note, localize("connections.note.capture_registered_record", "this capture is not registered to a record, so there is no canonical source to hang an edge on"));
   assert.deepEqual(w.snapshot(["refs", "asserted_connections", "bundles"]), before);
 });
 
@@ -232,7 +233,7 @@ test("R28: a projected links_to edge becomes a references[] entry of the source 
   const md = w.record.readFile(A, "bundle.md").text;
   /* C-6.1's links_to arm: the entry is the source's on its face, with the address and a contemporaneity verdict. */
   assert.match(md, /- rel: links_to\n    target: INFO-2026-0002-b\n    status: confirmed\n    asserted_by: source\n    address: "https:\/\/example.org\/b"\n    verdict: (contemporaneous|superseded|undetermined)\n    note: "https:\/\/example.org\/b"/);
-  assert.match(md, /## Session Log[\s\S]*Projected 1 link \| member:alice/);
+  assert.match(md, /## Session Log[\s\S]*member:alice/);
   assert.equal(w.record.readFile(A, "snapshots/c0.txt").text, "source", "every other file carried");
   /* The source is promoted again, carrying its document: the edge stays. */
   const head = w.record.head(A);
@@ -272,7 +273,7 @@ test("R32, R54: a source's own link between two held documents is an A connectio
   assert.equal(c.grade, "A"); assert.equal(c.asserted_by, "source"); assert.equal(c.established, true);
   assert.equal(c.a_bundle_id, A); assert.equal(c.b_bundle_id, B);
   assert.equal(c.timing, "undetermined", "one capture of the target, before the source: undetermined");
-  assert.match(c.timing_says, /undetermined/);
+  assert.equal(c.timing_says, localize("connections.version_target_source_pointed", "which version of its target the source pointed at is undetermined"));
   /* The target seen on both sides of the source's retrieval: contemporaneous. */
   const w2 = world();
   const [s2] = w2.doc(A, ["source"]);

@@ -10,6 +10,8 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { defaultRegistry, ownerConformance, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { STEP_SOURCE_KIND, STEP_SOURCE_KINDS, STEP_SOURCE_DECLARES, STEP_SOURCE_BASIS_MAX, MENTIONED_KIND,
          CONNECTIONS_TABLES, connectionsOps } from "../../../src/connections/index.mjs";
+import { STEP_SOURCE_UNDATED } from "../../../src/connections/stepsources.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const E = "ENT-2026-0101", F = "ENT-2026-0102", G = "ENT-2026-0103";
 const D1 = "INFO-2026-0101-a", D2 = "INFO-2026-0102-b", H = "INFO-2026-0150-h";
@@ -161,7 +163,7 @@ test("R69: neighbours answers, for an entity at either end, each standing source
       assert.equal(i.evidence[0].relation, rel);
       assert.deepEqual(i.grade.ends, [LOWEST_GRADE, LOWEST_GRADE], "each entity end at the lowest grade, as entities R47 answers them");
       assert.equal(i.derived, null);
-      assert.equal(typeof i.undetermined.why, "string");
+      assert.deepEqual(i.undetermined.why, STEP_SOURCE_UNDATED, "the reason is a key with its fills (R69)");
       assert.deepEqual({ from: i.valid.from, to: i.valid.to }, { from: null, to: null }, "valid unstated");
     }
     const one = r.items.find((i) => i.id === s1.id), two = r.items.find((i) => i.id === s2.id);
@@ -171,7 +173,7 @@ test("R69: neighbours answers, for an entity at either end, each standing source
     assert.equal(one.grade.assertion, "B", "the cited capture's grade, never above it");
     assert.equal(w.prov.captureGrade(d2).grade, null);
     assert.equal(two.grade.assertion, "D", "a capture whose grade is not determined is read at the lowest grade");
-    assert.match(two.grade_says, /not determined/);
+    assert.equal(two.grade_says, word("connections.says.cited_capture_grade_determined", { why: ` (${String(w.prov.captureGrade(d2).why).slice(0, 200)})`, lowest_grade: LOWEST_GRADE }));
     assert.equal(one.attached_by, "alice");
   }
   /* An entity that is no end of the relation, and a kind not asked, answer nothing. */

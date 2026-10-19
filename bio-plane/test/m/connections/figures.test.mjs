@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { CONNECTIONS_COUNT_KEYS, CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE,
          THEME_REF_RE, THEME_LEG_KEYS, themeLegFindings } from "../../../src/connections/index.mjs";
 
@@ -111,5 +112,5 @@ test("R46 (T19): C-81.1 is answered from this module's row, its id grammar expor
   assert.equal(findings.length, 1);
   assert.deepEqual([findings[0].check, findings[0].severity, findings[0].code, findings[0].repairable],
                    [THEME_CHECKS.THEME_NOT_EVIDENCE.check, "error", "THEME_NOT_EVIDENCE", true]);
-  assert.match(findings[0].message, /names a THEME membership/);
+  assert.equal(findings[0].message, localize("connections.checks.names_a_theme", "{label}.{field} '{value}' names a THEME{membership}, and a theme is never the basis of a claim (BIO_Content_Framework_v0_10.md §8.4, fence 4): it is a member's declared lens, not evidence, so no leg can rest on it or on membership in it", { label: "basis[0]", field: "target", value: `${id}#INFO-2026-0001-a`.slice(0, 80), membership: " membership" }));
 });

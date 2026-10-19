@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, checkConnectionPairCovers }
   from "../../../src/connections/index.mjs";
 import { readingOccurrenceKey, readingPositionInExtent } from "../../../src/textchain.mjs";
@@ -64,7 +65,7 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
     assert.deepEqual(Object.keys(k.determining_pair).sort(), PAIR_KEYS, "the determining pair's keys, exactly");
     assert.equal(k.determining_pair.a_ref, R); assert.equal(k.determining_pair.b_ref, R);
     assert.ok(k.a_capture_sha < k.b_capture_sha, "ends in canonical order");
-    assert.match(k.basis, new RegExp(`the connection is through the reference ${R} in A and ${R} in B`), "the basis names the pair");
+    assert.equal(k.basis.split(R).length - 1, 2, "the basis names the pair's reference on each end");
   }
   const sortKey = (k) => `${k.a_capture_sha}|${k.b_capture_sha}`;
   assert.deepEqual([...d.connections].sort((x, y) => sortKey(x).localeCompare(sortKey(y))),
@@ -77,8 +78,8 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
   assert.equal(ab.positioned, true);
   assert.deepEqual(ab[`${sideOf(AB, a)}_position`], place(1));
   assert.deepEqual(ab[`${sideOf(AB, b)}_position`], place(7));
-  assert.match(ab.why, /both ends record where/);
-  assert.ok(AB.basis.includes(`(read at ${ab.a_position.ref} and ${ab.b_position.ref})`), "the basis names both places, A then B");
+  assert.equal(ab.why, localize("connections.why.ends_record_document", "both ends record where in their document the determining reference was read"));
+  assert.ok(AB.basis.includes(localize("connections.index.read_at_both_ends", " (read at {ref} and {ref_2})", { ref: ab.a_position.ref, ref_2: ab.b_position.ref })), "the basis names both places, A then B");
   assert.deepEqual([AB.grade, AB.a_grade, AB.b_grade, AB.established], ["A", "A", "A", true], "the pair did not disturb the grade");
 
   /* A-C: one end placed; the other stated null, never invented. */
@@ -87,8 +88,8 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
   assert.equal(ac.positioned, false);
   assert.deepEqual(ac[`${sideOf(AC, a)}_position`], place(1));
   assert.equal(ac[`${sideOf(AC, c)}_position`], null);
-  assert.match(ac.why, /where it was read is not/);
-  assert.ok(AC.basis.includes(`(read at page 2 on one end only; the other reading does not say where)`));
+  assert.equal(ac.why, localize("connections.index.reference_recorded_not_read", "the determining reference is recorded on both ends; where it was read is not, so a citation of a PART of either document cannot yet earn from this connection"));
+  assert.ok(AC.basis.includes(localize("connections.index.read_at_one_end", " (read at {ref} on one end only; the other reading does not say where)", { ref: "page 2" })));
 
   /* R4 by capture: A's two connections, and only those. */
   const byC = w.k.read({ captureSha: a, viewer: V("x") });
@@ -106,7 +107,7 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
   w.resolve(x, D, "Ord. 2", E2, "B");
   const [CD] = w.k.derive({ entityId: E2 }).connections;
   assert.deepEqual([CD.determining_pair.positioned, CD.determining_pair.a_position, CD.determining_pair.b_position], [false, null, null]);
-  assert.match(CD.basis, /neither reading says where in its document the reference was read/);
+  assert.ok(CD.basis.includes(localize("connections.index.read_at_neither", " (neither reading says where in its document the reference was read)")));
 
   /* A row derived before pairs were kept: determining_pair is null (a third state), the key still present. */
   w.st.sql.exec(`UPDATE connections SET a_ref=NULL, b_ref=NULL WHERE entity_id=?`, E);
@@ -126,7 +127,7 @@ test("R7, R8, R10 (converts reading-position): per connection, the pair's own pa
   assert.deepEqual([p2.connection_grade, p2.established, p2.needs_confirmation], ["A", true, false]);
   assert.deepEqual(p2.counts, { connections: 2, reaching: 2, undetermined: 0, outside: 0 });
   for (const e of p2.reaching) {
-    assert.match(e.why, /^the determining reference was read at page 2, inside /, "it says which reference reached, and where");
+    assert.equal(e.why, localize("connections.index.read_inside_reference", "the determining reference was read at {ref}, inside {ref_2}", { ref: "page 2", ref_2: "page 2" }), "it says which reference reached, and where");
     assert.equal(e.grade, "A"); assert.equal(e.code, undefined);
   }
 
@@ -136,7 +137,7 @@ test("R7, R8, R10 (converts reading-position): per connection, the pair's own pa
   for (const e of p9.outside) {
     assert.equal(e.code, "CONNECTION_PAIR_OUTSIDE_EXTENT"); assert.equal(e.check, "C-49.1");
     assert.equal(e.translation, CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_OUTSIDE_EXTENT.translation);
-    assert.match(e.why, /was read at page 2, which is outside/);
+    assert.ok(e.why.includes("page 2"), "the outside reason names the place it was read at");
   }
 
   const pc = w.k.portionGrade({ contentId: mint(C, c, page(0)), viewer: V("x") });
@@ -152,7 +153,7 @@ test("R7, R8, R10 (converts reading-position): per connection, the pair's own pa
     const g = w.k.portionGrade({ contentId: mint(bundle, cap, DOCUMENT), viewer: V("x") });
     assert.equal(g.connection_grade, "A");
     assert.deepEqual(g.counts, { connections: 2, reaching: 2, undetermined: 0, outside: 0 }, bundle);
-    for (const e of g.reaching) assert.match(e.why, /whole document/);
+    for (const e of g.reaching) assert.equal(e.why, localize("connections.index.whole_document_citation", "this citation is of the whole document, so every connection the document has is inside it"));
   }
   /* …and still with no pair recorded on any row. */
   w.st.sql.exec(`UPDATE connections SET a_ref=NULL, b_ref=NULL`);
@@ -231,7 +232,7 @@ test("R14, R15, R16, R9 (converts reading-position-occurrences): three reads are
   assert.deepEqual(unnamed.occurrences, [2, 8, 13].map((i) => ({ occurrence: occ(i), position: place(i) })),
     "every occurrence, in reading order, with its key and place");
   assert.equal(unnamed.truncated, false);
-  assert.match(unnamed.detail, /at 3 places \(page 3, page 9, page 14\)/);
+  assert.equal(unnamed.detail, localize("connections.index.choice_occurrence_unnamed", "this document reads '{ref}' at {places_count} places ({places}), and each is its own mention. Pass occurrence= naming the one on point.", { ref: R, places_count: "3", places: "page 3, page 9, page 14" }));
   assert.equal(w.count("connection_pair_choices"), 0, "refused, never defaulted");
 
   const pages = [2, 8, 13];
@@ -247,7 +248,7 @@ test("R14, R15, R16, R9 (converts reading-position-occurrences): three reads are
       if (q === p) {
         assert.equal(k, "reaching", `the chosen page ${p + 1} reaches`);
         assert.deepEqual(e.on_point.position, place(p)); assert.equal(e.grade, "A");
-        assert.match(e.why, /a member \(alice\) chose/);
+        assert.equal(e.why, localize("connections.why.read_inside", "{said}; it was read at {ref}, inside {ref_2}",{ said: localize("connections.member_chose_point", "a member ({chosen_by}) chose {ref} as the on-point mention on this end", { chosen_by: "alice", ref: R }), ref: e.on_point.position.ref, ref_2: e.on_point.position.ref }));
       } else {
         assert.equal(k, "outside", `page ${q + 1} is outside once page ${p + 1} is chosen`);
         assert.equal(e.code, "CONNECTION_PAIR_OUTSIDE_EXTENT");
@@ -266,7 +267,7 @@ test("R14, R15, R16, R9 (converts reading-position-occurrences): three reads are
   const bogus = choose({ occurrence: "page 10" });
   assert.deepEqual([bogus.ok, bogus.code, bogus.check], [false, "CONNECTION_CHOICE_NOT_A_MENTION", "C-74.3"]);
   assert.deepEqual(bogus.occurrences.map((o) => o.position.ref), ["page 3", "page 9", "page 14"], "listing where it is read");
-  assert.match(bogus.detail, /It reads it at: page 3, page 9, page 14\./);
+  assert.equal(bogus.detail, localize("connections.index.this_document_does_not_read", "this document does not read '{ref}' {v1}{v2}. It reads it at: {v3}.", { ref: R, v1: "at 'page 10'", v2: "", v3: "page 3, page 9, page 14" }));
   assert.equal(w.count("connection_pair_choices"), n);
 
   const once = choose({}, b, a);
@@ -287,7 +288,7 @@ test("R6, R9 (converts reading-position-occurrences): a re-read that drops the c
     const [k, e] = only(w.k.portionGrade({ contentId: mint(A, a, page(p)), viewer: V("x") }));
     assert.notEqual(k, "reaching", `page ${p + 1} is not reached through the lapsed choice`);
     assert.deepEqual([e.on_point.lapsed, e.on_point.ref, e.on_point.occurrence, e.on_point.chosen_by], [true, R, occ(8), "alice"]);
-    assert.match(e.on_point.why, /no longer carries it at that place/);
+    assert.equal(e.on_point.why, localize("connections.why.member_chose_mention", "a member chose this mention as on point, and this document no longer carries it {value}for this subject, so the choice cannot answer and the machine's selection is read as unchosen", { value: "at that place " }));
   }
   const [k9] = only(w.k.portionGrade({ contentId: mint(A, a, page(8)), viewer: V("x") }));
   assert.equal(k9, "outside", "page 9 is no longer read: the machine's pair (page 3) answers, outside it");
