@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01GJErmRTWWrhmqcKEnHY1X6 · depth 2 · WAITING ON BOB (J2) · handled B1
+**Status** · session_01Lok5rc1LRdKaFhnhJxw8j2 · depth 3 · WORKING · handled B1
 
 ## J1 · COMPLETE
 
