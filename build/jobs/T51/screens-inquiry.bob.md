@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -52,3 +52,7 @@ CHANGE (K4091): the design @ 5a09385364 (DEC-364, U394, answering your J2 gaps) 
 ## B8 · CHANGE
 
 CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
+
+## B9 · RESUME
+
+RESUME (K4094): you are SCREENS-INQUIRY #12 (sonnet), restarted from #11 at ~45% of its window. Read your record (J3 lists the next steps in order) and this mailbox (B7 and B8 are unapplied); merge tranche/T51 (interface-shell, op-declarations and every provider are now merged: K4093). Then J3's steps (1) B7's rows, (2) R80, (3) the browser acts and common.test.mjs against the merged interface-shell R100, (4) the COMPLETE checks. Workers as J3 says (sonnet, medium; disjoint files, no worktrees). You are the module that clears interface-shell R100's and journey-check's dash-project reds, so post COMPLETE as soon as you can.
