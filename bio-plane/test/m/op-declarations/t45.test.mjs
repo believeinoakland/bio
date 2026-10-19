@@ -32,6 +32,7 @@ import { T47_SHARES } from "../../../src/op-declarations/t47.mjs";
 import { T48_SHARES } from "../../../src/op-declarations/t48.mjs";
 import { T49_SHARES } from "../../../src/op-declarations/t49.mjs";
 import { T50_SHARES } from "../../../src/op-declarations/t50.mjs";
+import { T51_SHARES } from "../../../src/op-declarations/t51.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_KINDS, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT, PLAN_RUN_SCOPE } = O;
@@ -282,9 +283,11 @@ test("R49, R5, R7, R51: t45.mjs is frozen data — each share names an owner who
        share (`t47.mjs`: project-roster's `projectlist`), and T48 (R64, R67) its T48 share (`t48.mjs`: action-holds'
        `pressurefor`, action-replies' `actionreplyquoting`, action-plans' `planask`, filings' `filingread`), and T49 (R72) its T49 share
        (`t49.mjs`: project-roster's `projectownervotes`), and T50 (R73) its T50 share (`t50.mjs`: filings' `stakeatpreparation`,
-       project-roster's three) */
+       project-roster's three), and T51 (R77–R79) its T51 share (`t51.mjs`: action-holds' `holdsdue`, local-facts' `rulefields`,
+       action-clocks' `clocksrunning`, filings' `approvedunsent`, action-plans' `checkpointsdue`, project-roster's
+       `projectinvitations`) */
     assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds),
-      plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}), ...(T47_SHARES[f.owner]?.ops ?? {}), ...(T48_SHARES[f.owner]?.ops ?? {}), ...(T49_SHARES[f.owner]?.ops ?? {}), ...(T50_SHARES[f.owner]?.ops ?? {}) }), f.owner);
+      plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}), ...(T47_SHARES[f.owner]?.ops ?? {}), ...(T48_SHARES[f.owner]?.ops ?? {}), ...(T49_SHARES[f.owner]?.ops ?? {}), ...(T50_SHARES[f.owner]?.ops ?? {}), ...(T51_SHARES[f.owner]?.ops ?? {}) }), f.owner);
   }
   for (const k of ["owners", "publishgate"]) assert.ok(Object.isFrozen(OP_KINDS[k]), k);
   for (const op of ["infractiondraft", "bearingdraft"]) {
