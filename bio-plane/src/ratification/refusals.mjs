@@ -146,12 +146,9 @@ export function approvalMissingRefusal(caseId, edition, approvalSha, read, notCa
     missing: read.unreadable ? null : missing, not_carried: read.unreadable ? null : uncarried,
     detail: read.unreadable
       ? localize("ratification.refusals.the_teams_approval_rule_or", "the team's approval rule, or the approvals given for case {caseId} edition {edition}, could not be read ({unreadable}), so whether every required approver has approved this document is undetermined and it is not signed unchecked. Ask again. Nothing was signed.", { caseId: String(caseId), edition: String(edition), unreadable: String(read.unreadable) })
-      : localize("ratification.refusals.the_team_requires_approvers_to", "the team requires {approvers} to approve a case before it is signed{v1}{v2}. Nothing was signed.", { approvers: String(read.approvers.join(", ")), v1: String(missing.length ? `, and ${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} not approved case `
-          + `${caseId} edition ${edition} as this document stands (${String(approvalSha ?? "").slice(0, 12)}); an `
-          + `approval of an earlier version does not carry over` : ""), v2: String(uncarried.length ? `${missing.length ? "; and" : ", and"} the approval${uncarried.length === 1 ? "" : "s"} of `
-          + `${uncarried.join(", ")}, given, ${uncarried.length === 1 ? "is" : "are"} not carried in the document's own `
-          + `approvals, so the signed file would not prove ${uncarried.length === 1 ? "it" : "them"}: prepare the `
-          + `document again to carry ${uncarried.length === 1 ? "it" : "them"} (its approval digest is unchanged)` : "") }) };
+      : localize("ratification.refusals.the_team_requires_approvers_to", "the team requires {approvers} to approve a case before it is signed{v1}{v2}. Nothing was signed.", { approvers: String(read.approvers.join(", ")),
+          v1: missing.length ? localize("ratification.refusals.and_members_have_not_approved", ", and {missing} {has} not approved case {caseId} edition {edition} as this document stands ({sha}); an approval of an earlier version does not carry over", { missing: missing.join(", "), has: missing.length === 1 ? "has" : "have", caseId: String(caseId), edition: String(edition), sha: String(approvalSha ?? "").slice(0, 12) }) : "",
+          v2: uncarried.length ? localize("ratification.refusals.the_approvals_given_are_not", "{joiner} the approval{plural} of {uncarried}, given, {is} not carried in the document's own approvals, so the signed file would not prove {pronoun}: prepare the document again to carry {pronoun_2} (its approval digest is unchanged)", { joiner: missing.length ? "; and" : ", and", plural: uncarried.length === 1 ? "" : "s", uncarried: uncarried.join(", "), is: uncarried.length === 1 ? "is" : "are", pronoun: uncarried.length === 1 ? "it" : "them", pronoun_2: uncarried.length === 1 ? "it" : "them" }) : "" }) };
   /* END DEC-49 REGION is-approval-missing */
 }
 

@@ -59,7 +59,7 @@ export function retire({ sql, promotion, retrieval, connections },
   if (!sel.ok) return sel;
   if (!sel.members.length)
     return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-             detail: "this selection resolves to no members, so there is nothing to retire" };
+             detail: localize("ratification.retire.this_selection_resolves_to_retire", "this selection resolves to no members, so there is nothing to retire") };
 
   /* R29, R33: every member examined before any document changes, each counted under the first class it fails. */
   const notInfo = [], illegal = [], cited = [];

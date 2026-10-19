@@ -85,22 +85,13 @@ test("R14, R46: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.11, C-65.1 a
 /* R14's two new rows (K1058), stamped by 1.53.0 (PROMOTION #24, T23 layer 2): their translations are R14's, word for word. */
 test("R14, R22, R35, R2: C-58.4 CONTESTED_IN_BATCH, C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED and C-92.10 ATTRIBUTION_UNCHOSEN carry R14's translations word for word (C-58.5 and C-92.10 as re-worded at T28), minted where R22, R35 and R2 refuse", () => {
   assert.deepEqual(R.rowOf("CONTESTED_IN_BATCH"), { code: "CONTESTED_IN_BATCH", check: "C-58.4",
-    translation: "Some of these documents are contested: a contradiction touching each is not yet resolved, and "
-      + "contested material is never released in a batch. They are named. Nothing was released." });
+    translation: word("refusal.CONTESTED_IN_BATCH") });
   assert.deepEqual(R.rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"), { code: "ANONYMOUS_TESTIMONY_UNCORROBORATED",
     check: "C-58.5",
-    translation: "This edition rests on testimony, or on material from an unnamed source attested by a member, "
-      + "credited only to the team or the project, with no independent leg corroborating it. Such testimony or "
-      + "evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. "
-      + "Each such member, observation and document is named. Corroborate the claim with an independent leg, ask "
-      + "the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing "
-      + "was signed." });
+    translation: word("refusal.ANONYMOUS_TESTIMONY_UNCORROBORATED") });
   /* T28 (N523): C-92.10 re-worded, word for word R14's */
   assert.deepEqual(R.rowOf("ATTRIBUTION_UNCHOSEN"), { code: "ATTRIBUTION_UNCHOSEN", check: "C-92.10",
-    translation: "This case edition uses a member's firsthand observation, or material from an unnamed source a "
-      + "member attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing "
-      + "it at any level would be choosing for them. Ask that member to choose, or prepare the edition without the "
-      + "finding that rests on it." });
+    translation: word("refusal.ATTRIBUTION_UNCHOSEN") });
   assert.equal(R.RATIFY_SCOPE_CHECKS.CONTESTED_IN_BATCH.where, "src/ratification/release.mjs release > is-release-contested");
   assert.equal(R.RATIFY_SCOPE_CHECKS.ANONYMOUS_TESTIMONY_UNCORROBORATED.where,
                "src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony");
