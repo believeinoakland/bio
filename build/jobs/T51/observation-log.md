@@ -83,3 +83,36 @@ Checks:
 Reading: the requirements (whole), T51-200 and BOB's B2 notes, the words-pass findings, and my own code (index.mjs, vocabulary.mjs, checks.mjs and schema.mjs, whole; schema.mjs was not changed).
 
 Size (session_017p9yDiKdDPqfnyWK37NQsk): test runs 2, module lines 3105
+
+## J4 · COMPLETE
+
+B3 done: the CHANGE (K3994) is applied in ecb70f9274 and pushed to job/T51/observation-log. This entry replaces J3's text where they differ.
+
+Changed member text (each sentence the design's row now supplies; the row text is what members read):
+- Eight design rows, as B3 names them, with word(key); the code-side ids are deleted:
+  - observation-log.lead_list_note (LEAD_LIST_NOTE): "...(never looked when nobody has followed it)..." (was "NEVER_LOOKED")
+  - observation-log.never_followed (the internet frontier's never_followed cause): "This is never looked, established rather than inferred" (was "This is NEVER_LOOKED")
+  - observation-log.address (subject kind address): "...in its normalized form" (was "normalised")
+  - observation-log.says.undetermined_derivation_over (the watermark band's derivation statement): "The log stores whole seconds" (was "`observation_log.at` stores whole seconds")
+  - observation-log.capture_session_ttl_expiring (condition): "a capture session is expiring with work outstanding" (dropped "(CAPTURE-SCALING)")
+  - observation-log.why.capture_content_level (the content level's undetermined reason): dropped "(OBSERVATION-LOG-DESIGN.md section 5.1)"
+  - observation-log.why.reading_persisted_capture_reader (no reader run): dropped "(section 5.1)"
+  - observation-log.partial.looked_got_part (state partial): "we looked and got part of it" (dropped "(SWH's crawl status; CPDF-5's measured 88% case)"); the derived state word is unchanged, since it strips that note either way.
+- Four state words, which I matched to the refusal rows: they differ only in capital letter and final stop, so I took the design's words as B3 asks. Tell me if you would rather keep the code's form.
+  - state NEVER_LOOKED: "Nobody looked at this level for this subject." (refusal.NEVER_LOOKED)
+  - state LOOKED_ABSENT: "We looked and it is positively not there." (refusal.LOOKED_ABSENT)
+  - state LOOKED_INDETERMINATE: "We looked and could not tell." (refusal.LOOKED_INDETERMINATE)
+  - state PRESENT: "We looked and it is there." (refusal.PRESENT)
+- The four pass hints keep their text (localize, same words): pass lead=…, pass project=…, pass reason=… (with {pid}), pass detail=….
+- Not changed: governor-holding-host's sentence. words.json row machinery-producers.summary.pacing_holding_captures reads "our own pacing is holding {host}: captures from it are PACED, not broken", which is a different sentence from the code's "the per-host governor is holding a host: the capture is PACED, not broken (D-103)". Its words differ, so I kept the code's text under observation-log.vocabulary.condition_governor_holding_host. Decide whether it is the same sentence.
+- Not changed: the other condition sentences. I searched words.json for each (for example "(S-7)", "(D-104)", "recheck", "archive fallback") and found no row, so they stay as localize. Only capture-session-ttl matched.
+- Noticed, not mine, not changed: observation-log.index.who_s_lead_is_recorded (a localize that predates this job) and the design row observation-log.says.lead_recorded_somewhere share most words; the code says "recorded with op=leadlook" where the row says "recorded as a look against it". Developer wording in member text; for the design stream.
+
+R36 (B3 item 3): test/m/observation-log/vocabulary.test.mjs now asserts CONDITION_KINDS["render-deferred"] equals RENDER_DEFERRED_CONDITION, which the module exports from its own localize call. Holding the sentence in the test would fail the testcopy check, so the test compares with the product's call rather than a copy of its text. The prefix and suffix checks are gone.
+
+Tests after the change: `node --test test/m/observation-log/` (bio-plane): 78 pass, 0 fail.
+Checks after the change: format 0 failures; architecture 0 failures; coverage 38 of 38 ids named, 0 failures; ownership 5 files, 0 failures; words 0 failures for observation-log. setup-words --check still reports rows.mjs stale for the new ids (expected; BOB regenerates at the layer close).
+
+Commits on job/T51/observation-log: 37ccba91f7 (the conversion), f6c5cef3ae (merge of tranche/T51 at 940517d41e), ecb70f9274 (B3). Pushed.
+
+Size (session_017p9yDiKdDPqfnyWK37NQsk): test runs 4, module lines 3105
