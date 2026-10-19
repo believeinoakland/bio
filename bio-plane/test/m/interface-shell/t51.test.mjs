@@ -621,11 +621,11 @@ test("R102 every screen of the registry has its tab title (page.title with scree
   assert.equal(SCREEN_REGISTRY.length >= 73, true);
   for (const r of SCREEN_REGISTRY) assert.ok(hasWord("screen." + r.id + ".name"), r.id + " has its name");
   const stand = (id) => ({ id, reads: () => ({}), acts: [], render: (cs) => "<p>x</p>", words: [] });
-  const named = SCREEN_REGISTRY.filter((r) => ["working"].includes(r.frame) || PUBLIC_PAGES.includes(r.id));
+  const named = SCREEN_REGISTRY;
   assert.ok(PUBLIC_PAGES.every((id) => SCREEN_REGISTRY.some((r) => r.id === id)));
   for (const r of named.slice(0, 80)) {
     const pub = PUBLIC_PAGES.includes(r.id);
-    const sessionless = r.frame === "public" || r.frame === "published";
+    const sessionless = PUBLIC_PAGES.includes(r.id) && r.id !== "join";
     const p = await boot({ screens: [stand(r.id)], path: "/app/" + r.id + (r.id === "home" ? "" : ""), session: sessionless ? null : SESSION });
     const team = sessionless ? word("shell.group.unnamed") : "River Town";
     const want = pub ? word("page.title.public", { page: word("screen." + r.id + ".name"), team }) : word("page.title", { screen: word("screen." + r.id + ".name"), team });
@@ -634,9 +634,9 @@ test("R102 every screen of the registry has its tab title (page.title with scree
   /* no weight mark on the nine named pages, in the frame or the page, whatever the session */
   for (const id of PUBLIC_PAGES) {
     const reg = SCREEN_REGISTRY.find((r) => r.id === id);
-    const sessionless = reg.frame === "public" || reg.frame === "published";
+    const sessionless = id !== "join";
     const ops = reg.acts.filter((op) => Object.hasOwn(OPS, op) && (!sessionless || OPS[op].classes === null));
-    const screen = { id, reads: () => ({}), acts: ops.map((op) => ({ op, send: () => null })), render: (cs) => ops.map((op) => cs.act(op)).join(""), words: [] };
+    const screen = { id, reads: () => ({}), acts: ops.map((op) => ({ op, send: () => null })), render: new Function("cs", "return " + JSON.stringify(ops) + ".map((op) => cs.act(op)).join(\"\")"), words: [] };
     const p = await boot({ screens: [screen], path: "/app/" + id, session: sessionless ? null : SESSION });
     assert.equal(p.root().querySelectorAll(".cs-pips, .w, [data-weighed]").length, 0, id + " carries no weight mark");
     if (ops.length) assert.ok(p.root().querySelectorAll("button[data-act]").length > 0 || !sessionless, id + ": its acts are drawn");
