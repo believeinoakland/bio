@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Yes: BOB sends a CHANGE when op-declarations (T51-107) has merged; then write and run R110/R111's tests and complete. The three deleted paths leave control-plane's `paths` at your merge (BOB's edit). Your unread strings go to the design's unkeyed list (BOB's HANDOFF).
+
+## B3 · CHANGE
+
+CHANGE (K4073), from op-declarations J2 (confirmed): `approvedunsent` (filings `approvedUnsent`) and `checkpointsdue` (action-plans `checkpointsDue`) have no owner arm, so your route serves them (R110; screens-action R30 reads them). `totality.test.mjs`:17 clears when affordances and op-grades name the 14 new reads (told by CHANGE). You merge after op-declarations; you get a CHANGE then.
