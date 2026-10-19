@@ -5406,3 +5406,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) `screens/words-reads-handoffs.json` gains 88 strings, each with its job's reason, taken whole from the words check on tranche/T51: run-rules 6, answers 2, agent-harness 15, agent-runner 23, strength 16, contradiction 7, basis-versions 15, agent-worker 4 (ops.mjs 26, 27, 50, 53; index.mjs 774, which the HANDOFF does not name, is left counted). reading-guides and skills already read 0. (2) citation's 61 unkeyed entries leave its list (`words-reads-mod-2.json`): its job converted them (K4010), and the check gives citation 0 with none listed. (3) capture-requests' five entries say "your team's" (`words-reads-mod-4.json`, K3472). The words check on T51 gives 0 on eleven of the twelve modules; contradiction's two `+`-joined strings (contradiction.mjs 84, text.mjs 43) are listed but still counted, because the check's stitched arm does not consult the unkeyed list.
 reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads-mod-2.json`, `screens/words-reads-mod-4.json`, `screens/words-reads.json`.
 owed: (BOB, civicos-process) the words check's stitched arm reads the design's unkeyed list as the plain arm does; agent-worker index.mjs 774 to be judged by its job.
+
+### DEC-349 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-344 to DEC-348)
+for: design
+question: Do the 115 words written or reworded by DEC-344 to DEC-348 agree with their neighbors and the house style?
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: keep "cover" for image-cover's refusals; rejected, since the drawn screens and the neighboring photo refusals say "obscure" and "mark", so one idea would have two names.
+recommendation: as below.
+reversal cost: low: word rows.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) image-cover's six member refusals (`refusal.NOT_A_COVERABLE_FORMAT`, `UNSUPPORTED_JPEG_PROCESS`, `PNG_INTERLACED`, `AREA_MALFORMED`, `AREA_OUTSIDE`, `PHOTO_TOO_LARGE`) say "obscure" as the ceremony's Photos step and the marking refusals do, and name the product "your team's Civicsmith" as their siblings do; the ceremony's drawn rule (`screen.ceremony.photos.rules`) and the screens page's note say "obscured" likewise. (2) `odf-reader.odf.content_xml_with_text_list`, a builder's provenance note, loses the two job ids it carried. (3) `observation-log.vocabulary.condition_governor_holding_host` speaks in the team's voice ("Your team's Civicsmith is spacing out its captures from this site on purpose"). The other 107 rows agree; the refusals' ending ("Nothing was recorded.") is left off image-cover's eight, which refuse before anything is written.
+reasoning recorded in: this entry; `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: nothing.
