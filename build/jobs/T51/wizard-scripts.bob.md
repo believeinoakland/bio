@@ -42,3 +42,7 @@ Convert those 48 to `word(key[, vars])` (the row wins over the code's text; fill
 2. Your J1 (2): ruled (BOB's, P17): `project-roster` is in your `uses` (modules.json; your requirements' Uses line says tests only). Architecture over your fixture is clean.
 
 Then run your suite and the checks of your START, and post COMPLETE.
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4076), re J4: (b), as you recommend. Match the two library entries by their script ids (`WIZ-f06504b9133b8d61`, `WIZ-7de505135a9ecd4f`), so no name literal remains; then post COMPLETE.
