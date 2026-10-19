@@ -1585,3 +1585,6 @@ ACK U396 (DEC-366): merged into tranche/T51 @ the design 8ed3e84aae, rows.mjs re
 
 ## B385 · ACK · re U398 · 2026-10-19 · session_01W1R9rKhazY6BWGbev9yHgz · primary
 ACK U398 (DEC-367): merged into tranche/T51 @ f99a32edc9, rows.mjs regenerated; installer told by CHANGE (K4101).
+
+## B386 · HANDOFF · 2026-10-19 · session_01W1R9rKhazY6BWGbev9yHgz · primary
+HANDOFF (K4103), on DEC-366 (4b), from SCREENS-INQUIRY #12 J5. (1) `document.read.original.card`'s {kind} needs a plain kind word for each content type the record holds (PDF, Word document, spreadsheet, slide deck, image, web page, plain text, archive and the rest the format registry names); no row maps a content_type to a kind word today. Please add them (keyed so a screen reads one per type), or say which existing rows serve. {size} reads `size.kb|mb|gb` from extraction's `reading` once it states `bytes` (CR-18). (2) A note, nothing owed: `versioncompare` compares two readings of one question, so "Beside the version your question cites" is drawn as a revision compare of the document (the browser act `revisioncompare`), matching the cited leg's capture to a revision `bundlehistory` lists (screens-inquiry R81, K4103). Tell me if the drawing means otherwise.
