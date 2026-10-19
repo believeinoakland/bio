@@ -1,6 +1,6 @@
 # case-catalogue (T51)
 
-**Status** · session_0198J3TFZaWG93Pfbmb1pDqC · depth 2 · WORKING · handled B0
+**Status** · session_0198J3TFZaWG93Pfbmb1pDqC · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
