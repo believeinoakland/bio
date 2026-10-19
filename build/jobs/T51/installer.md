@@ -42,3 +42,7 @@ FOR BOB (other modules / generated): (a) STALE: newgroup/dist/newgroup.bundled.m
 
 CHECKS (process repo): format 0 failures; architecture 0; coverage 70 of 70; ownership 0 (19+ files); words check on installer: 0 failures (inline 0, testcopy 0); `setup-words/build.mjs --check`: stale-rows note only (instance-setup row), none naming installer.
 Size (session_01CXckEksWGM54HGjBVzGfj2, installer #18 only): test runs ~24, module lines 2778 (src 2,362 without release.mjs, scripts 416).
+
+## J5 · COMPLETE
+
+B5 applied (pushed, tranche/T51 merged): screen.install.cf.logs is the sixth allowed line (ALLOWED, in R2's order; t47's R50 list gains it); installer.update.retired {parts} is drawn once in the update's finished panel for a retired container part, left in place (t51 R74 test, control: none retired draws nothing); both keys added to KEYS. The three retired keys are read nowhere on this branch. Suites: wizard 207; requirements/t47/t48/t50/t51/corpus/steps 169 of 175 pass; the only red is t47 R53 on the stale committed bundle, as in J4. Checks: format, architecture, ownership 0 failures, coverage 70/70, words 0 failures. Size (session_01CXckEksWGM54HGjBVzGfj2): test runs ~26, module lines 2789.
