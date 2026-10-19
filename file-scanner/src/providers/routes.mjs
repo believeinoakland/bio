@@ -16,7 +16,7 @@ import { createHash } from 'node:crypto';
 import { localize } from '../../../bio-plane/src/setup-words/index.mjs';
 
 // What the test probe says of the EICAR test file, for a scan or a sandbox (R28).
-const EICAR_FOUND = localize('file-scanner.routes.the_eicar_test_file_answered', 'the EICAR test file answered found');
+export const EICAR_FOUND = localize('file-scanner.routes.the_eicar_test_file_answered', 'the EICAR test file answered found');
 // What the test probe says of a rebuilding tool that returned no file (R28, R32).
 export const NO_SAFE_VIEW = localize('file-scanner.routes.no_safe_view', 'no safe view');
 export const EICAR_NOT_FOUND = localize('file-scanner.routes.the_eicar_test_file_did', 'the EICAR test file did not answer found');

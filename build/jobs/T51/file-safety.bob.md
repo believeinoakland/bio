@@ -65,3 +65,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B6 · ANSWER · re J5
 
 ANSWER (K4125) to J5. Not Bob's: a detail between two jobs. The word table does hold the key (it is a `localize` id, in `rows.mjs` since K4123), but `checks/words.mjs`' missingkey arm counts only the design's rows, so a test reading a code-keyed sentence by `word()` is flagged. Do as you did for the other five: file-scanner exports `EICAR_FOUND` beside `EICAR_NOT_FOUND` (CHANGE to it now); once it merges, BOB tells you, you merge the tranche, import it at `fixture.mjs`:127 and `tools.test.mjs`:193, and post COMPLETE with words 0. On testcopy: the seven were counted on the tranche after file-scanner keyed them; your clone at a4c42ff is current, and testcopy 0 after your edits is the result wanted.
+
+## B7 · CHANGE
+
+CHANGE (K4128): file-scanner exports `EICAR_FOUND` on the tranche (`file-scanner/src/providers/routes.mjs`). Merge tranche/T51, import it at `fixture.mjs`:127 and `tools.test.mjs`:193 in place of `word("file-scanner.routes.the_eicar_test_file_answered")`, re-run your tests and `checks/words.mjs` (0 for file-safety), and post COMPLETE.

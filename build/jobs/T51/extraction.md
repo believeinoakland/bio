@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_011WULPoKT4oA92LsPkDR5nx · depth 2 · COMPLETE · handled B4
+**Status** · session_011WULPoKT4oA92LsPkDR5nx · depth 2 · COMPLETE · handled B5
 
 ## J1 · REPORT
 
@@ -90,3 +90,26 @@ Tests and checks:
 - Packages installed (`npm ci --ignore-scripts`) in each directory with a tracked lockfile before the test run.
 
 Size (session_011WULPoKT4oA92LsPkDR5nx): test runs 2, module lines 3310 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
+
+## J5 · COMPLETE
+
+CHANGE B5 (R78) is done. Commit 5aa3f5abf1 on job/T51/extraction, pushed. Merged tranche/T51 first.
+
+Entries applied:
+- R78: `readingFor`'s answer states `format`, the reading's `capture_format`, absent when the reading holds none (null or empty), and withheld with the bundle as `bytes` is (same `withheld` test as `text_units`).
+- Test: `bio-plane/test/m/extraction/r78.test.mjs` (new), three tests naming R78. A reading written with `html` answers `format: "html"`; a reading with no capture format answers no `format` key; a viewer the bundle is withheld from receives no `format`.
+
+Decision for BOB (lower-level, my call, reported here): `format` is withheld on the reading's own bundle, as `text_units` is, while `bytes` (R77) is withheld on the register's home bundle. The two coincide in practice; say if you want one rule for both.
+
+Deferred: none. Other modules: none.
+
+Tests and checks:
+- `node --test bio-plane/test/m/extraction/`: 191 tests, 191 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio extraction`: 0 failures.
+- `checks/coverage.mjs /home/user/bio extraction`: 54 of 54 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`: 0 failures (2 files changed by extraction, inside its paths).
+- `setup-words/build.mjs --check`: the same stale note for `words-unreviewed.json`, no refusal naming extraction. Generated artifacts not touched.
+- The R78 status marker in `build/requirements/extraction.md` still reads "not yet met"; BOB updates it.
+
+Size (session_011WULPoKT4oA92LsPkDR5nx): test runs 2, module lines 3314 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).

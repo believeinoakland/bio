@@ -74,3 +74,20 @@ Add the two keys to KEYS and `words-reads.json` is the design's (it holds them).
 ## B12 · CHANGE
 
 CHANGE (K4101): the design @ f99a32edc9 (DEC-367, U398) is merged into tranche/T51 and rows.mjs regenerated. Three rows you read are reworded in place, keys unchanged: installer.fleet.why.container, installer.team.unrecorded.how.finished, installer.install.stopped.foreign (now ends "then start again from the installer's first page."). Merge tranche/T51 before your COMPLETE for B11; your tests read rows by key, so nothing else changes.
+
+## B13 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the completion round (§5.7 (0); P10 as amended, K3915): **CR-23 · installer** (read the entry line whole). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/installer.md` (read whole). R81 is marked not yet met: meet it.
+BOB's notes for this job:
+1. installer-steps (CR-22, merged) no longer exports `MEMBER_OBJECTS`. Remove it from `newgroup/src/index.mjs`:86's re-export and from the export list in `newgroup/test/t51.test.mjs`:191. Test-and-wiring only.
+2. INSTALLER-STEPS #3 J9 (K4126): (a) `newgroup/test/t50.test.mjs` R59 (:72) and R69 (:408) are red because your test release gives agent-worker no `Worker` part, so the upload carries no Durable Objects (installer-steps R37): your release fixture states agent-worker's objects in `worker.json` (`durable_objects` with the SEGMENTS and CHECKS bindings and the v1, v2 migrations) as the bundler writes them (installer-steps' `newgroup/test/steps/world.mjs` shows the shape); (b) `installer-steps` keeps `MEMBER_OBJECTS` only as an empty frozen export until your re-export goes: remove it from `index.mjs`:86 and `t51.test.mjs`:191; (c) `objectMigrations` now takes `(heldTag, objects)`: `t50.test.mjs`:103 drops its stale first argument. All three are yours in this job; R59 and R69 are accepted red by name until you merge.
+3. `newgroup/dist/` is a generated artifact: report it stale, BOB regenerates it.
+Your layer has closed; this round runs as a layer (§5.3 to §5.6). Nothing found here waits for the next tranche (K3915): a flaw in your module is fixed in this job, one in another module is a REPORT.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a test asserts the key or reads the text from the word table, never copies it. Every refusal a control. Report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Never edit a generated artifact (manifest §14); report one you make stale.
+Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer`. Your Size line counts only your module's own code (K2513).

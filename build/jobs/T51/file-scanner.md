@@ -1,6 +1,6 @@
 # file-scanner (T51)
 
-**Status** · session_01MT3yXPXwH15CT1r2FMdw2j · depth 2 · COMPLETE · handled B7
+**Status** · session_01MT3yXPXwH15CT1r2FMdw2j · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -79,3 +79,13 @@ COMPLETE for B7 (CHANGE, K4120: R33), on job/T51/file-scanner (tranche/T51 merge
 - Ran: `node --test test/` in file-scanner: 78 tests, 68 pass, 0 fail, 10 skipped (clamscan, sigtool absent); file-safety's tests 64 pass. format 0 failures; architecture 0 failures; coverage 33 of 33 ids named; ownership 12 files changed by file-scanner (merge from tranche included), 0 failures; words: no finding in file-scanner.
 - Generated artifact stale: `file-scanner/dist/`, as before (the release re-cut).
 - Size (session_01MT3yXPXwH15CT1r2FMdw2j): test runs 4, module lines 4653 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
+
+## J10 · COMPLETE
+
+COMPLETE for B8 (CHANGE, K4125), on job/T51/file-scanner (tranche/T51 merged in first).
+
+- Entries applied: `EICAR_FOUND` is exported from `file-scanner/src/providers/routes.mjs` beside `EICAR_NOT_FOUND` (the positive probe's detail, `file-scanner.routes.the_eicar_test_file_answered`); behaviour unchanged. Tests naming it: `adapters.test.mjs` (R28: each scan and sandbox tool's passing probe answers `EICAR_FOUND`) and `catalogue-words.test.mjs` (its id is found keyed among the probe sentences read under the pseudo-locale).
+- Deferred: none. Found in other modules: nothing new.
+- Ran: `node --test test/` in file-scanner: 78 tests, 68 pass, 0 fail, 10 skipped (clamscan, sigtool absent). format 0 failures; architecture 0 failures; coverage 33 of 33 ids named; ownership 4 files changed by file-scanner, 0 failures; words: no finding in file-scanner.
+- Generated artifact stale: `file-scanner/dist/`, as before.
+- Size (session_01MT3yXPXwH15CT1r2FMdw2j): test runs 5, module lines 4654 (the module's .mjs under file-scanner/, dist/ and node_modules/ excluded)
