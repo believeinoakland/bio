@@ -513,11 +513,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (!spec || !can(op, inst)) return "";
         const browser = browserAct(op, inst);
         const weight = browser ? "none" : weightOf(op);
-        const label = w(o.label || spec.label || "act." + op + ".label." + (inst.spec.id || "guide"), o.fills);
+        /* R100: the table holds a browser act's rows under the registry's owed name, `act.owed_<act>.label.<screen>` and `.does` */
+        const base = browser ? "act.owed_" + op : "act." + op;
+        const label = w(o.label || spec.label || base + ".label." + (inst.spec.id || "guide"), o.fills);
         /* R90: where the screen draws the button, `act.<op>.here.<place>` explains it in place of `.does`; a `here` word the
            table lacks falls back to `.does`, and no empty explanation is drawn */
         const hereKey = typeof o.here === "string" && o.here ? "act." + op + ".here." + o.here : "";
-        const doesKey = hereKey && has(hereKey) ? hereKey : "act." + op + ".does";
+        const doesKey = hereKey && has(hereKey) ? hereKey : base + ".does";
         const does = has(doesKey) ? w(doesKey) : "";
         const outward = !!(spec.outward || o.outward);
         /* R11 (DEC-181), R50 (K3156): a signed or irreversible act, or any weighed act `op-grades.phoneOf` answers false for,

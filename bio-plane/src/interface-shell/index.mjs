@@ -242,7 +242,7 @@ function pageWords(screens, ops) {
   const named = new Set(screens.flatMap((s) => (s.words || []).map((x) => (Array.isArray(x) ? x[0] : x))));
   const ids = screens.map((s) => s.id).filter(Boolean).concat(Object.keys(PATHS), ["unavailable", "more"]);
   const keep = (k) => named.has(k) || FAMILIES.some((f) => k.startsWith(f))
-    || ids.some((id) => k.startsWith("screen." + id + ".")) || [...ops].some((op) => k.startsWith("act." + op + "."));
+    || ids.some((id) => k.startsWith("screen." + id + ".")) || [...ops].some((op) => k.startsWith("act." + op + ".") || k.startsWith("act.owed_" + op + "."));
   return wordsOf(screens).filter(([k]) => keep(k));
 }
 
