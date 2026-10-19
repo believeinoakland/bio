@@ -29,3 +29,12 @@ Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 11, module lines 3500
 ## J1 · COMPLETE
 
 T51-89 actions complete on job/T51/actions (a8663cb94e). R108 met (minutes on a received entry of a public comment, flat on the entry, read in entries[].minutes); holderAt's why passed on by key (t33:105 green); words findings all converted (checks/words.mjs actions: 0; the 13-module run names no line of mine). Module tests 142/142; format, architecture, coverage (75/75), ownership 0 failures. REPORT in my record: (1) action-grammar needs a row for MINUTES_NOT_PUBLIC_COMMENT, and a row or your ruling for my BAD_MINUTES; (2) holder_on_date's undetermined branches now answer {undetermined: true, why: {key, vars}}; (3) used modules' reds (filings 2, escalation 2, action-holds 2, action-clocks 8, action-plans 1, screens-action 2) are identical with my change stashed.
+
+## Completion of B2 (CHANGE)
+
+1. R108 worded (K4041): the passage is recorded as content by the author's act: `content.mint` (`mintedBy` the author, at the extent, the capture's own bundle) once every refusal has passed; `minutes.passage` keeps `content_id` beside `captureSha` and `extent` (flat key `minutes_content_id`). Test (`t51`): the stored passage carries the id, the row is minted by the author, and a second reply at the same extent finds the same row (one content row).
+2. `t34.test.mjs`:101 already compares with `localize("actions.index.an_action_recorded_for_a_2", …)` by equality (done in the first pass); the conformance run shows no line naming `actions`. `tranche/T51` merged first.
+
+Tests: `node --test bio-plane/test/m/actions/` 142 pass, 0 fail. words (actions and the 13-module run) 0 findings; format, architecture, coverage (75/75) 0 failures; setup-words check: stale-rows note only.
+
+Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 14, module lines 3510

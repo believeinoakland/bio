@@ -79,7 +79,7 @@ export const CP = ["counterparty:", "  state: named", "  role: Town Clerk", "  b
 
 /* `recordAs(record)`, when given, is the record-core instance `actions` is handed (a test's spy over the real one). */
 /* `deps`, when given, are further dependencies handed to `actionsOf` (a stand-in a test controls). */
-export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, recordAs = null, deps = {} } = {}) {
+export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, context = null, recordAs = null, deps = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -114,7 +114,8 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   } : null;
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
                               content: { captureFor: (id) => captures.get(id) ?? null,
-                                         contentContextFor: (s) => (realContent ? realContent.contentContextFor(s) : {}) },
+                                         contentContextFor: (s) => context ?? (realContent ? realContent.contentContextFor(s) : {}),
+                                         mint: (args) => realContent.mint({ ...args, ...(context ? { context } : {}) }) },
                               now: () => clock.ms, ...deps });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */

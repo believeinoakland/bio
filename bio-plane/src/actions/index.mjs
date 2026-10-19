@@ -1102,7 +1102,8 @@ export class Actions {
       for (const f of [...MINUTES_EXTENT_FIELDS, "rect"])
         if (e[`minutes_extent_${f}`] !== undefined) leg[`extent_${f}`] = e[`minutes_extent_${f}`];
       return { meeting: e.minutes_meeting ?? null, date: e.minutes_date ?? null,
-               passage: { captureSha: e.minutes_capture ?? null, extent: citationExtent(leg) } };
+               passage: { captureSha: e.minutes_capture ?? null, extent: citationExtent(leg),
+                          content_id: e.minutes_content_id ?? null } };
     } catch { return null; }
   }
 
@@ -1135,11 +1136,11 @@ export class Actions {
     /* END DEC-49 REGION is-minutes-public-comment */
     const { captureSha, extent } = minutes.passage;
     const gate = viewerPredicate(viewer);
-    if (!this.#one(`SELECT r.capture_sha FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
-        WHERE r.capture_sha=? AND (${gate.sql}) LIMIT 1`, captureSha, ...gate.args))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha };
-    let bad = null;
-    try { bad = checkContentExtent(extent, this.content.contentContextFor(captureSha)); } catch { bad = null; }
+    const home = this.#one(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+        WHERE r.capture_sha=? AND (${gate.sql}) LIMIT 1`, captureSha, ...gate.args);
+    if (!home) return { ok: false, reason: "NO_SUCH_BUNDLE", target: captureSha };
+    const context = this.content.contentContextFor(captureSha);
+    const bad = checkContentExtent(extent, context);
     if (bad) return bad;
     const kept = Actions.#minutesKept(minutes);
     const back = Actions.minutesOf(kept);
@@ -1147,6 +1148,11 @@ export class Actions {
     try { same = !!back && canonicalExtent(back.passage.extent) === canonicalExtent(extent); } catch { same = false; }
     if (!same)
       return refuse("BAD_MINUTES", localize("actions.index.the_passage_has_a_part", "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written."), { max: MINUTES_MEETING_MAX });
+    /* R108 (K4041): the passage is recorded as content by the author's act (mint or find, content R12, R13), and the row's
+       id is kept beside the capture and the extent, so a reader of the minutes (filings R64) reads its text by that id. */
+    const m = this.content.mint({ bundleId: home.bundle_id, captureSha, extent, mintedBy: viewer, context });
+    if (!m || m.ok === false) return m || { ok: false, reason: "BAD_MINUTES" };
+    minutes.passage.content_id = m.content_id;
     return null;
   }
 
@@ -1155,7 +1161,8 @@ export class Actions {
   static #minutesKept(minutes) {
     const x = minutes.passage.extent;
     const out = { minutes_meeting: minutes.meeting, minutes_date: minutes.date, minutes_capture: minutes.passage.captureSha,
-                  minutes_extent_kind: String(x.kind) };
+                  minutes_extent_kind: String(x.kind),
+                  ...(minutes.passage.content_id ? { minutes_content_id: minutes.passage.content_id } : {}) };
     for (const f of [...MINUTES_EXTENT_FIELDS, "rect"]) {
       const v = x[f];
       if (v === undefined || v === null || v === "") continue;
@@ -2560,6 +2567,7 @@ export class Actions {
       ...(e.minutes_meeting !== undefined ? [`    minutes_meeting: "${e.minutes_meeting}"`] : []),
       ...(e.minutes_date !== undefined ? [`    minutes_date: ${e.minutes_date}`] : []),
       ...(e.minutes_capture !== undefined ? [`    minutes_capture: ${e.minutes_capture}`] : []),
+      ...(e.minutes_content_id !== undefined ? [`    minutes_content_id: ${e.minutes_content_id}`] : []),
       ...(e.minutes_extent_kind !== undefined ? [`    minutes_extent_kind: ${e.minutes_extent_kind}`] : []),
       ...[...MINUTES_EXTENT_FIELDS, "rect"].filter((f) => e[`minutes_extent_${f}`] !== undefined).map((f) => {
         const v = e[`minutes_extent_${f}`];

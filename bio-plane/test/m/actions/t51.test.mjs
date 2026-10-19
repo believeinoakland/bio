@@ -11,7 +11,7 @@ const PC = "ACTN-2026-0101-pc", RR = "ACTN-2026-0102-rr", INFO = "INFO-2026-0101
 const M = V("alice");
 /* the public comment kind is a profile's; the capture's context is a read capture's (a chain, three pages), as content answers it */
 const READ = { chain: [{ step: "layer", tier: 1 }], pageCount: 3, pageBoxes: null, container: {} };
-const OPEN = { profiles: ["oakland-alameda"], deps: { content: { captureFor: () => null, contentContextFor: () => READ } } };
+const OPEN = { profiles: ["oakland-alameda"], context: READ };
 
 /** A public comment with one sending, and a document holding the minutes' capture. */
 function comment(w, id = PC) {
@@ -30,8 +30,10 @@ test("R108 a received entry of a public comment holds the minutes' passage, kept
   const s = comment(w);
   const r = reply(w, given(s, { kind: "pdf-page", page: 2, rect: [10, 20, 300, 400] }));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  const id = r.minutes.passage.content_id;
+  assert.match(id, /^[0-9a-f]{64}$/);
   const kept = { meeting: "Council regular meeting", date: "2026-09-16",
-    passage: { captureSha: s, extent: { kind: "pdf-page", page: 2, rect: [10, 20, 300, 400] } } };
+    passage: { captureSha: s, extent: { kind: "pdf-page", page: 2, rect: [10, 20, 300, 400] }, content_id: id } };
   assert.deepEqual(r.minutes, kept);
   const e = w.fm(PC).correspondence[1];
   assert.deepEqual([e.direction, e.account, e.author, e.minutes_meeting, e.minutes_date, e.minutes_capture, e.minutes_extent_kind],
@@ -39,9 +41,15 @@ test("R108 a received entry of a public comment holds the minutes' passage, kept
   const read = w.a.actionRead({ id: PC, viewer: M });
   assert.deepEqual(read.entries.find((x) => x.ord === 1).minutes, kept);
   assert.equal(read.entries.find((x) => x.ord === 0), undefined, "the sending holds none");
+  /* the passage is recorded as content by the author's act: one row, minted by the author; a second reply at the same extent finds it */
+  const row = w.row(`SELECT content_id, minted_by, capture_sha FROM content WHERE content_id=?`, id);
+  assert.deepEqual([row.minted_by, row.capture_sha], [M, s]);
+  const again = reply(w, given(s, { kind: "pdf-page", page: 2, rect: [10, 20, 300, 400] }), { at: "2026-09-22" });
+  assert.equal(again.minutes.passage.content_id, id);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM content`)[0].n, 1);
   /* a reply without minutes writes exactly the bytes it wrote before */
-  assert.equal(reply(w, null, { at: "2026-09-21" }).ok, true);
-  assert.equal(Object.keys(w.fm(PC).correspondence[2]).some((k) => k.startsWith("minutes_")), false);
+  assert.equal(reply(w, null, { at: "2026-09-23" }).ok, true);
+  assert.equal(Object.keys(w.fm(PC).correspondence[3]).some((k) => k.startsWith("minutes_")), false);
   /* the decoration answers the same */
   assert.deepEqual(w.decorate(PC, undefined, M).action.entries.find((x) => x.ord === 1).minutes, kept);
 });
