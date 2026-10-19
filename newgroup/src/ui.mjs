@@ -127,12 +127,13 @@ const securityBlock = () => `<details class="ng-fold" id="security-fold"><summar
 <input id="vpc" class="cs-input id" type="text" autocomplete="off" spellcheck="false" placeholder="${escText(word("installer.security.vpc.placeholder"))}">
 <p class="help">${escText(word("installer.security.vpc.help"))}</p></div></details>`;
 
-/* R50 (and R2's five scopes): what Cloudflare will ask you to allow, in plain words, one line per scope, in R2's order. */
+/* R50 (and R2's six scopes): what Cloudflare will ask you to allow, in plain words, one line per scope, in R2's order. */
 export const ALLOWED = Object.freeze([
   word("screen.install.cf.programs"),
   word("screen.install.cf.plan"),
   word("screen.install.cf.containers"),
   word("screen.install.cf.join"),
+  word("screen.install.cf.logs"),
 ]);
 const allowedBlock = () => `<section class="cs-section ng-sec" id="allowed">
 <h2>${escText(word("screen.install.cf.asks"))}</h2>

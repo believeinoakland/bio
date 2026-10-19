@@ -1043,7 +1043,12 @@ async function updateRun(emit00, code, saved, guard) {
   }
 
   /* R74: before any upload, the copy's container applications are told from something not recognized as this copy's. */
-  try { if ((await foreignContainers(api, names, release, loaded)).foreign) return stopped(word("installer.update.stopped.foreign")); }
+  let retiredParts = [];
+  try {
+    const held = await foreignContainers(api, names, release, loaded);
+    if (held.foreign) return stopped(word("installer.update.stopped.foreign"));
+    retiredParts = held.retired;
+  }
   catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds, and R67 judges what was deployed */ }
 
   /* What is it running now? Asked before the upload, so an update that changes
@@ -1168,6 +1173,8 @@ ${lagList(verdict)}<p>${esc(word("installer.update.lagging.after"))}</p></div>`
 <p style="margin:0">${esc(UPDATE_WORDS.doneKept)}.</p>
 <p style="margin:0" class="small">${esc(UPDATE_WORDS.doneNote(version))}</p></div>`)
     + told
+    /* R74: a part of an earlier release that this one no longer uses is named once and left in place. */
+    + (retiredParts.length ? `<div class="notice" id="retired-parts"><p style="margin:0">${esc(word("installer.update.retired", { parts: retiredParts.join(", ") }))}</p></div>` : "")
     + securityToolsNote(saved.vpc)
     + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" id="update-back" href="${esc(base)}/">${esc(UPDATE_WORDS.back)}</a></div>` : "")));
 }

@@ -51,6 +51,8 @@ test("R74 an update stops, changing and deleting nothing, when the copy holds a 
     preApps: [own, { id: "app12", name: "pdf-worker", durable_objects: { namespace_id: "ns-pdf-worker-Retired" }, configuration: { image: IMAGE } }] });
   assert.equal(retired.page.failed, null);
   assert.ok(retired.apps.some((a) => a.name === "pdf-worker"), "the retired part stays");
+  assert.ok(retired.page.done.includes(h(word("installer.update.retired", { parts: "pdf-worker" }))), "the retired part is named once in the update's panel");
+  assert.ok(!clean.page.done.includes('id="retired-parts"'), "control: no retired part, nothing named");
   restoreSigners();
 });
 
