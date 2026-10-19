@@ -199,3 +199,34 @@ export const MODULE_MAPS = [
 
 /** Each module's map on host `ctx` for one request, as `[module, map]`, in R5's order. */
 export const ownMaps = (ctx, url, body, env = {}) => MODULE_MAPS.map(([m, f]) => [m, f(ctx, url, body, env)]);
+
+/* K3268, R58, R65 (T51): a test never hand-lists an owner's ops. These read them from the owners' own maps (`ownMaps`), so an
+   op added to an owner's map moves no list in a test. The ops below answer by a write the door's frame and a direct call
+   cannot both make on a bare "nobody" address (a malformed internal row, a clock, an export's id, an empty body, a count each ask moves), so they
+   are reached by their own tests and left out of the sweep. */
+export const NOT_COMPARED = Object.freeze(new Set(["recordlinkverdict", "recordcpuprobestep", "grouplogo", "knock", "inboxlist", "export", "clockpropose", "renderadmit"]));
+
+/** The ops `owners` (module names, as `MODULE_MAPS` names them) serve: `[[op, owner]]`, each from the owner's own map. */
+export const opsServedBy = (ctx, url, env, owners) =>
+  ownMaps(ctx, url, null, env).filter(([m]) => owners.includes(m)).flatMap(([m, map]) => Object.keys(map).map((op) => [op, m]));
+
+/** Every op `owners` serve is in the route map (once), and through control-plane's door answers what the owner's own map
+ *  answers called directly, on a twin store (instants masked). Answers the ops served, and each op that did not. */
+export async function servedThroughDoor(x, twin, owners, { skip = NOT_COMPARED } = {}) {
+  const u = new URL("http://do/");
+  const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+  const keys = Object.keys(x.s.routes(u, null));
+  const served = opsServedBy(x.ctx, u, x.env, owners), failed = [];
+  for (const [op, owner] of served) {
+    if (!keys.includes(op)) { failed.push(`${op}: not in the route map`); continue; }
+    if (skip.has(op)) continue;
+    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&project=PROJ-2026-none&case=CASE-2026-none&edition=1&language=es&id=X-none&plan=PLAN-2026-none`;
+    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
+    const fn = MODULE_MAPS.find(([m]) => m === owner)[1];
+    let direct;
+    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
+    const got = JSON.parse(mask(await res.text())), want = JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null })));
+    if (res.status !== 200 || JSON.stringify(got) !== JSON.stringify(want)) failed.push(`${op} (${owner}): ${res.status}`);
+  }
+  return { served, failed };
+}

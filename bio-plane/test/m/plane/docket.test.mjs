@@ -2,6 +2,7 @@
    `publication`), migrated as R3 says, its tables declared to purge through record-core (K23), started so that it fills
    `reevaluation`'s docket registration before the first request, handed to `public-read`, `network-notices` and `queue`
    as the docket they read, and every op of its ops map reaching its handler through control-plane's door. */
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -103,7 +104,7 @@ const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, 
 test("R15, R5: every op of docket's map is in the route map and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = Object.keys(docketOps(null, u, null));
-  assert.deepEqual(ops, ["docketfile", "docketpressure", "docket", "docketprepare", "docketpost", "docketdecline", "docketinvitation"]);
+  assert.ok(ops.length > 0 && ops.every((op) => Object.hasOwn(OPS, op)), "docket's map holds only ops op-declarations declares");
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);

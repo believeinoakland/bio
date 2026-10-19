@@ -109,6 +109,7 @@ const DRIVES = [
   ["grouplogoset?by=member:nobody", "POST", { raw: null }],
   ["grouplanguagesset?by=member:nobody", "POST", { languages: ["en"] }],
   ["grouplanguages", "GET"],
+  ["bootstrapfacts", "GET"],
   ["grouplogo", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
@@ -137,9 +138,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty-four routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty-five routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 44);
+  assert.equal(ops.length, 45);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);
@@ -256,7 +257,8 @@ test("R2, R5 (N13): queue's, tasks' and affordances' maps are part of the route 
     assert.ok(mine.includes(op), `controlPlaneRoutes lacks ${op}`);
     assert.ok(map.includes(op), `the map lacks ${op}`);
   }
-  assert.deepEqual(aOps, ["affordancefacts", "affordancescreens"]);   /* affordances R37 (N528): the screens read */
+  /* K3268: affordances' ops are read from its own map (R37, N528: the screens read among them), never listed here */
+  assert.ok(aOps.includes("affordancefacts") && aOps.includes("affordancescreens"));
   /* through the door, each answers what its own map answers on a second object */
   const twin = object();
   new Store(twin.ctx, twin.env);
