@@ -16,11 +16,13 @@ export const hasWord = (key) => typeof key === "string" && rowsByKey().has(key);
 const PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
 const ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
 
-/* R11's placeholder rule, shared by `word` and `localize`: each `{name}` filled from `vars[name]` as String writes it. */
+/* R11's placeholder rule, shared by `word` and `localize`: each `{name}` filled from `vars[name]` as String writes it.
+   R19: a value that is a reason `{key, vars}` is filled with that reason's words (`word`, so to any depth), never String. */
 function fill(key, text, vars) {
   return text.replace(PLACEHOLDER, (_, name) => {
     const v = vars?.[name];
     if (!Object.hasOwn(vars ?? {}, name) || v === undefined || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    if (typeof v === "object" && typeof v.key === "string") return word(v.key, v.vars ?? {});
     return String(v);
   });
 }
