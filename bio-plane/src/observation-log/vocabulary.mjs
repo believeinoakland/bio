@@ -35,11 +35,11 @@ export const OBSERVATION_LEVELS = {
    and a reader can both use; nothing derives behaviour from the key's spelling
    anywhere, so this object is the vocabulary and not a switch. */
 export const OBSERVATION_STATES = {
-  NEVER_LOOKED:         localize("observation-log.vocabulary.state_never_looked", "nobody looked at this level for this subject"),
-  LOOKED_ABSENT:        localize("observation-log.vocabulary.state_looked_absent", "we looked and it is positively not there"),
-  LOOKED_INDETERMINATE: localize("observation-log.vocabulary.state_looked_indeterminate", "we looked and could not tell"),
-  PRESENT:              localize("observation-log.vocabulary.state_present", "we looked and it is there"),
-  partial:              localize("observation-log.vocabulary.state_partial", "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"),
+  NEVER_LOOKED:         word("refusal.NEVER_LOOKED"),
+  LOOKED_ABSENT:        word("refusal.LOOKED_ABSENT"),
+  LOOKED_INDETERMINATE: word("refusal.LOOKED_INDETERMINATE"),
+  PRESENT:              word("refusal.PRESENT"),
+  partial:              word("observation-log.partial.looked_got_part"),
 };
 
 /* D-682 — THE SAME FIVE IN THE WORDS A MEMBER READS (R21). A sentence above may carry a
@@ -208,7 +208,7 @@ export const OBSERVATION_AUTHORITY_KINDS = {
    support, at the exact scale this project's worst defect class arrives at.
    `unstated` says the true thing: the kind was never recorded. */
 export const OBSERVATION_SUBJECT_KINDS = {
-  address:     localize("observation-log.vocabulary.subject_address", "the web address a document was looked for at, in its normalised form"),
+  address:     word("observation-log.address"),
   capture:     word("observation-log.capture"),
   extent:      localize("observation-log.vocabulary.subject_extent", "a particular passage inside a document — a page, a cell, a paragraph (IC-1)"),
   entity:      word("observation-log.entity"),
@@ -376,7 +376,7 @@ export function contentAxisFor({ observed = null, unitIndex = false,
       return { state: "not_extracted", determined: true, missing_cause: cause,
                why: `${CONTENT_AXIS_STATES.not_extracted} -- ${MISSING_ROW_CAUSES.never_looked}` };
     return { state: CONTENT_AXIS_UNDETERMINED, determined: false, missing_cause: cause,
-             why: localize("observation-log.vocabulary.capture_no_content_row", "this capture has no content-level observation, and that is NOT by itself a finding that nobody read it (OBSERVATION-LOG-DESIGN.md section 5.1): {cause}", { cause: MISSING_ROW_CAUSES[cause] }) };
+             why: word("observation-log.why.capture_content_level", { cause: MISSING_ROW_CAUSES[cause] }) };
   }
   if (observed === "LOOKED_ABSENT" || observed === "LOOKED_INDETERMINATE")
     return { state: "indexed_none", determined: true,
@@ -762,7 +762,7 @@ export const INTERNET_EVIDENCE_IS_ONE_SIDED = {
 export const INTERNET_FRONTIER_EMPTY_CAUSES = {
   no_member:        word("observation-log.no_member"),
   no_leads_visible: word("observation-log.no_leads_visible"),
-  never_followed:   localize("observation-log.vocabulary.frontier_never_followed", "there are leads this viewer may read and NOT ONE has been followed: no look is recorded against any of them. This is NEVER_LOOKED, established rather than inferred (a lead and its looks are only ever cleared together) — it is NOT a finding that what they describe is absent. They are listed in `never_looked`"),
+  never_followed:   word("observation-log.never_followed"),
 };
 
 /** REC-107 — **THE CAUSES THIS RECORD COULD NOT RULE OUT, PUBLISHED AS A SET ON
@@ -1065,7 +1065,7 @@ export function enteredAfterFirstRow(enteredAt, firstAt) {
  *  point in opposite directions on purpose. */
 export function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
-    return { row: null, why: localize("observation-log.vocabulary.no_reader_run_recorded", "no reading was persisted for this capture, so no reader run happened here to record. A look not taken is the ABSENCE of a row (section 5.1)") };
+    return { row: null, why: word("observation-log.why.reading_persisted_capture_reader") };
   const sha = typeof captureSha === "string" && captureSha ? captureSha : null;
   const entities = Array.isArray(reading.entities) ? reading.entities : [];
   const n = entities.length;
@@ -1284,7 +1284,7 @@ export function derivationStatement(row = null, missingCause = null) {
      that actually happened — the stored watermark being a whole second. */
   if (cause === WATERMARK_BAND_CAUSE)
     return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
-             says: localize("observation-log.vocabulary.derived_watermark_band", "undetermined: no derivation over this subject is recorded, and this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row the log holds. `observation_log.at` stores whole seconds, so the record cannot tell which side of that row the subject entered on, and it does not pick") };
+             says: word("observation-log.says.undetermined_derivation_over") };
   return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
            says: word("observation-log.says.undetermined_derivation_over_subject") };
 }
@@ -1294,10 +1294,13 @@ export function derivationStatement(row = null, missingCause = null) {
  * reads it. Transcribed from NOTIFICATIONS.md's catalogue ("The catalogue", the entries marked [CONDITION]), twelve
  * kinds, and since T23 the eight R33 adds. A condition outside it is refused C-22.4 rather than becoming a silent new
  * vocabulary. */
+/* R36 (DEC-149): the render-deferred sentence, held once so a test compares by equality with the product's own call. */
+export const RENDER_DEFERRED_CONDITION = localize("observation-log.vocabulary.condition_render_deferred", "a render your team's Civicsmith could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) — LIVE: queue-producers #conditionsRenderDeferred");
+
 export const CONDITION_KINDS = Object.freeze({
   "monitoring-recheck-due":       localize("observation-log.vocabulary.condition_monitoring_recheck_due", "a monitoring recheck or deadline sweep has come due (S-7)"),
   "archive-fallback-eligible":    localize("observation-log.vocabulary.condition_archive_fallback_eligible", "the archive fallback became eligible: three failures or fourteen days (D-104)"),
-  "capture-session-ttl-expiring": localize("observation-log.vocabulary.condition_capture_session_ttl_expiring", "a capture session is expiring with work outstanding (CAPTURE-SCALING)"),
+  "capture-session-ttl-expiring": word("observation-log.capture_session_ttl_expiring"),
   "source-unreachable-governed":  localize("observation-log.vocabulary.condition_source_unreachable_governed", "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)"),
   "capture-completed-unattended": localize("observation-log.vocabulary.condition_capture_completed_unattended", "a capture the member walked away from has completed (D-61)"),
   "partial-capture-outstanding":  word("observation-log.partial_capture_outstanding"),
@@ -1311,7 +1314,7 @@ export const CONDITION_KINDS = Object.freeze({
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred":              localize("observation-log.vocabulary.condition_render_deferred", "a render your team's Civicsmith could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) — LIVE: queue-producers #conditionsRenderDeferred"),
+  "render-deferred":              RENDER_DEFERRED_CONDITION,
   /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement
      there and the rule it cites (R57, R58, R60), and the three notice kinds of `network-notices` R12, R13, which
      `queue-producers` R27 raises for a project's owners. Conditions about our own sweeps and notices, never findings

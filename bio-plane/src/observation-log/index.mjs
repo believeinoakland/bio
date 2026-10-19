@@ -80,8 +80,7 @@ export const LEAD_LIST_LIMIT_MAX = 2000;
 /* A share's reason (DEC-88, R16): at most this many characters, counted as Unicode code points, refused over it. */
 export const LEAD_SHARE_REASON_MAX = 2000;
 export const LEAD_LIST_EMPTY = word("observation-log.lead_list_empty");
-export const LEAD_LIST_NOTE = localize("observation-log.index.lead_list_note",
-  "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it (NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are listed. A lead is never evidence");
+export const LEAD_LIST_NOTE = word("observation-log.lead_list_note");
 
 /* R13: the authority kinds whose bundles a later module's resolver answers (N39, K71; `step` T41-11, `steps` R18). */
 export const RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run", "step"]);
@@ -798,7 +797,7 @@ export class ObservationLog {
     if (!row)
       return ObservationLog.leadRefusal("LEAD_NOT_FOUND",
         lid ? localize("observation-log.index.no_lead_is_addressed_by", "no lead is addressed by {lid} in this record", { lid: String(lid.slice(0, 60)) })
-            : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
+            : localize("observation-log.index.pass_lead_hint", "pass lead=<LEAD-…>: the id op=lead returned"), { lead: lid || null });
     /* END DEC-49 REGION is-lead-source */
     return { ok: true, row };
   }
@@ -855,7 +854,7 @@ export class ObservationLog {
     if (!joined)
       return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
         pid ? localize("observation-log.index.you_are_not_a_joined", "you are not a joined participant of a project addressed by {pid}", { pid: String(pid.slice(0, 60)) })
-            : `pass project=<PROJ-…>: the project to share this lead to`,
+            : localize("observation-log.index.pass_project_hint", "pass project=<PROJ-…>: the project to share this lead to"),
         { lead: L.lead_id, project: pid || null });
     /* DEC-88 (C-54.12): the sharer's words on why this lead is disclosed to that project. Asked of every share, a
        repeat included: the act is the same act, and its words are refused or accepted the same way. */
@@ -865,7 +864,7 @@ export class ObservationLog {
       return refusal("LEAD_SHARE_NO_REASON",
         why == null
           ? (reason === undefined || reason === null
-              ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}`
+              ? localize("observation-log.index.pass_reason_hint", "pass reason=<your words>: why this lead is disclosed to {pid}", { pid: String(pid.slice(0, 60)) })
               : localize("observation-log.index.the_reason_must_be_your", "the reason must be your words, as text; a {v1} was sent", { v1: String(typeof reason) }))
           : !why.trim() ? localize("observation-log.index.the_reason_is_blank_say", "the reason is blank. Say why this lead is disclosed to {pid}", { pid: String(pid.slice(0, 60)) })
           : localize("observation-log.index.the_reason_is_chars_characters", "the reason is {chars} characters, over the {LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut", { chars: String(chars), LEAD_SHARE_REASON_MAX: String(LEAD_SHARE_REASON_MAX) }),
@@ -934,7 +933,7 @@ export class ObservationLog {
     if (note == null)
       return refusal("LEAD_LOOK_NO_DETAIL",
         detail === undefined || detail === null
-          ? `pass detail=<your words>: where you looked and what you found`
+          ? localize("observation-log.index.pass_detail_hint", "pass detail=<your words>: where you looked and what you found")
           : typeof detail !== "string" ? localize("observation-log.index.the_detail_must_be_your", "the detail must be your words, as text; a {v1} was sent", { v1: String(typeof detail) })
           : localize("observation-log.index.look_detail_blank", "the detail is blank. Say where you looked and what you found"),
         { lead: L.lead_id });
