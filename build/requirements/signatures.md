@@ -72,13 +72,13 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R24** Never throws.
 
 **The offline signer page (retired)** — the page (`sign-release.html`, `signpage.mjs`, `embed-signpage.mjs`) leaves this module (T51-124; K3807, K3814); BOB moves its files to `control-plane`'s paths at the merge and control-plane's job deletes them with the `/sign` route. Its ids stay retired, never reused:
-- **R25** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R30** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R31** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R32** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R42** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R43** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
-- **R44** *Retired (T51, K3814): moved to control-plane, deleted (K3807).*
+- **R25** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R30** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R31** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R32** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R42** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R43** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
+- **R44** *(retired: T51, K3814; moved to control-plane, deleted, K3807)*
 
 **The release signer (`bio-plane/scripts/sign-sshsig.mjs`, moved from `tools/` in T19; BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
 
