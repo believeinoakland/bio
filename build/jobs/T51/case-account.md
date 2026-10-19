@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs /home/user/bio case-account tranche/T51 job/T51/case-account`: 0 failures.
 
 Size (session_01F1hvUN6iXU1eehDzRVDcPr): test runs 9, module lines 925
+
+## J1 · REPORT
+
+Two strings I judge no member ever reads, left inline (R17 says MALFORMED and REVIEW_COMMENTS_DECLARED stay inline: start-up wiring errors), flagged by the words check's plain arm: bio-plane/src/case-account/index.mjs:523 "the review comments' reader is a function of {case, edition, viewer, draft}" (registerReviewComments, reason MALFORMED) and :526 "a reader of the case's review comments is already registered, once, at start" (reason REVIEW_COMMENTS_DECLARED). Please settle them with the design stream's unkeyed list (K3944). Also: case-inputs index.mjs:260 carries an inline words finding of its own ("what the outcome rests on is a list of cites in case-account R5's s..."); nothing else found in other modules. Signed bytes: reviewCommentBodyLines now reads the left-out count and the two placeholders from their frozen rows, rendering byte-identical (before/after SHA-256 on four inputs, recorded in t51-words.test.mjs); no new document-text version was needed, so none was added.
