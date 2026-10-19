@@ -5461,6 +5461,13 @@
       "line": 132
     },
     {
+      "id": "calculations.application.the_share_of_each",
+      "en": "the share of each outcome in each group, with the group's size",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/application.mjs",
+      "line": 56
+    },
+    {
       "id": "calculations.index.a_binding_is_adopted_by",
       "en": "a binding is adopted by a member (K1468). Nothing was written.",
       "module": "calculations",
@@ -5489,6 +5496,20 @@
       "line": 414
     },
     {
+      "id": "calculations.index.an_id_space_normalises",
+      "en": "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 1554
+    },
+    {
+      "id": "calculations.index.an_organisation_and_a_date",
+      "en": "an organisation and a date are needed",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 1968
+    },
+    {
       "id": "calculations.index.its_values_were_computed_by",
       "en": "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}",
       "module": "calculations",
@@ -5508,6 +5529,13 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
       "line": 1568
+    },
+    {
+      "id": "calculations.index.the_change_is_a_held",
+      "en": "the change is a held standard's version or a date (YYYY-MM-DD). Nothing was written.",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/index.mjs",
+      "line": 926
     },
     {
       "id": "calculations.index.the_column_v_is_not",
@@ -5578,6 +5606,13 @@
       "module": "calculations",
       "file": "bio-plane/src/calculations/index.mjs",
       "line": 1914
+    },
+    {
+      "id": "calculations.tables.a_table_schema_is",
+      "en": "a Table Schema is {fields: [{name, type}]} with one field per column",
+      "module": "calculations",
+      "file": "bio-plane/src/calculations/tables.mjs",
+      "line": 123
     },
     {
       "id": "calibration.calibration.a_calibration_carries_the_date",
@@ -30787,18 +30822,88 @@
       "line": 758
     },
     {
+      "id": "retrieval.frontier.acquire_not_here",
+      "en": "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on this build (op=frontier&level=document), not here",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 457
+    },
+    {
+      "id": "retrieval.frontier.internet_note",
+      "en": "the internet level's frontier reads a member's LEADS (section 4.5): the latest look per subject over the looks at leads THIS VIEWER MAY READ, and each lead nobody has followed. Visibility is the lead's own rule — its author, the joined participants of a project it was shared to, a machine key only within a member's minted scope — applied to the looks BEFORE they are grouped, so every list, date, count and cause here is computed from what you may read and nothing else: a lead outside your reach moves none of them. `tally` is therefore scoped to you (`tally_scope`), unlike the other three levels. An empty answer carries `empty` with its cause, because an empty frontier and one that looked and found nothing are different facts. `not_read` names what else sits at this level and is not in this read. A lead is never evidence",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 22
+    },
+    {
+      "id": "retrieval.frontier.run_searches_not_read",
+      "en": "an investigative run's open-internet searches are folded run-log rows whose subject kind was never recorded; they are read per run through op=airunlog, which gates each on the run's context. This read does not include them, and says nothing about whether any exist",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/frontier.mjs",
+      "line": 455
+    },
+    {
       "id": "retrieval.frontier.there_is_no_level_level",
       "en": "there is no {level} level of the frontier. This is NOT an empty frontier: this reader does not read a level called {level_2}, which is a different fact from having looked and found nothing. The levels are document, content, meaning and internet (REC-93, REC-94, REC-95, REC-129)",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 100
+      "line": 91
+    },
+    {
+      "id": "retrieval.index.action_facts_once",
+      "en": "the action facts are registered once",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 296
     },
     {
       "id": "retrieval.index.an_enumeration_this_large_is",
       "en": "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1265
+      "line": 1260
+    },
+    {
+      "id": "retrieval.index.content_reaches_layer",
+      "en": "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1044
+    },
+    {
+      "id": "retrieval.index.content_searches_citations",
+      "en": "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1045
+    },
+    {
+      "id": "retrieval.index.enumerated_needs_one_id",
+      "en": "an enumerated selection needs at least one id",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1257
+    },
+    {
+      "id": "retrieval.index.field_compare_range",
+      "en": "field:>value, field:<value, field:a..b compare and range",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1038
+    },
+    {
+      "id": "retrieval.index.field_registered_once",
+      "en": "a field is registered once",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 405
+    },
+    {
+      "id": "retrieval.index.meaning_arm_takes",
+      "en": "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1050
     },
     {
       "id": "retrieval.index.no_meaning_of_the_kind",
@@ -30806,6 +30911,20 @@
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
       "line": 888
+    },
+    {
+      "id": "retrieval.index.no_record_matches_all",
+      "en": "no record matches all of these terms; this many match any of them",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 830
+    },
+    {
+      "id": "retrieval.index.no_saved_query_of_yours",
+      "en": "no saved query of yours answers to that",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1471
     },
     {
       "id": "retrieval.index.no_scope_called_stringify_the",
@@ -30822,11 +30941,46 @@
       "line": 885
     },
     {
+      "id": "retrieval.index.record_no_text_index_key",
+      "en": "the record has no text index key",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1073
+    },
+    {
+      "id": "retrieval.index.selection_kind_query_enumerated",
+      "en": "a selection is 'query' or 'enumerated'",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1252
+    },
+    {
+      "id": "retrieval.index.selection_not_read_not_held",
+      "en": "the selection could not be read, so it is answered as one not held",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1350
+    },
+    {
+      "id": "retrieval.index.selection_owned_by_credential",
+      "en": "a selection is owned by the credential that made it",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1248
+    },
+    {
+      "id": "retrieval.index.selection_readable_by_credential",
+      "en": "a selection is readable only by the credential that made it",
+      "module": "retrieval",
+      "file": "bio-plane/src/retrieval/index.mjs",
+      "line": 1329
+    },
+    {
       "id": "retrieval.index.this_action_changes_state_so",
       "en": "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1373
+      "line": 1368
     },
     {
       "id": "review.index.a_comment_says_something_at",
@@ -33942,6 +34096,13 @@
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
       "line": 585
+    },
+    {
+      "id": "workbooks.index.k1447_grade_rule",
+      "en": "K1447 (ii): each bound input at its capture grade capped by its derivation; an unbound input is testimony (D); a third-party engine's value is a derivation step, undetermined until measured; the method is disclosed, not graded",
+      "module": "workbooks",
+      "file": "bio-plane/src/workbooks/index.mjs",
+      "line": 516
     }
   ]
 }
