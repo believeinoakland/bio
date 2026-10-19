@@ -250,7 +250,7 @@ test("R15: an established causation whose inquiry pat may not see is {state} alo
   let [pat, alice] = w.both(c, id);
   assert.deepEqual(pat.causation, { state: "established" }, "no inquiry, why or strength key");
   assert.equal(pat.out_of_view, true);
-  assert.deepEqual([holds(pat, INQ), holds(pat, PLACEHOLDER), holds(pat, "could not be read for you")], [false, false, false]);
+  assert.deepEqual([holds(pat, INQ), holds(pat, PLACEHOLDER), holds(pat, word("consequences.says.inquiry_strength_read"))], [false, false, false]);
   const { causation: pk, out_of_view, ...patRest } = pat;
   const { causation: ak, ...aliceRest } = alice;
   assert.deepEqual(patRest, aliceRest, "every other fact stands");

@@ -94,7 +94,7 @@ export function compute(op, figures) {
   const need = { difference: 2, ratio: 2 }[op];
   if (!OPS.includes(op)) return { ok: false, code: "op_unknown", why: word("consequences.why.text", { op: String(String(op)), ops: String(OPS.join(", ")) }) };
   if (n === 0 || (need && n < need))
-    return { ok: false, code: "operand_missing", why: word("consequences.why.needs_operand_given", { op: String(op), one: String(need ? `exactly ${need}` : "at least one"), s: String(need ? "s" : ""), n: String(n), were: String(n === 1 ? "was" : "were") }) };
+    return { ok: false, code: "operand_missing", why: word("consequences.why.needs_operand_given", { op: String(op), one: String(need ? `exactly ${need}` : word("consequences.why.least")), s: String(need ? "s" : ""), n: String(n), were: String(n === 1 ? "was" : "were") }) };
   if (need && n > need)
     return { ok: false, code: "operands_extra", why: word("consequences.why.takes_exactly_operands", { op: String(op), need: String(need), n: String(n) }) };
   if (op === "count") return { ok: true, figure: { value: String(n), sign: "+", precision: "exact" } };
