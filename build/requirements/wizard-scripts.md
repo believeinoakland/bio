@@ -167,6 +167,7 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 - `membership`: `viewerPredicate`, `isJoinedParticipant` (R54), `isProjectOwner`, `projectOwners` (R65), `isAdministrator` (R64), the `NOT_AN_ADMIN` answer (R84).
 - `filing-templates`: `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
 - (T47; R34) `ai-runs`: `partAdmitted` and `testInstance` (its R78), a new edge.
+- (T51; K4072) `project-roster`, in its tests only: the test fixture runs the roster's `migrate()` as the host's boot does (K4065).
 - Read from the door, not used (T34): the assistant's state and the account serving the viewer arrive as R24's and R27's `assistant` (`store-door` R10), so this module names neither `instance-setup` nor `ai-accounts`' account choice. (T37; N765; K2175, rule 5; T48, N996) `ai-accounts`: `aiKeptAway` (its R7; R24 item 1), the one reading of keep-away; the account still arrives from the door. This module no longer uses `credentials`.
 - Registered at start, not used (K31's pattern; `plane` R19): the screen registry, the member op table (`op-declarations`), `op-grades`' `MACHINE_REFUSALS` and its `irreversible` acts (R24), the machine-draft ops, the Civicsmith library.
 

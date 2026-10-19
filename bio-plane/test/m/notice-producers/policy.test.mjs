@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, BOB, MACHINE, DAY } from "../following/fixture.mjs";
-import { fresh, reader, ofKind, sentences, snapshot, notHintFailures, JUDGMENT, HINT, SIGNAL } from "./fixture.mjs";
+import { fresh, reader, ofKind, sentences, snapshot, notHintFailures, JUDGMENT, HINT, SIGNAL, dayOn } from "./fixture.mjs";
 import { HINT_MARK, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
 
@@ -81,10 +81,8 @@ test("R13: one FINDING policy-changed-noticed per change with amendment_held fal
 test("R13 R20: its summary and detail are queue.policy-changed-noticed.summary and .detail, the detail exactly DEC-145 (5)'s sentence as words.json holds it, {date} the local day of the earlier capture in the profile's zone by date.daymonth, {policy} the policy's cite", async () => {
   const { items } = await setup();
   const got = items("alice");
-  assert.deepEqual(got.map((i) => i.detail), [
-    "Changed without notice: the text differs from the copy captured on 30 September, and no amendment was announced.",
-    "Changed without notice: the text differs from the copy captured on 7 October, and no amendment was announced.",
-    "Changed without notice: the text differs from the copy captured on 14 October, and no amendment was announced."],
+  const detailOn = (d, m) => say("queue.policy-changed-noticed.detail", { date: dayOn(d, m) });
+  assert.deepEqual(got.map((i) => i.detail), [detailOn(30, "september"), detailOn(7, "october"), detailOn(14, "october")],
     "midnight UTC is the evening before in Halifax");
   for (const it of got) {
     assert.equal(it.summary_key, "queue.policy-changed-noticed.summary");
@@ -97,7 +95,7 @@ test("R13 R20: its summary and detail are queue.policy-changed-noticed.summary a
   /* read in the next local year, the same capture's day names its year (date.daymonthyear); control above: this year's names none */
   const later = (await setup()).items("alice", Date.parse("2027-01-05T12:00:00Z"));
   assert.ok(later.length > 0, "a change still inside the window");
-  for (const it of later) assert.match(it.fills.date, /^\d{1,2} [A-Z][a-z]+ 2026$/, it.fills.date);
+  for (const it of later) assert.match(it.fills.date, /^[A-Z][a-z]+ \d{1,2}, 2026$/, it.fills.date);
 });
 
 test("R13: it never says what the change means, never states a violation, is never a finding of the record, and is no hint (no R11 mark)", async () => {
@@ -224,4 +222,15 @@ test("R13 (T36): policyChanges is read with since, the instant 90 days before th
   const bad = reader(fresh(w.host, { membership: w.membership, standards: standardsOver(w),
     following: { policyChanges: () => ({ ok: true, changes: [], cursor: null, since_invalid: true }) } })).read("alice", { now: AFTER });
   assert.ok(bad.facts.failed.includes("following"));
+});
+
+test("R26 (T51; N889; DEC-340) R13 writes no day as ISO text: the earlier capture's day names its month and day, and its year in the next year", async () => {
+  const got = (await setup()).items("alice");
+  for (const it of got) assert.doesNotMatch(it.summary + it.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+  const later = (await setup()).items("alice", Date.parse("2027-01-05T12:00:00Z"));
+  assert.ok(later.length > 0, "a change still inside the window");
+  for (const it of later) {
+    assert.doesNotMatch(it.summary + it.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+    assert.ok(it.detail.includes(it.fills.date), "the day as the sentence names it");
+  }
 });

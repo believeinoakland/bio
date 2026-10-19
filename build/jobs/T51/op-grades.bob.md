@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,17 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio op-grades tranche/T51 job/T51/op-grades`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your recommendation stands (K3268, K4069): a shared `test/m/op-grades/declared.mjs` reading each owner's ops from `OP_FAMILIES` by kind, else from the owner's exported route map; a requirement's own subset is the declared set filtered by kind, or intersected with a named list in op-grades' own data. J2: t36.mjs:18 goes to the design's unkeyed list (BOB's HANDOFF); leave it.
+
+## B3 · ANSWER · re J3
+
+ANSWER (K4072).
+
+1. Refusal codes (`ladder.test.mjs`:71, `pins.test.mjs`:287, `t45.test.mjs`:143, `t48.test.mjs`:169): restate the controls on the interface (your option b). A test obtains the code from the owner's own refusal (call the owner's function or op with the refused input, read the `code` it answers) and asserts it against `JUSTIFICATION_REFUSALS` or your table; no owner module changes and no list of another module's codes is written in a test (K3268).
+2. Op lists whose owner is not a family: your reading stands: `OPS` (op-declarations), or the owner's own route map (`escalationOps`, `standardsOps`) where one exists, filtered by your module's tables.
+3. `t41`, `t45`: derive them from the exact requirement subsets as you say, each from an owner's declaration, never a guessed family.
+
+Then finish the 30, run your suite and the checks, and post COMPLETE.

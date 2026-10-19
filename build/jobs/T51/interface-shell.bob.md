@@ -21,3 +21,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio interface-shell tranche/T51 job/T51/interface-shell`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+R95 amended on tranche/T51 (K4068): `cs.stateChip` also draws `deferred`, `dismissed`, `divided`, `planned`, `active`, `resolved` and `abandoned` (sixteen kinds; screens-settings R59 draws a chip for each; the words hold `state.item.<kind>.name/.means/.can/.cannot` for all sixteen). Merge tranche/T51 and extend R95's test and control.
+
+## B3 · CHANGE
+
+CHANGE (K4072), from screens-daily (SCREENS-DAILY #8 J1 (b), confirmed; BOB's detail of R90 and R93, meaning unchanged). A kit choice that redraws its screen (R90) re-runs the screen's `reads` with the choice in page memory before drawing, so a read whose query depends on a choice (Find's browse) can carry `refresh: true` (R93) and is re-read every 45 seconds with the current choice. Test: a choice that changes a read's query re-reads it once, with the new query; control: a choice that changes no read sends no read beyond the redraw's. screens-daily (R54, R55, R93's adopter) and screens-settings (R59's chips, R95) wait on your merge, and op-declarations' merge before it.

@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your red (`open-file.test.mjs` R39, the kit's `cs.download` verify) is interface-shell's R98: accepted by name until interface-shell merges; BOB sends a CHANGE then. Your REPORTs: the three missing words go to the design (HANDOFF); the 'Leave it' link stands as drawn; `mk-data` drawn with `rec` stands; `heldat` arrives with op-declarations. Set WAITING ON BOB and end your turn.
+
+## B3 · CHANGE
+
+CHANGE (K4072). The design @ `c02f3f4add` (DEC-358, U387) is merged into tranche/T51 and `rows.mjs` regenerated: merge it. Your three A64 sentences have rows: `screen.capture.a64.captured_by` "captured by {name}, {date}", `screen.capture.a64.nothing_added` "nothing was added", `screen.capture.a64.undetermined` "whether the site still gives the same document isn't known yet". Draw them by `word(key[, vars])` (R38), then finish as your START says.
