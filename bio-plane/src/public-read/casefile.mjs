@@ -19,7 +19,7 @@
  * `CONTAINER_TOO_LARGE` (C-98.7) at the zip while the file is still served by its own hash: a case file is never refused
  * for its size and nothing is left out. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { canonicalJson } from "../record-grammar/index.mjs";
 import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
          provOf } from "../case-grammar/index.mjs";
@@ -51,8 +51,7 @@ export const ARCHIVE_HOLDS_ORIGINAL = word("public-read.archive_holds_material")
 
 /* R6: the assembly's one statement that it built nothing, naming what it could not read. */
 const notAssembled = (cause, what) => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED", cause, ...what,
-  detail: "the case edition is published and its findings answer by hash; its case file was not built, because it would "
-        + "have left out something it must carry. Nothing was recorded for it." });
+  detail: localize("public-read.casefile.the_case_edition_is_published", "the case edition is published and its findings answer by hash; its case file was not built, because it would have left out something it must carry. Nothing was recorded for it.") });
 
 /** A signing key on one line, as an SSH public key is written: its type (the wire blob's first string) and its base64. */
 export function keyLine(keyB64) {
@@ -82,7 +81,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   };
   const docBytes = utf8(facts.document.text);
   if ((await sha256Hex(docBytes)) !== facts.document.doc_sha)
-    return notAssembled("the signed case document's text does not hash to its digest", { sha256: facts.document.doc_sha });
+    return notAssembled(localize("public-read.casefile.signed_document_text_does_not", "the signed case document's text does not hash to its digest"), { sha256: facts.document.doc_sha });
   await add(caseFilePath("case_document"), "case_document", docBytes);
   await add(caseFilePath("case_signature"), "case_signature", utf8(facts.document.sig_armored ?? ""));
 
@@ -94,7 +93,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
         ?? { path: "bundle.md", sha256: f.published.bundle_sha };
       const bytes = await read(p.sha256);
       if (!bytes || (await sha256Hex(bytes)) !== p.sha256)
-        return notAssembled("a finding's published bytes are not in the published object store at their hash",
+        return notAssembled(localize("public-read.casefile.a_finding_s_published_bytes", "a finding's published bytes are not in the published object store at their hash"),
                             { finding: f.bundle_id, sha256: p.sha256 });
       await add(at("finding"), "finding", bytes);
       if (f.published.sig_armored) await add(at("finding_signature"), "finding_signature", utf8(f.published.sig_armored));
@@ -180,7 +179,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   if (calcs.length) await add(caseFilePath("calculation", "prov"), "calculation", utf8(provOf(calcs.map((c) => c.row))));
   const unspelled = files.filter((f) => typeof f.path !== "string");
   if (unspelled.length)
-    return notAssembled("a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",
+    return notAssembled(localize("public-read.casefile.a_finding_id_a_material", "a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path"),
                         { kinds: unspelled.map((f) => f.kind) });
 
   /* The signing keys: the case document's signer's and each finding's, once each, in the order they are met. */

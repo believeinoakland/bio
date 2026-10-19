@@ -252,15 +252,13 @@ export class PublicRead {
      unavailable, never as absent; with none registered the package says it carries no such block. */
   #evidencePackage(caseId, edition, findings) {
     if (!this.#evidenceBlock)
-      return { blocks: {}, detail: "no module provides an evidence-package block, so this package carries none; the "
-                                 + "evidence package is the published case edition itself" };
+      return { blocks: {}, detail: localize("public-read.index.no_module_provides_an_evidence", "no module provides an evidence-package block, so this package carries none; the evidence package is the published case edition itself") };
     const { name, module, fn } = this.#evidenceBlock;
     let value;
     try { value = fn({ caseId, edition, findings: findings.map((f) => f.bundle_id) }); }
-    catch (e) { value = { unavailable: true, detail: `${module} could not compute this block: ${String(e && e.message || e).slice(0, 200)}` }; }
+    catch (e) { value = { unavailable: true, detail: localize("public-read.index.could_not_compute_this_block", "{module} could not compute this block: {error}", { module, error: String(e && e.message || e).slice(0, 200) }) }; }
     return { blocks: { [name]: value ?? null },
-             detail: `each block is computed at this read by the module that provides it (${module}); it is not in the `
-                   + "case's signed bytes, and nothing of it is a claim the case makes" };
+             detail: localize("public-read.index.each_block_is_computed", "each block is computed at this read by the module that provides it ({module}); it is not in the case's signed bytes, and nothing of it is a claim the case makes", { module }) };
   }
 
 
@@ -573,53 +571,23 @@ export class PublicRead {
          here as null and a reader cannot tell them apart without this sentence:
          a case nobody published as a project's production, a member nobody
          designated, and a member whose version nobody pinned. */
-      production: "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was "
-                + "held to is that project's, told to the publishing act at the time it was made. Where "
-                + "`project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was "
-                + "published before this model, and an absent owner is not a claim that it had none, it "
-                + "is this record saying it does not know. Where a member's `role` is null NOBODY "
-                + "DESIGNATED that member load-bearing or supporting, so nothing here says whether the "
-                + "case rests on it: a designation is authored by the publisher and is never derived, so "
-                + "the record will not supply one it was not given. Where `version_sha` is null the "
-                + "member was rostered without a version being pinned, and the finding it names may have "
-                + "moved since. None of the three is a gap in this answer; each is a state of the record. "
-                /* CASE-5 / DEC-72: the fourth null, and the ONE instruction a
-                   reconstructor cannot do without. `caseMembers[].edition` is the
-                   CASE's and `published[].edition` is the FINDING's, and they are
-                   no longer the same number — so the join between the two tables
-                   is `version_sha` to `bundle_sha` and NEVER edition to edition.
-                   Said here rather than left to be inferred because a join on the
-                   old equality does not error: it silently drops exactly the
-                   members the pin exists for, which is the defect IC-66 measures
-                   in this record's own UI. */
-                + "Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that "
-                + "is NOT a bar of zero: the edition predates the case carrying its own bar, or none was "
-                + "ever declared, and a case that cleared no declared standard says so. AND THE JOIN "
-                + "BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO "
-                + "EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the "
-                + "FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its "
-                + "own edition 1. A join on the two numbers does not fail — it silently drops the members "
-                + "the pin exists to name.",
+      /* CASE-5 / DEC-72: the fourth null, and the ONE instruction a
+         reconstructor cannot do without. `caseMembers[].edition` is the
+         CASE's and `published[].edition` is the FINDING's, and they are
+         no longer the same number — so the join between the two tables
+         is `version_sha` to `bundle_sha` and NEVER edition to edition.
+         Said here rather than left to be inferred because a join on the
+         old equality does not error: it silently drops exactly the
+         members the pin exists for, which is the defect IC-66 measures
+         in this record's own UI. */
+      production: localize("public-read.index.a_case_is_a_production", "DEC-72: a case is a PRODUCTION OF A PROJECT, and the standard of evidence it was held to is that project's, told to the publishing act at the time it was made. Where `project_id` is null NO PROJECT IS RECORDED as this case's publisher — the case was published before this model, and an absent owner is not a claim that it had none, it is this record saying it does not know. Where a member's `role` is null NOBODY DESIGNATED that member load-bearing or supporting, so nothing here says whether the case rests on it: a designation is authored by the publisher and is never derived, so the record will not supply one it was not given. Where `version_sha` is null the member was rostered without a version being pinned, and the finding it names may have moved since. None of the three is a gap in this answer; each is a state of the record. Where a case edition's `bar` is null NO STANDARD OF EVIDENCE IS RECORDED for it, and that is NOT a bar of zero: the edition predates the case carrying its own bar, or none was ever declared, and a case that cleared no declared standard says so. AND THE JOIN BETWEEN `caseMembers` AND `published` IS `version_sha` TO `bundle_sha`, NEVER EDITION TO EDITION: `caseMembers.edition` is the CASE's edition and `published.edition` is the FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its own edition 1. A join on the two numbers does not fail — it silently drops the members the pin exists to name."),
       /* R23 (T38): the original of a material carried as its copy is not listed, as it is not served (`verifySha`). */
       shas: ((rows, originals) => rows.filter((r) => !originals.has(r.sha256)))(
         this.#rows(`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
         this.#copiedOriginals([{ kind: "archive" }])),
-      altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
-               + "has a scope, a completeness assertion, a bias acknowledgement, editions and a container; "
-               + "it has no strength, and "
-               + "composing its members' pairs into one letter would be a claim the evidence does not "
-               + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
-               + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
-               + "record and not a gap in this answer. "
-               /* REC-170: the one null on a finding row that is not "nothing was signed". */
-               + "Since the frozen pair is stated in each CASE's document (a case's reading of the finding at "
-               + "that hash), a finding several cases pin may carry several pairs: where their documents "
-               + "disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and "
-               + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
-               + "edition. None of them is the finding's pair; each is that case's.",
-      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
-            + "continued existence of this team's Civicsmith. Nothing unpublished appears, by construction: "
-            + "this reads the published projection and never the working corpus." };
+      /* REC-170: the one null on a finding row that is not "nothing was signed". */
+      altitudes: localize("public-read.index.a_frozen_strength_pair", "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE has a scope, a completeness assertion, a bias acknowledgement, editions and a container; it has no strength, and composing its members' pairs into one letter would be a claim the evidence does not support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET RATIFIED: it has no pair because nothing has been signed for it, which is a state of the record and not a gap in this answer. Since the frozen pair is stated in each CASE's document (a case's reading of the finding at that hash), a finding several cases pin may carry several pairs: where their documents disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and `strengthByCase` lists every ratified case edition's own pair, named by its case and edition. None of them is the finding's pair; each is that case's."),
+      detail: localize("public-read.index.every_hash_here_is_verifiable", "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or continued existence of this team's Civicsmith. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus.") };
   }
 
   /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
@@ -1030,9 +998,7 @@ export class PublicRead {
     if (!state) {
       /* DEC-49 REGION is-not-published */
       return { ok: false, reason: "NOT_PUBLISHED", ...rowOf("NOT_PUBLISHED"),
-               detail: "no published edition answers to that. A case that was never published, an edition "
-                     + "that does not exist and an id that never existed are one answer here, because the "
-                     + "published projection is the only thing this read can see." };
+               detail: localize("public-read.index.no_published_edition_answers", "no published edition answers to that. A case that was never published, an edition that does not exist and an id that never existed are one answer here, because the published projection is the only thing this read can see.") };
       /* END DEC-49 REGION is-not-published */
     }
 
@@ -1138,8 +1104,8 @@ export class PublicRead {
       ? caseTensionsOf(heldDocument.text)
       : { tensions: null, highlighted: null, members: {}, unread: null,
           detail: docWithheld ? WITHHELD_SENTENCE
-            : theCase ? "no signed case document is held for this edition, so it states no disclosure here"
-                      : "this is not a case, so it discloses no contradiction" };
+            : theCase ? localize("public-read.index.no_signed_case_document_disclosure", "no signed case document is held for this edition, so it states no disclosure here")
+                      : localize("public-read.index.not_a_case_discloses", "this is not a case, so it discloses no contradiction") };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
     /* R3 (N364; `case-grammar` R1): the `captures:` and `sources:` blocks as signed, from the same bytes and never live: what
        the document states of a source is what `publishableAt` answered at the commit (`publication` R51), and nothing is added. */
@@ -1147,8 +1113,8 @@ export class PublicRead {
       ? caseDocumentBlocks(heldDocument.text)
       : { captures: null, sources: null,
           detail: docWithheld ? WITHHELD_SENTENCE
-            : theCase ? "no signed case document is held for this edition, so it states no capture or source here"
-                      : "this is not a case, so it states no capture or source" };
+            : theCase ? localize("public-read.index.no_signed_case_document_capture", "no signed case document is held for this edition, so it states no capture or source here")
+                      : localize("public-read.index.not_a_case_capture", "this is not a case, so it states no capture or source") };
     const manifest = manifestWithheld ? null : manifestHeld;
     const signed = signedParts(heldDocument);
     const said = this.#editionStatements(signed, theCase, ed, editions, { docWithheld, index });
@@ -1319,10 +1285,7 @@ export class PublicRead {
                 written into the signed document or the case file (R23). */
              group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."),
-             graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
-                         + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
-                         + "classified servable at publication with no published edition behind it now, stated "
-                         + "rather than dropped; it should be empty." };
+             graph_detail: localize("public-read.index.each_finding_serves", "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty.") };
   }
 
   /** R37 (T50; DEC-310 (6); K3683, K3725): the `publishedcase` op's answer, `publishedCase`'s with `corrections` beside it,
@@ -1773,11 +1736,7 @@ export class PublicRead {
                           strength: r.strength ? JSON.parse(r.strength) : null,
                           required: r.required ? JSON.parse(r.required) : null,
                           parts: r.parts ? JSON.parse(r.parts) : [] }],
-             detail: "this is a RATIFIED RECORD that is not a member of any published case: it was never "
-                   + "published as a finding, so it carries no case identity, no scope statement, no "
-                   + "completeness assertion and no bias acknowledgement — those are claims a CASE makes, "
-                   + "and this is not one. Its bytes are verifiable by hash exactly as any other ratified "
-                   + "bytes are." };
+             detail: localize("public-read.index.a_ratified_record_that_is", "this is a RATIFIED RECORD that is not a member of any published case: it was never published as a finding, so it carries no case identity, no scope statement, no completeness assertion and no bias acknowledgement — those are claims a CASE makes, and this is not one. Its bytes are verifiable by hash exactly as any other ratified bytes are.") };
   }
 
   /* D-309: THE READ SURFACE'S HALF OF CLAUSE 6 — one case to serve, chosen by the

@@ -243,7 +243,7 @@ function registeredBeforeT38(w, ref, archiveSha, bytes) {
                  ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, archiveSha, ref, `materials/${archiveSha}`, "archive", bytes, NOW);
 }
 const unpacked = (container, s, file) => ({ file, locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW,
-  authority_state: "undetermined", authority_basis: "a file cut out of an archive",
+  authority_state: "undetermined", authority_basis: tableWord("acquisition.authority_basis.file_cut_out", { at: NOW }),
   capture: { method: "unpacked", grade: "B", actor_class: "daemon", sha256: s, encoding: "binary", bytes: container.uncompressed },
   container, origin: { kind: "named_request" } });
 function holdMember(w, id, text, container) {
