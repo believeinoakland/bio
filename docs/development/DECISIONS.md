@@ -5676,3 +5676,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: installer-steps' reads entry carries `installer.fleet.why.pullfailed` (79 keys, from its job branch). installer: `installer.address.offer` for the free prefix offered before anything is created; `installer.install.stopped.foreign` for an install that continues an unfinished team's Civicsmith; `installer.team.unrecorded.how.finished` says "a team's Civicsmith", not "a copy". screens-daily: `act.queuemute.here.queue_project` is retired (no muted entry is a whole project). screens-inquiry: say054's {source} is the newest document cited in the question, on that axis, after the edition published (the question's citations with their dates against the edition's published date); with no such read, the axis draws `screen.question.compare.axis`; `document` draws two tabs only, "By page" and "Beside the version your question cites" (`document.read.tab.compare`, reading `versioncompare`), and the original-file card (`document.read.original.card`, {kind}, {size}); no Whole text or Slides tab; on `NOTICE_SIGNATURE_REFUSED` the offer is a reference to `account`, where a member registers their signing key (no registry row on `project`). A new control-plane detail (`draft.mjs`, beside ASSISTANT_DRAFT_UNAVAILABLE) is triaged as wire text in the reads lists.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads.src.mjs`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-367 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (the standing consistency read of DEC-362 to DEC-366's rows)
+for: design
+question: What a consistency read of DEC-362 to DEC-366's rows found, and what changes.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: three rows reworded in place, meaning unchanged. `installer.fleet.why.container`, the fallback for a container fault with no named cause, now reads "this release's description of its container can't be used" (it said "can't be read", which is exactly `.container.parse`'s cause). `installer.team.unrecorded.how.finished` ends "can record it, from that account" (was "set it"), the verb its siblings use. `installer.install.stopped.foreign` ends "then start again from the installer's first page.", as every other `installer.install.stopped.*` row does. Read and kept: `network-notices.level.some_work` "Some work" sits oddly beside Very active, Active, Quiet and Dormant, but it is the level word a team's public notice signs (`network-notices/seals.mjs`), so it is not a display word to reword; `screen.document.a34.kept.noreason` keeps the comma before "by" ("Kept citing the earlier version, by …"), which `.moved` does not need; `screen.install.stopped.plan.done` "Check again" stays beside the containers stop's "It's on now", since a plan change is checked, not switched on. No key added or retired; no drawing, registry or stylesheet changes.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.
