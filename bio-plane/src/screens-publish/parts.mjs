@@ -180,12 +180,8 @@ export const PARTS = Object.freeze({
     return /^\d{4}-\d{2}-\d{2}$/.test(d) && /^\d{2}:\d{2}$/.test(t) ? { date: d, time: t } : null;
   },
 
-  /* A section whose heading is explained by several sentences, each its own key, in order (the kit's `cs.sec` takes one
-     key): the design's explanations that run to two or three sentences (R37, R38, R43). */
-  secTips: function (cs, key, inner, helpKeys) {
-    const tip = helpKeys.map(function (k) { return cs.w(k); }).join(" ");
-    return cs.sec(key, inner).replace('<h2 tabindex="0">', '<h2 tabindex="0" data-level="2" data-tip="' + cs.esc(tip) + '">');
-  },
+  /* A section whose heading is explained by several sentences, each its own key, in order (R37, R38, R43). */
+  secTips: function (cs, key, inner, helpKeys) { return cs.sec(key, inner, { help: helpKeys }); },
 
   /* R20: a section that holds nothing is not drawn. */
   sec: function (cs, key, inner, o) { return inner ? cs.sec(key, inner, o) : ""; },
