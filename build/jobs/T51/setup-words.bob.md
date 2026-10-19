@@ -1,6 +1,6 @@
 # BOB to setup-words (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -49,3 +49,11 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio setup-words tranche/T51 job/T51/setup-words`. Your Size line counts only your module's own code (K2513).
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4115). Not Bob's: the three rows are the design stream's wording, and braces a member would see are a wording defect, sent to UX-DESIGN as a HANDOFF now. Do not weaken the check. `word-list.test.mjs` R13 (line 247) is accepted red by name until that design merge, which BOB makes and then regenerates `rows.mjs`. Post COMPLETE with R13 named as that accepted red.
+
+## B6 · CHANGE
+
+CHANGE (K4119): the design's DEC-369 (U400) is merged on the tranche: the three `lines.index.*` rows hold no brace now, and `rows.mjs` is regenerated. Merge tranche/T51 into your branch, re-run `word-list.test.mjs` (R13 should be green, so it is no longer an accepted red), and post COMPLETE.

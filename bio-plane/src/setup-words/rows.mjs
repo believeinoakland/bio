@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (15767 design words, 934 protected; SHA-256
-   8a67a686c5f0c2e16faaadac170091d97ee51aa52dfebafd5be71c00cb3eadc6) followed by 6647 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   238fb7b56dadb032d070a4552aa5e8637e772a4f133f1381be3f73a56e0f8f60) followed by 6650 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "8a67a686c5";
+export const WORDS_COMMIT = "238fb7b56d";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8223,7 +8223,7 @@ export const WORD_ROWS = Object.freeze([
   ["lines.index.a_line_is_read_by","a line is read by its id (LIN-...)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_line_is_recorded_by","a line is recorded by the act's stamped author","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_line_names_both_its","a line names both its ends (from and to), each a registered entity","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
-  ["lines.index.a_line_rests_on_a","a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
+  ["lines.index.a_line_rests_on_a","a line rests on a passage (a capture and its extent), a system rule (a rule and its source) or a member's testimony (a statement)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_line_row_is_an","a line row is an object","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_line_runs_between_two","a line runs between two different entities","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_lines_kind_is_one","a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
@@ -8240,7 +8240,7 @@ export const WORD_ROWS = Object.freeze([
   ["lines.index.a_statement_is_recorded_by","a statement is recorded by the act's stamped author","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_system_register_row_states","a {system} register row states its own record instant (recorded_at)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_system_rule_names_the","a system rule names the rule it applies","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
-  ["lines.index.a_system_rules_source_is","a system rule's source is a held capture or a profile entry {profile, entry}","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
+  ["lines.index.a_system_rules_source_is","a system rule's source is a held capture or a profile entry (a profile and an entry in it)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_title_is_the_posts","a title is the post's title as the basis words it, a non-blank string","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_validity_carries_its_zone","a validity carries its zone, and no zone is stated and the active profiles give none","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.a_validitys_precision_is_one","a validity's precision is one of {PRECISIONS}","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
@@ -8250,7 +8250,7 @@ export const WORD_ROWS = Object.freeze([
   ["lines.index.an_entity_of_kind","an entity of kind {kinds}","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.an_event_bound_names_the","an event bound names the edge start or end of the event's when","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.any_registered_entity","any registered entity","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
-  ["lines.index.at_is_a_day_an","`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
+  ["lines.index.at_is_a_day_an","`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time (a value, its precision and its time zone)","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.bad_is_not_one_of","{bad} is not one of {within}","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["lines.index.capture_sha","capture {sha}","DEC-347: reviewed from code (B349): member: Citation label for a saved source copy; shown beside a link's basis.",null,false,"design"],
   ["lines.index.direction_is_from_to_or","direction is from, to or both","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
@@ -20959,6 +20959,9 @@ export const WORD_ROWS = Object.freeze([
   ["promotion.gate.the_case_document_catalogue_could","the case-document catalogue could not judge this document, so it is not passed: {String}",null,null,false,"code"],
   ["promotion.index.cut_was_produced_by_cut","{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.",null,null,false,"code"],
   ["promotion.index.empty_neither_text_a_string","{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.",null,null,false,"code"],
+  ["promotion.index.machine_cannot_reopen","reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member.",null,null,false,"code"],
+  ["promotion.index.not_set_down","reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.",null,null,false,"code"],
+  ["promotion.index.project_name_taken","a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.",null,null,false,"code"],
   ["promotion.index.project_needs_name","a project needs a name, and it must be unique across your team's Civicsmith",null,null,false,"code"],
   ["promotion.index.the_base_this_revision_names","the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",null,null,false,"code"],
   ["promotion.index.the_sha256_sent_for_map","the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",null,null,false,"code"],

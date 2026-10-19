@@ -184,6 +184,18 @@ export class Credentials {
     catch { return false; }
   }
 
+  /* R80 (T51 CR-16; K4076): the newest `last_active` over every session this module holds (R5), as the ISO-8601 instant
+     it is kept as (milliseconds), or null when none is held or none has recorded one. A read that changes nothing: it
+     reads the rows and never `session()`, which would count as activity. Never throws; a store that cannot be read
+     answers null, as one that holds no activity does. */
+  lastActivity() {
+    try {
+      const r = this.#one(`SELECT MAX(last_active) AS at FROM sessions`);
+      const ms = r && r.at !== null && r.at !== undefined ? Number(r.at) : NaN;
+      return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+    } catch { return null; }
+  }
+
   /* This module's tables, at every boot, idempotent: (T48; R72) `ai-accounts`' own first (its R32), then the additive
      columns an older store lacks, then every table and index created if absent, then R18's purge exemption declared.
      Run by the host inside its boot. */

@@ -107,8 +107,7 @@ test("R19 (index.mjs NAME_TAKEN, #promote): NAME_TAKEN and NO_TITLE say a projec
   assert.equal(p.promote(mk("Sewer Fund")).ok, true);
   const taken = p.promote(mk("  sewer   FUND "));
   assert.equal(taken.reason, "NAME_TAKEN");
-  assert.equal(taken.detail, "a project by that name already exists in your team's Civicsmith, compared without regard "
-    + "to case or spacing. This holds for deactivated projects too, because their names are still cited.");
+  assert.equal(taken.detail, localize("promotion.index.project_name_taken", "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited."));
   const untitled = p.promote(mk("", { files: [{ path: "bundle.md", text: pd("") }] }));
   assert.deepEqual([untitled.reason, untitled.detail], ["NO_TITLE",
     localize("promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith")]);

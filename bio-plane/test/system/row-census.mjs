@@ -5,7 +5,7 @@
              list, read from the working tree, so an untracked file or an installed `node_modules` is never read; a stamp
              adds a new file to the index before it reads the census), less tests (a `test/`
              directory, `*.test.mjs`, `*.control.mjs`) and scripts that run when imported (`bio-plane/scripts/`,
-             `bio-plane/migrate/`, `civicos-ui/check-*.mjs`);
+             `bio-plane/migrate/`);
      table   an exported plain object;
      row     one of its values whose string `check` matches /^C-\d+/, its code the key, a missing `where` or
              `translation` null;
@@ -16,8 +16,8 @@
              with no trailing newline, SHA-256 over UTF-8, lowercase hex.
 
    SCRIPTS THAT RUN WHEN IMPORTED: R50 names, since N350 (T14), every fleet member's `scripts/` (agent-worker's build
-   writes its bundle when imported, measured; sheet-worker's too, T35), `civicos-ui/deploy-ui.mjs` (it exits) and, since T48,
-   `bio-plane/src/journey-check/journey.mjs` (it runs its journey, then exits; N1056) beside its first three. They are
+   writes its bundle when imported, measured; sheet-worker's too, T35) and, since T48,
+   `bio-plane/src/journey-check/journey.mjs` (it runs its journey, then exits; N1056) beside its first two. They are
    left out as R50 leaves out `bio-plane/scripts/`, returned in `scripts`, and the suite fails by name if any of them
    holds a `check:` key, so leaving them out cannot move the census. Every other file is imported.
    A file node cannot import (it reaches `cloudflare:` or a browser global) is NOT skipped silently: it is returned in
@@ -36,9 +36,8 @@ export const CHECK_KEY = /\bcheck\s*:/;
    census then imported and ran (PROMOTION #33, T35). */
 /* N1056 (K3192, PROMOTION #46, T48): `journey-check`'s `journey.mjs` runs its journey and exits when imported, so the census
    that imported it never reached its end (T47's close red T). */
-const SCRIPTS = [/^[^/]+\/scripts\//, /^civicos-ui\/deploy-ui\.mjs$/, /^bio-plane\/src\/journey-check\/journey\.mjs$/];
-const EXCLUDED = [/(^|\/)test\//, /\.test\.mjs$/, /\.control\.mjs$/, /^bio-plane\/scripts\//, /^bio-plane\/migrate\//,
-                  /^civicos-ui\/check-[^/]*\.mjs$/];
+const SCRIPTS = [/^[^/]+\/scripts\//, /^bio-plane\/src\/journey-check\/journey\.mjs$/];
+const EXCLUDED = [/(^|\/)test\//, /\.test\.mjs$/, /\.control\.mjs$/, /^bio-plane\/scripts\//, /^bio-plane\/migrate\//];
 
 /** The files R50 names, repository-relative and sorted, under `root` (a checkout of the repository). */
 export function censusFiles(root) {
@@ -48,7 +47,7 @@ export function censusFiles(root) {
     .split("\0").filter(Boolean);
   return [...new Set(tracked)].filter((f) => /\.(mjs|js)$/.test(f) && !EXCLUDED.some((re) => re.test(f))).sort();
 }
-/** R50's files that are scripts running when imported, beyond the three it names (see the header). */
+/** R50's files that are scripts running when imported, beyond the two it names (see the header). */
 export const isScript = (f) => SCRIPTS.some((re) => re.test(f));
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v)
