@@ -52,3 +52,17 @@ Answered in part by `NOTES.md` §Q2: provider connection ways, models and contex
 - Q3 (boundary) designs to AIR1, 3, 5–8 and 10: a provider-neutral interface with a **capability and plan catalogue** as data, one adapter per provider, usage in a neutral shape, session abstraction, effort/model controls from the catalogue.
 - Q4 (testing) adds per-AI tests for AIR5–AIR8 on top of the lowest-layer proofs.
 - Q5 (what a member sees) gains: the plan comparison screen (AIR2), the connect/signup path (AIR9), and the leader/member configuration of the offered list (AIR10) as questions for the UX design stream.
+
+## 6 · Added 2026-10-19 from Bob's description of the process (`PROCESS.md` §1, verbatim)
+Proposed as AIR11–AIR16; same standing as AIR1–AIR10 (provisional until Bob confirms).
+
+| # | Requirement | Checked by |
+|---|---|---|
+| **AIR11** | **Evidence-based choice.** Every statement the product makes about an AI or plan carries a grade (Reproduced / Reported / Stated), its source and date; an unconfirmed point is OPEN and restricts nothing. | Catalogue schema test; screen inspection (Q5). |
+| **AIR12** | **Any legitimate plan and place:** open or proprietary models; cloud, hosted or local; through one neutral adapter contract (including an OpenAI-compatible endpoint at a given address). | A fake local endpoint passes the same adapter tests as a hosted one. |
+| **AIR13** | **Gate 1:** a model is offered for a role only after it passes Civicsmith's versioned conformance suite for that role; results are per role (passes / passes with limits / not suitable). | Suite exists, versioned, runs against every adapter; role gating enforced at the control table. |
+| **AIR14** | **Characterization:** each included model carries the measured or stated properties: session start cost/time, average turn latency, privacy and training terms, consistency, plan-scope limits, stated and effective context window, all-in cost of standard tasks, uptime evidence with its period. | Evidence record present per entry; each property has a method and a grade. |
+| **AIR15** | **Team and member testing under Civicsmith control, not gameable:** signed versioned suite; synthetic fixtures only; scoring on Civicsmith's side from the raw exchange against answers the copy never holds; challenge nonce and rotating items; tamper-evident bundle; team-run results are Reported until reproduced. | Tests: bundle with altered transcript marked unverified; copy cannot read expected answers; no team data in the bundle. |
+| **AIR16** | **Standard encrypted result bundle** from a team's test, sealed to Civicsmith's public key, free of secrets, inspectable by the team before sending, comparable across teams by Bob when choosing what joins a release. | Bundle schema and round-trip test; scan for secrets finds none. |
+
+Questions for Bob (via BOB) with recommendation: (1) Adopt AIR11–AIR16. (2) Is "scoring on Civicsmith's side" acceptable, which requires Civicsmith to receive and hold raw test transcripts (synthetic only) and to hold the private key? Recommended: yes. (3) Thresholds for Gate 1 are Bob's once the suite exists; recommended order: define suite, measure candidates, then he sets the bar from the spread. (4) Sample accounts, in the order in `PROCESS.md` §6.
