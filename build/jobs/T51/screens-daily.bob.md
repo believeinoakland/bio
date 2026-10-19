@@ -48,3 +48,7 @@ CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged
 B370: `screen.home.area.ourmove` reworded "Our move: {n}, the earliest due {date}", `.theirmove` "Their move: {n}, the earliest due {date}" (clocksrunning's by_owed counts and next), drawing changed with them; `screen.home.area.expertise.person` "{member}, {label} ({standing})" with `.expertise.confirmed|declared`; `screen.home.area.edition.published` (no draft with an end date), `.edition.comments` {count} / `.comments.one`, `.edition.draftonly` and `.draftonly.comments` (no published edition yet).
 
 And DEC-361 (U391): `queue.feed.action`, `queue.feed.wizards` reworded; `screen.home.todo.vouch.noplace` takes "the", with `screen.home.todo.vouch.noplace.one` for one photo. Note the reworded `screen.home.area.ourmove`/`.theirmove` now take {n} and {date} (no {what}, {due}, {reply}).
+
+## B7 · CHANGE
+
+CHANGE (K4088), re J4: the design @ 112748edcf (DEC-363, U393) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your row, from the design's answer verbatim: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
