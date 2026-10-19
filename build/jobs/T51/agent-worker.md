@@ -73,3 +73,17 @@ Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 17, module lines 2598
 ## J4 · COMPLETE
 
 B6 done: the 7 test copies compare by the product's own localize call (same id, en); transcribe.mjs's label now a localize; t42.control arm 16 re-anchored. Words check clean for agent-worker but the 4 accepted ops.mjs strings. npm test: only R45 (stale bundle). Ownership 0.
+
+## J5 · COMPLETE
+
+B7 START (K4033, K4018) applied. Entry: F4 control arm re-anchored on the call `cancelled:  word("run-rules.member_stopped"),` in bio-plane/src/run-rules/rules.mjs; replacement is another key of the same table, `word("run-rules.run_finished_work")`; mustFail prose no longer quotes the sentence. Copied sentences dropped at harness.control.mjs:481 and harness.test.mjs ~1223 (comment) and ~1229 (title). Test-only; no code or provided service changed.
+
+Verified: F4 armed alone -> AS DECLARED (run-rules R1 file 9/1 FAIL, harness 263/0, restore verified sha256 + cmp). npm test in agent-worker: 22 suites, 21 pass, 1 fail: requirements.test R45 (committed bundle stale vs src, expected; regenerate at L6 close). checks: format 0; architecture 0; coverage 68/68; ownership 0; words check (agent-worker) 0 findings; setup-words --check stale-rows note only; run.mjs failures are all in other modules (none in agent-worker).
+
+K4018 item: agent-harness/src/harness.mjs:5 already names MEANING_ARM as agent-steps' (no change needed here; it is agent-harness's file).
+
+Not changed, noted: two comments still quote 'a member stopped it' (agent-worker/test/harness.control.mjs ~442; agent-worker/test/harness.test.mjs ~419). The words check does not flag them.
+
+Deferred: none.
+
+Size (session_01VygDm8poigwmA9K5dkYQrM): test runs 4, module lines 2598
