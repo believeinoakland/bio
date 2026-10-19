@@ -39,7 +39,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
-import { ARMED_SIGNERS } from "../src/signers.mjs";
+import { ARMED_SIGNERS } from "../src/steps/signers.mjs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 

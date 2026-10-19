@@ -9,6 +9,7 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
 import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { wizardScriptsOf, WizardScripts } from "../../../src/wizard-scripts/index.mjs";
@@ -112,6 +113,8 @@ export function world({ register = true, reg = {}, templates = "reviewed", recor
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* project-roster's tables, as the host's boot creates them after membership's (K4065): queue-producers reads its projects through this store */
+  projectRosterOf(host, { record, membership }).migrate();
   record.setSetting("jurisdiction_profiles", [TEST], "test");
   const now = () => Date.parse(clock.now);
   const filingTemplates = filingTemplatesOf(host, { record, membership, now,

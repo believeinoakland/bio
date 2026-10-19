@@ -9,8 +9,6 @@
  * Every function takes `api(path, init)`, the Cloudflare call already bound to the run's permission and account path
  * prefix (`/accounts/<id>`), so this file holds no token and no address of its own. */
 
-import { word } from "./words.mjs";
-
 export const SLUG_SCHEME = "slug";
 export const LEGACY_SCHEME = "legacy";
 export const LEGACY_BUCKETS = Object.freeze({ captures: "bio-captures", published: "bio-published" });
@@ -227,37 +225,6 @@ export async function touchLock(api, id, now = Date.now()) {
 }
 export async function dropLock(api) {
   try { await api(`/workers/scripts/${LOCK_SCRIPT}?force=true`, { method: "DELETE" }); } catch { /* it goes stale by itself */ }
-}
-
-/* ------------------------------------------------------------------ R63: the words of what is already here */
-
-const unknownText = (f) => word("installer.fact.unknown", { reason: word(f && f.why === "older" ? "installer.fact.unknown.older" : "installer.fact.unknown.silent") });
-const dateOf = (v) => (typeof v === "string" ? v.slice(0, 10) : v);
-const HOLDINGS = ["projects", "documents", "published", "members"];
-
-/* One copy, drawn as the page draws it: its facts as its own worker stated them or as not known (R63), and, when the worker
-   stated no counts, the installer's own from Cloudflare's API in their place, beside the line that the team's own were not
-   available. `fallback` is countsViaApi's answer or null. */
-export function describeCopy(copy, address, facts, fallback) {
-  const val = (f) => (f.known ? String(f.value) : unknownText(f));
-  const known = HOLDINGS.filter((k) => facts[k].known);
-  const lines = [];
-  const whose = facts.team.known ? word("screen.install.exists.whose", { team: facts.team.value, address: address || copy.slug })
-    : `${unknownText(facts.team)} ${address || copy.slug}`;
-  const release = word("screen.install.exists.release", { release: val(facts.release), date: facts.installed.known ? dateOf(facts.installed.value) : unknownText(facts.installed),
-    used: facts.used.known ? dateOf(facts.used.value) : unknownText(facts.used) });
-  let holdings;
-  if (known.length) {
-    holdings = known.map((k) => word(`installer.holdings.${k}.${facts[k].value === 1 ? "one" : "other"}`, { n: facts[k].value })).join(", ");
-    for (const k of HOLDINGS) if (!facts[k].known) lines.push(unknownText(facts[k]));
-  } else if (fallback) {
-    const parts = [["workers", "Workers"], ["containers", "container applications"], ["captured", "objects in its evidence storage"],
-      ["published", "objects in its published storage"]].filter(([k]) => fallback[k] !== null && fallback[k] !== undefined);
-    holdings = parts.map(([k, noun]) => `${fallback[k]} ${noun}`).join(", ");
-    lines.push(unknownText(facts.projects));
-  } else holdings = unknownText(facts.projects);
-  return { slug: copy.slug, finished: copy.finished, address, whose, release, holds: word("screen.install.exists.holds", { holdings }), holdings, unknown: lines,
-    fromApi: !known.length && !!fallback };
 }
 
 /* R62, R65: every copy the inventory shows, a plane and what it holds, or what is left of one that has no plane (a copy under

@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
 import { boot, stubOver, doAnswer } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { INSTANCE_SETUP_CHECKS, HOSTING_CONTROL, hostingControlBlock, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY } from "../../../src/setup.mjs";
 
 const REAL = heldProfiles().filter((p) => p.test !== true);
@@ -15,7 +16,7 @@ test("R12 profiles(): the record-core setting's ids in order, each with its name
   const w = await world();
   const empty = w.m.profiles();
   assert.deepEqual([empty.ok, empty.profiles, empty.conflicts], [true, [], []]);
-  assert.match(empty.detail, /no active profile/);
+  assert.equal(empty.detail, word("instance-setup.profiles.detail.none_active"));
   assert.deepEqual(empty.choices.map((c) => c.id), REAL.map((p) => p.id));
   w.record.setSetting("jurisdiction_profiles", [REAL[0].id], "admin");
   const one = w.m.profiles();
@@ -145,7 +146,7 @@ test("R14 profilesSet replaces the list: PROFILES_NOT_ADMIN, NOT_A_LIST, UNKNOWN
   const none = w.m.profilesSet({ profiles: [], by: "admin" });
   assert.equal(none.ok, true);
   assert.deepEqual(none.profiles, []);
-  assert.match(none.note, /no profile is active/);
+  assert.equal(none.note, word("setup.note.profile_active_now"));
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM settings WHERE name='jurisdiction_profiles'`).get().n, 2);
 });
 

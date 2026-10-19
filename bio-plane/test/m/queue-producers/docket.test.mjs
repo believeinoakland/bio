@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const ofKind = (r, kind) => r.items.filter((i) => i.kind === kind);
@@ -60,9 +61,17 @@ test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core i
   assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002"].options.map((o) => o.id), ["docketprepare", "docketdecline"]);
   assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::edition::2"].options.map((o) => o.id), ["docketprepare"], "a newer edition: placement only");
   assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"].options.map((o) => o.id), ["docketprepare"], "an undisclosed tension: placement only");
-  assert.match(sub.summary, /a response/); assert.match(m["OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002"].summary, /a statement/);
-  assert.match(m["OBLIGATION::docket-core-due::CASE-1::edition::2"].summary, /a newer edition on edition 2/);
-  assert.match(m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"].summary, /an undisclosed tension/);
+  /* R43: the sentences by key, the item named by `what` and the edition where one is stated */
+  const what = (k) => word(`queue.docket-core-due.what.${k}`), tail = word("queue.docket-core-due.detail.tail");
+  assert.equal(sub.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("response"), edition: 1 }));
+  assert.equal(sub.detail, `${word("queue.docket-core-due.detail.response")} ${tail}`);
+  assert.deepEqual([sub.summary_key, sub.detail_key], ["queue.docket-core-due.summary.edition", "queue.docket-core-due.detail.response"]);
+  const st = m["OBLIGATION::docket-core-due::CASE-1::statement::DKT-2026-0002"], ed = m["OBLIGATION::docket-core-due::CASE-1::edition::2"], te = m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"];
+  assert.equal(st.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("statement"), edition: 2 }));
+  assert.equal(ed.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("edition"), edition: 2 }));
+  assert.equal(ed.detail, `${word("queue.docket-core-due.detail.edition", { edition: 2 })} ${tail}`);
+  assert.equal(te.summary, word("queue.docket-core-due.summary.edition", { case: "CASE-1", what: what("tension"), edition: 2 }));
+  assert.equal(te.detail, `${word("queue.docket-core-due.detail.tension")} ${tail}`);
   assert.deepEqual(sub.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the item's since");
   assert.equal(m["OBLIGATION::docket-core-due::CASE-1::tension::CC-9"].age.state, "undetermined");
   assert.deepEqual(sub.recipients, ["olga"], "the case's managers, its project's owners");
@@ -111,7 +120,14 @@ test("R31 (reevaluation R30; DEC-116 items 3, 7): FINDINGs edition-withdrawn and
   assert.deepEqual(wd.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the cause's since");
   assert.equal(m["FINDING::edition-withdrawn::INQ-2::CASE-2#1"].age.state, "undetermined");
   assert.deepEqual(wd.options, [{ id: "opt", on: ["INQ-1"] }]);
-  assert.match(wd.summary, /Was the contract bid\?/); assert.match(wd.detail, /editions 1, 2/); assert.match(ct.detail, /edition 2/);
+  const named = word("queue.docket-case.named", { case: "CASE-1" });
+  assert.equal(wd.summary, word("queue.edition-withdrawn.summary", { name: "Was the contract bid?" }));
+  assert.equal(wd.detail, word("queue.edition-withdrawn.detail.other", { case: named, editions: "1, 2" }));
+  assert.equal(ct.summary, word("queue.edition-contested.summary", { case: named, name: "Was the contract bid?" }));
+  assert.equal(ct.detail, word("queue.edition-contested.detail.numbered", { case: named, edition: 2 }));
+  assert.equal(m["FINDING::edition-withdrawn::INQ-2::CASE-2#1"].detail,
+    word("queue.edition-withdrawn.detail.one", { case: word("queue.docket-case.named", { case: "CASE-2" }), editions: "1" }), "one edition reads .one");
+  assert.deepEqual([wd.detail_key, ct.detail_key], ["queue.edition-withdrawn.detail.other", "queue.edition-contested.detail.numbered"]);
   assert.equal(wd.basis.source, "reevaluation.docketDependents"); assert.deepEqual(wd.basis.legs, entries[0].legs);
   for (const it of [wd, ct]) for (const s of [it.summary, it.detail, it.basis.detail])
     assert.doesNotMatch(s, /\b(obligation|condition|subject)s?\b/i, s);

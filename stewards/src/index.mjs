@@ -3,6 +3,7 @@
    (R8–R13), the notice (R14), the purge (R15) and the public register (R22). Its only store is its own Durable Object
    and its only outbound act is the notice through its mail binding (R16). */
 import { EmailMessage } from "cloudflare:email";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { readConfig, validateReport, CAPS } from "./config.mjs";
 import { SESSION_MS } from "./limits.mjs";
 import * as ui from "./ui.mjs";
@@ -36,28 +37,28 @@ const wantsJson = (request) => (request.headers.get("content-type") || "").toLow
   || (request.headers.get("accept") || "").toLowerCase().includes("application/json");
 
 const WORDS = {
-  NOT_YET_OPEN: "Reporting to Civicsmith's stewards is not yet open.",
-  REPORT_BODY_TOO_LARGE: "The report is too large: it must be under 16 KiB in all.",
-  BODY_TOO_LARGE: "The request is too large.",
-  REPORT_KIND_UNKNOWN: "The kind of abuse must be one of: fabricated evidence, harassment, impersonation, other.",
-  REPORT_CONCERNS_INVALID: `What the report concerns must be a team's short name or an https:// address, at most ${CAPS.concerns} characters.`,
-  REPORT_DESCRIPTION_INVALID: `The description must be from 1 to ${CAPS.description} characters.`,
-  REPORT_CONTACT_INVALID: `The contact must be at most ${CAPS.contact} characters.`,
-  REPORT_RATE_LIMITED: "Too many reports have been sent for now. Please try again later.",
-  INTAKE_FULL: "The stewards have too many reports waiting to take another now. Please try again later, or write to them by e-mail.",
-  INTAKE_UNAVAILABLE: "The report could not be taken now. Nothing was kept. Please try again later.",
-  STEWARD_SIGNIN_REFUSED: "That name and key do not sign in.",
-  STEWARD_SIGNIN_LIMITED: "Too many refused sign-ins. Try again later.",
-  STEWARD_SESSION_REQUIRED: "Sign in as a steward first.",
-  CREDENTIAL_IN_ADDRESS: "Stewards' addresses carry nothing after a question mark; nothing was read.",
-  ORIGIN_REFUSED: "This request did not come from the stewards' own pages; nothing was changed.",
-  NO_SUCH_REPORT: "There is no such report.",
-  DECISION_UNKNOWN: "The decision must be dismiss or withdraw.",
-  NO_REASON: `A reason is required, at most ${CAPS.reason} characters.`,
-  WITHDRAW_TARGET_INVALID: "A withdrawal names one shared service (a shared profile, the template library, a public listing) and its item.",
-  NOT_WITHDRAWN: "No withdrawal of that shared service stands.",
-  NOT_FOUND: "There is no such page.",
-  METHOD_NOT_ALLOWED: "That method is not allowed here.",
+  NOT_YET_OPEN: localize("stewards.index.not_yet_open", "Reporting to Civicsmith's stewards is not yet open."),
+  REPORT_BODY_TOO_LARGE: localize("stewards.index.report_too_large", "The report is too large: it must be under 16 KiB in all."),
+  BODY_TOO_LARGE: localize("stewards.index.request_too_large", "The request is too large."),
+  REPORT_KIND_UNKNOWN: localize("stewards.index.kind_unknown", "The kind of abuse must be one of: fabricated evidence, harassment, impersonation, other."),
+  REPORT_CONCERNS_INVALID: localize("stewards.index.concerns_invalid", "What the report concerns must be a team's short name or an https:// address, at most {max} characters.", { max: CAPS.concerns }),
+  REPORT_DESCRIPTION_INVALID: localize("stewards.index.description_invalid", "The description must be from 1 to {max} characters.", { max: CAPS.description }),
+  REPORT_CONTACT_INVALID: localize("stewards.index.contact_invalid", "The contact must be at most {max} characters.", { max: CAPS.contact }),
+  REPORT_RATE_LIMITED: localize("stewards.index.rate_limited", "Too many reports have been sent for now. Please try again later."),
+  INTAKE_FULL: localize("stewards.index.intake_full", "The stewards have too many reports waiting to take another now. Please try again later, or write to them by e-mail."),
+  INTAKE_UNAVAILABLE: localize("stewards.index.intake_unavailable", "The report could not be taken now. Nothing was kept. Please try again later."),
+  STEWARD_SIGNIN_REFUSED: localize("stewards.index.signin_refused", "That name and key do not sign in."),
+  STEWARD_SIGNIN_LIMITED: localize("stewards.index.signin_limited", "Too many refused sign-ins. Try again later."),
+  STEWARD_SESSION_REQUIRED: localize("stewards.index.session_required", "Sign in as a steward first."),
+  CREDENTIAL_IN_ADDRESS: localize("stewards.index.credential_in_address", "Stewards' addresses carry nothing after a question mark; nothing was read."),
+  ORIGIN_REFUSED: localize("stewards.index.origin_refused", "This request did not come from the stewards' own pages; nothing was changed."),
+  NO_SUCH_REPORT: localize("stewards.index.no_such_report", "There is no such report."),
+  DECISION_UNKNOWN: localize("stewards.index.decision_unknown", "The decision must be dismiss or withdraw."),
+  NO_REASON: localize("stewards.index.reason_required", "A reason is required, at most {max} characters.", { max: CAPS.reason }),
+  WITHDRAW_TARGET_INVALID: localize("stewards.index.withdraw_target_invalid", "A withdrawal names one shared service (a shared profile, the template library, a public listing) and its item."),
+  NOT_WITHDRAWN: localize("stewards.index.not_withdrawn", "No withdrawal of that shared service stands."),
+  NOT_FOUND: localize("stewards.index.no_such_page", "There is no such page."),
+  METHOD_NOT_ALLOWED: localize("stewards.index.method_not_allowed", "That method is not allowed here."),
 };
 
 function refuse(request, status, code, extra = {}, steward = false) {
@@ -169,8 +170,8 @@ async function notify(env, cfg, request, { ref, received, kind }) {
     if (!cfg.from) throw new Error("no sender");
     const stewardsPage = `${new URL(request.url).origin}/steward`;
     const domain = cfg.from.split("@")[1];
-    const raw = [`From: Civicsmith's stewards' reporting service <${cfg.from}>`, `To: <${cfg.address}>`,
-      `Subject: A report has arrived (${ref})`, `Date: ${new Date(received).toUTCString()}`, `Message-ID: <${ref}@${domain}>`,
+    const raw = [`From: ${localize("stewards.index.notice_sender", "Civicsmith's stewards' reporting service")} <${cfg.from}>`, `To: <${cfg.address}>`,
+      `Subject: ${localize("stewards.index.notice_subject", "A report has arrived ({ref})", { ref })}`, `Date: ${new Date(received).toUTCString()}`, `Message-ID: <${ref}@${domain}>`,
       "MIME-Version: 1.0", "Content-Type: text/plain; charset=utf-8", "Content-Transfer-Encoding: 8bit", "",
       ui.notifyText({ ref, kind, received, stewardsPage })].join("\r\n");
     await env.NOTIFY.send(new EmailMessage(cfg.from, cfg.address, raw));
@@ -283,7 +284,7 @@ export default {
       return await handle(request, env);
     } catch {
       console.log("stewards: a request failed");
-      return new Response("The service could not answer now.", { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } });
+      return new Response(localize("stewards.index.service_could_not_answer", "The service could not answer now."), { status: 500, headers: { "content-type": "text/plain; charset=utf-8" } });
     }
   },
   /* R15: the daily purge. */
