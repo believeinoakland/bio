@@ -77,3 +77,19 @@ One thing I could not do as B4 says: data.mjs:55 "Comment for the group" and dat
 Options, your ruling:
 (a) Treat them as identifiers (K3971: a string the code compares is an identifier, not a localize sentence), and the words check exempts or accepts them.
 (b) Let me match by the script id instead of the name (WIZ-f06504b9133b8d61 and WIZ-7de505135a9ecd4f; both ids are in the vendored files), so no name literal is needed. This changes adoptedLibrary's matching inside my module. I recommend (b): it removes the name from the code entirely and needs no exemption. I will do it on your word.
+
+## J5 · COMPLETE
+
+COMPLETE · T51-139 wizard-scripts. Head: the commit that carries this (job/T51/wizard-scripts).
+
+Applied: R44 and B2 (registry, front doors, library at 20c8001300; pins in build-data.mjs and data.mjs); B3/B4 (the 46 sentences read by key, word(key, vars) with the row's English); B5 (adoption and addition match by script id: WIZ-f06504b9133b8d61, WIZ-7de505135a9ecd4f; no name literal in data.mjs); the fixture runs project-roster's migrate() (K4065; B4 item 2 ruled uses clean).
+
+Checks on job/T51/wizard-scripts (merged tranche/T51):
+- module suite: 106 pass, 0 fail
+- words: 0 failures (inline 0, plain 0, testcopy 0, handlist 0; dev 8, unkeyed 7 as the design lists them)
+- format 0 failures; architecture 0; coverage 44 of 44; ownership 0
+- setup-words --check: rows.mjs matches words.json and the source
+- checks/run.mjs over the whole product is red in other modules (answer-envelope architecture; coverage in affordances, agent-harness, agent-runner; testcopy and handlist in screens-investigate, screens-settings, screens-wizards, signin-door, tasks; words elsewhere). None of it is wizard-scripts. Reported, not changed (P7).
+- Cross-module (K3986): the wizard script-name copies in screens-daily and screens-wizards test files belong to those jobs.
+
+Size (session_0192jMRKKhCkVUkwJyJXBS3f): test runs 21, module lines 2674 (own code; the three generated files excluded).
