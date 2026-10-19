@@ -5,14 +5,15 @@ import { PLAN_PROBE } from "./probes.mjs";
 import { BINDING_OF } from "./bindings.mjs";
 import { uploadUpdate } from "./uploads.mjs";
 import { uploadMember } from "./members.mjs";
-import { containerPartsOf, withLacks, WORKER_PART_LACKS, VPC_MEMBER, VPC_BINDING, vpcServiceOk, containerConditions, placeContainer, setSchedules } from "./containers.mjs";
+import { containerPartsOf, lacksFor, WORKER_PART_LACKS, VPC_MEMBER, VPC_BINDING, vpcServiceOk, containerConditions, conditionWhy, placeContainer, setSchedules } from "./containers.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 
 /* Install (or refresh — the PUT is the same act) every member `loadFleet` verified. DEGRADES PER MEMBER, never fails the
    install: a team's plane must not be lost over a member it can add at the next update, and what was left out is SAID
    (D-115's "quietly doing less" is the defect; the cure is the saying, not the refusing). `ctx.vpc`: the Workers VPC service
    the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed}`. */
 async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) {
-  await emit.step("fleet", "Installing the capability workers beside your team's Civicsmith");
+  await emit.step("fleet", word("installer.step.helpers"));
   if (loaded.skip) { emit.ok("fleet", loaded.skip); return; }
   const names = ctx.names;
   const man = release.man;
@@ -26,7 +27,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
        scope, not Workers Paid, a part missing or unreadable) is LEFT OUT, named here with why and what the copy lacks; it is
        not a failed upload and the verdict does not wait on it (`out`). A member whose upload was attempted and failed is. */
     const isContainer = containerPartsOf(m).length > 0;
-    if (L.error) { left.push({ member: m.member, why: withLacks(m, L.error), ...(isContainer ? { out: true } : {}) }); continue; }
+    if (L.error) { left.push({ member: m.member, why: L.error, ...(lacksFor(m) ? { lacks: lacksFor(m) } : {}), ...(isContainer ? { out: true } : {}) }); continue; }
     let uploaded = false, attempted = false;
     try {
       const { box, limits, own, classes } = L;
@@ -34,10 +35,10 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       let held = null;
       const fetchHeld = async () => {
         try { held = await L.bytes(); }
-        catch (e) { if (special(e)) throw e; throw new Error("its files could not be read again for the upload (" + String(e && e.message || e) + ")"); }
+        catch (e) { if (special(e)) throw e; throw new Error(e && e.fleetWhy ? e.fleetWhy : word("installer.fleet.why.refetch")); }
       };
       /* Said once the member is installed (a member left out is named with its own reason). */
-      const lacking = !L.workerPart && WORKER_PART_LACKS[m.member] ? `${m.member}: ${WORKER_PART_LACKS[m.member]}` : null;
+      const lacking = !L.workerPart && WORKER_PART_LACKS.includes(m.member) ? word("installer.fleet.note.scanner", { member: m.member }) : null;
       const ownBindings = own.r2_buckets.map((b) => ({ type: "r2_bucket", name: b.binding, bucket_name: names.role(b.bucket) }));
       const vpcBindings = vpcServiceOk(ctx.vpc) && m.member === VPC_MEMBER ? [{ type: "vpc_service", name: VPC_BINDING, service_id: ctx.vpc }] : [];
       const heldTag = scripts.get(names.member(m.member))?.migration_tag ?? null;
@@ -51,19 +52,18 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
         try {
           await send({ ...extra, bindings: [...bindings, ...vpcBindings] });
           vpcTaken = true;
-          notes.push(`${m.member} is connected to the Workers VPC service you named (${VPC_BINDING})`);
+          notes.push(word("installer.fleet.note.vpc.connected", { member: m.member }));
         } catch (e) {
           if (special(e)) throw e;
           await send({ ...extra, bindings });
           vpcTaken = true;
-          notes.push(`${m.member} could not be connected to the Workers VPC service you named (Cloudflare said: ${e.message}), so it `
-            + "was installed without it, and a security tool reached through a tunnel answers REACH_NOT_BOUND until the updater connects it");
+          notes.push(word("installer.fleet.note.vpc.refused", { member: m.member, said: e.message }));
         }
       };
       const schedule = async () => {
         if (!own.crons.length) return;
         try { await setSchedules(token, acct, names.member(m.member), own.crons); }
-        catch (e) { if (special(e)) throw e; notes.push(`${m.member} was installed, but its schedule (${own.crons.join("; ")}) could not be set (Cloudflare said: ${e.message}); the next update sets it`); }
+        catch (e) { if (special(e)) throw e; notes.push(word("installer.fleet.note.schedule", { member: m.member, schedule: own.crons.join("; "), said: e.message })); }
       };
       if (scripts.has(names.member(m.member))) completed.push(m.member);
       if (!box.length) {
@@ -91,7 +91,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
         /* Left out this time; a container an earlier act installed keeps serving, so its bindings are restated (a
            member re-uploaded without one would lose it). */
         if (!fresh) binds();
-        throw new Error(conditions.why);
+        throw new Error(conditionWhy(conditions));
       }
       await fetchHeld();
       attempted = true;
@@ -108,25 +108,21 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       if (lacking) notes.push(lacking);
     } catch (e) {
       if (special(e)) throw e;
-      left.push({ member: m.member, why: withLacks(m, String(e && e.message || e)), ...(isContainer && !attempted ? { out: true } : {}) });
+      left.push({ member: m.member, why: String(e && e.fleetWhy ? e.fleetWhy : e && e.message || e), ...(lacksFor(m) ? { lacks: lacksFor(m) } : {}), ...(isContainer && !attempted ? { out: true } : {}) });
     }
   }
   /* R45: a VPC service named that no member installed here takes is said, never dropped in silence. */
   if (vpcServiceOk(ctx.vpc) && !vpcTaken)
-    notes.push(`the Workers VPC service you named was not connected: ${VPC_MEMBER} was not installed this time, so a tool reached `
-      + "through a tunnel answers REACH_NOT_BOUND in your team's Civicsmith until the updater connects it");
-  const probeNote = leftover ? " One cleanup note: the tiny probe script \"" + PLAN_PROBE + "\" could not be deleted "
-    + "automatically — it is harmless, and you can remove it from Workers & Pages any time." : "";
-  /* Each note begins with a member's name or a capital, as written; a name is never re-cased. */
-  const noteText = notes.length ? " " + notes.map((n) => (/^[a-z]+-[a-z]/.test(n) ? n : n[0].toUpperCase() + n.slice(1)) + ".").join(" ") : "";
+    notes.push(word("installer.fleet.note.vpc.unused", { member: VPC_MEMBER }));
+  const probeNote = leftover ? word("installer.probe.leftover", { name: PLAN_PROBE }) : "";
+  const tail = [...notes, ...new Set(left.map((l) => l.lacks).filter(Boolean)), probeNote].filter(Boolean).map((n) => " " + n).join("");
+  const doneNames = done.join(", ");
+  const list = left.map((l) => word("installer.fleet.left.item", { member: l.member, why: l.why })).join("; ");
   if (left.length === 0) {
-    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: "
-      + done.join(", ") + "." + noteText + probeNote);
+    emit.ok("fleet", (done.length === 1 ? word("installer.fleet.done.one", { names: doneNames }) : word("installer.fleet.done.other", { n: done.length, names: doneNames })) + tail);
   } else {
-    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "")
-      + left.length + " left out: "
-      + left.map((l) => l.member + " (" + l.why + ")").join("; ")
-      + ". Your team's Civicsmith works without them; the next update retries exactly this step." + noteText + probeNote);
+    emit.ok("fleet", (done.length ? word("installer.fleet.partial.some", { installed: done.length, names: doneNames, left: left.length, list })
+      : word("installer.fleet.partial.none", { left: left.length, list })) + tail);
   }
   /* D-116: WHICH members this act uploaded, so the verify step can require each of them to answer THROUGH the plane's
      binding. Every early return above uploads nothing and returns undefined, which the caller reads as none. */
@@ -148,20 +144,18 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
      known even with no member to add. An update states them in its own upload, and restates them here. */
   const hosts = opts.writeHosts && Array.isArray(opts.ownHosts) && opts.ownHosts.length ? opts.ownHosts : null;
   if (added.length === 0 && !hosts) return { bound: already, unbound: [] };
-  await emit.step("bind", added.length ? "Connecting your team's Civicsmith to its capability workers"
-    : "Telling your team's Civicsmith its own address");
+  await emit.step("bind", added.length ? word("installer.step.connect") : word("installer.step.connect.address"));
   try {
     await uploadUpdate(token, acct, slug, opts.withR2, release,
       { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles, ownHosts: opts.ownHosts, names: opts.names });
-    emit.ok("bind", [added.length ? "Your team's Civicsmith is connected to " + added.join(", ") + "." : "",
-      hosts ? "Your team's Civicsmith now knows its own address (" + hosts.join(", ") + "), which it reads as its own." : ""]
+    emit.ok("bind", [added.length ? word("installer.connect.done", { names: added.join(", ") }) : "",
+      hosts ? word("installer.connect.address.done", { hosts: hosts.join(", ") }) : ""]
       .filter(Boolean).join(" "));
     return { bound: want, unbound: [], put: true, hosts: !!hosts };
   } catch (e) {
-    emit.no("bind", [added.length ? "The capability workers were installed, but connecting your team's Civicsmith to them was refused ("
-      + added.join(", ") + "). Your team's Civicsmith works without them; running the updater connects them." : "",
-      hosts ? "Telling your team's Civicsmith its own address was refused, so it does not know it yet; running the updater tells it." : "",
-      "(Cloudflare said: " + e.message + ")"].filter(Boolean).join(" "));
+    emit.no("bind", [added.length ? word("installer.connect.refused", { names: added.join(", ") }) : "",
+      hosts ? word("installer.connect.address.refused") : "",
+      word("installer.cfsaid", { said: e.message })].filter(Boolean).join(" "));
     return { bound: already, unbound: added, hosts: false };
   }
 }

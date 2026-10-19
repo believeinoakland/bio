@@ -137,7 +137,7 @@ test("R48: no refusal or answer of the acts, the mint or the sort says obligatio
   assert.equal(offending("a CONDITION about the machinery"), true);
   assert.equal(offending("a signal is a fact about our machinery"), true);
   assert.equal(offending("Signals"), true);
-  assert.equal(offending("whether its condition was met"), false);
+  assert.equal(offending(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"]), false);
   assert.deepEqual(vocab.filter((s) => BANNED.test(s)).length, 3,
     "only the checkpoint's, the objective's and the quiet project's objective's own condition (R1, K2484)");
   assert.equal(vocab.filter((s) => BANNED.test(s) && /its objective, its condition and what the record still lacks/.test(s)).length, 1);

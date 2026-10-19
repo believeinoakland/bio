@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { browserActs } from "./browser.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
 
@@ -197,11 +198,13 @@ test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry ever
      R73) the five PR #36 owes whose ops T49 left out are declared now; the registry also owes the installer's four own
      routes (K3471, installer R62), no plane op, named, with no spec */
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), LEFT_OUT);
+  /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
+  const BROWSER = browserActs(registry);
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), [...LEFT_OUT, ...BROWSER].sort());
   const src = readFileSync(new URL("bio-plane/src/op-declarations/index.mjs", ROOT), "utf8");
   assert.doesNotMatch(src, /`setpassword` \(credentials, in process\)/);
   /* negative control */
-  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op)), ["nosuchowedact"]);
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op) && !BROWSER.includes(op)), ["nosuchowedact"]);
   assert.ok(inNoTable("claimidentity"));
 });
 

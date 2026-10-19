@@ -1,0 +1,35 @@
+# answer-envelope (T51)
+
+**Status** · session_01KHeJpKJpVgMFJJ24YKGUBJ · depth 2 · COMPLETE · handled B2
+
+## J1 · COMPLETE
+
+T51-109 answer-envelope: done at cdcb5f4bfc (on job/T51/answer-envelope, merged tranche/T51 at fe5d5656fb).
+
+Entries applied:
+- T51-109 (the entry): the stale comments are fixed. checks.mjs:23 now says the legacy civicos-ui screens read the "unknown op" sentence until that folder is deleted (CR-5), and page-policy.test.mjs's header and test title no longer name the signer page. page-policy.test.mjs no longer imports SIGN_HTML; the signer-page case leaves its test (the page is deleted by control-plane's T51-123).
+- The words check (words.mjs, answer-envelope): 1 finding, the families.test.mjs hand-list of five route and attest codes, now read from provenance-routes' ROUTE_MARK_CHECKS and attestation's ATTEST_CHECKS. Result: 0 failures.
+- The words-pass testcopies (words-pass file, 4 lines): the catalogue-end and families copies were already gone; the two envelope.test.mjs copies of "requires sha256=<64 lowercase hex>" (lines 290, 292) are now a fixture that copies no product sentence. Result: 0 failures.
+- The four inherited reds (catalogue-end.test.mjs:17, :80, :124, families.test.mjs:686): cleared by re-pinning rows-before-r43.json. STANDARD_PROPOSER_UNNAMED re-pinned b037fb193ecd187e -> f949b28d7eef8c30 as K4010 §2 says. The tip has moved since K4010: nine more rows drifted and are re-pinned to the sentence each now reads by key (see REPORT below): CANDIDATE_NO_PROPOSALS, CAPTURE_REQUEST_NO_RUN, CAPTURE_REQUEST_RENDER_MALFORMED, LIFECYCLE_TOKEN_MALFORMED, PHASE_MALFORMED, SUBJECT_MALFORMED, TEMPLATE_KIND_REFUSED, VERSION_CURRENT_NO_PROJECT, VERSION_STRENGTH_UNKNOWN_STATE. changed.note names each.
+- You inherited: T51-109 removes page-policy.test.mjs's import of signpage.mjs. Done.
+
+Deferred: none.
+
+REPORT (for BOB, against other modules and the words pass):
+1. The words pass (K3949, K3930) did not hold "character for character" for these rows. Each row's words.json sentence differs from the sentence its owner's code carried before the pass: contradiction C-93.4 CANDIDATE_NO_PROPOSALS reads "judgment" where the code had "judgement"; I checked CANDIDATE_NO_PROPOSALS and PHASE_MALFORMED against their pre-pass text; the other seven moved the same way (digest changed, same check and code). I re-pinned them as owners' rows now declare them (the T50-25 precedent), so the pin guard is quiet, but the change is a wording change that the pass's proof did not state. Please confirm these are the intended words; if not, owners must restore them and the rows must be re-keyed.
+2. standards' commit 4c43e67e3f changed C-112.14's text from "labelled" to "labeled" under a "no wording change" message (already in K4010 §2). Pinned here as f949b28d7eef8c30.
+3. control-plane (T51-123) should drop the signer page: after it, nothing in answer-envelope tests the signer page's policy. bio-plane/src/answer-envelope/index.mjs:15 still names "the signer page" in a comment; accurate until T51-123 deletes the page, so I left it.
+4. The repository-wide words run shows 1,096 failures across other modules (wizard-scripts and others). Not answer-envelope's; not touched.
+
+Requirement lines: no requirement text changed by this job. R6's text still names the signer page; that is BOB's edit at the fold.
+
+Checks (run in this job, summary lines):
+- node checks/run.mjs /home/user/bio (process repo @ a4c42ff): format: 176 modules, 175 requirements files; 0 failures. architecture: 3649 product files; 0 failures. words: 175 modules; answer-envelope 0 findings after the two fixes (repo total 1096 failures in other modules, see REPORT 4).
+- node checks/words.mjs /home/user/bio answer-envelope: 1 modules, 1528 string literals; 0 failures.
+- node checks/architecture.mjs /home/user/bio answer-envelope: 10 product files, 127 relative imports; 0 failures.
+- node checks/coverage.mjs /home/user/bio answer-envelope: 18 of 18 live requirement ids named by a test; 0 failures.
+- node checks/ownership.mjs /home/user/bio answer-envelope tranche/T51 job/T51/answer-envelope: 6 files changed by answer-envelope; 0 failures.
+- node bio-plane/src/setup-words/build.mjs --check: "words-unreviewed.json is stale or absent" (the stale-rows note the entry expects; no refusal naming answer-envelope).
+- node --test test/m/answer-envelope/ (bio-plane): tests 41, pass 41, fail 0.
+
+Size (session_01KHeJpKJpVgMFJJ24YKGUBJ): test runs 8, module lines 890

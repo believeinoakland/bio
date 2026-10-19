@@ -8,6 +8,7 @@
  */
 import worker, { CFG, ARMED_SIGNERS, planeLimits } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
@@ -24,6 +25,19 @@ function builtInAssets() {
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 export const ORIGIN = "https://newgroup.believeinoakland.workers.dev";
 export const realFetch = globalThis.fetch;
+/* The text of a key before its first fill the caller does not give: every placeholder not in `vars` answers a NUL, and the head is what
+   comes before the first one (K3810: a test reads a sentence from the word table, never copies it). */
+export const headOf = (key, vars = {}) => word(key, new Proxy(vars, {
+  get: (t, k) => (k in t ? t[k] : "\u0000"), getOwnPropertyDescriptor: (t, k) => ({ value: k in t ? t[k] : "\u0000", enumerable: true, configurable: true }),
+})).split("\u0000")[0];
+/* A pattern for a key's sentence: each fill in `vars` is itself (a string, matched literally, or a RegExp), every other placeholder
+   matches anything. A test reads its expectation from the word table through this, never from a copy of the English. */
+export const like = (key, vars = {}) => {
+  const P = (n) => `\u0001${String(n)}\u0001`;
+  const text = word(key, new Proxy({}, { get: (_, n) => P(n), getOwnPropertyDescriptor: (_, n) => ({ value: P(n), enumerable: true, configurable: true }) }));
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(esc(text).replace(/\u0001(\w+)\u0001/g, (_, n) => (n in vars ? (vars[n] instanceof RegExp ? vars[n].source : esc(String(vars[n]))) : "[\\s\\S]*?")), "s");
+};
 export const jres = (o, status = 200) => new Response(JSON.stringify(o), { status });
 export const cfok = (result) => jres({ success: true, result });
 export const cferr = (message, status = 400, code = 0) => jres({ success: false, errors: [{ message, code }] }, status);

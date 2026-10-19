@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
+import { T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
@@ -38,6 +39,7 @@ const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
 const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}, {}));
+const isMutating = (op) => Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op);
 
 /* ---- op-grades R13: each owner's T33 ops, writes with the grade its R3's rule gives them, reads apart ------------------
    The whole op map of each new module; of an earlier module, the ops T33 adds to it (K1549, K1550, K1571, K1572, K1601,
@@ -47,58 +49,43 @@ const T33 = {
       datedfact: "observational", editacts: "observational", readoptin: "substrate", eventcreate: "undetermined",
       eventattest: "undetermined", eventgovern: "reversible", participantadd: "undetermined", participantcorrect: "reasoned",
       eventmerge: "reasoned", eventsplit: "reasoned", eventrelate: "reversible", eventrelationwithdraw: "reasoned",
-      actalias: "undetermined", eventimport: "substrate", registerimport: "substrate" },
-    reads: ["event", "eventforact", "datedfacts", "eventsfor", "timeline", "sequence", "whowassent", "statementsof",
-      "proceedingstatus"] },
-  lines: { map: lines.linesOps, writes: { linerecord: "reversible", linewithdraw: "reasoned", linecurrentthrough: "undetermined" },
-    reads: ["line", "linesof", "structureat", "holderat", "partiesof", "proceedinglinks"] },
+      actalias: "undetermined", eventimport: "substrate", registerimport: "substrate" } },
+  lines: { map: lines.linesOps, writes: { linerecord: "reversible", linewithdraw: "reasoned", linecurrentthrough: "undetermined" } },
   money: { map: money.moneyOps, writes: { moneyrecord: "reversible", moneywithdraw: "reasoned", moneysetcreate: "undetermined",
-      moneysetinclude: "reasoned", moneysetexclude: "reasoned", moneysetpropose: "undetermined", moneyfundtype: "undetermined" },
-    reads: ["money", "moneyof", "moneysummable", "moneyreconcile", "moneyset", "committedagainstpaid", "authoritychain"] },
+      moneysetinclude: "reasoned", moneysetexclude: "reasoned", moneysetpropose: "undetermined", moneyfundtype: "undetermined" } },
   "money-checks": { map: moneyChecksOps, writes: { moneycheckparam: "undetermined", moneydetectordefine: "undetermined",
-      moneydetectorswitch: "reversible", moneydetectorsrun: "substrate", moneydetectorgate: "substrate" },
-    reads: ["moneyamountchecks", "moneyjunction", "moneycheckparams", "moneydetectors", "moneynoticed"] },
+      moneydetectorswitch: "reversible", moneydetectorsrun: "substrate", moneydetectorgate: "substrate" } },
   duties: { map: dutiesOps, writes: { dutypropose: "undetermined", dutyadopt: "reversible", dutydeclare: "reversible",
-      dutyrevise: "reasoned", dutywithdraw: "reasoned", dutymatch: "reasoned", dutytransition: "reasoned" },
-    reads: ["duty", "dutiesof", "dutyoccurrences", "dutytransitions", "powersof", "dutysetagainst"] },
+      dutyrevise: "reasoned", dutywithdraw: "reasoned", dutymatch: "reasoned", dutytransition: "reasoned" } },
   people: { map: people.peopleOps, writes: { identityclaim: "reasoned", identitywithdraw: "reasoned", personfact: "reversible",
       personfactwithdraw: "reasoned", personexpunge: "reasoned", membertie: "reasoned", membertiewithdraw: "reasoned",
       sourcepersonlink: "reasoned", interestcheckdefine: "undetermined", interestcheckswitch: "reversible",
-      interestcheckgate: "substrate" },
-    reads: ["identity", "samepersoncandidates", "person", "career", "personcredentials", "personinterests",
-      "personstatements", "staffing", "memberties", "sourcepersonlinks", "interestchecks"] },
-  explore: { map: exploreOps, writes: {}, reads: ["explore", "explorepreset", "exploreverify", "exploretimeline", "exploregraph"] },
+      interestcheckgate: "substrate" } },
+  explore: { map: exploreOps, writes: {} },
   hypotheses: { map: hypothesesOps, writes: { hypothesishold: "reversible", hypothesisrevise: "reasoned",
-      hypothesiswithdraw: "reasoned", /* op-grades R15 (T34-75) */ notewrite: "caller-owned", noteturn: "caller-owned" },
-    reads: ["hypotheses", "notes" /* op-grades R15 */] },
+      hypothesiswithdraw: "reasoned", /* op-grades R15 (T34-75) */ notewrite: "caller-owned", noteturn: "caller-owned" } },
   calculations: { map: calculationsOps, writes: { tabledeclare: "undetermined", bindingadopt: "undetermined",
       moneyingest: "reasoned", calculationcreate: "undetermined", calculationaccept: "undetermined",
-      calculationdraw: "undetermined", recordset: "observational", patterngate: "substrate", patternswitch: "reversible" },
-    reads: ["table", "tablesat", "calculationevaluate", "calculation", "patterns"] },
+      calculationdraw: "undetermined", recordset: "observational", patterngate: "substrate", patternswitch: "reversible" } },
   workbooks: { map: workbooksOps, writes: { workbookadd: "undetermined", workbookbind: "reversible", workbookunbind: "reasoned",
       workbookrecompute: "observational", workbooklintexplain: "reasoned", workbookmethodnote: "reasoned",
-      workbooksecondcheck: "undetermined" }, reads: ["workbook", "workbookinputs", "workbooklint", "workbookexport"] },
+      workbooksecondcheck: "undetermined" } },
   answers: { map: answersOps, writes: { answercheck: "observational", ruleservicesswitch: "substrate",
-      standingset: "caller-owned", standingend: "caller-owned", standingaiswitch: "substrate" },
-    reads: ["rule", "asktallies", "standing", "standinganswers"] },
+      standingset: "caller-owned", standingend: "caller-owned", standingaiswitch: "substrate" } },
   following: { map: followingOps, writes: { followbody: "reversible", unfollow: "reversible", followregister: "reversible",
-      followpersonquery: "reversible", followportal: "reversible", permeetingbody: "reversible", refreshregister: "substrate" },
-    reads: ["follows", "snapshots", "snapshotdiff"] },
+      followpersonquery: "reversible", followportal: "reversible", permeetingbody: "reversible", refreshregister: "substrate" } },
   standards: { map: standardsOps, part: true, writes: { lawrelate: "reasoned", lawwithdraw: "reasoned",
-      lawpropose: "undetermined", courtlink: "reasoned", courttreat: "reasoned" },
-    reads: ["inforceat", "standardsfor", "lawrelations", "lawaddresses", "stillstanding", "citationresolve"] },
+      lawpropose: "undetermined", courtlink: "reasoned", courttreat: "reasoned" } },
   credentials: { map: credentialsOps, part: true, writes: { accountreferenceset: "credential",
       accountreferenceremove: "credential", aigrantmint: "credential",
-      keyedserviceset: "credential", keyedserviceswitch: "substrate" }, reads: ["accountreference", "keyedservices"] },
-  sources: { map: sourcesOps, part: true, writes: { sourcekeyed: "undetermined" }, reads: [] },
-  entities: { map: entitiesOps, part: true, writes: { entityidentify: "reasoned" }, reads: [] },
-  inquiry: { map: inquiryOps, part: true, writes: { waitlook: "caller-owned" }, reads: [] },
-  "corpus-export": { map: corpusExportOps, part: true, writes: { exportrender: "substrate" }, reads: ["exportpage"] },
-  actions: { map: actionsOps, part: true, writes: {}, reads: ["addresseesuggest"] },
-  "action-clocks": { map: actionClocksOps, part: true, writes: { clockadopt: "undetermined" },
-    reads: ["clocksics", "clocklateness"] },
-  "ai-runs": { map: aiRunsOps, part: true, writes: { airunverify: "reasoned" }, reads: [] },
-};
+      keyedserviceset: "credential", keyedserviceswitch: "substrate" } },
+  sources: { map: sourcesOps, part: true, writes: { sourcekeyed: "undetermined" } },
+  entities: { map: entitiesOps, part: true, writes: { entityidentify: "reasoned" } },
+  inquiry: { map: inquiryOps, part: true, writes: { waitlook: "caller-owned" } },
+  "corpus-export": { map: corpusExportOps, part: true, writes: { exportrender: "substrate" } },
+  actions: { map: actionsOps, part: true, writes: {} },
+  "action-clocks": { map: actionClocksOps, part: true, writes: { clockadopt: "undetermined" } },
+  "ai-runs": { map: aiRunsOps, part: true, writes: { airunverify: "reasoned" } } };
 /* The ops T33's requirements name whose owners serve them in process but whose route arm is the wiring jobs' (op-declarations
    R17, K1601; instance-setup R50, R53): graded now so the table is total when they are routed. */
 const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reversible",
@@ -110,10 +97,6 @@ const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reve
    `accountswitchset` (to `accountusesset`) and ai-runs' `aiceilingset` and `aicopyceilingset` (to ai-use's `ailimitset`),
    each graded in op-grades' t41.mjs under the op that replaces it. */
 const RETIRED = ["assistantset", "accountswitchset", "aiceilingset", "aicopyceilingset"];
-const UNROUTED_READS = ["capturerequestplatformhosts", "assistantstate", "disclosureof",
-  "standardinforce" /* layer 9's read, gated since T33 (K1689) */,
-  /* (K2514) T33's read, ai-runs' until T41-23, now ai-use's (its R4), not in this module's uses: its row stays T33's */
-  "aiusage"];
 /* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
 const UNGATED_WRITES = ["askusage"];
 /* op-grades R3's `reversible`: the published act of the owner that takes each result back. */
@@ -125,7 +108,6 @@ const TAKEN_BACK_BY = {
   followpersonquery: "unfollow", followportal: "unfollow", unfollow: "followbody", permeetingbody: "permeetingbody",
 };
 const ALL_WRITES = { ...Object.assign({}, ...Object.values(T33).map((m) => m.writes)), ...UNROUTED };
-const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
 const published = () => new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
 
 /* K2049 (B4): the ops each of T33's new modules adds in T35, graded by op-grades in its `t35.mjs` (its R22, K2043) and held
@@ -155,6 +137,20 @@ const T48_ADDS = { following: ["proceedingdates"] };
    in T50 (T50-18); pinned here so following's map stays closed (the grades are op-grades' tests'). */
 const T50_ADDS = { following: ["watchitem", "secondlook", "secondlookclear"] };
 
+/* The reads are not listed: an owner's reads are the ops of its own op map that no rung or absence grades and that no later
+   tranche's list above adds as a write; of an earlier module's map (`part`), only those op-grades' T33 table names (T33_NON_ACTS),
+   since the rest of that map is other tranches' (a new op of a whole module's map is seen at once; a write is stated above with its grade). */
+const LATER_ADDS = new Set([...Object.values(T35_ADDS).flat(), ...Object.values(T36_ADDS).flatMap((o) => Object.keys(o)),
+  ...Object.values(T41_ADDS).flatMap((o) => Object.keys(o)), ...Object.values(T45_ADDS).flat(), ...Object.values(T47_ADDS).flat(),
+  ...Object.values(T48_ADDS).flat(), ...Object.values(T50_ADDS).flat()]);
+for (const m of Object.values(T33))
+  m.reads = keysOf(m.map).filter((op) => !isMutating(op) && !LATER_ADDS.has(op) && (!m.part || Object.hasOwn(T33_NON_ACTS, op)));
+/* The reads T33 grades whose owners are not among the maps above (capture-requests, instance-setup, standards' layer 9, ai-use's
+   usage read, K1689, K2514): the reads of op-grades' T33 table that no listed owner's map serves. */
+const UNROUTED_READS = Object.keys(T33_NON_ACTS).filter((op) => !isMutating(op)
+  && !Object.values(T33).some((m) => m.reads.includes(op)));
+const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
+
 test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41, T45, T47, T48 and T50 add — "
    + "each earlier module's map holds the ops T33 adds to it, and no owner serves a retired op", () => {
   for (const [name, m] of Object.entries(T33)) {
@@ -162,6 +158,7 @@ test("R12: each new module's op map holds exactly the ops graded for it — T33'
     const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
       ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? []), ...(T47_ADDS[name] ?? []), ...(T48_ADDS[name] ?? []),
       ...(T50_ADDS[name] ?? [])];
+    assert.deepEqual(Object.keys(m.writes).filter((op) => !isMutating(op)), [], `${name}: a write is graded`);
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }

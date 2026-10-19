@@ -27,6 +27,13 @@ import { T46_RUNGS } from "../../../src/op-grades/t46.mjs";
 import { T47_RUNGS } from "../../../src/op-grades/t47.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { sourcesOps } from "../../../src/sources/index.mjs";
+import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { planWorkOps } from "../../../src/plan-work/index.mjs";
+import { actionHoldsOps } from "../../../src/action-holds/index.mjs";
+import { actionRecordsOps } from "../../../src/action-records/index.mjs";
+import { filingsOps } from "../../../src/filings/index.mjs";
+import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
   "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",
@@ -542,8 +549,13 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   const fixed = JSON.parse(JSON.stringify(VOCABULARIES));
   assert.deepEqual(Object.fromEntries(Object.keys(fixed).map((k) => [k, r.vocabularies[k]])), fixed);
   const extra = Object.keys(r.vocabularies).filter((k) => !Object.hasOwn(fixed, k));
-  assert.deepEqual(extra.filter((k) => !R39_KEYS.includes(k)), []);
-  for (const k of extra) assert.deepEqual(Object.keys(r.vocabularies[k]).sort(), ["values", "words"], k);
+  /* R67, R68: `proceeding_kinds` (a list) and `action_kind_labels` (a map) are the profiles' own record data, not
+     `{values, words}` vocabularies */
+  const PROFILE_DATA = { proceeding_kinds: Array.isArray, action_kind_labels: (v) => v && typeof v === "object" && !Array.isArray(v) };
+  for (const [k, isShape] of Object.entries(PROFILE_DATA)) if (extra.includes(k)) assert.ok(isShape(r.vocabularies[k]), k);
+  const words = extra.filter((k) => !Object.hasOwn(PROFILE_DATA, k));
+  assert.deepEqual(words.filter((k) => !R39_KEYS.includes(k)), []);
+  for (const k of words) assert.deepEqual(Object.keys(r.vocabularies[k]).sort(), ["values", "words"], k);
   assert.ok(extra.includes("connection_kinds"), "the plane composes connection owners");
   /* R37: the plane registers the bundled screen registry (plane R19); each is a list, and every script offered starts on
      a registered screen */
@@ -941,17 +953,16 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
-  /* N364: `sourceconsent` is offered beside no bundle and the durable object does not route sources' ops; its machine
-     answer is driven at sources' interface (sources.test.mjs) */
-  const AT_SOURCES = ["sourceconsent",
-    /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
-       their owners' interfaces (t45.test.mjs) */
-    "actionreplybearing", "actionbearingpropose", "actionreplyquoting", "arosefrom", "itemtakeup",
-    /* and action-holds' (composed with them), action-records' T45 acts (actions' until T47's split) and action-clocks'
-       `clockstate`, routed there too */
-    "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",
-    "actionscope", "actionpromise", "clockstate"];
-  const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_SOURCES.includes(k));
+  /* N364, R51: sources', action-replies', plan-work's, action-holds', action-records', filings' and action-clocks' acts
+     are composed by the plane at T45-47 or routed at their owners; their machine answers are driven at their owners'
+     interfaces (sources.test.mjs, t45.test.mjs). The set is read off those owners' own op maps: an act of this module
+     that one of them serves and this table does not drive */
+  const ownerUrl = new URL("http://x/");
+  const ownersOf = [sourcesOps, actionRepliesOps, planWorkOps, actionHoldsOps, actionRecordsOps, filingsOps, actionClocksOps]
+    .flatMap((ops) => Object.keys(ops({}, ownerUrl, {}, {})));
+  const AT_OWNERS = ACTS.map((a) => a.id).filter((k) => ownersOf.includes(k) && !(k in DRIVE));
+  assert.equal(AT_OWNERS.length, 15, "a new act an owner serves, left undriven here, is seen");
+  const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_OWNERS.includes(k));
   assert.deepEqual(objectActs.filter((k) => !(k in DRIVE)), [], "every object-directed act is driven");
   /* the offer side first, before any drive moves an object */
   const leak = [];

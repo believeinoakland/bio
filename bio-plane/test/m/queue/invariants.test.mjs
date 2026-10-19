@@ -22,7 +22,7 @@ test("R36: queue_state purges by case_id; queue_item_mutes and finding_dispositi
   assert.deepEqual([...QUEUE_TABLES], ["queue_state", "queue_item_mutes", "finding_dispositions"]);
   w.bundle("INQ-1", "inquiry");
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('a','INQ-1','x'), ('a','INQ-2','x')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('a','FINDING::x','FINDING',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('a','FINDING::x','FINDING',?)`, iso(NOW));
   w.run(`INSERT INTO finding_dispositions VALUES ('P','F','k','dismissed','r','a',?)`, iso(NOW));
   assert.equal(w.record.purge({ bundleId: "INQ-1" }).scope, "INQ-1");
   assert.deepEqual(w.all(`SELECT case_id FROM queue_state`).map((r) => r.case_id), ["INQ-2"]);
