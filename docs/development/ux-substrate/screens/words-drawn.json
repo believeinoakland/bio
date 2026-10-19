@@ -24713,6 +24713,90 @@
    "en": "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start again from the installer's first page.",
    "protected": false,
    "note": "DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"
+  },
+  {
+   "key": "document.kind.pdf",
+   "en": "PDF",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pdf`"
+  },
+  {
+   "key": "document.kind.docx",
+   "en": "Word document",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `docx`"
+  },
+  {
+   "key": "document.kind.xlsx",
+   "en": "Excel spreadsheet",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `xlsx`"
+  },
+  {
+   "key": "document.kind.pptx",
+   "en": "PowerPoint slide deck",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pptx`"
+  },
+  {
+   "key": "document.kind.odt",
+   "en": "OpenDocument text document",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odt`"
+  },
+  {
+   "key": "document.kind.ods",
+   "en": "OpenDocument spreadsheet",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `ods`"
+  },
+  {
+   "key": "document.kind.odp",
+   "en": "OpenDocument slide deck",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odp`"
+  },
+  {
+   "key": "document.kind.csv",
+   "en": "CSV table",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `csv`"
+  },
+  {
+   "key": "document.kind.jpeg",
+   "en": "JPEG image",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `jpeg`"
+  },
+  {
+   "key": "document.kind.png",
+   "en": "PNG image",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `png`"
+  },
+  {
+   "key": "document.kind.html",
+   "en": "web page",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `html`"
+  },
+  {
+   "key": "document.kind.zip",
+   "en": "ZIP archive",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `zip`"
+  },
+  {
+   "key": "document.kind.text",
+   "en": "plain-text file",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; a text/plain capture, which the registry leaves undetermined"
+  },
+  {
+   "key": "document.kind.undetermined",
+   "en": "file",
+   "protected": false,
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the fallback for a format the registry does not name (\"the file exactly as captured\")"
   }
  ],
  "rewrite": {

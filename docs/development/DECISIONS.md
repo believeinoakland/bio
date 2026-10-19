@@ -5691,3 +5691,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: three rows reworded in place, meaning unchanged. `installer.fleet.why.container`, the fallback for a container fault with no named cause, now reads "this release's description of its container can't be used" (it said "can't be read", which is exactly `.container.parse`'s cause). `installer.team.unrecorded.how.finished` ends "can record it, from that account" (was "set it"), the verb its siblings use. `installer.install.stopped.foreign` ends "then start again from the installer's first page.", as every other `installer.install.stopped.*` row does. Read and kept: `network-notices.level.some_work` "Some work" sits oddly beside Very active, Active, Quiet and Dormant, but it is the level word a team's public notice signs (`network-notices/seals.mjs`), so it is not a display word to reword; `screen.document.a34.kept.noreason` keeps the comma before "by" ("Kept citing the earlier version, by …"), which `.moved` does not need; `screen.install.stopped.plan.done` "Check again" stays beside the containers stop's "It's on now", since a plan change is checked, not switched on. No key added or retired; no drawing, registry or stylesheet changes.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`.
 owed: nothing.
+
+### DEC-368 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B386, from SCREENS-INQUIRY #12 J5; K4103, DEC-366)
+for: design
+question: Which word fills `document.read.original.card`'s {kind} for each format a capture can have, and whether "Beside the version your question cites" is a revision compare.
+why it is Bob's: it is not (P17): the design's words and drawing.
+provisional: as below.
+alternative: one generic word ("file") for every format, weighed and set aside: the card is where a member decides whether to open the original on their device, and knowing it is a spreadsheet or a slide deck tells them which program opens it.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) fourteen rows `document.kind.<format>`, one per format the format registry (`bio-plane/src/formats.mjs`) registers, plus a plain-text capture the registry leaves undetermined and a fallback; each reads mid-sentence after "the": pdf "PDF", docx "Word document", xlsx "Excel spreadsheet", pptx "PowerPoint slide deck", odt "OpenDocument text document", ods "OpenDocument spreadsheet", odp "OpenDocument slide deck", csv "CSV table", jpeg "JPEG image", png "PNG image", html "web page", zip "ZIP archive", text "plain-text file", and `document.kind.undetermined` "file" for any format the registry does not name (so a format registered later reads "the file exactly as captured" until it is given its own row). {size} reads `size.kb|mb|gb` (and `size.small`) as B386 says. (2) Yes: "Beside the version your question cites" sets this copy beside the capture the question's cited leg rests on, both captures of one document, so the revision compare (`revisioncompare`, matched through `bundlehistory`) is what the drawing means (screens-inquiry R81, K4103); `versioncompare` is not it.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.

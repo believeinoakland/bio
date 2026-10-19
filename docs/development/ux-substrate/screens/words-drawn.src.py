@@ -4713,6 +4713,22 @@ W.append(dict(key='installer.fleet.why.pullfailed', en="its software was placed 
 W.append(dict(key='installer.address.offer', en='Your account has no web address prefix yet. The installer can give it a free one, “{prefix}”, which every future program on this account will share. Nothing has been created yet.', protected=False, note='DEC-366 (B383 2a): installer-steps offerSubdomain (F7), shown before anything is created; installer.address.prefix stays the line after it is set'))
 W.append(dict(key='installer.install.stopped.foreign', en="Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start again from the installer's first page.", protected=False, note="DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"))
 
+# DEC-368: B386 (screens-inquiry, document.read.original.card's {kind})
+W.append(dict(key='document.kind.pdf', en='PDF', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `pdf`'))
+W.append(dict(key='document.kind.docx', en='Word document', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `docx`'))
+W.append(dict(key='document.kind.xlsx', en='Excel spreadsheet', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `xlsx`'))
+W.append(dict(key='document.kind.pptx', en='PowerPoint slide deck', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `pptx`'))
+W.append(dict(key='document.kind.odt', en='OpenDocument text document', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `odt`'))
+W.append(dict(key='document.kind.ods', en='OpenDocument spreadsheet', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `ods`'))
+W.append(dict(key='document.kind.odp', en='OpenDocument slide deck', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `odp`'))
+W.append(dict(key='document.kind.csv', en='CSV table', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `csv`'))
+W.append(dict(key='document.kind.jpeg', en='JPEG image', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `jpeg`'))
+W.append(dict(key='document.kind.png', en='PNG image', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `png`'))
+W.append(dict(key='document.kind.html', en='web page', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `html`'))
+W.append(dict(key='document.kind.zip', en='ZIP archive', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the format registry entry `zip`'))
+W.append(dict(key='document.kind.text', en='plain-text file', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; a text/plain capture, which the registry leaves undetermined'))
+W.append(dict(key='document.kind.undetermined', en='file', protected=False, note='DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after "the"; the fallback for a format the registry does not name ("the file exactly as captured")'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
