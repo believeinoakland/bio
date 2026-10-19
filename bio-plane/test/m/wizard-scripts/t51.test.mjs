@@ -19,16 +19,16 @@ const BUILD = fileURLToPath(new URL("../../../src/wizard-scripts/build-data.mjs"
 const sha = (f) => createHash("sha256").update(readFileSync(join(SOURCE_DIR, f), "utf8"), "utf8").digest("hex");
 const run = (...args) => spawnSync(process.execPath, [BUILD, ...args], { encoding: "utf8" });
 
-test("R44 (T51; N1184, N858, N1046; DEC-340, U366; K3935; B2 CHANGE: 20c8001300; amends R41) the registry is re-taken at 20c8001300: SCREEN_REGISTRY_SOURCE names it, with 77 screens and 441 acts (286 declared, 132 function, 23 owed), and build-data.mjs --check passes on the committed files; the library and the front doors stay at their commits; a one-byte change to the registry fails --check", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "20c8001300", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.equal(SOURCES.registry.commit, "20c8001300");
+test("R44 (T51; N1184, N858, N1046; DEC-340, U366; K3935; B2, B6 CHANGEs: 2a64c5ae77; amends R41) the registry is re-taken at 2a64c5ae77: SCREEN_REGISTRY_SOURCE names it, with 77 screens and 441 acts (286 declared, 132 function, 23 owed), and build-data.mjs --check passes on the committed files; the library and the front doors stay at their commits; a one-byte change to the registry fails --check", () => {
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
+  assert.equal(SOURCES.registry.commit, "2a64c5ae77");
   assert.equal(wz.SCREEN_REGISTRY.length, 77);
   const acts = JSON.parse(readFileSync(join(SOURCE_DIR, "registry.json"), "utf8")).screens.flatMap((s) => s.acts);
   const count = (status) => acts.filter((a) => a.status === status).length;
-  assert.deepEqual([acts.length, count("declared"), count("function"), count("owed")], [441, 286, 132, 23]);
+  assert.deepEqual([acts.length, count("declared"), count("function"), count("owed")], [442, 287, 132, 23]);
   assert.equal(wz.SCREEN_REGISTRY.reduce((n, s) => n + s.acts.length, 0), count("declared") + count("function"),
     "registered acts are the declared and function acts; the owed ones wait for their ops");
-  assert.equal(wz.FRONT_DOORS_SOURCE.commit, "20c8001300", "the front doors are unchanged (R41's library)");
+  assert.equal(wz.FRONT_DOORS_SOURCE.commit, "2a64c5ae77", "the front doors are unchanged (R41's library)");
   assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3", "the library's version 1 is unchanged (R22)");
   assert.equal(wz.CIVICSMITH_LIBRARY.length, 23, "no script added by the re-take (DEC-148; no {template} step)");
 
