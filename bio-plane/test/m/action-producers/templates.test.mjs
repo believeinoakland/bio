@@ -74,13 +74,13 @@ test("R7: one OBLIGATION per fact factsDue answers over the paths calendarFactsR
     { path: TZ, actions: [{ action: "ACT-3", project: null, created_by: "token:member" }] }];
   const status = {
     [H25]: { path: H25, fact: { profile: "p", fact: "holidays", year: 2025 }, status: "unconfirmed", due: true,
-             why: "no member has confirmed it; the year is due from 2024-11-01", latest: null, due_from: "2024-11-01" },
+             why: word("local-facts.why.member_confirmed", { due_why: "; the year is due from 2024-11-01" }), latest: null, due_from: "2024-11-01" },
     [H26]: { path: H26, fact: { profile: "p", fact: "holidays", year: 2026 }, status: "disputed", due: true,
              why: "disputed by bob, 2026-08-30", latest: { act: "dispute", by: "bob", at: iso(NOW - 2 * DAY), how: "called" } },
     [HRS]: { path: HRS, fact: { profile: "p", fact: "hours" }, status: "unconfirmed", due: true, why: "the confirmation lapsed",
              latest: { act: "confirm", by: "alice", at: "2025-01-02T00:00:00Z", how: "page" },
              lapsed: { act: "confirm", by: "alice", at: "2025-01-02T00:00:00Z", how: "page" }, lapses_on: "2026-08-29" },
-    [TZ]: { path: TZ, fact: { profile: "p", fact: "time_zone" }, status: "unconfirmed", due: true, why: "no member has confirmed it",
+    [TZ]: { path: TZ, fact: { profile: "p", fact: "time_zone" }, status: "unconfirmed", due: true, why: word("local-facts.why.member_confirmed", { due_why: "" }),
             latest: null } };
   const w = people({
     actionClocks: { calendarFactsRead: (a) => { reads.push(["calendar", a]); return { ok: true, as_of: "2026-09-01", paths, actions_limit: 500, truncated: false }; } },

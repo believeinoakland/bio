@@ -7,7 +7,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
-import { ACTION_WORDS, WORDS_CANON } from "../../../src/action-producers/index.mjs";
+import { ACTION_KEYS, WORDS_CANON } from "../../../src/action-producers/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { WORD, FILLED } from "./words.mjs";
 
 /* ada an administrator; alice, bob, carl members; olga owns PRJ-1 (alice, bob, carl joined); PRJ-2 owned by olga too;
@@ -89,8 +90,8 @@ test("R1 (T45; v0.2 rule 6), R23: the words by basis, read by key: the addressee
   const m = byId(w.read("alice"));
   const at = (n) => m[`CONDITION::action-clock-overdue::ACT-1::${n}`];
   assert.equal(at(0).summary_key, "queue.action-clock-overdue.noreply");
-  assert.equal(at(0).summary, "Noticed: no reply recorded by 25 August", "canon's own words (v0.2 rule 6), unchanged (R23)");
-  assert.equal(ACTION_WORDS["queue.action-clock-overdue.noreply"], "Noticed: no reply recorded by {date}");
+  assert.equal(at(0).summary, localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 25" }),
+    "canon's own words (v0.2 rule 6), unchanged (R23)");
   assert.deepEqual([...WORDS_CANON], ["queue.action-clock-overdue.noreply"], "the one key held apart from words.json, named");
   assert.equal(at(1).summary_key, "queue.action-clock-overdue.noreply", "an entry whose owner is not stated reads as canon's question");
   /* R23: the group's own date and the other side's stated date, each its key's words filled, never a copy */
@@ -100,7 +101,7 @@ test("R1 (T45; v0.2 rule 6), R23: the words by basis, read by key: the addressee
   assert.equal(at(3).summary_key, "queue.action-clock-overdue.theirs.summary");
   assert.equal(at(3).summary, FILLED("queue.action-clock-overdue.theirs.summary", { what: "their date" }));
   /* control: the interim keys are gone, and canon's question is no other key's sentence */
-  assert.equal(ACTION_WORDS["queue.action-clock-overdue.ours"], undefined);
+  assert.equal(ACTION_KEYS.includes("queue.action-clock-overdue.ours"), false);
   assert.notEqual(at(0).summary, at(2).summary);
   /* the kept details answer no detail_key (R23: returned to BOB) */
   for (const n of [0, 1, 2, 3]) assert.equal("detail_key" in at(n), false, at(n).id);
