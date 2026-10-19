@@ -39,7 +39,7 @@
 ## B4 handled (SCREENS-DAILY #9)
 - (2c) applied with tests: the cite state's words `screen.finder.cite.*` (legend, support, against, cited, newly_against, set_changed, added_since, gone_since, back, back.help; the set moved is compared with the set held when the state opened, `citeHeld`); `screen.finder.pick`, `.pickfirst` already used; resolved rows are their title alone; `queue.answered.forwarded.unnamed`; the 20 new `queue.feed.<id>` names (`sources` keeps its own sentence, `queue.allclear.failed`); `queue.multi.why.check` for an item of kind `check`, `.why.letter` for `filingapprove`.
 - (2a) the "Search projects" button is gone (and its word); the field redraws on `change` until the kit narrows as typed.
-- (2b) NOT drawn yet: `<div class="tw">` around Find's table makes the shell refuse every screen at boot (served stylesheet defines no `tw`, interface-shell's class check) until interface-assets takes the class; do it on the CHANGE that carries it.
+- (2b) drawn once interface-assets carried `.tw` (B5): Find's table sits in `<div class="tw">`.
 
 ## J1 · BLOCKED
 

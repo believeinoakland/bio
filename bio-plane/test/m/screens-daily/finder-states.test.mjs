@@ -29,6 +29,7 @@ test("R55: Show as offers the list or one table; the table is read with no kinds
   await choose(p, "finder-view", "table");
   const rq = last(p, "browse").query;
   assert.deepEqual([rq.kinds, rq.only], [undefined, undefined], "the whole record");
+  assert.ok(main(p).querySelector(".tw table"), "B4 (2b): the table is drawn inside the design's scroll wrapper");
   assert.ok(text(p).includes(word("screen.finder.table.intro")) && text(p).includes(word("screen.finder.table.sorting")));
   assert.ok(text(p).includes(word("screen.finder.table.count.other", { n: "7", m: "1" })));
   assert.deepEqual(main(p).querySelectorAll("th").map((h) => h.textContent), ["item", "kind", "state", "updated"].map((c) => word(`column.finder.${c}.name`)));

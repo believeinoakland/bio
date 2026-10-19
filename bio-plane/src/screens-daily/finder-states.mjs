@@ -68,7 +68,7 @@ export function finderStates() {
         + cs.esc(String(it.last_changed || "")) + '">' + (it.last_changed ? cs.date(String(it.last_changed)) : "") + "</td></tr>";
     }).join("");
     return '<p class="mk-small">' + cs.w("screen.finder.table.intro") + '</p><p class="mk-small"><b>' + count + "</b></p>"
-      + '<table class="mk-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table>"
+      + '<div class="tw"><table class="mk-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table></div>"
       + '<p class="mk-note">' + cs.w("screen.finder.table.sorting") + "</p>"
       + (browse.truncated && browse.next ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">' + cs.act("search", { label: "find.browse.showmore", data: { more: String(browse.next) } }) + "</span>" : "");
   };
