@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V, MACHINE, received } from "./fixture.mjs";
 import * as holds from "../../../src/action-holds/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a";
@@ -56,11 +57,10 @@ test("R15 C-149.10 MACHINE_CANNOT_SEND reads words.json's refusal.MACHINE_CANNOT
 test("R15 C-149.11 HOLD_NOT_IN_PLACE and C-149.8 HOLD_PLACE_REFUSED keep their present translations, not words.json's; no other row's check, where or translation moved", () => {
   const rows = holds.ACTION_HOLDS_CHECKS;
   const KEPT_WORDS = {
-    HOLD_NOT_IN_PLACE: ["C-149.11", "holdNotInPlace > is-hold-not-in-place", "A hold notice is recorded for a hold that is in "
-      + "place, and the hold at this place is not: none has been placed, or it was released. Nothing was written."],
-    HOLD_PLACE_REFUSED: ["C-149.8", "#placeOf > is-hold-place", "A litigation hold is placed at one place: an action, one "
-      + "entry of an action named by its position, or a project. This named more than one, or an entry that is not there, "
-      + "so nothing was written."],
+    HOLD_NOT_IN_PLACE: ["C-149.11", "holdNotInPlace > is-hold-not-in-place",
+      localize("action-holds.checks.a_hold_notice_is_recorded", "A hold notice is recorded for a hold that is in place, and the hold at this place is not: none has been placed, or it was released. Nothing was written.")],
+    HOLD_PLACE_REFUSED: ["C-149.8", "#placeOf > is-hold-place",
+      localize("action-holds.checks.a_litigation_hold_is_placed", "A litigation hold is placed at one place: an action, one entry of an action named by its position, or a project. This named more than one, or an entry that is not there, so nothing was written.")],
   };
   for (const [code, [check, region, translation]] of Object.entries(KEPT_WORDS)) {
     assert.deepEqual([rows[code].check, rows[code].where, rows[code].translation],
