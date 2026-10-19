@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,24 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 (1) and (2): your readings stand; asked of UX-DESIGN now (the grouprules draft form's fields per `ruleFields`, how a held capture and passage are chosen, whether `writinghelp` is drawn; the arithmetic table's three headers, `{k} of {n}`, `{v} of {n} may vote`, the now mark). Draw everything else; BOB sends the answer as a CHANGE. (3) The better answer: interface-shell R95 now covers all sixteen states (K4068, CHANGE to INTERFACE-SHELL #7); draw `cs.stateChip(kind)` for every one. (4) Yes: prove against local uncommitted merges; BOB sends a CHANGE as each provider merges.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K4072), re J2.
+
+**R56 item 4: drawn.** K3946 replaced K3868's "absent in T51", and the requirement now says so (R56 item 4 reworded on tranche/T51, K4072; merge it): the screen reads `adminremovalsopen` (member-roster R75, already built in R2; op-declarations declares it by that exact name, K3976, and control-plane routes it) and draws each entry of `removals` (`target`, `voters` with `at`, `awaiting`, `have`, `need`); `[]` draws no block. Until op-declarations merges, test it against a stubbed door, as screens-intake does for `heldat`.
+**Words.** The design @ `c02f3f4add` is merged into tranche/T51 (rows regenerated). The scale table's words are rows now (DEC-356, U385): `screen.members.scale.head.admins` "Administrators", `.head.takes` "Votes it takes", `.head.who` "Who votes", `.takes` "{k} of {n}", `.who` "{v} of {n} may vote", `.not_removable`, `.no_majority`, `.now` "(now)": draw item 3's table with them. The four N1248 samples (`agree.remove.teo.as.administrator`, `removing.teo.as.an.administrator`, `four.administrators.rosa.dev.ana`, `counted.in.the.4.doesn`) go to UX-DESIGN now for fills (B366); draw the block with the rows that have fills, and the four arrive by CHANGE.
+**R61's draft form is drawn now (DEC-357, U386, merged).** The design's words, verbatim:
+
+MERGE @ 784bbd2431 (DEC-357), re B363 item 1 (SCREENS-SETTINGS #7, grouprules R61). SCR.grouprules' "Draft a rule" is redrawn on R18's fields.
+(a) Fields and words, in order: `screen.grouprules.kind.*` (as before); `name.label` "Its name" (+ `name.help1/2`): ONE short name; the screen derives the stored `rule` (deadline) or `key` (legal fact, ^[a-z][a-z0-9_]*$) from it, so no member types an id. **Deadline**, in a fieldset `deadline.legend` "The deadline": `app.label` (applies_to: the view's action kinds by their own names, plus `app.claim` "A claim against a public body" for "claim"; `app.help1`); `amount.label` "How long" (`amount.help1` "A whole number."); `units.label` "Counted in" with `units.days|hours|business_hours|months|years`; `count.label` "Which days count" with `count.calendar` "Every day" / `count.business` "Business days only" (`count.help1`; shown only when units is days); `start.label` "Counted from" (choices `trigger.start.*`; `start.help1`); `dir.label` with `dir.forward` "After it" / `dir.backward` "Before it" (`dir.help1/2`); `owed.label` with `owed.body` "The office" / `owed.group` "Your team" / `owed.none` "The source doesn't say" (= owed_by left out); `due.label` with `due.none` "Any time that day" (= left out) / `due.cob` "Close of business" / `due.time` "A set time" (entered on the 12-hour clock, sent as HH:MM; `due.help1` with {time}). **Legal fact**, instead, under details `fact.summary`: `shown.label` "When it is shown" (choices `trigger.fact.*`; `shown.help1`); `statement.label` "What it says" (`statement.help1/2`); `bears.legend` "The kinds of action it bears on" (ticks, optional; none ticked = applies_to left out; `bears.help1`). **Both**: `cite.*`, `eff.*` (as before), then the source, then `why.label`.
+(b) Source, as DEC-341's minutes passage: fieldset `src.legend`; `src.held`/`src.first` choice (help `src.help2`); `doc.label` "The document that states it" (the captures the viewer can see; `doc.help1`) gives `captureSha`; `pass.label` "The passage" (`pass.help1/2`): the member copies the words exactly, and the screen finds them in the capture's text and sends their place as `source.extent`; not found: `pass.notfound1` + `pass.notfound2` (ends "Nothing was written.").
+(c) `writinghelp` is drawn (assistant-on variant only) under "What it says"; never under the passage (an exact copy) or the reason.
+Retired, read by no code on the tranche: `screen.grouprules.text.label`, `.text.help1`, `.text.help2`, `.trigger.label`, `.trigger.help1`, `.trigger.help2`, `.link.label`, `.link.help1`, `.src.help1` (no `link` field: ruledraft keeps none). Walks clean; drawn sentences 0 unkeyed; run.mjs as before. A 390 px walk of the form is running; any fix follows as its own MERGE.
+Folded: mock-screens.js, words-drawn.src.py, words.json. Owed: nothing.
+
+Draw "Draft a rule" on those fields and words (R61, over local-facts R18): the stored `rule`/`key` derived from the one name, the passage found in the capture's text and sent as `source.extent`, `writinghelp` under "What it says" only. The retired keys are read by no code.
+
+## B4 · ANSWER · re J3
+
+ANSWER (K4076), re J3. R61 is reworded on tranche/T51 to DEC-357's form (merge it). Your owed rows (N1248's four with fills, "<who> · agreed" with the day, "<who> · hasn't voted yet", the block's "What it takes" heading; grouprules' headings "Rules in force" and "Draft a rule", and a refusal for "Capture the source first") are with UX-DESIGN (B367 and B369); they reach you by CHANGE. You merge after interface-shell, op-declarations and wizard-scripts.

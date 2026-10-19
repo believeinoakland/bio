@@ -1888,133 +1888,140 @@
       "en": "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never stored. It goes to the member who last took it up, else the member who set the scenario's current version, each while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when a member judges it or closes the plan.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 667
+      "line": 669
     },
     {
       "id": "action-producers.index.a_fact_due_is_local",
       "en": "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are action-clocks' (its R11). It goes to the members who created those actions while active members who may see them, else their projects' active owners, else the administrators, and is raised once per fact and status.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1016
+      "line": 1018
     },
     {
       "id": "action-producers.index.a_legal_mark_on_a",
       "en": "a legal mark on a docket entry with no hold placed from it is action-holds' fact (its R3, over docket R27), read here and never stored. It goes to every administrator, and to whoever marked it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the mark (action-holds R2).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 820
+      "line": 822
     },
     {
       "id": "action-producers.index.a_legal_pressure_mark_with",
       "en": "a legal pressure mark with no hold stated is action-holds' fact (its R2, R3), read here and never stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), and leaves when any member states a hold on that mark: in place (its R2) or released (its R5).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 806
+      "line": 808
     },
     {
       "id": "action-producers.index.a_legal_pressure_record_with",
       "en": "a legal pressure record with no hold placed from it is action-holds' fact (its R3, R12), read here and never stored. It goes to every administrator and to the member who recorded it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the record (action-holds R2).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 833
+      "line": 835
     },
     {
       "id": "action-producers.index.a_passed_date_is_action",
       "en": "a passed date is action-clocks' fact (its R3): a stored status, or a pending entry dated before the action's local day (`local_day`), its basis kind as `basis_of` names it; a pending entry of an action whose zone is not held is left out and counted (`zone_undetermined`). It goes to the member who last took the entry up, else the member who created the action, each while an active member who may see it, else the project's active owners, else the administrators, and is raised once: nothing here repeats it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 614
+      "line": 616
     },
     {
       "id": "action-producers.index.a_paused_plans_day_to",
       "en": "a paused plan's day to look again is action-plans' (its R40), told once. It goes to the member who paused it while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when the plan is resumed or closed.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1475
+      "line": 1477
     },
     {
       "id": "action-producers.index.a_proposed_stage_is_escalations",
       "en": "a proposed stage is escalation's (its R16): its trigger met by the record, dated by the record's own instant and never by this read. It goes to the member who last took the escalation up, else the member who opened it, each while an active member who may see it, else the project's active owners, else the administrators.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 709
+      "line": 711
     },
     {
       "id": "action-producers.index.a_release_that_ended_a",
       "en": "a release that ended a hold in place is action-holds' fact (its R5, R8), read here and never stored. It is told to every administrator and to each member who placed the hold (DEC-113), once (DEC-69, DEC-70), and leaves when its recipient disposes of it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 894
+      "line": 896
     },
     {
       "id": "action-producers.index.a_reminder_is_the_members",
       "en": "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has come (its R5): it goes to the member who set it, while she is an active member who may see the action, and to nobody else, and it leaves when that member answers it (its R6) or the entry or the action no longer calls for it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 754
+      "line": 756
     },
     {
       "id": "action-producers.index.a_review_asked_for_is",
       "en": "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a version in review who has not reviewed its present text. It goes to that member and to nobody else, and is raised once (DEC-69, DEC-94).",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 945
+      "line": 947
     },
     {
       "id": "action-producers.index.a_review_come_due_is",
       "en": "a review come due is plan-work's (its R4): a member-set rhythm reached a day with no review entry since. It goes to the member who set the rhythm while an active member who may see the plan, else the project's active owners, else the administrators, and is raised once per day.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1332
+      "line": 1334
     },
     {
       "id": "action-producers.index.a_watchs_once_only_question",
       "en": "a watch's once-only question is following's (its R24): due when the plan closes or every promise its matters adopted reads met, to the link's author while an active member who may see the plan, else the project's active owners, else the administrators (a standing question's to its author alone). It is raised once and leaves when the link is answered or its watch ends.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1267
+      "line": 1269
     },
     {
       "id": "action-producers.index.an_approved_draft_or_communication",
       "en": "an approved draft or communication not recorded sent is filings' fact (its R53), read here and never stored. It goes to the member who approved it, else the member who created the action, each while an active member who may see it, else the project's active owners. It leaves when the sending is recorded, or the action is dropped or resolved; nothing here repeats it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1425
+      "line": 1427
     },
     {
       "id": "action-producers.index.an_entry_on_this_cases",
       "en": "an entry on this case's docket was marked as a legal threat{said}. Record that the team is preserving what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is stated on the mark.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 818
+      "line": 820
     },
     {
       "id": "action-producers.index.the_hold_on_a_legal",
       "en": "the hold on a legal threat recorded on this action (position {ord}) was released{v1}. {v2} This is told once, to the administrators and to whoever placed the hold.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 887
+      "line": 889
     },
     {
       "id": "action-producers.index.the_rhythm_a_member_set",
       "en": "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. Open the review to see what changed, and record what the members decided. You are reminded only because the team asked for it.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1315
+      "line": 1317
     },
     {
       "id": "action-producers.index.whether_a_member_is_still",
       "en": "whether a member is still here is membership's (its R68, R74); which items routed to her is the latest take-up (plan-work R11), else who created or set the item. The list holds only items you may see, and is told to the project's active owners, else the administrators, once.",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1194
+      "line": 1196
     },
     {
       "id": "action-producers.index.words_and_more_more",
       "en": "{words}; and {more} more",
       "module": "action-producers",
       "file": "bio-plane/src/action-producers/index.mjs",
-      "line": 1213
+      "line": 1215
+    },
+    {
+      "id": "action-producers.words.noreply_canon",
+      "en": "Noticed: no reply recorded by {date}",
+      "module": "action-producers",
+      "file": "bio-plane/src/action-producers/words.mjs",
+      "line": 57
     },
     {
       "id": "action-records.index.a_question_is_opened_from",
@@ -12774,13 +12781,6 @@
       "module": "case-grammar",
       "file": "bio-plane/src/case-grammar/casefile.mjs",
       "line": 192
-    },
-    {
-      "id": "case-grammar.casefile.group",
-      "en": "the source group is named by its slug, and this manifest states {value}",
-      "module": "case-grammar",
-      "file": "bio-plane/src/case-grammar/casefile.mjs",
-      "line": 194
     },
     {
       "id": "case-grammar.casefile.input-sha",
@@ -32408,91 +32408,161 @@
       "en": "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 851
+      "line": 842
     },
     {
       "id": "machinery-producers.index.a_sweeps_status_is_link",
       "en": "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 970
+      "line": 961
     },
     {
       "id": "machinery-producers.index.a_working_on_notices_state",
       "en": "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1019
+      "line": 1010
     },
     {
       "id": "machinery-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 652
+      "line": 647
+    },
+    {
+      "id": "machinery-producers.index.cooloff_no_refusal_instant",
+      "en": "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 359
+    },
+    {
+      "id": "machinery-producers.index.eligibility_is_captures_rule",
+      "en": "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 724
+    },
+    {
+      "id": "machinery-producers.index.failing_run_no_first_failure",
+      "en": "the failing run carries no first-failure instant this producer can read",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 728
     },
     {
       "id": "machinery-producers.index.it_was_due_at_due",
       "en": "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 767
+      "line": 758
     },
     {
       "id": "machinery-producers.index.its_last_n_runs_each",
       "en": "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 925
+      "line": 916
     },
     {
       "id": "machinery-producers.index.its_last_run_filed_n",
       "en": "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 914
+      "line": 905
+    },
+    {
+      "id": "machinery-producers.index.machine_writer_is_named",
+      "en": "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 561
+    },
+    {
+      "id": "machinery-producers.index.manifest_created_unreadable",
+      "en": "the manifest entry carries a created stamp this producer cannot read as an instant",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 565
     },
     {
       "id": "machinery-producers.index.n_of_its_captures_are",
       "en": "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 911
+      "line": 902
     },
     {
       "id": "machinery-producers.index.no_instance_key_was_bound",
       "en": "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1042
+      "line": 1033
     },
     {
       "id": "machinery-producers.index.no_interval_can_be_derived",
       "en": "no interval can be derived for it ({v1}), so no check is scheduled.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 768
+      "line": 759
     },
     {
       "id": "machinery-producers.index.on_its_last_run_these",
       "en": "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 917
+      "line": 908
+    },
+    {
+      "id": "machinery-producers.index.our_own_attempts_at",
+      "en": "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 720
+    },
+    {
+      "id": "machinery-producers.index.request_completion_unreadable",
+      "en": "the request row carries a completion stamp this producer cannot read as an instant",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 651
+    },
+    {
+      "id": "machinery-producers.index.request_stamp_unreadable",
+      "en": "the request row carries a request stamp this producer cannot read as an instant",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 846
+    },
+    {
+      "id": "machinery-producers.index.session_created_unreadable",
+      "en": "the session row carries a created stamp this producer cannot read as an instant",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 430
+    },
+    {
+      "id": "machinery-producers.index.sweep_status_no_instant",
+      "en": "the sweep's status carries no instant this producer can read",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 965
     },
     {
       "id": "machinery-producers.index.the_ledger_is_scratch_and",
       "en": "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 427
+      "line": 426
     },
     {
       "id": "machinery-producers.index.the_notice_has_been_dormant",
       "en": "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1052
+      "line": 1043
     },
     {
       "id": "machinery-producers.index.the_per_host_governor_is",
@@ -32506,42 +32576,49 @@
       "en": "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 772
+      "line": 763
     },
     {
       "id": "machinery-producers.index.the_primary_document_is_captured",
       "en": "the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick {ticks}, expires {expires}).",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 420
+      "line": 419
     },
     {
       "id": "machinery-producers.index.the_to_do_is_derived",
       "en": "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1163
+      "line": 1154
+    },
+    {
+      "id": "machinery-producers.index.unscheduled_no_instant",
+      "en": "an unscheduled address has no instant it fell due",
+      "module": "machinery-producers",
+      "file": "bio-plane/src/machinery-producers/index.mjs",
+      "line": 767
     },
     {
       "id": "machinery-producers.index.words_the_request_expired_at",
       "en": "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 842
+      "line": 833
     },
     {
       "id": "machinery-producers.index.words_the_request_is_held",
       "en": "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 843
+      "line": 834
     },
     {
       "id": "machinery-producers.index.your_teams_civicsmith_signed_the",
       "en": "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1068
+      "line": 1059
     },
     {
       "id": "member-roster.index.a_cover_is_the_label_you",
@@ -34207,7 +34284,14 @@
       "en": "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with its writer's handle, naming no project unless its writer did.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1237
+      "line": 1235
+    },
+    {
+      "id": "notice-producers.index.a_dated_wait_is_inquirys",
+      "en": "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the member who set it and to nobody else, and leaves when they look, re-date or remove it, or the question concludes.",
+      "module": "notice-producers",
+      "file": "bio-plane/src/notice-producers/index.mjs",
+      "line": 720
     },
     {
       "id": "notice-producers.index.a_detectors_result_is_money",
@@ -34221,70 +34305,70 @@
       "en": "a difference between two captures of a policy's published copy (following R21), never a finding of the record and never what the change means; it leaves when an amendment is held for it or its recipient disposes of it.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 872
+      "line": 871
     },
     {
       "id": "notice-producers.index.a_find_is_the_systems",
       "en": "a find is the system's work (question-explorer R5), offered once to each of the question's recipients who may see it; it is not evidence until a member takes it in.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1162
+      "line": 1160
     },
     {
       "id": "notice-producers.index.a_later_arrival_is_steps",
       "en": "a later arrival is steps' (its R23): told once to each recipient of a referring question who may see the step and what arrived, and to the member who did the step; no outcome moves by itself.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1183
+      "line": 1181
     },
     {
       "id": "notice-producers.index.a_limit_first_reached_in",
       "en": "a limit first reached in its current period is ai-use's (its R5), answered to that account's owners; it is told once a period, and names no member.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1068
+      "line": 1066
     },
     {
       "id": "notice-producers.index.a_milestone_overdue_is_investigations",
       "en": "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder to the member who asked, on its day, and to nobody else.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1255
+      "line": 1253
     },
     {
       "id": "notice-producers.index.a_projects_sign_in_account",
       "en": "a project's sign-in account serves only while the project has one member (ai-accounts R13); answered to the project's owners, naming no member.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1093
+      "line": 1091
     },
     {
       "id": "notice-producers.index.a_quiet_spell_is_investigations",
       "en": "a quiet spell is investigation's (its R18): told once per spell to the project's joined participants; no member act declares the objective met.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1276
+      "line": 1274
     },
     {
       "id": "notice-producers.index.a_reviewers_comments_left_out",
       "en": "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may file a response in the case's docket.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1291
+      "line": 1289
     },
     {
       "id": "notice-producers.index.a_scanners_found_note_file",
       "en": "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a hold the built-in scanner alone placed (its R18) open it again.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 935
+      "line": 934
     },
     {
       "id": "notice-producers.index.a_shared_cost_is_steps",
       "en": "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never when any of them is hidden; told once per step, totals and project set.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1221
+      "line": 1219
     },
     {
       "id": "notice-producers.index.a_standing_questions_run_is",
@@ -34298,21 +34382,28 @@
       "en": "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or asked for the reminder, and to nobody else.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1201
+      "line": 1199
     },
     {
       "id": "notice-producers.index.a_tool_answering_private_mode",
       "en": "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again only once an administrator's test passes (its R29).",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 988
+      "line": 987
     },
     {
       "id": "notice-producers.index.a_watched_items_last_change",
       "en": "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch mark was set (following R35); told once per change, to her alone, and it says nothing of what changed.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 1368
+      "line": 1366
+    },
+    {
+      "id": "notice-producers.index.an_accounts_ask_is_ai_uses",
+      "en": "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; silence means no.",
+      "module": "notice-producers",
+      "file": "bio-plane/src/notice-producers/index.mjs",
+      "line": 1023
     },
     {
       "id": "notice-producers.index.an_interest_checks_result_is",
@@ -34336,11 +34427,11 @@
       "line": 504
     },
     {
-      "id": "notice-producers.index.the_security_level_of_your",
-      "en": "The security level of your team's Civicsmith has been High since {from}, and in that time {got}.",
+      "id": "notice-producers.index.the_level_is_credentials",
+      "en": "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.",
       "module": "notice-producers",
       "file": "bio-plane/src/notice-producers/index.mjs",
-      "line": 755
+      "line": 760
     },
     {
       "id": "observation-log.index.a_container_has_no_arm",
@@ -42575,13 +42666,6 @@
       "line": 1994
     },
     {
-      "id": "skills.skilldoctrine.a_member_takes_every_act",
-      "en": "A member takes every act that commits the group: declaring a standard, determining, assessing a consequence or a success, choosing an option, approving, sending, advancing or stopping a stage, resolving, closing.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 668
-    },
-    {
       "id": "skills.skilldoctrine.a_new_kind_of_ai",
       "en": "a new kind of AI work inside the existing AI parts: the assistant's interview, turning a member's words into proposed questions and steps, and turning remembered claims into \"find the record\" steps.",
       "module": "skills",
@@ -42624,13 +42708,6 @@
       "line": 673
     },
     {
-      "id": "skills.skilldoctrine.a_procedure_guide_lists_the",
-      "en": "a procedure guide lists the routes the profile or the group knows for one kind of action, in its order and unranked, with the replies to expect and each route's citation; it is legal information, not legal advice, and never how the AI may behave: the AI's rules of conduct come only from the rules Bob approves, no guide can loosen them, and code checks that none does.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1752
-    },
-    {
       "id": "skills.skilldoctrine.a_project_may_declare_the",
       "en": "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the assistant suggests and nothing else.",
       "module": "skills",
@@ -42645,13 +42722,6 @@
       "line": 1039
     },
     {
-      "id": "skills.skilldoctrine.a_sentence_that_asserts_a",
-      "en": "A sentence that asserts a breach as the group's finding needs a live noncompliant determination.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 675
-    },
-    {
       "id": "skills.skilldoctrine.a_sentence_the_evidence_does",
       "en": "A sentence the evidence does not support is flagged: she ties it to evidence or removes it.",
       "module": "skills",
@@ -42664,13 +42734,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1854
-    },
-    {
-      "id": "skills.skilldoctrine.a_version_may_be_written",
-      "en": "A version may be written for a particular audience (the violating party, the group's members, an oversight office, the public) or broadly for all.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 750
     },
     {
       "id": "skills.skilldoctrine.a_word_keeps_its_key",
@@ -42692,13 +42755,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 693
-    },
-    {
-      "id": "skills.skilldoctrine.administrators_or_members_given_the",
-      "en": "Administrators, or members given the grant, have a translation workspace listing every interface word beside the group's language, gaps marked; the assistant drafts the missing ones as labelled drafts, a member who knows the language checks and adopts each, and without the assistant members type them.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1441
     },
     {
       "id": "skills.skilldoctrine.an_action_about_a_persons",
@@ -42785,32 +42841,11 @@
       "line": 1037
     },
     {
-      "id": "skills.skilldoctrine.civicsmith_takes_no_position_on",
-      "en": "Civicsmith takes no position on what policy should be, and does not rule on policy even when members or groups do.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 702
-    },
-    {
-      "id": "skills.skilldoctrine.claims_about_a_body_rest",
-      "en": "Claims about a body rest on findings of the three kinds in §3 or on the group's own dated correspondence; statements about what the group itself is doing need neither.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 682
-    },
-    {
       "id": "skills.skilldoctrine.connectedness_is_a_property_of",
       "en": "Connectedness is a property of the drawing, not evidence. Where BIO must draw edges, the grade travels with the edge and an ungraded edge renders as undetermined, not as a thinner line that reads as weaker-but-real.",
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 544
-    },
-    {
-      "id": "skills.skilldoctrine.counsel_may_be_briefed_at",
-      "en": "Counsel may be briefed at any stage, for a claim or for the group's defence, without a determination",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 724
     },
     {
       "id": "skills.skilldoctrine.d_82_a_derived_thing",
@@ -42881,13 +42916,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1449
-    },
-    {
-      "id": "skills.skilldoctrine.every_plan_for_an_infraction",
-      "en": "Every plan for an infraction also offers the violating party the chance to fix and remediate: a notice saying what correcting the act and remedying its harm would look like, with the law's period or a time the group sets.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 752
     },
     {
       "id": "skills.skilldoctrine.every_sentence_is_tied_to",
@@ -43079,13 +43107,6 @@
       "line": 542
     },
     {
-      "id": "skills.skilldoctrine.no_fact_and_no_rule",
-      "en": "No fact and no rule from the model's knowledge; every rule from the plane (system rules from affordances, the group's rules from its reads, jurisdiction rules from the profile, law's text from `standards`); \"not held\" at its level, with the act that would find it; quotes beside every summary",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1118
-    },
-    {
       "id": "skills.skilldoctrine.no_field_holds_significance_severity",
       "en": "No field holds significance, severity, priority or a score.",
       "module": "skills",
@@ -43105,13 +43126,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1805
-    },
-    {
-      "id": "skills.skilldoctrine.no_reading_guide_was_passed",
-      "en": "no reading guide was passed to this render: a guide is the group's or Civicsmith's, read for the kind of document a run reads by the run's caller, and with none this layer carries nothing to read for.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1968
     },
     {
       "id": "skills.skilldoctrine.no_significance_no_score",
@@ -43154,13 +43168,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1855
-    },
-    {
-      "id": "skills.skilldoctrine.outward_acts_are_classed_by",
-      "en": "Outward acts are classed by what their text does: asking an office to examine something, seeking evidence (a records request, a request for comment), and enforcing the group's own request on its own dated record are never held back.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 674
     },
     {
       "id": "skills.skilldoctrine.partners_on_a_joint_action",
@@ -43303,13 +43310,6 @@
       "line": 530
     },
     {
-      "id": "skills.skilldoctrine.suggested_options_come_from_reasoning",
-      "en": "Suggested options come from reasoning over the matter, the routes the profile's guides list and the group's own earlier plans, never from a fixed catalogue; the plan holds no costs, assignees or hours (members take up work themselves, rule 20).",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 691
-    },
-    {
       "id": "skills.skilldoctrine.sweep_1_3_a_grade",
       "en": "SWEEP §1.3: a grade asserted rather than earned is forbidden by the ASSISTANT construct, DEC-18 makes an ungraded leg inert and NAMED, and DEC-15 makes a hunch a member act. A machine-composed leg is therefore never a hunch — it either carries a grade the record earned or it is absent-and-named — and a hunch is unreachable to it because a hunch carries the name and the date of the member declaring it, which no automated credential has to give.",
       "module": "skills",
@@ -43371,13 +43371,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 2016
-    },
-    {
-      "id": "skills.skilldoctrine.the_ai_may_read_a",
-      "en": "The AI may read a document the group holds a few pages at a time, within a reading limit, and never one under a \"no AI\" limit.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1830
     },
     {
       "id": "skills.skilldoctrine.the_answers_are_narrative_8",
@@ -43485,32 +43478,11 @@
       "line": 613
     },
     {
-      "id": "skills.skilldoctrine.the_fixed_terms_the_grades",
-      "en": "the fixed terms (the grades, \"Undetermined\", the queue's kinds, the acts' names) each carry a note on what they mean, so every language says the same thing; renaming words within a language stays out (option A), so cases read the same from group to group.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1453
-    },
-    {
       "id": "skills.skilldoctrine.the_gate_is_at_the",
       "en": "The gate is at the outward act, not the reasoning, and a member may pass it openly on stated grounds.",
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 671
-    },
-    {
-      "id": "skills.skilldoctrine.the_groups_own_local_words",
-      "en": "the group's own local words are its to translate as ordinary words.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1435
-    },
-    {
-      "id": "skills.skilldoctrine.the_groups_own_writing_notes",
-      "en": "The group's own writing (notes, questions, findings, notices) can be read in a member's language on request: the assistant drafts the translation, labelled \"Machine translation · original in English\", with the original one tap away; it never replaces the original.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1640
     },
     {
       "id": "skills.skilldoctrine.the_instance_transmits_nothing",
@@ -43618,13 +43590,6 @@
       "line": 843
     },
     {
-      "id": "skills.skilldoctrine.the_planes_published_catalogue_holds_10",
-      "en": "the plane's published catalogue holds no {id} act, the one act through which a member asks to read the group's own writing in her language, so this layer carries no doctrine for work no draft can do.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1674
-    },
-    {
       "id": "skills.skilldoctrine.the_planes_published_catalogue_holds_2",
       "en": "the plane's published catalogue holds no {FILING_TEMPLATE_ACT} act, the one act a run proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.",
       "module": "skills",
@@ -43658,13 +43623,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1379
-    },
-    {
-      "id": "skills.skilldoctrine.the_planes_published_catalogue_holds_7",
-      "en": "the plane's published catalogue holds no {INTERFACE_TRANSLATION_ACT} act, the one act a run drafts the interface words a group's language lacks through, so this layer carries no doctrine for work no run can do.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1508
     },
     {
       "id": "skills.skilldoctrine.the_planes_published_catalogue_holds_8",
@@ -43702,13 +43660,6 @@
       "line": 513
     },
     {
-      "id": "skills.skilldoctrine.the_signed_statement_is_the",
-      "en": "The signed statement is the group's, adopted by a member, and the record keeps that it began as a machine draft.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 960
-    },
-    {
       "id": "skills.skilldoctrine.the_skills_own_prohibition_set",
       "en": "The skill's own prohibition set comes from the practice survey and is not restated by each build session",
       "module": "skills",
@@ -43721,13 +43672,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1844
-    },
-    {
-      "id": "skills.skilldoctrine.the_system_is_nonetheless_prepared",
-      "en": "The system is nonetheless prepared for stonewalling, retaliation, discrediting and legal harassment: every plan is checked for a branch that answers a hostile response; pressure against the group or its supporters is recorded as evidence wherever it arrives, and can open an inquiry of its own; lawful demands are complied with openly.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 723
     },
     {
       "id": "skills.skilldoctrine.the_system_never_explores_a",
@@ -43800,13 +43744,6 @@
       "line": 1822
     },
     {
-      "id": "skills.skilldoctrine.this_layer_is_instruction_a",
-      "en": "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every word here gets past nothing.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1615
-    },
-    {
       "id": "skills.skilldoctrine.this_layer_is_instruction_and",
       "en": "this layer is INSTRUCTION and it holds no flag of its own, and this module deploys no mode. Which modes are deployed (the order's first, and any mode deployed apart from the chain by its own flag) is read from FL-3's landed table at the address above, which is CODE and is the first row every run takes, and by the plane's open from the run's rules, whose record this layer carries unchanged; this text neither restates those flags nor could change them. What it adds is the REASON for the order and who owns each later mode's enabling condition, both of which are facts a run should be able to state and neither of which any code can be asked to hold.",
       "module": "skills",
@@ -43819,13 +43756,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1395
-    },
-    {
-      "id": "skills.skilldoctrine.this_layer_is_instruction_and_3",
-      "en": "this layer is INSTRUCTION, and this pack reads no account, grant, keep-away setting or word list: which account serves the member, whether the group keeps the assistant away, which member is granted a language and which words a draft is given are read for each call by the modules that serve it. A draft is recorded apart, labelled as machine work, and becomes the group's wording only by a granted member's act. A run ignoring every word here gets past nothing.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1525
     },
     {
       "id": "skills.skilldoctrine.this_layer_is_instruction_and_4",
@@ -43868,13 +43798,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 933
-    },
-    {
-      "id": "skills.skilldoctrine.this_layer_is_instruction_every_5",
-      "en": "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1007
     },
     {
       "id": "skills.skilldoctrine.this_layer_is_instruction_every_6",
@@ -43926,20 +43849,6 @@
       "line": 1524
     },
     {
-      "id": "skills.skilldoctrine.what_the_group_chose_changes",
-      "en": "What the group chose changes only by a member's act.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 743
-    },
-    {
-      "id": "skills.skilldoctrine.what_the_group_sends_is",
-      "en": "What the group sends is checked against its record.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 679
-    },
-    {
       "id": "skills.skilldoctrine.what_the_passage_means_is",
       "en": "What the passage means is read by the member when she accepts it, and recorded as proposed or edited.",
       "module": "skills",
@@ -43968,13 +43877,6 @@
       "line": 609
     },
     {
-      "id": "skills.skilldoctrine.wherever_a_member_writes_in",
-      "en": "Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me write this\": it works only from what the member tells it and what the group holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labelled \"Draft · the assistant's, asked by <handle>\", saved only when the member keeps them.",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1330
-    },
-    {
       "id": "skills.skilldoctrine.whether_a_matter_warrants_action",
       "en": "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and their reasons.",
       "module": "skills",
@@ -44001,13 +43903,6 @@
       "module": "skills",
       "file": "bio-plane/src/skilldoctrine.mjs",
       "line": 1802
-    },
-    {
-      "id": "skills.skilldoctrine.with_the_members_suggestions_switch",
-      "en": "With the member's suggestions switch off it works only from what the member typed; with it on it may also draw on what the group holds (rule 7).",
-      "module": "skills",
-      "file": "bio-plane/src/skilldoctrine.mjs",
-      "line": 1338
     },
     {
       "id": "skills.skilldoctrine.without_a_determination_an_act",
