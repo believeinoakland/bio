@@ -225,11 +225,13 @@ test("R20 (live arm): while the assistant does not work, R9's step 4 and all of 
   } finally { await fp.close(); }
 });
 
-test("R20 control (live arm): a screen that draws an assistant control while the assistant does not work fails by name", { timeout: 300000 }, async () => {
+test("R20 control (live arm): connect's sign-in drawn while the assistant does not work is the assistant's own step (K4086): reported not walked, never failed", { timeout: 300000 }, async () => {
   const fp = await fakePlane({ admins: { ada: true }, assistantControls: true });
   try {
     const r = await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, screens: only("members") });
-    assert.ok(r.walk.failures.some((f) => f.kind === FAIL.STEP && /connect draws an assistant control that cannot work while the assistant does not: act subscriptionsignin/.test(f.detail)), r.report);
+    assert.ok(!r.walk.failures.some((f) => /draws an assistant control that cannot work/.test(f.detail)), r.report);
+    assert.ok(r.walk.notes.some((n) => n.startsWith(STEP_NAMES.connect)), r.report);
+    assert.deepEqual(fp.codes, [], "the sign-in was not tried");
   } finally { await fp.close(); }
 });
 

@@ -3,7 +3,8 @@
    administrator and as a member, each verified by `whoami`, and sweeps every working screen beside the design mock.
    Each answers the walk (its steps, its failures, its report); R3's guard runs before anything is written. */
 import { join, dirname, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { readdir } from "node:fs/promises";
 import http from "node:http";
 import https from "node:https";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
@@ -123,7 +124,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
       walk.journey = "R10 as member";
       if (!assistant) await (async () => {
         await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
-        await notReady(walk, mai.page, copy, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect",
+        await notReady(walk, mai.page, copy, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect", assistantSignin: true,
           names: [STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk] });
       })().catch(going);
       else if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
@@ -147,7 +148,10 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     if (parts.includes("R27")) {
       walk.journey = "R27 the pseudo-locale walk";
       const ps = await device(walk, b, async (ctx) => { await route(ctx); await pseudoRoute(ctx, { host: walk.copyHost, fetchCopy: (req) => world.fetchCopy(req) }); });
-      const entered = [PLAN_TITLE, QUESTION, OWN_PROJECT, OWN_QUESTION, OWN_READING, UPLOAD_NAME, UPLOAD_TEXT.trim(), GROUP_NAME, SLUG, NOTICE_PASSAGE, HEAT_PASSAGE,
+      /* jurisdiction profiles' display names are data, not sentences (B3) */
+      const profiles = await Promise.all((await readdir(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "jurisdictions", "profiles")))
+        .filter((f) => f.endsWith(".mjs")).map(async (f) => (await import(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "jurisdictions", "profiles", f)).href)).default?.name));
+      const entered = [...profiles.filter(Boolean), PLAN_TITLE, QUESTION, OWN_PROJECT, OWN_QUESTION, OWN_READING, UPLOAD_NAME, UPLOAD_TEXT.trim(), GROUP_NAME, SLUG, NOTICE_PASSAGE, HEAT_PASSAGE,
         "Roof repairs at 14 Lakeshore Row", "Mai, from flat 4", "Teo, from flat 9", "Interpreting, Spanish and English",
         "Water has come through the ceiling of flat 4 since Monday; reported twice.", "Flat 4, second floor", "Housing notice 2026-118: repair order, 14 Lakeshore Row",
         "Housing notice 2026-131: heating order, 14 Lakeshore Row", "When did the tenants first report the leak to the landlord?", "The city withdrawing or amending notice",
@@ -226,7 +230,7 @@ async function investigateLive(walk, b, base, { founder, member, codeOf, assista
       const mine = await device();
       await (async () => {
         await signInBy(walk, mine, base, member, "she signs in by her handle");
-        await notReady(walk, mine, base, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect",
+        await notReady(walk, mine, base, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect", assistantSignin: true,
           names: [STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk] });
       })().catch(going);
       return;

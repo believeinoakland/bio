@@ -284,13 +284,16 @@ export async function assistantControls(page) {
 
 /* The not-ready assertion on the screen at `path`, as a step of its own labelled `label`; `names` are the walk's steps
    that would have used it, each reported as not walked. */
-export async function notReady(walk, page, base, { label, path, screen, names }) {
+export async function notReady(walk, page, base, { label, path, screen, names, assistantSignin = false }) {
   for (const n of names) walk.notWalked(n);
   /* a screen that fails its assertion has said so by name; the journey goes on, as the assistant is not part of it */
   await walk.step(page, label, async (p) => {
     await open(walk, p, base, path, screen);
     const drawn = await assistantControls(p);
     const bad = [...drawn.acts.map((op) => `act ${op}`), ...drawn.shell.map((k) => `the ${k} button`)];
+    /* B3 (K4086): `connect`'s disclosure and sign-in are the assistant's own sign-in, drawn though not working (K3717): an
+       assistant step, reported not walked above, never a failure */
+    if (assistantSignin) for (const op of ["subscriptionsignin", "disclosureshown", "accountconnect"]) { const i = bad.indexOf(`act ${op}`); if (i >= 0) bad.splice(i, 1); }
     if (bad.length) throw new Error(`${screen} draws an assistant control that cannot work while the assistant does not: ${bad.join(", ")}`);
     for (const t of drawn.said) {
       const code = developerWords(t).find((w) => w.what === "a refusal code");
@@ -329,7 +332,7 @@ export async function walkAdministrator(walk, page, { base, founder, codeOf = nu
   /* the project exists from here on: R10 invites a member to it even when a later step of this journey stops (`made`) */
   made.project = project; made.question = question;
   if (assistant) await connectSubscription(walk, page, base, { password: founder.password, codeOf });
-  else await notReady(walk, page, base, { label: "assistant not ready: the connect screen", path: "/app/connect", screen: "connect", names: [STEP_NAMES.connect] });
+  else await notReady(walk, page, base, { label: "assistant not ready: the connect screen", path: "/app/connect", screen: "connect", assistantSignin: true, names: [STEP_NAMES.connect] });
   const document = await captureAndVouch(walk, page, base, { question, password: founder.password });
   await firstPage(walk, page, document);
   await readAndCite(walk, page, { document, question });
