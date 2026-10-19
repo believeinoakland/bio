@@ -1136,8 +1136,8 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     [body.includes(h(word("installer.team.unrecorded.head"))), body.includes(h(word("installer.team.unrecorded.certain", { before: "0.70.0", first: "0.71.0" })))],
     [true, true]);
   t("naming what the copy refuses until it is recorded", body.includes(h(word("installer.team.unrecorded.effect"))), true);
-  t("naming the way to record it — run the installer again; no request or credential is told to the operator",
-    [body.includes(h(word("installer.team.unrecorded.how"))), body.includes("op=instancegroupseed"), body.includes("ADMIN_TOKEN")], [true, false, false]);
+  t("not naming 'run the installer again' for a copy whose state the update could not read as unfinished (it lands on a page that records nothing); no request or credential is told to the operator",
+    [body.includes(h(word("installer.team.unrecorded.how"))), body.includes("op=instancegroupseed"), body.includes("ADMIN_TOKEN")], [false, false, false]);
   /* R22 (N5): no copy but the operator's is named; the installed name is only offered as the one the installer records unless another is given. */
   t("the installed name is offered as a SUGGESTION, naming no other copy",
     [body.includes(h(word("installer.team.unrecorded.suggest", { slug: "cross-town" }))), /biosmoke7|believe-in-oakland/.test(body)], [true, false]);

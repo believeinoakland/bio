@@ -237,9 +237,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   /* R38: the scopes the token response states (null: it states none), and the Containers API. `containers`: "ok", or
      "read" (every Containers call refused), "create" or "rollout" (that call refused); `preApps` the applications held;
      `preClasses` the Durable Object classes each pre-existing script holds. `settingsBlind`: settings answer no bindings.
-     `refuseSecretDelete`: a secret's removal refused. */
+     `refuseSecretDelete`: a secret's removal refused; `refuseMark`: the install's last mark (INSTALL_COMPLETE) refused. */
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
-  refuseSecretDelete = false,
+  refuseSecretDelete = false, refuseMark = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
@@ -364,6 +364,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: (u, init) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       const { name: secret } = JSON.parse(init.body);
+      if (refuseMark && secret === "INSTALL_COMPLETE") return cferr("mark refused <i>by the fake</i>", 400);
       secretPuts.push(`${name}/${secret}`);
       acct.set(name, [...(acct.get(name) || []).filter((b) => b.name !== secret), { type: "secret_text", name: secret }]);
       return cfok({ name: secret });

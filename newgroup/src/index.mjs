@@ -868,7 +868,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R78: with the address answering, the installer records the team's short name itself; where it could not, the telling is drawn (R18). */
   const recorded = st ? await recordTeam(emit, base, secrets.boot, slug) : "refused";
-  const told = recorded === "recorded" ? "" : groupNotice("refused", slug);
+
 
   /* R51: the checks the finished panel shows, each as it came out. */
   const servingLags = served ? served.lags.length : null;
@@ -890,6 +890,8 @@ async function installRun(emit0, code, saved, guard) {
   let markLag = null;
   try { await putSecret(token, acct.id, slug, MARK, release.version); }
   catch (e) { if (approve(e)) throw e; markLag = word("installer.mark.failed", { said: e.message }); }
+  /* F12: the telling says "run the installer again" only when the mark failed (the copy is unfinished, so a run resumes and records it). */
+  const told = recorded === "recorded" ? "" : groupNotice("refused", slug, undefined, markLag !== null);
   emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts,
     [...(retiredParts.length ? [word("installer.update.retired", { parts: retiredParts.join(", ") })] : []), ...(markLag ? [markLag] : [])], told));
 }
@@ -970,14 +972,16 @@ function groupUnrecorded(recorded, before) {
   if (recorded === "unread" || before === null || !SEMVER.test(String(before))) return "unknown";
   return vcmp(before, FIRST_GROUP_RELEASE) < 0 ? "certain" : "unknown";
 }
-function groupNotice(kind, slug, before) {
+/* F12 (R18, R78, K3892): `runAgain` is true only for a copy KNOWN to be unfinished, where running the installer again resumes it and
+   records the name. A finished copy (or one the run could not tell) is sent to the "already holds a copy" page by that advice,
+   which records nothing: the way is then not drawn, the rest is (the design's row for a finished copy is owed). */
+function groupNotice(kind, slug, before, runAgain = false) {
   if (!kind) return "";
   const why = kind === "certain" ? word("installer.team.unrecorded.certain", { before, first: FIRST_GROUP_RELEASE })
     : kind === "unknown" ? word("installer.team.unrecorded.unknown", { first: FIRST_GROUP_RELEASE }) : "";
   return `<div class="notice" id="team-unrecorded"><p style="margin:0 0 .6em"><b>${esc(word("installer.team.unrecorded.head"))}</b></p>
 <p>${esc(why ? why + " " : "")}${esc(word("installer.team.unrecorded.effect"))}</p>
-<p>${esc(word("installer.team.unrecorded.how"))}</p>
-<p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
+${runAgain ? `<p>${esc(word("installer.team.unrecorded.how"))}</p>\n` : ""}<p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
 }
 
 /* R78 (K3868, K3878): the copy's own answer about its producing team, read with `Authorization: Bearer` only when a
@@ -1232,7 +1236,8 @@ async function updateRun(emit00, code, saved, guard) {
 
   /* R18, R78: this run holds no credential to record the team's short name with (an update binds no new ADMIN_TOKEN, K3892), so it
      reads what the copy records and tells the operator when it records none, or when the copy did not answer. */
-  const told = groupNotice(groupUnrecorded(await readGroup(base), before), slug, before);
+  const unfinished = !!held && scheme !== LEGACY_SCHEME && !held.has(MARK);
+  const told = groupNotice(groupUnrecorded(await readGroup(base), before), slug, before, unfinished);
 
   const version = release.version;
   emit.done(versionLines(before, version) + (noop

@@ -118,7 +118,13 @@ test("R78 an install, a resumed install and an update's read: an install and a r
   assert.equal(refused.page.status("record"), "no");
   assert.ok(refused.page.label("record").startsWith(word("installer.step.record.refused", { slug: "r78-refused", said: "\u0000" }).split("\u0000")[0]));
   assert.ok(told(refused));
-  assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.how"))), "run the installer again");
+  /* F12: the copy is finished (its mark is written): running the installer again would land on "already holds a copy" and record
+     nothing, so that advice is not drawn; the head, the effect and the suggestion are. */
+  assert.ok(!refused.page.done.includes(h(word("installer.team.unrecorded.how"))), "no loop: a finished copy is not told to run the installer again");
+  assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.effect"))));
+  /* Control: a copy the install could not finish (its mark refused) is unfinished, and running the installer again resumes and records it. */
+  const unfinished = await run({ slug: "r78-nomark", group: null, seedRefused: "GROUP_SLUG_MALFORMED", refuseMark: true });
+  assert.ok(unfinished.page.done.includes(h(word("installer.team.unrecorded.how"))), "an unfinished copy is told the way");
   assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.suggest", { slug: "r78-refused" }))));
   assert.ok(refused.page.done.includes('id="out-boot"'), "the credentials are still handed over");
   /* A copy that does not answer the read: the same. */
@@ -130,6 +136,13 @@ test("R78 an install, a resumed install and an update's read: an install and a r
   const upd = await run({ slug: "r78-upd", mode: "update", pre: { "r78-upd": planeBase("r78-upd") }, group: null });
   assert.deepEqual(upd.seeds, []);
   assert.ok(told(upd), "an update of a copy answering `group: null` draws R18's telling");
+  assert.ok(upd.page.done.includes(h(word("installer.team.unrecorded.how"))), "(this copy has no mark: unfinished, so run again resumes it)");
+  /* F12: a finished copy (its mark written) is told the rest, never to run the installer again; nothing is seeded. */
+  const fin = await run({ slug: "r78-fin", mode: "update", pre: { "r78-fin": [...planeBase("r78-fin"), { type: "secret_text", name: "INSTALL_COMPLETE" }] }, group: null });
+  assert.ok(told(fin));
+  assert.ok(!fin.page.done.includes(h(word("installer.team.unrecorded.how"))), "no loop");
+  assert.ok(fin.page.done.includes(h(word("installer.team.unrecorded.suggest", { slug: "r78-fin" }))));
+  assert.deepEqual(fin.seeds, []);
   /* Control: no request the installer makes carries a Claude credential (R36). */
   for (const c of [...w.calls, ...upd.calls]) assert.ok(!/sk-ant|claude/i.test(JSON.stringify(c.init?.headers || {}) + c.u), `${c.u}`);
 });
