@@ -84,6 +84,9 @@ test("R27: a fixture screen with one sentence from the list and one hard-coded r
   assert.equal(found.length, 1, JSON.stringify(found));
   assert.equal(found[0].text, "Please sign in again now");
   assert.match(found[0].element, /^p/);
+  /* data the screens draw from records and catalogues is not a sentence (K4086): a record reference and a catalogue row name */
+  const data = await on('<main id="cs-main"><a class="cs-ref" href="/x">Firsthand observation observed</a><span class="mk-rowname">Splunk HTTP Event Collector</span><p>Please sign in again now</p></main>', (p) => escapedOnPage(p));
+  assert.deepEqual(data.map((x) => x.text), ["Please sign in again now"]);
   assert.deepEqual(escapedIn(fromList), []);
   assert.deepEqual(escapedIn("a b"), []);
 });

@@ -16,17 +16,21 @@ export function escapedIn(text, { entered = [] } = {}) {
   return [...t.matchAll(RUN)].map((m) => ({ text: m[0].slice(0, 80) }));
 }
 
+/* Data the screens draw from records, profiles and catalogues, not sentences (B3, K4086): a reference to a record (`a.cs-ref`),
+   the jurisdiction directory `elsewhere` draws from the profile, and the scanner catalogue's row names on `security`. */
+export const DATA = Object.freeze(["a.cs-ref", '[data-screen="elsewhere"] #cs-main li', "#cs-main .mk-rowname"]);
+
 /* The page's drawn text nodes holding an escaped sentence: `[{element, text}]`, `element` as a person finds it (the tag, id
    and first class, and the closest `data-screen` or `id`). Script, style, form values and the `entered` data are not read. */
 export async function escapedOnPage(page, { entered = [] } = {}) {
-  const found = await page.evaluate(([entered, src]) => {
+  const found = await page.evaluate(([entered, src, data]) => {
     const RUN = new RegExp(src, "g");
     const skip = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"]);
     const out = [];
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let n = w.nextNode(); n; n = w.nextNode()) {
       const p = n.parentElement;
-      if (!p || skip.has(p.tagName)) continue;
+      if (!p || skip.has(p.tagName) || data.some((d) => p.closest(d))) continue;
       const r = p.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0 || getComputedStyle(p).visibility === "hidden") continue;
       let t = n.nodeValue.replace(/\s+/g, " ");
@@ -37,7 +41,7 @@ export async function escapedOnPage(page, { entered = [] } = {}) {
       }
     }
     return out;
-  }, [entered.filter((x) => typeof x === "string" && x.length >= 3), RUN.source]);
+  }, [entered.filter((x) => typeof x === "string" && x.length >= 3), RUN.source, DATA]);
   return found;
 }
 
