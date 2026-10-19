@@ -22,31 +22,31 @@ const at = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
    refusal reads `ai.refused.limit.unjudged`. Only the Ask item, a queue item `notice-producers` renders, leaves `{scope}`
    and `{account}` for the screen. `ai.use.suggestions` names a switch, not a use, and is not read here. */
 export const AI_USE_WORDS = Object.freeze({
-  'ai.use.ask.name': 'Asking',
-  'ai.use.draft.name': 'Drafting',
+  'ai.use.ask.name': word('ai.use.ask.name'),
+  'ai.use.draft.name': word('ai.use.draft.name'),
   'ai.use.run.name': word('ai.use.run.name'),
-  'ai.use.standing.name': 'Standing questions',
-  'ai.use.explore.name': 'Exploring',
+  'ai.use.standing.name': word('ai.use.standing.name'),
+  'ai.use.explore.name': word('ai.use.explore.name'),
   'ai.use.enquire.name': word('ai.use.enquire.name'),
   'ai.use.read.name': word('ai.use.read.name'),
   'ai.use.transcribe.name': word('ai.use.transcribe.name'),
   'ai.use.account.name': word('ai.use.account.name'),
-  'ai.use.ask.inline': 'asking',
-  'ai.use.draft.inline': 'drafting',
+  'ai.use.ask.inline': word('ai.use.ask.inline'),
+  'ai.use.draft.inline': word('ai.use.draft.inline'),
   'ai.use.run.inline': word('ai.use.run.inline'),
   'ai.use.standing.inline': word('ai.use.standing.inline'),
-  'ai.use.explore.inline': 'exploring',
+  'ai.use.explore.inline': word('ai.use.explore.inline'),
   'ai.use.enquire.inline': word('ai.use.enquire.inline'),
   'ai.use.read.inline': word('ai.use.read.inline'),
   'ai.use.transcribe.inline': word('ai.use.transcribe.inline'),
   'ai.use.account.inline': word('ai.use.account.inline'),
-  'ai.whose.group': 'your team\'s',
-  'ai.whose.project': 'this project\'s',
-  'ai.whose.own': 'your own',
-  'ai.period.day': 'daily',
-  'ai.period.month': 'monthly',
-  'ai.when.day': 'tomorrow',
-  'ai.when.month': 'on {month} 1',
+  'ai.whose.group': word('ai.whose.group'),
+  'ai.whose.project': word('ai.whose.project'),
+  'ai.whose.own': word('ai.whose.own'),
+  'ai.period.day': word('ai.period.day'),
+  'ai.period.month': word('ai.period.month'),
+  'ai.when.day': word('ai.when.day'),
+  'ai.when.month': word('ai.when.month', { month: '{month}' }),
   'date.month.january': 'January',
   'date.month.february': 'February',
   'date.month.march': 'March',
@@ -59,16 +59,11 @@ export const AI_USE_WORDS = Object.freeze({
   'date.month.october': 'October',
   'date.month.november': 'November',
   'date.month.december': 'December',
-  'ai.refused.limit': 'The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. '
-    + 'Everything else works as usual.',
-  'ai.refused.limit.overall': 'The assistant stopped here: {whose} {period} limit is reached. It works again {when}. '
-    + 'Everything else works as usual.',
-  'ai.refused.limit.member': 'The assistant stopped here: you have used the {period} amount each member may use of '
-    + '{whose} account. It works again {when}. Everything else works as usual.',
-  'ai.refused.limit.unjudged': 'The assistant stopped here: your team\'s Civicsmith couldn\'t check the use of {whose} account just '
-    + 'now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.',
-  'ai.refused.limitinvalid': 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, '
-    + 'for a day or a month.',
+  'ai.refused.limit': word('ai.refused.limit', { whose: '{whose}', period: '{period}', use: '{use}', when: '{when}' }),
+  'ai.refused.limit.overall': word('ai.refused.limit.overall', { whose: '{whose}', period: '{period}', when: '{when}' }),
+  'ai.refused.limit.member': word('ai.refused.limit.member', { period: '{period}', whose: '{whose}', when: '{when}' }),
+  'ai.refused.limit.unjudged': word('ai.refused.limit.unjudged', { whose: '{whose}' }),
+  'ai.refused.limitinvalid': word('ai.refused.limitinvalid', { field: '{field}' }),
   'ai.limitfield.owner': word('ai.limitfield.owner'),
   'ai.limitfield.scope': word('ai.limitfield.scope'),
   'ai.limitfield.unit': word('ai.limitfield.unit'),
@@ -78,12 +73,10 @@ export const AI_USE_WORDS = Object.freeze({
   'ai.limitfield.use': word('ai.limitfield.use'),
   'ai.limitfield.count': word('ai.limitfield.count'),
   'ai.refused.unitunavailable': word('ai.refused.unitunavailable'),
-  'ai.refused.explorenotenabled': 'Exploring is off on {whose} account. Its owners can switch it on.',
-  'ai.refused.exploreoutofscope': 'The assistant can\'t explore this question on {whose} account: it lies outside what '
-    + 'the account\'s owners chose to explore.',
+  'ai.refused.explorenotenabled': word('ai.refused.explorenotenabled', { whose: '{whose}' }),
+  'ai.refused.exploreoutofscope': word('ai.refused.exploreoutofscope', { whose: '{whose}' }),
   'ai.refused.exploreaskinvalid': word('ai.refused.exploreaskinvalid'),
-  'ai.queue.exploreask': 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on '
-    + '{account}? If nobody says yes today, it doesn\'t.',
+  'ai.queue.exploreask': word('ai.queue.exploreask', { scope: '{scope}', what: '{what}', account: '{account}' }),
 });
 
 /* R13: the key each refusal and each fill reads. `AI_LIMIT_REACHED` by its scope (a use's own: `ai.refused.limit`), or
