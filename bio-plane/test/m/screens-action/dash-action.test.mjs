@@ -1,7 +1,7 @@
 /* screens-action R30 (T51-122; K3815, journey 22; DEC-335): the Action dashboard. Every sentence is asserted by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, ACTIONS, PROJECT, FILINGS, draft, FILING, READER } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, ACTIONS, PROJECT, FILINGS, draft, FILING, READER, RO } from "./page.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
@@ -82,7 +82,7 @@ test("R30: 'Start an action' opens the composer on the project chosen and writes
 
 test("R30, R27: a member who may read and not act reads the kit's sentence and sees no act, and every read is still made; a failed list is drawn failed", async () => {
   const p = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ONE), whoami: ok(READER) });
-  assert.ok(text(p).includes(W("shell.readonly", { noun: W("shell.readonly.noun.dash-action") })));
+  assert.ok(text(p).includes(RO("dash-action")));
   assert.deepEqual(ops(p), []);
   assert.equal(rows(p).length, 1);
   const f = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: { status: 502, text: "boom" } });

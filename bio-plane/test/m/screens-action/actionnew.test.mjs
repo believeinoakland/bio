@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, ops, press, last, ok, refusedIn, button, choose, W, hasWord, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PROJECT, QUESTION, QUESTION_TITLE, AFFORDANCES,
-  OFFICES, KINDS, PREVIEW, STAKE, READ, FILINGS, draft, READER } from "./page.mjs";
+  OFFICES, KINDS, PREVIEW, STAKE, READ, FILINGS, draft, READER, RO } from "./page.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
@@ -142,8 +142,8 @@ test("R29: `request` leads to the composer for any other kind, in both of its st
 
 test("R27: a member who may read and not act is told so and sees none of the composer's acts", async () => {
   const p = await open(ROUTES.actionnew, { ...PLANE, whoami: ok(READER) });
-  assert.ok(text(p).includes(W("shell.readonly", { noun: W("shell.readonly.noun.actionnew") })), "the kit's read-only sentence, the screen's name its noun");
+  assert.ok(text(p).includes(RO("actionnew")), "the kit's read-only sentence, the screen's name its noun");
   assert.deepEqual(ops(p), []);
   const q = await open(ROUTES.actionnew, PLANE);
-  assert.ok(!text(q).includes(W("shell.readonly", { noun: W("shell.readonly.noun.actionnew") })), "control: a member who may act reads no such sentence");
+  assert.ok(!text(q).includes(RO("actionnew")), "control: a member who may act reads no such sentence");
 });

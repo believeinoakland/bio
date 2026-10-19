@@ -136,7 +136,7 @@ export const action = Object.freeze({
         const passed = st === "pending" && c.date && String(c.date) < today;
         const says = passed ? cs.w("screen.action.noreplyby", { date: { html: cs.date(c.date) } }) : cs.w("screen.action.clock." + st);
         const due = c.date ? '<a href="/app/due-date/' + encodeURIComponent(view.subject + "~" + i) + '" data-nav>' + cs.due(String(c.date), st === "met" ? "met" : passed ? "passed" : "") + "</a>" : "";
-        const remind = c.date && st === "pending"
+        const remind = c.date && st === "pending" && cs.can("actioncorrespond")
           ? cs.field("remind-" + i, "screen.action.remindon", { type: "date" }) + cs.act("reminderset", { data: { entry: String(i) } }) : "";
         return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + "</span>", "", remind);
       }).join("")));

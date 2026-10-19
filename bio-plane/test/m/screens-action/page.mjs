@@ -249,3 +249,6 @@ export const ROUTES = {
   actionnew: `/app/actionnew/${PROJECT}`, hold: `/app/hold/${ACTION_ID}`, holdnotice: `/app/holdnotice/${encodeURIComponent(JSON.stringify({ target: ACTION_ID, ord: 2 }))}`,
   counsel: `/app/counsel/${ACTION_ID}`, "dash-action": "/app/dash-action",
 };
+
+/** The kit's read-only sentence for a screen (`interface-shell` R94): the screen's noun by its key, the path to Members as its word. */
+export const RO = (id) => W("shell.readonly", { noun: W(`shell.readonly.noun.${id}`), members: W("shell.readonly.members") });
