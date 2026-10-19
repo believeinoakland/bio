@@ -194,8 +194,7 @@ export class AiAccounts {
       return AiAccounts.#notYours("a member's Claude account is acted on only by that member; another member, an "
         + "administrator or the founder cannot. Nothing was written.");
     if (!this.#holderActive(id))   /* (T47; R19) the claimed founder holds as a member does */
-      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was "
-        + "written.");
+      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.only_an_active_member_holds", "only an active member holds a Claude account reference. Nothing was written."));
     /* END DEC-49 REGION is-account-own-act */
     return null;
   }
@@ -214,12 +213,9 @@ export class AiAccounts {
     /* DEC-49 REGION is-account-held */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "NO_ACCOUNT", scope === true || scope === "own"
       ? localize("ai-accounts.index.this_member_holds_no_claude", "this member holds no Claude account reference of their own. Nothing was used or written.")
-      : scope === "member" ? "this member holds no Claude account of their own: no key and no connected sign-in. Nothing "
-        + "was written."
+      : scope === "member" ? localize("ai-accounts.index.this_member_holds_no_claude_key", "this member holds no Claude account of their own: no key and no connected sign-in. Nothing was written.")
       : scope === "project" ? localize("ai-accounts.index.this_project_holds_no_claude", "this project holds no Claude account. Nothing was written.")
-      : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
-        + "their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was "
-        + "used.", { member });
+      : localize("ai-accounts.index.no_claude_account_serves_this", "no Claude account serves this member: they hold no reference of their own, they are not connected through their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was used."), { member });
     /* END DEC-49 REGION is-account-held */
   }
 
@@ -1107,8 +1103,7 @@ export class AiAccounts {
     if (!(g && g.sealed && g.is_on)) return { refusal: this.#noAccount(id) };
     if (!AiAccounts.#usesOf(g)[use]) return { refusal: AiAccounts.#switchedOff("group", use) };
     if (this.#memberFacts(id)?.status !== "active")
-      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the team's key serves only acts "
-        + "of active members. Nothing was used.") };
+      return { refusal: AiAccounts.#row(AI_ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", localize("ai-accounts.index.the_teams_key_serves_only", "the team's key serves only acts of active members. Nothing was used.")) };
     const due = notice ? this.#noticeDue(id) : null;
     if (due) return { refusal: due };
     return { level: "group", kind: "apikey", row: g };
@@ -1243,8 +1238,7 @@ export class AiAccounts {
     if (lim.on === false || (lim.on === true && !AiAccounts.#covers(lim, use))) return null;
     /* DEC-49 REGION is-project-kept-away */
     return AiAccounts.#row(AI_ACCOUNT_CHECKS, "PROJECT_AI_KEPT_AWAY", lim.on === true
-      ? "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing "
-        + "was sent."
+      ? localize("ai-accounts.index.this_project_keeps_its_material", "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing was sent.")
       : localize("ai-accounts.index.whether_this_project_keeps_its", "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent."),
       { project: String(project), use: use ?? null, keep_away: { reason: lim.reason, set_by: lim.set_by, set_at: lim.set_at } });
     /* END DEC-49 REGION is-project-kept-away */
