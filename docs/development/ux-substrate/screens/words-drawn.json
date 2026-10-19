@@ -11666,7 +11666,7 @@
   },
   {
    "key": "installer.fleet.why.container",
-   "en": "this release's description of its container can't be read",
+   "en": "this release's description of its container can't be used",
    "protected": false,
    "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:934; stands for the nine places that read a container description: it does not parse, is not an object, names no class, a policy other than the default, no maximum, an unreadable size, unreadable bindings, a part not named for its class, a class named twice (index.mjs:934-967)"
   },
@@ -24686,7 +24686,7 @@
   },
   {
    "key": "installer.team.unrecorded.how.finished",
-   "en": "The installer can't record it for a team's Civicsmith that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.",
+   "en": "The installer can't record it for a team's Civicsmith that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can record it, from that account.",
    "protected": false,
    "note": "DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)"
   },
@@ -24710,7 +24710,7 @@
   },
   {
    "key": "installer.install.stopped.foreign",
-   "en": "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start the install again.",
+   "en": "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start again from the installer's first page.",
    "protected": false,
    "note": "DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"
   }
