@@ -6,11 +6,11 @@
 | --- | --- | --- | --- | --- | --- |
 | 1 | R27 counts values read from the Oakland profile on `elsewhere` and `places` (data, K4086) | journey-check | B4 | `dec340.test.mjs` "R27 (K4086, K4111)": profile values not reported, a hard-coded sentence beside them reported | **closed** (K4113) |
 | 2 | R27 counts vendor names on `setup` (data) | journey-check | B4 | same test: vendor names not reported, control | **closed** (K4113) |
-| 3 | R27 counts the scanner catalogue's labels, hints and legends on `setup` (36 at 1280 px) | file-scanner | CR-17 | CR-17's own test (START note 2) | open: CR |
+| 3 | R27 counts the scanner catalogue's labels, hints and legends on `setup` (36 at 1280 px) | file-scanner | CR-17 (K4123) | `catalogue-words.test.mjs`: GET /providers under a pseudo-locale, no plain sentence in any member-facing field, a control per field | **closed** (K4123) |
 | 4 | `investigation.mjs`:422, the fixture document's text (words check) | journey-check | B4 (the reading is the fixture's `NOTICE_PASSAGE`) | words check 0 | **closed** (K4113) |
 | 5 | `document` draws no `screen.document.passages.head` (R9 step 7, R16): stale step | journey-check | B5 (`document.read.title`) | `dec340.test.mjs`, `words.test.mjs` | **closed** (K4113) |
-| 3b | `security`'s catalogue sentence `ADMIN` ("stated by the administrator"), excluded by R27 as a row name (JOURNEY-CHECK #7 J3) | file-scanner | CR-17 (START, K4113) | CR-17's own test | open: CR |
-| 3c | three `lines.index.*` rows hold `{a, b}` braces a member would see literally (setup-words R13) | UX-DESIGN | DEC-369 @ e2b319b55d (U400, K4119) | setup-words R13 (`word-list.test.mjs`:247) | **closed** once setup-words merges |
+| 3b | `security`'s catalogue sentence `ADMIN` ("stated by the administrator"), excluded by R27 as a row name (JOURNEY-CHECK #7 J3) | file-scanner | CR-17 (K4123) | same test (`ADMIN` keyed) | **closed** (K4123) |
+| 3c | three `lines.index.*` rows hold `{a, b}` braces a member would see literally (setup-words R13) | UX-DESIGN | DEC-369 @ e2b319b55d (U400, K4119) | setup-words R13 (`word-list.test.mjs`:247) | **closed** (K4122: 21 of 21 on the merged tree) |
 | 6 | `dash-project` from Home's door draws "Nothing is here" (R22) | screens-daily | R51, K4107 | screens-daily's door test (several, one, none) | **closed** (K4110) |
 
 ## Changes since the last run that could add a finding (each covered by its own test before the run)

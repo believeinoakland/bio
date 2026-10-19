@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01FZWRQ2Kz7BQHTbB7ocRjzr · depth 2 · COMPLETE · handled B4
+**Status** · session_01CjpPbnVFWqVsrNKA5TJg3t · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-183, words)
 
@@ -115,3 +115,50 @@ Tests and checks run (summary lines):
 ## J4 · COMPLETE
 
 CHANGE B4 done at commit b7de3d9d1b; record at 69ff9ec4f7. The `potentially_unwanted` and `test` kind sentences in `kinds.mjs` now read through `word(key)` with their words.json rows, as the trojan kind did. The row for `potentially_unwanted` reads "showing ads" (was "adverts"); members read the design's words. No test held the text; the rows test compares by equality. Words check: 0 failures for file-safety (unkeyed 51). Module tests 64/64; format, architecture, coverage, ownership 0 failures; setup-words --check clean. The whole-product run still shows 1,629 failures in other modules, none in file-safety. Details: build/jobs/T51/file-safety.md, Completion (CHANGE B4).
+
+## J5 · BLOCKED
+
+Cause: needs Bob.
+
+CR-21 is applied in part. Pushed `job/T51/file-safety` @ 8f006e8f62 (test files only: `bio-plane/test/m/file-safety/fixture.mjs`, `tools.test.mjs`).
+
+Done:
+- The five copied sentences that file-scanner keys are now read from file-scanner's own export: the `cloudflare-intel` account label, the `scanii` and `opswat-deep-cdr` recipients (in the `onOwnServers` checks), and the EICAR "did not answer found" detail (`EICAR_NOT_FOUND`, exported by `file-scanner/src/providers/routes.mjs`).
+- Behaviour unchanged: `node --test test/m/file-safety/*.test.mjs` = tests 64, pass 64, fail 0.
+- `checks/architecture.mjs` 0 failures; `checks/coverage.mjs` 45 of 45 ids named, 0 failures; `checks/format.mjs` 0 failures; `checks/ownership.mjs` 0 failures.
+
+Not done: `checks/words.mjs /home/user/bio file-safety` reads missingkey 2, not 0:
+- `fixture.mjs:127` and `tools.test.mjs:193` read `word("file-scanner.routes.the_eicar_test_file_answered")` (the "EICAR test file answered found" detail for a positive probe).
+- That key is not in `docs/development/ux-substrate/screens/words.json`, and file-scanner exports only the "did not answer" sentence, not the "answered" one. I did not copy the sentence back in, and I did not change file-scanner (another module).
+
+The one act for Bob, one of two:
+1. Regenerate the word table so `words.json` carries file-scanner's CR-17 keys (the key is listed in `bio-plane/src/setup-words/words-unreviewed.json`). Recommended: it is the same route the rest of file-scanner's keys take. Then this job re-runs words, and posts COMPLETE.
+2. Or have file-scanner export `EICAR_FOUND` (a file-scanner change, so a job of its own), and this job imports it.
+
+Also for routing: at the process checkout I cloned (a4c42ff), `checks/words.mjs` reported testcopy 0 for file-safety both before and after my edits, so I could not reproduce the seven testcopy findings in CR-21. If your checker run shows them, tell me which checker version to use.
+
+Test-only; nothing outside `bio-plane/test/m/file-safety/` changed. Ready to finish as soon as the key is in the table.
+
+## J6 · COMPLETE
+
+## CR-21 · file-safety · complete (B7 CHANGE, K4128)
+
+**Entries applied.** CR-21 (test-only): the seven copied sentences are now read from file-scanner's export or the word table.
+- `fixture.mjs`: the positive EICAR detail is `EICAR_FOUND` from file-scanner's `routes.mjs` (was `word(...)` on the code-keyed id, now the export as B7 asked). The `setup-words` import is gone.
+- `tools.test.mjs`: the Cloudflare label is read from file-scanner's `cloudflare-intel` config; the negative EICAR detail is `EICAR_NOT_FOUND`; the positive is `EICAR_FOUND` at :193; the two `onOwnServers` "not on own servers" cases use the `scanii` and `opswat-deep-cdr` recipients from `PROVIDERS`. The `setup-words` import is gone.
+- Behaviour unchanged. Tranche `tranche/T51` merged into the job branch (f0343ed4bc).
+
+**Deferred.** None.
+
+**Found in another module (REPORT, not touched).** The full `checks/run.mjs /home/user/bio` on this tranche shows reds outside file-safety: coverage (8 modules, e.g. agent-harness R17, agent-runner R36 to R38 and R40, installer R81, instance-setup R98 and R99) and words (12 inline findings in `instance-setup`, `bio-plane/src/setup-fleet.mjs`:30 to :67). None is in file-safety. Not touched; for BOB's routing.
+
+**Tests and checks run (summary lines).**
+- `node --test test/m/file-safety/*.test.mjs` (bio-plane): "tests 64, pass 64, fail 0".
+- `node checks/words.mjs /home/user/bio file-safety`: "inline 0, plain 0, testcopy 0, missingkey 0, handlist 0 … 0 failures".
+- `node checks/architecture.mjs /home/user/bio file-safety`: "18 product files … 0 failures".
+- `node checks/coverage.mjs /home/user/bio file-safety`: "45 of 45 live requirement ids named by a test; 0 failures".
+- `node checks/format.mjs /home/user/bio`: "175 modules, 175 requirements files; 0 failures".
+- `node checks/run.mjs /home/user/bio`: file-safety clean in every section; the reds listed above are other modules.
+- `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "3 files changed by file-safety … 0 failures".
+
+**Size (session_01CjpPbnVFWqVsrNKA5TJg3t):** test runs 3, module lines 2342

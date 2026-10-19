@@ -10,7 +10,7 @@ import { LOG_COUNT_KINDS, PROVIDER_TIMEOUT_MS, SANDBOX_TIMEOUT_MS, REPUTATION_LI
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
 import { memoryBucket, putCapture, putDerived, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
 import { vendorNet, vendorSockets, specs, infected, has, WEB_RISK_TEST } from './vendors.mjs';
-import { NOT_HONOURED_CODE } from '../src/providers/routes.mjs';
+import { NOT_HONOURED_CODE, EICAR_FOUND, EICAR_NOT_FOUND } from '../src/providers/routes.mjs';
 
 const SCAN = ['scanii', 'metadefender-cloud', 'metadefender-core', 'icap', 'defender-storage', 'sophos-intelix'];
 const SANDBOX = ['joe-sandbox', 'vmray', 'falcon-sandbox', 'wildfire', 'sophos-intelix'];
@@ -306,13 +306,14 @@ test('R28 every catalogued tool\'s test probe passes through its own adapter; a 
     const r = await w.jsonCall('/provider/test', { tool: w.specs[d.provider_id] });
     assert.equal(r.body.ok, true, d.provider_id);
     assert.equal(r.body.passed, true, `${d.provider_id}: ${r.body.detail}`);
+    if (d.kinds.includes('scan') || d.kinds.includes('sandbox')) assert.equal(r.body.detail, EICAR_FOUND, d.provider_id);
     assert.ok(!w.bucket.calls.some(([, k]) => k.includes('captures')), 'no capture read');
   }
   const w = world();
   const broken = { ...w.specs.scanii, credentials: { api_key: 'a', api_secret: 'b' } };
   assert.deepEqual((await w.jsonCall('/provider/test', { tool: broken })).body, { ok: true, passed: false, detail: 'SERVICE_REFUSED HTTP:401' });
   const clean = world({}, { answer: () => 'ICAP/1.0 204 No Content\r\n\r\n' });
-  assert.deepEqual((await clean.jsonCall('/provider/test', { tool: clean.specs.icap })).body, { ok: true, passed: false, detail: 'the EICAR test file did not answer found' });
+  assert.deepEqual((await clean.jsonCall('/provider/test', { tool: clean.specs.icap })).body, { ok: true, passed: false, detail: EICAR_NOT_FOUND });
 });
 
 test('R30 ICAP: RESPMOD over TCP or TLS; 204 or a bare 200 clean; X-Infection-Found or X-Virus-ID found; any other status unknown', async () => {

@@ -968,6 +968,9 @@ export class Extraction {
        see names no size of its own). */
     const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(row.capture_sha) : null;
     const bytes = home && this.#redactor(viewer)(home.bundleId) !== null ? home.bytes : undefined;
+    /* R78 (T51; K4127; amends R77): `format` is the reading's own capture format, a format-registry id, absent when the
+       reading holds none, and withheld with the bundle as `bytes` is. */
+    const format = withheld || row.capture_format == null || row.capture_format === "" ? undefined : row.capture_format;
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
@@ -988,7 +991,8 @@ export class Extraction {
              reading_history: this.#readingHistoryOf(row.capture_sha),
              ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
              ...(text_units ? { text_units } : {}),
-             ...(bytes === undefined ? {} : { bytes }) };
+             ...(bytes === undefined ? {} : { bytes }),
+             ...(format === undefined ? {} : { format }) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

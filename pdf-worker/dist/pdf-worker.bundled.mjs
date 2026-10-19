@@ -39677,6 +39677,7 @@ function fill(key, text, vars) {
   return text.replace(PLACEHOLDER, (_2, name) => {
     const v2 = vars?.[name];
     if (!Object.hasOwn(vars ?? {}, name) || v2 === void 0 || v2 === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    if (typeof v2 === "object" && typeof v2.key === "string") return word(v2.key, v2.vars ?? {});
     return String(v2);
   });
 }

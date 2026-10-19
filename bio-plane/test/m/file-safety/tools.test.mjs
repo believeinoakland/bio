@@ -7,6 +7,7 @@ import { world, pdf, sha, T0 } from "./fixture.mjs";
 import { FILE_SAFETY_CHECKS, PROVIDER_REASON_WORDS, DEEPER_CHECKS_PER_MONTH, LOG_COUNT_KINDS, FileSafety, onOwnServers }
   from "../../../src/file-safety/index.mjs";
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS } from "../../../../file-scanner/src/providers/catalogue.mjs";
+import { EICAR_FOUND, EICAR_NOT_FOUND } from "../../../../file-scanner/src/providers/routes.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
@@ -30,7 +31,7 @@ test("R27: `securityToolCatalogue` (administrators) answers {offered, refused, h
     if (d.template) for (const n of ["engine_family", "handling"]) assert.equal(d.config.find((f) => f.name === n)?.required, true, `${d.provider_id}: ${n}`);
   }
   assert.ok(c.offered.some((d) => d.config.length === 0) && c.offered.some((d) => d.config.length > 0), "both kinds are read");
-  assert.deepEqual(c.offered.find((d) => d.provider_id === "cloudflare-intel").config, [{ name: "account_id", label: "Cloudflare account ID", required: true }]);
+  assert.deepEqual(c.offered.find((d) => d.provider_id === "cloudflare-intel").config, [{ name: "account_id", label: PROVIDERS.find((d) => d.provider_id === "cloudflare-intel").config.find((f) => f.name === "account_id").label, required: true }]);
   assert.deepEqual(c.refused.map((r) => [r.provider_id, r.reason]), REFUSED_PROVIDERS.map((r) => [r.provider_id, r.reason]));
   for (const r of c.refused) assert.equal(r.words, PROVIDER_REASON_WORDS[r.reason]);
   assert.deepEqual(c.held.map((h) => [h.provider_id, h.reason, h.words]), HELD_PROVIDERS.map((h) => [h.provider_id, h.missing, PROVIDER_REASON_WORDS.HANDLING_NOT_STATED]));
@@ -177,7 +178,7 @@ test("R28 (T38): an entry that needs an address (splunk-hec) added with its host
 });
 
 test("R29: `securityToolTest` runs file-scanner's /provider/test with the tool's spec; passed sets on and tested_at, otherwise test_failed with the detail and the tool stays off; a tool is used only while on", async () => {
-  const w = world({ scan: { test: { "joe-sandbox": { passed: false, detail: "the EICAR test file did not answer found" } } } });
+  const w = world({ scan: { test: { "joe-sandbox": { passed: false, detail: EICAR_NOT_FOUND } } } });
   const add = async (id, creds) => w.fs.securityToolAdd({ providerId: id, credentials: creds, handlingDigest: digestOf(id), by: "boss",
                                                            config: id === "scanii" ? { region: "eu1" } : {} });
   const a = await add("scanii", { api_key: "k", api_secret: "s" });
@@ -188,11 +189,11 @@ test("R29: `securityToolTest` runs file-scanner's /provider/test with the tool's
   const s = await w.capture(pdf(true, "t"));
   assert.equal(w.fs.requestDeeperCheck({ captureSha: s, viewer: "member:m1" }).code, "NO_OUTSIDE_TOOL");
   const ta = await w.fs.securityToolTest({ toolId: a.tool_id, by: "boss" });
-  assert.deepEqual([ta.ok, ta.state, ta.passed, ta.detail], [true, "on", true, "the EICAR test file answered found"]);
+  assert.deepEqual([ta.ok, ta.state, ta.passed, ta.detail], [true, "on", true, EICAR_FOUND]);
   assert.equal(w.calls("/provider/test")[0].body.tool.tool_id, a.tool_id);
   assert.deepEqual(Object.keys(w.calls("/provider/test")[0].body), ["tool"]);
   const tb = await w.fs.securityToolTest({ toolId: b.tool_id, by: "boss" });
-  assert.deepEqual([tb.state, tb.passed, tb.detail], ["test_failed", false, "the EICAR test file did not answer found"]);
+  assert.deepEqual([tb.state, tb.passed, tb.detail], ["test_failed", false, EICAR_NOT_FOUND]);
   const tools = w.fs.securityTools({ viewer: "member:boss" }).tools;
   assert.ok(tools.find((t) => t.tool_id === a.tool_id).tested_at);
   assert.equal(tools.find((t) => t.tool_id === b.tool_id).state, "test_failed");
@@ -272,8 +273,8 @@ test("R32 (K1949): a tool's use is on_request (the default) or routine; on_reque
   assert.equal(onOwnServers("the organization"), true);
   assert.equal(onOwnServers("the organization's own Acme appliance"), true);
   assert.equal(onOwnServers("Microsoft (the organization's own Azure bucket)"), true);
-  assert.equal(onOwnServers("OPSWAT, Inc. (Cloud), or the organization's own Core server"), false);
-  assert.equal(onOwnServers("Uva Software, LLC"), false);
+  assert.equal(onOwnServers(PROVIDERS.find((d) => d.provider_id === "opswat-deep-cdr").handling.recipient), false);
+  assert.equal(onOwnServers(PROVIDERS.find((d) => d.provider_id === "scanii").handling.recipient), false);
   /* the default is on_request, which no scan batch uses and no capture queues a copy for */
   const v = world();
   const a = await v.tool("scanii");
@@ -431,7 +432,8 @@ test("R41: `refreshReputationLists({at})`, reached by no route, asks file-scanne
 test("R44 (T47; N971; setup-page R30): `onOwnServers(recipient)`, exported, answers true exactly when the recipient is a string that, trimmed, begins with the words \"the organization\" (any case), or names one service with \"the organization's own …\" in parentheses at its end; false for a vendor's service, two places, or a value that is not a string; pure, self-contained (its source alone, carried elsewhere, answers the same) and never throws; R28 and R32 decide routine use by it alone", async () => {
   const yes = ["the organization", "  The Organization  ", "THE ORGANIZATION's own rack", "the organization's own Acme appliance",
                "Microsoft (the organization's own Azure bucket)", "Acme ICAP (The Organization's own appliance)"];
-  const no = ["Uva Software, LLC", "OPSWAT, Inc. (Cloud), or the organization's own Core server", "Microsoft (Azure, run by Microsoft)",
+  const no = [PROVIDERS.find((d) => d.provider_id === "scanii").handling.recipient,
+              PROVIDERS.find((d) => d.provider_id === "opswat-deep-cdr").handling.recipient, "Microsoft (Azure, run by Microsoft)",
               "Microsoft (the organization's own storage) and Google (the organization's own bucket)", "Microsoft (the organization's own storage) in the cloud",
               "the organizational partner's cloud", "a vendor for the organization", "", "   ", "not stated"];
   const odd = [null, undefined, 1, true, {}, [], ["the organization"], { toString() { throw new Error("no"); } }, Symbol("x"), () => "the organization"];
