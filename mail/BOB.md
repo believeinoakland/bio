@@ -1415,3 +1415,75 @@ Home's remaining readings (T51-118, screens-daily R64, K4059; DEC-218, DEC-219).
 
 ## B361 · ACK · re U383 · 2026-10-19 · session_01CcPD7nccPnQTm1zvhNBCFF · primary
 ACK U382 and U383: the design @ 20c8001300 (DEC-353, DEC-354) is merged into tranche/T51 at R9's close with no job running (K4062, K4063), rows.mjs regenerated; screens-daily's L11 job reads Home's five rows (R64).
+
+## B362 · HANDOFF · 2026-10-19 · session_01CcPD7nccPnQTm1zvhNBCFF · primary
+journey-check R17 (`group.test.mjs`:19) scans setup-words' rows, and since the words conversion (K3930) that includes `code` rows, which members read (setup-words R13). At the tranche tip 71 rows say "group" outside GROUP_SENSE; journey-check's job clears its own two. The other 69 are yours to judge (K4066): a row in the team sense gets a `words.json` row under the same id saying "team" (the table wins, K3930); a row in another sense (a grouping of reasons or legs, a regex group, SQL `GROUP BY`, the owner token 'group') joins GROUP_SENSE. Most look like other senses; the 30 `skills.skilldoctrine.*` rows read as the team sense ("the group's own writing"). Please post MERGE when done; R17:19 is accepted red until it is merged. The 69 ids:
+- `action-grammar.checks.copied_i_is_not_a`
+- `ai-use.index.a_limit_s_owner_is`
+- `ai-use.index.an_estimate_is_for`
+- `ai-use.index.exploring_is_approved_for`
+- `ai-use.index.limits_are_read_for`
+- `ai-use.index.the_use_names_no_paying`
+- `ai-use.index.use_is_read_for`
+- `ai-use.index.use_over_time_is_read_for`
+- `calc-grammar.recipe.why_its_groups_sum_is`
+- `calculations.application.the_share_of_each`
+- `case-authoring.document.axis_group_ground_state`
+- `case-grammar.casefile.group`
+- `court-citations.translate.back_reference_to_v1_before`
+- `inquiry.index.basis_raw_is_claimed_by`
+- `inquiry.index.grounds_i_legs_must_be`
+- `inquiry.index.grounds_i_legs_names_ord`
+- `inquiry.index.pass_grounds_an_array`
+- `inquiry.index.the_structure_this_would_author`
+- `link-sweep.sweep-match.a_closes_no_group`
+- `link-sweep.sweep-match.a_named_group_s`
+- `link-sweep.sweep-match.an_unclosed_group`
+- `link-sweep.sweep-match.an_unclosed_group_name`
+- `link-sweep.sweep-match.an_unopened_group`
+- `link-sweep.sweep-match.escape_refers_back_to_a`
+- `link-sweep.sweep-match.the_group_k`
+- `link-sweep.sweep-match.v1_is_not_a_group`
+- `promotion.index.this_store_records_no_producing`
+- `query-language.query.select_name_as_field_fieldref`
+- `skills.skilldoctrine.a_member_takes_every_act`
+- `skills.skilldoctrine.a_procedure_guide_lists_the`
+- `skills.skilldoctrine.a_sentence_that_asserts_a`
+- `skills.skilldoctrine.a_version_may_be_written`
+- `skills.skilldoctrine.administrators_or_members_given_the`
+- `skills.skilldoctrine.an_action_is_addressed_to`
+- `skills.skilldoctrine.civicsmith_takes_no_position_on`
+- `skills.skilldoctrine.claims_about_a_body_rest`
+- `skills.skilldoctrine.counsel_may_be_briefed_at`
+- `skills.skilldoctrine.every_plan_for_an_infraction`
+- `skills.skilldoctrine.no_fact_and_no_rule`
+- `skills.skilldoctrine.no_reading_guide_was_passed`
+- `skills.skilldoctrine.outward_acts_are_classed_by`
+- `skills.skilldoctrine.suggested_options_come_from_reasoning`
+- `skills.skilldoctrine.the_ai_may_read_a`
+- `skills.skilldoctrine.the_count_a_run_publishes`
+- `skills.skilldoctrine.the_fixed_terms_the_grades`
+- `skills.skilldoctrine.the_groups_own_local_words`
+- `skills.skilldoctrine.the_groups_own_writing_notes`
+- `skills.skilldoctrine.the_planes_published_catalogue_holds_10`
+- `skills.skilldoctrine.the_planes_published_catalogue_holds_7`
+- `skills.skilldoctrine.the_signed_statement_is_the`
+- `skills.skilldoctrine.the_system_is_nonetheless_prepared`
+- `skills.skilldoctrine.this_layer_is_instruction_a`
+- `skills.skilldoctrine.this_layer_is_instruction_and_3`
+- `skills.skilldoctrine.this_layer_is_instruction_every_5`
+- `skills.skilldoctrine.what_the_group_chose_changes`
+- `skills.skilldoctrine.what_the_group_sends_is`
+- `skills.skilldoctrine.wherever_a_member_writes_in`
+- `skills.skilldoctrine.with_the_members_suggestions_switch`
+- `strength.index.a_standard_of_evidence_is_a_property_of_a_project`
+- `strength.index.group_carries_no_name`
+- `strength.index.group_lists_no_reasons`
+- `strength.index.group_names_something_other_than_a_position`
+- `strength.index.groups_name_is_longer_than_200_characters`
+- `strength.index.groups_were_proposed_and_a_written_reading_holds`
+- `strength.index.is_not_a_question_so_it_has_no_reasons`
+- `strength.index.no_question_by_that_id_is_readable_no_reasons`
+- `strength.index.pass_partition_a_non_empty_list_of_groups`
+- `strength.index.reason_positions_are_in_no_group`
+- `strength.index.two_groups_are_both_named`
