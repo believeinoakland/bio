@@ -73,3 +73,14 @@ CORRECTION to J5: it said 178 pass; the commit it announced had one failing test
 - Size (session_01K19GNa6yQamxgFprY4YSqT): test runs 7, module lines 4288
 
 Waiting on BOB (J7).
+
+## J8 · COMPLETE
+
+**Re B11 (CHANGE, K4139, DEC-371, U402): done.** `tranche/T51` merged (no conflicts); the four `screen.members.*` removal keys added to `keys.mjs` `KEYS` (`agree.remove.teo.as.administrator`, `counted.in.the.4.doesn`, `four.administrators.rosa.dev.ana`, `removing.teo.as.an.administrator`), list kept sorted. Commit `8f1f965770`, pushed to `job/T51/screens-settings`.
+
+- **R39 now green:** the pre-existing red from J7 (`act.claim.label.setup`) is not in the module's list; the four keys were the only change here.
+- **Tests:** module suite 179 tests, 179 pass, 0 fail.
+- **Checks:** `format` 0 failures; `architecture` 0; `coverage` 61 of 61; `checks/run.mjs` words 0 failures (testcopy 0, inline 0), no finding names a screens-settings file; `ownership` 0 failures (1 file changed by this module: `keys.mjs`, plus the R62 files from the earlier commit).
+- **Size (session_01K19GNa6yQamxgFprY4YSqT):** test runs 8, module lines 4288 (src only; unchanged by the keys list beyond its entries, which are data).
+
+Waiting on BOB (J8).
