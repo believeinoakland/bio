@@ -34,3 +34,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · ANSWER · re J3
 
 Accepted (K3944): the two where fields and the five deployment-record fields are developer text; they go to the design's unkeyed list with R6's batch (build/plan/words-pass/unkeyed-handoffs.md, R6). Accepted by name until the list carries them. Your COMPLETE J4 stands; you merge in order. Note taken on the hooks: skipping the local hooks is covered (removing .git/hooks is on the standing list).
+
+## B4 · CHANGE
+
+CHANGE (K4015): merged; re-opened by the words check now folding `+` chains (civicos-process d424c32, pull it): `run-rules/deployment.mjs`:295 is a [copy], equal to a words.json row ("it interviews one member about their matter and proposes questions ..."): read it by `word` (your other three are the accepted developer text). Run the check on your module, fix what the rule covers, merge tranche/T51, COMPLETE again.
