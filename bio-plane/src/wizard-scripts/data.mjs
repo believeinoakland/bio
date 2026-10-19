@@ -40,13 +40,13 @@ export const LIBRARY_ADOPTED = Object.freeze([
 ]);
 /** R33, R41 (T47, T50; DEC-198 (4), DEC-266; N992, N1130): the commit of the library whose `doors` are carried as the front
  *  doors: the design commit named at T50's START, whose file holds the sixth door. */
-export const DOORS_SOURCE = "7be06eb4cb";
+export const DOORS_SOURCE = "20c8001300";
 /** R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241, which needs no approval from Bob): the library re-taken from the
  *  design file's content at the design commit named at T50's START (`7be06eb4cb`, the design branch's last merge into
  *  `tranche/T50`, K3750): every script whose name or steps differ from its latest carried version gains the file's
  *  content as its next version, approved as the entry records, the earlier version kept (R1, R7). */
 export const LIBRARY_RETAKEN = Object.freeze([
-  Object.freeze({ source: "7be06eb4cb", approved: Object.freeze({ by: "BOB", at: "2026-10-17", ruling: "K2241" }) }),
+  Object.freeze({ source: "20c8001300", approved: Object.freeze({ by: "BOB", at: "2026-10-17", ruling: "K2241" }) }),
 ]);
 /** R30 (T46; DEC-194 (5); N913; K2241): the scripts BOB adds to the library from a newer design file, each by name, at
  *  version 1, from the commit of the library it is taken from, approved by BOB on the date of the adoption; none

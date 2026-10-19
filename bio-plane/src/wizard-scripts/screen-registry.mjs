@@ -3,7 +3,7 @@
  * its owed acts apart, each with the number of acts before it. Do not edit: run build-data.mjs. */
 import { deepFreeze } from "./data.mjs";
 
-export const SCREEN_REGISTRY_SOURCE = deepFreeze({"commit":"8c5e692e19","path":"docs/development/ux-substrate/screens/registry.json","sha256":"fd3d82623f04526404a65641fc7866142ab09cea6be8da6428c8c73c4feacb12"});
+export const SCREEN_REGISTRY_SOURCE = deepFreeze({"commit":"20c8001300","path":"docs/development/ux-substrate/screens/registry.json","sha256":"fd3d82623f04526404a65641fc7866142ab09cea6be8da6428c8c73c4feacb12"});
 
 export const SCREEN_REGISTRY = deepFreeze([
   {"id":"site","name":"civicsmith.org","purpose":"Civicsmith's own website, one site of three pages joined by one menu (Bob's D6, K3060; DEC-206; rewritten for its readers, DEC-223): the front page, for someone who has never heard of Civicsmith (what it is, how a team uses it in five steps, what a team gets, what it does not do, a published case, members sent to their own team's address); \"Start a team\", for a member who has decided (whether it fits, what is needed, who holds the Cloudflare account, what happens step by step, what it costs, then \"Create your team\" opens the installer); \"Teams at work\", the teams that chose to be listed (DEC-132).","acts":[],"owed":[]},

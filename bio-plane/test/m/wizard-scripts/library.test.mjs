@@ -78,7 +78,7 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "8c5e692e19", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "20c8001300", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
   assert.equal(wz.SCREEN_REGISTRY.length, 77, "R44: the file at the design commit named at the START of T51");
   REG_FILE.screens.forEach((f, i) => {
@@ -262,7 +262,7 @@ const afterT50 = (k) => {
   const chain = chainBefore(k);
   const [pv, pfile, pcommit, papproved] = chain.at(-1);
   const changed = pfile.scripts.find((x) => x.id === k.id).name !== k.name || JSON.stringify(stepsIn(pfile, k.id)) !== JSON.stringify(stepsIn(LIB_T50, k.id));
-  return { chain, changed, version: changed ? pv + 1 : pv, source: changed ? "7be06eb4cb" : pcommit, approved: changed ? T50 : papproved };
+  return { chain, changed, version: changed ? pv + 1 : pv, source: changed ? "20c8001300" : pcommit, approved: changed ? T50 : papproved };
 };
 const onT50 = (e) => afterT50(LIB_T50.scripts.find((k) => k.id === e.id));
 
@@ -276,7 +276,8 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
     { commit: "a0fab7abf0", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-a0fab7abf0.json") },
     { commit: "f90b187c7b", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-f90b187c7b.json") },
     { commit: "4664e8efd4", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-4664e8efd4.json") },
-    { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") }]);
+    { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-7be06eb4cb.json") },
+    { commit: "20c8001300", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-20c8001300.json") }]);
   const lib = wz.CIVICSMITH_LIBRARY;
   assert.equal(lib.length, 23);
   assert.equal(LIB_T50.scripts.length, 23);
@@ -298,7 +299,7 @@ test("R22, R30, R32, R36, R42 CIVICSMITH_LIBRARY is the 23 scripts of library.js
     const changed = was.name !== k.name || JSON.stringify(stepsIn(pfile, k.id)) !== JSON.stringify(e.steps);
     const held = (changed ? chain : chain.slice(0, -1)).map(([v, fl, c, approved]) => ({ version: v, steps: stepsIn(fl, k.id), author: "civicsmith", approved, source: c }));
     if (changed) retaken.push(k.name);
-    assert.deepEqual([e.version, e.source, e.approved], changed ? [pv + 1, "7be06eb4cb", T50] : [pv, pcommit, papproved], `${k.name}: version`);
+    assert.deepEqual([e.version, e.source, e.approved], changed ? [pv + 1, "20c8001300", T50] : [pv, pcommit, papproved], `${k.name}: version`);
     if (held.length) assert.deepEqual(e.earlier, held, `${k.name}: every earlier version kept whole, oldest first`);
     else assert.equal("earlier" in e, false, k.name);
     const all = [...held.map((x) => x.steps), e.steps].map((x) => JSON.stringify(x));
