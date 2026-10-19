@@ -25,3 +25,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 R95 amended on tranche/T51 (K4068): `cs.stateChip` also draws `deferred`, `dismissed`, `divided`, `planned`, `active`, `resolved` and `abandoned` (sixteen kinds; screens-settings R59 draws a chip for each; the words hold `state.item.<kind>.name/.means/.can/.cannot` for all sixteen). Merge tranche/T51 and extend R95's test and control.
+
+## B3 · CHANGE
+
+CHANGE (K4072), from screens-daily (SCREENS-DAILY #8 J1 (b), confirmed; BOB's detail of R90 and R93, meaning unchanged). A kit choice that redraws its screen (R90) re-runs the screen's `reads` with the choice in page memory before drawing, so a read whose query depends on a choice (Find's browse) can carry `refresh: true` (R93) and is re-read every 45 seconds with the current choice. Test: a choice that changes a read's query re-reads it once, with the new query; control: a choice that changes no read sends no read beyond the redraw's. screens-daily (R54, R55, R93's adopter) and screens-settings (R59's chips, R95) wait on your merge, and op-declarations' merge before it.

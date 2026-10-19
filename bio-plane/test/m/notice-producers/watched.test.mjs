@@ -55,7 +55,7 @@ test("R24 a member watches a document; it changes after her mark: one item with 
   assert.equal(it.summary_key, "queue.watched-changed.summary");
   assert.equal(it.detail_key, "queue.watched-changed.detail");
   assert.equal(it.summary, word("queue.watched-changed.summary", { what: "Minutes of the 1 October meeting" }));
-  assert.equal(it.detail, word("queue.watched-changed.detail", { date: `5 ${word("date.month.october")}` }));
+  assert.equal(it.detail, word("queue.watched-changed.detail", { date: word("date.daymonth", { day: "5", month: word("date.month.october") }) }));
   assert.deepEqual(s.asked[0], { only: "watched", viewer: "member:alice", limit: WATCHED_PAGE });
   /* read again: the same change is the same item, never a second */
   const again = told(read("alice", { now: "2026-10-06T13:00:00Z" }));
