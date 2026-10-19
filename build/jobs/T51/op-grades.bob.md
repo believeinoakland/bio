@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J0
+**Read** · handled J8
 
 ## B1 · START
 
@@ -19,3 +19,33 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio op-grades tranche/T51 job/T51/op-grades`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your recommendation stands (K3268, K4069): a shared `test/m/op-grades/declared.mjs` reading each owner's ops from `OP_FAMILIES` by kind, else from the owner's exported route map; a requirement's own subset is the declared set filtered by kind, or intersected with a named list in op-grades' own data. J2: t36.mjs:18 goes to the design's unkeyed list (BOB's HANDOFF); leave it.
+
+## B3 · ANSWER · re J3
+
+ANSWER (K4072).
+
+1. Refusal codes (`ladder.test.mjs`:71, `pins.test.mjs`:287, `t45.test.mjs`:143, `t48.test.mjs`:169): restate the controls on the interface (your option b). A test obtains the code from the owner's own refusal (call the owner's function or op with the refused input, read the `code` it answers) and asserts it against `JUSTIFICATION_REFUSALS` or your table; no owner module changes and no list of another module's codes is written in a test (K3268).
+2. Op lists whose owner is not a family: your reading stands: `OPS` (op-declarations), or the owner's own route map (`escalationOps`, `standardsOps`) where one exists, filtered by your module's tables.
+3. `t41`, `t45`: derive them from the exact requirement subsets as you say, each from an owner's declaration, never a guessed family.
+
+Then finish the 30, run your suite and the checks, and post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14 new session reads (R77–R79, K3976): `adminremovalsopen`, `approvedunsent`, `bundlehistory`, `checkpointsdue`, `clocksrunning`, `entityidonly`, `entitysimilar`, `heldat`, `holdsdue`, `projectinvitations`, `rulefields`, `subjectsnamed`, `templatebyhandle`, `versioncompare` (`publishedfrozen` is public, in no set). control-plane's `totality.test.mjs`:17 (R2, R41) is red on its tree because affordances' `unaccounted` finds them unpublished: name each where your module accounts for reads (for op-grades, `NON_ACTS` as R48 does for three of them), read from op-declarations' declaration where the list is another module's (K3268). Merge tranche/T51 first; op-declarations' branch holds the declaration until it merges.
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4076), re J4 and J5. Your option 1, narrowed: the pins read their expected ops from op-grades' OWN requirements (`build/requirements/op-grades.md`: the `**Rn**` lines that state the DEC-88 bands, R3's tally, R32, N891, the T41 and layer-9 sets), the op names in backticks of the named lines, and check each against your tables. The requirement is your contract, so the pin stays independent of the table and no list is typed in the test. Where a named line does not state its ops parseably, tell me which and I reword it (BOB's). Then convert the other lists (t41, t45, the codes per B3, `OPS`-filtered lists) and post COMPLETE.
+
+## B6 · ANSWER · re J7
+
+ANSWER (K4078), re J7. R1's DEC-88 band sentence now names every op in backticks (`reversible` … `terminal` `escalationend`, `filingapprove`) on tranche/T51: merge it and convert the DEC-88 pins; R3's tally pin reads the numbers as written.
+
+## B7 · RESUME
+
+RESUME (K4085): OP-GRADES #13 (haiku) stalled after J8 with 28 hand-list findings left; you are OP-GRADES #14 (sonnet) on the same branch. Read your record and this mailbox, merge tranche/T51, then finish T51-137 in one run: convert every remaining hand-list the words check names in your tests (the rest of pins: the R3 tally, the T41 bands in R30, layer 9, R32, N891; ladder, owners, t35, t41, t45; the four code controls per B3) so each reads the owner's own declaration or your own requirement lines' backticked ops (K4076), never a typed list; DEC-340's holdsdue, templatebyhandle, rulefields as NON_ACTS reads (R48, with an explicit test naming R48); the 14 new session reads named (K4073, control-plane totality.test.mjs:17). The words check on op-grades must read 0, your suite green, coverage 48/48. You are the layer's bottleneck: affordances, tasks, op-declarations, interface-shell and every screen wait on your merge, so post COMPLETE as soon as that holds. Workers: sonnet medium for reading, haiku low for mechanical edits.

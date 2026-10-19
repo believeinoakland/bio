@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio installer-steps tranche/T51 job/T51/installer-steps`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your reading is right. `uses` is set now (signatures, instance-setup; setup-words joins at your second stage, as your R36 and the map say), and installer's uses gains installer-steps (K4068). `paths` and `tests` stay empty until your COMPLETE: the format check refuses a path naming nothing (K1043), so BOB fills them from your record (newgroup/src/steps/, newgroup/test/steps/) before the merge's ownership check. Until then your own ownership and coverage checks name your new files: expected, say so in COMPLETE. Write only those two directories and your record.
+
+## B3 · CHANGE
+
+CHANGE (K4083): installer (T51-128) is merged into tranche/T51 (the moved ranges deleted, re-exported from steps/). Your keys stage now (R36): merge tranche/T51; read every member-facing sentence of steps/ by key through setup-words' word(key, vars) from DEC-329's and DEC-331's families (installer.fleet.*, installer.image.*, installer.lag.*, installer.logs.*, installer.connect.*, installer.address.*, installer.probe.leftover, installer.release.nolimits, .badlimits); STEP_KEYS cut into the bundle beside the installer's; no inline sentence remains (the words check's 74 inline and 25 plain findings on your module go to 0); R20's and R30's T51 paragraphs met. Your edge to setup-words is in modules.json and your Uses (K4083). A sentence with no row is a REPORT (to UX-DESIGN through me), never inline English. Run installer's suites too (it re-exports your names). Then COMPLETE.

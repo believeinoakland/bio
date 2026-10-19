@@ -7,8 +7,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
 import { WORD, FILLED } from "./words.mjs";
-import { ACTION_WORDS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { ACTION_KEYS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
+import { word, localize, hasWord } from "../../../src/setup-words/index.mjs";
 
 function people(fakes) {
   const w = world(fakes);
@@ -58,7 +58,7 @@ test("R22: an entry carrying noticed_by raises R1's item once its duty's watch h
   assert.ok(it, "the watch was stopped yesterday: R1's item is drawn");
   assert.deepEqual(asked.at(-1), "DUT-2026-0001", "following is asked of the entry's duty");
   assert.deepEqual(it.recipients, ["alice"]); assert.equal(it.basis.recipients_rule, "author");
-  assert.equal(it.summary, "Noticed: no reply recorded by 29 August");
+  assert.equal(it.summary, localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 29" }));
   assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - 2 * DAY)}T00:00:00Z`, ms: 2 * DAY, days: 2 });
   assert.deepEqual(it.basis.noticed_by, noticed); assert.equal(it.basis.duty_watch_end, day(NOW - DAY));
   assert.deepEqual(ids(w.read("olga")), [], "R1's recipients, nobody else");
@@ -176,12 +176,12 @@ test("R23, R11: each door's label is words.json's door.<op> where it holds one; 
 });
 
 test("R23: every sentence this module holds by key is words.json's en, verbatim, but canon's question R23 keeps unchanged; the kept sentences are named", () => {
-  for (const [key, en] of Object.entries(ACTION_WORDS)) {
-    if (WORDS_CANON.includes(key)) continue;
-    assert.equal(en, WORD(key), key);
-  }
-  /* control: the canon key differs from words.json's, and is the one held apart */
-  assert.notEqual(ACTION_WORDS["queue.action-clock-overdue.noreply"], WORD("queue.action-clock-overdue.noreply"));
+  for (const key of ACTION_KEYS) assert.ok(hasWord(key), key);
+  /* control: canon's question is words.json's key, its own words held apart, and the one key so held */
+  const [canon] = WORDS_CANON;
+  assert.ok(hasWord(canon), canon);
+  assert.notEqual(localize("action-producers.words.noreply_canon", "Noticed: no reply recorded by {date}", { date: "August 29" }),
+    word(canon, { date: "August 29" }));
   for (const k of ["queue.action-clock-overdue.theirs.detail", "queue.plan-look-again.detail", "queue.litigation-hold.docket.detail"]) {
     assert.ok(KEPT.includes(k), k);
     assert.equal(typeof WORD(k), "string", `${k} is words.json's, kept and returned to BOB`);

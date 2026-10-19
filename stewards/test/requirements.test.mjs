@@ -11,7 +11,8 @@ import { worker, W, makeEnv, makeStore, call, report, signIn, ALICE, BOB, ADDRES
   shaHex, keyOf, clock, T0 } from "./fixture.mjs";
 import { GROUP_SLUG_RE } from "../../bio-plane/src/setup-fleet.mjs";
 import { parseJsonc } from "../src/config.mjs";
-import { GUIDE_TEXT } from "../src/ui.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+import { GUIDE_TEXT, GUIDE_PARAGRAPHS, SERVICE_HOLDS, KIND_WORDS, RESPONSIBLE, STEWARDS, RECEIVED, NOT_YET_OPEN_HEADING, noticeSentences, noticeLines, esc, when } from "../src/ui.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const DAY = 86400e3, HOUR = 3600e3;
@@ -35,7 +36,7 @@ test("R1: not yet open while any of the five values is absent or malformed; the 
     const env = makeEnv({ [name]: value });
     const page = await call(env, "/", { json: false });
     assert.equal(page.status, 200);
-    assert.match(page.text, /not yet open/);
+    assert.ok(page.text.includes(esc(NOT_YET_OPEN_HEADING)), `${name}: the page says the service is not yet open`);
     assert.doesNotMatch(page.text, /<form/);
     assert.ok(!page.text.includes(ADDRESS), `${name}: the page names no address`);
     const r = await report(env);
@@ -63,7 +64,7 @@ test("R2: checkOpen answers null only when the deploy configuration would open t
   assert.equal(W.checkOpen({ wranglerJsonc: WRANGLER_OPEN(), secretNames: secrets }), null);
   const lacking = W.checkOpen({ wranglerJsonc: WRANGLER_OPEN({ STEWARDS_ADDRESS: undefined }), secretNames: secrets });
   assert.deepEqual(lacking.map((p) => p.name), ["STEWARDS_ADDRESS"]);
-  assert.match(lacking[0].problem, /address/);
+  assert.equal(lacking[0].problem, localize("stewards.config.address_not_set", "is not set: the stewards' contact address is missing"));
   for (const [over, sec, name] of [[{ REPORT_RETENTION_DAYS: "0" }, secrets, "REPORT_RETENTION_DAYS"], [{ CONTACT_RETENTION_DAYS: undefined }, secrets, "CONTACT_RETENTION_DAYS"],
     [{ STEWARDS_ADDRESS: "a@b.example,c@d.example" }, secrets, "STEWARDS_ADDRESS"], [{}, ["SOURCE_KEY"], "STEWARD_KEYS"], [{}, ["STEWARD_KEYS"], "SOURCE_KEY"],
     [{ SOURCE_KEY: "plain" }, secrets, "SOURCE_KEY"]]) {
@@ -139,7 +140,8 @@ test("R3: the intake takes {kind, concerns, description, contact?} with no crede
   const form = await call(env, "/report", { method: "POST", form: { ...REPORT }, json: false, ip: "203.0.113.202" });
   assert.equal(form.status, 200);
   const ref = /id="ref">([^<]+)</.exec(form.text)[1];
-  assert.match(form.text, /replies only by the contact you gave/);
+  assert.ok(form.text.includes(esc(RECEIVED.withContact)), "a reply only by the contact given");
+  assert.ok(!form.text.includes(esc(RECEIVED.withoutContact)));
   /* stored: the four fields and the received time, nothing else of the request. */
   const row = env.STORE.db.prepare("SELECT * FROM reports WHERE ref = ?").get(ref);
   assert.deepEqual(Object.keys(row).sort(), ["concerns", "contact", "description", "kind", "latest_act", "received", "ref", "state"]);
@@ -220,11 +222,21 @@ test("R5: the open page's notice says what a report is for, the stewards' limits
   assert.equal(status, 200);
   const notice = text.slice(text.indexOf('id="notice"'), text.indexOf("<form"));
   assert.ok(text.indexOf('id="notice"') < text.indexOf("<form"), "the notice is before the form");
-  for (const re of [/abuse of Civicsmith itself/, /fabricated evidence/, /harassment/, /impersonation/, /only withdraw a shared service/,
-    /never edit or delete a team's record/, /contact field is optional and is used only to reply/, /Only Civicsmith&#39;s stewards read them/,
-    /erased 90 days after/, /deleted 365 days after/, new RegExp(`mailto:${ADDRESS}`), /gives no legal advice/,
-    /Civicsmith&#39;s stewards decide every report\. Believe in Oakland, the publisher of Civicsmith, is responsible for them/])
-    assert.match(notice, re);
+  /* each of the notice's seven sentences, in order: what a report is for, the stewards' limits, the contact, what is kept
+     and for how long (as numbers), the address, no legal advice, who is responsible. */
+  const sentences = noticeSentences({ contactDays: 90, reportDays: 365 });
+  assert.equal(sentences.length, 7);
+  const mail = `<a href="mailto:${esc(ADDRESS)}">${esc(ADDRESS)}</a>`;
+  let at = 0;
+  for (const x of sentences) {
+    const shown = esc(x).replace("\u0001", () => mail);
+    const i = notice.indexOf(shown, at);
+    assert.ok(i >= at, `a notice sentence is missing or out of order: ${x.slice(0, 20)}`);
+    at = i + shown.length;
+  }
+  assert.ok(sentences[3].includes("90") && sentences[3].includes("365"), "the periods as numbers");
+  assert.ok(sentences[3].includes(STEWARDS) && sentences.at(-1) === RESPONSIBLE);
+  assert.ok(sentences[4].includes("\u0001"), "the address sentence holds the address's place");
   for (const s of [ALICE.name, BOB.name]) assert.ok(!text.includes(s));
 });
 
@@ -253,15 +265,14 @@ test("R7: /guide serves the shared guide words byte for byte as stewards/guide.m
     const words = [...section.matchAll(/<(h1|p)>([\s\S]*?)<\/\1>/g)].map((m) => unesc(m[2])).join("\n\n") + "\n";
     assert.equal(words, shared, "byte for byte");
     const service = /<section id="service">([\s\S]*?)<\/section>/.exec(text)[1];
-    assert.match(service, /holds the reports sent to it, the stewards&#39; decisions on them, and the register of withdrawn shared services/);
-    assert.match(service, /Civicsmith&#39;s stewards could be asked or compelled/);
-    assert.match(service, /hosting provider, under the law that binds it/);
-    assert.match(text, /not legal advice/);
+    const [heading, ...second] = SERVICE_HOLDS;
+    assert.equal(second.length, 3);
+    assert.ok(service.includes(`<h2>${esc(heading)}</h2>${second.map((x) => `<p>${esc(x)}</p>`).join("")}`), "what this service holds, who could be compelled, no legal advice");
     assert.ok(text.indexOf('id="guide"') < text.indexOf('id="service"'));
   }
-  /* the shared words carry installer R48's third part: what and where, who controls it, who could be compelled. */
-  for (const re of [/own hosting account/, /Whoever can sign in to that hosting account controls your team's Civicsmith/, /your team itself \(and anyone in it who keeps a copy\), and its hosting provider, under the law that binds/, /stewards hold none of it/, /not legal advice/])
-    assert.match(shared, re);
+  /* the shared words are the guide's five paragraphs, heading first, and nothing else. */
+  assert.equal(GUIDE_PARAGRAPHS.length, 5);
+  assert.equal(`${GUIDE_PARAGRAPHS.join("\n\n")}\n`, shared);
 });
 
 test("R8: sign-in by name and key in the body sets a 12-hour HttpOnly, Secure, SameSite=Strict cookie on /steward; any wrong pair is one answer; 5 refusals per 15 minutes then limited even for a right key", async () => {
@@ -469,6 +480,7 @@ test("R13: the register; reinstate with a reason ends a standing withdrawal (NO_
 });
 
 test("R14: one notice to the stewards' address per accepted report, with ref, kind, time and the stewards' page only; none unset; a failure leaves the answer; nothing to reporters or groups", async () => {
+  clk = clock();
   LOGS.length = 0;
   const env = makeEnv();
   const contact = "reporter@example.org";
@@ -477,7 +489,10 @@ test("R14: one notice to the stewards' address per accepted report, with ref, ki
   const m = env.sent[0];
   assert.equal(m.to, ADDRESS);
   assert.match(m.raw, new RegExp(`^To: <${ADDRESS}>`, "m"));
-  for (const want of [r.data.ref, "Harassment", "/steward", "Received: 2"]) assert.ok(m.raw.includes(want), want);
+  const lines = noticeLines({ ref: r.data.ref, kind: "harassment", received: T0, stewardsPage: `${ORIGIN}/steward` });
+  assert.ok(m.raw.endsWith(`\r\n\r\n${lines.join("\r\n")}\r\n`), "the notice's lines, in order, after the headers");
+  for (const want of [r.data.ref, KIND_WORDS.harassment, `${ORIGIN}/steward`, when(T0)]) assert.ok(lines.join("\n").includes(want), want);
+  assert.ok(m.raw.includes(`Subject: ${localize("stewards.index.notice_subject", "A report has arrived ({ref})", { ref: r.data.ref })}`));
   for (const not of [contact, "UNIQUE-DESCRIPTION", "case.example", "steward_session"]) assert.ok(!m.raw.includes(not), not);
   await report(env, {}, { ip: "192.0.2.8" });
   assert.equal(env.sent.length, 2);
@@ -605,7 +620,7 @@ test("R17: no group's Civicsmith holds a route or binding to this service, and i
   for (const f of scan(new URL("../../bio-plane/src", import.meta.url).pathname))
     assert.ok(!/stewards\.[a-z0-9-]+\.workers\.dev|\/steward\/|STEWARDS_ADDRESS/.test(readFileSync(f, "utf8")), f);
   for (const [f, src] of SOURCES()) {
-    assert.ok(!/bio-plane\/src\/(?!setup-fleet\.mjs)/.test(src), `${f} imports only the slug grammar from a group's Civicsmith's code`);
+    assert.ok(!/bio-plane\/src\/(?!setup-fleet\.mjs|setup-words\/index\.mjs)/.test(src), `${f} imports only the slug grammar and the word list from a group's Civicsmith's code`);
   }
 });
 
@@ -641,7 +656,8 @@ test("R19: every page names Civicsmith, says \"a group's Civicsmith\", never cop
     assert.doesNotMatch(words, /\b(instance|instances|plane|server)\b/i, p);
     /* "copy" only in its other meanings (a copy of a document), never as a name for a group's Civicsmith. */
     assert.doesNotMatch(words, /group(&#39;|')s (own )?cop(y|ies)|cop(y|ies) of (your |a )?(group(&#39;|')s )?Civicsmith|Civicsmith cop(y|ies)/i, p);
-    for (const m of words.matchAll(/Believe in Oakland/g)) assert.match(words.slice(m.index, m.index + 60), /Believe in Oakland, the publisher of Civicsmith/, p);
+    const unesc = (x) => x.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    assert.doesNotMatch(unesc(words).split(RESPONSIBLE).join(""), /Believe in Oakland/, `${p}: the publisher is named only inside the responsibility sentence`);
   }
   assert.match(out.find(([p]) => p === "/guide")[1], /your team&#39;s Civicsmith/);
 });
@@ -683,7 +699,7 @@ test("R22: /withdrawals serves anyone the standing withdrawals {service, item, s
   assert.equal(j.text, JSON.stringify(j.data.map((r) => ({ item: r.item, kind: r.kind, service: r.service, since: r.since }))), "canonical");
   const h = await call(env, "/withdrawals", { json: false });
   assert.match(h.text, /prof-1/);
-  assert.match(h.text, /Impersonation/);
+  assert.ok(h.text.includes(esc(KIND_WORDS.impersonation)));
   for (const t of [j.text, h.text]) for (const x of [a, b, c, "DESC-A", "ca@x.example", "c.example/a", "REASON", ALICE.name]) assert.ok(!t.includes(x), x);
   await call(env, "/steward/reinstate", { method: "POST", body: { service: "shared_profile", item: "prof-1", reason: "ok" }, cookie: s.cookie });
   assert.deepEqual((await call(env, "/withdrawals")).data.map((r) => r.item), ["tpl-1"]);
@@ -702,7 +718,7 @@ test("R23: no page or answer outside /steward/ names a steward; the public pages
   for (const p of ["/", "/guide", "/withdrawals"]) {
     const t = (await call(env, p, { json: false })).text;
     assert.match(t, /Civicsmith&#39;s stewards/);
-    assert.match(t, /Believe in Oakland, the publisher of Civicsmith, is responsible for them/);
+    assert.ok(t.includes(esc(RESPONSIBLE)), `${p}: who is responsible`);
   }
   assert.ok((await call(env, `/steward/report/${ref}`, { cookie: s.cookie })).text.includes(BOB.name), "shown to a signed-in steward");
 });

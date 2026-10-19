@@ -44,7 +44,7 @@ import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mj
 import { dayWords, say } from "./words.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
-export { ACTION_WORDS, WORDS_CANON, KEPT, OWN_WORDS } from "./words.mjs";
+export { ACTION_KEYS, WORDS_CANON, KEPT } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -511,8 +511,10 @@ export class ActionProducers {
    *  words.json but keeps this present text, returned to BOB, so no `detail_key` is answered (R23: it says "no reply is
    *  recorded since", untrue once a reply is recorded while nothing marks the entry met). */
   static #detailOf(e, dated, steps) {
-    return word("action-producers.dated_nothing_marks", { text: String(e.text ? `"${e.text}"` : "An entry on this action's clock"), dated: String(dated ? e.date : "with no date"), basis: String(e.basis ? ` (${e.basis})` : ""), plural: String(steps.length ? ` The step${steps.length > 1 ? "s" : ""} ${steps.join(", ")} stand${steps.length > 1 ? "" : "s"} `
-          + "for the same date, and are told here, once." : "") });
+    const stepsSentence = steps.length
+      ? ` ${word("action-producers.step_stand_date", { plural: steps.length > 1 ? "s" : "", steps: steps.join(", "), plural_2: steps.length > 1 ? "" : "s" })}`
+      : "";
+    return word("action-producers.dated_nothing_marks", { text: String(e.text ? `"${e.text}"` : word("action-producers.entry_action_clock")), dated: String(dated ? e.date : word("action-producers.date")), basis: String(e.basis ? ` (${e.basis})` : ""), plural: stepsSentence });
   }
 
   /** R24 (action-clocks R23): the office or venue a group's own date is owed at, as the record states it: an office as
@@ -744,7 +746,7 @@ export class ActionProducers {
         due: ActionProducers.#dueDay(isCalendarDate(x.date) ? x.date : null, zone),
         subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
                    text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
-        summary: word("action-producers.summary.reminder_asked", { text: String(x.text || "a clock entry"), action: String(x.action), date: String(x.date ? `, due ${x.date}` : "") }),
+        summary: word("action-producers.summary.reminder_asked", { text: String(x.text || word("action-producers.summary.clock_entry")), action: String(x.action), date: String(x.date ? `, due ${x.date}` : "") }),
         detail: `you asked to be reminded of this date on ${x.on}. Answer it with another reminder on a later day, or with `
               + "none; nothing reminds you again unless you ask.",
         basis: { source: "action-clocks.remindersDue", action: x.action, entry: x.ord, date: x.date ?? null,

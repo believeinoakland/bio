@@ -320,9 +320,9 @@
   },
   {
    "key": "screen.dash-project.story.undetermined",
-   "en": "Undetermined order: {events}, both dated by {precision}.",
+   "en": "Undetermined order: {events}, each dated only {precision}.",
    "protected": false,
-   "note": "DEC-259: {precision} month or year"
+   "note": "DEC-259: DEC-360 (B371 1): {precision} from screen.dash-project.precision.<code>; any number of events"
   },
   {
    "key": "screen.dash-project.activity.events",
@@ -8779,12 +8779,6 @@
    "note": "DEC-328: B300 (7): the refusal naming what remains"
   },
   {
-   "key": "installer.fact.unknown",
-   "en": "Not known: {reason}.",
-   "protected": false,
-   "note": "DEC-328: B300 (7): a fact a silent or older copy does not answer"
-  },
-  {
    "key": "installer.fact.unknown.silent",
    "en": "your team's Civicsmith didn't answer when the installer asked",
    "protected": false,
@@ -9541,12 +9535,6 @@
    "note": "DEC-329: B303 (7c): index.mjs:1626-1629 (any run, update included)"
   },
   {
-   "key": "installer.tryagain.install",
-   "en": "To continue, start again from the installer's first page in a minute; this is usually temporary. (Cloudflare said: {said})",
-   "protected": false,
-   "note": "DEC-329: B303 (7c): index.mjs:1647 tryAgain"
-  },
-  {
    "key": "installer.fallback.programs.one",
    "en": "1 program",
    "protected": false,
@@ -9676,7 +9664,7 @@
    "key": "installer.remove.done",
    "en": "Deleted all {n} parts. The account is clear.",
    "protected": false,
-   "note": "DEC-329: B303 (7f): index.mjs:2539, the last line before removedPanel; {n} counts the deletions made"
+   "note": "DEC-359 (B368 4): said as the progress line before the removed panel, not inside it; DEC-329: B303 (7f): index.mjs:2539, the last line before removedPanel; {n} counts the deletions made"
   },
   {
    "key": "installer.fact.unknown.short",
@@ -10076,13 +10064,13 @@
   },
   {
    "key": "queue.export-performed.summary",
-   "en": "A full {scope} export was taken on {date}: {records}, {files}",
+   "en": "A full export of your team's record was taken on {date}: {records}, {files}",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1149; {scope} {date} {records} {files} (records and files are the two count keys above; scope is the export's kind word, see NOTES)"
   },
   {
    "key": "queue.export-performed.detail",
-   "en": "An export of the {scope} left your team's Civicsmith using the team's master key. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
+   "en": "A full export of your team's record left your team's Civicsmith using the team's master key. Every administrator is told; nobody else is. The export log is the record of it, and nothing here changes the log.",
    "protected": false,
    "note": "DEC-329: B303 (10): queue-producers/index.mjs:1150; {scope}"
   },
@@ -12265,12 +12253,6 @@
    "note": "DEC-331: replaces the technical request the source states (newgroup/src/index.mjs:2205); the installer records it (K3868; DEC-336)"
   },
   {
-   "key": "installer.team.unrecorded.address",
-   "en": "the address of your team's Civicsmith",
-   "protected": false,
-   "note": "DEC-331: the installer remaining sentences: newgroup/src/index.mjs:2193; the {address} above when the address is not known"
-  },
-  {
    "key": "installer.team.unrecorded.suggest",
    "en": "Your team's Civicsmith was installed under the name {slug}. Unless you give another, the installer records that name as your team's short name. Which team produces your record is yours to say.",
    "protected": false,
@@ -12371,30 +12353,6 @@
    "en": "Answered by {member}, {when}",
    "protected": false,
    "note": "DEC-330: B306 A61 receipt: when another member did it for everyone; {when} as in queue.answered.byyou"
-  },
-  {
-   "key": "queue.answered.photos.one",
-   "en": "Vouched for a photo you captured on {place}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt: the one-photo form of queue.answered.photos, which holds two or more"
-  },
-  {
-   "key": "queue.answered.photos",
-   "en": "Vouched for {n} photos you captured on {place}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
-  },
-  {
-   "key": "queue.answered.granted",
-   "en": "Granted {member}'s request to join {project}",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
-  },
-  {
-   "key": "queue.answered.granted.meta",
-   "en": "{member} saw your answer",
-   "protected": false,
-   "note": "DEC-330: B306 A61 receipt"
   },
   {
    "key": "queue.answered.snoozed.meta",
@@ -13226,7 +13184,7 @@
   },
   {
    "key": "screen.document.a30.6_links_on_this_page_4_lead_outside_the_",
-   "en": "6 links on this page. 4 lead outside the record, where the site is as it is today and may differ from what was captured.",
+   "en": "{n} links on this page. {outside} lead outside the record, where the site is as it is today and may differ from what was captured.",
    "protected": false,
    "note": "DEC-330: B306 A30: document drawn word"
   },
@@ -13946,15 +13904,15 @@
   },
   {
    "key": "screen.members.removing.teo.as.an.administrator",
-   "en": "Removing Teo as an administrator",
+   "en": "Removing {member} as an administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal (adminremovalsopen target)"
   },
   {
    "key": "screen.members.four.administrators.rosa.dev.ana",
-   "en": "Four administrators: Rosa, Dev, Ana and Teo.",
+   "en": "{n} administrators: {members}.",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} every administrator counted, the one facing removal included; {members} their names as one list in the language's own list form (Intl.ListFormat, conjunction); who voted and who is awaited are the rows below it, one per member (screen.members.removal.*)"
   },
   {
    "key": "screen.members.this.takes.3.of.4",
@@ -13976,15 +13934,15 @@
   },
   {
    "key": "screen.members.agree.remove.teo.as.administrator",
-   "en": "Agree: remove Teo as administrator",
+   "en": "Agree: remove {member} as an administrator",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal"
   },
   {
    "key": "screen.members.counted.in.the.4.doesn",
-   "en": "counted in the 4, doesn't vote",
+   "en": "counted in the {n}, doesn't vote",
    "protected": false,
-   "note": "DEC-330: B306 A72/A74: drawn sentence"
+   "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {n} the administrators counted; the member's name heads the row, so the row needs no {member}"
   },
   {
    "key": "screen.members.2.of.3.have.agreed",
@@ -14024,7 +13982,7 @@
   },
   {
    "key": "screen.project.this.takes.2.of.2",
-   "en": "This takes 2 of 2 owners' votes, and Dev's own is one of them.",
+   "en": "This takes {n} of {total} owners' votes, and {member}'s own is one of them.",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
@@ -14036,25 +13994,25 @@
   },
   {
    "key": "screen.project.by.standing.down.17.october",
-   "en": "by standing down, October 17",
+   "en": "by standing down, {date}",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
   {
    "key": "screen.project.the.change.waits.for.ana",
-   "en": "the change waits for Ana",
+   "en": "the change waits for {member}",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
   {
    "key": "screen.project.agree.dev.stands.down.as",
-   "en": "Agree: Dev stands down as owner",
+   "en": "Agree: {member} stands down as owner",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
   {
    "key": "screen.project.1.of.2.have.agreed",
-   "en": "1 of 2 have agreed so far.",
+   "en": "{n} of {total} have agreed so far.",
    "protected": false,
    "note": "DEC-330: B306 A47: drawn sentence"
   },
@@ -14168,7 +14126,7 @@
   },
   {
    "key": "shell.readonly",
-   "en": "You can read this {noun} and cannot act on it. What each member may do is set under Settings › Members.",
+   "en": "You can read this {noun} and cannot act on it. What each member may do is set under {members}.",
    "protected": false,
    "note": "DEC-330: B306 A13: once at the top of a page, for a member who may read and not act (Contribute off in Settings › Members); no other credential exists since token login was retired"
   },
@@ -15200,7 +15158,7 @@
   },
   {
    "key": "screen.project.notice.your.team.has.two.other",
-   "en": "Other notices your team has open: {open}. Cases it has published: {published}.",
+   "en": "Your team has other notices open and has published no case yet.",
    "protected": false,
    "note": "DEC-332: B306 C6: drawn sentence; B325 2: {open} is a count in words (such as two); {published} is the cases published so far, in words (such as no case, one case, three cases)"
   },
@@ -17329,30 +17287,6 @@
    "note": "DEC-340: B330 N858 D8: draft form"
   },
   {
-   "key": "screen.grouprules.text.label",
-   "en": "What it requires",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: draft form; DEC-341: B335 2: local-facts R10, R18"
-  },
-  {
-   "key": "screen.grouprules.text.help1",
-   "en": "What the rule makes someone do or allows, in plain words, such as the time or the limit it sets.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: draft form; DEC-341: B335 2"
-  },
-  {
-   "key": "screen.grouprules.text.help2",
-   "en": "It must be valid as an entry of your jurisdiction's profile.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: RULE_ENTRY_INVALID"
-  },
-  {
-   "key": "screen.grouprules.src.help1",
-   "en": "The passage of a captured document that states the rule.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: RULE_NO_SOURCE"
-  },
-  {
    "key": "screen.grouprules.src.help2",
    "en": "A rule with no source held here is not drafted.",
    "protected": false,
@@ -18025,24 +17959,6 @@
    "note": "DEC-341: B335 2: grouprules: kind option"
   },
   {
-   "key": "screen.grouprules.trigger.label",
-   "en": "What sets it off",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field, the trigger"
-  },
-  {
-   "key": "screen.grouprules.trigger.help1",
-   "en": "For a legal fact, the situation in which it is shown.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help (LEGAL_FACT_TRIGGERS)"
-  },
-  {
-   "key": "screen.grouprules.trigger.help2",
-   "en": "For a deadline, the event that starts its count.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help (deadline starts)"
-  },
-  {
    "key": "screen.grouprules.trigger.start.received",
    "en": "The office receives your team's request",
    "protected": false,
@@ -18123,18 +18039,6 @@
   {
    "key": "screen.grouprules.cite.help1",
    "en": "The provision the rule comes from, such as a section number or a rule number.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help"
-  },
-  {
-   "key": "screen.grouprules.link.label",
-   "en": "A link to it",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field, the source as a link"
-  },
-  {
-   "key": "screen.grouprules.link.help1",
-   "en": "Optional. The web address of the document that states the rule.",
    "protected": false,
    "note": "DEC-341: B335 2: grouprules: field help"
   },
@@ -21692,7 +21596,7 @@
   },
   {
    "key": "refusal.VOTES_SHORT",
-   "en": "There are not enough votes yet to carry this removal. Nothing was written.",
+   "en": "There are not enough votes yet to carry this removal. Your vote is recorded, and the removal waits for the rest.",
    "protected": false,
    "note": "DEC-342: removal vote counted below the needed threshold"
   },
@@ -22445,6 +22349,2166 @@
    "en": "high",
    "protected": false,
    "note": "DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, as screen.security.level.high"
+  },
+  {
+   "key": "case-grammar.casefile.group",
+   "en": "the source team is named by its slug, and this manifest states {value}",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.a_member_takes_every_act",
+   "en": "A member takes every act that commits the team: declaring a standard, determining, assessing a consequence or a success, choosing an option, approving, sending, advancing or stopping a stage, resolving, closing.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.a_procedure_guide_lists_the",
+   "en": "a procedure guide lists the routes the profile or the team knows for one kind of action, in its order and unranked, with the replies to expect and each route's citation; it is legal information, not legal advice, and never how the AI may behave: the AI's rules of conduct come only from the rules Bob approves, no guide can loosen them, and code checks that none does.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.a_sentence_that_asserts_a",
+   "en": "A sentence that asserts a breach as the team's finding needs a live noncompliant determination.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.a_version_may_be_written",
+   "en": "A version may be written for a particular audience (the violating party, the team's members, an oversight office, the public) or broadly for all.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.administrators_or_members_given_the",
+   "en": "Administrators, or members given the grant, have a translation workspace listing every interface word beside the team's language, gaps marked; the assistant drafts the missing ones as labeled drafts, a member who knows the language checks and adopts each, and without the assistant members type them.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.civicsmith_takes_no_position_on",
+   "en": "Civicsmith takes no position on what policy should be, and does not rule on policy even when members or teams do.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.claims_about_a_body_rest",
+   "en": "Claims about a body rest on findings of the three kinds in §3 or on the team's own dated correspondence; statements about what the team itself is doing need neither.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.counsel_may_be_briefed_at",
+   "en": "Counsel may be briefed at any stage, for a claim or for the team's defense, without a determination",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.every_plan_for_an_infraction",
+   "en": "Every plan for an infraction also offers the violating party the chance to fix and remediate: a notice saying what correcting the act and remedying its harm would look like, with the law's period or a time the team sets.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.no_fact_and_no_rule",
+   "en": "No fact and no rule from the model's knowledge; every rule from the plane (system rules from affordances, the team's rules from its reads, jurisdiction rules from the profile, law's text from `standards`); \"not held\" at its level, with the act that would find it; quotes beside every summary",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.no_reading_guide_was_passed",
+   "en": "no reading guide was passed to this render: a guide is the team's or Civicsmith's, read for the kind of document a run reads by the run's caller, and with none this layer carries nothing to read for.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.outward_acts_are_classed_by",
+   "en": "Outward acts are classed by what their text does: asking an office to examine something, seeking evidence (a records request, a request for comment), and enforcing the team's own request on its own dated record are never held back.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.suggested_options_come_from_reasoning",
+   "en": "Suggested options come from reasoning over the matter, the routes the profile's guides list and the team's own earlier plans, never from a fixed catalog; the plan holds no costs, assignees or hours (members take up work themselves, rule 20).",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_ai_may_read_a",
+   "en": "The AI may read a document the team holds a few pages at a time, within a reading limit, and never one under a \"no AI\" limit.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_fixed_terms_the_grades",
+   "en": "the fixed terms (the grades, \"Undetermined\", the queue's kinds, the acts' names) each carry a note on what they mean, so every language says the same thing; renaming words within a language stays out (option A), so cases read the same from team to team.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_groups_own_local_words",
+   "en": "the team's own local words are its to translate as ordinary words.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_groups_own_writing_notes",
+   "en": "The team's own writing (notes, questions, findings, notices) can be read in a member's language on request: the assistant drafts the translation, labeled \"Machine translation · original in English\", with the original one tap away; it never replaces the original.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_planes_published_catalogue_holds_10",
+   "en": "the plane's published catalog holds no {id} act, the one act through which a member asks to read the team's own writing in her language, so this layer carries no doctrine for work no draft can do.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_planes_published_catalogue_holds_7",
+   "en": "the plane's published catalog holds no {INTERFACE_TRANSLATION_ACT} act, the one act a run drafts the interface words a team's language lacks through, so this layer carries no doctrine for work no run can do.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_signed_statement_is_the",
+   "en": "The signed statement is the team's, adopted by a member, and the record keeps that it began as a machine draft.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.the_system_is_nonetheless_prepared",
+   "en": "The system is nonetheless prepared for stonewalling, retaliation, discrediting and legal harassment: every plan is checked for a branch that answers a hostile response; pressure against the team or its supporters is recorded as evidence wherever it arrives, and can open an inquiry of its own; lawful demands are complied with openly.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.this_layer_is_instruction_a",
+   "en": "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labeled as machine work, and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that serve it. It becomes the team's only by a member's own acts, which refuse a machine. A run ignoring every word here gets past nothing.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.this_layer_is_instruction_and_3",
+   "en": "this layer is INSTRUCTION, and this pack reads no account, grant, keep-away setting or word list: which account serves the member, whether the team keeps the assistant away, which member is granted a language and which words a draft is given are read for each call by the modules that serve it. A draft is recorded apart, labeled as machine work, and becomes the team's wording only by a granted member's act. A run ignoring every word here gets past nothing.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.this_layer_is_instruction_every_5",
+   "en": "this layer is INSTRUCTION. Every act it names is refused or labeled by the module that performs it: a drafted statement is stored apart and labeled as machine work, and becomes the team's statement only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.what_the_group_chose_changes",
+   "en": "What the team chose changes only by a member's act.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.what_the_group_sends_is",
+   "en": "What the team sends is checked against its record.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.wherever_a_member_writes_in",
+   "en": "Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me write this\": it works only from what the member tells it and what the team holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labeled \"Draft · the assistant's, asked by <handle>\", saved only when the member keeps them.",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "skills.skilldoctrine.with_the_members_suggestions_switch",
+   "en": "With the member's suggestions switch off it works only from what the member typed; with it on it may also draw on what the team holds (rule 7).",
+   "protected": false,
+   "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "screen.members.scale.head.admins",
+   "en": "Administrators",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many administrators the team has"
+  },
+  {
+   "key": "screen.members.scale.head.takes",
+   "en": "Votes it takes",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: the votes a removal needs at that size"
+  },
+  {
+   "key": "screen.members.scale.head.who",
+   "en": "Who votes",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many of the administrators may vote (the one facing removal does not)"
+  },
+  {
+   "key": "screen.members.scale.takes",
+   "en": "{k} of {n}",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {k} votes needed out of {n} administrators, e.g. 3 of 4"
+  },
+  {
+   "key": "screen.members.scale.who",
+   "en": "{v} of {n} may vote",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {v} of the {n} administrators may vote, e.g. 3 of 4 may vote"
+  },
+  {
+   "key": "screen.members.scale.not_removable",
+   "en": "not removable",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: at this size no administrator can be removed by vote"
+  },
+  {
+   "key": "screen.members.scale.no_majority",
+   "en": "no majority that leaves out the one facing removal can be reached",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: why, at one or two administrators"
+  },
+  {
+   "key": "screen.members.scale.now",
+   "en": "(now)",
+   "protected": false,
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a mark after the size the team has today"
+  },
+  {
+   "key": "screen.grouprules.name.label",
+   "en": "Its name",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: the rule (deadline) or key (legal fact); Civicsmith derives the stored id from it"
+  },
+  {
+   "key": "screen.grouprules.name.help1",
+   "en": "A short name your team will know it by.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.name.help2",
+   "en": "Civicsmith files the rule under it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.deadline.legend",
+   "en": "The deadline",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the group of a deadline's fields"
+  },
+  {
+   "key": "screen.grouprules.app.label",
+   "en": "The kind of action it applies to",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: applies_to, one kind"
+  },
+  {
+   "key": "screen.grouprules.app.help1",
+   "en": "The kinds of action your jurisdiction's profile lists, by their own names.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.app.claim",
+   "en": "A claim against a public body",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the choice \"claim\": a claim for money or another remedy filed with a public body"
+  },
+  {
+   "key": "screen.grouprules.amount.label",
+   "en": "How long",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: amount"
+  },
+  {
+   "key": "screen.grouprules.amount.help1",
+   "en": "A whole number.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.label",
+   "en": "Counted in",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: units"
+  },
+  {
+   "key": "screen.grouprules.units.days",
+   "en": "Days",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.hours",
+   "en": "Hours",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.business_hours",
+   "en": "Business hours",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.months",
+   "en": "Months",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.years",
+   "en": "Years",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.count.label",
+   "en": "Which days count",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: count, asked only for days"
+  },
+  {
+   "key": "screen.grouprules.count.calendar",
+   "en": "Every day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: count: calendar"
+  },
+  {
+   "key": "screen.grouprules.count.business",
+   "en": "Business days only",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: count: business"
+  },
+  {
+   "key": "screen.grouprules.count.help1",
+   "en": "Asked only for a deadline counted in days.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.start.label",
+   "en": "Counted from",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: starts; its choices are screen.grouprules.trigger.start.*"
+  },
+  {
+   "key": "screen.grouprules.start.help1",
+   "en": "The event that starts the count.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.dir.label",
+   "en": "Before or after it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: direction"
+  },
+  {
+   "key": "screen.grouprules.dir.forward",
+   "en": "After it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: direction: forward"
+  },
+  {
+   "key": "screen.grouprules.dir.backward",
+   "en": "Before it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: direction: backward"
+  },
+  {
+   "key": "screen.grouprules.dir.help1",
+   "en": "Most deadlines run after the event.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.dir.help2",
+   "en": "A notice that must come first runs before it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.owed.label",
+   "en": "Who must act by then",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: owed_by"
+  },
+  {
+   "key": "screen.grouprules.owed.body",
+   "en": "The office",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by: body"
+  },
+  {
+   "key": "screen.grouprules.owed.group",
+   "en": "Your team",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by: the team"
+  },
+  {
+   "key": "screen.grouprules.owed.none",
+   "en": "The source doesn't say",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by left out: undetermined"
+  },
+  {
+   "key": "screen.grouprules.due.label",
+   "en": "By what time on the last day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: due_at"
+  },
+  {
+   "key": "screen.grouprules.due.none",
+   "en": "Any time that day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at left out"
+  },
+  {
+   "key": "screen.grouprules.due.cob",
+   "en": "Close of business",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at: close_of_business"
+  },
+  {
+   "key": "screen.grouprules.due.time",
+   "en": "A set time",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at: a time, entered in the 12-hour clock and stored as HH:MM"
+  },
+  {
+   "key": "screen.grouprules.due.help1",
+   "en": "Choose a set time only when the source names one, such as {time}.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: {time} is a time of day, e.g. 5:00 PM"
+  },
+  {
+   "key": "screen.grouprules.fact.summary",
+   "en": "For a legal fact, these instead of the deadline",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the legal fact's own fields"
+  },
+  {
+   "key": "screen.grouprules.shown.label",
+   "en": "When it is shown",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: trigger; its choices are screen.grouprules.trigger.fact.*"
+  },
+  {
+   "key": "screen.grouprules.shown.help1",
+   "en": "The situation in which the fact is shown to a member.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.statement.label",
+   "en": "What it says",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: statement"
+  },
+  {
+   "key": "screen.grouprules.statement.help1",
+   "en": "The protection or the limit, in plain words.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.statement.help2",
+   "en": "It must be valid as an entry of your jurisdiction's profile.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.bears.legend",
+   "en": "The kinds of action it bears on",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: applies_to, several, optional"
+  },
+  {
+   "key": "screen.grouprules.bears.help1",
+   "en": "Leave them all unchecked when it is not tied to a kind of action.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.src.legend",
+   "en": "Where the source states it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the group of the source fields"
+  },
+  {
+   "key": "screen.grouprules.doc.label",
+   "en": "The document that states it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: source.captureSha, one of the captures the member can see"
+  },
+  {
+   "key": "screen.grouprules.doc.help1",
+   "en": "A capture your team holds and you can see.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.pass.label",
+   "en": "The passage",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: the words that become source.extent"
+  },
+  {
+   "key": "screen.grouprules.pass.help1",
+   "en": "Copy the words that state the rule exactly as the document writes them.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.pass.help2",
+   "en": "Civicsmith finds them in it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: Civicsmith locates the copied words in the capture and keeps their place as the source"
+  },
+  {
+   "key": "screen.grouprules.pass.notfound1",
+   "en": "Those words are not in that document as written.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: shown when the copied words are not found"
+  },
+  {
+   "key": "screen.grouprules.pass.notfound2",
+   "en": "Copy them exactly, or choose the document that holds them. Nothing was written.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "wizard-scripts.names.comment_for_team",
+   "en": "Comment for the team",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): data.mjs:55; translator: Name of a Civicsmith script (library). No placeholders."
+  },
+  {
+   "key": "wizard-scripts.names.update_team_civicsmith",
+   "en": "Update your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): data.mjs:59; translator: Name of a Civicsmith update script. No placeholders."
+  },
+  {
+   "key": "wizard-scripts.refusal.proposal_why_length",
+   "en": "Say why in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1030; translator: Refusal detail when a proposal has no reason or it is too long. {max}: the longest allowed reason, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.submit_author_only",
+   "en": "Only the author of a draft can submit it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1058; translator: Refusal detail shown when someone other than the draft author tries to submit it."
+  },
+  {
+   "key": "wizard-scripts.refusal.widen_not_approved",
+   "en": "This version is {state}. Only an approved project script can be offered team-wide. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1090; translator: Refusal detail when offering a script team-wide. {state}: the version's current state (e.g. draft, submitted, or \"of a retired script\" wording: a retired script)."
+  },
+  {
+   "key": "wizard-scripts.refusal.widen_admin_only",
+   "en": "Only an administrator can offer a script team-wide. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1092; translator: Refusal detail when a non-administrator tries to offer a script team-wide."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_not_submitted",
+   "en": "This version is {state}, not submitted. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1100; translator: Refusal detail when approving a version that is not awaiting approval. {state}: the version's current state, e.g. draft or approved."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_team_wide_admin_only",
+   "en": "Only an administrator can approve a team-wide script. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when a non-administrator tries to approve a team-wide script."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_owner_only",
+   "en": "Only an owner of the script's project can approve it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when someone who does not own the project tries to approve a project script."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_not_own_work",
+   "en": "You wrote this version and nobody else has contributed to it, so another member needs to approve it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1106; translator: Refusal detail when the approver is the only member who worked on the version."
+  },
+  {
+   "key": "wizard-scripts.refusal.grant_admin_action",
+   "en": "granting the advanced wizard editor",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1131; translator: Fragment naming the action that needs an administrator; slotted into a \"not an administrator\" refusal. Keep as a lowercase phrase."
+  },
+  {
+   "key": "wizard-scripts.refusal.grant_no_such_member",
+   "en": "No member has that id. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1135; translator: Refusal detail when granting the advanced wizard editor to an unknown member id."
+  },
+  {
+   "key": "wizard-scripts.refusal.revoke_admin_action",
+   "en": "revoking the advanced wizard editor",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1154; translator: Fragment naming the action that needs an administrator; slotted into a \"not an administrator\" refusal. Keep as a lowercase phrase."
+  },
+  {
+   "key": "wizard-scripts.refusal.revoke_no_such_grant",
+   "en": "No editor grant has that id. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1157; translator: Refusal detail when revoking an advanced editor grant that does not exist."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_reason_length",
+   "en": "Give the reason in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1182; translator: Refusal detail when retiring or withdrawing without a reason or with one that is too long. {max}: the longest allowed reason, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_team_wide_admin_only",
+   "en": "Only an administrator can retire a team-wide script. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-administrator tries to retire a team-wide script."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_owner_only",
+   "en": "Only an owner of the script's project can retire it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-owner tries to retire a project script."
+  },
+  {
+   "key": "wizard-scripts.refusal.withdraw_author_only",
+   "en": "Only the author of a version can withdraw it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1201; translator: Refusal detail when someone other than the author tries to withdraw a version."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_no_help_field",
+   "en": "The assistant can't help word this field. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1528; translator: Refusal detail when the writing assistant is not offered for this field."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_tell_length",
+   "en": "Tell the assistant what to say, in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1532; translator: Refusal detail when the request to the assistant is empty or too long. {max}: the longest allowed request, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_draft_unavailable",
+   "en": "The assistant can't draft this yet. Nothing was drafted and the field is unchanged.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1537; translator: Refusal detail when the writing assistant is not available yet."
+  },
+  {
+   "key": "wizard-scripts.refusal.use_owners_authors_only",
+   "en": "Only the owners of a script's project and its authors can see how it is used.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1586; translator: Refusal detail when someone else asks for a script's usage figures."
+  },
+  {
+   "key": "wizard-scripts.refusal.candidates_owners_admins_only",
+   "en": "Only project owners and administrators can see candidate scripts.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1613; translator: Refusal detail when someone else asks for the list of candidate scripts."
+  },
+  {
+   "key": "wizard-scripts.refusal.steps_at_most",
+   "en": "A script can have at most {max} steps. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:163; translator: Refusal detail when a script has too many steps. {max}: the most steps allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.step_text_length",
+   "en": "The step's {field} text can be at most {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:174; translator: Refusal detail when step text is too long. {field}: the step field, \"what\" or \"why\"; {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_text_length",
+   "en": "A draft's text must be 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:178; translator: Refusal detail when a step's draft text is empty or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.side_trip_not_offered",
+   "en": "There is no script {script} on offer here to go to. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:266; translator: Refusal detail when a step's side trip points at a script that is not offered. {script}: the script id as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.side_trip_loops_back",
+   "en": "The side trip to {script} leads back to this script, so it would never return. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:276; translator: Refusal detail when a side trip would loop back. {script}: the script id the side trip goes to (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.needs_one_step",
+   "en": "A script needs at least one step. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:299; translator: Check finding shown when a script has no steps."
+  },
+  {
+   "key": "wizard-scripts.refusal.screen_unknown",
+   "en": "There is no screen {screen}. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:306; translator: Check finding when a step names a screen that does not exist. {screen}: the screen name as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.act_unknown",
+   "en": "The screen {screen} has no action {act}. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:309; translator: Check finding when a step names an action its screen does not offer. {screen}: the screen name; {act}: the action as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.step_needs_what_why",
+   "en": "This step needs to say what the member does and why. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:311; translator: Check finding when a step lacks its \"what\" or \"why\" text."
+  },
+  {
+   "key": "wizard-scripts.refusal.template_not_offered",
+   "en": "There is no filing template {template} on offer here. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:318; translator: Check finding when a step's draft names a missing filing template. {template}: the template id as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_text_length_check",
+   "en": "A draft's text must be 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:319; translator: Check finding when a step's draft text is empty or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_never_helps_act",
+   "en": "The assistant can't help word the action {act}, because it can't be done by a machine or can't be undone. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:330; translator: Check finding when a step asks the assistant to help word an action it may not help with. {act}: the action name (internal action id)."
+  },
+  {
+   "key": "wizard-scripts.refusal.act_refused_to_machine",
+   "en": "The assistant can't take the action {act}. It can only place a labeled draft there. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:332; translator: Check finding when a machine-made step uses a restricted action. {act}: the action name."
+  },
+  {
+   "key": "wizard-scripts.warning.single_step",
+   "en": "This script has only one step.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:335; translator: Check warning shown when a script has a single step."
+  },
+  {
+   "key": "wizard-scripts.warning.duplicate_script",
+   "en": "An offered script already walks the same screens and actions.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:339; translator: Check warning when a script duplicates one already on offer."
+  },
+  {
+   "key": "wizard-scripts.refusal.no_such_script",
+   "en": "No wizard script has that id, or you can't see it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:463; translator: Refusal detail when a script id is unknown or hidden from the viewer."
+  },
+  {
+   "key": "wizard-scripts.refusal.not_a_draft",
+   "en": "This version is {state}, past draft, so its steps are fixed. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:479; translator: Refusal detail when editing or withdrawing a version that is no longer a draft. {state}: the version's current state, e.g. submitted or approved."
+  },
+  {
+   "key": "wizard-scripts.refusal.civicsmith_read_only",
+   "en": "A Civicsmith script is read-only. Teams can't edit or retire it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:489; translator: Refusal detail when a team tries to change one of Civicsmith's own scripts."
+  },
+  {
+   "key": "wizard-scripts.refusal.script_already_retired",
+   "en": "This script was already retired. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when retiring an already retired script."
+  },
+  {
+   "key": "wizard-scripts.refusal.version_already_withdrawn",
+   "en": "This version was already withdrawn. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when withdrawing an already withdrawn version."
+  },
+  {
+   "key": "wizard-scripts.refusal.steps_at_most_recording",
+   "en": "A script can have at most {max} steps. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:865; translator: Refusal detail when a recording has too many steps. {max}: the most steps allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_joined_only",
+   "en": "Only members who have joined the script's project can draft a script for it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:915; translator: Refusal detail when a non-participant tries to start a script draft."
+  },
+  {
+   "key": "wizard-scripts.refusal.name_length",
+   "en": "Name the script in one line of 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:926; translator: Refusal detail when the script name is empty, multi-line or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.revise_author_only",
+   "en": "Only the author of a draft can revise it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:968; translator: Refusal detail when someone other than the author tries to revise a draft."
+  },
+  {
+   "key": "wizard-scripts.refusal.rumor_as_lead",
+   "en": "A rumor can't be proposed as a question. Propose it as a lead instead. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): start.mjs:86; translator: Detail shown when a rumor part of a start is proposed as a question."
+  },
+  {
+   "key": "notice-producers.index.the_security_level_of_your",
+   "en": "The security level of your team's Civicsmith has been high since {from}, and in that time {got}.",
+   "protected": false,
+   "note": "DEC-358: B365; notice-producers R12 (T51-132); translator: {from} is a date and time, {got} says what was stopped in that time"
+  },
+  {
+   "key": "notice-producers.index.the_security_level_of_your_no_time",
+   "en": "The security level of your team's Civicsmith has been high, and in that time {got}.",
+   "protected": false,
+   "note": "DEC-358: B365; the same, when the moment it rose is not known"
+  },
+  {
+   "key": "screen.capture.a64.captured_by",
+   "en": "captured by {name}, {date}",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64 (T51-117): who captured the copy already held, and when; screen.document.capturedby adds the source"
+  },
+  {
+   "key": "screen.capture.a64.nothing_added",
+   "en": "nothing was added",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64: the held copy is unchanged, so the press added nothing"
+  },
+  {
+   "key": "screen.capture.a64.undetermined",
+   "en": "whether the site still gives the same document isn't known yet",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64: the record alone cannot tell; a member's check asks the site once"
+  },
+  {
+   "key": "screen.finder.cite.legend",
+   "en": "How they bear on the question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); the legend of the two choices"
+  },
+  {
+   "key": "screen.finder.cite.support",
+   "en": "Support it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily)"
+  },
+  {
+   "key": "screen.finder.cite.against",
+   "en": "Cut against it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily)"
+  },
+  {
+   "key": "screen.finder.cite.cited",
+   "en": "Cited",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's outcome, beside screen.finder.a17.left_as_it_was"
+  },
+  {
+   "key": "screen.finder.cite.newly_against",
+   "en": "newly cited, cutting against the question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); beside screen.finder.a17.newly_cited_supporting_the_question"
+  },
+  {
+   "key": "screen.finder.cite.set_changed",
+   "en": "The set changed after you held it, so these are the documents held now.",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); heads what changed; citing goes on with the set as it is"
+  },
+  {
+   "key": "screen.finder.cite.added_since",
+   "en": "added to the set after you held it",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's line under set_changed"
+  },
+  {
+   "key": "screen.finder.cite.gone_since",
+   "en": "no longer in the set, so not cited",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); a document's line under set_changed"
+  },
+  {
+   "key": "screen.finder.cite.back",
+   "en": "Back to Find",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); the way out of the cite state that keeps the set held"
+  },
+  {
+   "key": "screen.finder.cite.back.help",
+   "en": "Goes back to Find without citing anything. The set stays held until you let it go or its time runs out.",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): finder's cite state (screens-daily); explains screen.finder.cite.back"
+  },
+  {
+   "key": "queue.answered.forwarded.unnamed",
+   "en": "Forwarded {item}",
+   "protected": false,
+   "note": "DEC-359 (B367 2c): queue (screens-daily); an earlier forward whose recipient the record does not name ({item} the title, as queue.answered.forwarded)"
+  },
+  {
+   "key": "queue.feed.tasks",
+   "en": "To-dos",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the tasks feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.bias-debts",
+   "en": "Assistant runs owed a re-check for bias",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the bias-debts feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.sources",
+   "en": "Changes to documents your team watches",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the sources feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.proposals",
+   "en": "Proposed next stages",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the proposals feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.shared-inquiries",
+   "en": "Questions shared with other teams",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the shared-inquiries feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.leads",
+   "en": "Leads found outside a question",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the leads feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.exports",
+   "en": "Full exports of the record",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the exports feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.references",
+   "en": "Newer versions of documents a reference points to",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the references feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.objectives",
+   "en": "Gaps in what a project set out to show",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the objectives feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.machinery",
+   "en": "Civicsmith's own working order",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the machinery feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.contradictions",
+   "en": "Contradictions to clear up",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the contradictions feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.signing-keys",
+   "en": "Signing keys members registered",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the signing-keys feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.action",
+   "en": "Actions and their deadlines",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the action feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.attribution",
+   "en": "Credit for what a case uses",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the attribution feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.docket",
+   "en": "Case dockets",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the docket feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.cited-cases",
+   "en": "Other teams' cases your findings rest on",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the cited-cases feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.wizards",
+   "en": "Wizards waiting for approval or a newer version",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the wizards feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.schedule",
+   "en": "Scheduled publications",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the schedule feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.places",
+   "en": "Place profiles that arrived",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the places feed (queue R60)"
+  },
+  {
+   "key": "queue.feed.projects",
+   "en": "Project invitations and requests to join",
+   "protected": false,
+   "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the projects feed (queue R60)"
+  },
+  {
+   "key": "queue.export-performed.rendering.summary",
+   "en": "A copy of your team's record in {format} was taken on {date}",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; a rendering export (scope rendering), {format} from queue.fill.format.<code>; .summary and .detail are the full export (scope working-corpus), so neither takes {scope}"
+  },
+  {
+   "key": "queue.export-performed.rendering.detail",
+   "en": "A copy of your team's record, laid out in {format} for other tools to read, left your team's Civicsmith. It adds nothing to the record. Every administrator is told; nobody else is. The export log is the record of it.",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; a rendering export"
+  },
+  {
+   "key": "queue.fill.format.ftm",
+   "en": "FollowTheMoney",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ftm-event",
+   "en": "FollowTheMoney (events)",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm-event (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ftm-people",
+   "en": "FollowTheMoney (people)",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ftm-people (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ocel2",
+   "en": "OCEL 2.0",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ocel2 (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.popolo",
+   "en": "Popolo",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format popolo (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.ocds",
+   "en": "the Open Contracting Data Standard",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format ocds (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.fill.format.fdp",
+   "en": "a Fiscal Data Package",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {format} of a rendering export, format fdp (corpus-export R10): the open standard's own name"
+  },
+  {
+   "key": "queue.newer-capture-affects-reference.detail.unseen",
+   "en": "A newer capture of what this reference points to was read. You can't see that capture, so how it compares isn't shown. Nothing about the reference has changed: it keeps the version it names until the member who holds it adopts the newer one or keeps the earlier one.",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; for a viewer who cannot see the newer capture (grade and affects absent); otherwise .detail with {grade} from queue.fill.grade.<code lower-cased> and .detail.affects with {affects} from queue.fill.affects.<code>"
+  },
+  {
+   "key": "queue.fill.reason.not_json",
+   "en": "what came back was not readable data",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code not_json"
+  },
+  {
+   "key": "queue.fill.reason.not_a_docket",
+   "en": "what came back was not a docket",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code not_a_docket"
+  },
+  {
+   "key": "queue.fill.reason.too_large",
+   "en": "what came back was too large to read",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code too_large"
+  },
+  {
+   "key": "queue.fill.reason.fetch_failed",
+   "en": "the docket's address could not be reached",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code fetch_failed"
+  },
+  {
+   "key": "queue.fill.reason.http_unknown",
+   "en": "the publisher's site answered with an error",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} of queue.cited-docket-unreadable.detail.reason, code http_unknown"
+  },
+  {
+   "key": "queue.fill.reason.http",
+   "en": "the publisher's site answered with error {status}",
+   "protected": false,
+   "note": "DEC-359 (B368 1): queue-producers; the {reason} for a code http_<status>, {status} the number (404)"
+  },
+  {
+   "key": "screen.actionnew.rests.advances",
+   "en": "Advances",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the link choice beside screen.start-send.rests (Rests on)"
+  },
+  {
+   "key": "screen.actionnew.due.what",
+   "en": "What is due",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; field label in When things are due"
+  },
+  {
+   "key": "screen.actionnew.due.when",
+   "en": "When",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; field label in When things are due"
+  },
+  {
+   "key": "shell.readonly.noun.action",
+   "en": "action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on action, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.actionnew",
+   "en": "action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on actionnew, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.counsel",
+   "en": "brief",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on counsel, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.dash-action",
+   "en": "dashboard",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on dash-action, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.hold",
+   "en": "hold",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on hold, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.holdnotice",
+   "en": "hold notice",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on holdnotice, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.matter",
+   "en": "matter",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on matter, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.plan",
+   "en": "plan",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on plan, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.request",
+   "en": "request",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on request, lower case, read mid-sentence"
+  },
+  {
+   "key": "shell.readonly.noun.start-send",
+   "en": "request",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the {noun} of shell.readonly on start-send, lower case, read mid-sentence"
+  },
+  {
+   "key": "screen.action.openquestion",
+   "en": "Open the question",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the link to the question an action is the reference of"
+  },
+  {
+   "key": "screen.action.guide.expect",
+   "en": "Expect: {expectation}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a guide route's line, {expectation} the profile's own words"
+  },
+  {
+   "key": "screen.action.guide.source",
+   "en": "Source: {citation}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a guide route's line, {citation} as the profile cites it (Gov. Code § 7922.535)"
+  },
+  {
+   "key": "screen.counsel.who.name",
+   "en": "Counsel's name",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action"
+  },
+  {
+   "key": "screen.counsel.who.org",
+   "en": "Counsel's organization",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action"
+  },
+  {
+   "key": "screen.dash-action.col.action",
+   "en": "Action",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the table's first column head"
+  },
+  {
+   "key": "screen.dash-action.tile.dueweek",
+   "en": "{n} due this week",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Clocks running's note"
+  },
+  {
+   "key": "screen.dash-action.tile.dueday",
+   "en": "due {day}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Our move's note, {day} the weekday within this week (Friday), else the date"
+  },
+  {
+   "key": "screen.dash-action.tile.came",
+   "en": "came in {date}",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; Replies to read's note, the newest reply's date"
+  },
+  {
+   "key": "screen.plan.list.more",
+   "en": "Not every plan is shown here. Find lists them all: choose Plans under Show.",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; under a plan list the answer cut off (R25)"
+  },
+  {
+   "key": "screen.holdnotice.how.email",
+   "en": "An email",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.message",
+   "en": "A message",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.person",
+   "en": "In person",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.holdnotice.how.other",
+   "en": "Another way",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; a choice of How you sent it (screen.start-send.how) on holdnotice"
+  },
+  {
+   "key": "screen.hold.release.reason",
+   "en": "Why the team no longer needs to keep this",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; the release's reason field, drawn by DEC-359 (act actionholdrelease)"
+  },
+  {
+   "key": "screen.hold.release.reason.help",
+   "en": "In your own words. It stays on the record with the hold, beside who released it and when.",
+   "protected": false,
+   "note": "DEC-359 (B368 2): screens-action; explains the release's reason field"
+  },
+  {
+   "key": "screen.published.leg",
+   "en": "Leg {n}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a leg's head in What it rests on"
+  },
+  {
+   "key": "screen.published.leg.supports",
+   "en": "supports it",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; after Leg {n}"
+  },
+  {
+   "key": "screen.published.leg.cuts",
+   "en": "cuts against it",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; after Leg {n}"
+  },
+  {
+   "key": "screen.published.restson.lead",
+   "en": "Rests on: {items}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the generic lead, {items} what it rests on as a list"
+  },
+  {
+   "key": "screen.published.cutagainstby.lead",
+   "en": "Cut against by: {items}",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the generic lead, {items} what cuts against it as a list"
+  },
+  {
+   "key": "screen.published.min.none",
+   "en": "No minimum",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.c",
+   "en": "C or better",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.b",
+   "en": "B or better",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.published.min.a",
+   "en": "A only",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a choice of the two minimum strengths"
+  },
+  {
+   "key": "screen.review_copy.save.file",
+   "en": "Save the file",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the review copy's primary button after the acknowledgment"
+  },
+  {
+   "key": "screen.review_copy.carries.fingerprint",
+   "en": "Its fingerprint",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a line of What the file carries"
+  },
+  {
+   "key": "screen.review_copy.carries.author",
+   "en": "Its author",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; a line of What the file carries"
+  },
+  {
+   "key": "screen.published.finding.unreadable",
+   "en": "This document's text could not be read, so it isn't shown here. The finding still names it.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the finding page, a document whose text is unreadable"
+  },
+  {
+   "key": "screen.published.finding.withheld",
+   "en": "A court order this team complied with keeps this document's contents from being shown. The order and the record entry that names it are public, and nothing was deleted.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the finding page, a document withheld by a court order (as refusal.WITHHELD_BY_COURT_ORDER)"
+  },
+  {
+   "key": "shell.card.hold",
+   "en": "Where any member who can see an action places a litigation hold, with a reason.",
+   "protected": false,
+   "note": "DEC-359 (B368 3): screens-publish; the card for hold, as shell.card.action"
+  },
+  {
+   "key": "screen.install.cf.logs",
+   "en": "Reading your account's log settings, to check that no log records who opens which file.",
+   "protected": false,
+   "note": "DEC-359 (B368 4): installer; the sixth scope's allowed line (account-logs.read)"
+  },
+  {
+   "key": "installer.update.retired",
+   "en": "Left as it was: {parts}. They came from an earlier release, and this one no longer uses them.",
+   "protected": false,
+   "note": "DEC-359 (B368 4): installer; foreignContainers answers retired; {parts} the parts' names as a list"
+  },
+  {
+   "key": "screen.members.removal.heading",
+   "en": "What it takes",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, members R56; the removal block's heading (the page's own explanation stays under What removing an administrator takes)"
+  },
+  {
+   "key": "screen.members.removal.agreed",
+   "en": "{member} · agreed",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, members R56; a voter's row, the day on its meta line as a date"
+  },
+  {
+   "key": "screen.members.removal.notyet",
+   "en": "{member} · hasn't voted yet",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, members R56; an awaited voter's row, screen.members.the.removal.waits.for.ana on its meta line"
+  },
+  {
+   "key": "screen.members.removal.faces",
+   "en": "{member} · faces removal",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, members R56; the row of the one facing removal, screen.members.counted.in.the.4.doesn on its meta line"
+  },
+  {
+   "key": "screen.grouprules.inforce",
+   "en": "Rules in force",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, grouprules R61; a section heading"
+  },
+  {
+   "key": "screen.grouprules.draft",
+   "en": "Draft a rule",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, grouprules R61; a section heading"
+  },
+  {
+   "key": "screen.grouprules.src.refuse",
+   "en": "Nothing was drafted: a team rule needs its primary source held here. Capture the source first, then draft the rule.",
+   "protected": false,
+   "note": "DEC-360 (B369 1): screens-settings, grouprules R61; the refusal when Capture the source first is chosen or no capture is named; screen.grouprules.src.help2 stays the help line only"
+  },
+  {
+   "key": "screen.people.show.offices",
+   "en": "Offices",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a Show choice (value offices)"
+  },
+  {
+   "key": "screen.people.show.ordinances",
+   "en": "Ordinances",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a Show choice (value ordinances)"
+  },
+  {
+   "key": "screen.people.show.contracts",
+   "en": "Contracts",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a Show choice (value contracts)"
+  },
+  {
+   "key": "screen.people.show.funds",
+   "en": "Funds and programs",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a Show choice (value funds)"
+  },
+  {
+   "key": "screen.people.show.sources",
+   "en": "Sources",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a Show choice (value sources)"
+  },
+  {
+   "key": "screen.people.add.kind.office",
+   "en": "An office",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.ordinance",
+   "en": "An ordinance",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.contract",
+   "en": "A contract",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.fund",
+   "en": "A fund",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.program",
+   "en": "A program",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.place",
+   "en": "A place",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.parcel",
+   "en": "A parcel",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "screen.people.add.kind.source",
+   "en": "A source",
+   "protected": false,
+   "note": "DEC-360 (B369 2): screens-investigate, People; a kind in Add something the record follows (What kind of thing is it?)"
+  },
+  {
+   "key": "instance-setup.setup.the_minute_of_the_day",
+   "en": "the minute of the day could not be drawn: {reason}",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 200 characters"
+  },
+  {
+   "key": "instance-setup.setup.the_running_release_could_not",
+   "en": "the running release could not be recorded: {reason}",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 200"
+  },
+  {
+   "key": "instance-setup.setup.the_offices_could_not_be",
+   "en": "the offices could not be seeded at setup: {reason}",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 200"
+  },
+  {
+   "key": "instance-setup.setup.the_place_could_not_be",
+   "en": "the place could not be compared: {reason}",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 200"
+  },
+  {
+   "key": "instance-setup.setup.public_read_could_not_be",
+   "en": "public-read could not be reached: {reason}",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 200"
+  },
+  {
+   "key": "instance-setup.setup.the_governor_did_not_answer",
+   "en": "the governor did not answer ({reason})",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 120"
+  },
+  {
+   "key": "instance-setup.setup.the_governor_did_not_answer_2",
+   "en": "the governor did not answer ({reason})",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 120"
+  },
+  {
+   "key": "instance-setup.setup.the_languages_could_not_be",
+   "en": "the languages could not be read ({reason}).",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 160"
+  },
+  {
+   "key": "instance-setup.setup.whether_your_team_keeps_its",
+   "en": "whether your team keeps its material away from every assistant did not answer ({reason}), so no ask is put to an assistant and no run starts.",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {reason} the error, cut to 160"
+  },
+  {
+   "key": "instance-setup.setup.what_did_not_answer_string",
+   "en": "{what} did not answer ({reason}), so whether the step is met is not known",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {what} the read, {reason} the error, cut to 160"
+  },
+  {
+   "key": "instance-setup.setup.what_could_not_be_read",
+   "en": "{what} could not be read ({reason}), so it is not known.",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {what} the read, {reason} the error, cut to 160"
+  },
+  {
+   "key": "instance-setup.setup.the_store_did_not_confirm",
+   "en": "the store did not confirm step {next}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.",
+   "protected": false,
+   "note": "DEC-360 (B369 3): instance-setup setup.mjs, the codemod placeholders renamed; the call passes the new names; {next} the step after {confirmed}"
+  },
+  {
+   "key": "screen.home.area.expertise.person",
+   "en": "{member}, {label} ({standing})",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; one person on the expertise line, joined with \"; \"; {standing} screen.home.area.expertise.confirmed or .declared"
+  },
+  {
+   "key": "screen.home.area.expertise.confirmed",
+   "en": "confirmed",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; the standing of an expertise the team confirmed"
+  },
+  {
+   "key": "screen.home.area.expertise.declared",
+   "en": "declared",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; the standing of an expertise its member declared"
+  },
+  {
+   "key": "screen.home.area.edition.published",
+   "en": "Edition {n} of {case} published {date}",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; the edition line when no draft is shared for review with an end date"
+  },
+  {
+   "key": "screen.home.area.edition.comments",
+   "en": "Edition {n} of {case} published {date}; a draft is shared for review until {until}, {count} comments to answer",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; a draft with recipients' comments"
+  },
+  {
+   "key": "screen.home.area.edition.comments.one",
+   "en": "Edition {n} of {case} published {date}; a draft is shared for review until {until}, 1 comment to answer",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; the same, one comment"
+  },
+  {
+   "key": "screen.home.area.edition.draftonly",
+   "en": "A draft of {case} is shared for review until {until}",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; a draft shared for review on a case with no published edition yet"
+  },
+  {
+   "key": "screen.home.area.edition.draftonly.comments",
+   "en": "A draft of {case} is shared for review until {until}, {count} comments to answer",
+   "protected": false,
+   "note": "DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 1 or more: draw \"1 comment\" via .comments.one's wording when 1)"
+  },
+  {
+   "key": "screen.project.standdown.heading",
+   "en": "What it takes",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; the stand-down block's heading"
+  },
+  {
+   "key": "screen.project.standdown.beforevote",
+   "en": "Before you vote",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; the checks' heading"
+  },
+  {
+   "key": "screen.project.standdown.takes",
+   "en": "This takes {n} of {total} owners' votes.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; when the departing owner's own vote is not one of them; screen.project.this.takes.2.of.2 when it is"
+  },
+  {
+   "key": "screen.project.standdown.agreed",
+   "en": "{member} · agreed",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; an owner's row; its meta screen.project.by.standing.down.17.october for the one standing down, else the date"
+  },
+  {
+   "key": "screen.project.standdown.notyet",
+   "en": "{member} · hasn't voted yet",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; an awaited owner's row; meta screen.project.the.change.waits.for.ana"
+  },
+  {
+   "key": "screen.project.scale.head.owners",
+   "en": "Owners",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; the table's column head"
+  },
+  {
+   "key": "screen.project.scale.head.takes",
+   "en": "Votes it takes",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; the table's column head"
+  },
+  {
+   "key": "screen.project.scale.head.why",
+   "en": "Why",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; the table's column head"
+  },
+  {
+   "key": "screen.project.ownerstand.required",
+   "en": "Required.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R75; before the reason's note"
+  },
+  {
+   "key": "screen.project.notice.heading",
+   "en": "Telling the network",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); the section heading; the act keeps its own words"
+  },
+  {
+   "key": "screen.project.notice.legend.welcome",
+   "en": "Others welcome",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a fieldset legend"
+  },
+  {
+   "key": "screen.project.notice.legend.sign",
+   "en": "Before you sign",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a fieldset legend"
+  },
+  {
+   "key": "screen.project.notice.thenotice",
+   "en": "The notice",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a section heading"
+  },
+  {
+   "key": "screen.project.notice.change",
+   "en": "Change the notice",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); opens the preview to change it (op noticeprepare, mode change)"
+  },
+  {
+   "key": "screen.project.notice.stop",
+   "en": "Stop the notice…",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); opens the preview to stop it (op noticeprepare, mode stop)"
+  },
+  {
+   "key": "network-notices.level.active",
+   "en": "Active",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a level, 7 to 9 of 13 weeks; Very active and Some work are network-notices.active and .some_work"
+  },
+  {
+   "key": "network-notices.level.quiet",
+   "en": "Quiet",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a level, 1 to 3 of 13 weeks"
+  },
+  {
+   "key": "network-notices.level.dormant",
+   "en": "Dormant",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a level, none of 13 weeks"
+  },
+  {
+   "key": "network-notices.status.open",
+   "en": "open",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice's status, lower case after a middle dot"
+  },
+  {
+   "key": "network-notices.status.stopped",
+   "en": "stopped",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice's status, lower case after a middle dot"
+  },
+  {
+   "key": "network-notices.status.closed",
+   "en": "closed",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice's status, lower case after a middle dot"
+  },
+  {
+   "key": "network-notices.status.lapsed",
+   "en": "lapsed",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice's status, lower case after a middle dot"
+  },
+  {
+   "key": "screen.project.notice.lapsed.on",
+   "en": "It lapsed on {date}.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); after screen.project.notice.a.notice.that.stays.dormant"
+  },
+  {
+   "key": "screen.project.notice.missed",
+   "en": "A monthly check was missed. The last level attested is {level}, on {date}.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, project R76, R77 (the network notice); a notice with missed monthlies"
+  },
+  {
+   "key": "screen.dash-project.tile.events.undetermined",
+   "en": "{n} undetermined in order",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the Events tile's note"
+  },
+  {
+   "key": "screen.dash-project.next.vouch.noplace",
+   "en": "Vouch for the {count} photos you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; a held capture with no address (an upload)"
+  },
+  {
+   "key": "screen.home.todo.vouch.noplace",
+   "en": "Vouch for the {count} photos you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home"
+  },
+  {
+   "key": "screen.dash-project.precision.day",
+   "en": "to the day",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined"
+  },
+  {
+   "key": "screen.dash-project.precision.minute",
+   "en": "to the minute",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined"
+  },
+  {
+   "key": "screen.dash-project.precision.second",
+   "en": "to the second",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined"
+  },
+  {
+   "key": "screen.dash-project.precision.edtf",
+   "en": "to the month or year, or approximately",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the {precision} of story.undetermined"
+  },
+  {
+   "key": "screen.dash-project.next.prepare.label",
+   "en": "Prepare Edition {n}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the reference to the ceremony; its card is shell.card.ceremony"
+  },
+  {
+   "key": "screen.document.record.release",
+   "en": "Recorded by Civicsmith release {version}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R65; the record of this copy's first row"
+  },
+  {
+   "key": "screen.document.record.added",
+   "en": "Added by {member}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R65; the first revision's row"
+  },
+  {
+   "key": "screen.document.revisions.truncated",
+   "en": "Only the newest {n} revisions are shown here; this copy has more.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R65; a cut history"
+  },
+  {
+   "key": "screen.document.revision.nobytes",
+   "en": "This revision's own text isn't held, so it can't be compared.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document; a compare side whose bytes are not held"
+  },
+  {
+   "key": "screen.document.compare.grade",
+   "en": "Grade:",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document; the compare panel's label before the grade mark, beside Standing: and Vouched for by:"
+  },
+  {
+   "key": "screen.document.a30.tally.one",
+   "en": "{n} links on this page. 1 of them leads outside the record, where the site is as it is today and may differ from what was captured.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R67"
+  },
+  {
+   "key": "screen.document.a30.tally.none",
+   "en": "{n} links on this page. None leads outside the record.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R67"
+  },
+  {
+   "key": "screen.document.links.navleft",
+   "en": "The site's own navigation links are left out.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R67; after the tally"
+  },
+  {
+   "key": "screen.document.a30.open_anyway",
+   "en": "Open it anyway",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document; the leaving dialog's confirm; the row's own button keeps act.owed_linkopen.label.document"
+  },
+  {
+   "key": "screen.document.names.matched.identifier",
+   "en": "matched by a shared identifier",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by identifier"
+  },
+  {
+   "key": "screen.document.names.matched.reference",
+   "en": "matched by a reference the record holds for it",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by reference"
+  },
+  {
+   "key": "screen.document.names.matched.reference_key",
+   "en": "matched by name and issuer",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by reference_key"
+  },
+  {
+   "key": "screen.document.names.matched.label",
+   "en": "matched by name only, not yet confirmed",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by label"
+  },
+  {
+   "key": "screen.document.names.matched.testimony",
+   "en": "matched by a member's testimony",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by testimony"
+  },
+  {
+   "key": "screen.document.names.matched.none",
+   "en": "how it was matched isn't recorded",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R68; matched_by none (null)"
+  },
+  {
+   "key": "screen.document.a34.no_newer",
+   "en": "no newer copy exists",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; no_newer_capture"
+  },
+  {
+   "key": "screen.document.a34.page_differs",
+   "en": "page {page} reads differently",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; affects affected, by page"
+  },
+  {
+   "key": "screen.document.a34.page_same",
+   "en": "page {page} reads the same in both",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; the by-page form of screen.document.a34.section_3_reads_the_same_in_both"
+  },
+  {
+   "key": "screen.document.place.restson",
+   "en": "rests on page {page}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; a question's leg place"
+  },
+  {
+   "key": "screen.document.a34.moved",
+   "en": "Citations moved to this copy by {member}, {date}: “{why}”",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; the decided row, adopted"
+  },
+  {
+   "key": "screen.document.a34.kept",
+   "en": "Kept citing the earlier version, by {member}, {date}: “{why}”",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, document R69; the decided row, kept"
+  },
+  {
+   "key": "screen.question.touches.heading",
+   "en": "What this touches",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question; the set-aside fold's section heading"
+  },
+  {
+   "key": "shell.reason.lead",
+   "en": "Your reason:",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question; the lead before a quoted reason in a receipt"
+  },
+  {
+   "key": "screen.question.frozen.count",
+   "en": "This question is in {n} published cases.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.frozen.count.one",
+   "en": "This question is in 1 published case.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.frozen.published",
+   "en": "Published {date}, edition {n}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.frozen.today",
+   "en": "Today:",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72; before today's strength"
+  },
+  {
+   "key": "screen.question.word.same",
+   "en": "the same",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72, R73; an axis or a dimension unchanged"
+  },
+  {
+   "key": "screen.question.word.different",
+   "en": "different",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.word.stronger",
+   "en": "stronger now",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.word.weaker",
+   "en": "weaker now",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.word.unknown",
+   "en": "can't be compared: one side has no grade",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72"
+  },
+  {
+   "key": "screen.question.frozen.unpinned",
+   "en": "Nothing was pinned when it published.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R72; pinned null"
+  },
+  {
+   "key": "screen.question.compare.takenup",
+   "en": "Reasons taken up",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.compare.letgo",
+   "en": "Reasons let go",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.compare.kept",
+   "en": "Reasons kept",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.compare.none",
+   "en": "none",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73; an empty list of reasons"
+  },
+  {
+   "key": "screen.question.compare.was",
+   "en": "Was: {value}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.compare.now",
+   "en": "Now: {value}",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73"
+  },
+  {
+   "key": "screen.question.compare.origin",
+   "en": "Where it came from",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R73; the origin dimension's label"
+  },
+  {
+   "key": "screen.question.bias.moved",
+   "en": "It has moved.",
+   "protected": false,
+   "note": "DEC-360 (B371 1): screens-inquiry, question R74; the bold lead before screen.question.say013"
+  },
+  {
+   "key": "shell.readonly.members",
+   "en": "Settings › Members",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R94; the {members} of shell.readonly, drawn as a reference to Settings › Members"
+  },
+  {
+   "key": "screen.glossary.money.acfr.name",
+   "en": "ACFR",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.money.acfr"
+  },
+  {
+   "key": "screen.glossary.money.cafr.name",
+   "en": "CAFR",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.money.cafr"
+  },
+  {
+   "key": "screen.glossary.money.gpf.name",
+   "en": "GPF",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.money.gpf"
+  },
+  {
+   "key": "screen.glossary.money.fy.name",
+   "en": "FY",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.money.fy"
+  },
+  {
+   "key": "screen.glossary.honest.fingerprint.name",
+   "en": "Fingerprint",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.fingerprint"
+  },
+  {
+   "key": "screen.glossary.honest.manifest.name",
+   "en": "Manifest",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.manifest"
+  },
+  {
+   "key": "screen.glossary.honest.provenance.name",
+   "en": "Provenance",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.provenance"
+  },
+  {
+   "key": "screen.glossary.honest.signature.name",
+   "en": "Signature",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.signature"
+  },
+  {
+   "key": "screen.glossary.honest.timestamp.name",
+   "en": "Timestamp",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R95; the term's name, its definition screen.glossary.honest.timestamp"
+  },
+  {
+   "key": "refusal.DIGEST_MISMATCH.download",
+   "en": "The file that arrived doesn't match the fingerprint your team holds for it, so it was not saved or opened. Nothing was changed. Try the download again.",
+   "protected": false,
+   "note": "DEC-360 (B371 2): interface-shell R98; the browser-side check before a download is saved"
+  },
+  {
+   "key": "screen.dash-project.next.vouch.noplace.one",
+   "en": "Vouch for the photo you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): the one-photo form"
+  },
+  {
+   "key": "screen.home.todo.vouch.noplace.one",
+   "en": "Vouch for the photo you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): the one-photo form on Home"
   }
  ],
  "rewrite": {
