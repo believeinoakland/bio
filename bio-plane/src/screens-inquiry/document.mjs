@@ -28,7 +28,11 @@
  * nothing sent); R67 the links by their verdict, an outside link opening a warning before its address (the browser acts
  * `linkopen`, `revisioncompare`: done in the page, nothing sent); R68 the names from `resolutions`; R69 one row for each
  * question that rests on the document, asked for a newer copy only when the member asks (`versionnotice`); R78 every page
- * drawn is the record's page + 1, every value sent is the record's own. */
+ * drawn is the record's page + 1, every value sent is the record's own.
+ *
+ * CR-19 (R81, R82): the second "Read it" tab compares the revision a question cites with the current copy (matched by the leg's
+ * `extent_capture` to `bundlehistory`'s `capture_sha`), by the browser act `revisioncompare`; the original-file card draws the
+ * file's kind from the reading's format id and its size from `bytes`, and none without `bytes`. */
 
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
@@ -205,11 +209,13 @@ function render(cs, view) {
   for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
   const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
   const preset = heldFor.length ? String(heldFor[0].question) : "";
-  out.push(secOf("document.read.title", reading, (r) => {
+  /* the reading section is built once the revisions it compares are read (R81), in the slot it holds here */
+  const readingAt = out.push("") - 1;
+  const readingBody = () => secOf("document.read.title", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
-    if (!list.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    if (!list.length) return originalCard + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
     /* a blank first choice, so that none is preselected unless the capture was held for one; a cite with it blank is refused */
     const pick = cites.length
       ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset })
@@ -232,12 +238,18 @@ function render(cs, view) {
     const asked = Number(ui.readpage);
     const cur = paged ? (Number.isInteger(asked) && asked >= 1 && asked <= total ? asked : first) : 0;
     const shown = paged ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); }) : list.map((p, i) => [p, i]);
-    const bar = paged ? `<div class="mk-pagebar" data-pagebar="1">`
-      + cs.checks("document-read-tab", "document.read.title", [{ value: "page", key: "document.read.tab.page", on: true }], { radio: true, redraw: "readtab" })
+    /* R81: the second tab, the comparison with the revision a question cites, is drawn only where that revision is found (citedRev);
+       the compare tab shows the comparison in place of the passages and their pages */
+    const compareOn = citedRev >= 0 && ui.readtab === "compare";
+    const tabs = paged || citedRev >= 0 ? cs.checks("document-read-tab", "document.read.title",
+      [{ value: "page", key: "document.read.tab.page", on: !compareOn }].concat(citedRev >= 0 ? [{ value: "compare", key: "document.read.tab.compare", on: compareOn }] : []),
+      { radio: true, redraw: "readtab" }) : "";
+    if (compareOn) return originalCard + tabs + compareTab();
+    const bar = paged ? `<div class="mk-pagebar" data-pagebar="1">` + tabs
       + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
           (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
-          { radio: true, redraw: "readpage" }) + "</div>" : "";
-    return `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
+          { radio: true, redraw: "readpage" }) + "</div>" : tabs;
+    return originalCard + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
@@ -246,7 +258,7 @@ function render(cs, view) {
         + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + pickHelp + none + own("cite");
-  }, { help: "document.read.help" }));
+  }, { help: "document.read.help" });
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
   if (reading.state === "ok" && Array.isArray(reading.value.unread_pages) && reading.value.unread_pages.length) {
@@ -402,6 +414,68 @@ function render(cs, view) {
   };
   const standingWord = (to) => (to === "collected" ? W("screen.document.a27.held_until_vouched_for") : to === "verified" ? W("screen.document.a27.now_used_by_the_team")
     : to === "retired" ? W("state.item.retired.name") : undetermined(to));
+  const filesOf = (r) => (Array.isArray(r.files) ? r.files.filter((f) => f && f.path) : []);
+  const titleOf = (r) => T("screen.document.revision.title", { n: String(r.seq) });
+  /* R65, R81: two revisions side by side, the older on the left (`ia`, `ib` index `revs`): the standing, the grade and who vouched,
+     each marked where the two differ, and, for a copy that came as a set of files, the files that changed between them */
+  const comparePanel = (ia, ib) => {
+    const fa = factsOf(ia), fb = factsOf(ib);
+    const edit = (same, left, inner) => (same ? inner : left ? `<del>${inner}</del>` : `<ins>${inner}</ins>`);
+    const standingLine = (st) => (st === "collected" ? W("screen.document.a27.standing_held_until_vouched_for") : st === "verified" ? W("screen.document.a27.standing_used_by_the_team")
+      : st === "retired" ? W("state.item.retired.name") : undetermined(st));
+    const lines = (f, g, left) => (!f ? `<p>${cs.mark("gap", "undetermined")} ${W("screen.document.revision.nobytes")}</p>`
+      : `<p>${edit(!g || f.standing === g.standing, left, standingLine(f.standing))}</p>`
+      + `<p>${W("screen.document.compare.grade")} ${edit(!g || f.grade === g.grade, left, f.grade ? cs.grade("capture", f.grade) : cs.mark("gap", "undetermined"))}</p>`
+      + `<p>${edit(!g || f.vouched === g.vouched, left, f.vouched ? W("screen.document.a27.vouched_for_by_dev.2", { member: who(f.vouched) }) : W("screen.document.a27.vouched_for_by_nobody"))}</p>`);
+    const side = (i, f, g, left) => `<div><h3>${cs.esc(titleOf(revs[i]))}</h3><span class="mk-date">${at(revs[i].at)} · ${cs.esc(who(revs[i].author))}</span>${lines(f, g, left)}</div>`;
+    /* a set of files: the files that changed between the two, each with its digest on either side */
+    let changed = "";
+    if (isSet) {
+      const fa2 = new Map(filesOf(revs[ia]).map((f) => [String(f.path), String(f.sha256 || "")])), fb2 = new Map(filesOf(revs[ib]).map((f) => [String(f.path), String(f.sha256 || "")]));
+      changed = [...new Set([...fa2.keys(), ...fb2.keys()])].filter((p) => fa2.get(p) !== fb2.get(p))
+        .map((p) => `<p class="mk-small id" data-file-changed="${cs.esc(p)}">${cs.esc(p)} ${fa2.has(p) ? `<del>${W("screen.document.compare.fingerprint", { digest: shortOf(fa2.get(p)) })}</del>` : ""} ${fb2.has(p) ? `<ins>${W("screen.document.compare.fingerprint", { digest: shortOf(fb2.get(p)) })}</ins>` : ""}</p>`).join("");
+    }
+    return `<div class="mk-compare" data-compare="revisions">${side(ia, fa, fb, true)}${side(ib, fb, fa, false)}</div>` + changed;
+  };
+  /* R81 (CR-19; promotion R59): the earlier revision a question that rests on this document cites: its leg's `extent_capture` (the
+     capture the leg pins) matched to a revision's `capture_sha`, among the questions the screen already reads (backlinks, each question's
+     image). A leg with only a `content_id` is not matched, as no read this screen makes answers it; a capture no revision lists is not
+     guessed. -1 when there is none. */
+  const citedRev = (() => {
+    for (const x of backs.filter((b) => b && b.from_type === "inquiry" && b.from)) {
+      const qi = later("qimg:" + String(x.from), "image", { id: String(x.from) });
+      const qf = qi.state === "ok" && qi.value && typeof qi.value["bundle.md"] === "string" ? view.parts.front(qi.value["bundle.md"]) : null;
+      for (const l of (qf ? qf.lists.basis || [] : [])) {
+        if (!l || String(l.target) !== id || !l.extent_capture) continue;
+        const i = revs.findIndex((r) => r && r.capture_sha === String(l.extent_capture));
+        if (i >= 1) return i;
+      }
+    }
+    return -1;
+  })();
+  /* R81: the compare tab shows the cited revision beside the current copy; the browser act `revisioncompare` sets the pair (nothing sent) */
+  const compareTab = () => {
+    const cited = revs[citedRev], current = revs[0];
+    const shownNow = ui.revcmp && String(ui.revcmp.a) === String(cited.seq) && String(ui.revcmp.b) === String(current.seq);
+    return shownNow ? comparePanel(citedRev, 0)
+      : cs.act("revisioncompare", { label: "screen.document.revisions.compare.act", data: { a: String(cited.seq), b: String(current.seq) } });
+  };
+  /* R82 (CR-19; DEC-368; extraction R77): the original file's card, its kind from the format id the reading names (its `text_container`,
+     the same id the capture's format falls back to; a text/plain capture the registry leaves undetermined is `text`; an id with no row is
+     `undetermined`) and its size from `bytes`; no size, no card */
+  const originalCard = (() => {
+    const rv = reading.state === "ok" && reading.value ? reading.value : null;
+    if (!rv || !Number.isInteger(rv.bytes)) return "";
+    const named = rv.reading && typeof rv.reading.text_container === "string" ? rv.reading.text_container.trim() : "";
+    const id0 = named || (/^text\/plain\b/.test(String(rv.content_type || "")) ? "text" : "");
+    const kind = view.parts.kinds.includes(id0) ? id0 : "undetermined";
+    const n = rv.bytes;
+    const size = n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
+      : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) });
+    return `<p class="mk-note" data-card="original">${W("document.read.original.card", { kind: T("document.kind." + kind), size })}</p>`;
+  })();
+  out[readingAt] = readingBody();
+
   const recordBody = (h) => {
     if (!h || typeof h !== "object") return "";
     const states = Array.isArray(h.states) ? h.states.filter((s) => s && typeof s === "object") : [];
@@ -423,8 +497,6 @@ function render(cs, view) {
     }
     if (log.length) parts.push(`<p class="mk-note">${W("screen.document.a27.everything_done_to_this_copy_s_standing_")} ${W("screen.document.a27.none_of_it_is_ever_changed_or_removed")}</p>` + cs.sheet(log.join("")));
     if (revs.length > 1) {
-      const filesOf = (r) => (Array.isArray(r.files) ? r.files.filter((f) => f && f.path) : []);
-      const titleOf = (r) => T("screen.document.revision.title", { n: String(r.seq) });
       const revRows = revs.map((r, i) => cs.row("", `<b>${cs.esc(titleOf(r))}</b>` + (i === 0 ? ` <span class="mk-small">${W("document.versions.thiscopy")}</span>` : ""), "",
         [dayOf(r.at), cs.esc(who(r.author))].filter(Boolean).join(" · ")
         + (isSet ? filesOf(r).map((f) => ` <span class="id">${cs.esc(String(f.path))} ${cs.esc(shortOf(String(f.sha256 || "")))}</span>`).join("") : "")));
@@ -432,24 +504,7 @@ function render(cs, view) {
       const cmp = ui.revcmp && opts.some((o) => o.value === String(ui.revcmp.a)) && opts.some((o) => o.value === String(ui.revcmp.b)) ? ui.revcmp : null;
       let panel = "";
       if (cmp) {
-        const ia = revs.findIndex((r) => String(r.seq) === String(cmp.a)), ib = revs.findIndex((r) => String(r.seq) === String(cmp.b));
-        const fa = factsOf(ia), fb = factsOf(ib);
-        const edit = (same, left, inner) => (same ? inner : left ? `<del>${inner}</del>` : `<ins>${inner}</ins>`);
-        const standingLine = (st) => (st === "collected" ? W("screen.document.a27.standing_held_until_vouched_for") : st === "verified" ? W("screen.document.a27.standing_used_by_the_team")
-          : st === "retired" ? W("state.item.retired.name") : undetermined(st));
-        const lines = (f, g, left) => (!f ? `<p>${cs.mark("gap", "undetermined")} ${W("screen.document.revision.nobytes")}</p>`
-          : `<p>${edit(!g || f.standing === g.standing, left, standingLine(f.standing))}</p>`
-          + `<p>${W("screen.document.compare.grade")} ${edit(!g || f.grade === g.grade, left, f.grade ? cs.grade("capture", f.grade) : cs.mark("gap", "undetermined"))}</p>`
-          + `<p>${edit(!g || f.vouched === g.vouched, left, f.vouched ? W("screen.document.a27.vouched_for_by_dev.2", { member: who(f.vouched) }) : W("screen.document.a27.vouched_for_by_nobody"))}</p>`);
-        const side = (i, f, g, left) => `<div><h3>${cs.esc(titleOf(revs[i]))}</h3><span class="mk-date">${at(revs[i].at)} · ${cs.esc(who(revs[i].author))}</span>${lines(f, g, left)}</div>`;
-        /* a set of files: the files that changed between the two, each with its digest on either side */
-        let changed = "";
-        if (isSet) {
-          const fa2 = new Map(filesOf(revs[ia]).map((f) => [String(f.path), String(f.sha256 || "")])), fb2 = new Map(filesOf(revs[ib]).map((f) => [String(f.path), String(f.sha256 || "")]));
-          changed = [...new Set([...fa2.keys(), ...fb2.keys()])].filter((p) => fa2.get(p) !== fb2.get(p))
-            .map((p) => `<p class="mk-small id" data-file-changed="${cs.esc(p)}">${cs.esc(p)} ${fa2.has(p) ? `<del>${W("screen.document.compare.fingerprint", { digest: shortOf(fa2.get(p)) })}</del>` : ""} ${fb2.has(p) ? `<ins>${W("screen.document.compare.fingerprint", { digest: shortOf(fb2.get(p)) })}</ins>` : ""}</p>`).join("");
-        }
-        panel = `<div class="mk-compare" data-compare="revisions">${side(ia, fa, fb, true)}${side(ib, fb, fa, false)}</div>` + changed;
+        panel = comparePanel(revs.findIndex((r) => String(r.seq) === String(cmp.a)), revs.findIndex((r) => String(r.seq) === String(cmp.b)));
       }
       parts.push(`<details class="mk-details" data-fold="revisions"${cmp ? " open" : ""}><summary>${W("screen.document.a27.earlier_revisions_of_this_record")} <span class="muted">· ${revs.length}</span></summary>`
         + cs.sheet(revRows.join(""))
@@ -792,7 +847,12 @@ const browserActs = [
     } },
   /* R65: two revisions of this copy's record set side by side, from the image answer the page holds */
   { op: "revisioncompare", label: "screen.document.revisions.compare.act",
-    send(view, el, cs) { cs.set("revcmp", { a: String(cs.value("document-rev-a") || ""), b: String(cs.value("document-rev-b") || "") }); return null; } },
+    /* R81: the compare tab's act carries its pair as its own data (the cited revision and the current copy); the fold's act reads its two choices */
+    send(view, el, cs) {
+      const a = el && el.dataset.a !== undefined ? el.dataset.a : cs.value("document-rev-a");
+      const b = el && el.dataset.b !== undefined ? el.dataset.b : cs.value("document-rev-b");
+      cs.set("revcmp", { a: String(a || ""), b: String(b || "") }); return null;
+    } },
   /* R67: an outside link's warning opens ("ask"), closes ("stay") or lets the address open in a new window ("open"); a script
      scheme is never opened */
   { op: "linkopen", label: "act.owed_linkopen.label.document",
@@ -850,6 +910,8 @@ const words = Object.freeze([
     "a34.one_line_for_each_question_that_rests_on", "a64.captured_together_with_this_page_and_che",
     "a64.not_established_means_the_record_cannot_"].map((k) => "screen.document." + k),
   "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
+  /* T51 (R81, R82, CR-19): the compare tab, the original-file card, its size and kind */
+  "document.read.tab.compare", "document.read.original.card", "size.small", "size.kb", "size.mb", "size.gb",
   ...["record.release", "record.added", "revisions.truncated", "revision.nobytes", "compare.grade", "compare.fingerprint", "a34.moved.noreason", "a34.kept.noreason", "place.restson", "names.matched.identifier",
     "names.matched.reference", "names.matched.reference_key", "names.matched.label", "names.matched.testimony", "names.matched.none"].map((k) => "screen.document." + k),
   ...["captured", "copy", "fingerprint", "fingerprint.means", "passages.head", "passage.where", "cite.question", "cite.role",
@@ -862,5 +924,6 @@ const words = Object.freeze([
 
 /** The document screen (interface-shell R21). */
 export function documentScreen(parts) {
-  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs], words, parts });
+  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs],
+    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k)]), parts });
 }

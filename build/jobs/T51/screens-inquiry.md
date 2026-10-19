@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_017Kmaz4psUrUVmvttFcYbfb · depth 2 · COMPLETE · handled B12
+**Status** · session_013FqAXHU9wuVwLZqxBYLrmn · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -62,3 +62,41 @@ COMPLETE with two REPORTS, re B12 (K4105). tranche/T51 merged; no code change th
 **(1) `document` / `screen.document.passages.head`: the design no longer draws that heading; journey-check's step is stale.** The heading ("Passages") was the title of the reading section in the first build (my T46 code: `secOf("screen.document.passages.head", reading, ...)`). The drawing of DEC-229 replaced that section by "Read it" with its tabs (`docs/development/ux-substrate/screens/mock-screens.js` l.1108: `sec('Read it', ...tab 'By page', tab 'Beside the version your question cites'...)`; the only "Passages" sentence left is a note elsewhere), and since B5 the section is `document.read.title` ("Read it"); R80 draws its tab and page bar under it. No drawing of `document` draws a "Passages" heading, so the page as walked is right. Fix is journey-check's: `src/journey-check/investigation.mjs`:178, `requireWord(p, "screen.document.passages.head", ...)` becomes `requireWord(p, "document.read.title", { within: "#cs-main" })` (the next lines, the notice's passage drawn on its page, still hold: the passages are drawn on page 1 of the reading). `screen.document.passages.head` is then an unused row (still listed in the module's words; BOB or the design may retire it).
 **(2) `dash-project` opened from Home's door draws "Nothing is here": Home's door has no project.** `bio-plane/src/screens-daily/home.mjs`:311 draws the Investigation block's door as `area("investigation", "/app/dash-project", ...)`, the bare path. `dash-project` is `subject: true` at `/app/dash-project/<project>` (R79, its `projectstage` read marked `subject: true`), and interface-shell R61 rule 1 says "the same applies when a subject screen is opened with no subject": the shell draws only "Nothing is here". So the walk's click on the door lands on a bare `/app/dash-project`; the project the walk created and worked is never named. Not a read or a parameter of mine: the path's project id is absent. Fix options, BOB's call (requirements): (a) Home's door names a project: `/app/dash-project/<id>` of the project it already has (the `latest` change's project, or the one project when there is one; screens-daily R51; the code has `plist` and `latest` there), the bare path kept for no project; or (b) R79 gains a no-subject rule for `dash-project` (e.g. the member's one project, else the project list) with the shell's R61 taught that this subject screen answers one; I recommend (a): smaller, and R79's route stays one project's dashboard. I did not touch screens-daily or the shell (not mine) and I added no test that would fix the bare-path behaviour in place. Send a CHANGE if you choose (b) or want my screen to take a different part.
 Size (session_017Kmaz4psUrUVmvttFcYbfb): test runs 14, module lines 4022
+
+## J8 · REPORT
+
+Two points for BOB from CR-19 (screens-inquiry), and failures found outside this module.
+
+1. The format id for R82 is not stated by `extraction`'s `readingFor`. The card's kind takes the reading's own `text_container` (what reading-pipeline writes as the reader's format), falls back to "text" for a text/plain content type, and draws `document.kind.undetermined` for any id with no row. The capture's registry id is the `capture_format` column, which the answer does not state. Requested: extraction R77's answer also states the capture's format, so the card names the registry's own id.
+
+2. R81 never guesses. A question leg whose `extent_capture` matches no revision draws no compare tab and no sentence; a leg naming only a `content_id` draws no tab, since no read the screen makes answers it. The screen cannot send a REPORT when that happens at runtime, so these cases are not surfaced to BOB at all. If that is wanted, a read naming the content row's capture is needed.
+
+3. Failing on this branch by `node checks/run.mjs /home/user/bio` in modules this job did not change (screens-inquiry has 0 findings):
+   coverage: agent-harness R17; agent-runner R36 R37 R38 R40; file-scanner R33; installer-steps R26 R31; journey-check R19; screens-settings R62; setup-words R19.
+   words: 12 inline copy strings in bio-plane/src/setup-fleet.mjs (instance-setup), lines 30 to 67.
+
+## J9 · COMPLETE
+
+COMPLETE, CR-19 · screens-inquiry. Commit 55a6271d96, pushed to job/T51/screens-inquiry.
+
+Entries applied:
+- R81, the compare tab. The document's second "Read it" tab is drawn only where a question's basis leg (`extent_capture`) cites an earlier revision (index 1 or later) by `bundlehistory`'s `capture_sha`. Its act `revisioncompare` carries the pair (the cited revision and the current copy) and sends nothing. The fold's own compare still works.
+- R82, the original-file card. Its kind comes from the reading's `text_container` (text for a text/plain content type, `undetermined` for an id with no row) and its size from `bytes` (size.small, size.kb, size.mb, size.gb). No `bytes`, no card.
+- Words: no word row added. The tab, card and size keys already exist in words.json. The kind list is shared through the module's parts (common.mjs `KIND_IDS`, `COMMON.kinds`), and documentScreen adds the `document.kind.*` words, so the served page carries them.
+
+Deferred: none in the module.
+Found elsewhere: see the REPORT just before this message.
+
+Tests: test/m/screens-inquiry/cr19-document.test.mjs has 5 tests naming R81 and R82; all pass. Full module suite: 234 pass, 0 fail (229 existing and the 5 new).
+
+Checks, run from civicos-process against /home/user/bio:
+- format: 175 modules, 0 failures.
+- architecture screens-inquiry: 0 failures.
+- coverage screens-inquiry: 82 of 82 live ids named by a test, 0 failures.
+- ownership screens-inquiry tranche/T51: 0 failures.
+- run.mjs: screens-inquiry has 0 findings; the rest are in the REPORT.
+Not run: the journey-check walk (per your note).
+
+Draft PR: none opened. The module job's role says to open no pull request, but the harness asks for a draft after a push. Please rule whether a draft is wanted.
+
+Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 7, module lines 4088
