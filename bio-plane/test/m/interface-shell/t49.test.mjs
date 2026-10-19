@@ -47,8 +47,7 @@ test("R65 the shell draws its own elements with the design's classes: the member
   for (const c of [...REPLACED, "cs-testband"]) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
   /* STYLE holds only the page's height settings and the reduced-motion rule */
   const selectors = styleOf(html).replace(/@media[^{]*\{[\s\S]*\}\s*$/, "").split("}").map((r) => r.split("{")[0].trim()).filter(Boolean);
-  /* R102 (T51): and the one rule that makes the team's name wrap at every width, over the design's `.mk-grp` that cuts it */
-  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root|\.cs-mast \.mk-grp$)/, sel);
+  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root)/, sel);
   assert.match(styleOf(html), /@media \(prefers-reduced-motion:reduce\)/);
   /* the design's classes are all defined by the served stylesheets */
   const css = ASSET_FILES["civicsmith.css"].body + ASSET_FILES["shell.css"].body;

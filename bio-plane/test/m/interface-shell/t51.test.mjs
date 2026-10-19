@@ -312,7 +312,7 @@ test("R94 cs.readonly(noun) draws shell.readonly as a note at the head of a scre
   const p = await boot({ screens: [READONLY], plane: { whoami: ok({ ...MEMBER, capabilities: [] }) } });
   const notes = p.root().querySelectorAll('.mk-note[role="note"]');
   assert.equal(notes.length, 1, "once per screen");
-  assert.equal(notes[0].textContent, word("shell.readonly", { noun: NOUN }));
+  assert.equal(notes[0].textContent, word("shell.readonly", { noun: NOUN, members: word("shell.readonly.members") }));
   assert.ok(!/credential/i.test(notes[0].textContent));
   assert.equal(p.root().querySelector("button[data-act]"), null, "the acts stay absent, never greyed");
   const m = await boot({ screens: [READONLY] });
@@ -321,7 +321,7 @@ test("R94 cs.readonly(noun) draws shell.readonly as a note at the head of a scre
   const a = await boot({ screens: [READONLY], plane: { whoami: ok({ ...ADMIN, capabilities: [] }) } });
   assert.equal(a.root().querySelector('.mk-note[role="note"]'), null, "an administrator holds it");
   const d = await boot({ screens: [{ ...READONLY, render: (cs) => cs.readonly({ text: "a <b>record</b>" }) }], plane: { whoami: ok({ ...MEMBER, capabilities: [] }) } });
-  assert.equal(d.root().querySelector('.mk-note[role="note"]').textContent, word("shell.readonly", { noun: "a <b>record</b>" }), "data is drawn as text");
+  assert.equal(d.root().querySelector('.mk-note[role="note"]').textContent, word("shell.readonly", { noun: "a <b>record</b>", members: word("shell.readonly.members") }), "data is drawn as text");
 });
 
 /* ---------- R95 ---------- */
@@ -329,9 +329,9 @@ test("R94 cs.readonly(noun) draws shell.readonly as a note at the head of a scre
 const KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned"];
 const CHIPS = {
   id: "home", reads: () => ({}), acts: [],
-  words: [["screen.glossary.money.acfr.name", "fx ACFR", false]],
+  words: [],
   render: (cs) => ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned", "nonesuch"].map((k) => '<p data-kind-of="' + k + '">' + cs.stateChip(k) + "</p>").join("")
-    + '<p id="terms">' + cs.term("money.acfr") + "|" + cs.term("honest.fingerprint") + "</p>",
+    + '<p id="terms">' + cs.term("money.acfr") + "|" + cs.term("honest.nonesuch") + "</p>",
 };
 
 test("R95 cs.stateChip(kind) draws the design's mk-chip for each kind, its name and its explanation (means, then can and cannot where the table holds them); a kind outside the list draws nothing", async () => {
@@ -355,9 +355,9 @@ test("R95 cs.term(termKey) draws a glossary term as a card: its name, explained 
   const p = await boot({ screens: [CHIPS, GLOSSARY] });
   const terms = p.doc.getElementById("terms");
   const link = terms.querySelector("a.cs-ref");
-  assert.equal(link.textContent, "fx ACFR");
+  assert.equal(link.textContent, word("screen.glossary.money.acfr.name"));
   assert.equal(tipOf(link), h(word("screen.glossary.money.acfr")) + '<span class="more">' + h(word("shell.card.open")) + "</span>");
-  assert.equal(terms.textContent, "fx ACFR|", "a term the design has not named draws nothing");
+  assert.equal(terms.textContent, word("screen.glossary.money.acfr.name") + "|", "a term the design has not named draws nothing");
   await p.click(link);
   assert.equal(p.location.pathname, "/app/glossary");
   assert.ok(p.doc.getElementById("at-glossary"));
@@ -646,8 +646,8 @@ test("R102 every screen of the registry has its tab title (page.title with scree
   const long = "A very long team name that has to wrap and never be cut, however many words it takes to say it in full";
   const wrapped = await boot({ screens: ALL, plane: { groupidentity: ok({ ok: true, display_name: long }) } });
   assert.equal(wrapped.root().querySelector(".cs-mast .mk-grp").textContent, long, "whole");
-  assert.match(wrapped.html, /\.cs-mast \.mk-grp\{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere[^}]*\}\s*@media/, "wraps at 1280 as well as at 390");
-  assert.match(wrapped.html, /@media \(max-width:760px\)\{\.cs-mast \.mk-grp\{flex:1 1 auto\}/, "and at the phone width");
+  assert.ok(!/\.mk-grp[^}]*white-space:\s*nowrap/.test(ASSET_FILES["shell.css"].body + ASSET_FILES["civicsmith.css"].body), "the design lets the name wrap, at every width (K4084)");
+  assert.ok(!/\.mk-grp/.test(wrapped.html.slice(wrapped.html.indexOf("<style>"), wrapped.html.indexOf("</style>"))), "the shell carries no rule of its own for it");
 });
 
 /* ---------- R103 ---------- */

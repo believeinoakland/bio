@@ -812,7 +812,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (!ME || ME.administer === true || (Array.isArray(ME.capabilities) && ME.capabilities.includes("contribute")) || inst.ro) return "";
         inst.ro = true;
         const n = noun && typeof noun === "object" ? wordOrData(noun) : typeof noun === "string" && has(noun) ? w(noun) : esc(noun == null ? "" : noun);
-        return '<p class="mk-note" role="note">' + w("shell.readonly", { noun: html(n) }) + "</p>";
+        /* K4084: the path "Settings › Members" is drawn as the reference it names, where `members` is a screen */
+        const members = screenOf("members") ? '<a class="cs-ref" href="' + esc(hrefOf("members")) + '" data-nav>' + w("shell.readonly.members") + "</a>" : w("shell.readonly.members");
+        return '<p class="mk-note" role="note">' + w("shell.readonly", { noun: html(n), members: html(members) }) + "</p>";
       },
       /* R95 (A11): the design's state chip for a kind, explained at level 1 by what it means, can and cannot (separate lines
          of the one explanation); a kind outside the list draws nothing */

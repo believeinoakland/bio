@@ -6,6 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
@@ -228,7 +229,7 @@ test("R76 the masthead's explanations button names itself and its setting (shell
     assert.ok(name && name.trim(), "an accessible name: " + el.outerHTML.slice(0, 80));
     assert.ok(String(el.getAttribute("data-tip") || "").startsWith("<b>" + name), "shown on a tap: " + name);
   }
-  assert.match(scriptOf(p.html) + p.html, /\.cs-mast \.mk-grp\{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere/, "the name wraps onto a second line");
+  assert.ok(!/white-space:\s*nowrap/.test(((r) => r ? r[0] : "")(/\.mk-grp[^}]*\}/.exec(ASSET_FILES["shell.css"].body))), "the design's own rule lets the name wrap onto a second line (K4084)");
   /* no explanation of an act button equals its label or the sentence drawn beside it */
   for (const path of ["/app", "/app/document/c1", "/app/held"]) {
     const q = await boot({ screens: ALL, path, plane: { image: ok({ title: "A lease", pages: 1, grade: "B", why: "w", project: { id: "P1", title: "P" }, passages: [] }), heldcaptures: ok({ items: [{ id: "h1", title: "T", at: "2026-10-01" }] }) } });

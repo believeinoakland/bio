@@ -304,8 +304,7 @@ function dataOf(screens, guide) {
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
-.cs-mast .mk-grp{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;min-width:0;flex:0 1 auto}
-@media (max-width:${PHONE_WIDTH}px){.cs-mast .mk-grp{flex:1 1 auto}
+@media (max-width:${PHONE_WIDTH}px){
 .cs-main{overflow-x:hidden}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
