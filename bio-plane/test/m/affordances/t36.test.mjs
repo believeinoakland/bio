@@ -31,7 +31,7 @@ const T50_NEW = ["secondlookclear", "reauth", ...R66_OPS];
 /* R70 (T51; DEC-340, U366): the four entries the design re-took at `8c5e692e19`: two with new texts, two new. R62: four more ops whose `does` words the
    design's reads list gives this module (declared ops, held under their own names) */
 const R70_OPS = ["actionhold", "holdnoticesent", "holdnoticeprepare", "counselpacket"];
-const READS_NEW = ["noticeprepare", "noticepost", "signeradd", "versionnotice"];
+const READS_NEW = ["noticeprepare", "noticepost", "signeradd", "versionnotice", "actionholdrelease" /* DEC-359 */];
 /* R69 (T51): the seven browser acts, the design keeping the `owed_` in the key of each */
 const R69_ACTS = ["revisioncompare", "hashcopy", "linkopen", "pubfloorset", "pubfloorclear", "pubprint", "reviewexport"];
 /* R48's named keys. PR #14 withdrew the five op-less texts and `claimidentity`'s, and dropped `assistantset` (DEC-182 (1)–(3)); DEC-189

@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_0184gxzpn1s2EDqr1qacRUZ3 · depth 2 · COMPLETE · handled B3
+**Status** · session_0184gxzpn1s2EDqr1qacRUZ3 · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -26,3 +26,8 @@ Size (session_0184gxzpn1s2EDqr1qacRUZ3): test runs 14, module lines 2699
 ## J4 · REPORT
 
 REPORT (re B3 · CHANGE K4073). Nothing in affordances' paths can name them. `unaccounted` (R12) is correct: it reports a gated op "unpublished" when it is in none of ACTS, CAPTURE_ACTS, PER_ITEM_ACTS or NON_ACTS, and NON_ACTS (like RUNGS and RUNG_ABSENT) is op-grades' table, read here by reference (R4, K1974); these are reads, so they are no ACTS rows, and adding a copy here would break R4's "no copy" rule. I checked on the merged tranche tip: none of the 14 is in NON_ACTS, RUNGS or RUNG_ABSENT. op-grades R48 covers three (holdsdue, templatebyhandle, rulefields); the other eleven (adminremovalsopen, approvedunsent, bundlehistory, checkpointsdue, clocksrunning, entityidonly, entitysimilar, heldat, projectinvitations, subjectsnamed, versioncompare) need an op-grades requirement and job (each with a "read: …" NON_ACTS reason), after which control-plane's totality goes green with no change here. Affordances' own tests derive their op sets from the owners' maps, so they need no list updated. Job stays COMPLETE; no change made.
+
+## J5 · COMPLETE
+
+COMPLETE (re B4 · CHANGE K4093). Merged tranche/T51; ACT_HELP re-taken at the design now on the tranche (2a64c5ae77): `actionholdrelease` (DEC-359, `act.actionholdrelease.does`) is held; t36.test.mjs :89 and :191 are green. Suite whole: 280 pass, 0 fail; words check 0 failures; coverage 54 of 54; format and architecture unchanged. Consequence for op-declarations: `actionholdrelease` is in its `unexplained` ACT_HELP_ABSENT group and must leave it (R34 partition), as for the six of J1.
+Size (session_0184gxzpn1s2EDqr1qacRUZ3): test runs 18, module lines 2700
