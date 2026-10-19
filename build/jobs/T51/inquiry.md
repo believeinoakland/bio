@@ -30,3 +30,21 @@ Notes for BOB
 - The two inquiry-grammar keys used in case-grammar.test.mjs are in words-unreviewed.json, not words.json. Once the design stream reviews them, the test could switch to word(key).
 
 Size (session_01NvSSvWMYsZ2nhZyzjqLjdo): test runs 2, module lines 3816
+
+## J2 · COMPLETE
+
+B2 (CHANGE) applied. Commit ddcec16bf6 on job/T51/inquiry; tranche/T51 merged in (no conflicts).
+
+- case-grammar.test.mjs:77 and :264 now compare with the product's own localize calls, same id, en and vars as inquiry-grammar's code: inquiry-grammar.grammar.the_case_states_these_facts and inquiry-grammar.grammar.name_the_member_asserting_that. Compared by equality, not copied.
+- The earlier case-grammar test copies (remove_k_from_this_documents, grounds_i_asserted_by_asserted) stay as localize calls with the product's id and en.
+
+Tests and checks (after the merge):
+- node --test bio-plane/test/m/inquiry/: tests 218, pass 217, fail 0, todo 1.
+- format: 176 modules, 175 requirements files; 0 failures.
+- architecture inquiry: 39 product files, 138 relative imports; 0 failures.
+- coverage inquiry: 56 of 56 live requirement ids named by a test; 0 failures.
+- checks/run.mjs: no inline, plain, testcopy or missingkey finding under bio-plane/src/inquiry or bio-plane/test/m/inquiry (missingkey 0 overall).
+- setup-words --check: rows.mjs stale, expected; no refusal naming inquiry.
+- ownership: 1 file changed by inquiry between tranche/T51 and job/T51/inquiry; 0 failures.
+
+Size (session_01NvSSvWMYsZ2nhZyzjqLjdo): test runs 4, module lines 3816
