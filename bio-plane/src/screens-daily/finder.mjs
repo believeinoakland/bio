@@ -27,6 +27,26 @@ export const finder = Object.freeze({
       // the team's themes fill the Theme choice (R43). The browse itself is called from `render` once `since` is known.
       out.lookedat = { op: "lookedat" };
       out.themes = { op: "themeread", empty: function (v) { return !v || !Array.isArray(v.themes) || v.themes.length === 0; } };
+      // R54, R93: the browse is a list that re-reads itself; its choices (page memory, `choice:<id>`) and the member's last look fix its request.
+      // A "new" browse waits for that look, and is read in `render` until then.
+      const KINDS = ["all", "document", "question", "action", "entity", "plan"];
+      const ONLY = ["any", "new_since", "watched", "flagged"];
+      const parts = subject.charAt(0) === "~" ? subject.slice(1).split("~") : [];
+      const chosen = function (id, list, seed) { const v = ui["choice:" + id]; return list.indexOf(v) >= 0 ? v : seed; };
+      const lk = view.data && view.data.lookedat && view.data.lookedat.state === "ok" ? view.data.lookedat.value : null;
+      const since = lk && typeof lk.since === "string" ? lk.since : null;
+      const asTable = chosen("finder-view", ["list", "table"], "list") === "table";
+      const kind = asTable ? "all" : chosen("finder-kind", KINDS, KINDS.indexOf(parts[0]) >= 0 ? parts[0] : "all");
+      const only = asTable ? "any" : chosen("finder-state", ONLY, ONLY.indexOf(parts[1]) >= 0 ? parts[1] : "any");
+      if (only !== "new_since" || since) {
+        const query = { limit: "50" };
+        if (!asTable) {
+          if (kind !== "all") query.kinds = kind;
+          if (only !== "any") query.only = only;
+          if (only === "new_since") query.since = since;
+        }
+        out.browse = { op: "browse", query: query, refresh: true, empty: function () { return false; } };
+      }
     }
     if (ui.handle) out.selection = { op: "selection", query: { handle: String(ui.handle) } };
     if (ui.frontier) {
@@ -75,12 +95,12 @@ export const finder = Object.freeze({
     const themeId = asTable ? "" : String(ui["choice:finder-theme"] || "");
     const onlyList = ONLY.filter(function (o) { return o !== "new_since" || since || o === only; });
     const filters = !browsing ? "" : '<div class="mk-grid2">'
-      + (asTable ? "" : cs.choice("finder-kind", "find.kind.label", KINDS.map(function (k) { return [k, "find.kind." + k]; }), { value: kind, acts: {} })
-        + cs.choice("finder-state", "find.state.label", onlyList.map(function (o) { return [o, ONLY_KEY[o]]; }), { value: only, acts: {} }))
-      + cs.choice("finder-view", "screen.finder.showas", [["list", "screen.finder.showas.list"], ["table", "screen.finder.showas.table"]], { value: "list", acts: {} })
+      + (asTable ? "" : cs.choice("finder-kind", "find.kind.label", KINDS.map(function (k) { return [k, "find.kind." + k]; }), { value: kind, redraw: "choice:finder-kind" })
+        + cs.choice("finder-state", "find.state.label", onlyList.map(function (o) { return [o, ONLY_KEY[o]]; }), { value: only, redraw: "choice:finder-state" }))
+      + cs.choice("finder-view", "screen.finder.showas", [["list", "screen.finder.showas.list"], ["table", "screen.finder.showas.table"]], { value: "list", redraw: "choice:finder-view" })
       + (!asTable && themeList.length ? cs.choice("finder-theme", "theme.filter", [["", "theme.filter.any"]].concat(themeList.map(function (t) {
           return { value: String(t.theme_id), text: String(t.name || t.theme_id) };
-        })), { value: "", acts: {} }) : "")
+        })), { value: "", redraw: "choice:finder-theme" }) : "")
       + "</div>"
       + '<p class="mk-small muted">' + cs.w("screen.finder.table.view.help") + "</p>"
       + (asTable ? "" : (!asTable && themeList.length ? '<p class="mk-small muted">' + cs.w("theme.filter.help") + "</p>" : "")
@@ -108,15 +128,37 @@ export const finder = Object.freeze({
           awaiting: merge && typeof merge.awaiting === "number" ? merge.awaiting : (typeof v.awaiting_review === "number" ? v.awaiting_review : null) };
       }, function () { return { state: "failed", key: key }; });
     };
-    let browse = ui.browse && typeof ui.browse === "object" && ui.browse.key === key ? ui.browse : null;
-    if (browsing && !themeId && !browse && (only !== "new_since" || (lk && lk.state !== "loading"))) {
-      if (only === "new_since" && !since) {
-        browse = { state: "failed", key: key };
-      } else {
-        ui.browse = browse = { state: "loading", key: key };
-        getBrowse(base(), null).then(function (r) { cs.set("browse", r); });
+    // The first page: the shell's read of `browse` (a list that re-reads itself, R93) when the request was fixed at load, else read here (a
+    // "new" browse opened by its link waits for the member's last look, and so does one reached from a search or a theme).
+    const feed = view.data.browse;
+    let browse = null;
+    if (browsing && !themeId && feed && feed.state !== "empty") {
+      const v = ok(feed);
+      browse = feed.state === "loading" ? { state: "loading", key: key }
+        : v && Array.isArray(v.items) ? { state: "ok", key: key, since: since, base: base(), items: v.items.slice(), next: v.truncated && v.next ? String(v.next) : null,
+          truncated: !!v.truncated, undetermined: v.undetermined || null, total: typeof v.total === "number" ? v.total : null,
+          awaiting: typeof v.awaiting_review === "number" ? v.awaiting_review : null }
+        : { state: "failed", key: key };
+    } else {
+      let page = ui.page1 && typeof ui.page1 === "object" && ui.page1.key === key ? ui.page1 : null;
+      if (browsing && !themeId && !page && Object.keys(view.data).length && (only !== "new_since" || (lk && lk.state !== "loading"))) {
+        if (only === "new_since" && !since) {
+          page = { state: "failed", key: key };
+        } else {
+          ui.page1 = page = { state: "loading", key: key };
+          getBrowse(base(), null).then(function (r) { cs.set("page1", r); });
+        }
       }
+      browse = page ? Object.assign({}, page) : null;
     }
+    // "Show more": the pages after the first, kept by the request they follow.
+    const more = ui.more && typeof ui.more === "object" && ui.more.key === key ? ui.more : null;
+    if (browse && browse.state === "ok" && more) {
+      browse.items = browse.items.concat(more.items);
+      browse.next = more.next;
+      browse.truncated = more.truncated;
+    }
+    ui.browse = browse;
     // R43, R54: a theme chosen is read at once, what was placed in it and its hunches apart; kept by the theme chosen.
     let theme = ui.themeRead && ui.themeRead.id === themeId ? ui.themeRead : null;
     if (browsing && themeId && !theme) {
@@ -249,7 +291,8 @@ export const finder = Object.freeze({
           return cs.call("browse", { query: query }).then(function (a) {
             const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
             if (v && v.ok !== false && Array.isArray(v.items)) {
-              cs.set("browse", Object.assign({}, b, { items: (b.items || []).concat(v.items), next: v.truncated && v.next ? String(v.next) : null, truncated: !!v.truncated }));
+              const had = ui.more && ui.more.key === b.key ? ui.more.items : [];
+              cs.set("more", { key: b.key, items: had.concat(v.items), next: v.truncated && v.next ? String(v.next) : null, truncated: !!v.truncated });
               return null;
             }
             return { refuse: "state.failed", fills: { reason: "" } };
@@ -338,7 +381,7 @@ export const finder = Object.freeze({
       send: function (view) { return { query: {} }; } },
     // R45: Watch, for what is picked, one `watchitem` for each picked item in order; one row's "Take off my watch list" is the
     // same act with `on: false`. A refusal stops the rest and is drawn.
-    { op: "watchitem", label: "act.owed_watchitem.label.finder", rereads: [],
+    { op: "watchitem", label: "act.owed_watchitem.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_ITEM: "refusal.MARK_NO_ITEM", MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK" },
       send: function (view, el, cs) {
         if (el.dataset.item) return { body: { item: el.dataset.item, on: el.dataset.off ? false : true } };
@@ -359,9 +402,9 @@ export const finder = Object.freeze({
         };
         return run(0);
       },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
     // R45: Flag for a second look…, one note for each picked item (the first refusal stops the rest and is drawn).
-    { op: "secondlook", label: "act.owed_secondlook.label.finder", rereads: [],
+    { op: "secondlook", label: "act.owed_secondlook.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_ITEM: "refusal.MARK_NO_ITEM", MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK",
         SECOND_LOOK_NO_NOTE: "refusal.SECOND_LOOK_NO_NOTE", SECOND_LOOK_NOT_OPEN: "refusal.SECOND_LOOK_NOT_OPEN" },
       send: function (view, el, cs) {
@@ -384,11 +427,11 @@ export const finder = Object.freeze({
         };
         return run(0);
       },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
     // R45: Clear, on a flagged row: any member who may see the item, no reason asked; the row leaves.
-    { op: "secondlookclear", label: "act.secondlookclear.label.finder", rereads: [],
+    { op: "secondlookclear", label: "act.secondlookclear.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK", SECOND_LOOK_NOT_OPEN: "refusal.SECOND_LOOK_NOT_OPEN" },
       send: function (view, el) { return el.dataset.item ? { body: { item: el.dataset.item } } : null; },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
   ],
 });

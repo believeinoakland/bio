@@ -191,8 +191,7 @@ export const home = Object.freeze({
     const away = all.filter(function (x) { return x.door === "elsewhere" || x.opens === "elsewhere"; }).slice(0, 1);
     const five = all.filter(function (x) { return away.indexOf(x) < 0 && Array.isArray(x.scripts) && x.scripts.length; });
     // R30, R40: "Start a project" opens its form on press: what it is about, who can find it.
-    const start = starts ? view.parts.startProject().form(cs, "home", "act.promote.label.home", cs.act("promote", { label: "project.start.go", tone: "primary" })) : "";
-    const startNote = start ? '<p class="mk-small muted">' + cs.w("act.promote.here.home") + "</p>" : "";
+    const start = starts ? view.parts.startProject().form(cs, "home", "act.promote.label.home", cs.act("promote", { label: "project.start.go", tone: "primary", here: "home" })) : "";
     const opened = typeof ui.door === "string" ? ui.door : "";
     const doorCard = function (x) {
       const k = String(x.door);
@@ -211,8 +210,8 @@ export const home = Object.freeze({
       : (starts && five.length) || away.length
         ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2" tabindex="0">' + cs.w("door.front.head") + "</h2>"
           + (starts ? '<p class="mk-sub">' + cs.w("door.front.intro") + "</p>" : "") + '<div class="mk-doors">' + (starts ? five.map(doorCard).join("") : "") + awayCard + "</div>"
-          + (start ? '<p class="mk-note">' + cs.w("door.front.blank") + "</p>" + start + startNote : "") + "</section>"
-        : start ? '<section class="mk-welcome" data-front="start">' + start + startNote + "</section>" : "";
+          + (start ? '<p class="mk-note">' + cs.w("door.front.blank") + "</p>" + start : "") + "</section>"
+        : start ? '<section class="mk-welcome" data-front="start">' + start + "</section>" : "";
 
     if (fresh) return heading + first + front;
 
@@ -234,7 +233,7 @@ export const home = Object.freeze({
     if (forGroup.length) readings.push({ n: forGroup.length, label: "screen.home.strip.group", screen: "queue" });
     // R50 (3): a team's own passed dates are a reading of their own, opening the queue.
     const ours = forMe.concat(forGroup).filter(function (it) { return it && it.kind === "action-clock-overdue.ours"; }).length;
-    if (!firstVisit && ours) readings.push({ n: "", label: { key: ours === 1 ? "home.strip.ours_passed.one" : "home.strip.ours_passed.other", fills: { n: String(ours) } }, screen: "queue" });
+    if (!firstVisit && ours) readings.push({ n: "", label: { key: ours === 1 ? "home.strip.ours_passed.one" : "home.strip.ours_passed.other", fills: { n: String(ours) } }, says: "home.strip.ours_passed.opens", screen: "queue" });
     const strip = readings.length ? cs.strip(readings) : "";
 
     const queueFailed = failed(data.queue) ? cs.sec("screen.home.needsyou", cs.state("queue", null)) : "";

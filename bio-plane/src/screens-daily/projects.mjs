@@ -74,8 +74,8 @@ export const projects = Object.freeze({
     // R63 (DEC-340, U366): the list is narrowed in the page, by the words in a project's name (case-folded, every word present)
     // and by `mine` (project-roster R38); nothing is sent and nothing in any project changes.
     const ui = view.ui || {};
-    // The words typed are page memory like a choice (the shell redraws on `change` and keeps `choice:<id>`), so the list narrows
-    // as the field is left or Enter is pressed (DEC-359: "Search projects" is a field of the kit, no act; narrowing as typed is the kit's).
+    // The words typed are page memory like a choice (`choice:<id>`), handed over by the kit's typed-input hook, so the list narrows
+    // as it is typed (DEC-359: a field of the kit, no act and no registry row).
     if (typeof ui["choice:projects-search"] !== "string") ui["choice:projects-search"] = "";
     const typed = ui["choice:projects-search"];
     const words = typed.toLowerCase().split(/\s+/).filter(Boolean);
@@ -88,8 +88,8 @@ export const projects = Object.freeze({
       return filter === "in" ? m.in === true : filter === "own" ? m.owner === true : true;
     };
     const finding = all.length
-      ? '<div class="mk-acts" style="align-items:flex-end">' + cs.field("projects-search", "screen.projects.search.label", { value: typed, help: "screen.projects.search.help" })
-          .replace('<input id="projects-search"', '<input id="projects-search" data-shell="choice" data-choice="projects-search"')
+      ? '<div class="mk-acts" style="align-items:flex-end">' + cs.field("projects-search", "screen.projects.search.label", { value: typed, help: "screen.projects.search.help",
+          typing: function (cs, view, value) { cs.set("choice:projects-search", String(value)); } })
         + cs.choice("projects-filter", "screen.projects.filter.label", [["all", "screen.projects.filter.all"], ["in", "screen.projects.filter.in"], ["own", "screen.projects.filter.own"]], { value: "all", acts: {} })
         + '<p class="mk-small muted">' + cs.w("screen.projects.filter.help") + "</p>"
         + "</div>" : "";

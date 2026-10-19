@@ -62,7 +62,7 @@ const WORDS_OF = {
     ...SOURCES, "home.first.name", ...KEYED_QUEUE, "action.noreply.title", "queue.step-cost-shared.detail",
     ...START, "file.trigger.home", "screen.home.title.needed",
     "screen.home.script", "home.ready.title", "screen.home.invite", "screen.home.saywho", "screen.home.first.invite", "screen.home.first.identity", "screen.home.first.project",
-    "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "screen.home.request.grant", "screen.home.request.decline",
+    "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "home.strip.ours_passed.opens", "screen.home.request.grant", "screen.home.request.decline",
     "act.projectrequestanswer.label.home",
     "screen.home.strip.you", "screen.home.strip.group", "screen.home.needsyou", "screen.home.needsyou.holds", "screen.home.needsgroup", "screen.home.needsgroup.holds",
     "screen.home.open", "screen.home.why", "screen.home.fieldfirst", "screen.home.move.admin", "screen.home.move.member", "screen.home.move.anyone",

@@ -240,6 +240,7 @@ test("R13 (DEC-212): the unsent-request item draws \"Pick up where you left off\
   assert.equal(pick.textContent, word("screen.queue.unsent.pickup"));
   assert.equal(row.querySelector('button[data-act="queuesnooze"]').closest("details").querySelector("summary").textContent, word("screen.queue.unsent.keep"));
   assert.ok(row.querySelector('button[data-act="actionmove"]').textContent.startsWith(word("screen.queue.unsent.drop")));
+  assert.ok(row.querySelector('button[data-act="actionmove"]').getAttribute("data-tip").includes(String(word("act.actionmove.here.queue")).replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;")), "the drop explains itself by its queue word (R54)");
   // Control: actionmove is drawn on no other item.
   assert.equal(itemOf(p, "TSK-1").querySelectorAll('button[data-act="actionmove"]').length, 0);
   const other = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], options: [{ id: "actionmove" }] }] }) });

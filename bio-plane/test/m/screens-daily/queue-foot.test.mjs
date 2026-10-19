@@ -16,6 +16,9 @@ const MUTED = ok({ ok: true, count: 3, muted: [
 ] });
 const queueOf = (items, muted = MUTED) => (req) => (req.query.muted ? muted : ok({ items, item_count: items.length }));
 
+const tipOf = (el) => el.getAttribute("data-tip");
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
 test("R50: Muted at the foot lists each kind muted in a project and each item muted on its own, with its date or the undated sentence, and Turn back on sends the unmute", async () => {
   const p = await open("/app/queue", { queue: queueOf([{ id: "TSK-1", class: "OBLIGATION", kind: "check", case: NOCASE, summary: "Do a thing", options: [], disposition: { instead: "taskresolve" } }]) });
   const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("queue.muted.title"));
@@ -32,6 +35,7 @@ test("R50: Muted at the foot lists each kind muted in a project and each item mu
   assert.equal(sec.querySelectorAll('button[data-act="queuemute"]').length, 5);
   const unmute = sec.querySelectorAll('button[data-act="queuemute"]');
   assert.ok(unmute.every((b) => b.textContent.startsWith(word("queue.muted.unmute"))));
+  assert.ok(unmute.some((b) => (b.getAttribute("data-tip") || "").includes(esc(word("act.queuemute.here.queue_kind")))), "a muted kind is turned back on by its own word");
   const at = (pred) => main(p).querySelectorAll('button[data-act="queuemute"]').findIndex(pred);
   await press(p, "queuemute", { nth: at((b) => b.dataset.unmute === "kind" && b.dataset.kind === "step-cost-shared") });
   assert.deepEqual([last(p, "queuemute").body.case, last(p, "queuemute").body.kinds, last(p, "queuemute").body.unmute], ["PROJ-1", ["step-cost-shared"], true]);
@@ -74,6 +78,7 @@ test("R50: an invitation is drawn by its keys with Join; a team's own passed dat
     groupidentity: ok({ ok: true, display_name: "Lakeshore" }), startfrom: ok({ ok: true, scripts: [], doors: [] }) });
   const strip = main(home).querySelector(".mk-strip");
   assert.ok(strip.textContent.includes(word("home.strip.ours_passed.one")));
+  assert.ok(strip.querySelectorAll("[data-tip]").some((e) => (e.getAttribute("data-tip") || "").includes(esc(word("home.strip.ours_passed.opens")))), "the reading carries its `says`");
   assert.equal(strip.querySelectorAll("a").find((a) => a.textContent.includes(word("home.strip.ours_passed.one"))).getAttribute("href"), "/app/queue");
   // Control: no item of the team's own, no such reading.
   const none = await open("/app", { queue: queueOf([], ok({ ok: true, muted: [] })), projectlist: ok({ ok: true, projects: [] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
@@ -84,8 +89,10 @@ test("R50: an invitation is drawn by its keys with Join; a team's own passed dat
 test("R50: \"Start a project\" explains itself on Home by act.promote.here.home, in place of the general act.promote.does", async () => {
   const p = await open("/app", { whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }), queue: ok({ items: [] }), projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Mine", participation: "joined" }] }),
     projectquestions: ok({ ok: true, items: [], cursor: null }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), groupidentity: ok({ ok: true, display_name: "L" }), startfrom: ok({ ok: true, scripts: [{ id: "W", version: 1, name: "n" }], doors: [{ door: "problem", scripts: ["W"] }] }) });
-  assert.ok(text(p).includes(word("act.promote.here.home")));
-  assert.ok(!text(p).includes(word("act.promote.does")));
+  const tip = main(p).querySelector('button[data-act="promote"]').getAttribute("data-tip");
+  assert.ok(tip.includes(esc(word("act.promote.here.home"))), "the place's own word, as the kit's `here`");
+  assert.ok(!tip.includes(esc(word("act.promote.does"))), "in place of the general one");
+  assert.ok(!text(p).includes(word("act.promote.here.home")), "control: not also drawn as a paragraph");
 });
 
 test("R49: a queue or Home item names its subject by subject.title, a reference; a subject with no title draws queue.source.untitled with the item's date; no item draws a record id as a title", async () => {

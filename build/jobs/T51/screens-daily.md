@@ -46,6 +46,13 @@
 - Gap closed (B7): exactly one comment on a draft with no published edition draws `.edition.draftonly.comments.one`.
 - DEC-361: `screen.home.todo.vouch.noplace*` are not used by this module (the to-do arrives with the queue's words); `queue.feed.action` and `.wizards` are read as the list holds them.
 
+## Completion (SCREENS-DAILY #9, T51-118)
+- Entries applied: T51-118 whole: R54–R64 and the words rule (all words findings cleared), B4–B7 rows, and the kit parts after interface-shell's merge (B8): `placeholder`, `says` on the strip reading, `here` on Home's "Start a project" (the stand-in paragraph is gone), the muted kind's "Turn back on" and the unsent request's drop; Find's browse is the shell's `browse` read with `refresh: true` (re-read every 45 seconds, `cs.fresh()`, picks kept; "Show more" pages kept apart in `more`; a "new" browse opened by its link, and one reached from a search or theme, is read in `render` until the shell's read exists); Show, Only, Show as and Theme are `redraw` choices that re-read; "Search projects" narrows as typed through the kit's `typing` hook; `cs.stateChip` in use.
+- Deferred: none. `act.queuemute.here.queue_project` is not drawn: no muted entry of the plane's answer is a whole project (a muted entry is a kind in a case, or an item).
+- Found in other modules: op-declarations has no row for `clocksrunning` as of J2 (K4093 merged op-declarations: Home reads it for every member; recheck: see the suite, it answers in the harness only). `rows.mjs` is stale for op-declarations' words (`setup-words --check`), BOB regenerates it.
+- Tests run: `node --test bio-plane/test/m/screens-daily/` 163 of 163 pass. Checks from the process repository: format 0 failures; architecture screens-daily 0 failures; coverage screens-daily 62 of 62 live requirement ids named by a test, 0 failures; ownership 0 failures (23 files); words for screens-daily 0 (also over every L11 module together, no line naming it); `checks/run.mjs` shows no line naming screens-daily; `setup-words/build.mjs --check`: stale rows, none naming this module.
+- Size (session_01JgsJ8b2USWAbcxeza3CtSa): test runs ~30, module lines 3397
+
 ## J1 · BLOCKED
 
 BLOCKED (cause: context). screens-daily #8 is at half its window and has stopped at a clean step; my record (`build/jobs/T51/screens-daily.md`, "Progress") lists what is done, what is next, and the REPORTs/QUESTIONs for you. Pushed: `job/T51/screens-daily` @ d980f1010c.

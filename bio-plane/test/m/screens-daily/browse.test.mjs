@@ -177,3 +177,25 @@ test("R54: choosing Documents re-reads browse at once with kinds set and sends n
   assert.deepEqual([last(seeded, "browse").query.kinds, last(seeded, "browse").query.only], ["document", "new_since"]);
   assert.ok(hasWord("find.query.help") && hasWord("screen.finder.showas"));
 });
+
+test("R54, R93 (interface-shell R93): Find's browse re-reads itself every 45 seconds with the picked rows kept, says so while the list is fresh, and a choice changes the request", async () => {
+  let items = ITEMS.slice();
+  const p = await open("/app/finder", { ...PLANE, browse: () => BROWSE(items) });
+  const reads = () => browseReqs(p).length;
+  assert.equal(reads(), 1);
+  assert.ok(text(p).includes(word("list.fresh")), "the first answer is fresh");
+  p.doc.getElementById("finder-pick-INF-1").checked = true;
+  items = [{ kind: "document", id: "INF-9", title: "Newest filing", last_changed: "2026-10-13T10:00:00Z", new: true, watched: false, flagged: null }, ...ITEMS];
+  await p.clock.tick(45000); await settle();
+  assert.equal(reads(), 2, "read again at 45 seconds");
+  assert.ok(text(p).includes("Newest filing"), "the list shows the new row");
+  assert.equal(p.doc.getElementById("finder-pick-INF-1").checked, true, "the picked row stays picked");
+  await p.clock.tick(120000); await settle();
+  const t = text(p);
+  assert.ok(t.includes("Newest filing"));
+  await choose(p, "finder-kind", "document");
+  assert.equal(last(p, "browse").query.kinds, "document", "a choice changes the request");
+  const quiet = await open("/app/finder/pothole", { ...PLANE, search: ok({ total: 0, hits: [] }) });
+  await quiet.clock.tick(120000); await settle();
+  assert.equal(browseReqs(quiet).length, 0, "control: a search is not a browse and is never re-read");
+});

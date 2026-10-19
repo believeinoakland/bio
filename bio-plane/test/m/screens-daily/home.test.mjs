@@ -393,7 +393,7 @@ test("R9, R23, R40: beside the doors, the blank start, \"Start a project\" openi
   assert.ok(start.querySelector("#home-title") && start.querySelector('button[data-act="promote"]'));
   assert.ok(!p.doc.getElementById("home-words"), "no free-text box");
   assert.equal(p.byOp("search").length, 0, "no matching work is searched");
-  assert.ok(text(p).includes(word("act.promote.here.home")), "the act explains itself by its Home key");
+  assert.ok(start.querySelector('button[data-act="promote"]').getAttribute("data-tip").includes(String(word("act.promote.here.home")).replace(/&/g, "&amp;").replace(/'/g, "&#39;").replace(/"/g, "&quot;")), "the act explains itself by its Home key");
 });
 
 // A project's participants (project-roster R1): the member's own row there says whether she is invited or has joined.

@@ -229,7 +229,11 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
   assert.deepEqual(main(p).querySelectorAll("#projects-filter option").map((o) => o.textContent), ["screen.projects.filter.all", "screen.projects.filter.in", "screen.projects.filter.own"].map((k) => word(k)));
   assert.deepEqual(names(), ["The Coliseum lease", "Sewer fund transfers", "Pothole repairs"], "control: at all, every row shows");
   const before = p.requests.length;
-  const set = async (id, v) => { const el = p.doc.getElementById(id); el.value = v; p.fire(el, "change"); await settle(); };
+  const set = async (id, v) => {
+    const el = p.doc.getElementById(id); el.value = v;
+    if (id === "projects-search") { p.fire(el, "input"); await p.clock.tick(600); } else p.fire(el, "change");
+    await settle();
+  };
   await set("projects-search", "  FUND  sewer ");
   assert.deepEqual(names(), ["Sewer fund transfers"], "case-folded, every word present");
   await set("projects-search", "");

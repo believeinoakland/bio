@@ -164,7 +164,7 @@ export const queue = Object.freeze({
       const snoozeBtn = cas ? cs.act("queuesnooze", { label: "screen.queue.unsent.keep", data: { project: String(cas.id), f: f } }) : "";
       const snooze = snoozeBtn ? '<details class="mk-details"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"
         + cs.field(f + "-until", "screen.queue.snooze.until", {}) + snoozeBtn + "</details>" : "";
-      const drop = id ? cs.act("actionmove", { label: "screen.queue.unsent.drop", data: { item: it.id, action: id } }) : "";
+      const drop = id ? cs.act("actionmove", { label: "screen.queue.unsent.drop", here: "queue", data: { item: it.id, action: id } }) : "";
       return pick + snooze + drop;
     };
     const src = view.parts.sourceItems();
@@ -268,7 +268,7 @@ export const queue = Object.freeze({
         if (!r) return "";
         const by = r.at ? cs.w("queue.muted.by", { date: { html: cs.date(String(r.at)) } }) : cs.w("queue.muted.by.undated");
         if (r.kind && r.case && r.case.id) {
-          const unmute = cs.act("queuemute", { label: "queue.muted.unmute", data: { unmute: "kind", mutecase: String(r.case.id), kind: String(r.kind) } });
+          const unmute = cs.act("queuemute", { label: "queue.muted.unmute", here: "queue_kind", data: { unmute: "kind", mutecase: String(r.case.id), kind: String(r.kind) } });
           return cs.row("", cs.w("queue.muted.kind", { kind: { html: cs.w("queue.kind." + String(r.kind)) }, project: { html: cs.ref("project", String(r.case.id), r.case.title || String(r.case.id), []) } })
             + '<span class="meta">' + by + "</span>", unmute, "");
         }
