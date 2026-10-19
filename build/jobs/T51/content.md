@@ -22,3 +22,35 @@ Job T51-28 · content: done.
 - `node checks/ownership.mjs /home/user/bio content tranche/T51 job/T51/content`: 1 file changed by content; 0 failures.
 
 Size (session_01Wwq7CyJnf8mYnH7fP7TvMY): test runs 2, module lines 3777
+
+## J2 · COMPLETE
+
+Job T51-188 · content (the words pass, K3949 / K3957 / K3962): done. Commit a36ab8e467 on `job/T51/content`, pushed.
+
+**Applied.**
+- The 14 conversion findings and the 52 plain findings, each judged by the words rule. `checks/words.mjs /home/user/bio content` now reports 0 failures (66 before).
+- The `[copy]` rows read through `word(key)`: `content.text.image_painted_pdf`, `content.kind_why.office_container_bytes` and `_hold`, `content.why.whole_document`.
+- Beyond the check's arms (R13): the member-read refusal details and reasons in `extent-core`, `extent`, `notice` and `index` that the check does not count (for example the C-45 details, the envelope and core-property refusals, the notice's state sentences, the candidate sentences, the container-missing levels and the connection axis) are converted the same way, as BOB's note asks.
+- `ops.mjs`: a new export `CONTENT_OP_NAMES`, the module's own list of its eight op names; `contentOps` is unchanged in behaviour.
+- Tests: `seams.test.mjs` assembles the op list from `CONTENT_OP_NAMES`, and I removed one assertion message that copied a sentence. `words.test.mjs` and the sentence-shaped assertions in both files compare with `word`/`localize` by equality, with the same text and vars, so no assertion is weaker.
+
+**Deferred.** None.
+
+**Not converted (wire or developer text, for BOB to settle, K3944).** Three `detail` strings are instructions to an API caller rather than text a member reads in the interface:
+- `index.mjs`, `contentRead`'s `NO_ID`: `content requires ?id=<content_id>`.
+- `index.mjs`, `transcribe`'s `TRANSCRIBE_NO_DOCUMENT` (no bundle given): `pass bundleId=<INFO-…>: the document whose page you transcribed`.
+- `index.mjs`, `#transcriptionOf`'s `TRANSCRIPTION_NOT_FOUND` (no id given): `pass contentId=<the content id op=transcribe returned>`.
+
+**Found in other modules (not changed).** `checks/words.mjs` over the whole repository reports other modules' findings, among them `money` (two plain), `contradiction`, `inquiry-grammar`, `monitoring` (a `[copy]` of "no content type"), `run-productions`, `standards` and `case-checker`. None is content's. `checks/coverage.mjs` without a module argument reports 30 failures in other modules; content has 55 of 55.
+
+**Process note.** The mail tool's `start` first ran `pull --rebase` on my job branch and stopped on a conflict, because my local branch carried an unpushed three-line start commit (`5948321d10`) that origin's history had already superseded. I aborted the rebase, reset the local branch to `origin/job/T51/content` (the old commit is in the reflog), and re-ran `start`, which wrote the entry. No pushed history was touched.
+
+**Checks.** Summary lines, as run:
+- `node --test bio-plane/test/m/content/`: tests 132, pass 132, fail 0.
+- `node checks/words.mjs /home/user/bio content`: "words: 1 modules, 5882 string literals read … 0 failures".
+- `node checks/run.mjs /home/user/bio`: "format: 175 modules, 174 requirements files; 0 failures"; "architecture: 3617 product files … 0 failures". The run's words and coverage failures are all in other modules.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only, as expected (`rows.mjs` is BOB's to regenerate at the layer close). No refusal naming content.
+- `node checks/coverage.mjs /home/user/bio content`: "55 of 55 live requirement ids named by a test; 0 failures".
+- `node checks/ownership.mjs /home/user/bio content tranche/T51 job/T51/content`: "8 files changed by content …; 0 failures" (seven code and test files plus the start record).
+
+Size (session_01JPMzjtaiYQhhvavJECf8NY): test runs 1, module lines 3531
