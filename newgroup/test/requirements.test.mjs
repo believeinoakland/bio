@@ -383,7 +383,7 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
     assert.match(own.page.label("fleet"), like("installer.fleet.partial.some", { names: /.*pdf-worker.*/ }));
     const bare = seen(await run({ slug: "fleet-tagless", rel: null }));
     for (const member of MEMBERS) assert.ok(!bare.acct.has(`${member}-fleet-tagless`), member);
-    assert.match(bare.page.label("fleet"), like("installer.fleet.partial.none", { list: /[\s\S]*pdf-worker \(pdf-worker http 404\)[\s\S]*/ }));
+    assert.match(bare.page.label("fleet"), like("installer.fleet.partial.none", { list: new RegExp("[\\s\\S]*" + like("installer.fleet.left.item", { member: "pdf-worker", why: like("installer.fleet.why.http", { status: 404 }) }).source + "[\\s\\S]*") }));
     assert.ok(bare.page.done, "the install is not failed over a member");
     armWith(SIGNER.line);
   }
@@ -404,7 +404,7 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
        not hash to it: no member is installed, each named for its integrity. */
     const paired = seen(await run({ slug: "fleet-not-newer", rel: await release({ version: RELEASE_VERSION }), builtInFleet: true }));
     for (const member of MEMBERS) assert.ok(!paired.acct.has(`${member}-fleet-not-newer`), member);
-    assert.match(paired.page.label("fleet"), /pdf-worker \(pdf-worker failed its integrity check\)/);
+    assert.match(paired.page.label("fleet"), like("installer.fleet.left.item", { member: "pdf-worker", why: like("installer.fleet.why.integrity") }));
     assert.ok(paired.page.done);
     armWith(SIGNER.line);
   }
@@ -419,7 +419,8 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
   const said = bytes.page.label("fleet");
   const rest = MEMBERS.filter((m) => m !== "pdf-worker" && m !== "agent-worker");
   assert.equal(said.search(like("installer.fleet.partial.some", { installed: rest.length, names: rest.join(", "), left: 2 })), 0, said);
-  assert.ok(said.includes("pdf-worker (pdf-worker failed its integrity check)") && said.includes("agent-worker (agent-worker http 404)"), said);
+  assert.match(said, like("installer.fleet.left.item", { member: "pdf-worker", why: like("installer.fleet.why.integrity") }), said);
+  assert.match(said, like("installer.fleet.left.item", { member: "agent-worker", why: like("installer.fleet.why.http", { status: 404 }) }), said);
   assert.ok(bytes.page.done, "the install never fails over a member");
   /* T33-91: sheet-worker installs as any member (inactive until the release that activates it, K1506); a container
      member is R38's. */
@@ -1014,18 +1015,18 @@ test("R38 a container member installs only with the Containers scope granted, Wo
     assert.ok(w.page.done, `${why}: the install finished`);
     return w;
   };
-  await leftOut("noscope", { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }, like("installer.image.nopermission", { part: RUNNER }));
+  await leftOut("noscope", { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }, like("installer.fleet.why.nopermission"));
   /* A token response stating no scope: one read of the Containers API decides. */
   const asked = seen(await run({ slug: "box-asked", rel, grantedScope: null }));
   assert.equal(asked.apps.length, 1, "a read that answers means the scope is held");
-  await leftOut("unasked", { grantedScope: null, containers: "read" }, like("installer.image.permissionunknown", { part: RUNNER, said: "Authentication error" }));
+  await leftOut("unasked", { grantedScope: null, containers: "read" }, like("installer.fleet.why.permissionunknown"));
   for (const [why, d, says] of [
-      ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, like("installer.image.unpinned", { part: RUNNER })],
-      ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, like("installer.image.unpullable", { part: RUNNER })],
-      ["policy", { ...DESCRIPTOR, scheduling_policy: "durable_object" }, like("installer.fleet.why.container")],
-      ["noclass", { ...DESCRIPTOR, class_name: "" }, like("installer.fleet.why.container")], ["max", { ...DESCRIPTOR, max_instances: 0 }, like("installer.fleet.why.container")],
-      ["bind", { ...DESCRIPTOR, bind: [{ member: "agent-worker", binding: "runner" }] }, like("installer.fleet.why.container")],
-      ["garbled", "{not json", like("installer.fleet.why.container")]]) {
+      ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, like("installer.fleet.why.unpinned")],
+      ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, like("installer.fleet.why.unpullable")],
+      ["policy", { ...DESCRIPTOR, scheduling_policy: "durable_object" }, like("installer.fleet.why.container.policy")],
+      ["noclass", { ...DESCRIPTOR, class_name: "" }, like("installer.fleet.why.container.class")], ["max", { ...DESCRIPTOR, max_instances: 0 }, like("installer.fleet.why.container.size")],
+      ["bind", { ...DESCRIPTOR, bind: [{ member: "agent-worker", binding: "runner" }] }, like("installer.fleet.why.container.bindings")],
+      ["garbled", "{not json", like("installer.fleet.why.container.parse")]]) {
     const w = await leftOut(why, { rel: await release({ version: NEXT, container: true, descriptor: d }) }, says);
     /* R70 (F2) reads the applications once, before anything is created; nothing is written to the Containers API. */
     assert.equal(w.calls.some((c) => c.u.includes("/containers/") && c.method !== "GET"), false, `${why}: the Containers API written`);
@@ -1036,7 +1037,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   /* The descriptor's hash is covered by the fleet signature: bytes that differ are refused like any part. */
   const tampered = await release({ version: NEXT, container: true });
   tampered.assets[`${RUNNER}/container.json`] = JSON.stringify({ ...DESCRIPTOR, image: "docker.io/evil/x@sha256:" + "c".repeat(64) });
-  await leftOut("tampered", { rel: tampered }, /agent-runner container\.json failed its integrity check/);
+  await leftOut("tampered", { rel: tampered }, like("installer.fleet.why.integrity"));
   /* An update: re-consent. Without the scope, everything else updates and the container is named; a container held
      from before keeps its binding; with the scope and Paid, the application is rolled out to the image. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
@@ -1044,7 +1045,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   const noScope = seen(await run({ slug: "box-upd", mode: "update", rel, pre: preAll, preClasses: { [RUNNER]: ["AgentRunner"] },
     preApps: [{ id: "app9", name: RUNNER }], grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }));
   assert.equal(noScope.page.status("up"), "ok");
-  assert.match(noScope.page.label("fleet"), like("installer.image.nopermission", { part: RUNNER }));
+  assert.match(noScope.page.label("fleet"), like("installer.fleet.why.nopermission"));
   assert.equal(noScope.calls.some((c) => c.u.includes("bio-plan-probe")), false, "no plan probe without the scope");
   assert.deepEqual(runnerOf(noScope), [RUNNER_BINDING()], "a container held from before keeps serving its member");
   assert.deepEqual(noScope.rollouts, []);
@@ -1057,7 +1058,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   assert.deepEqual(rolled.refused, []);
   const free = seen(await run({ slug: "box-upd", mode: "update", rel, pre: preAll, preClasses: { [RUNNER]: ["AgentRunner"] }, plan: "free" }));
   assert.equal(free.page.status("up"), "ok", "an update never grows a refusal");
-  assert.match(free.page.label("fleet"), like("installer.image.freeplan", { part: RUNNER }));
+  assert.match(free.page.label("fleet"), like("installer.fleet.why.freeplan"));
   restoreSigners();
 });
 
@@ -1136,14 +1137,14 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
     assert.ok(w.acct.has("pdf-worker-two-" + why) && w.page.done, `${why}: the rest installed, the install finished`);
     return w;
   };
-  await out("missing", {}, /file-scanner container\/SafeViewRenderer\.json http 404/, {}, (r) => { delete r.assets[`${SCANNER}/container/SafeViewRenderer.json`]; });
-  await out("tampered", {}, /file-scanner container\/FileScanner\.json failed its integrity check/, {},
+  await out("missing", {}, like("installer.fleet.why.http", { status: 404 }), {}, (r) => { delete r.assets[`${SCANNER}/container/SafeViewRenderer.json`]; });
+  await out("tampered", {}, like("installer.fleet.why.integrity"), {},
     (r) => { r.assets[`${SCANNER}/container/FileScanner.json`] = JSON.stringify({ ...SCANNER_CLASSES[0], image: "docker.io/evil/x@sha256:" + "f".repeat(64) }); });
-  await out("misnamed", { scannerParts: { "container/SafeViewRenderer.json": null, "container/Renderer.json": SCANNER_CLASSES[1] } }, like("installer.fleet.why.container"));
-  await out("unpathed", { scannerParts: { "container/SafeViewRenderer.json": null, "renderer.json": SCANNER_CLASSES[1] } }, like("installer.fleet.why.container"));
+  await out("misnamed", { scannerParts: { "container/SafeViewRenderer.json": null, "container/Renderer.json": SCANNER_CLASSES[1] } }, like("installer.fleet.why.container.path"));
+  await out("unpathed", { scannerParts: { "container/SafeViewRenderer.json": null, "renderer.json": SCANNER_CLASSES[1] } }, like("installer.fleet.why.container.path"));
   await out("ghcr", { scannerParts: { "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: "ghcr.io/believeinoakland/file-scanner-renderer@sha256:" + "e".repeat(64) } } },
-    like("installer.image.unpullable", { part: SCANNER }));
-  await out("noscope", {}, like("installer.image.nopermission", { part: SCANNER }), { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" });
+    like("installer.fleet.why.unpullable"));
+  await out("noscope", {}, like("installer.fleet.why.nopermission"), { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" });
   /* An update rolls each class's application out to its own image. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   const up = seen(await run({ slug: "two-upd", mode: "update", rel, pre: { "two-upd": planeBase("two-upd"), [SCANNER]: old },
@@ -1170,8 +1171,8 @@ test("R38 (T46) a container member left out because its image is not in a regist
     assert.equal(w.calls.some((c) => c.u.includes("/containers/") && c.method !== "GET"), false, `${mode}: the Containers API written`);
     for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(`${m}-r38-ghcr`), `${mode}: ${m} installs`);
     /* R57: agent-runner is named with its reason and nothing the assistant lacks. */
-    assert.match(said, like("installer.image.unpullable", { part: RUNNER }), mode);
-    assert.match(said, like("installer.image.unpullable", { part: SCANNER }), mode);
+    assert.match(said, like("installer.fleet.why.unpullable"), mode);
+    assert.match(said, like("installer.fleet.why.unpullable"), mode);
     assert.match(said, like("installer.image.lacks.scanner"), mode);
     assert.equal(/public registry/i.test(w.page.words), false, mode);
     assert.ok(w.page.done, `${mode}: the act finished`);

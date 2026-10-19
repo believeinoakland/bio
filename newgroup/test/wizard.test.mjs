@@ -1008,7 +1008,7 @@ console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name
   t("no member reached the account",
     calls.some((c) => c.method === "PUT" && /\/scripts\/probe-member-[a-z0-9-]+$/.test(c.u)), false);
   t("the page says the manifest does not state how members are uploaded",
-    like("installer.fleet.skip.manifest").test(unesc(body)), true);
+    like("installer.fleet.skip.manifest.reason").test(unesc(body)), true);
   t("the plane itself installed normally",
     calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/bare-fleet")), true);
 }

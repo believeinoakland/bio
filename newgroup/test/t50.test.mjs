@@ -139,7 +139,7 @@ test("R61 every part comes from one release's own signed fleet statement: the bu
      bytes) installs no member, each named for its integrity. */
   const paired = await run({ slug: "r61-paired", rel: await release({ version: RELEASE_VERSION }), builtInFleet: true });
   for (const m of MEMBERS) assert.ok(!paired.acct.has(`${m}-r61-paired`), m);
-  assert.match(paired.page.label("fleet"), /failed its integrity check/);
+  assert.match(paired.page.label("fleet"), like("installer.fleet.why.integrity"));
   assert.ok(paired.page.done, "the plane still installed");
   /* Control: a member the statement does not name is not installed, whatever the repository serves. */
   armWith(SIGNER.line);
@@ -608,7 +608,7 @@ test("R15 R38 (K3793) a container member R38 leaves out (images on ghcr.io, whic
   for (const [mode, pre] of [["install", {}], ["update", { "r15-ghcr": planeBase("r15-ghcr") }]]) {
     const w = await run({ slug: "r15-ghcr", mode, rel, pre });
     const said = w.page.label("fleet");
-    for (const m of [RUNNER, SCANNER]) assert.match(said, like("installer.image.unpullable", { part: m }), `${mode}: ${m} named once at the fleet step with R38's reason`);
+    for (const m of [RUNNER, SCANNER]) assert.match(said, like("installer.fleet.left.item", { member: m, why: like("installer.fleet.why.unpullable") }), `${mode}: ${m} named once at the fleet step with R38's reason`);
     assert.equal(said.split(`${SCANNER} (`).length - 1, 1, `${mode}: file-scanner named once`);
     assert.match(said, like("installer.image.lacks.scanner"), `${mode}: what the copy lacks`);
     assert.equal(w.page.status("verify"), "ok", `${mode}: the verdict confirms (${w.page.words})`);
