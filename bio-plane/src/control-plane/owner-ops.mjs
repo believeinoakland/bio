@@ -5,7 +5,7 @@
 
    `plane` spreads this map into its route map (R5) beside the owners' own, handing it each owner's one instance through
    `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
-   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, and since T47 `of.actionClocks()`), each asked only when its op is served. */
+   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()` and `of.actionPlans()`), each asked only when its op is served. */
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
    owners that compare a bare member id with their roster are handed the bare id, and a machine stamp unchanged, so the
@@ -49,6 +49,12 @@ export function controlPlaneOwnerOps(of, url, body) {
        `action-clocks` exports the service and no arm, so this one calls it by name. */
     clockpropose: () => of.actionClocks().clockPropose({ target: f("target"), rule: f("rule"), proposer: q("proposer"),
                                                          viewer: q("viewer") }),
+    /* R110 (T51; K4073; screens-action R30): the two reads whose owners export a service and no arm. `approvedunsent` is
+       filings' `approvedUnsent` (its R53) as the viewer may see; `checkpointsdue` is action-plans' `checkpointsDue` (its R17),
+       whose instant is the owner's clock, never the request's, and only `limit` comes from the address or the body. */
+    approvedunsent: () => of.filings().approvedUnsent({ viewer: q("viewer") }),
+    checkpointsdue: () => of.actionPlans().checkpointsDue(
+      f("limit") === undefined || f("limit") === null ? {} : { limit: Number(f("limit")) }),
     /* leg-earning R14 (K2569): the projects a question is shown on, as the viewer may see them. */
     projectsshownon: () => of.legEarning().projectsShownOn({ id: f("id"), viewer: q("viewer") }),
 
