@@ -1,4 +1,4 @@
-/* installer-steps R16 to R26: the fleet, verified in full, held as hashes, and installed beside the plane. */
+/* installer-steps R16 to R25: the fleet, verified in full, held as hashes, and installed beside the plane. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
