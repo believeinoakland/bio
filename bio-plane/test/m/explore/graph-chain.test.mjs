@@ -4,6 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exploreOf, exploreOps, STOPPED_SENTENCE, DEPTH_SENTENCE, AT_DEPTH_MAX, LEAD_SENTENCE } from "../../../src/explore/index.mjs";
+import { nodeRefusal } from "../../../src/explore/answer.mjs";
+import { stepNeitherWhy, sharesNoRecordWhy } from "../../../src/explore/rederive.mjs";
 import { DECLARED_LABEL, LOWEST_GRADE, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { AT, INQUIRY, ZONE, ent, evt, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
@@ -58,7 +60,7 @@ test("R21 refusals in R1's order with the centre in from's place, then BAD_RINGS
   assert.equal(x.neighbourhood({ centre: A, at: AT }).refused, "VIEWER_MISSING");
   const no = x.neighbourhood({ at: AT, viewer: V });
   assert.equal(no.refused, "NO_NODE");
-  assert.match(no.why, /centre/);
+  assert.equal(no.why, nodeRefusal(undefined, "centre", true).why);
   assert.equal(x.neighbourhood({ centre: "not-an-id", viewer: V, rings: 9 }).refused, "BAD_NODE");
   assert.equal(x.neighbourhood({ centre: A, viewer: V, kinds: ["nope"], rings: 9 }).refused, "NO_DATE");
   assert.equal(x.neighbourhood({ centre: A, at: { value: "2026-02-31", precision: "day", zone: ZONE }, viewer: V }).refused, "BAD_DATE");
@@ -269,11 +271,11 @@ test("R23 refusals: BAD_CHAIN for an empty chain, one over 10 or a step of neith
   for (const step of [{}, { id: "x" }, { id: "x", kind: "line:part_of" }, { ...params(d), method: "" }, { ...params(d), from: "nope" }, { id: d.id, kind: d.kind, owner: d.owner }, "LIN-2026-00000000000000ev"]) {
     const r = x.rederive({ chain: [params(d), step], viewer: V });
     assert.equal(r.refused, "BAD_CHAIN", JSON.stringify(step));
-    assert.match(r.why, /step 2/);
+    assert.equal(r.why, stepNeitherWhy(2));
   }
   const broken = x.rederive({ chain: [params(d), { ...cited(ev), from: D, to: E }], viewer: V });
   assert.equal(broken.refused, "CHAIN_BROKEN");
-  assert.match(broken.why, /step 2/);
+  assert.equal(broken.why, sharesNoRecordWhy(2, 1));
   assert.equal(x.rederive({ chain: [params(d)], viewer: V, scope: "INQ" }).refused, "BAD_SCOPE");
   const one = x.rederive({ ...params(d), viewer: V });
   assert.equal(one.matches, true);

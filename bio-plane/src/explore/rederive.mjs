@@ -11,6 +11,11 @@ import { isObj, filled, refuse, viewerRefusal, nodeRefusal } from './answer.mjs'
 import { word, localize } from '../setup-words/index.mjs';
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The refusal when a chain's step names neither form (R23), by its step number. */
+export const stepNeitherWhy = (step) => localize('explore.rederive.step_is_neither', 'step {step} is neither a derived connection\'s parameters {kind, from, to, as_of, method, id} nor a step of another class {id, kind, owner}', { step: String(step) });
+/** The refusal when two steps share no record (R23): the step and the one before it. */
+export const sharesNoRecordWhy = (v1, i) => localize('explore.rederive.step_v1_shares_no_record', 'step {v1} shares no record with step {i}', { v1: String(v1), i: String(i) });
 const DERIVED_ID = /^[0-9a-f]{64}$/;
 const no = (why, extra = {}) => ({ ok: true, matches: false, why, ...extra });
 
@@ -135,13 +140,13 @@ function rederiveChain(ctx, a) {
   const forms = chain.map((h) => formOf(ctx.registry, h));
   const bad = forms.indexOf(null);
   if (bad !== -1) {
-    return refuse('BAD_CHAIN', localize('explore.rederive.step_is_neither', 'step {step} is neither a derived connection\'s parameters {kind, from, to, as_of, method, id} nor a step of another class {id, kind, owner}', { step: String(bad + 1) }));
+    return refuse('BAD_CHAIN', stepNeitherWhy(bad + 1));
   }
   for (let i = 1; i < chain.length; i++) {
     const p = chain[i - 1], h = chain[i];
     if (![p.from, p.to, h.from, h.to].every(filled)) continue; // a step that states no ends cannot be shown apart
     if (![p.from, p.to].some((n) => n === h.from || n === h.to)) {
-      return refuse('CHAIN_BROKEN', localize('explore.rederive.step_v1_shares_no_record', 'step {v1} shares no record with step {i}', { v1: String(i + 1), i: String(i) }));
+      return refuse('CHAIN_BROKEN', sharesNoRecordWhy(i + 1, i));
     }
   }
   const hops = chain.map((h, i) => {

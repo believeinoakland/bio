@@ -294,8 +294,7 @@ test("R8 an answer with no path states its level in observation-log's vocabulary
   assert.equal(r.absence.level, "meaning");
   assert.equal(r.absence.state, "LOOKED_ABSENT");
   assert.equal(r.absence.meaning, OBSERVATION_STATES.LOOKED_ABSENT);
-  assert.match(r.absence.searched, /as of 2026-03-01/);
-  assert.match(r.absence.searched, /to depth 3/);
+  assert.equal(r.absence.searched, word("explore.searched", { kinds: String(r.kinds.length), s: r.kinds.length === 1 ? "" : "s", at: `${AT.value} (${AT.precision}, ${AT.zone})`, depth: "3", from: A, to: ` toward ${D}` }));
   assert.equal(r.absence.reach, word("explore.reach"));
   assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: word("people.held_as_a_table_not") }]);
   // A walk that was cut short cannot say the path is not there.

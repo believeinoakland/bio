@@ -9,6 +9,9 @@ import { nameEnds } from './labels.mjs';
 import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } from './answer.mjs';
 import { word, localize } from '../setup-words/index.mjs';
 
+/** The words of a span's others held, and how many of them are not settled (R11). */
+export const othersWords = (held, settled) => localize('explore.presets.others_held', 'with {held} others held{settled}', { held: String(held), settled: settled ? localize('explore.presets.others_not_settled', ' (and {settled} not settled)', { settled: String(settled) }) : '' });
+
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
   chain: Object.freeze({ words: 'organisation chains', rules: [
@@ -166,6 +169,6 @@ function sharedSet(ctx, reader, { kind, node, span, a, b }) {
     else if (x.holds !== 'out') undetermined.add(other);
   }
   for (const o of held) undetermined.delete(o);
-  return { held: held.size, undetermined: undetermined.size, words: `with ${held.size} others held${undetermined.size ? ` (and ${undetermined.size} not settled)` : ''}`,
+  return { held: held.size, undetermined: undetermined.size, words: othersWords(held.size, undetermined.size),
     ...(reader.s.fanout.length > cutBefore ? { at_least: true } : {}) };
 }
