@@ -13,6 +13,8 @@ import { browserActs } from "./browser.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { checkScript } from "../../../src/wizard-scripts/index.mjs";
+import { promotionOps } from "../../../src/promotion/index.mjs";
+import { basisVersionsOps } from "../../../src/basis-versions/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { entitiesOps } from "../../../src/entities/index.mjs";
 import { projectRosterOps } from "../../../src/project-roster/index.mjs";
@@ -49,16 +51,15 @@ const KINDS = {
 };
 /* The 14 session reads, each with its owner, kind and the stamps R77 to R79 name (`viewer` always, beside the family's own);
    `map` is the owner's ops map where it serves the op (`approvedunsent` and `checkpointsdue` have no owner arm: the control
-   plane's route serves them, screens-action R30; `bundlehistory` and `versioncompare` are served by `promotion`'s and
-   `basis-versions`' maps, which this module does not list in `uses`, so they are not driven here). */
+   plane's route serves them, screens-action R30). */
 const T51 = {
   heldat:             { owner: "capture",         kind: "read",        stamps: ["by", "viewer"], map: captureOps },
-  bundlehistory:      { owner: "promotion",       kind: "read",        stamps: ["viewer"],       map: null /* promotion is no `uses` edge of this module: BOB records one (R77 Uses) before its map is driven */ },
+  bundlehistory:      { owner: "promotion",       kind: "read",        stamps: ["viewer"],       map: promotionOps },
   entityidonly:       { owner: "entities",        kind: "read",        stamps: ["viewer"],       map: entitiesOps },
   subjectsnamed:      { owner: "entities",        kind: "read",        stamps: ["viewer"],       map: entitiesOps },
   entitysimilar:      { owner: "entities",        kind: "read",        stamps: ["viewer"],       map: entitiesOps },
   projectinvitations: { owner: "project-roster",  kind: "read",        stamps: ["viewer"],       map: projectRosterOps },
-  versioncompare:     { owner: "basis-versions",  kind: "read",        stamps: ["viewer"],       map: null /* basis-versions is no `uses` edge of this module either */ },
+  versioncompare:     { owner: "basis-versions",  kind: "read",        stamps: ["viewer"],       map: basisVersionsOps },
   approvedunsent:     { owner: "filings",         kind: "read",        stamps: ["viewer"],       map: null },
   checkpointsdue:     { owner: "action-plans",    kind: "read",        stamps: ["viewer"],       map: null },
   holdsdue:           { owner: "action-holds",    kind: "sessionread", stamps: ["viewer"],       map: actionHoldsOps },
@@ -218,7 +219,7 @@ test("R77, R78, R79: the kinds' controls — an `ai` credential is refused every
   assert.ok(!OPS.adminremovalsopen.classes.includes("probe"));
 });
 
-test("R77, R78, R79, R4: each viewer, each `by` and each request field of the 10 ops an imported owner's map serves reaches the owner at the site it reads (the query), and a body copy does not, nor does another key (negative control per op); the four whose maps are not driven (approvedunsent and checkpointsdue, the control plane's route, screens-action R30; bundlehistory and versioncompare, whose owners are no `uses` edge) are checked as declared", async () => {
+test("R77, R78, R79, R4: each viewer, each `by` and each request field of the 12 ops an owner's map serves reaches the owner at the site it reads (the query), and a body copy does not, nor does another key (negative control per op); the two no owner map serves (approvedunsent and checkpointsdue) are the control plane's route (screens-action R30, control-plane R110)", async () => {
   /* the request fields each owner reads, from R77 to R79 and the owner's requirement */
   const FIELDS = {
     heldat: ["address", "sha256", "by", "viewer"]   /* `check` is a flag, driven below */, bundlehistory: ["bundle", "viewer"],
@@ -230,7 +231,7 @@ test("R77, R78, R79, R4: each viewer, each `by` and each request field of the 10
   let checked = 0;
   for (const [op, want] of Object.entries(T51)) {
     if (!want.map) {
-      assert.ok(!keysOf(captureOps).includes(op) && !keysOf(projectRosterOps).includes(op), `${op}: served by an imported map`);
+      assert.ok(!keysOf(captureOps).includes(op) && !keysOf(projectRosterOps).includes(op), `${op}: served by a map`);
       continue;
     }
     assert.ok(keysOf(want.map).includes(op), `${op}: ${want.owner}'s map does not serve it`);
@@ -243,7 +244,7 @@ test("R77, R78, R79, R4: each viewer, each `by` and each request field of the 10
     /* negative control: a key the owner does not read does not reach */
     assert.equal(await reaches(want.map, op, { query: { nosuchstamp: SENT } }), false, `${op}: any key reaches`);
   }
-  assert.ok(checked >= 25, `${checked} fields driven`);
+  assert.ok(checked >= 30, `${checked} fields driven`);
   /* heldat: with no session the arm carries no member, so `check: true` reaches capture without one (its R86 fence answers MEMBER_SESSION_REQUIRED, the owner's own refusal) */
   const calls = JSON.parse(await drive(captureOps, "heldat", { query: { sha256: "a".repeat(64), check: "true" } }));
   const heldAt = calls.find(([k]) => k === "heldAt");
