@@ -24358,7 +24358,7 @@
       "en": "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 301
+      "line": 304
     },
     {
       "id": "intent.index.a_retired_aspiration_is_held",
@@ -24366,6 +24366,41 @@
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
       "line": 963
+    },
+    {
+      "id": "intent.index.aspiration_scope_named",
+      "en": "an aspiration is the team's (naming no owner), a project's or a member's (naming which). Nothing was written.",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 66
+    },
+    {
+      "id": "intent.index.condition_shape_unreadable",
+      "en": "a condition is {shape}, each name a bare key or id; a filter's `amount` is {amount_shape}, with at least one bound, each an exact decimal. Nothing was written.",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 329
+    },
+    {
+      "id": "intent.index.declaring_revising_retiring_group_aspiration",
+      "en": "declaring, revising or retiring an aspiration the whole team holds",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 62
+    },
+    {
+      "id": "intent.index.objective_measure_member_act",
+      "en": "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 437
+    },
+    {
+      "id": "intent.index.project_departs_group_only",
+      "en": "a project departs only from an aspiration the whole team holds; a project's or a member's own is not held by other projects. Nothing was written.",
+      "module": "intent",
+      "file": "bio-plane/src/intent/index.mjs",
+      "line": 961
     },
     {
       "id": "intent.index.setting_an_assistant_to_work",
@@ -24379,7 +24414,7 @@
       "en": "setting, changing or removing an objective's measure records why, in your own words. Nothing was written.",
       "module": "intent",
       "file": "bio-plane/src/intent/index.mjs",
-      "line": 443
+      "line": 447
     },
     {
       "id": "investigation.checks.there_is_no_question_this",
@@ -33881,95 +33916,298 @@
       "line": 142
     },
     {
+      "id": "reevaluation.index.acceptance_nothing_here",
+      "en": "nothing here rests on it",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2057
+    },
+    {
+      "id": "reevaluation.index.acceptance_rests_on_it",
+      "en": "what rests on it is named",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2057
+    },
+    {
+      "id": "reevaluation.index.acceptance_says",
+      "en": "each finding listed rests on another team's finding at an edition its publisher has since replaced or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, and a recorded re-evaluation closes the cause",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2113
+    },
+    {
+      "id": "reevaluation.index.acceptance_unread",
+      "en": "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 180
+    },
+    {
+      "id": "reevaluation.index.accepted_work_absent",
+      "en": "no module holding another team's work is registered, so no acceptance withdrawal or publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 179
+    },
+    {
+      "id": "reevaluation.index.across_undetermined",
+      "en": "the newer version is held at another address, and content could not compare the passage with it, so whether the change touches this passage is undetermined; that is not the same as unaffected",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 143
+    },
+    {
       "id": "reevaluation.index.attributiondetail_this_leg_rests_on",
       "en": "{attributionDetail} This leg rests on it. The leg's grade is unchanged and the weight the new level gives is strength's to judge; whether this finding still stands is the members' to decide.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1291
+      "line": 1279
+    },
+    {
+      "id": "reevaluation.index.case_parts_absent",
+      "en": "no module has registered the cited parts of a case edition, so which cases a project owns was not read and no wp_retraction cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 166
+    },
+    {
+      "id": "reevaluation.index.case_parts_no_owner_told",
+      "en": "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2371
+    },
+    {
+      "id": "reevaluation.index.corrected_says",
+      "en": "each finding listed rests on a side a member's resolution named wrong; that side still resolves and says it was corrected, nothing resting on it was moved, and a recorded re-evaluation closes the cause",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1941
+    },
+    {
+      "id": "reevaluation.index.corrections_unread",
+      "en": "the contradiction module's tensions read could not be made, so whether a side this rests on was named wrong was not read and no corrected cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 161
     },
     {
       "id": "reevaluation.index.dependent_now_derives_weaker_than",
       "en": "{dependent} now derives weaker than edition {latest} froze: {map}. The signed edition keeps its own pair and nothing here changes either; a new edition stays the authors' choice (DEC-12, DEC-69).",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1007
+      "line": 996
+    },
+    {
+      "id": "reevaluation.index.docket_absent",
+      "en": "no module has registered the docket, so no withdrawn or contested case edition was read and no withdrawal, contested or withdrawal wp_retraction cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 176
+    },
+    {
+      "id": "reevaluation.index.docket_says",
+      "en": "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is evidence, and a recorded re-evaluation closes the cause",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1988
+    },
+    {
+      "id": "reevaluation.index.docket_unread",
+      "en": "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or wp_retraction cause may be missing; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 177
+    },
+    {
+      "id": "reevaluation.index.editions_absent",
+      "en": "no module provides the published registry, so no edition was read and no edition cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1682
+    },
+    {
+      "id": "reevaluation.index.event_nothing_live",
+      "en": "nothing live here rests on it",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1404
+    },
+    {
+      "id": "reevaluation.index.event_rests_directly",
+      "en": "what rests on it directly is named",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1404
+    },
+    {
+      "id": "reevaluation.index.grade_not_carried",
+      "en": "the grade was given to the passage in the earlier capture; the newer passage is not graded until a member grades it",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2819
     },
     {
       "id": "reevaluation.index.holder_s_grounds_carry_a",
       "en": "{holder}'s grounds carry a label a version cannot hold, so the newer version could not be written. Nothing was written.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 2811
+      "line": 2787
+    },
+    {
+      "id": "reevaluation.index.key_not_listed",
+      "en": "The entry's signing key is not among the keys the imported case file lists.",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 277
+    },
+    {
+      "id": "reevaluation.index.kind_case_part",
+      "en": "case {holder}'s cited part {target}",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2839
+    },
+    {
+      "id": "reevaluation.index.moves_absent",
+      "en": "the module holding another team's work keeps no publisher moves here, so no new edition or withdrawal of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 182
+    },
+    {
+      "id": "reevaluation.index.moves_unread",
+      "en": "the cited cases' publisher moves could not all be read, so a cited_case_moved cause may be missing; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 183
+    },
+    {
+      "id": "reevaluation.index.no_cited_passage",
+      "en": "this leg rests on no cited passage (it cites another question, or a document this record holds no bytes of), so there is no capture whose newer versions could be asked about",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2204
+    },
+    {
+      "id": "reevaluation.index.no_instant_for_mark",
+      "en": "{why}the tensions read states no instant for this mark, and none is invented here",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 1080
     },
     {
       "id": "reevaluation.index.notice_id_is_about_a",
       "en": "{notice_id} is about a part case {holder} cites at its pin; a case edition keeps the bytes it was signed over, and resting a case on the newer version is a new edition, which is the case's authors' act. Nothing was written.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 2749
+      "line": 2725
+    },
+    {
+      "id": "reevaluation.index.notices_says",
+      "en": "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2372
+    },
+    {
+      "id": "reevaluation.index.standards_unread",
+      "en": "the held standards, or the addresses a provision has been held under, could not all be read, so a notice of a newer version at another address may be missing; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 163
+    },
+    {
+      "id": "reevaluation.index.taken_back",
+      "en": "The publisher has since taken this entry back (entry {seq}{date}); the cause still stands.",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 278
     },
     {
       "id": "reevaluation.index.targetid_has_been_set_down",
       "en": "{targetId} has been set down. It is reversible and the team may pick it back up, and until it does, a claim resting on it rests on a question nobody is working.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 455
+      "line": 444
+    },
+    {
+      "id": "reevaluation.index.telling_untimed",
+      "en": "the telling states no instant of the change, so it cannot be ordered against a dependent's last write and was not kept; that is not the same as no change",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 140
     },
     {
       "id": "reevaluation.index.the_event_id_v1_v2",
       "en": "the event {id} {v1}; {v2}",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1416
+      "line": 1404
     },
     {
       "id": "reevaluation.index.the_newer_version_of_holder",
       "en": "the newer version of {holder} could not be written. Nothing was written.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 2833
+      "line": 2809
     },
     {
       "id": "reevaluation.index.the_source_of_capture_cap",
       "en": "the source of capture {cap}, which this leg rests on, moved from {v1} to {rung_after} at {at}: what the team knows of who gave it has changed. The leg's grade is unchanged; whether this finding still stands is the members' to decide.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1183
+      "line": 1171
     },
     {
       "id": "reevaluation.index.this_leg_names_no_edition",
       "en": "this leg names no edition of {t}, which now stands at edition {latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1637
+      "line": 1625
     },
     {
       "id": "reevaluation.index.this_leg_rests_on_another",
       "en": "this leg rests on another team's finding {target_id} at edition {edition}{v1}{v2}, and this team's acceptance of that edition was withdrawn ({withdrawal}{v3}). The finding keeps answering as that team published it and the leg is unchanged; whether this finding still stands is the members' to decide.",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 849
+      "line": 838
     },
     {
       "id": "reevaluation.index.this_leg_rests_on_edition",
       "en": "this leg rests on edition {cited} of {t}, which now stands at edition {latest}. Edition {cited_2} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1638
+      "line": 1626
     },
     {
       "id": "reevaluation.index.this_teams_acceptance_of_another",
       "en": "this team's acceptance of another team's work was withdrawn ({id}{v1}); {v2}",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 2073
+      "line": 2057
     },
     {
       "id": "reevaluation.index.v1_a_withdrawn_leg_supports",
       "en": "{v1} A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).",
       "module": "reevaluation",
       "file": "bio-plane/src/reevaluation/index.mjs",
-      "line": 1631
+      "line": 1619
+    },
+    {
+      "id": "reevaluation.index.visible_to_chains",
+      "en": "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 2211
+    },
+    {
+      "id": "reevaluation.index.work_products_unread",
+      "en": "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",
+      "module": "reevaluation",
+      "file": "bio-plane/src/reevaluation/index.mjs",
+      "line": 167
     },
     {
       "id": "retrieval-browse.browse.marks_another_shape",
