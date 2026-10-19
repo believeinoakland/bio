@@ -33,8 +33,8 @@ export function recordedBy(k, args) {
   try {
     const a = isObj(args) ? args : {};
     if (a.viewer === undefined || a.viewer === null || a.viewer === "")
-      return refused("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
-    if (!said(a.captureSha)) return noSha("who recorded something is read for one captured document, named by its capture sha256");
+      return refused("VIEWER_MISSING", localize("events.recorded.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public"));
+    if (!said(a.captureSha)) return noSha(localize("events.recorded.who_recorded_something_is_read", "who recorded something is read for one captured document, named by its capture sha256"));
     let asked = null;
     if (a.extent !== undefined && a.extent !== null) {
       if (!known(a.extent))

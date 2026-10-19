@@ -34,3 +34,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 K3997, two effects of R5 merges on duties, done in this job (P10): (1) lines' holderAt now answers {holder: null, undetermined: true, why: {key, vars}, lines} (lines R11, R24): index.mjs ~1451-1453 builds a message from h.undetermined through said(), which loses the reason; read h.why by key (pass it on, or lines' exported reasonText where a sentence is built). (2) local-facts R18 requires effective_from on a member-drafted rule (DEC-341): response.test.mjs:346's draft over the real local-facts adds it. Merge tranche/T51 after lines and local-facts merge (I will tell you), or test against their branches now; re-run tests and checks, then COMPLETE again.
+
+## B4 · CHANGE
+
+Lines and events are merged into tranche/T51 (K3998); local-facts is not yet. Merge tranche/T51 now for lines' holderAt shape; local-facts' effective_from follows when it merges (I will tell you).
+
+## B5 · CHANGE
+
+local-facts is merged into tranche/T51 (K3999): merge it now for effective_from (K3997 (2)), then COMPLETE again.

@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, MACHINE } from "./fixture.mjs";
 import { EVENT_KINDS, STATUSES } from "../../../src/events/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { idPattern } from "../../../src/record-grammar/index.mjs";
 
 const doc = { kind: "document" };
@@ -97,7 +98,7 @@ test("R9 when is derived only from the governing attestation and rebuilt in the 
   const e = w.ev.createEvent({ kind: "meeting", attestations: [{ captureSha: s, extent: doc }], by: MEMBER }).event_id;
   const v0 = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.equal(v0.when, null);
-  assert.match(v0.why, /placed nowhere/);
+  assert.equal(v0.why, word("events.why.placed_nowhere_attestation"));
   assert.equal(w.one(`SELECT value FROM event_when_cache WHERE event_id=?`, e).value, null);
   w.ev.attest({ eventId: e, attestation: { datedFactId: fact(w, s, "2026-05-05T18:30") }, by: MEMBER });
   const row = w.one(`SELECT * FROM event_when_cache WHERE event_id=?`, e);
@@ -117,7 +118,7 @@ test("R10 a read whose when_cache differs from its rebuild fails closed: when un
   w.st.sql.exec(`UPDATE event_when_cache SET value='2020-01-01', start='2020-01-01T04:00:00Z' WHERE event_id=?`, e);
   const v = w.ev.readEvent({ eventId: e, viewer: MEMBER }).event;
   assert.equal(v.when, "undetermined");
-  assert.equal(v.why, "cache stale");
+  assert.deepEqual(v.why, { key: "events.why.cache_stale", vars: {} }, "a key with its fills, never English");
   assert.equal(w.ev.sequence({ a: e, b: w.event({ value: "2027-01-01" }).event_id }).answer, "undetermined");
   w.record.rebuildDerived("events", "event_when_cache");
   assert.equal(w.ev.readEvent({ eventId: e, viewer: MEMBER }).event.when.value, "2026-06-01");

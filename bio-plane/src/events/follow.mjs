@@ -116,15 +116,15 @@ function participant(k, eventId, entityId, role, attestationId, voteValue = null
 
 /** R22: the machine's writes from one Legistar capture of a followed body and period. */
 export function followedImport(k, { captureSha, body, period, by = MACHINE } = {}) {
-  if (!said(body)) return refuse("NO_BODY", "following names the one body a member follows, by its entity id");
+  if (!said(body)) return refuse("NO_BODY", localize("events.follow.following_names_the_one_body", "following names the one body a member follows, by its entity id"));
   if (!isObj(period) || (!said(period.from) && !said(period.to)))
-    return refuse("NO_PERIOD", "following names the period a member follows: {from, to}, days");
-  if (!said(captureSha)) return noSha("an import reads one captured Legistar list, named by its capture sha256");
+    return refuse("NO_PERIOD", localize("events.follow.following_names_the_period_a", "following names the period a member follows, by its first and last day"));
+  if (!said(captureSha)) return noSha(localize("events.follow.an_import_reads_one_captured", "an import reads one captured Legistar list, named by its capture sha256"));
   const held = k.heldCapture(captureSha, null);
   if (!held) return refuse("CAPTURE_NOT_HELD", word("events.why.record_holds_capture"));
   const reading = readingOf(k, held.sha);
   if (!reading || reading.content_type !== "legistar_api")
-    return refuse("NOT_LEGISTAR", "the capture is not one legistar-reader read");
+    return refuse("NOT_LEGISTAR", localize("events.follow.the_capture_is_not_one", "the capture is not one legistar-reader read"));
   if (!k.entities || !k.entities.has(body)) return noSuchEntity(body, { end: "body" });
   const zone = k.zone();
   const from = said(period.from) ? period.from.trim() : null, to = said(period.to) ? period.to.trim() : null;
@@ -164,7 +164,7 @@ function meeting(k, held, row, f, scope, out) {
   const status = f.status === "cancelled" ? "EventCancelled" : "EventScheduled";
   const facts = { date: day, time: f.time ?? null, status, agenda: f.agenda_last_published ?? null, minutes: f.minutes_last_published ?? null };
   const fact = date ? k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "meeting", date,
-    method: "legistar-reader: EventDate and EventTime joined in the profile's zone", by: MACHINE, sourceRow: row.source }).dated_fact : null;
+    method: localize("events.follow.legistar_reader_eventdate_and_eventtime", "legistar-reader: EventDate and EventTime joined in the profile's zone"), by: MACHINE, sourceRow: row.source }).dated_fact : null;
   const prior = source(k, row.key);
   let eventId;
   if (!prior) {
@@ -281,13 +281,13 @@ const kindOf = (row) => (/order/i.test(String(row.kind_as_written ?? "")) || /^\
 
 /** R38: register rows with a source-assigned entry id, as `filing` or `order` events of a proceeding a member follows. */
 export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {}) {
-  if (!said(proceeding)) return noEntity("following a register names the proceeding a member follows, by its entity id");
+  if (!said(proceeding)) return noEntity(localize("events.follow.following_a_register_names_the", "following a register names the proceeding a member follows, by its entity id"));
   if (!k.entities || !k.entities.has(proceeding)) return noSuchEntity(proceeding);
-  if (!said(captureSha)) return noSha("a register import reads one captured register, named by its capture sha256");
+  if (!said(captureSha)) return noSha(localize("events.follow.a_register_import_reads_one", "a register import reads one captured register, named by its capture sha256"));
   const held = k.heldCapture(captureSha, null);
   if (!held) return refuse("CAPTURE_NOT_HELD", word("events.why.record_holds_capture"));
   const reading = readingOf(k, held.sha);
-  if (!reading || !COURT_TYPES.includes(reading.content_type)) return refuse("NOT_A_REGISTER", "the capture is not a register court-doctypes read");
+  if (!reading || !COURT_TYPES.includes(reading.content_type)) return refuse("NOT_A_REGISTER", localize("events.follow.the_capture_is_not_a", "the capture is not a register court-doctypes read"));
   const rows = reading.facts && Array.isArray(reading.facts.rows) ? reading.facts.rows : [];
   const out = { written: [], unchanged: 0, skipped: [] };
   const res = k.tx(() => {

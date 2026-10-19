@@ -51,7 +51,7 @@ import { word, localize } from "../setup-words/index.mjs";
 export { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
 export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
-export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE } from "./rules.mjs";
+export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE, RULE_FIELDS, EFFECTIVE_FROM } from "./rules.mjs";
 
 /** R7: a member's three acts on a fact. */
 export const LOCAL_FACT_ACTS = Object.freeze(["confirm", "correct", "dispute"]);
@@ -240,6 +240,8 @@ export class LocalFacts {
   ruleConfirm(a = {}) { return this.rules.ruleConfirm(isObj(a) ? a : {}, machineRefusal); }
   /** R12: the group's rules, to a viewer naming a member. */
   groupRules(a = {}) { return this.rules.groupRules(a); }
+  /** R18: the fields an entry of a section carries, and their vocabularies. */
+  ruleFields(a = {}) { return this.rules.ruleFields(a); }
   /** R12: `combine`'s view of the active profiles with each confirmed, unwithdrawn group rule added. */
   governingView() { return this.rules.governingView(); }
   /** R13: any member withdraws a rule with a reason. */
@@ -548,7 +550,7 @@ export class LocalFacts {
       }
       if (year === null)
         return { ok: true, path: null, via: "none", lines: [],
-                 why: "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year" };
+                 why: localize("local-facts.index.the_year_is_undetermined", "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year") };
     }
     /* the path of `office`'s own fact in the profile, or null */
     const own = (office) => {
@@ -584,7 +586,7 @@ export class LocalFacts {
     if (!entity) return fallback(word("local-facts.registry_entity_given"));
     if (!this.lines && this.host) { try { this.lines = linesOf(this.host); } catch { this.lines = null; } }
     if (!this.lines || typeof this.lines.structureAt !== "function")
-      return fallback("`lines` is not reachable on this host, so no part_of line was followed");
+      return fallback(localize("local-facts.index.lines_is_not_reachable", "`lines` is not reachable on this host, so no part_of line was followed"));
     if (!at) return fallback(word("local-facts.date_given_part"));
     const followed = [], seen = new Set([entity]);
     let cur = entity;
@@ -654,6 +656,8 @@ export function localFactsOps(s, url, body) {
     ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") }),
     /* R15 (T46; N935): R12's read, `section` the query's (absent read as none), `viewer` the URL's */
     grouprules: () => s.groupRules({ section: qp("section") ?? undefined, viewer: qp("viewer") }),
+    /* R18 (T51; DEC-340): the fields a drafted rule is made of, `section` the query's, `viewer` the URL's */
+    rulefields: () => s.ruleFields({ section: qp("section") ?? undefined, viewer: qp("viewer") }),
   };
 }
 
