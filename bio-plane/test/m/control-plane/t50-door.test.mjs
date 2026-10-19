@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, makeFetch, defaultHooks, refused, aik, cred, hex64, FORGED } from "./harness.mjs";
 import { ok, routesForSessions } from "./door-routes.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { callerViewer, admit, aiCredentialPresented, presentedCredential } from "../../../src/admission/index.mjs";
 import { ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 const { inbandQuartet } = await import("../../../src/inband.mjs");
@@ -341,7 +341,7 @@ test("R108 (control): a short answer arrives whole and byte for byte as the plan
   assert.deepEqual(dropped(d.w), []);
 });
 
-test("R105 (T50; K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded)", async () => {
+test("R105 (T50; T51: N1234, DEC-329 (5); K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, its `detail` read by the design's key `refusal.ACQUIRE_TIMED_OUT`, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded and carries neither the code nor the detail)", async () => {
   const w = world();
   const slow = { ...defaultHooks(), acquireBoundMs: 60,
     async gatedOp(ctx) {
@@ -353,9 +353,15 @@ test("R105 (T50; K3770): the door answers `acquire` within its bound, 25 seconds
   const late = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, params: { wait: "long" }, body: { locator: "https://example.org/big" } });
   assert.equal(late.status, 504, late.text);
   assert.deepEqual([late.json.ok, late.json.reason, late.json.code, late.json.op], [false, "ACQUIRE_TIMED_OUT", "ACQUIRE_TIMED_OUT", "acquire"]);
+  assert.ok(hasWord("refusal.ACQUIRE_TIMED_OUT"), "the design holds the key");
+  assert.equal(late.json.detail, word("refusal.ACQUIRE_TIMED_OUT"));
   const quick = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, body: { locator: "https://example.org/small" } });
   assert.equal(quick.status, 200);
   assert.equal(quick.json.result.done, true);
   const other = await call(w.env, { op: "list", token: w.S.ann, hooks: slow });
   assert.equal(other.status, 200);
+  for (const r of [quick, other]) {
+    assert.equal(JSON.stringify(r.json).includes("ACQUIRE_TIMED_OUT"), false);
+    assert.equal(r.json.detail, undefined);
+  }
 });

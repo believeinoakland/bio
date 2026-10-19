@@ -9,7 +9,7 @@
    itself is never answered. */
 import { checkDraft } from "../wizard-scripts/index.mjs";
 /* R99 (T49; K3366): the note a checked draft carries is read by key. */
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The ops whose draft is asked of the object (`instance-setup` R65, `wizard-scripts` R27; T37, N669, K2201: `instance-setup`
  *  R67's `translationdraft`, the third). */
@@ -107,7 +107,8 @@ export function checkedDraft(ask, drafted, status, askedBy) {
     if (!k || k.ok !== true) return refused(k);
     if ([...k.text].length > FIELD_MAX[f])
       return { status: 409, body: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE",
-                                    detail: `the draft's ${f} is over its limit, so nothing was drafted and the fields are as they were.` } };
+                                    detail: localize("control-plane.draft.draft_over_limit",
+                                                     "the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.", { field: f }) } };
     out[f] = { text: k.text, label: k.label };
     out.withheld.push(...(k.withheld || []).map((x) => ({ field: f, ...x })));
   }

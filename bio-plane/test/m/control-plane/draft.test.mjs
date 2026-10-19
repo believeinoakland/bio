@@ -118,3 +118,20 @@ test("R57 (wizard-scripts R25; DEC-153 (2)): the door checks the draft before th
                                    body: { answers: [{ question: "Who?", text: "Tenants" }] } });
   assert.deepEqual([l.status, l.json.reason], [409, "ASSISTANT_DRAFT_UNAVAILABLE"]);
 });
+
+test("R57, R99 (T51; K3962): a group draft whose checked field is over its limit (focus 1,000, purpose 4,000 characters) is answered 409 ASSISTANT_DRAFT_UNAVAILABLE with nothing drafted, its `detail` the code's `localize` sentence with the field named; control: a draft inside the limits is answered whole", async () => {
+  const { checkedDraft } = await import("../../../src/control-plane/draft.mjs");
+  const { localize } = await import("../../../src/setup-words/index.mjs");
+  const long = "Tenants. ".repeat(130).trim();   /* over 1,000 characters */
+  const ask = { op: "groupdescriptiondraft", told: [long, "Tenants."], firsthand: false };
+  const drafted = (focus) => ({ ok: true, draft: { focus, purpose: "Tenants." }, suggestions: false, read: [] });
+  const over = checkedDraft(ask, drafted(long), 200, "member:ann");
+  assert.equal(over.status, 409);
+  assert.equal(over.body.ok, false);
+  assert.equal(over.body.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
+  assert.equal(over.body.detail, localize("control-plane.draft.draft_over_limit",
+    "the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.", { field: "focus" }));
+  const within = checkedDraft(ask, drafted("Tenants."), 200, "member:ann");
+  assert.equal(within.status, 200);
+  assert.equal(within.body.ok, true);
+});
