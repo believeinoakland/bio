@@ -5,7 +5,8 @@
    read as the plane), and, in the last tests, the real publish-schedule module over the world's own storage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, said, atWord } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
 
 const entry = (over = {}) => ({ case: "CASE-1", edition: 2, project: "PRJ-1", state: "waiting", signer: "KEY-O", set_by: "carol",
@@ -33,10 +34,12 @@ test("R37: a waiting edition is one CONDITION edition-scheduled, keyed CONDITION
   const it = byId(r)["CONDITION::edition-scheduled::CASE-1@2"];
   assert.ok(it, "the waiting edition's status");
   assert.deepEqual([it.class, it.kind], ["CONDITION", "edition-scheduled"]);
-  assert.ok(it.summary.startsWith("Signed · publishes 2026-09-03, 09:30"), it.summary);
-  /* R36: the date and time as set, in the group's zone as R69 carries it, never converted to UTC */
-  assert.ok(!/16:30|T16|UTC/.test(`${it.summary} ${it.detail}`), "never the UTC instant");
-  assert.match(it.detail, /America\/Los_Angeles/);
+  /* R36, R43: the date and time as set, in the group's zone as R69 carries it, never converted to UTC; `time.at` and `time.clock` */
+  assert.equal(it.summary, said("queue.edition-scheduled.summary", { when: atWord("2026-09-03", 9, 30), case: "CASE-1", edition: 2 }));
+  assert.equal(it.detail, [said("queue.edition-scheduled.detail", { when: atWord("2026-09-03", 9, 30) }),
+    said("queue.edition-scheduled.detail.zone", { zone: "America/Los_Angeles" })].join(" "));
+  assert.deepEqual([it.summary_key, it.detail_key], ["queue.edition-scheduled.summary", "queue.edition-scheduled.detail"]);
+  assert.ok(!/4:30|T16|UTC/.test(`${it.summary} ${it.detail.replace("America/Los_Angeles", "")}`), "never the UTC instant");
   assert.deepEqual(it.subject, { kind: "case_edition", id: "CASE-1@2", case: "CASE-1", edition: 2, project: "PRJ-1" });
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the case's project");
   assert.deepEqual(it.options.map((o) => o.id), ["publishatmove", "publishatcancel"]);
@@ -49,7 +52,10 @@ test("R37: a waiting edition is one CONDITION edition-scheduled, keyed CONDITION
   const moved = scheduled([entry({ at: { date: "2026-09-04", time: "18:05", zone: "America/Los_Angeles" },
     moves: [{ at: { date: "2026-09-03", time: "09:30", zone: "America/Los_Angeles" }, by: "owner" }] })]).read("owner");
   assert.deepEqual(ofKind(moved, /^edition-scheduled$/).map((i) => i.id), ["CONDITION::edition-scheduled::CASE-1@2"]);
-  assert.ok(byId(moved)["CONDITION::edition-scheduled::CASE-1@2"].summary.startsWith("Signed · publishes 2026-09-04, 18:05"));
+  const mv = byId(moved)["CONDITION::edition-scheduled::CASE-1@2"];
+  assert.equal(mv.summary, said("queue.edition-scheduled.summary", { when: atWord("2026-09-04", 18, 5), case: "CASE-1", edition: 2 }));
+  assert.equal(mv.detail, [said("queue.edition-scheduled.detail", { when: atWord("2026-09-04", 18, 5) }),
+    said("queue.edition-scheduled.detail.zone", { zone: "America/Los_Angeles" }), said("queue.edition-scheduled.detail.moved.one")].join(" "));
 });
 
 test("R37: once published, one FINDING edition-published-as-scheduled naming the set time and the instant published; once stopped, one FINDING scheduled-edition-stopped naming each reason in its own translation; a cancelled edition earns none", () => {
@@ -63,14 +69,16 @@ test("R37: once published, one FINDING edition-published-as-scheduled naming the
   const m = byId(r);
   const pub = m["FINDING::edition-published-as-scheduled::CASE-P@2"];
   assert.deepEqual([pub.class, pub.kind], ["FINDING", "edition-published-as-scheduled"]);
-  assert.match(pub.summary, /2026-09-03, 09:30/, "the set time");
-  assert.ok(pub.detail.includes(iso(NOW - 60000)), "the instant published");
+  assert.equal(pub.summary, said("queue.edition-published-as-scheduled.summary", { case: "CASE-P", edition: 2, when: atWord("2026-09-03", 9, 30) }), "the set time");
+  /* the instant published, read in the group's zone through civil-time (R43): 23:59 UTC is 4:59 PM the day before there */
+  assert.equal(pub.detail, said("queue.edition-published-as-scheduled.detail", { when: atWord("2026-09-03", 9, 30), published: atWord("2026-08-31", 16, 59) }));
   assert.deepEqual(pub.age, { state: "determined", since: iso(NOW - 60000), ms: 60000 });
   assert.deepEqual(pub.options, []);
   const stop = m["FINDING::scheduled-edition-stopped::CASE-S@2"];
   assert.deepEqual([stop.class, stop.kind], ["FINDING", "scheduled-edition-stopped"]);
   for (const x of reasons) assert.ok(stop.detail.includes(x.translation), `names ${x.code} in its own translation`);
-  assert.match(stop.detail, /Nothing was published\. Publishing this edition needs a new signing\./);
+  assert.equal(stop.detail, said("queue.scheduled-edition-stopped.detail", { reasons: reasons.map((x) => x.translation).join(" ") }));
+  assert.equal(stop.summary, said("queue.scheduled-edition-stopped.summary", { case: "CASE-S", edition: 2, when: atWord("2026-09-03", 9, 30) }));
   assert.deepEqual(stop.basis.reasons, reasons);
   assert.deepEqual(stop.age, { state: "determined", since: iso(NOW - 120000), ms: 120000 });
   assert.equal(r.items.filter((i) => i.subject && i.subject.case === "CASE-C").length, 0, "a cancelled edition earns no item");
@@ -100,7 +108,8 @@ test("R37: the read is followed by its cursor, and an unreadable time is said so
   w.member("owner"); w.bundle("PRJ-1", "project"); w.join("PRJ-1", "owner", { owner: true });
   const m = byId(w.read("owner"));
   assert.ok(m["CONDITION::edition-scheduled::CASE-A@2"] && m["CONDITION::edition-scheduled::CASE-B@2"], "both pages read");
-  assert.match(m["CONDITION::edition-scheduled::CASE-B@2"].summary, /^Signed · publishes a time that cannot be read/);
+  assert.equal(m["CONDITION::edition-scheduled::CASE-B@2"].summary, said("queue.edition-scheduled.summary", { when: "", case: "CASE-B", edition: 2 }),
+    "R43: an unreadable time leaves {when} empty and the sentence closed up, never guessed");
 });
 
 test("R37 (N823, K2438): the editions are read from publish-schedule, never publication; a provider without the read fails loudly, never raising nothing in silence", () => {
@@ -111,11 +120,12 @@ test("R37 (N823, K2438): the editions are read from publish-schedule, never publ
   const ids = ofKind(w.read("owner"), /^edition-scheduled$/).map((i) => i.id);
   assert.deepEqual(ids, ["CONDITION::edition-scheduled::CASE-1@2"], "publish-schedule's edition, and only it");
   assert.equal(publicationAsked, 0, "publication is not asked for scheduled editions (it no longer holds them)");
-  /* the type guard that hid the move: a provider that lost the read is a programming error, seen, never an empty feed */
+  /* the type guard that hid the move: a provider that lost the read is seen, never an empty feed (R45: named in `facts.failed`,
+     the other feeds' items standing) */
   const lost = world({ publishSchedule: { scheduledEditions: undefined } });
   lost.member("owner"); lost.bundle("PRJ-1", "project"); lost.join("PRJ-1", "owner", { owner: true });
-  assert.throws(() => lost.read("owner"), TypeError);
-  assert.doesNotThrow(() => lost.read(null, "class:admin"), "a caller with no member asks nothing (none of its recipients)");
+  assert.deepEqual(lost.read("owner").facts.failed, [{ feed: "schedule", reason: "threw" }]);
+  assert.deepEqual(lost.read(null, "class:admin").facts.failed, [], "a caller with no member asks nothing (none of its recipients)");
 });
 
 /* The real publish-schedule module over the world's storage: its table and its R4 read, so a shape or arm this module
@@ -155,14 +165,14 @@ test("R37: through the real publish-schedule read, a waiting edition is one stat
     "FINDING::scheduled-edition-stopped::CASE-S@1"], "each state's one item; the cancelled edition earns none");
   const m = byId(r);
   const wait = m["CONDITION::edition-scheduled::CASE-W@1"];
-  assert.ok(wait.summary.startsWith("Signed · publishes 2026-09-03, 09:30"), wait.summary);
-  assert.ok(!/16:3\d|UTC/.test(`${wait.summary} ${wait.detail}`), "never the UTC instant (R36)");
-  assert.match(wait.detail, /moved once/, "the move publish-schedule R3 kept is said, on the same item");
+  assert.equal(wait.summary, said("queue.edition-scheduled.summary", { when: atWord("2026-09-03", 9, 30), case: "CASE-W", edition: 1 }));
+  assert.ok(!/4:3\d PM|UTC/.test(`${wait.summary} ${wait.detail}`), "never the UTC instant (R36)");
+  assert.ok(wait.detail.includes(word("queue.edition-scheduled.detail.moved.one")), "the move publish-schedule R3 kept is said, on the same item");
   assert.deepEqual(wait.subject, { kind: "case_edition", id: "CASE-W@1", case: "CASE-W", edition: 1, project: "PRJ-1" });
   assert.deepEqual(wait.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the case's project (publication R40)");
   assert.deepEqual(wait.recipients.sort(), ["carol", "owner"]);
   assert.ok(m["FINDING::scheduled-edition-stopped::CASE-S@1"].detail.includes(reasons[0].translation), "the reason in its own translation");
-  assert.ok(m["FINDING::edition-published-as-scheduled::CASE-P@1"].detail.includes(iso(NOW - 60000)), "the instant published");
+  assert.ok(m["FINDING::edition-published-as-scheduled::CASE-P@1"].detail.includes(atWord("2026-08-31", 16, 59)), "the instant published, in the group's zone");
   const mine = (who) => ofKind(w.read(who), /scheduled|published-as/).map((i) => i.id).sort();
   assert.deepEqual(mine("carol"), ours, "the member who set the time");
   assert.deepEqual(mine("bob"), [], "a member who neither set it nor owns the project");

@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
 import { WORD, FILLED } from "./words.mjs";
-import { ACTION_WORDS, KEPT, OWN_WORDS } from "../../../src/action-producers/index.mjs";
+import { ACTION_KEYS, KEPT } from "../../../src/action-producers/index.mjs";
 
 function people(fakes) {
   const w = world(fakes);
@@ -44,13 +44,12 @@ test("R24: the group's own date owed to an office answers queue.action-clock-ove
   const m = Object.fromEntries(overdue(w).map((i) => [i.subject.entry, i]));
   const K = "queue.action-clock-overdue.ours.detail";
   assert.equal(m[0].detail_key, K);
-  assert.equal(m[0].detail, FILLED(K, { what: "file the reply brief", venue: "the Clerk, the City Council", date: "25 August" }));
-  assert.equal(m[0].detail, "Your team's deadline to file the reply brief with the Clerk, the City Council was 25 August, and nothing is recorded as done. See what can still be done.");
+  assert.equal(m[0].detail, FILLED(K, { what: "file the reply brief", venue: "the Clerk, the City Council", date: "August 25" }));
   assert.equal(m[0].summary, FILLED("queue.action-clock-overdue.ours.summary", { what: "file the reply brief" }), "the summary is unchanged (R23)");
   assert.deepEqual(m[0].basis.venue, office, "the venue as the record states it");
-  assert.equal(m[1].detail, FILLED(K, { what: "file the reply brief", venue: "the Board of Appeals", date: "25 August" }), "a venue by its name");
-  assert.equal(m[2].detail, FILLED(K, { what: "file the reply brief", venue: "the Auditor", date: "25 August" }), "an office with no body by its role");
-  assert.equal(m[5].detail, FILLED(K, { what: "file the reply brief", venue: "the Clerk, the City Council", date: "30 December 2025" }),
+  assert.equal(m[1].detail, FILLED(K, { what: "file the reply brief", venue: "the Board of Appeals", date: "August 25" }), "a venue by its name");
+  assert.equal(m[2].detail, FILLED(K, { what: "file the reply brief", venue: "the Auditor", date: "August 25" }), "an office with no body by its role");
+  assert.equal(m[5].detail, FILLED(K, { what: "file the reply brief", venue: "the Clerk, the City Council", date: "December 30, 2025" }),
     "a day of another year names its year (date.daymonthyear)");
   /* controls: no office or venue held; a date the addressee owes (not the group's own) */
   assert.equal("detail_key" in m[3], false, "venue: null keeps the present detail, returned to BOB");
@@ -58,7 +57,7 @@ test("R24: the group's own date owed to an office answers queue.action-clock-ove
   assert.equal(m[3].basis.venue_why, "no office or venue is held for this action");
   assert.equal("detail_key" in m[4], false, "control: an addressee's date is canon's question, its detail unkeyed");
   assert.ok(KEPT.includes("queue.action-clock-overdue.ours.detail (no venue held)"), "the kept arm is named");
-  assert.equal(ACTION_WORDS[K], WORD(K), "the key's words are words.json's, verbatim");
+  assert.ok(ACTION_KEYS.includes(K), "the key is one this module reads from words.json, verbatim");
 });
 
 const rhythm = (rrule, by = "alice", at = iso(NOW - 30 * DAY)) => ({ rrule, dtstart: "2026-08-03", zone: "UTC", by, at });
@@ -77,15 +76,14 @@ test("R24: a plan's review reads queue.plan-review-due.detail naming the plan's 
   const m = Object.fromEntries(ofKind(w.read("alice"), "plan-review-due").map((i) => [i.subject.id, i]));
   const K = "queue.plan-review-due.detail";
   assert.equal(m["PLN-1"].detail_key, K);
-  assert.equal(m["PLN-1"].detail, FILLED(K, { plan: '"Library hours"', rhythm: "week", date: "17 August" }), "reviewed once: that review's day");
-  assert.equal(m["PLN-1"].detail, 'Your team set "Library hours" to be reviewed every week, and nothing has been reviewed since 17 August. See what changed, then record the review.');
-  assert.equal(m["PLN-2"].detail, FILLED(K, { plan: "PLN-2", rhythm: "2 weeks", date: "2 August" }), "never reviewed: the day its rhythm was set; a plan with no title by its id");
-  assert.equal(m["PLN-3"].detail, FILLED(K, { plan: "PLN-3", rhythm: "month", date: "30 November 2025" }), "another year's day names its year");
-  assert.equal(m["PLN-4"].detail, FILLED(K, { plan: "PLN-4", rhythm: "3 years", date: "5 January" }));
+  assert.equal(m["PLN-1"].detail, FILLED(K, { plan: '"Library hours"', rhythm: "week", date: "August 17" }), "reviewed once: that review's day");
+  assert.equal(m["PLN-2"].detail, FILLED(K, { plan: "PLN-2", rhythm: "2 weeks", date: "August 2" }), "never reviewed: the day its rhythm was set; a plan with no title by its id");
+  assert.equal(m["PLN-3"].detail, FILLED(K, { plan: "PLN-3", rhythm: "month", date: "November 30, 2025" }), "another year's day names its year");
+  assert.equal(m["PLN-4"].detail, FILLED(K, { plan: "PLN-4", rhythm: "3 years", date: "January 5" }));
   assert.deepEqual(m["PLN-1"].basis.since, { day: "2026-08-17", from: "review" });
   assert.equal(m["PLN-1"].basis.title, "Library hours");
   assert.equal(m["PLN-1"].summary, FILLED("queue.plan-review-due.summary", { plan: "PLN-1" }), "the summary is unchanged (R23)");
-  assert.equal(ACTION_WORDS[K], WORD(K));
+  assert.ok(ACTION_KEYS.includes(K), K);
 });
 
 test("R24: a rhythm not one occurrence a period, an unreadable one, or no day since keeps the plan review's present detail and no detail_key (control: a weekly rhythm on one day is keyed)", () => {
@@ -143,9 +141,9 @@ test("R25: its subject the action, homed under its project, naming what is asked
   assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", filing: "FIL-1", what: "inspection logs for pothole reports closed last year",
     approved_by: "alice", approved_at: "2026-08-28T17:00:00Z", project: "PRJ-1" });
   assert.equal(it.summary, "You left a request unsent: inspection logs for pothole reports closed last year", "to the approver, in her own words");
-  assert.equal(it.detail, "Approved on 28 August, not yet sent: nothing has gone to the office. Pick up where you left off, keep it for later, or drop it with a reason.");
+  assert.equal(it.detail, FILLED("request-unsent.detail", { date: "August 28" }));
   assert.equal("summary_key" in it || "detail_key" in it, false, "words.json holds no key for it: this module's own words, returned to BOB");
-  assert.equal(it.summary, OWN_WORDS["request-unsent.summary.mine"].replace("{what}", it.subject.what));
+  assert.equal(it.summary, FILLED("request-unsent.summary.mine", { what: it.subject.what }));
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under its project");
   assert.deepEqual(it.age, { state: "determined", since: "2026-08-28T17:00:00Z", ms: NOW - Date.parse("2026-08-28T17:00:00Z") });
   assert.equal("due" in it, false);
@@ -164,12 +162,12 @@ test("R25: its doors are the action's screen at its step, queuesnooze and action
   const r = w.read("alice");
   const it = byId(r)[K];
   assert.deepEqual(it.options, [
-    { id: "action", label: "Pick up where you left off", weight: "single", screen: { op: "action", id: "ACT-1", step: "send" } },
+    { id: "action", label: WORD("request-unsent.open"), weight: "single", screen: { op: "action", id: "ACT-1", step: "send" } },
     { id: "queuesnooze", label: WORD("act.queuesnooze.label.queue"), weight: "single" },
     { id: "actionmove", label: WORD("act.actionmove.label.queue"), weight: "single", move: { action: "ACT-1", to: "abandoned", reason: "required" } },
     { id: "opt", on: ["ACT-1"] }]);
   assert.deepEqual(it.screen, { op: "action", id: "ACT-1", step: "send" });
-  for (const k of ["act.queuesnooze.label.queue", "act.actionmove.label.queue"]) assert.equal(ACTION_WORDS[k], WORD(k), k);
+  for (const k of ["act.queuesnooze.label.queue", "act.actionmove.label.queue"]) assert.ok(ACTION_KEYS.includes(k), k);
   const other = ofKind(r, "action-clock-overdue")[0];
   assert.ok(other.options.every((o) => !["action", "queuesnooze", "actionmove"].includes(o.id)), "control");
 });

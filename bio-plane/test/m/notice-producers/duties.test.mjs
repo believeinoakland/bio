@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, E, BOB, ZONE } from "../duties/fixture.mjs";
 import { world as followingWorld, MEMBER, T0 } from "../following/fixture.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
-import { producers, fresh, reader, ofKind, sentences, JUDGMENT, notHintFailures } from "./fixture.mjs";
+import { producers, fresh, reader, ofKind, sentences, JUDGMENT, notHintFailures, dayOn } from "./fixture.mjs";
 import { HINT_MARK } from "../../../src/notice-producers/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -253,7 +253,7 @@ function toldWorld(following) {
   w.declare();                                             /* one obligor row for dutiesOf's walk */
   const occ = { key: "OCC-R18", trigger: { kind: "date", ref: "2026-09-01" }, state: "undetermined", evidence: [],
                 due: { date: { candidates: [{ value: "2026-10-01", precision: "day", zone: "UTC" }, { value: "2026-10-20", precision: "day", zone: "UTC" }] }, basis_kind: "rule" },
-                why: "possibly overdue: undetermined, because the due date is uncertain" };
+                why: "WHY-MARK: the due date is uncertain" };
   const duty = { duty_id: "DUT-R18", adoption: { by: BOB }, performance: { act: "answer the request" } };
   const duties = { dutiesOf: () => ({ ok: true, duties: [duty], truncated: false }), occurrencesOf: () => ({ ok: true, occurrences: [occ] }) };
   const read = (now, f = following) => reader(fresh(w.host, { membership: w.membership, duties, following: f })).read("bob", { now });
@@ -362,8 +362,6 @@ test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expe
   assert.equal(it.detail_key, "queue.temporal-expectation-due.overdue.detail");
   assert.equal(it.summary, say(it.summary_key, fills));
   assert.equal(it.detail, say(it.detail_key, fills));
-  assert.equal(it.summary, "Nothing recorded by 12 February: respond to the records request");
-  assert.equal(it.detail, "Town Clerk was due to respond to the records request by 12 February (Test Code §7922). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.");
   /* control (K3144): an obligor the registry answers no entity for is named by its id */
   const bare = ofKind(reader(fresh(w.host, { membership: w.membership, duties: w.duties })).read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
   assert.equal(bare.fills.office, obligor);
@@ -380,7 +378,8 @@ test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expe
   /* R22 (T48): {reason} is duties' member-facing reason, never its why */
   const says = u.w.duties.occurrencesOf({ dutyId: b.subject.id, asOf: "2026-03-01T16:00:00Z", viewer: BOB }).occurrences.find((x) => x.key === b.subject.occurrence).reason.says;
   assert.equal(b.fills.reason, says.replace(/\.$/, ""), "duties' reason.says");
-  assert.notEqual(b.fills.reason, b.basis.why.replace(/^possibly overdue: undetermined, because /, "").replace(/\.$/, ""), "control: not the why");
+  assert.ok(!(b.summary + b.detail).includes(b.basis.why.vars.zone), "control: the why's zone is in no sentence (K1444, R22)");
+  assert.notEqual(b.fills.reason, b.basis.why.key, "control: not the why");
   assert.equal(b.summary, say(b.summary_key, b.fills));
   assert.equal(b.detail, say(b.detail_key, b.fills));
   assert.equal(b.summary_key, "queue.temporal-expectation-due.undetermined.summary");
@@ -393,10 +392,10 @@ test("R20 R5: an occurrence due last year names its year (date.daymonthyear); co
   const { w, read } = setup();
   w.declare();                                               /* due 2026-02-12 */
   const thisYear = ofKind(read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
-  assert.equal(thisYear.fills.date, "12 February");
+  assert.equal(thisYear.fills.date, dayOn(12, "february"));
   const nextYear = ofKind(read("bob", { now: "2027-01-05T12:00:00Z" }), KIND)[0];
   assert.equal(nextYear.fills.date, say("date.daymonthyear", { day: "12", month: say("date.month.february"), year: "2026" }));
-  assert.equal(nextYear.fills.date, "12 February 2026");
+  assert.equal(nextYear.fills.date, dayOn(12, "february", 2026));
   assert.equal(nextYear.summary, say("queue.temporal-expectation-due.overdue.summary", nextYear.fills));
 });
 
@@ -407,7 +406,7 @@ test("R20 R5: an occurrence due last year names its year (date.daymonthyear); co
 function reasoned(reason, why = "the trigger 2026-01-31 in America/Halifax is undetermined (K1444, R10)") {
   const { w } = setup();
   const duty = { duty_id: "DUT-2026-0042", project: null, adoption: { by: "member:bob" }, performance: { act: "post the minutes" } };
-  const occ = { key: "OCC-1", trigger: { kind: "date", ref: "2026-01-31" }, state: "undetermined", why: `possibly overdue: undetermined, because ${why}`,
+  const occ = { key: "OCC-1", trigger: { kind: "date", ref: "2026-01-31" }, state: "undetermined", why: `WHY-MARK: undetermined, because ${why}`,
                 evidence: [], question: "?", reason,
                 due: { basis_kind: "rule", date: { candidates: [day("2026-02-28"), day("2026-03-01")] } } };
   w.st.sql.exec(`INSERT INTO duties (duty_id, modality, obligor, version, adopted_by, adopted_at, clause) VALUES ('DUT-2026-0042','duty','ENT-x',1,'member:bob','2026-02-01T00:00:00Z','c')`);
@@ -417,14 +416,14 @@ function reasoned(reason, why = "the trigger 2026-01-31 in America/Halifax is un
 }
 
 test("R22 an undetermined occurrence whose trigger is undated answers the words of trigger_undated in {reason}, naming no ISO date, zone id or ruling number, and its reason_code; control: its why text appears nowhere in the item's summary or detail", () => {
-  const says = "What starts the clock has no date in the record.";
+  const says = "REASON-MARK: no date in the record.";
   const it = reasoned({ code: "trigger_undated", says });
   assert.ok(it, "the item is raised");
-  assert.equal(it.fills.reason, "What starts the clock has no date in the record", "reason.says, its closing full stop left to the sentence");
+  assert.equal(it.fills.reason, "REASON-MARK: no date in the record", "reason.says, its closing full stop left to the sentence");
   assert.equal(it.reason_code, "trigger_undated");
   assert.equal(it.detail_key, "queue.temporal-expectation-due.undetermined.detail");
   assert.equal(it.detail, say(it.detail_key, it.fills));
-  assert.equal(it.fills.reason, "What starts the clock has no date in the record");
+  assert.equal(it.fills.reason, "REASON-MARK: no date in the record");
   for (const t of [it.summary, it.detail]) {
     assert.doesNotMatch(t, /\d{4}-\d{2}-\d{2}/, "no ISO date");
     assert.doesNotMatch(t, /America\/Halifax/, "no zone id");
@@ -436,9 +435,8 @@ test("R22 an undetermined occurrence whose trigger is undated answers the words 
 });
 
 test("R22 each of duties' codes is answered as reason_code and its says fills {reason}; control: another code's words are not used", () => {
-  const codes = { trigger_undated: "What starts the clock has no date in the record.", due_between_days: "The due date depends on a day the record does not settle.",
-                  deadline_not_held: "Your team's Civicsmith holds no rule for this deadline yet.", due_not_computed: "The due date could not be worked out.",
-                  match_undated: "The event that met it has no settled date.", order_unsettled: "The dates held are not precise enough to say whether it was on time." };
+  const codes = { trigger_undated: "REASON-MARK one.", due_between_days: "REASON-MARK two.", deadline_not_held: "REASON-MARK three.",
+                  due_not_computed: "REASON-MARK four.", match_undated: "REASON-MARK five.", order_unsettled: "REASON-MARK six." };
   for (const [code, says] of Object.entries(codes)) {
     const it = reasoned({ code, says });
     assert.equal(it.reason_code, code);
@@ -469,4 +467,14 @@ test("R22 over the real duties: a possibly overdue occurrence answers duties' re
   const o = setup();
   o.w.declare();
   assert.equal(ofKind(o.read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0].reason_code, null, "control: an overdue occurrence has no reason");
+});
+
+test("R26 (T51; N889; DEC-340) R5 writes no day as ISO text: its due day names its month and day, and an occurrence due last year names its year (control)", () => {
+  const { w, read } = setup();
+  w.declare();                                               /* due 2026-02-12 */
+  const thisYear = ofKind(read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
+  assert.doesNotMatch(thisYear.summary + thisYear.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+  const nextYear = ofKind(read("bob", { now: "2027-01-05T12:00:00Z" }), KIND)[0];
+  assert.doesNotMatch(nextYear.summary + nextYear.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+  assert.ok(nextYear.detail.includes(dayOn(12, "february", 2026)), "control: last year's day names its year");
 });

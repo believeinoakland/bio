@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, pdf, sha } from "../file-safety/fixture.mjs";
 import { findingKind } from "../../../src/file-safety/index.mjs";
-import { fresh, reader, ofKind, sentences, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
+import { fresh, reader, ofKind, sentences, texts, notHintFailures, JUDGMENT, dayOn } from "./fixture.mjs";
 import { HINT_MARK, NOTICE_KINDS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -228,7 +228,6 @@ test("R15 R20: its summary and detail are queue.security-tool-off.summary and .d
   assert.deepEqual(it.fills, fills);
   assert.equal(it.summary, say("queue.security-tool-off.summary", fills));
   assert.equal(it.detail, say("queue.security-tool-off.detail", fills));
-  assert.equal(it.detail, `metadefender-core (${id}) was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.`);
   for (const t of [...sentences(it), ...texts(it.subject), ...texts(it.basis), ...texts(it.fills)]) {
     assert.ok(!t.includes(file.slice(0, 12)), `a file in ${t}`);
     for (const m of ["m1", "m2", "boss", "member:"]) assert.ok(!t.includes(m), `${m} in ${t}`);
@@ -328,6 +327,18 @@ test("R14 R20: {date} is the note's local day in the profile's zone, never the U
   const read = (zone, now) => ofKind(reader(fresh(w.host, { membership: w.membership, fileSafety: standIn(w, notes, asked), provenance: w.prov,
     view: () => ({ time_zone: { value: zone } }) })).read("m1", { now }), KIND).map((i) => i.fills.date);
   const now = Date.parse("2026-02-01T12:00:00Z");
-  assert.deepEqual(read("America/Halifax", now), ["31 December 2025", "31 December 2025"], "2 a.m. UTC on 1 January is 31 December in Halifax");
-  assert.deepEqual(read("UTC", now), ["1 January", "31 December 2025"], "control: in UTC, the 1st, this year, no year named");
+  assert.deepEqual(read("America/Halifax", now), [dayOn(31, "december", 2025), dayOn(31, "december", 2025)], "2 a.m. UTC on 1 January is 31 December in Halifax");
+  assert.deepEqual(read("UTC", now), [dayOn(1, "january"), dayOn(31, "december", 2025)], "control: in UTC, the 1st, this year, no year named");
+});
+
+test("R26 (T51; N889; DEC-340) R14 and R15 write no day as ISO text: a note's day names its month and day by date.daymonth, and a tool's switch-off names no day at all", async () => {
+  const { w } = await files();
+  const asked = [];
+  const notes = [{ at: "2026-01-01T02:00:00Z" }];
+  const [note] = ofKind(reader(fresh(w.host, { membership: w.membership, fileSafety: standIn(w, notes, asked), provenance: w.prov,
+    view: () => ({ time_zone: { value: "UTC" } }) })).read("m1", { now: Date.parse("2026-02-01T12:00:00Z") }), KIND);
+  assert.doesNotMatch(note.summary + note.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
+  assert.ok(note.detail.includes(dayOn(1, "january")), "the day by date.daymonth");
+  const { items } = await tools();
+  for (const it of items("boss")) assert.doesNotMatch(it.summary + it.detail, /\d{4}-\d{2}-\d{2}/, "no ISO day");
 });
