@@ -19,3 +19,14 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3974; K3964, setup-words R13). Your J1 is merged. The copy you left at `t35-misc.test.mjs`:145 (a substring of the unknown-kind detail) is a test copy of a member sentence whatever the check counts: compare with `localize(id, en[, vars])` by equality, and read that detail by `localize` in `index.mjs` if it is not yet. Merge `tranche/T51` first. Then tests, checks, COMPLETE.
+
+## B3 · CHANGE
+
+CHANGE (K3980). R2's close: `checks/run.mjs` on the tranche (after every R2 merge, @ 3ba33495cb) shows these test copies of sentences in your tests; they read now because the copied sentences are `localize` text elsewhere in the tree since the other R2 merges (member-roster's, credentials', record-core's):
+
+- testcopy ai-accounts bio-plane/test/m/ai-accounts/seams.test.mjs:173 [code] "an ask's grant is minted only under the member's own live session. ..."
+- testcopy ai-accounts bio-plane/test/m/ai-accounts/seams.test.mjs:176 [code] "an ask's grant is minted only under the member's own live session. ..."
+- testcopy ai-accounts bio-plane/test/m/ai-accounts/seams.test.mjs:183 [code] "a standing question runs only for an active member. Nothing was min..."
+- testcopy ai-accounts bio-plane/test/m/ai-accounts/seams.test.mjs:186 [code] "a standing question runs only for an active member. Nothing was min..."
+
+Merge `tranche/T51` into your branch (never rebase), make each compare with `localize`/`word` by equality or assert the key (K3810), run `node checks/words.mjs /home/user/bio ai-accounts` (0 failures) and your tests, and COMPLETE again.
