@@ -1,6 +1,6 @@
 # local-facts (T51)
 
-**Status** · session_01ST4CngevnjWcyxth5PJjXe · depth 2 · COMPLETE · handled B2
+**Status** · session_012PieGczCfTTKCXgZH64nqx · depth 2 · COMPLETE · handled B3
 
 ## Completion (T51-158)
 
@@ -42,3 +42,26 @@ T51-158 done on job/T51/local-facts: R18 ruleFields (+op rulefields) with effect
 ## J2 · COMPLETE · re B2
 
 B2 applied: ruleFields starts choices are the seven (no third_party), tested; deferral dropped from the record. Module tests 71 pass, coverage 19/19, format/architecture/ownership 0 failures, words clean for local-facts.
+
+## J3 · COMPLETE · re B3
+
+RW (words, K4015): done. `checks/words.mjs /home/user/bio local-facts` reads 0 failures (was 1 inline).
+
+**Entries applied**
+- The one finding, `rules.mjs` (the refusal `MACHINE_CANNOT_DRAFT_RULE`'s detail): the inline sentence is replaced by `word("refusal.MACHINE_CANNOT_DRAFT_RULE")`, the list's row already for it. Members now read the row's text: "Only a member drafts or withdraws your team's own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself. Nothing was written." Please confirm at the regeneration (list wins, K3930).
+
+**Other changes in this module (P8)**
+- `index.mjs` governingPath: an undetermined `part_of` line's reason was a lines `{key, vars}` object, so a member read "[object Object]" in the sentence. It now goes through lines' `reasonText`, which lines exports for this.
+- Tests: the sentence regexes in `governing`, `due`, `status`, `rows`, `rules` (K3964, K3965, K3974) now compare with `word(key, vars)` by equality. Two R6 governing tests, red at the start of this job on the changed rows, pass. `t46`'s `/\{errors\}/` is a placeholder check, not sentence text, and stays.
+
+**Not reported:** no string judged unread by a member; nothing deferred.
+
+**Tests and checks** (from `/home/user/bio`, process repository at `e8ac153`, which contains d424c32):
+- `node --test bio-plane/test/m/local-facts/*.test.mjs`: 71 pass, 0 fail (before: 69 pass, 2 fail).
+- `checks/run.mjs /home/user/bio`: format 0 failures, architecture 0 failures. Coverage, words and the rest report failures in other modules only (coverage 22, words 1629 across the tranche; none name local-facts).
+- `checks/words.mjs /home/user/bio local-facts`: 0 failures.
+- `checks/coverage.mjs /home/user/bio local-facts`: 19 of 19 live ids named.
+- `bio-plane/src/setup-words/build.mjs --check`: rows and unreviewed list match words.json and the source.
+- `checks/ownership.mjs /home/user/bio local-facts tranche/T51 job/T51/local-facts`: 0 failures.
+
+Size (session_012PieGczCfTTKCXgZH64nqx): test runs 10, module lines 1450

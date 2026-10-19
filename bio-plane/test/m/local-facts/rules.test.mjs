@@ -280,7 +280,7 @@ test("R13 ruleOffer: a confirmed rule's entry, source and confirmed {at, with_st
   const { createHash } = await import("node:crypto");
   assert.equal(o.digest, createHash("sha256").update(o.bytes, "utf8").digest("hex"));
   for (const word of ["Zephyrine", V("bob"), V("carol"), "member:", "\"statement\""]) assert.ok(!o.bytes.includes(word), word);
-  assert.match(o.note, /transmits nothing/);
+  assert.equal(o.note, word("local-facts.note.carry_bytes_shared"));
   /* withdrawn, it is no longer offered */
   w.lf.ruleWithdraw({ rule: r, reason: "repealed", by: V("dan"), viewer: V("dan") });
   row(w.lf.ruleOffer({ rule: r, viewer: V("dan") }), "RULE_NOT_CONFIRMED");

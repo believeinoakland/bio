@@ -1,6 +1,7 @@
 /* local-facts: factStatus (R2) and the horizons (R3). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V, P, TP, NOW, written } from "./fixture.mjs";
 import { LOCAL_FACT_STATUSES } from "../../../src/local-facts/index.mjs";
 
@@ -47,7 +48,7 @@ test("R2 each status: confirmed with the latest act's member, date and how; corr
   s = c.status(P.tz);
   assert.equal(s.status, "absent");
   assert.equal(s.governs, null);
-  assert.match(s.why, /disagree/);
+  assert.equal(s.why, word("local-facts.why.active_jurisdiction_profiles"));
   assert.equal(s.latest.act, "confirm", "its acts are still read");
   /* the same fact given alike by two profiles is held once, named by either profile's path */
   const same = written("test-same", { time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" } });
@@ -73,7 +74,7 @@ test("R2 a confirmation is of the value that governed when made: a later correct
   before.time_zone.value = "Europe/Madrid";
   const after = m.status("test-moves/time_zone");
   assert.equal(after.status, "unconfirmed");
-  assert.match(after.why, /has since changed/);
+  assert.equal(after.why, word("local-facts.why.value_confirmed_changed", { by: "member:bob", at: "2026-09-28", due_why: "" }));
   assert.equal(after.lapsed.act, "confirm", "naming the confirmation that no longer counts");
 });
 
@@ -97,7 +98,7 @@ test("R2 without a path: every fact of the active profiles once, corrections and
   /* a path R6 names that the active profiles hold no fact at reads absent (and may not be acted on, R1) */
   const y = w.status(`${TP}/holidays/2030`);
   assert.equal(y.status, "absent");
-  assert.match(y.why, /no active jurisdiction profile holds/);
+  assert.equal(y.why, word("local-facts.why.active_jurisdiction_profile"));
 });
 
 /* The test profile's zone is America/Halifax: UTC-3 in daylight time (to 1 November 2026, 02:00), UTC-4 after. Every
@@ -112,7 +113,7 @@ test("R3 a holiday year's confirmation lasts until the year ends at the zone's l
   assert.equal(s.status, "unconfirmed");
   assert.equal(s.lapses_on, "2027-01-01");
   assert.deepEqual(s.lapsed, { act: "confirm", by: V("bob"), at: "2026-09-28T01:00:00Z", how: "the town's holiday schedule" });
-  assert.match(s.why, /confirmation by member:bob on 2026-09-27 lapsed on 2027-01-01/);
+  assert.equal(s.why, word("local-facts.why.confirmation_lapsed", { by: "member:bob", at: "2026-09-27", lapses_on: "2027-01-01", due_why: word("local-facts.year_due", { due_from: "2025-11-01" }) }));
   /* a year confirmed early lasts until its own end */
   w.at("2026-02-01T00:00:00Z").act(P.y2027, "confirm");
   assert.equal(w.at("2027-12-31T12:00:00Z").status(P.y2027).status, "confirmed");
@@ -168,12 +169,12 @@ test("R3 a profile with no time zone answers the horizon undetermined, saying so
   assert.equal(s.status, "unconfirmed");
   assert.equal(s.due, null);
   assert.equal(s.horizon.undetermined, true);
-  assert.match(s.horizon.why, /no time zone/);
+  assert.equal(s.horizon.why, word("local-facts.why.profile_holds_time", { profile: "test-nozone" }));
   w.act(path, "confirm");
   s = w.status(path);
   assert.equal(s.status, "unconfirmed", "a confirmation whose horizon is undetermined is not shown in force");
   assert.equal(s.lapsed.act, "confirm");
-  assert.match(s.why, /cannot be shown in force: .*no time zone/);
+  assert.equal(s.why, word("local-facts.why.confirmation_cannot_shown", { by: "member:bob", at: "2026-09-28T01:00:00Z", why: word("local-facts.why.profile_holds_time", { profile: "test-nozone" }) }));
   assert.equal(s.latest.at, "2026-09-28T01:00:00Z", "the act's instant, whole, not a UTC day");
   const due = w.lf.factsDue({});
   assert.deepEqual(due.due.map((d) => [d.path, d.status, d.due, d.horizon.undetermined]), [[path, "unconfirmed", null, true]]);
@@ -252,7 +253,7 @@ test("R2 R6 a named closure list's year that the active profiles disagree on is 
   const w = world({ profiles: [TP, "test-court"], own: [other] });
   const s = w.status(P.y2026courtList);
   assert.equal(s.status, "absent");
-  assert.match(s.why, /disagree/);
+  assert.equal(s.why, word("local-facts.why.active_jurisdiction_profiles"));
   assert.equal(w.act(P.y2026courtList, "dispute").ok, true, "still named in an active profile, so it may be acted on (R1)");
   /* the negative control: the town's list, given by one profile only, is held */
   assert.equal(w.status(P.y2026townList).status, "unconfirmed");

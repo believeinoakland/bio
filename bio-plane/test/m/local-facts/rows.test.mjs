@@ -19,7 +19,7 @@ test("R8 R14 each refusal carries its row in the module's own table, family C-12
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"]);
     assert.equal(r.check, `C-126.${i + 1}`);
     assert.match(r.where, /^src\/local-facts\/(index|rules)\.mjs \S+ > is-[a-z-]+$/);
-    assert.match(r.translation, /Nothing was written\.$/);
+    assert.equal(r.translation, word(`refusal.${code}`, code === "RULE_ENTRY_INVALID" ? { errors: "{errors}" } : {}));
   });
   /* every code is reached at the interface and answers its row */
   const w = world();

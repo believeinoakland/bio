@@ -52,7 +52,7 @@ test("R6 governingPath follows part_of upward to the nearest entity whose fact t
   assert.equal(g.path, P.clerkHours);
   assert.equal(g.via, "part_of");
   assert.deepEqual(g.lines, [{ line_id: "LIN-1", from: "ENT-board", to: "ENT-mid" }, { line_id: "LIN-2", from: "ENT-mid", to: "ENT-clerk" }]);
-  assert.match(g.why, /LIN-1 → LIN-2/);
+  assert.equal(g.why, word("local-facts.why.office_fact_held", { cur: "ENT-clerk", followed: "LIN-1 → LIN-2" }));
   assert.deepEqual(r.calls.map((c) => [c.entity, c.at, c.kinds, c.viewer]),
                    [["ENT-board", AT, ["part_of"], V("bob")], ["ENT-mid", AT, ["part_of"], V("bob")]]);
   /* holidays: the parent's own entry */
@@ -62,24 +62,23 @@ test("R6 governingPath follows part_of upward to the nearest entity whose fact t
 
 test("R6 governingPath falls back to the profile's offices grouping, saying why: no entity, no lines, no parent, an undetermined line, two parents", () => {
   const cases = [
-    [reader([]), { entity: undefined }, /no registry entity/],
-    [{ lines: {}, officeOf: null }, { entity: "ENT-board" }, /`lines` is not reachable/],
-    [reader([]), { entity: "ENT-board" }, /part of no entity/],
+    [reader([]), { entity: undefined }, word("local-facts.registry_entity_given")],
+    [{ lines: {}, officeOf: null }, { entity: "ENT-board" }, word("local-facts.index.lines_is_not_reachable")],
+    [reader([]), { entity: "ENT-board" }, word("local-facts.part_entity_profile", { cur: "ENT-board", at: AT })],
     [reader([["LIN-1", "ENT-board", "ENT-clerk", "undetermined"]], { "ENT-clerk": CLERK }), { entity: "ENT-board" },
-     /part_of line LIN-1 from ENT-board is undetermined at 2026-06-01T12:00:00Z \(no end is stated\)/],
+     word("local-facts.part_line_undetermined", { open: "LIN-1", cur: "ENT-board", at: AT, open_2: ` (${word("civil-time.end_stated")})` })],
     [reader([["LIN-1", "ENT-board", "ENT-a", "in"], ["LIN-2", "ENT-board", "ENT-clerk", "in"]], { "ENT-clerk": CLERK }),
-     { entity: "ENT-board" }, /part of 2 entities.*LIN-1, LIN-2/],
-    [reader([["LIN-1", "ENT-board", "ENT-clerk", "in"]], { "ENT-clerk": CLERK }), { entity: "ENT-board", at: undefined }, /no date was given/],
+     { entity: "ENT-board" }, word("local-facts.part_entities_governs", { cur: "ENT-board", held: "2", at: AT, held_2: "LIN-1, LIN-2" })],
+    [reader([["LIN-1", "ENT-board", "ENT-clerk", "in"]], { "ENT-clerk": CLERK }), { entity: "ENT-board", at: undefined }, word("local-facts.date_given_part")],
   ];
-  for (const [r, extra, why] of cases) {
+  for (const [r, extra, inner] of cases) {
     const l = lf(r);
     const h = ask(l, { fact: "holidays", office: BOARD, year: 2026, ...extra });
-    assert.deepEqual([h.ok, h.path, h.via], [true, P.y2026, "fallback"], String(why));
-    assert.match(h.why, why);
-    assert.match(h.why, /entry for every office governs \(its `offices` grouping\)/);
+    assert.deepEqual([h.ok, h.path, h.via], [true, P.y2026, "fallback"], inner);
+    assert.equal(h.why, word("local-facts.index.why_the_profiles_entry_for", { why: inner }));
     const o = ask(l, { fact: "hours", office: BOARD, ...extra });
-    assert.deepEqual([o.path, o.via], [null, "none"], `hours have no grouping: ${why}`);
-    assert.match(o.why, /undetermined/);
+    assert.deepEqual([o.path, o.via], [null, "none"], `hours have no grouping: ${inner}`);
+    assert.equal(o.why, word("local-facts.why.profile_holds_hours", { why: inner }));
   }
   /* the negative control: the same walk with the line `in` reaches the parent */
   const ok = ask(lf(reader([["LIN-1", "ENT-board", "ENT-clerk", "in"]], { "ENT-clerk": CLERK })),
@@ -108,11 +107,11 @@ test("R6 governingPath walks at most connection-grammar's default depth, and nev
   r = reader(chain(n + 1), { [`ENT-${n + 1}`]: CLERK });
   g = ask(lf(r), { fact: "hours", office: BOARD, entity: "ENT-0" });
   assert.equal(g.path, null);
-  assert.match(g.why, new RegExp(`within ${n} part_of lines`));
+  assert.equal(g.why, word("local-facts.why.profile_holds_hours", { why: word("local-facts.entity_within_part", { depth_default: String(n), entity: "ENT-0" }) }));
   assert.equal(r.calls.length, n);
   r = reader([["LIN-1", "ENT-a", "ENT-b", "in"], ["LIN-2", "ENT-b", "ENT-a", "in"]]);
   g = ask(lf(r), { fact: "hours", office: BOARD, entity: "ENT-a" });
-  assert.match(g.why, /return to an entity already followed/);
+  assert.equal(g.why, word("local-facts.why.profile_holds_hours", { why: word("local-facts.part_lines_return", { entity: "ENT-a" }) }));
 });
 
 test("R6 governingPath's year: given, else the local year of `at` in the profile's zone", () => {
@@ -122,7 +121,7 @@ test("R6 governingPath's year: given, else the local year of `at` in the profile
   assert.equal(ask(l, { fact: "holidays", office: BOARD, at: "2027-01-01T05:00:00Z" }).path, P.y2027);
   const none = ask(l, { fact: "holidays", office: BOARD, at: undefined });
   assert.deepEqual([none.path, none.via], [null, "none"]);
-  assert.match(none.why, /year is undetermined/);
+  assert.equal(none.why, word("local-facts.index.the_year_is_undetermined"));
 });
 
 test("R6 governingPath writes nothing and never throws; an unknown profile or a refused viewer is NO_SUCH_FACT", () => {
@@ -130,7 +129,7 @@ test("R6 governingPath writes nothing and never throws; an unknown profile or a 
   const w = world(thrower);
   const g = w.lf.governingPath({ profile: TP, fact: "hours", office: BOARD, entity: "ENT-board", at: AT, viewer: V("bob") });
   assert.deepEqual([g.ok, g.path], [true, null]);
-  assert.match(g.why, /undetermined: the walk failed \(boom\)/);
+  assert.equal(g.why, word("local-facts.why.undetermined_walk_failed", { entry: "boom" }));
   for (const a of [undefined, null, 7, "x", [], { profile: 3 }, { profile: TP, fact: "weather" }, { profile: TP, fact: "hours", office: 5 }])
     assert.doesNotThrow(() => w.lf.governingPath(a));
   assert.equal(w.lf.governingPath({ profile: "other", fact: "time_zone" }).reason, "NO_SUCH_FACT");
@@ -155,8 +154,8 @@ test("R6 governingPath over the real lines (linesOf(host), its R10): an in-force
   /* the same office at a date before its in-force line: only the expired line's era, which is out then too */
   const before = l.governingPath({ profile: TP, fact: "hours", office: BOARD, entity: board, at: "2015-06-15", viewer: ANN });
   assert.deepEqual([before.path, before.via], [null, "none"]);
-  assert.match(before.why, /part of no entity/);
+  assert.equal(before.why, word("local-facts.why.profile_holds_hours", { why: word("local-facts.part_entity_profile", { cur: board, at: "2015-06-15" }) }));
   const h = l.governingPath({ profile: TP, fact: "holidays", office: HARBOUR, entity: open, at: "2026-06-15", year: 2026, viewer: ANN });
   assert.deepEqual([h.path, h.via], [P.y2026, "fallback"]);
-  assert.match(h.why, new RegExp(`part_of line ${unended} from ${open} is undetermined`));
+  assert.equal(h.why, word("local-facts.index.why_the_profiles_entry_for", { why: word("local-facts.part_line_undetermined", { open: unended, cur: open, at: "2026-06-15", open_2: ` (${word("civil-time.end_stated")})` }) }));
 });
