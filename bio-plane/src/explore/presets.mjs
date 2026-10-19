@@ -7,7 +7,7 @@ import { kindsByOwner, makeReader } from './reader.mjs';
 import { intersect, spanOfValidity, spanOfWindow } from './intervals.mjs';
 import { nameEnds } from './labels.mjs';
 import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } from './answer.mjs';
-import { word } from '../setup-words/index.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
@@ -70,7 +70,7 @@ export const pathBetween = (ctx, a) => {
   const x = argOf(a);
   const v = viewerRefusal(x.viewer);
   if (v) return v;
-  if (x.to === undefined || x.to === null || x.to === '') return refuse('NO_NODE', 'no to is named: a path between two records names both');
+  if (x.to === undefined || x.to === null || x.to === '') return refuse('NO_NODE', localize('explore.presets.no_to_named', 'no to is named: a path between two records names both'));
   return presetWalk(ctx, 'pathBetween', { from: x.from, to: x.to, at: x.at, depth: x.depth, viewer: x.viewer });
 };
 
@@ -125,7 +125,7 @@ export function overlaps(ctx, arg) {
       const span = { start: x.from, end: x.to };
       const pair = intersect(both);
       if (x.holds === 'in' && (isObj(ha.undetermined) || isObj(hb.undetermined))) {
-        x = { ...x, holds: 'undetermined', why: [ha, hb].filter((h) => isObj(h.undetermined)).map((h) => `${h.id}: ${h.undetermined.why}`).join('; ') };
+        x = { ...x, holds: 'undetermined', why: [ha, hb].filter((h) => isObj(h.undetermined)).map((h) => ({ hop: h.id, why: h.undetermined.why })) };
       }
       // The shared span is the two steps' own; whether it holds is judged at the date or within the period.
       const intersection = { holds: x.holds, from: pair.from, to: pair.to, ...(x.why ? { why: x.why } : {}) };

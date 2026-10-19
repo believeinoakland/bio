@@ -32,7 +32,7 @@ function rederiveOne(ctx, a) {
   const r0 = viewerRefusal(a.viewer) || nodeRefusal(a.from, 'from', true) || nodeRefusal(a.to, 'to', true);
   if (r0) return r0;
   if (a.scope !== undefined && a.scope !== null && !(isObj(a.scope) && filled(a.scope.inquiry))) {
-    return refuse('BAD_SCOPE', 'a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to');
+    return refuse('BAD_SCOPE', localize('explore.rederive.scope_derived', 'a scope names one inquiry: the inquiry the leg naming the derived connection belongs to'));
   }
   const scope = a.scope ? a.scope.inquiry : null;
   for (const f of ['kind', 'as_of', 'method', 'id']) if (!filled(a[f])) return no(word('explore.no.stated_derivation_recomputed', { f: String(f) }));
@@ -126,7 +126,7 @@ function rederiveChain(ctx, a) {
   const v = viewerRefusal(a.viewer);
   if (v) return v;
   if (a.scope !== undefined && a.scope !== null && !(isObj(a.scope) && filled(a.scope.inquiry))) {
-    return refuse('BAD_SCOPE', 'a scope is {inquiry}: the inquiry the leg naming the chain belongs to');
+    return refuse('BAD_SCOPE', localize('explore.rederive.scope_chain', 'a scope names one inquiry: the inquiry the leg naming the chain belongs to'));
   }
   const chain = a.chain;
   if (!Array.isArray(chain) || chain.length < 1 || chain.length > CHAIN_MAX) {
@@ -135,7 +135,7 @@ function rederiveChain(ctx, a) {
   const forms = chain.map((h) => formOf(ctx.registry, h));
   const bad = forms.indexOf(null);
   if (bad !== -1) {
-    return refuse('BAD_CHAIN', `step ${bad + 1} is neither a derived connection's parameters {kind, from, to, as_of, method, id} nor a step of another class {id, kind, owner}`);
+    return refuse('BAD_CHAIN', localize('explore.rederive.step_is_neither', 'step {step} is neither a derived connection\'s parameters {kind, from, to, as_of, method, id} nor a step of another class {id, kind, owner}', { step: String(bad + 1) }));
   }
   for (let i = 1; i < chain.length; i++) {
     const p = chain[i - 1], h = chain[i];

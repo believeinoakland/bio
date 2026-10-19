@@ -26,7 +26,7 @@ export const PATH_ORDER = word('explore.path_order');
  */
 export function resolveKinds(registry, kinds) {
   if (kinds === undefined || kinds === null) return { kinds: registry.owners().flatMap((o) => o.kinds.map((k) => k.kind)) };
-  if (!Array.isArray(kinds) || kinds.some((k) => !filled(k))) return { refusal: refuse('UNKNOWN_KIND', 'kinds is a list of the kinds owners registered') };
+  if (!Array.isArray(kinds) || kinds.some((k) => !filled(k))) return { refusal: refuse('UNKNOWN_KIND', localize('explore.walk.kinds_is_list', 'kinds is a list of the kinds owners registered')) };
   const unknown = kinds.find((k) => registry.kindOf(k) === null);
   if (unknown !== undefined) return { refusal: refuse('UNKNOWN_KIND', word('explore.no.owner_registered_kind', { kind: String(String(unknown).slice(0, 60)) })) };
   return { kinds: [...new Set(kinds)] };
@@ -44,9 +44,9 @@ export function checkWalkArgs(registry, a, fromName = 'from') {
   if (k.refusal) return k;
   const d = depthOrRefusal(arg.depth);
   if (d.refusal) return d;
-  if (arg.sortBy !== undefined && arg.sortBy !== null && !filled(arg.sortBy)) return { refusal: refuse('UNKNOWN_QUANTITY', 'sortBy names a quantity a step states') };
+  if (arg.sortBy !== undefined && arg.sortBy !== null && !filled(arg.sortBy)) return { refusal: refuse('UNKNOWN_QUANTITY', localize('explore.walk.sort_by_names', 'sortBy names a quantity a step states')) };
   if (arg.scope !== undefined && arg.scope !== null && !(isObj(arg.scope) && filled(arg.scope.inquiry))) {
-    return { refusal: refuse('BAD_SCOPE', 'a scope is {inquiry}: the working inquiry whose hunch steps may be walked') };
+    return { refusal: refuse('BAD_SCOPE', localize('explore.walk.scope_names_one', 'a scope names one inquiry: the working inquiry whose hunch steps may be walked')) };
   }
   return { kinds: k.kinds, depth: d.depth };
 }
@@ -215,7 +215,7 @@ export function describePath(registry, hops, by) {
   const p = {
     hops, grade: chainGrade(hops), label: label.label, ...(label.label === 'lead' ? { lead: { hops: label.hops, sentence: LEAD_SENTENCE } } : {}),
     marks, at_date: undet.length ? 'undetermined' : 'in',
-    ...(undet.length ? { undetermined: { hops: undet.map((h) => h.id), why: undet.map((h) => `${h.id}: ${h.undetermined.why}`).join('; ') } } : {}),
+    ...(undet.length ? { undetermined: { hops: undet.map((h) => h.id), why: undet.map((h) => ({ hop: h.id, why: h.undetermined.why })) } } : {}),
   };
   if (by) {
     const last = hops[hops.length - 1];

@@ -6,6 +6,7 @@ import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { AT, INQUIRY, ent, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
 import { seeded, ANN } from "../money/fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { NO_EVENTS_RECORD } from "../../../src/explore/timeline.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3);
@@ -28,7 +29,7 @@ test("R12 rederive recomputes a derived connection through its owner and answers
   // A tampered id.
   const bad = x.rederive({ ...args, id: "0".repeat(64) });
   assert.equal(bad.matches, false);
-  assert.match(bad.why, /not the id its parameters derive/);
+  assert.equal(bad.why, word("explore.text.id_asked_id"));
   // Parameters that do not recompute: matches false with the reason, never a guess.
   for (const [extra, re] of [[{ method: "other-method" }, /holds no/], [{ as_of: "2025-01-01" }, /holds no/], [{ kind: "line:part_of" }, /not a derived kind/],
     [{ kind: "nope" }, /no owner registered/], [{ method: undefined }, /method is not stated/]]) {
@@ -151,7 +152,7 @@ test("R19 rederive reads the derivation's ends and the hops its inputs name with
 test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the group's Civicsmith by name, never the instance", () => {
   const none = exploreOf(null, {}).timelineOver({ set: [A], viewer: V });
   assert.equal(none.refused, "NOT_AVAILABLE");
-  assert.equal(none.why, "your team's Civicsmith has no events record connected, so no timeline can be read");
+  assert.equal(none.why, NO_EVENTS_RECORD);
   const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
   assert.equal(noMoney.money_note, word("explore.money_note"));
   for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);

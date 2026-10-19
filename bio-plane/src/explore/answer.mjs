@@ -22,7 +22,7 @@ export const NOT_ASSERTED = word('explore.not_asserted');
 /** A viewer is the control plane's stamp; absent, every read fails closed (Terms). @param {unknown} viewer */
 export function viewerRefusal(viewer) {
   if (viewer === undefined || viewer === null || viewer === '') {
-    return refuse('VIEWER_MISSING', 'a read names the member reading; an absent viewer is neither an administrator nor the public');
+    return refuse('VIEWER_MISSING', localize('explore.answer.viewer_missing', 'a read names the member reading; an absent viewer is neither an administrator nor the public'));
   }
   return null;
 }
@@ -45,9 +45,10 @@ export function dateRefusal(at, name = 'at') {
   if (at === undefined || at === null || at === '') return refuse('NO_DATE', localize('explore.answer.no_name_is_stated_an', 'no {name} is stated: an exploration is always as of a stated date, never of "now"', { name: String(name) }));
   let b;
   try { b = bounds(/** @type {any} */ (at)); } catch (e) {
-    return refuse('BAD_DATE', `${name} is not a date-time {value, precision, zone} or an instant: ${String(/** @type {any} */ (e)?.message ?? e)}`);
+    return refuse('BAD_DATE', localize('explore.answer.bad_date_detail', '{name} is not a date-time {value, precision, zone} or an instant: {detail}', { name: String(name), detail: String(/** @type {any} */ (e)?.message ?? e) }));
   }
-  if (b && (b.refused || b.undetermined)) return refuse('BAD_DATE', `${name}: ${b.why}`);
+  if (b && b.refused) return refuse('BAD_DATE', localize('explore.answer.date_named_why', '{name}: {why}', { name: String(name), why: String(b.why) }));
+  if (b && b.undetermined) return refuse('BAD_DATE', { name: String(name), why: b.why });
   return null;
 }
 

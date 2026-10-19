@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exploreOf, exploreOps, STOPPED_SENTENCE, DEPTH_SENTENCE, AT_DEPTH_MAX, LEAD_SENTENCE } from "../../../src/explore/index.mjs";
-import { LOWEST_GRADE, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
+import { DECLARED_LABEL, LOWEST_GRADE, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { AT, INQUIRY, ZONE, ent, evt, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
 
 const V = "alice";
@@ -31,7 +32,7 @@ test("R21 the connection graph: a centre with a person one ring out and an organ
   assert.ok(g.steps.every((s) => s.label === undefined && s.undetermined === undefined));
   assert.deepEqual(g.stopped, [{ node: C, why: "ring" }], "the organisation's own steps were not walked");
   assert.equal(g.stopped_sentence, STOPPED_SENTENCE);
-  assert.match(STOPPED_SENTENCE, /undetermined, not absent/);
+  assert.equal(STOPPED_SENTENCE, word("explore.stopped_sentence"));
   assert.ok(!JSON.stringify(g).includes("c-d"), "beyond the outer ring nothing is answered");
   for (const k of ["visited", "budget_ms", "elapsed_ms"]) assert.equal(typeof g[k], "number", k);
   assert.equal(g.visited, 3);
@@ -103,10 +104,10 @@ test("R21 R6 R4 a declared step is labelled declared at the lowest grade, a hunc
   const { x } = make(conns);
   const g = x.neighbourhood({ centre: A, at: AT, viewer: V, scope: { inquiry: INQUIRY } });
   const by = Object.fromEntries(g.steps.map((s) => [s.kind, s]));
-  assert.deepEqual([by.member_of.label, by.member_of.grade, by.member_of.word], ["declared, not evidenced", { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] }, "grouped under"]);
+  assert.deepEqual([by.member_of.label, by.member_of.grade, by.member_of.word], [DECLARED_LABEL, { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] }, "grouped under"]);
   assert.deepEqual([by.hunch_tie.label, by.hunch_tie.grade], ["hunch", null]);
   assert.deepEqual(by.mentioned_together.derived, conns[2].derived);
-  assert.match(by["line:seat_on"].undetermined.why, /no end is stated/);
+  assert.equal(by["line:seat_on"].undetermined.why.key, "civil-time.end_stated");
   const out = x.neighbourhood({ centre: A, at: AT, viewer: V });
   assert.ok(!out.steps.some((s) => s.kind === "hunch_tie"), "no hunch without its inquiry");
   assert.equal(x.neighbourhood({ centre: A, at: AT, viewer: V, scope: "x" }).refused, "BAD_SCOPE");
@@ -167,7 +168,7 @@ test("R22 a walk stopped at its depth says so: a three-hop chain walked to depth
   assert.deepEqual(two.at_depth, [C]);
   assert.equal(two.at_depth_truncated, undefined);
   assert.equal(two.depth_sentence, DEPTH_SENTENCE);
-  assert.match(DEPTH_SENTENCE, /undetermined, not absent/);
+  assert.equal(DEPTH_SENTENCE, word("explore.depth_sentence"));
   assert.ok(!log.some((c) => c.node === C), "the node at the depth was not asked about");
   assert.ok(!JSON.stringify(two).includes("cd"), "nothing says it has further steps");
   const past = x.explore({ from: A, at: AT, viewer: V, depth: 4 });
@@ -236,7 +237,7 @@ test("R23 exploreverify over a chain: a derived and an evidentiary step answer m
   assert.equal(ok.undetermined, undefined);
   const bad = x.rederive({ chain: [{ ...params(d), id: "0".repeat(64) }, cited(ev)], viewer: V });
   assert.equal(bad.matches, false);
-  assert.match(bad.hops[0].why, /not the id its parameters derive/);
+  assert.equal(bad.hops[0].why, word("explore.text.id_asked_id"));
   assert.equal(store.snapshot(), before);
 });
 
