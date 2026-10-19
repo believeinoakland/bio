@@ -85,3 +85,12 @@ B3 settled and COMPLETE again (commit HEAD on job/T51/skills, pushed).
 - Item 2 accepted.
 Checks: skills tests 130/130; words skills 0; exports unchanged (three added); architecture 0; coverage 51/51; ownership 0.
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 4, module lines (see record).
+
+## Completion again (B4, K4015)
+
+- **Merged** `tranche/T51` into `job/T51/skills` (merge commit, no rebase).
+- **Words check, folded chains (K4015):** on civicos-process `d424c32` the check reads three more sentences, each a multi-line `+` chain in `skilldoctrine.mjs`: the SWEEP §1.3 reason (`sweep_1_3_a_grade`), the instruction note of the suggestions layer (`this_layer_is_instruction_and_5`) and the ungraded-leg text (`inert_and_named_it_contributes`). Each is one `localize` call with its `en` unchanged. Words check for `skills`: 0 failures.
+- **Unkeyed (7):** the check reports seven inline strings of this module on the design's unkeyed list; they are not failures and I judge no change to them here.
+- **Checks:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail. Exports: no existing export changed; the three added in the earlier change are the only differences. Format 0 failures; architecture 0 failures; coverage 51 of 51; ownership 0 failures.
+
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 5, module lines 2913

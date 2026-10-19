@@ -305,12 +305,7 @@ export const CLAUSES = [
     defers: [],
     enforced_by: [C.hunch_needs_author],
     why:
-      "SWEEP §1.3: a grade asserted rather than earned is forbidden by the ASSISTANT construct, "
-      + "DEC-18 makes an ungraded leg inert and NAMED, and DEC-15 makes a hunch a member act. A "
-      + "machine-composed leg is therefore never a hunch — it either carries a grade the record "
-      + "earned or it is absent-and-named — and a hunch is unreachable to it because a hunch "
-      + "carries the name and the date of the member declaring it, which no automated credential "
-      + "has to give.",
+      localize("skills.skilldoctrine.sweep_1_3_a_grade", "SWEEP §1.3: a grade asserted rather than earned is forbidden by the ASSISTANT construct, DEC-18 makes an ungraded leg inert and NAMED, and DEC-15 makes a hunch a member act. A machine-composed leg is therefore never a hunch — it either carries a grade the record earned or it is absent-and-named — and a hunch is unreachable to it because a hunch carries the name and the date of the member declaring it, which no automated credential has to give."),
   },
   {
     id: "description-to-a-commit-standard",
@@ -1308,10 +1303,7 @@ export function suggestionsLayer() {
     sourcing: "authored",
     body: {
       clauses: SUGGESTION_CLAUSES,
-      note: "this layer is INSTRUCTION, and this pack reads no switch: whether the asking member's own switch is on "
-        + "is read for each call by the assistant's runner, and with it off this layer is not loaded and DEC-27's "
-        + "limit stands alone. A suggestion is labelled as the machine's and becomes the member's only by the "
-        + "member's act.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_and_5", "this layer is INSTRUCTION, and this pack reads no switch: whether the asking member's own switch is on is read for each call by the assistant's runner, and with it off this layer is not loaded and DEC-27's limit stands alone. A suggestion is labelled as the machine's and becomes the member's only by the member's act."),
     },
   };
 }
@@ -2111,9 +2103,7 @@ export const COMPOSITION = {
    *  inert, so this file names it nowhere. */
   unreachable_to_a_machine: VERSION_STRENGTH_INERT_SOURCES,
   ungraded_leg:
-    "inert, and NAMED. It contributes nothing to the calculation, floors nothing and unrates "
-    + "nothing — and it is named in the description, per axis, with the reason. Inert never means "
-    + "invisible (DEC-18).",
+    localize("skills.skilldoctrine.inert_and_named_it_contributes", "inert, and NAMED. It contributes nothing to the calculation, floors nothing and unrates nothing — and it is named in the description, per axis, with the reason. Inert never means invisible (DEC-18)."),
   where_the_grades_come_from:
     "the resolutions the legs rest on, through the record's earned-basis registry, exactly as "
     + "`op=cite` already fills them",
