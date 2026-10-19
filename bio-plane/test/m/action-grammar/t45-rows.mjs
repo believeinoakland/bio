@@ -4,7 +4,7 @@
    below is each row as it now reads, `T45_ROWS` the record of T45's drafts. Since T47 (R28; N961) the `where`s of C-117.39 and
    C-117.48–.52 name `src/action-records/index.mjs`, whose acts raise them now. */
 import { readFileSync } from "node:fs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 export const T45_ROWS = {
   DETERMINATION_NOT_NONCOMPLIANT: {
@@ -20,7 +20,7 @@ export const T45_ROWS = {
   OVERRIDE_GROUND_REFUSED: {
     check: "C-117.32",
     where: "src/actions/index.mjs #overrideAndAddressee > is-override-ground",
-    translation: "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written.",
+    translation: localize("action-grammar.checks.the_ground_stated_for_acting", "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written."),
   },
   COPIED_IS_ADDRESSEE: {
     check: "C-117.33",
@@ -65,7 +65,7 @@ export const T45_ROWS = {
   OFFICE_STATUS_WITHOUT_OUTCOME: {
     check: "C-117.41",
     where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
-    translation: "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first.",
+    translation: localize("action-grammar.checks.the_offices_own_wording_of", "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first."),
   },
   MACHINE_CANNOT_SET_REPLY_OWED: {
     check: "C-117.42",
@@ -135,7 +135,7 @@ export const T45_ROWS = {
   REPLY_OWED_REFUSED: {
     check: "C-117.55",
     where: "src/action-grammar/checks.mjs actionFieldFindings > is-action-fields",
-    translation: "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written.",
+    translation: localize("action-grammar.checks.whether_a_reply_is_owed", "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written."),
   },
   FOLLOWS_ACTION_REFUSED: {
     check: "C-117.56",
@@ -145,7 +145,7 @@ export const T45_ROWS = {
   LAW_STAGE_UNKNOWN: {
     check: "C-117.57",
     where: "src/action-grammar/checks.mjs lawStagesFindings > is-law-stages",
-    translation: "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
+    translation: localize("action-grammar.checks.a_records_law_in_the", "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has."),
   },
   MACHINE_CANNOT_SET_COPIED: {
     check: "C-117.58",

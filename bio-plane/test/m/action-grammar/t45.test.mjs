@@ -9,6 +9,7 @@ import * as AG from "../../../src/action-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { isCalendarDate } from "../../../src/civil-time/index.mjs";
 import { pushed, ZONE } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { DOCS, NOW } from "./corpus.mjs";
 import { ROWS_NOW } from "./t45-rows.mjs";
 
@@ -146,9 +147,9 @@ test("R6 (T45; K2845, K2849 (5)): a rests_on leg may name a success record by co
   const legs = (action_basis) => pushed((f) => AG.actionBasisFindings({ action_kind: "other", action_basis }, f)).findings.map((x) => x.message);
   assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "rests_on" }]), []);
   assert.ok(AG.SUCCESS_RECORD_ID_RE.test("SUC-2026-0042"));
-  assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "advances" }]), ["action_basis[0].target 'SUC-2026-0042' is not a canonical record id"]);
+  assert.deepEqual(legs([{ target: "SUC-2026-0042", kind: "advances" }]), [localize("action-grammar.grammar.action_basis_i_target_string_is", "action_basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: "SUC-2026-0042" })]);
   for (const t of ["SUC-2026-42", "SUC-2026-00042", "SUC-26-0042", "SUC-2026-0042-slug", "suc-2026-0042", "XYZ-2026-0042"])
-    assert.deepEqual(legs([{ target: t, kind: "rests_on" }]), [`action_basis[0].target '${t}' is not a canonical record id`], t);
+    assert.deepEqual(legs([{ target: t, kind: "rests_on" }]), [localize("action-grammar.grammar.action_basis_i_target_string_is", "action_basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: t })], t);
   assert.deepEqual(audit(base({ action_basis: [{ target: "SUC-2026-0042", kind: "rests_on" }, { target: "INQ-2026-0003-question", kind: "advances" }] })), []);
 });
 
@@ -570,10 +571,10 @@ test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOG
   for (const [code, site] of Object.entries(RECORDS)) assert.equal(C[code].where, `src/action-records/index.mjs ${site}`, code);
   const tables = ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS", "LIFECYCLE_CHECKS", "RISK_TIER_REVISION_CHECKS", "RECORDS_LAW_FENCE_CHECKS"];
   for (const t of tables) for (const code of t45) assert.ok(!(code in AG[t]), `${code} in ${t}`);
-  /* action-holds' and action-replies' codes: no C-117 row here */
   const ALL = Object.assign({}, ...tables.map((t) => AG[t]), C);
-  for (const code of ["HOLD_PLACE_REFUSED", "MACHINE_CANNOT_SEND", "HOLD_NOT_IN_PLACE", "MACHINE_CANNOT_RECORD_BEARING", "BEARING_NOT_RFC", "BEARING_REFUSED",
-    "MACHINE_CANNOT_LINK", "AROSE_FROM_NOT_A_RESPONSE", "AROSE_FROM_LINKED", "AROSE_FROM_REFUSED", "ASSERTION_RESOLUTION_REFUSED"]) assert.ok(!(code in ALL), code);
+  /* the rows held here are the C-117 family, each naming its site in this module or in actions' files; a row of action-holds or
+     action-replies names its own, so none of theirs is held here */
+  for (const [code, row] of Object.entries(ALL)) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks|action-records\/index)\.mjs /, code);
   /* the codes this module's arms push, each with its row: the shape codes by the arm its where names */
   const ARMS = {
     overrideGroundFindings: pushed((f) => { AG.overrideGroundFindings({}, f); AG.overrideGroundFindings({ ground: { kind: "legal_deadline" } }, f); }).findings,
