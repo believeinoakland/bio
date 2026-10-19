@@ -6,7 +6,7 @@
    answering as their requirements state until those jobs merge (K248). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, STRANGER, PROFILE, DOC, actionsWith, sha } from "./fixture.mjs";
+import { world, V, STRANGER, PROFILE, DOC, actionsWith, templatesOver, sha } from "./fixture.mjs";
 import { said } from "../../../src/filings/words.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
@@ -124,6 +124,21 @@ test("R65 templatesForAction also answers not_offered, each template the kind ho
   assert.deepEqual([mute.ok, mute.not_offered, mute.not_offered_read], [true, [], false]);
   assert.equal(x.f.templatesForAction({ viewer: V("bo") }).reason, "NO_SUCH_ACTION", "no action");
   assert.equal(x.f.templatesForAction({ action: "bylaw_complaint", viewer: V("bo") }).reason, "NO_SUCH_ACTION", "a kind is no action");
+});
+
+test("R65 over filing-templates R35: a profile template with no professional review answers not_offered with professional_review in lacks and is absent from the offered list; control: reviewed, it is offered and not listed", async () => {
+  const x = world();
+  const A = x.action();
+  const bare = x.filingsWith({ filingTemplates: templatesOver(x.w, undefined, { reviewed: false }) }).templatesForAction({ action: A, viewer: V("bo") });
+  assert.equal(bare.ok, true);
+  const lacking = bare.not_offered.find((t) => t.lacks.includes("professional_review"));
+  assert.ok(lacking, JSON.stringify(bare.not_offered));
+  assert.deepEqual(Object.keys(lacking).sort(), ["handle", "lacks", "name"]);
+  assert.equal(bare.versions.some((v) => v.name === lacking.name), false, "not offered, so not among the offered versions");
+  const reviewed = x.f.templatesForAction({ action: A, viewer: V("bo") });
+  assert.deepEqual(reviewed.not_offered, [], "control: the reviewed template is offered, never listed as not offered");
+  assert.equal(reviewed.versions.some((v) => v.name === lacking.name), true);
+  assert.equal(reviewed.not_offered_read, undefined);
 });
 
 test("R65 a kind whose venue is filed with a court answers court_petition: true and no template, offered or listed; a kind filed otherwise does not", async () => {
