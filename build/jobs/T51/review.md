@@ -56,3 +56,7 @@ COMPLETE for T51-237 · review (BOB's B2: the words findings). Branch job/T51/re
 - `node checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`: run after this commit (see the post).
 
 Size (session_012TPvP8gm8qT2VjtUB8E9Dk): test runs 3, module lines 1367
+
+## J2 · COMPLETE
+
+T51-237 · review (BOB's B2: the words findings) is complete on job/T51/review @ c8c833dedb. The three inline, two plain and two test-copy findings in build/plan/words-pass/review.md are fixed through localize; four further inline sentences that the process checks now report in this module (index.mjs:141, :173, :549, :892) are converted too. Tests: 61 pass before and after. Checks: format and architecture 0 failures; coverage has no review line; words has no review finding; ownership 0 failures; setup-words --check gives the stale-rows note only (rows.mjs and words-unreviewed.json for you to regenerate at the layer close). For you: the stitched arm now counts multi-line + sentences, so other modules may have new findings; the tree's words total is 2254, none in review. Stale and not edited: the bundles under bio-plane/dist and release (carried from J1). Details in the completion record.
