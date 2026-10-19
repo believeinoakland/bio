@@ -65,7 +65,9 @@ test("R50 GET / asks only the permanent short name (R41's dialog) and the places
   assert.ok(before.includes(`<h1>${escd(word("screen.install.cf.title"))}</h1>`));
   /* (R72) the design's four lines cover the five scopes: the scripts and the storage share one (`screen.install.cf.programs`). */
   assert.deepEqual([...ALLOWED], ["programs", "plan", "containers", "join"].map((k) => word("screen.install.cf." + k)));
-  assert.equal(CFG.SCOPES.length, 5);
+  /* R2's six scopes (K3819: the sixth, `account-logs.read`, reads the Logpush list) against the design's four lines: the design holds no
+     line for the sixth, so none is drawn and the gap is reported (R79: no sentence is written as English meanwhile). */
+  assert.equal(CFG.SCOPES.length, 6);
   const allowed = section(before, "allowed");
   assert.deepEqual([...allowed.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]), [...ALLOWED].map(escd));
   assert.ok(!/[a-z]+(?:-[a-z]+)*\.(write|read|bind)\b/.test(words(allowed)), "plain words, never a scope's code");

@@ -72,6 +72,9 @@ t("(B) the bundle's RELEASE_BINARY is the one src/release.mjs carries (by sha256
   shaBinary(literal(committed, "RELEASE_BINARY")), want.source);
 
 const fresh = await bundleText(esbuild);
+/* N1254: the test closes what it opens. esbuild's service is a child process that holds the suite's stdout pipe: left running it
+   keeps a reader of that pipe (a runner, `| tail`) waiting for an end that never comes, though the suite itself has finished. */
+await esbuild.stop();
 t("(C) the WHOLE committed bundle is byte-identical to a fresh build of newgroup/src (catches installer code the bundle lags)",
   { bytes: committed.length, sha256: sha(committed) }, { bytes: fresh.length, sha256: sha(fresh) });
 

@@ -299,6 +299,7 @@ export const KEYS = Object.freeze([
   "installer.update.stopped",
   "installer.update.stopped.account",
   "installer.update.stopped.badlimits",
+  "installer.update.stopped.foreign",
   "installer.update.stopped.integrity",
   "installer.update.stopped.lookup",
   "installer.update.stopped.noanswer",

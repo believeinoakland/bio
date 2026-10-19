@@ -55,12 +55,14 @@ export const CFG = {
      scope, by the id Cloudflare's scope list gives it (`GET /client/v4/oauth/scopes`, read 2026-10-06: "Workers
      Containers Write", `containers.write`); it is asked so a container member can be installed (R38), and a group
      re-consents to it at its first update after T33 (R17). The fifth (T36, K2155) is "Connectivity Directory Bind",
-     `connectivity-directory.bind` (the same list, read 2026-10-08), which binding a Workers VPC service needs (R45). */
-  SCOPES:    ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind"],
-  /* R46 (K2155): every Logpush API call, the job list included, needs "Logs Write" (`account-logs.write`), a write power
-     over the team's logging that R2 does not ask: the check reads the list and, refused, states itself undetermined
-     with the one check the operator can make. Named here so the reason is in one place; never asked. */
-  LOGPUSH_SCOPE: "account-logs.write",
+     `connectivity-directory.bind` (the same list, read 2026-10-08), which binding a Workers VPC service needs (R45). The sixth
+     (N1151; R2, K3818) is "Logs Read", `account-logs.read`, which reading the Logpush job list needs (R46); Bob registered it on the
+     OAuth client (K3819), so it is asked: the installer asks nothing the client does not hold, and a scope the client does not
+     hold would fail on Cloudflare's side before the founder returns, where no message of this installer can say so. */
+  SCOPES:    ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind", "account-logs.read"],
+  /* R46 (K2155, K3818): the scope that reads every Logpush API call's job list, named here so the reason is in one place. When
+     Cloudflare refuses the read anyway, the check says plainly that it could not look (`installer.logs.undetermined`). */
+  LOGPUSH_SCOPE: "account-logs.read",
   COOKIE:    "bio_wiz",
   COOKIE_MAX_AGE_S: 900,
   /* Public releases: two committed files in the repo's release/ folder on
@@ -1457,7 +1459,7 @@ function withByteLags(verdict, byteLags, capable) {
  * (alone, or one condition of a top-level `and`) is a `ScriptName` condition that leaves every one of them out:
  * `!in` or `!eq` naming them all, or `in` or `eq` naming none of them. Anything else, a filter that does not parse
  * included, does not exclude them. A list the permission cannot read leaves the check UNDETERMINED, said so, never
- * passed (CFG.LOGPUSH_SCOPE: every Logpush API call needs "Logs Write", which R2 does not ask). */
+ * passed (CFG.LOGPUSH_SCOPE: the job list is read under "Logs Read", which R2 asks as its sixth scope). */
 export const PER_REQUEST_DATASET = "workers_trace_events";
 export function filterExcludes(filter, names) {
   if (filter === null || filter === undefined || filter === "") return false;
@@ -1704,6 +1706,30 @@ async function newestVersion() {
 }
 const memberNamesOf = (release) => [...new Set([...BINDING_OF.keys(), ...RELEASE_MANIFEST.fleet.map((m) => m.member),
   ...(Array.isArray(release?.man?.fleet) ? release.man.fleet.map((m) => m && m.member).filter((m) => typeof m === "string") : [])])];
+
+/* R74 (N1239; DEC-329 (7); BOB's reading, K3892) — WHAT AN UPDATE STOPS FOR AS FOREIGN. Before any upload, an update lists the
+   container applications the account holds on the Durable Object namespaces of the copy's own Workers (the plane's and each
+   member's: the list R65 deletes by) and stops when one carries a name that is not one of the copy's names for that member's
+   class (`names.app`, R64: the fixed names for a copy that keeps them): the copy holds something not recognized as this copy's. An
+   application under the copy's names for a class the chosen release no longer has is a retired part, not foreign: it is left in
+   place, and is answered in `retired` for the update's checks to say. Nothing is deleted or changed. A list the permission cannot
+   read is not a stop (R74 stops on what it finds); an application on another copy's Workers (R64) is not this copy's to judge. */
+async function foreignContainers(api, names, release, loaded) {
+  const memberScripts = new Map(memberNamesOf(release).map((m) => [names.member(m), m]));
+  const [spaces, apps] = await Promise.all([listNamespaces(api), listApps(api)]);
+  const mine = new Map(spaces.filter((s) => s && (s.script === names.slug || memberScripts.has(s.script))).map((s) => [s.id, s]));
+  const wanted = new Set((loaded?.members || []).flatMap((L) => (L.classes || []).map((c) => `${L.m.member}/${c.class_name}`)));
+  const retired = [];
+  for (const a of apps) {
+    const ns = a && a.durable_objects ? mine.get(a.durable_objects.namespace_id) : null;
+    if (!ns) continue;
+    const member = memberScripts.get(ns.script);
+    const own = member !== undefined && (a.name === names.app(member, ns.class, false) || a.name === names.app(member, ns.class, true));
+    if (!own) return { foreign: true, retired };
+    if (!wanted.has(`${member}/${ns.class}`)) retired.push(a.name);
+  }
+  return { foreign: false, retired };
+}
 
 /* R62, R63: what the account already holds, drawn: each copy by its own worker's answers (stored nowhere), and the installer's
    own counts where the worker states none. */
@@ -2257,6 +2283,10 @@ async function updateRun(emit00, code, saved, guard) {
     if (e && e.source) return stopped(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
   }
+
+  /* R74: before any upload, the copy's container applications are told from something not recognized as this copy's. */
+  try { if ((await foreignContainers(api, names, release, loaded)).foreign) return stopped(word("installer.update.stopped.foreign")); }
+  catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds, and R67 judges what was deployed */ }
 
   /* What is it running now? Asked before the upload, so an update that changes
      nothing can say so instead of reading as a success. A no-op reported as

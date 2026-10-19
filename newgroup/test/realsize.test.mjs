@@ -22,6 +22,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { buildSync } from "esbuild";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 import { planeLimits, reportsBuilds } from "../src/index.mjs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
@@ -55,7 +56,7 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
     assert.equal(w.planePuts.length, 2, readBack);
     assert.equal(w.planePuts[0].source, REAL, `${readBack}: the repository release installed, byte for byte`);
     assert.equal(w.page.status("verify"), "ok", readBack);
-    assert.match(w.page.done, /Your team's Civicsmith is running\./, readBack);
+    assert.ok(w.page.done.includes(RUNNING), readBack);
     assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `${readBack}: no lag named`);
   }
   /* The built-in release (no repository answering): the same, at the size Bob's install met. */
@@ -69,7 +70,7 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
   for (const readBack of ["differ", "fail"]) {
     const w = await run({ slug: "rs-bad", rel, readBack });
     assert.match(w.page.done, readBack === "differ" ? MISMATCH : /could not be read back/, readBack);
-    assert.ok(!w.page.done.includes("Your team's Civicsmith is running."), `${readBack}: no success claimed`);
+    assert.ok(!w.page.done.includes(RUNNING), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
   }
   restoreSigners();
@@ -77,6 +78,8 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
 
 /* ---- the memory bound ---- */
 
+/* The finished panel's headline, by its key, as the panel escapes it. */
+const RUNNING = word("installer.success.running").replace(/'/g, "&#39;");
 const dir = mkdtempSync(join(tmpdir(), "r33-"));
 after(() => rmSync(dir, { recursive: true, force: true }));
 let bundle = null, repo = null, repoFleet = null;

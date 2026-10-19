@@ -31,6 +31,8 @@ import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b6
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
+/* R2: the scopes registered on the OAuth client (Cloudflare's own names for them), in the order they are asked. */
+const REGISTERED_SCOPES = ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind", "account-logs.read"];
 /* R55: the update page is drawn for the release chosen (the address `instance-setup` R90 answers). */
 const UPDATE_PATH = "/update?version=" + NEXT;
 const text = async (path) => (await req(path)).text();
@@ -78,7 +80,7 @@ test("R1 GET / serves the install page and GET /update the update page; any othe
   globalThis.fetch = realFetch;
 });
 
-test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly the five scopes (the Containers write scope and the VPC bind scope among them), the registered redirect, and the 15-minute cookie; no field carries a Claude credential", async () => {
+test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly the scopes registered on the OAuth client (the Containers write scope, the VPC bind scope and, since K3819, the Logs read scope among them), the registered redirect, and the 15-minute cookie; no field carries a Claude credential", async () => {
   for (const bad of ["", "ab", "-abc", "abc-", "Abc", "a_b", "a".repeat(41), "abc.def", "newgroup", 12345, null]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: bad }) });
     const j = await r.json();
@@ -100,10 +102,11 @@ test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in 
   assert.equal(u.origin + u.pathname, CFG.AUTHORIZE);
   assert.deepEqual(Object.fromEntries([...u.searchParams].filter(([k]) => !["state", "code_challenge"].includes(k))), {
     response_type: "code", client_id: CFG.CLIENT_ID, redirect_uri: "https://newgroup.believeinoakland.workers.dev/callback",
-    scope: "workers-scripts.write workers-r2.write account-settings.read containers.write connectivity-directory.bind", code_challenge_method: "S256" });
-  assert.deepEqual(CFG.SCOPES, ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind"]);
-  /* R46 (K2155): no Logs scope is asked. */
-  assert.ok(!CFG.SCOPES.some((x) => /logs/.test(x)));
+    scope: REGISTERED_SCOPES.join(" "), code_challenge_method: "S256" });
+  /* R2 (N1151; K3818, K3819): the sixth scope, `account-logs.read`, reads the Logpush job list (R46) and is registered on the client
+     (Bob's act); control: the authorize address carries no scope the client does not hold, and no Logs write power is ever asked. */
+  assert.deepEqual(CFG.SCOPES, REGISTERED_SCOPES);
+  assert.deepEqual(CFG.SCOPES.filter((x) => /logs/.test(x)), ["account-logs.read"]);
   /* R36: a Claude credential sent to /begin is taken nowhere: the cookie holds no trace of it. */
   const CLAUDE = "sk-ant-oat01-" + "q".repeat(40);
   const c = await begin("no-claude", "install", { instanceClaude: CLAUDE, claude: CLAUDE });
@@ -1214,10 +1217,13 @@ test("R23 (T46) when the release this installer carries names, for a container m
     }
     if (!named.length) assert.equal(page.includes('id="left-out"'), false, where);
   }
-  /* The release this tree carries (0.82.0) names GitHub's registry for both container members (draft-T46-trial §3.3), so
-     the pages name those whose absence lacks something today (R57: not agent-runner). */
+  /* The release this tree carries names its container images where an account can pull them (Docker Hub, by digest; N1242, K3805),
+     so the pages name no part left out; a release that names GitHub's registry for both container members (draft-T46-trial §3.3)
+     has the pages name those whose absence lacks something (R57: not agent-runner). */
   if (RELEASE_CONTAINERS.length && RELEASE_CONTAINERS.every((c) => c.image.startsWith("ghcr.io/")))
     assert.deepEqual(partsLeftOut(RELEASE_CONTAINERS).map((p) => p.member).sort(), [...new Set(RELEASE_CONTAINERS.map((c) => c.member))].filter((m) => m !== RUNNER).sort());
+  else if (RELEASE_CONTAINERS.length && RELEASE_CONTAINERS.every((c) => c.image.startsWith("docker.io/")))
+    assert.deepEqual(partsLeftOut(RELEASE_CONTAINERS), [], "a release on Docker Hub, pinned by digest, leaves nothing out");
 });
 
 test("R23 (T46) the embed records the container classes the release's signed fleet statement names (member, class, image), only from a fleet that verifies against the installer's keys and parts whose bytes it signs; a release naming no signed fleet names none; the shipped embed is the release's own", async () => {
@@ -1385,7 +1391,7 @@ test("R46 before verify succeeds, the install and the update list the account's 
       assert.match(w.page.label("logs"), /A Logpush job on your Cloudflare account would keep a log of who opened which file: the Logpush job "trace all" \(id 7\)/);
       assert.equal(w.page.status("verify"), "no", mode);
       assert.ok(w.page.done.includes("the Logpush job &quot;trace all&quot; (id 7)"), mode);
-      assert.ok(!w.page.done.includes("Your team's Civicsmith is running.") && !/<b>Updated (from|to)/.test(w.page.done), `${mode}: no success`);
+      assert.ok(!w.page.done.includes(h(word("installer.success.running"))) && !/<b>Updated (from|to)/.test(w.page.done), `${mode}: no success`);
     }
     /* Unreadable: undetermined, with the manual check, and never stated as passed. */
     const u = seen(await run({ slug: "lp-u", mode, rel, pre: pre("lp-u"), logpush: "refused" }));

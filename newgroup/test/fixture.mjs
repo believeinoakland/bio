@@ -481,7 +481,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (enableFail) return cferr("could not enable", 500);
       enabled.add(u.split("/workers/scripts/")[1].split("/")[0]); return cfok({ enabled: true });
     } },
-    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u) => {
+    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u, init = {}) => {
       const host = new URL(u).host;
       const [name, pre2] = host.split(".");
       /* R63: a copy already held answers what its facts say (`copy.held[slug]`), or nothing. */
