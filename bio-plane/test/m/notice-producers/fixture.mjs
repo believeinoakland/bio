@@ -103,3 +103,13 @@ export function snapshot(sqlExec) {
   for (const { name } of rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)) out[name] = JSON.stringify(rows(`SELECT * FROM "${name}"`));
   return out;
 }
+
+/** A local day as a sentence names it, from `words.json` (R16, R20): `date.daymonth` ("October 9"), or
+ *  `date.daymonthyear` ("December 31, 2025") when a year is given. Built from the words, never copied (K3810). */
+import { WORDS as DAY_WORDS } from "../ai-use/fixture.mjs";
+export const dayOn = (day, month, year) => {
+  const m = DAY_WORDS[`date.month.${month}`];
+  return year === undefined
+    ? DAY_WORDS["date.daymonth"].replace("{day}", String(day)).replace("{month}", m)
+    : DAY_WORDS["date.daymonthyear"].replace("{day}", String(day)).replace("{month}", m).replace("{year}", String(year));
+};
