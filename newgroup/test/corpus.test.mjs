@@ -21,9 +21,9 @@ const flatten = (html) => unescape(html.replace(/<script>[\s\S]*?<\/script>/g, "
 /* Every key's row as a pattern over the flattened text: markup in a row is dropped as the drawn text's is, a placeholder matches
    any value of one line. The longest rows come out first, so a row that holds another is taken whole. */
 const rows = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-const PATTERNS = KEYS.map((k) => rows.get(k)).filter((t) => typeof t === "string")
-  .map((t) => flatten(t).trim()).filter((t) => t.length >= 2).sort((a, b) => b.length - a.length)
-  .map((t) => new RegExp(t.split(/\{[A-Za-z0-9_]+\}/).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")).join(".{0,200}?"), "g"));
+const rowRe = (t) => new RegExp(t.split(/\{[A-Za-z0-9_]+\}/).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")).join(".{0,200}?"), "g");
+const longestFirst = (texts) => texts.map((t) => flatten(t).trim()).filter((t) => t.length >= 2).sort((a, b) => b.length - a.length).map(rowRe);
+const PATTERNS = longestFirst(KEYS.map((k) => rows.get(k)).filter((t) => typeof t === "string"));
 
 /* What a drawn text holds beside the keys' words: the runs of three or more consecutive lower-case words are English. A name,
    a version, an address or a count is no word; Cloudflare's own text and the leaf text another module owns are exempt below. */
@@ -42,20 +42,34 @@ export function leftovers(drawn, exempt = []) {
    Logpush check. A name in them is any worker name or list of them. */
 const flat = (t) => flatten(t).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
 const NAMES = "[\\w-]+(?:, [\\w-]+)*";
+const PREFIXES = ["installer.fleet.", "installer.connect.", "installer.lag.", "installer.logs.", "installer.step.connect"];
+/* The design's rows for those lines, taken by clause: the code `installer-steps` takes over words them nearly as the rows do. */
+const MOVED_ROWS = longestFirst(WORD_ROWS.filter(([k]) => PREFIXES.some((p) => k.startsWith(p)))
+  .flatMap((r) => flatten(r[1]).split(/[.:;,\u2014]\s|\{[A-Za-z0-9_]+\}/)).filter((c) => c.trim().split(/\s+/).length >= 3));
 const MOVED = [
-  "the capability workers beside your team's", "to its capability workers", `capability workers installed and verified:`, `is connected to`,
-  "the capability worker", "could not be installed, so your team's", "failed its integrity check", "fleet signature did not verify",
-  "so no capability workers were installed", "itself installed normally and is safe", "in the manifest is", "fact about the release, not about your team's",
-  "its own address", "now knows its own address", "which it reads as its own", "was installed, but its schedule", "could not be set", "the next update sets it",
+  "the capability workers beside your team's",
+  "to its capability workers",
+  "capability workers installed and verified:",
+  "the capability worker",
+  "could not be installed, so your team's",
+  "failed its integrity check",
+  "fleet signature did not verify",
+  "so no capability workers were installed",
   "its release does not yet state its bucket and its daily schedule, so it was installed without them: it cannot read captured files or refresh its virus signatures, and files are not scanned until",
-  "release that states them is installed", "works without them; the next update retries exactly this step", "connection to use",
-  "the permission you approved could not be shown to include", "the record store of your team's", "account holds for your team's", "is not the",
-  "release's own bytes", "read back, it hashes to", "the release hashes to", "that no log on your account records who opened which file",
-  "job on your", "record of each request to your team's", "the installer could not read your account's", "so it cannot say whether one keeps",
-  "its address, its record store and each helper program it", "its address, its record store, and each helper program it", "part of your team's", "part runs release",
-  "and look for", "check it yourself: in the", "none should cover", "which would be", "log of who opened which file",
+  "connection to use",
+  "the permission you approved could not be shown to include",
+  "release's own bytes",
+  "read back, it hashes to",
+  "the release hashes to",
+  "that no log on your account records who opened which file",
+  "the installer could not read your account's",
+  "so it cannot say whether one keeps",
+  "check it yourself: in the",
+  "none should cover", "holds for your team's", "could not be set", "the next update sets it", "fact about the release", "in the manifest is", "is not the",
+  "states them is installed", "but its schedule", "which would be", "installed normally", "and is safe", "job on your", "each request to your", "who opened which file",
 ].map((t) => new RegExp(flat(t), "g"));
-const exemptions = { exempt: [...[true, false].map((deployer) => Object.assign(new RegExp(flat(hostingControlBlock("notice", { deployer })), "g"), { whole: true })), ...[...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence, HOSTING_RECOVERY_DEPLOYER].map((t) => Object.assign(new RegExp(flat(t), "g"), { whole: true })), ...MOVED] };
+
+const exemptions = { exempt: [...[true, false].map((deployer) => Object.assign(new RegExp(flat(hostingControlBlock("notice", { deployer })), "g"), { whole: true })), ...[...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence, HOSTING_RECOVERY_DEPLOYER].map((t) => Object.assign(new RegExp(flat(t), "g"), { whole: true })), ...MOVED, ...MOVED_ROWS] };
 const everything = (w) => [w.page.words, ...w.page.waits, w.raw].join("\n");
 
 async function states() {
