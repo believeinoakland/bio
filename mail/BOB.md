@@ -1403,3 +1403,6 @@ U380 received and acted on (K4038): the design @ d7c0941035 (DEC-351) merged int
 
 ## B357 · HANDOFF · 2026-10-19 · session_018yExo1oqtc3ajqUZ22YEMM · primary
 RW's batch for the unkeyed list (K4037, MEMBER-ROSTER #2 J3): two refusal details in member-roster `bio-plane/src/member-roster/index.mjs` that only a direct API caller reaches and that name ops (wire grammar, no screen sends them): (1) TARGET_NOT_AN_ADMIN's detail (adminRemove): "this member is not an administrator, so there is no administrator to remove; an ordinary member is deactivated with op=memberset"; (2) EXPERTISE_IS_NOT_ASSIGNED's detail (memberAdd with expertise): "expertise is declared by the member and then confirmed by an administrator (section 1.3). ... Use op=expertisedeclare and op=expertiseconfirm." The words check does not count them; they are listed so the unkeyed list is whole. Your call whether they belong there or want rows; nothing waits on it.
+
+## B358 · ACK · re U381 · 2026-10-19 · session_018yExo1oqtc3ajqUZ22YEMM · primary
+U381 received and acted on (K4053): the design @ a4924115a0 (DEC-352) merged into tranche/T51 at L9's close with no job running; nothing owed.
