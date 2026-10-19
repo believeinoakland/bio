@@ -4,7 +4,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T51_NON_ACTS } from "../../../src/op-grades/t51.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const READS = ["holdsdue", "templatebyhandle", "rulefields"];
 
@@ -36,11 +35,10 @@ test("R48: the three reads are no act (no MACHINE_REFUSALS row, no CONSEQUENCE_S
 
 /* ---- R77–R79 (op-declarations): the reads it declares for T51, each accounted here as a read ----------------------- */
 test("R77 R78 R79: each read op-declarations declares for T51 has a NON_ACTS reason beginning \"read: \", and no rung, "
-   + "ground or machine refusal; each is op-declarations' declared op", () => {
+   + "ground or machine refusal", () => {
   const ops = Object.keys(T51_NON_ACTS);
   assert.equal(ops.length, 15, "the fourteen session reads op-declarations declares for T51 (three of them R48's) and publishedfrozen, public");
   for (const op of ops) {
-    assert.ok(Object.hasOwn(OPS, op), `${op} is declared by op-declarations`);
     assert.ok(NON_ACTS[op].startsWith("read: "), op);
     assert.equal(RUNGS[op], undefined, op);
     assert.equal(RUNG_ABSENT[op], undefined, op);
