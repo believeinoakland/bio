@@ -18,12 +18,12 @@ import { word, localize } from "../setup-words/index.mjs";
  * only of a planning run, while `originAllowed` mints the code in every mode, so C-22.25 keeps its own sentence until the
  * design stream's covers both (R31). R32 (T47; N992; DEC-198): `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, which DEC-198 added,
  * is C-22.30's translation, read the same way. R35 (T50; N1169): `refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE` is C-22.31's. Frozen. */
-export const RUN_RULES_WORDS = Object.freeze(Object.fromEntries([
-  'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE',
-  'refusal.AI_RUN_REEXAM_OPEN',
-  'refusal.MEMBER_RUN_MODE_NOT_ADMITTED',
-  'refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE',
-].map((key) => [key, word(key)])));
+export const RUN_RULES_WORDS = Object.freeze({
+  'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE': word('refusal.AI_RUN_REEXAM_NEEDS_RESPONSE'),
+  'refusal.AI_RUN_REEXAM_OPEN': word('refusal.AI_RUN_REEXAM_OPEN'),
+  'refusal.MEMBER_RUN_MODE_NOT_ADMITTED': word('refusal.MEMBER_RUN_MODE_NOT_ADMITTED'),
+  'refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE': word('refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE'),
+});
 
 /* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), T41's .22 (R19's test
  * bar), .23 (R26) and .24 (R23), and T46's .29 (R30) and .30 (R32, minted by `ai-runs`), and T50's .31 (R35). The family's history and its reason for being one row per code are in
