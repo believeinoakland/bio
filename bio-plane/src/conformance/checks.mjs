@@ -219,8 +219,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),
-    translation: 'A determination is recorded only by the determination act, and never edited: a correction is a new '
-      + 'determination that supersedes it. Nothing was written.',
+    translation: localize('conformance.checks.a_determination_is_recorded_only', 'A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.'),
   },
 });
 
