@@ -18,7 +18,7 @@ export function escapedIn(text, { entered = [] } = {}) {
 
 /* Data the screens draw from records, profiles and catalogues, not sentences (B3, K4086): a reference to a record (`a.cs-ref`),
    the jurisdiction directory `elsewhere` draws from the profile, and the scanner catalogue's row names on `security`. */
-export const DATA = Object.freeze(["a.cs-ref", '[data-screen="elsewhere"] #cs-main li', "#cs-main .mk-rowname", '[data-screen="places"] #cs-main li']);
+export const DATA = Object.freeze(["a.cs-ref", '[data-screen="elsewhere"] li', "#cs-main .mk-rowname", '[data-screen="places"] li']);
 
 /* The page's drawn text nodes holding an escaped sentence: `[{element, text}]`, `element` as a person finds it (the tag, id
    and first class, and the closest `data-screen` or `id`). Script, style, form values and the `entered` data are not read. */

@@ -113,3 +113,23 @@ test("R23: a page numbered 0 is found by the scan, and fails the step that draws
   assert.deepEqual(bad.failures.map((f) => f.kind), [FAIL.PAGE_ZERO]);
   assert.deepEqual((await stepOn(`<!doctype html><title>x</title><main><p>${word("document.read.page", { n: 1, count: 3 })}</p></main>`)).failures, []);
 });
+
+test("R27 (K4086, K4111): values read from the Oakland profile and a vendor's name are data and are not reported; a hard-coded sentence beside them still is; the document step requires document.read.title", async () => {
+  const profile = (await import("../../../../jurisdictions/profiles/oakland-alameda.mjs")).default;
+  const name = profile.name;
+  const dirs = `<main id="cs-main" data-screen="elsewhere"><ul><li><b>Rent Adjustment Program</b> <span class="meta">Takes a tenant's petition challenging certain rent increases</span> <span>Frank Ogawa Plaza, Suite 5313</span></li></ul></main>`;
+  assert.deepEqual(await on(dirs, (p) => escapedOnPage(p)), [], "the directory's profile values");
+  const places = `<main id="cs-main" data-screen="places"><ul><li>${name}</li><li>City of Oakland, Alameda County</li></ul></main>`;
+  assert.deepEqual(await on(places, (p) => escapedOnPage(p, { entered: [name] })), [], "the profile's display name");
+  const vendor = '<main id="cs-main" data-screen="security"><ul><li><span class="mk-rowname">Joe Security LLC</span> <span class="mk-rowname">MetaDefender Cloud or Core</span></li></ul></main>';
+  assert.deepEqual(await on(vendor, (p) => escapedOnPage(p)), [], "vendor and product names");
+  /* control: the same pages holding a hard-coded sentence report exactly it */
+  for (const html of [dirs, places, vendor]) {
+    const found = await on(html.replace("</main>", "<p>Please sign in again now</p></main>"), (p) => escapedOnPage(p, { entered: [name] }));
+    assert.deepEqual(found.map((x) => x.text), ["Please sign in again now"]);
+  }
+  /* the document step asks for the reading section by its key (B5) */
+  const { requireWord } = await import("../../../src/journey-check/words.mjs");
+  await on(`<main id="cs-main"><h2>${word("document.read.title")}</h2></main>`, (p) => requireWord(p, "document.read.title", { within: "#cs-main", timeout: 2000 }));
+  await on('<main id="cs-main"><h2>Passages</h2></main>', async (p) => { await assert.rejects(requireWord(p, "document.read.title", { within: "#cs-main", timeout: 600 }), /does not draw the word document\.read\.title/); });
+});
