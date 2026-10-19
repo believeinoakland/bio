@@ -178,7 +178,9 @@ test("R7, R11: two projects hidden from each other on two sides of one duty: eac
   const { case: homes, ...own } = a[0];
   assert.deepEqual(keys(own).filter((k) => /count|bound|truncated/.test(k)), [], "no count, bound or truncated flag of its own");
   assert.deepEqual(homes.reasons, [], "the homes walk states nothing of the other side either");
-  assert.equal(a[0].detail, a[0].basis.says); assert.equal(a[0].basis.asked_by_another, false);
+  assert.equal(a[0].detail, word("queue.contradiction-duty-unseen.detail"), "R43: the keyed sentence replaces the notice's fixed one");
+  assert.equal(a[0].summary, word("queue.contradiction-duty-unseen.summary"));
+  assert.ok(a[0].basis.says, "the notice's own sentence stays on the basis"); assert.equal(a[0].basis.asked_by_another, false);
   // after bob's project opts in, alice's item reads asked_by_another
   state.optedB = true;
   a = unseen(w.read("alice"));
