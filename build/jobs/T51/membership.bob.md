@@ -39,3 +39,16 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`. Your Size line counts only your module's own code (K2513).
+
+## B4 · CHANGE
+
+CHANGE (K3980). R2's close: `checks/run.mjs` on the tranche (after every R2 merge, @ 7ab05dbb47) shows these test copies of sentences in your tests; they read now because the copied sentences are `localize` text elsewhere in the tree since the other R2 merges (member-roster's, credentials', record-core's):
+
+- testcopy membership bio-plane/test/m/membership/t19-enrol-boot.test.mjs:52 [code] "the invitation is still live"
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:59 [code] "is an administrator's act (Membership Architecture v2 §4.9), and yo..."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:60 [code] "Civicsmith takes who is asking from the signed-in session rather th..."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:61 [code] "the active administrators. Nothing was changed."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:65 [code] "recording who holds hosting access (4.8)"
+- testcopy membership bio-plane/test/m/membership/t46-handles-doors.test.mjs:35 [code] "reading the team's website key and join link"
+
+Merge `tranche/T51` into your branch (never rebase), make each compare with `localize`/`word` by equality or assert the key (K3810), run `node checks/words.mjs /home/user/bio membership` (0 failures) and your tests, and COMPLETE again.
