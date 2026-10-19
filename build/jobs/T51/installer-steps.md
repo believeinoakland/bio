@@ -132,3 +132,23 @@ Found in other modules, for CR-23 and the release (none of these is mine to edit
 3. `objectMigrations` now takes `(heldTag, objects)` and no longer a member name. `t50.test.mjs`:103 calls `installer.objectMigrations("pdf-worker", null)`; it still returns null, but CR-23 should drop the stale first argument.
 4. `newgroup/dist/newgroup.bundled.mjs` (tracked generated artifact) is stale against this change. Not regenerated; BOB regenerates it.
 5. `build/requirements/installer-steps.md` R37 still reads "(not yet met: T51)". The test named R37 now meets it; the marker is BOB's to change.
+
+## J10 · COMPLETE
+
+CR-22 (R37) applied; pushed on `job/T51/installer-steps` at 81120b052d. The findings for other modules are in the REPORT above (installer's t50 R59 and R69).
+
+**Entries applied.** R37: the `MEMBER_OBJECTS` table in `steps/members.mjs` and its fallbacks are removed. `objectBindings` and `objectMigrations` (now `(heldTag, objects)`) take the member's own statement only, from its signed `Worker` part; a part that states none deploys none. `MEMBER_OBJECTS` stays as an empty frozen export only so installer's re-export still links until CR-23. Test fixture: `world.mjs` gives agent-worker its `Worker` part stating its objects, as the bundler writes them. New test R37 (a part stating fewer deploys fewer; a part stating none binds and migrates none). R24 and R24 (F10) updated to the statement; R35's request count moves from 3 to 4 for agent-worker's `worker.json`.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Tests and checks.**
+- Steps suite: 89 pass, 0 fail.
+- Installer's `newgroup/test`: 199 run, 192 pass, 2 fail, both in `t50.test.mjs` (R59, R69), caused by installer's fixture as the REPORT says; not edited (not my module).
+- Format: 175 modules, 175 requirements files; 0 failures.
+- Architecture: 24 product files, 91 relative imports; 0 failures.
+- Words: 0 failures (inline 0, missingkey 0).
+- Ownership (`tranche/T51` to `job/T51/installer-steps`, committed): 6 files changed; 0 failures.
+- Coverage: 35 of 37 live ids named by a test; R26 and R31 uncovered by design.
+- `checks/run.mjs`: no finding in installer-steps; the inline words findings it lists are in `bio-plane/src/setup-fleet.mjs` (instance-setup).
+
+Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 4, module lines 1946
