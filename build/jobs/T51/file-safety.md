@@ -95,3 +95,19 @@ Tests and checks run (summary lines):
 - `checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "1 files changed by file-safety …; 0 failures".
 - `checks/run.mjs /home/user/bio`: "words: 175 modules … 1629 failures" (all in other modules, none in file-safety); format and architecture 0 failures.
 - `bio-plane/src/setup-words/build.mjs --check`: "rows.mjs and words-unreviewed.json match words.json and the source" (no refusal naming file-safety).
+
+## Completion (CHANGE B4, K4036: the kind sentences)
+
+Entries applied: on J3's open question, the two kind sentences still inline in `bio-plane/src/file-safety/kinds.mjs` now read through their words rows, as the trojan kind did: `potentially_unwanted` through `word('file-safety.kind.potentially_unwanted')` (the row's "showing ads" now shows, against the old "adverts"; members read the design's words, as B4 intends) and `test` through `word('file-safety.kind.test')` (its row exists in words.json). The rows test compares each kind's `words` with `of(kind)` by equality and holds no text, so no test changed.
+
+Deferred: none. Found in other modules: unchanged from J3 (scheduler `index.mjs`:636 names file-safety in a plain sentence; wizard-scripts test copies); not touched.
+
+Tests and checks run (summary lines):
+- `node checks/words.mjs /home/user/bio file-safety`: "inline 0, plain 0, testcopy 0, missingkey 0 … unkeyed 51; 0 failures".
+- `node --test test/m/file-safety/*.test.mjs` (bio-plane): "tests 64, pass 64, fail 0".
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs file-safety`: 0 failures. `checks/coverage.mjs file-safety`: 45 of 45, 0 failures.
+- `checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "2 files changed by file-safety …; 0 failures".
+- `checks/run.mjs /home/user/bio`: 1,629 failures, none in file-safety (the one file-safety mention is scheduler's sentence).
+- `bio-plane/src/setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match; no refusal naming file-safety.
+
+**Size (session_01FZWRQ2Kz7BQHTbB7ocRjzr), cumulative:** test runs 3, module lines 2342
