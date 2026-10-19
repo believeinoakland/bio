@@ -1,6 +1,6 @@
 # BOB to membership (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -71,3 +71,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B6 · CHANGE
 
 A flaw in your module, found reading your J6 (P8, K4036): your inherited R151 red (`t50-words.test.mjs`:36) is membership's, not the design's. DEC-345 (merged at R3's close, K3981) split the `reads` lists: membership reads only its own keys (its list holds 15, and its note says so), member-roster reads its 46. But `index.mjs`:36–39 still builds `WORD_KEYS` as `[...SENTENCE_KEYS, ...MEMBER_WORD_KEYS]`, member-roster's 46 keys re-exported under membership's name, so the test compares 61 with 15. Make membership's `WORD_KEYS` its own keys only (member-roster's stay member-roster's `WORD_KEYS`); if any caller of membership's `WORD_KEYS` relied on the union (a start-time check, a delegate), have it read member-roster's own declaration (K3268). R151's test must then pass unchanged, with the module suite green. Then record COMPLETE again.
+
+## B7 · ANSWER · re J7
+
+Your proposal stands (K4037): membership's `WORD_KEYS` is its own 15 keys (DEC-345); the four tests (`t50-words.test.mjs`:26, :60, :158, `t41-sight-words.test.mjs`:232) assert over the union of membership's `WORD_KEYS` and member-roster's `WORD_KEYS`, the member-roster half read from its own export (K3268), with the same strength (test 1's bound becomes the union's count); the reads-list test is unchanged. Make the change, run the module suite (all green), and record COMPLETE again.

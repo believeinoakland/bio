@@ -478,11 +478,11 @@ arm({
   id: "F4", subject: "OVER-STRICTNESS, ARMED — a GENUINE member cancellation must still read as `cancelled`",
   what: "NOTHING about the member's ending is touched; instead the plane's `cancelled` TEXT is rewritten to a different sentence. The correction must not have made the member's ending vestigial: arms that assert a member cancellation is recorded as a member act must still be LIVE and must notice",
   /* RE-POINTED T21 (N467): airun's V6b and skillsequencing's D5 read `cancelled`'s sentence; run-rules' R1 test does. */
-  mustFail: "run-rules' R1 test, which reads `cancelled`'s sentence (`a member stopped it`) and must object, which is what shows the member's ending is still genuinely asserted rather than left as a word nobody checks",
+  mustFail: "run-rules' R1 test, which holds `cancelled`'s text by its key (`run-rules.member_stopped`) and must object when the key's text is no longer what `cancelled` names, which is what shows the member's ending is still genuinely asserted rather than left as a word nobody checks",
   mustNot: "the gate arms, DIRECTION 1 or DIRECTION 2 — none of them is about the member's ending, and a fix that made `cancelled` and `mode-not-deployed` interchangeable would show up as those failing too",
   file: AIRUN,
-  find: `  cancelled:  "a member stopped it",`,
-  replace: `  cancelled:  "the run came to an end somehow",`,
+  find: `  cancelled:  word("run-rules.member_stopped"),`,
+  replace: `  cancelled:  word("run-rules.run_finished_work"),`,
   run() {
     const rules = runRules();
     const rh = runHarness();

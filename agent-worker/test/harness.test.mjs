@@ -1220,13 +1220,13 @@ console.log("\n--- B7 · SK-4's gate through the op: an investigate run stops be
   /* CORRECTED 2026-08-10 BY FL-7 (IC-62). THE OLD EXPECTATION WAS `cancelled`
      AND IT WAS RIGHT WHEN WRITTEN — it recorded what the gate then produced
      through the op, which is what this arm is for. It was never right about what
-     the record then SAID: the plane defines `cancelled` as "a member stopped it",
+     the record then SAID: the plane defines `cancelled` as the member-stopped word (`run-rules.member_stopped`),
      and this run was refused by a deployment gate with no member anywhere near
      it. FL-7 gave the machine's act its own word. This is the THROUGH-THE-OP
      half of the acceptance — the ending is read off what the op actually
      returned, not asserted at a store or off `nextStep`'s return value. */
   t("the run was closed at the gate, carrying an ending that NAMES WHAT HAPPENED — a machine refused the "
-    + "launch, and the record no longer says a member stopped it",
+    + "launch, and the record no longer names a member as the one who stopped it",
     out.ended?.bound ?? null, "mode-not-deployed");
   /* THE MISATTRIBUTION ARM, stated as its own assertion so a regression NAMES
      the defect instead of failing an equality: whatever else changes, the word

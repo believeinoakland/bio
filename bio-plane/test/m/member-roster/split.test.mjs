@@ -185,6 +185,9 @@ async function fourAdmins() {
     assert.equal((await w.m.enroll({ invite, handle: id, password: `${id}-passphrase-x` })).ok, true);
   };
   await add("third");
+  /* R29 orders administrators by when their rows were created, ties by member id: a millisecond apart, so "third" is
+     first as created and not by a tie-break on its name. */
+  await new Promise((done) => setTimeout(done, 2));
   await add("fourth");
   assert.deepEqual(w.m.activeAdmins(), ["admin", "second", "third", "fourth"]);
   return w;

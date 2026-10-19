@@ -131,7 +131,7 @@ test("R34 inviteWithdraw: NOT_AN_ADMIN (R28), NO_SUCH_MEMBER, NO_UNUSED_INVITATI
   t.mock.timers.tick(2 * DAY);
   for (const by of ["ann", null, "ghost", `${MACHINE_CLASS_PREFIX}admin`]) {
     const before = snapshot(w);
-    assert.deepEqual(w.m.inviteWithdraw({ memberId: "liv", by }), notAnAdmin(by, "withdrawing an invitation"), String(by));
+    assert.deepEqual(w.m.inviteWithdraw({ memberId: "liv", by }), notAnAdmin(by, localize("member-roster.index.withdrawing_an_invitation", "withdrawing an invitation")), String(by));
     assert.equal(snapshot(w), before);
   }
   assert.equal(w.m.inviteWithdraw({ memberId: "nobody", by: "admin" }).reason, "NO_SUCH_MEMBER");
@@ -166,7 +166,7 @@ test("R35 websiteKeyCreate: refusals in order; one live key; the key once, hashe
   for (const by of ["ann", null, `${MACHINE_CLASS_PREFIX}admin`])
     assert.deepEqual(w.m.websiteKeyCreate({ dailyCap: 5, by }), notAnAdmin(by, localize("member-roster.index.creating_the_teams_website_key", "creating the team's website key")));
   const caps = (c) => w.m.websiteKeyCreate({ capabilities: c, dailyCap: 5, by: "admin" });
-  assert.deepEqual([caps("publish").reason, caps("publish").detail], ["BAD_CAPABILITY", "capabilities is an array"]);
+  assert.deepEqual([caps("publish").reason, caps("publish").detail], ["BAD_CAPABILITY", localize("member-roster.index.capabilities_is_an_array", "capabilities is an array")]);
   const fly = caps(["publish", "fly", "administer"]);
   assert.deepEqual([fly.reason, fly.got, fly.known], ["BAD_CAPABILITY", ["fly", "administer"], Members.CAPABILITIES]);
   for (const cap of [undefined, null, 0, -1, 1.5, "5", true])
