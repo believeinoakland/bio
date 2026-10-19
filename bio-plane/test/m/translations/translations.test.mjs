@@ -217,7 +217,7 @@ test("R1 translationdraftrecord to_language: each word answered is stored as a d
   assert.equal(rec.drafted[0].label.machine_work, true);
   assert.match(rec.drafted[0].label.says, /Draft/);
   assert.deepEqual(rec.not_drafted.map((d) => d.key).sort(), [PLACEHOLDER.key, PROTECTED.key].sort());
-  assert.match(rec.not_drafted.find((d) => d.key === PLACEHOLDER.key).why, /placeholders/);
+  assert.equal(rec.not_drafted.find((d) => d.key === PLACEHOLDER.key).why.key, "translations.not_drafted.placeholders_differ");
   assert.equal(count(w, "translation_drafts"), 1);
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM translation_drafts WHERE key = 'weight.signed.name'`).get().n, 0);
   const multi = await w.m.translationDraftRecord({ language: "es", direction: "to_language", keys: [PROTECTED.key], by: "ruth",

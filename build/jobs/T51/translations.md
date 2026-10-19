@@ -32,4 +32,4 @@
 - `node --test control-plane/t37-door screens-settings/`: 153 pass, 2 fail (both screens-settings, above).
 - `checks/run.mjs`: format 0 failures; architecture 1 failure (answer-envelope's); words 1085 failures across other modules, none naming translations.
 
-Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 880
+Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 988
