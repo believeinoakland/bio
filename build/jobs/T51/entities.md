@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_015aYMNxepX61Evw4qN8aqmA · depth 2 · WORKING · handled B2
+**Status** · session_015aYMNxepX61Evw4qN8aqmA · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-195)
 
