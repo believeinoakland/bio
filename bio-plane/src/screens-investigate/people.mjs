@@ -30,30 +30,26 @@ function render(cs, view) {
   const otherMode = Object.hasOwn(OTHER_SHOW, showNow);
   const kindWordOf = (k) => (cs.w(S + "today.kind." + k) !== cs.esc(S + "today.kind." + k) ? cs.w(S + "today.kind." + k) : cs.w("find.row.kind." + k));
   const near = view.ui.near && typeof view.ui.near === "object" ? view.ui.near : null;
-  /* R42: as a name is typed the registry is asked what is close to it (`entitysimilar`, which writes nothing); the poll runs while the
-     form is drawn, once per half second, and stops when it is not */
-  const tick = (cs2, view2) => {
-    const name = cs2.value("people-other-name");
-    if (name === null) { view2.ui.nearPoll = false; return; }
-    const typed = String(name).trim();
+  /* R42: as a name is typed (the field's `typing` hook, half a second after the last key) the registry is asked what is close to it
+     (`entitysimilar`, which writes nothing) */
+  const typing = (cs2, view2, value) => {
+    const typed = String(value || "").trim();
+    if (!typed) { view2.ui.nearKey = ""; if (view2.ui.near) cs2.set("near", null); return; }
     const kind = String(cs2.value("people-other-kind") || "");
     const key = typed + "|" + kind;
-    if (typed && key !== view2.ui.nearKey) {
-      view2.ui.nearKey = key;
-      cs2.call("entitysimilar", { query: Object.assign({ name: typed, limit: "10" }, kind ? { kind } : {}) }).then((a) => {
-        const r = a && a.result !== undefined ? a.result : a;
-        cs2.set("near", { name: typed, rows: r && r.ok !== false && Array.isArray(r.similar) ? r.similar : [] });
-      });
-    } else if (!typed && view2.ui.near) { view2.ui.nearKey = ""; cs2.set("near", null); }
-    cs2.later(500, tick);
+    if (key === view2.ui.nearKey) return;
+    view2.ui.nearKey = key;
+    cs2.call("entitysimilar", { query: Object.assign({ name: typed, limit: "10" }, kind ? { kind } : {}) }).then((a) => {
+      const r = a && a.result !== undefined ? a.result : a;
+      cs2.set("near", { name: typed, rows: r && r.ok !== false && Array.isArray(r.similar) ? r.similar : [] });
+    });
   };
-  if (otherMode && !view.ui.nearPoll) { view.ui.nearPoll = true; cs.later(500, tick); }
   const nearHtml = near && near.name
     ? `<p class="mk-small">${cs.w(S + "addother.preflight", { name: near.name })}</p>`
       + (near.rows.length ? cs.sheet(near.rows.map((x) => cs.row("", `<b>${cs.ref("person", x.entity_id, x.label || x.entity_id, [x.note || ""])}</b> <span class="mk-small">${kindWordOf(x.kind)} · ${cs.w("people.nearmatch." + (["same", "contains", "spelling"].includes(x.closeness) ? x.closeness : "same"))}</span>`, "")).join("")) : "")
     : "";
   const add = otherMode
-    ? cs.field("people-other-name", S + "addother.name", {}) + nearHtml
+    ? cs.field("people-other-name", S + "addother.name", { typing }) + nearHtml
       + cs.choice("people-other-kind", S + "addother.kind", [["person", S + "add.kind.person"], ["institution", S + "add.kind.organization"],
         ...["office", "ordinance", "contract", "fund", "program", "place", "parcel", "source"].map((k) => [k, S + "add.kind." + k])], {})
       + `<p class="mk-small">${cs.w(S + "addother.kind.help")}</p>`

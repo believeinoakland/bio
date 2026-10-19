@@ -206,6 +206,7 @@ test("R42 with a kind other than people in view \"Add\" is the state g form: the
   await p.clock.tick(1000);
   assert.equal(p.byOp("entitysimilar").length, 0, "nothing typed, nothing asked");
   fill(p, { "people-other-name": "Sewer Service Fund", "people-other-kind": "fund" });
+  p.fire(p.doc.getElementById("people-other-name"), "input");
   await p.clock.tick(1000);
   const q = p.byOp("entitysimilar")[0].query;
   assert.deepEqual([q.name, q.kind], ["Sewer Service Fund", "fund"]);
