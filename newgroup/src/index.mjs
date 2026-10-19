@@ -925,8 +925,10 @@ async function readGroup(base, credential = null) {
   try {
     const r = await fetch(`${base}/api/?op=instancegroup`, credential ? { headers: { authorization: `Bearer ${credential}` } } : undefined);
     const j = await r.json();
-    if (!r.ok || !j || typeof j !== "object") return "unread";
-    return typeof j.group === "string" && j.group ? "recorded" : j.group === null ? "none" : "unread";
+    /* The copy answers its envelope, `{ ok, result: { ok, group }, store }`: the group is read inside `result`. */
+    const g = j && typeof j === "object" ? j.result : null;
+    if (!r.ok || !g || typeof g !== "object") return "unread";
+    return typeof g.group === "string" && g.group ? "recorded" : g.group === null ? "none" : "unread";
   } catch { return "unread"; }
 }
 /* R78: the install's step that records the short name. Already recorded: nothing is done and nothing is said. */
@@ -941,7 +943,8 @@ async function recordTeam(emit, base, boot, slug) {
       const r = await fetch(`${base}/api/?op=instancegroupseed`, { method: "POST",
         headers: { authorization: `Bearer ${boot}`, "content-type": "application/json" }, body: JSON.stringify({ slug }) });
       const j = await r.json().catch(() => null);
-      if (!j || !(j.ok === true || j.code === "GROUP_ALREADY_RECORDED")) said = String((j && (j.code || j.error || j.detail)) || r.status);
+      const g = j && typeof j.result === "object" && j.result ? j.result : j;
+      if (!j || !(j.ok === true || g.code === "GROUP_ALREADY_RECORDED" || j.code === "GROUP_ALREADY_RECORDED")) said = String((j && (g.code || j.code || g.error || j.error || g.detail || j.detail)) || r.status);
     } catch (e) { said = String(e && e.message || e); }
   }
   if (said === null && (await readGroup(base, boot)) !== "recorded") said = word("installer.fact.unknown.silent");

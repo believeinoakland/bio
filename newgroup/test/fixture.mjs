@@ -255,8 +255,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   builtInFleet = false,
   /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
      recorded it at its first boot), `null` (records none: `group: null`), or "silent" (does not answer `op=instancegroup`);
-     `seedRefused` the code `op=instancegroupseed` refuses with. */
-  group = undefined, seedRefused = null } = {}) {
+     `seedRefused` the code `op=instancegroupseed` refuses with; `groupFlat` answers `op=instancegroup` with the group at the top level
+     (the shape a plane does not answer: the control that the group is read inside `result`). */
+  group = undefined, seedRefused = null, groupFlat = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -508,14 +509,15 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       const v = verOf(acct.get(slug)) || "0.0.0";
       if (q.get("op") === "instancegroup") {
         if (group === "silent") throw new Error("ENOTFOUND " + host);
-        return jres(recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" });
+        if (groupFlat) return jres({ ok: true, group: recordedGroup });
+        return jres({ ok: true, result: recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" });
       }
       if (q.get("op") === "instancegroupseed") {
         seeds.push({ u, init });
-        if (seedRefused) return jres({ ok: false, code: seedRefused });
-        if (recordedGroup) return jres({ ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup });
+        if (seedRefused) return jres({ ok: false, result: { ok: false, code: seedRefused } });
+        if (recordedGroup) return jres({ ok: false, result: { ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup } });
         recordedGroup = JSON.parse(init.body).slug;
-        return jres({ ok: true, group: recordedGroup });
+        return jres({ ok: true, result: { ok: true, group: recordedGroup }, store: "STORE" });
       }
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
       if (q.get("op") === "bootstrap") {

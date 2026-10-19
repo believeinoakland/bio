@@ -104,6 +104,17 @@ test("R78 an install, a resumed install and an update's read: an install and a r
   for (const c of [...w.calls, ...upd.calls]) assert.ok(!/sk-ant|claude/i.test(JSON.stringify(c.init?.headers || {}) + c.u), `${c.u}`);
 });
 
+test("R78 the group is read inside the copy's answer envelope `{ ok, result: { ok, group }, store }`: a recorded team in `result` is recorded (no act, nothing said), `result.group: null` is none, and a group at the top level of the answer, where a plane puts none, is not read as recorded", async () => {
+  const real = await run({ slug: "r78-env" });
+  assert.deepEqual(real.seeds, [], "recorded inside result: no act");
+  assert.ok(!told(real));
+  const none = await run({ slug: "r78-env-none", group: null });
+  assert.equal(none.recorded(), "r78-env-none", "result.group null: the installer records it");
+  /* Control: the same recorded team at the top level of the answer is not read; an update tells it could not read it. */
+  const flat = await run({ slug: "r78-flat", mode: "update", pre: { "r78-flat": planeBase("r78-flat") }, groupFlat: true });
+  assert.ok(told(flat), "unread is told, never taken for recorded");
+});
+
 /* ------------------------------------------------------------------------------------------------ R79 */
 
 test("R79 the invitation page is built from the keys: its committed file is exactly the output of `scripts/invite-page.mjs` over setup-words' rows, so it holds no sentence the keys do not; control: a page with another sentence is not the output", async () => {

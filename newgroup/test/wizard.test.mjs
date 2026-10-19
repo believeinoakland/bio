@@ -1112,7 +1112,7 @@ const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".
   for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
 const groupCalls = (calls) => calls.filter((c) => /op=instancegroupseed/.test(c.u)).map((c) => `${c.method} ${c.u}`);
 /* What the copy answers when asked what it records: a group, or none (`group: null`, instance-setup R3). */
-const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: () => jres(group ? { ok: true, group } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }) });
+const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: () => jres({ ok: true, result: group ? { ok: true, group } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" }) });
 const unauthenticated = (calls) => calls.filter((c) => /op=instancegroup\b/.test(c.u)).every((c) => !c.init?.headers?.authorization);
 t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
   semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
