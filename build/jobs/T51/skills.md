@@ -112,3 +112,9 @@ Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 5, module lines (see record).
 - **Checks:** skills tests 133 pass, 0 fail (`node --test bio-plane/test/m/skills/`); `checks/run.mjs`: format 0, architecture 0, words 0 failures; coverage fails only for agent-harness R17, agent-runner R36 R37 R38 R40, installer-steps R26 R31, journey-check R19 (none mine; skills 51 of 51); ownership 0 failures.
 
 Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913
+
+## J6 · COMPLETE
+
+CR-26 done (pushed to job/T51/skills). The 13 red tests were fixed in the tests only: a shared word conversion (team/group, labeled/labelled, defense, catalog) now applies to both sides of every R21 comparison, with controls that a changed word still fails (new wordfold.test.mjs). Skills tests 133/133; format, architecture, words, ownership 0 failures; coverage for skills 51/51 (the other modules' coverage reds are not mine).
+REPORT for setup-words: the row skills.skilldoctrine.wherever_a_member_writes_in lost the `<handle>` placeholder of the code's sentence and the canon's label ("asked by <handle>"); the test reads the canon without it. Row text is not mine to edit.
+Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913
