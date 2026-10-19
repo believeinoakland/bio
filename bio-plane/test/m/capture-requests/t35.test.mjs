@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha, filed } from "./fixture.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_REQUEST_ADDRESS_MAX, RECORDS_ANSWERS, captureRequestsOps }
   from "../../../src/capture-requests/index.mjs";
 
@@ -464,7 +465,7 @@ test("R54 DEC-149's eight rows: each member-facing string says your group's Civi
   const unk = w2.ask({ address: "https://s.example.org/unknown", sweep: "INQ-1#gone" }).request;
   await w2.cr.drain({});
   said(w2.req(unk).detail, ":1316");
-  assert.match(w2.req(unk).detail, /INQ-1#gone is not a sweep your team's Civicsmith holds/);
+  assert.ok(w2.req(unk).detail.includes(localize("capture-requests.index.is_not_a_sweep_your_team", "is not a sweep your team's Civicsmith holds")));
 });
 
 test("R54 R34 the new rows' translations and R49–R53's details say no copy, instance, plane or server for the group's Civicsmith", () => {

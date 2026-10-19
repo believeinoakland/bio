@@ -62,7 +62,7 @@
  *  said an investigation fetch *"introduces or reuses deliberately"*; `acquire`
  *  is the existing one and is admitted so a run re-fetching a source a member
  *  already named does not have to misdescribe that either. */
-import { word, localize } from '../setup-words/index.mjs';
+import { word } from '../setup-words/index.mjs';
 
 export const CAPTURE_PURPOSES = Object.freeze(['investigate', 'acquire']);
 
@@ -102,7 +102,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_NO_RUN: {
     check: 'C-28.1',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: localize('capture-requests.checks.this_request_did_not_name', 'This request did not name the piece of work asking for it, or named one that is not running here. Every fetch your team\'s Civicsmith makes on its own is traceable to a session somebody opened, because that opening is what authorises it.'),
+    translation: word('refusal.CAPTURE_REQUEST_NO_RUN'),
   },
   CAPTURE_REQUEST_NOT_PUBLIC: {
     check: 'C-28.2',
@@ -124,10 +124,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
     check: 'C-28.4',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'A request asks for a document; it never brings one. The fetch is performed by your '
-      + 'team\'s Civicsmith itself so that where the bytes came from is something the record established rather '
-      + 'than something it was told, and a provenance chain anybody could hand us is one anybody could '
-      + 'invent.',
+    translation: word('refusal.CAPTURE_REQUEST_CARRIES_A_CAPTURE'),
   },
   /* WHAT IS NOT HERE, AND WHY IT WAS REMOVED RATHER THAN KEPT FOR SYMMETRY.
      The door also refused an incomplete attribution at one point in this item's
@@ -243,7 +240,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_RENDER_MALFORMED: {
     check: 'C-28.16',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: localize('capture-requests.checks.this_asked_for_the_page', 'This asked for the page as a visitor would see it in a form your team\'s Civicsmith does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page\'s empty frame. Nothing was queued.'),
+    translation: word('refusal.CAPTURE_REQUEST_RENDER_MALFORMED'),
   },
   /* D-584 (capture-requests R19; T6, legacy-checks) — THE DRAIN'S OWN HOLD WHEN A FETCH DOES NOT LAND.
      Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
@@ -301,7 +298,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_SITE_KIND_UNKNOWN: {
     check: 'C-28.21',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: localize('capture-requests.checks.this_request_described_the_site', 'This request described the site it asks for in a way your team\'s Civicsmith does not recognise. It reads site_kind: "personal" for a private person\'s own site, "platform" for a page on a platform that asks for a login, or nothing for an ordinary public page. Nothing was queued.'),
+    translation: word('refusal.CAPTURE_REQUEST_SITE_KIND_UNKNOWN'),
   },
   /* R46: how a member marks a host a login-gated platform (R41's scope record, kind `platform`), settled by this job:
      a group-wide mark with no secret. Its one refusal: the act is a member's (or the administrator's), never a machine
