@@ -6259,12 +6259,6 @@
    "note": "DEC-260: capture-sources, unsigned_reason"
   },
   {
-   "key": "lines.text.date_read",
-   "en": "the date could not be read: {refused}",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
    "key": "lines.why.stated_current_through",
    "en": "{why}; it is stated current through {day}, and the date is after that",
    "protected": false,
@@ -6273,30 +6267,6 @@
   {
    "key": "lines.text.recorded",
    "en": "as recorded by {system} on {recorded_at}",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.undetermined.line_covers_date",
-   "en": "no line covers the date",
-   "protected": false,
-   "note": "DEC-260: lines, undetermined"
-  },
-  {
-   "key": "lines.text.lines_hold_post",
-   "en": "{inn} lines hold the post at the date",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.text.lines_read_holds",
-   "en": "more lines than one read holds name this office",
-   "protected": false,
-   "note": "DEC-260: lines, text"
-  },
-  {
-   "key": "lines.text.line_naming_office",
-   "en": "a line naming this office may cover the date, and the record does not settle it",
    "protected": false,
    "note": "DEC-260: lines, text"
   },

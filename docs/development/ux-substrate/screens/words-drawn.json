@@ -21743,6 +21743,636 @@
    "en": "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labeled, {floor} boxes): this document does not lay out an organization's boxes",
    "protected": false,
    "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); {labelled}, {named}, {min_labels}, {floor} are counts; translator: keep the placeholder names"
+  },
+  {
+   "key": "label.connectionkinds.event_actor",
+   "en": "acted in",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.actor"
+  },
+  {
+   "key": "label.connectionkinds.event_organizer",
+   "en": "organized",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.organizer"
+  },
+  {
+   "key": "label.connectionkinds.event_mover",
+   "en": "moved",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.mover"
+  },
+  {
+   "key": "label.connectionkinds.event_seconder",
+   "en": "seconded",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.seconder"
+  },
+  {
+   "key": "label.connectionkinds.event_voted",
+   "en": "voted in",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.voted"
+  },
+  {
+   "key": "label.connectionkinds.event_present",
+   "en": "was present at",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.present"
+  },
+  {
+   "key": "label.connectionkinds.event_speaker",
+   "en": "spoke at",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.speaker"
+  },
+  {
+   "key": "label.connectionkinds.event_sender",
+   "en": "sent",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.sender"
+  },
+  {
+   "key": "label.connectionkinds.event_recipient",
+   "en": "was sent",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.recipient"
+  },
+  {
+   "key": "label.connectionkinds.event_copied",
+   "en": "was copied on",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.copied"
+  },
+  {
+   "key": "label.connectionkinds.event_signatory",
+   "en": "signed",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.signatory"
+  },
+  {
+   "key": "label.connectionkinds.event_decider",
+   "en": "decided",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.decider"
+  },
+  {
+   "key": "label.connectionkinds.event_author",
+   "en": "wrote",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.author"
+  },
+  {
+   "key": "label.connectionkinds.event_implementer",
+   "en": "carried out",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.implementer"
+  },
+  {
+   "key": "label.connectionkinds.event_party",
+   "en": "was a party to",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.party"
+  },
+  {
+   "key": "label.connectionkinds.event_subject",
+   "en": "was the subject of",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.subject.subject"
+  },
+  {
+   "key": "label.connectionkinds.event_concerns",
+   "en": "concerns",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.concerns"
+  },
+  {
+   "key": "label.connectionkinds.event_authorises",
+   "en": "authorizes",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.authorises"
+  },
+  {
+   "key": "label.connectionkinds.event_answers",
+   "en": "answers",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.answers"
+  },
+  {
+   "key": "label.connectionkinds.event_amends",
+   "en": "amends",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.amends"
+  },
+  {
+   "key": "label.connectionkinds.event_reverses",
+   "en": "reverses",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.reverses"
+  },
+  {
+   "key": "label.connectionkinds.event_stated_cause",
+   "en": "is stated by a source to cause",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.stated_cause"
+  },
+  {
+   "key": "label.connectionkinds.event_within",
+   "en": "took place within",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.within"
+  },
+  {
+   "key": "label.connectionkinds.event_precedes",
+   "en": "is cited as coming before",
+   "protected": false,
+   "note": "DEC-347: B349, events R54 (2): the event connection's word, as events' own events.precedes"
+  },
+  {
+   "key": "retrieval-browse.findin.read_another_shape",
+   "en": "the answer came back in a form Civicsmith does not read, so nothing from it is shown",
+   "protected": false,
+   "note": "DEC-347: B349, reviewed from code (K3930): reworded for a member (it named a requirement)"
+  },
+  {
+   "key": "observation-log.vocabulary.condition_governor_holding_host",
+   "en": "Civicsmith's own pacing is holding back captures from this site: they are paced, not broken",
+   "protected": false,
+   "note": "DEC-347: B349, reviewed from code (K3930): the same meaning as machinery-producers.summary.pacing_holding_captures, in its words"
+  },
+  {
+   "key": "observation-log.index.who_s_lead_is_recorded",
+   "en": "{who}'s lead is recorded. It is somewhere to look and never evidence: no leg can rest on it. Following it is recorded as a look against it, and a look that finds nothing is itself a finding with this lead behind it",
+   "protected": false,
+   "note": "DEC-347: B349, reviewed from code (K3930): the same sentence as observation-log.says.lead_recorded_somewhere (op=leadlook removed); {who} is the member"
+  },
+  {
+   "key": "lines.index.a_capacity_is_one_of",
+   "en": "a capacity is one of {CAPACITIES}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_current_through_day_is",
+   "en": "a current-through day is a calendar day, YYYY-MM-DD",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_holder_is_asked_of",
+   "en": "a holder is asked of one office, named by its entity id",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_holder_is_asked_of_an",
+   "en": "a holder is asked of an entity of kind office; a line to an organization is a career, never a holder",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_holds_no_amount",
+   "en": "a line holds no amount ({money}): money given or received is a money fact",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_is_read_by",
+   "en": "a line is read by its id (LIN-...)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_is_recorded_by",
+   "en": "a line is recorded by the act's stamped author",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_names_both_its",
+   "en": "a line names both its ends (from and to), each a registered entity",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_rests_on_a",
+   "en": "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_row_is_an",
+   "en": "a line row is an object",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_line_runs_between_two",
+   "en": "a line runs between two different entities",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_lines_kind_is_one",
+   "en": "a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_members_testimony_states_what",
+   "en": "a member's testimony states what they know, in their own words",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_passage_names_its_capture",
+   "en": "a passage names its capture by its sha256",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_passage_names_the_part",
+   "en": "a passage names the part of the capture it cites (an extent)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_post_is_held_by",
+   "en": "a post is held by a person entity, the same entity across every role it has held",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_post_is_held_in",
+   "en": "a post is held in a capacity: {CAPACITIES}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_proceedings_links_are_asked",
+   "en": "a proceeding's links are asked of one proceeding, named by its entity id",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_proceedings_links_are_asked_kind",
+   "en": "a proceeding's links are asked of an entity of kind proceeding",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_read_as_of_a",
+   "en": "a read as of a date names the date (`at`)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_read_names_the_member",
+   "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_register_rows_own_record",
+   "en": "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_statement_is_recorded_by",
+   "en": "a statement is recorded by the act's stamped author",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_system_register_row_states",
+   "en": "a {system} register row states its own record instant (recorded_at)",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_system_rule_names_the",
+   "en": "a system rule names the rule it applies",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_system_rules_source_is",
+   "en": "a system rule's source is a held capture or a profile entry {profile, entry}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_title_is_the_posts",
+   "en": "a title is the post's title as the basis words it, a non-blank string",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_validity_carries_its_zone",
+   "en": "a validity carries its zone, and no zone is stated and the active profiles give none",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_validitys_precision_is_one",
+   "en": "a validity's precision is one of {PRECISIONS}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_withdrawal_is_made_by",
+   "en": "a withdrawal is made by the act's stamped author",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_withdrawal_says_why_in",
+   "en": "a withdrawal says why, in the member's own words",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.a_withdrawn_line_takes_no",
+   "en": "a withdrawn line takes no current-through statement",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.an_entity_of_kind",
+   "en": "an entity of kind {kinds}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.an_event_bound_names_the",
+   "en": "an event bound names the edge start or end of the event's when",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.any_registered_entity",
+   "en": "any registered entity",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.at_is_a_day_an",
+   "en": "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.bad_is_not_one_of",
+   "en": "{bad} is not one of {within}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.capture_sha",
+   "en": "capture {sha}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Citation label for a saved source copy; shown beside a link's basis."
+  },
+  {
+   "key": "lines.index.direction_is_from_to_or",
+   "en": "direction is from, to or both",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.hyp_is_a_hypothesis_it",
+   "en": "{hyp} is a hypothesis: it is never an end or a basis of a line",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.k_runs_from_v1_to",
+   "en": "{k} runs from {v1} to one of kind {to}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.k_takes_a_role_of",
+   "en": "{k} takes a role of {allowed}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.k_takes_no_role",
+   "en": "{k} takes no role",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.lines_are_read_for_one",
+   "en": "lines are read for one registered entity, named by its id",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.lines_instances_are_made",
+   "en": "{n} lines instances are made in this isolate and the read names no host",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.no_line_with_that_id",
+   "en": "no line with that id is held",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.no_lines_instance_is_made",
+   "en": "no lines instance is made over that host",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.only_a_holds_line_carries",
+   "en": "only a holds line carries a title",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.only_a_holds_line_carries_cap",
+   "en": "only a holds line carries a capacity",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.only_a_holds_line_is",
+   "en": "only a holds line is stated current through a day",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.rule_capture_sha",
+   "en": "{rule}, capture {sha}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Citation label for a rule-based link; shows rule and saved source."
+  },
+  {
+   "key": "lines.index.rule_profile",
+   "en": "{rule}, from the {profile} profile",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Citation label for a rule-based link; shows rule and local profile."
+  },
+  {
+   "key": "lines.index.testimony_inside_a_project_names",
+   "en": "testimony inside a project names a project the record holds",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_extent_is_not_a",
+   "en": "the extent is not a part of that capture: {v1}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_machine_records_a_current",
+   "en": "the machine records a current-through statement only from a system rule",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_machine_records_a_line",
+   "en": "the machine records a line only from a system rule whose two ends are identified by scheme identifiers; a line from a name match is a member's act",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_parties_are_asked_of",
+   "en": "the parties are asked of one proceeding, named by its entity id",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_parties_are_asked_of_kind",
+   "en": "the parties are asked of an entity of kind proceeding",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_record_holds_no_such",
+   "en": "the record holds no such capture, or it may not be seen",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_structure_is_read_around",
+   "en": "the structure is read around one registered entity, named by its id",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_system_rules_source_is",
+   "en": "the system rule's source is a capture the record does not hold, or it may not be seen",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_from_is_after",
+   "en": "the validity's from is after its to",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_side_gives_both",
+   "en": "the validity's {side} gives both a value and an event; a bound is one or the other",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_side_is_a",
+   "en": "the validity's {side} is a date-time value, an event bound or null",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_side_names_an",
+   "en": "the validity's {side} names an event the record does not hold",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_side_v_is",
+   "en": "the validity's {side} {v} is not a {precision}-precision date-time in {zone}: {why}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.the_validitys_side_value_is",
+   "en": "the validity's {side} value is a string",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "lines.index.this_line_states_its_end",
+   "en": "this line states its end; a current-through statement is for a line with none",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "local-facts.index.confirmed_by_by_when",
+   "en": "confirmed by {by}, {when}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Status line on a local fact showing who confirmed it and when."
+  },
+  {
+   "key": "local-facts.index.confirming_correcting_or_disputing_a",
+   "en": "confirming, correcting or disputing a local fact, or confirming a team's rule, is a named member's act; an assistant's re-check reaches a member as its run's output. Nothing was written.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "local-facts.index.disputed_by_by_when",
+   "en": "disputed by {by}, {when}",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Status line on a local fact showing who disputed it and when."
+  },
+  {
+   "key": "local-facts.index.lines_is_not_reachable",
+   "en": "Connections between offices could not be checked here, so only the entry for the office itself was used.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Explains why a local fact lookup skipped related offices; shown on screen."
+  },
+  {
+   "key": "local-facts.index.the_year_is_undetermined",
+   "en": "The year could not be determined: choose a year, or give a date and the profile's time zone.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Shown when a local fact lookup has no usable year."
+  },
+  {
+   "key": "local-facts.index.why_the_profiles_entry_for",
+   "en": "{why}. The profile's entry that applies to every office is used instead.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): member: Explains a local fact fell back to the profile's general entry."
+  },
+  {
+   "key": "local-facts.rules.a_teams_rule_is_drafted",
+   "en": "a team's rule is drafted in {RULE_SECTIONS}.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "local-facts.rules.effective_from_is_a_day",
+   "en": "effective_from is the day the rule takes effect, as YYYY-MM-DD",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "local-facts.rules.the_rule_is_state_only",
+   "en": "the rule is {state}; only a confirmed rule the team still applies is offered.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
+  },
+  {
+   "key": "local-facts.rules.the_team_holds_no_rule",
+   "en": "the team holds no rule of its own by that id.",
+   "protected": false,
+   "note": "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members."
   }
  ],
  "rewrite": {

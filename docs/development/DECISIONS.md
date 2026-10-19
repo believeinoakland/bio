@@ -5376,3 +5376,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: `screens/words-reads-handoffs.json` (DEC-344) gains capture's `index.mjs`:699, the `HASH_DISAGREEMENT` 500's detail, and :1832, the render allowance's deferral reason, each with CAPTURE #37's reason; the words check on tranche/T51 gives capture 0 failures.
 reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-347 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B349, R5's batch, K3944, K3957)
+for: design
+question: R5's strings no member reads, the rows asked of the design, and the code rows given for review.
+why it is Bob's: it is not (P17): the design's lists and member words beneath K3930.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: data rows.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) retrieval's start-up registration diagnostic (index.mjs 293, 306, 318, 331, 367) joins `screens/words-reads-handoffs.json`; events' OWNER_HOST whys, its ListenerFailure prefix and `where`, and money's 956 already read as builder strings (0 failures), so nothing is added for them; money's three unkeyed entries now keyed by `localize` (R13) leave its list. (2) `label.connectionkinds.event_<kind>` for events' 24 kinds (16 roles, `concerns`, 7 links), each as events' own word (`events.seconder` "seconded" and the rest). (3) Reviewed from code: `retrieval-browse.findin.read_another_shape` reworded for a member (it named a requirement); `observation-log.vocabulary.condition_governor_holding_host` takes the pacing sentence's meaning in member words; `observation-log.index.who_s_lead_is_recorded` takes `observation-log.says.lead_recorded_somewhere`'s sentence (no op name). (4) lines' five rows no longer read (`lines.text.date_read`, `.lines_hold_post`, `.lines_read_holds`, `.line_naming_office`, `lines.undetermined.line_covers_date`) leave the table and lines' reads. (5) lines' 68 and local-facts' 10 code rows written into the table: 70 builder details kept as written (American spelling; four K references removed), 8 a member reads reworded (placeholders kept). The words check on tranche/T51 gives 0 failures on all seven modules.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-347 blocks), `screens/words-mod-1.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads-mod-1.json`, `screens/words-reads-mod-3.json`.
+owed: (BOB) observation-log may read `observation-log.says.lead_recorded_somewhere` and `machinery-producers.summary.pacing_holding_captures` in place of its two duplicates, if its code allows; nothing else.
