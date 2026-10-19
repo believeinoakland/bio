@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { notAnAdmin } from "../../../src/member-roster/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { MEMBER_ROSTER_ROWS } from "../../../src/member-roster/checks.mjs";
 const { MEMBERSHIP_CHECKS } = MEMBER_ROSTER_ROWS;
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
@@ -31,7 +32,7 @@ const TABLES = ["members", "admin_votes", "hosting_access"];
 const snapshot = (w) => Object.fromEntries(TABLES.map((t) => [t, w.rows(`SELECT * FROM ${t}`)]));
 
 test("R28 notAnAdmin: {ok, reason, code, check, translation, by, detail}, the row C-96.1, by as stamped (null when none), one fixed sentence naming the act", () => {
-  const r = notAnAdmin("ann", "setting a member's status");
+  const r = notAnAdmin("ann", localize("member-roster.index.setting_a_members_status", "setting a member's status"));
   assert.deepEqual(r, { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: "C-96.1",
                         translation: ROW.translation, by: "ann", detail: r.detail });
   assert.ok(r.detail.startsWith("setting a member's status "), "names the act");
