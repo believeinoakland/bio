@@ -31,3 +31,29 @@ Tests and checks:
 No pull request is opened (JOB step 1). The commit carries the session trailer but no model-name co-author line, because the model-identity rule forbids model identifiers in commits.
 
 Size (session_018wkgQYFa889na4frSPWfKx): test runs 1, module lines 1486
+
+## J3 · COMPLETE
+
+B2 done: every member-read sentence of citation is read through the list. Pushed as the commit "T51 citation (B2): member-read sentences read through the list" on job/T51/citation.
+
+Converted (output text unchanged, ids citation.<file stem>.<slug>):
+- Every refusal detail in index.mjs and recorded.mjs (the 61 design-unkeyed items, including the ones already keyed by an earlier codemod that the design list still named).
+- The session-log lines that reach bundle.md: the Session headers (one id for one record, one for many; no ICU plural), Trigger: selection (both forms), Trigger: question, the "; for question" trailer, Changes: basis legs, Changes: cites edges, the Note trailer, and the set-moved note.
+- The grammar labels passed to inquiry's extent check ("the part of the document this citation names") and the #document fallbacks ("the project's own bundle.md does not parse").
+
+Kept unkeyed, listed for the record: none in the module source. The design list's one remaining counted entry is the frontmatter wiring line in splice.mjs (`- rel: ... target: ... status: ...`), which is record grammar, not prose.
+
+Tests: every test that held a sentence now compares with localize by equality (cite-write, draw, query-drift, recorded, found), or asserts the key. Test copies are 0.
+
+Checks:
+- node --test bio-plane/test/m/citation/: 102 pass, 0 fail.
+- node checks/words.mjs /home/user/bio citation: 0 failures (inline 0, testcopy 0, unkeyed 1: the splice wiring line above).
+- node checks/format.mjs /home/user/bio: 176 modules, 0 failures.
+- node checks/architecture.mjs /home/user/bio citation: 0 failures.
+- node checks/coverage.mjs /home/user/bio citation: 15 of 15 live ids named, 0 failures.
+- node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation: 9 files, 0 failures.
+- node bio-plane/src/setup-words/build.mjs --check: a stale-rows note (expected; rows regenerate at the layer close); no refusal naming citation.
+
+Earlier pass (CR-11, J2): unchanged; this COMPLETE supersedes it.
+
+Size (session_018wkgQYFa889na4frSPWfKx): test runs 5, module lines 1415
