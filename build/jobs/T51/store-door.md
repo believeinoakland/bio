@@ -1,6 +1,6 @@
 # store-door (T51)
 
-**Status** · session_01XqQ6pkMvBPshebczrsb5RM · depth 2 · COMPLETE · handled B2
+**Status** · session_01JifjKBEkxVwREXfmY1gSL5 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -23,3 +23,23 @@ Words: 3 of the 4 findings fixed (dispatch.mjs:308, :333 via localize; routes.te
 Deferred: none. Found in another module: answer-envelope/page-policy.test.mjs imports control-plane's signpage.mjs, which is not earlier in the order (architecture, whole-product run; not my module). Coverage failures in other modules (24) are not store-door's.
 Tests: store-door suite 48 of 48 pass (3 runs). Checks: format 0 failures; architecture store-door 0 failures; coverage store-door 16 of 16; ownership 0 failures; words store-door: only dispatch.mjs:245. setup-words --check: stale rows only, expected. checks/run.mjs whole product: 1 architecture failure and 1 words failure in another module, none in store-door.
 Size (session_01XqQ6pkMvBPshebczrsb5RM): test runs 3, module lines 650.
+
+## J4 · COMPLETE
+
+CR-27 · store-door applied (commit 411d8e1379, branch job/T51/store-door).
+
+Change: bio-plane/test/m/store-door/routes.test.mjs only. The translationdraft cases (R10) called instance-setup's translationGrant and translationAdopt, which are removed. They now call translations' own methods via `tr = translationsOf(r.ctx)`, which the drafts() helper now returns. The unused `setup` binding in the R10 test is removed. No module code changed.
+
+Deferred: none. Found in another module: none from this round.
+
+Whole-product run (checks/run.mjs /home/user/bio): no store-door findings. The coverage check over the whole product shows 4 reds in other modules, not store-door's: agent-harness R17; agent-runner R36, R37, R38, R40; installer-steps R26, R31; journey-check R19. Those are outside this round.
+
+Tests: node --test bio-plane/test/m/store-door/*.test.mjs: 48 tests, 48 pass, 0 fail. Journey.test.mjs not run, per your note 2.
+Checks (store-door):
+- format: 175 modules, 175 requirements files; 0 failures
+- architecture store-door: 10 product files, 115 relative imports; 0 failures
+- coverage store-door: 16 of 16 live requirement ids named by a test; 0 failures
+- words: 175 modules; 0 failures
+- ownership store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures
+
+Size (session_01JifjKBEkxVwREXfmY1gSL5): test runs 3, module lines 650
