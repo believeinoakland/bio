@@ -49,3 +49,15 @@ Results: words check on agent-steps, 0 failures. Tests all pass as before: plan 
 The one blocker is architecture. test/plan.test.mjs imports bio-plane/src/op-declarations (OPS, layer 11, index 152), but agent-steps is layer 6 (index 98), so the check fails: "imports ... which is not earlier in the order". Using OPS is the only own-declaration source for the plane's op names; the hand-list it replaces is the words check's handlist finding. Both cannot pass at once, and I did not add a workaround.
 
 Decision for you (layers and order are yours): (A, my recommendation) rule which earlier module declares the plane's op names the plan test needs, or move that declaration to one, and I import it from there; (B) rule that op-declarations may be used by a test of an earlier layer; (C) rule another source. Until then this job is not COMPLETE: the architecture check and handlist finding are open, and I changed nothing else.
+
+## Completion (AGENT-STEPS #2, T51-208)
+
+**Entries applied.** T51-208 (words pass): every sentence the words check listed in `drive.mjs`, `work.mjs` and `plane.mjs` is read through `localize(id, en, vars)` with a fixed id, English unchanged; none judged developer-only. `plan.test.mjs` reads its plane op lists from `agent-steps/src/ops.mjs` (`PLAN_OPS`, this module's own declaration, per BOB's ruling B3 on J2), not from `op-declarations` (layer 11, later than this module).
+
+**Tests.** plan 53/0, interface 70/0, readers 43/0, subsessions 35/0, fanout 62/0, r096 22/0, r101 12/0, r103 14/0, r107 22/0, t49r90 14/0. Every R1–R49 still named by a test.
+
+**Checks.** format 0 failures; architecture agent-steps 0 failures; words agent-steps 0 failures; coverage agent-steps 49 of 49, 0 failures; ownership 0 failures; `setup-words --check`: the stale-rows note only (regenerated at layer close).
+
+**Deferred.** None. **Another module.** None.
+
+Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700
