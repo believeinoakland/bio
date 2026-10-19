@@ -1,6 +1,6 @@
 # action-grammar (T51)
 
-**Status** · session_01Wkof3P16pbHsMX1b882161 · depth 2 · COMPLETE · handled B1
+**Status** · session_01Wkof3P16pbHsMX1b882161 · depth 2 · WAITING ON BOB (J3) · handled B1
 
 ## J1 · REPORT
 
