@@ -677,7 +677,7 @@ export class MoneyChecks {
     const out = recipe.steps.find((st) => st.as === recipe.output);
     const ratio = r.trace.find((t) => t.step === out.a)?.output;
     if (!ratio || !ratio.denominator || ratio.denominator.undetermined || isZero(ratio.denominator.value))
-      return { none: "no denominator" };
+      return { none: localize("money-checks.why.no_denominator", "no denominator") };
     const inputs = [...new Set([...s.facts, ...(names.has("population") ? populationFacts : [])].map((f) => f.fact_id))].sort();
     const subject = json(s.subject);
     const key = sha256HexSync(json({ detector_id: v.detector_id, version: v.version, subject: s.subject, inputs }));
