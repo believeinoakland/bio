@@ -56,3 +56,7 @@ CHANGE (K4088), re J4: the design @ 112748edcf (DEC-363, U393) is merged into tr
 ## B8 · CHANGE
 
 CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
+
+## B9 · CHANGE
+
+CHANGE (K4094): journey-check's pseudo-locale walk (R27) finds profile link slugs drawn as text on elsewhere ('Report-an-Issue-OAK', 'get-legal-help', the hyphenated names in span.muted): draw each link's own label from the profile data, never its id; a test with a control.
