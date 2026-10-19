@@ -57056,6 +57056,7 @@ var Extraction = class _Extraction {
     const text_units = withheld ? void 0 : this.unitsOf(row3.capture_sha).units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated }));
     const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(row3.capture_sha) : null;
     const bytes = home && this.#redactor(viewer)(home.bundleId) !== null ? home.bytes : void 0;
+    const format = withheld || row3.capture_format == null || row3.capture_format === "" ? void 0 : row3.capture_format;
     return {
       ok: true,
       found: true,
@@ -57090,7 +57091,8 @@ var Extraction = class _Extraction {
       reading_history: this.#readingHistoryOf(row3.capture_sha),
       ...this.#unreadOf(row3.capture_sha, reading, viewer, row3.bundle_id, row3.capture_format),
       ...text_units ? { text_units } : {},
-      ...bytes === void 0 ? {} : { bytes }
+      ...bytes === void 0 ? {} : { bytes },
+      ...format === void 0 ? {} : { format }
     };
   }
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

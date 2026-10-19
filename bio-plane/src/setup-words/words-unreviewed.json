@@ -29685,7 +29685,7 @@
       "en": "The check did not complete ({why}).",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2492
+      "line": 2484
     },
     {
       "id": "instance-setup.setup.choosing_the_jurisdiction_profiles_is",
@@ -29762,7 +29762,7 @@
       "en": "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2821
+      "line": 2813
     },
     {
       "id": "instance-setup.setup.every_answer_is_empty_so",
@@ -29881,14 +29881,14 @@
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2884
+      "line": 2876
     },
     {
       "id": "instance-setup.setup.probe_none_cut_off",
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2885
+      "line": 2877
     },
     {
       "id": "instance-setup.setup.profile_made_up_for_testing",
@@ -29923,21 +29923,21 @@
       "en": "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2773
+      "line": 2765
     },
     {
       "id": "instance-setup.setup.skip_reason_many_lines",
       "en": "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2775
+      "line": 2767
     },
     {
       "id": "instance-setup.setup.skip_reason_too_long",
       "en": "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2774
+      "line": 2766
     },
     {
       "id": "instance-setup.setup.slug_none_given",
@@ -30056,7 +30056,7 @@
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3213
+      "line": 3205
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
@@ -30070,21 +30070,21 @@
       "en": "The request names no version, and a release is decided by its version. The release ready to install is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2709
+      "line": 2701
     },
     {
       "id": "instance-setup.setup.update_none_ready",
       "en": "No release is ready to install. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2707
+      "line": 2699
     },
     {
       "id": "instance-setup.setup.update_not_the_ready_one",
       "en": "'{version}' is not the release ready to install, which is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2708
+      "line": 2700
     },
     {
       "id": "instance-setup.setup.what_asking_draft",
@@ -30098,7 +30098,7 @@
       "en": "choosing to update your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2724
+      "line": 2716
     },
     {
       "id": "instance-setup.setup.what_declaring_stake",
@@ -30133,7 +30133,7 @@
       "en": "reading the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2639
+      "line": 2631
     },
     {
       "id": "instance-setup.setup.what_seeding_offices",
@@ -30154,7 +30154,7 @@
       "en": "setting aside an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2737
+      "line": 2729
     },
     {
       "id": "instance-setup.setup.what_setting_languages",
@@ -30175,14 +30175,14 @@
       "en": "skipping an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2765
+      "line": 2757
     },
     {
       "id": "instance-setup.setup.what_the_updates",
       "en": "the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2670
+      "line": 2662
     },
     {
       "id": "instance-setup.setup.whether_this_set_answers_the",

@@ -94,8 +94,8 @@
     },
     {
       "path": "src/providers/routes.mjs",
-      "bytes": 21781,
-      "sha256": "782ad21453c3fd73b20cb07fec015b2aeaf2692a76391175a104f84562ee336c"
+      "bytes": 21788,
+      "sha256": "0fd575bdad592199983d6a218b62d77ecb829305fbd6d8f34ad313c482ba4eee"
     },
     {
       "path": "src/providers/sandboxes.mjs",
