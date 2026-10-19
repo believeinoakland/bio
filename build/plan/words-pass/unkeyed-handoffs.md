@@ -43,3 +43,6 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 - strength (STRENGTH #16 J3, J4): `method.mjs` V1_LINES / V2_LEGS (:279–326), the three published signed grading-method texts bio-grading/1–3, pinned bytes (K1333); `index.mjs` `appendSessionLog`'s `## Session Log` marker and the session header's glue. Why: signed pinned versions and document grammar.
 - contradiction (CONTRADICTION #11 J2): `contradiction.mjs`:31 JUDGEMENT_PROMPT, :99 RECOMMEND_PROMPT, :84 `renderJudgementInput`'s pair line. Why: the model's input, pinned by digest (R2, R41, R57); a row must not override the measured text.
 - citation (CITATION #13 J3): `splice.mjs`'s frontmatter wiring line (`- rel: ... target: ... status: ...`): record grammar.
+- basis-versions (BASIS-VERSIONS #20 J5): the 15 `where` strings of `checks.mjs` (source locators read by control-plane's region checks).
+- contradiction (CONTRADICTION #11 J3): besides the three pinned prompts, `contradiction/index.mjs`:361, :364 (run-gate registration diagnostics), :2001 ("contradiction {}: candidate {}", an internal label), `text.mjs`:43 (the `## Session Log` marker).
+- skills (SKILLS #25 J5): the seven strings its record names, already on the design's unkeyed list.
