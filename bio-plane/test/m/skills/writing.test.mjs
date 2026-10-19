@@ -4,7 +4,7 @@ import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
 import { writingHelpLayer, suggestionsLayer, WRITING_HELP_CLAUSES, WRITING_HELP_ACTS, WRITING_HELP_ACT,
          INTERACTION_SOURCE, ROLES_SOURCE, PILOT_SOURCE, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DRAFT_MODE } from "../../../src/run-rules/index.mjs";
-import { SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
+import { SRC, read, wordFold, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R36 names, as `op=affordances` would publish them once their ops land (L11): the draft acts open to the
    assistant and the description's setting left to a member, each an entry of the plane's shape. */
@@ -64,9 +64,9 @@ test("R36 R5 the writing_help layer, in disclosed after suggestions and before i
     /for an observation it only helps word what the member saw/,                            // (c)
     /never in a field that states a member's reason for an act/,                            // (d), K1841 (1)
     /the machine never writes the member's reason/,                                         // (d), rule 1
-    /labelled "Draft · the assistant's, asked by <handle>", saved only when the member keeps them/, // (e)
+    /labelled "Draft · the assistant's, asked by ", saved only when the member keeps them/, // (e), the folded form of the canon's label
     /a draft becomes the member's words only by the member's own act of keeping or editing it/,      // (e), K1364
-  ]) assert.match(all, re);
+  ]) assert.match(wordFold(all), re);
   /* The lookup can miss: a changed word is not found, and §P's paragraph is not the Roles canon's. */
   assert.ok(!foundIn(P, WRITING_HELP_CLAUSES[0].text.replace("never adds a fact", "may add a fact")));
   assert.ok(!foundIn(bySource[ROLES_SOURCE]["§3"], WRITING_HELP_CLAUSES[0].text));

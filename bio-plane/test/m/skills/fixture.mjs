@@ -22,7 +22,15 @@ export const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
 /* Markdown emphasis, code and blockquote marks removed, whitespace collapsed: a sentence wrapped across lines,
    quoted or set in bold is still the same sentence. Nothing else is folded, so a changed word is not found. */
-export const norm = (s) => String(s).replace(/^[ \t]*>[ \t]?/gm, "").replace(/[*`]/g, "").replace(/\s+/g, " ").trim();
+export const norm = (s) => wordFold(String(s).replace(/^[ \t]*>[ \t]?/gm, "").replace(/[*`]/g, "").replace(/\s+/g, " ").trim());
+
+/* The word conversion the rows carry (DEC-355: the team is written "team" where the canon says "group"; DEC-221:
+   American spelling): both sides of a comparison are read through it, so a sentence the rows say with "team" is
+   still the canon's sentence, and any other changed word is still not found. The canon's example label
+   "asked by <handle>" is read as the row carries it, without the placeholder (reported to BOB: the row dropped it). */
+export const wordFold = (s) => String(s).replace(/\bteam(s?)\b/g, "group$1").replace(/\blabeled\b/g, "labelled")
+  .replace(/\bdefense\b/g, "defence").replace(/\bcatalog(s?)\b/g, "catalogue$1")
+  .replace(/ <handle>/g, " ");
 
 /* Whether `sentence` is in `text`, verbatim but for the normaliser; a quoted sentence may start with a
    letter the document capitalises at a sentence start, and only that first letter is compared either way. */

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { renderPack, packVersion } from "../../../src/skillpack.mjs";
 import { actionPlanningLayer, ACTION_RULES, ACTION_RULE_TABLE, ACTION_SOURCE, ACTION_SECTION, PLANNING_ACTS, PLANNING_ACT,
          PLANNING_INPUTS, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
-import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
+import { SRC, read, norm, wordFold, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R28 names, as `op=affordances` would publish them once their modules land: each a catalogue entry of
    the plane's shape, the proposals open to a machine and the member's acts to a session. */
@@ -65,7 +65,7 @@ test("R28 the action_planning layer: authored, its load_when R28's sentence with
     [19, /the first option the plan offers is to describe and document it/], [19, /the plan never withdraws it/],
     [21, /nothing is prepared that asks anything for the benefit of the group or its members/],
     [21, /names the office and the official responsible in that role/],
-  ]) assert.match(n === 2 ? ACTION_RULES[1].heading + " " + of(2) : of(n), re, `rule ${n}: ${re}`);
+  ]) assert.match(wordFold(n === 2 ? ACTION_RULES[1].heading + " " + of(2) : of(n)), re, `rule ${n}: ${re}`);
   /* No place is named in what the layer carries (R26): rule 3's example sentences, which name one, are not carried. */
   for (const place of ["Hayward", "Oakland", "Alameda", "California"]) assert.ok(!JSON.stringify(layer).includes(place), place);
   /* The lookup can miss: a changed word is not found, and v0.1's wording is not v0.2's. */
