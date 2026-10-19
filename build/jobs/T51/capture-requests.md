@@ -67,3 +67,18 @@ T51-59 done (red #27, N1243). plane.test.mjs R48 ghost arm: the 'for' naming no 
 - `checks/ownership.mjs` after the commit: see the posted COMPLETE.
 
 **Size (session_019pe7uRW2gPXhRG61G9zuCe): test runs 4, module lines 2559.**
+
+## J2 · COMPLETE
+
+T51-213 is done (the words pass for capture-requests), committed and pushed at c85a755476. Record: build/jobs/T51/capture-requests.md, section "Completion (T51-213)".
+
+Done: all 18 findings of checks/words.mjs, the 3 plain sentences (K3957) and the 3 test copies (K3962). Also the C-28 translations that still held literal text now read their words rows, and one unflagged sentence (index.mjs:288) is keyed. Nothing deferred. The design's unkeyed list stays in source.
+
+Checks: words 0 failures (was 23); module tests 127/127; related tests 153/153; format, architecture, coverage (56/56) and ownership (8 files, this module only) all 0 failures. checks/run.mjs has no capture-requests line.
+
+For Bob, not decided here:
+1. The words-reads.json unkeyed list says "your group's Civicsmith" for several sentences; the source and the words rows say "your team's". One is stale.
+2. checks/words.mjs does not count punctuated pure-literal "+" chains, so such sentences are invisible to it (R13 binds them).
+3. rows.mjs is stale; not regenerated (BOB regenerates at the layer close).
+
+No PR opened, per JOB step 1.
