@@ -111,7 +111,7 @@ const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").ma
 
 test("R36 the court is chosen among the registered forums (entitieskind with forum_kind, as record data), never among the people; the kind among the forum's, worded by proceeding.kind.<kind>", async () => {
   const p = await open("/app/proceeding");
-  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Superior Court of California, County of Alameda"]]);
+  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Alameda Housing Tribunal"]]);
   assert.ok(p.byOp("entitieskind").some((r) => r.query.kind === "body" && /court/.test(r.query.forum_kind)), "forum kinds asked");
   assert.equal(p.byOp("peopledirectory").length === 0 || !p.doc.getElementById("pr-forum").querySelectorAll("option").some((o) => o.textContent === "L. Chen"), true, "no person is offered as a court");
   assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[0]), ["civil", "writ", "appeal"]);

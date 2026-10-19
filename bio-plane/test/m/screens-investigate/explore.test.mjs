@@ -38,7 +38,7 @@ test("R24 R27 explore's Follow offers the design's six groups, the first three t
 
 test("R27 a step_source step is drawn in its own class (e-step_source), named by connection.kind.step_source.name and explained by its means; control: a mentioned-together step is not", async () => {
   const g = GRAPH();
-  g.steps[0] = { ...g.steps[0], kind: "step_source", word: "stated in a source", class: "evidentiary", grade: { assertion: "B", ends: ["D", "D"] }, evidence: [{ capture_sha: SHA }] };
+  g.steps[0] = { ...g.steps[0], kind: "step_source", word: "step sourced", class: "evidentiary", grade: { assertion: "B", ends: ["D", "D"] }, evidence: [{ capture_sha: SHA }] };
   const p = await open(at, { plane: { exploregraph: ok(g) } });
   const gr = main(p).querySelector(".mk-graph");
   assert.equal(gr.querySelectorAll(".gwrap .e-step_source").length, 1, "its own class");

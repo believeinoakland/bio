@@ -169,12 +169,12 @@ test("R32 (1) control: an organization's page words it for an organization; writ
 test("R32 (2) every fact recorded is listed: valid today, then those whose validity is not stated or settled (marked undetermined with the reason and the source), the withdrawn in a fold with who, when and why", async () => {
   const base = PERSON();
   const nostate = { fact_id: "PFA-2026-0008", member: ENT, kind: "birth", value: "1971", valid: null, citation: { captureSha: SHA, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: { key: "people.why.validity_stated", vars: {} } } };
-  const unsettled = { fact_id: "PFA-2026-0009", member: ENT, kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: "2021-01-01" }, citation: { captureSha: SHA2, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: { key: "lines.why.no_line_covers", vars: {} } } };
+  const unsettled = { fact_id: "PFA-2026-0009", member: ENT, kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: "2021-01-01" }, citation: { captureSha: SHA2, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: { key: "people.why.record_settle_order", vars: {} } } };
   const gone = { fact_id: "PFA-2026-0003", member: ENT, kind: "contact", value: "old@example.org", valid: null, citation: null, grade: "D", withdrawn: { by: "member:mai", at: "2026-10-05T09:00:00Z", reason: "a typo" } };
   const p = await open(at, { plane: { person: ok({ ...base, undetermined: [nostate, unsettled], facts: [...base.facts, gone] }) } });
   const f = secOf(p, "screen.person.facts");
   drew(f, "screen.person.facts.undetermined", { reason: word("people.why.validity_stated"), document: "Lease amendment 1" });
-  drew(f, "screen.person.facts.undetermined", { reason: word("lines.why.no_line_covers"), document: "Rent schedule" });
+  drew(f, "screen.person.facts.undetermined", { reason: word("people.why.record_settle_order"), document: "Rent schedule" });
   assert.ok(f.textContent.includes("1971") && f.textContent.includes("9 Elm St"), "none dropped");
   assert.ok(f.querySelectorAll(".cs-gap").length >= 2, "each marked undetermined");
   drew(f, "screen.person.facts.withdrawn", { n: "1" });
