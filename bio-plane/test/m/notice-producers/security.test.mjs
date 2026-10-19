@@ -8,6 +8,7 @@ import { world } from "../credentials/fixture.mjs";
 import { fresh, reader, ofKind, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
 import { HINT_MARK, NOTICE_KINDS, SECURITY_LEVELS } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const KIND = "security-level-high";
 const H = 3600e3;
@@ -18,6 +19,14 @@ const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 const lay = (w, kind, hour, n, country = "") =>
   w.sql.exec(`INSERT INTO security_counts (kind, hour, country, count) VALUES (?,?,?,?)
               ON CONFLICT(kind, hour, country) DO UPDATE SET count=count+excluded.count`, kind, hour, country, n);
+const MONTH = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+/* an instant as the sentences name a moment in UTC (R25: `time.at` of `date.daymonthyear` and `time.clock`, with "UTC" after it) */
+const moment = (ms) => {
+  const d = new Date(ms), h = d.getUTCHours();
+  const date = word("date.daymonthyear", { day: String(d.getUTCDate()), month: word(`date.month.${MONTH[d.getUTCMonth()]}`), year: String(d.getUTCFullYear()) });
+  const time = word("time.clock", { hour: String(h % 12 || 12), minute: String(d.getUTCMinutes()).padStart(2, "0"), ampm: word(h < 12 ? "time.am" : "time.pm") });
+  return `${word("time.at", { date, time })} UTC`;
+};
 function at(t, fn) {
   const real = Date.now;
   Date.now = () => t;
@@ -67,7 +76,7 @@ test("R12: the item is keyed by its episode's start, to the hour, and opens the 
   const start = iso((HOUR - 7) * H);
   assert.equal(it.id, `FINDING::${KIND}::${start}`);
   assert.deepEqual(it.screen, { op: "securitymap", from: start, to: iso(NOW) });
-  assert.match(it.detail, new RegExp(`since ${start}`));
+  assert.ok(it.detail.includes(`since ${moment((HOUR - 7) * H)}`), "R25: the instant is written in words");
   /* the screen it opens answers that period */
   const m = at(NOW, () => w.c.securityMap({ from: it.screen.from, to: it.screen.to, by: "admin" }));
   assert.equal(m.ok, true);
@@ -86,14 +95,14 @@ test("R12: an episode is an unbroken run: an earlier unusual hour before a quiet
     lay(w, "through", HOUR - 3, 1);
     const [it] = items("admin");
     assert.equal(it.id, `FINDING::${KIND}::${iso((HOUR - 3) * H)}`);
-    assert.match(it.detail, /in that time 1 sign-in or recovery got through/);
+    assert.ok(it.detail.includes(word("notice-producers.got_through_paused", { through: "1", through_2: word("notice-producers.sign_recovery") })));
   }
   {
     const { w, items } = await setup();
     lay(w, "through", HOUR, 2);
     const [it] = items("admin");
     assert.equal(it.screen.from, iso(HOUR * H));
-    assert.match(it.detail, /2 sign-ins or recoveries got through/);
+    assert.ok(it.detail.includes(word("notice-producers.got_through_paused", { through: "2", through_2: word("notice-producers.sign_ins_recoveries") })));
   }
 });
 
@@ -136,7 +145,8 @@ test("R12: its detail is one plain sentence: the level is High, since when, whet
   const { w, items } = await setup();
   for (let h = HOUR - 2; h < HOUR; h++) { lay(w, "signin", h, 30, "NZ"); lay(w, "rate", h, 30, "FR"); }
   const [it] = items("admin");
-  assert.equal(it.detail, `The security level of your team's Civicsmith has been High since ${iso((HOUR - 2) * H)}, and in that time nothing got through.`);
+  /* the sentence's parts are words; the sentence itself is held by the design stream's words (none given yet, so it is not copied here) */
+  assert.ok(it.detail.includes(moment((HOUR - 2) * H)) && it.detail.includes(word("notice-producers.nothing_got_through")), "the instant and the count, in words");
   const words = [it.summary, it.detail].join(" ");
   for (const x of ["NZ", "FR", "admin", "second", "alice", "cover of", "member:", "role"]) assert.ok(!words.includes(x), x);
   assert.doesNotMatch(words, JUDGMENT);
@@ -184,4 +194,30 @@ test("R12: a securityLevel or securityMap that throws or does not answer contrib
   const before = w.snapshot();
   assert.equal(at(NOW, () => ofKind(reader(n).read("admin", { now: NOW }), KIND)).length, 1);
   assert.equal(w.snapshot(), before);
+});
+
+test("R25 (T51; DEC-299, DEC-333, DEC-335) the security item's instant is a plain date and time in the team's zone: an episode starting 2026-10-16T16:00:00Z for a team in the Pacific zone reads 9:00 AM; with no zone the UTC reading and UTC; control: id and screen.from stay ISO, and a second read in the episode keeps the id", async () => {
+  const START = Date.parse("2026-10-16T16:00:00Z"), NOW_R25 = Date.parse("2026-10-17T12:30:00Z");
+  const episode = async (over) => {
+    const { w, items } = await setup(over);
+    lay(w, "rate", START / H - 1, 3);                  /* not unusual: the hour before the episode */
+    for (let h = START / H; h < NOW_R25 / H; h++) lay(w, "rate", h, 40);
+    return { items: (member) => items(member, NOW_R25) };
+  };
+  const PACIFIC = () => ({ time_zone: { value: "America/Los_Angeles" } });
+  const pac = await episode({ view: PACIFIC });
+  const [it] = pac.items("admin");
+  const date = word("date.daymonthyear", { day: "16", month: word("date.month.october"), year: "2026" });
+  const time = word("time.clock", { hour: "9", minute: "00", ampm: word("time.am") });
+  assert.ok(it.detail.includes(`since ${word("time.at", { date, time })}, `), "the Pacific reading, 9:00 AM");
+  assert.doesNotMatch(it.detail, /\d{4}-\d{2}-\d{2}T|Z\b/, "no ISO instant in the words");
+  /* control: the same episode with no zone held reads the UTC reading (4:00 PM), with UTC after it */
+  const none = await episode({});
+  const [utc] = none.items("admin");
+  assert.ok(utc.detail.includes(`since ${moment(START)}, `), "no zone: the UTC reading and UTC");
+  assert.ok(utc.detail.includes(word("time.clock", { hour: "4", minute: "00", ampm: word("time.pm") })), "4:00 PM in UTC");
+  /* the identifiers keep the ISO instant, and a second read in the episode answers the same id */
+  assert.equal(it.id, `FINDING::${KIND}::2026-10-16T16:00:00Z`);
+  assert.equal(it.screen.from, "2026-10-16T16:00:00Z");
+  assert.equal(pac.items("admin")[0].id, it.id);
 });

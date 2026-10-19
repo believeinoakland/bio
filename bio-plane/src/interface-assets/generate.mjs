@@ -1,4 +1,4 @@
-/* interface-assets' generator (R1, R5–R7; K1043): writes `index.mjs` beside it from the design stream's visual language
+/* interface-assets' generator (R1, R5–R7, R10; K1043): writes `index.mjs` beside it from the design stream's visual language
    and page as committed at ASSETS_COMMIT, read from git so the working copy never moves it. Kept beside the module and
    imported by nothing in the product, so it is not bundled; its test imports `shellCss` to state R7's transform.
    Run from anywhere: node bio-plane/src/interface-assets/generate.mjs
@@ -9,7 +9,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
-const COMMIT = "7be06eb4cb"; // R9 (T50): the design commit the START names; the visual files are as at e5fd78226f (DEC-327)
+const COMMIT = "20c8001300"; // R10 (T51): the design branch's last merge into tranche/T51 (DEC-353, DEC-354), the commit `site` takes
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
 
@@ -140,7 +140,7 @@ function main() {
       [`fonts/OFL-${n}.txt`, plain("text/plain", show(`fonts/OFL-${n}.txt`).toString("utf8"))]),
   ];
 
-  const out = `/* GENERATED: do not edit by hand. interface-assets R1–R7 (DEC-138; N897 (1); N559; N1039; K3254): the visual
+  const out = `/* GENERATED: do not edit by hand. interface-assets R1–R10 (DEC-138; N897 (1); N559; N1039; K3254): the visual
    language's stylesheet, the design page's product rules (shell.css), icons, ${faces.length} faces (base64) and their three
    licences, read from ${DIR}/ and ${PAGE} at ASSETS_COMMIT. civicsmith.css is civicsmith.css followed by faces.css with
    each url("fonts/<f>") rewritten to url("/app/assets/fonts/<f>") (R1, R2). A face's body is built on its first read,
