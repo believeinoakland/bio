@@ -1,4 +1,4 @@
-import { word, localize } from "../setup-words/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* filing-templates' refusal rows (requirements: `build/requirements/filing-templates.md`, R23; K921, K927, K933).
  * DEC-49: every refusal this module answers carries its code, its row and the member's translation.
@@ -214,7 +214,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_COURT_PETITION: {
     check: "C-125.34", where: at("#courtPetition", "is-court-petition"),
-    translation: localize("filing-templates.checks.this_kind_is_filed_with", "This kind is filed with a court, so no template the team files in its own name is kept for it until a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it."),
+    translation: word("refusal.TEMPLATE_COURT_PETITION"),
   },
 });
 

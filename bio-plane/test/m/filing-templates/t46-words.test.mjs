@@ -1,6 +1,6 @@
 /* filing-templates, T46 (T46-36; R29; DEC-194, N913): C-125.33 TEMPLATE_NOT_REVIEWED takes its translation from
    `words.json`'s `refusal.TEMPLATE_NOT_REVIEWED`, read by key, never a copy, its `{missing}` left for the screen with
-   the refusal's `lacks` beside it; C-125.34 TEMPLATE_COURT_PETITION keeps its present translation; every other row keeps
+   the refusal's `lacks` beside it; C-125.34 TEMPLATE_COURT_PETITION reads its word by key; every other row keeps
    its own; codes, numbers, `where`s and behaviour unmoved. At the interface: the rows as exported, and each refusal as
    the reads answer it, beside its control, the same template offered once its attribution is whole. */
 import { test } from "node:test";
@@ -10,7 +10,7 @@ import { seeded, V, TEST, TEXT, reviewedOf, PROFILE_IDS } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
-import { word, hasWord, localize } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -28,8 +28,8 @@ const AT = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 const T45_NOT_REVIEWED = "This template from the jurisdiction profile is not offered yet. A profile's template is offered only "
   + "once it names who wrote it, the public sources it was written from, a professional's review with no concerns, "
   + "and an approver other than its writer; what it lacks is named.";
-/* C-125.34 keeps its present translation in T46 (R29): words.json's names "Civicsmith" bare (DEC-149). */
-const COURT_PETITION = localize("filing-templates.checks.this_kind_is_filed_with", "This kind is filed with a court, so no template the team files in its own name is kept for it until a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.");
+/* C-125.34 reads the list's word by key (R29, K4043) */
+const COURT_PETITION = word("refusal.TEMPLATE_COURT_PETITION");
 /* Every other row (42, C-115.31–.38 less .34, C-115.45, .46, C-125.1–.32 and .34), as T45 left them: the canonical JSON's
    sha256 of each one's check and where, so none moves. A translation is the list's word, read by key (K3810), never
    pinned here as text. */
@@ -54,13 +54,10 @@ test("R29 C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT
   assert.notEqual(row.translation, T45_NOT_REVIEWED, "T45's words no longer");
 });
 
-test("R29 C-125.34 TEMPLATE_COURT_PETITION keeps its present translation, not words.json's (which names Civicsmith bare, against DEC-149); every other row keeps its own", () => {
+test("R29 C-125.34 TEMPLATE_COURT_PETITION reads words.json's refusal.TEMPLATE_COURT_PETITION by key (K4043); every other row keeps its own", () => {
   const row = rows.TEMPLATE_COURT_PETITION;
   assert.deepEqual([row.check, row.where, row.translation], ["C-125.34", AT("#courtPetition", "is-court-petition"), COURT_PETITION]);
-  assert.ok(!("refusal.TEMPLATE_COURT_PETITION" in ft.FILING_TEMPLATES_WORDS), "not taken in T46");
-  assert.notEqual(row.translation, en("refusal.TEMPLATE_COURT_PETITION"));
-  assert.match(en("refusal.TEMPLATE_COURT_PETITION"), /\bCivicsmith\b/, "words.json's sentence names Civicsmith");
-  assert.doesNotMatch(en("refusal.TEMPLATE_COURT_PETITION"), /your group's Civicsmith/);
+  assert.equal(row.translation, en("refusal.TEMPLATE_COURT_PETITION"), "verbatim from words.json, by key");
   /* T47 (R30) moved C-125.4's `where` to its one site, which r30.test.mjs pins; read here at its T46 place, so this pin
      still proves no other check, where or translation moved */
   const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED" && c !== "RFC_QUOTING_MISSING")
@@ -69,7 +66,7 @@ test("R29 C-125.34 TEMPLATE_COURT_PETITION keeps its present translation, not wo
     "no other row's check or where moved");
   for (const code of Object.keys(kept)) {
     assert.ok(!Object.values(ft.FILING_TEMPLATES_WORDS).includes(rows[code].translation), code);
-    if (code !== "TEMPLATE_COURT_PETITION" && hasWord(`refusal.${code}`)) assert.equal(rows[code].translation, word(`refusal.${code}`), `${code}: the list's word, by key`);
+    if (hasWord(`refusal.${code}`)) assert.equal(rows[code].translation, word(`refusal.${code}`), `${code}: the list's word, by key`);
   }
 });
 
