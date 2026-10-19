@@ -94,7 +94,7 @@ test("R5 R14 spotcheckvisit needs her testimony and a finding (control: none sen
   fill(p, { "calc-item": "9", "calc-finding-1": true });
   await press(p, "spotcheckvisit", { reason: "x" });
   assert.equal(p.byOp("spotcheckvisit")[0].body.finding, "no");
-  assert.ok(main(p).textContent.includes("That report is not in the draw."), "the refusal by its words");
+  assert.ok(main(p).textContent.includes(word("refusal.NOT_DRAWN")), "the refusal by its words");
 });
 
 test("R11 \"How spot-checks work\" is reached from calculation and says, in plain words, what a spot-check does, why the draw is random and recorded, what the result says and does not say", async () => {

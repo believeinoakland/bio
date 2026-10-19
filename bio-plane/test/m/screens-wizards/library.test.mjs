@@ -158,7 +158,7 @@ test("R1 a copy whose base changed shows what changed and brings it across by ad
   const { sent } = await a.press("wizardrevise", { data: { mode: "base", version: V.draft }, reason: "the base changed" });
   assert.deepEqual(sent[0].body, { version: V.draft, adopt: { base: `${GET_RECORD.id}@2` }, reason: "the base changed" });
   // control: with the change on an approved copy, a new draft of it is offered instead (wizard-scripts R3's `from`)
-  const up = { ok: true, entries: [{ copy: COPY.id, copy_version: V.copy, base: GET_RECORD.id, base_name: "Get a record", base_version: `${GET_RECORD.id}@2`, steps: { copy: [], base: [] } }] };
+  const up = { ok: true, entries: [{ copy: COPY.id, copy_version: V.copy, base: GET_RECORD.id, base_name: GET_RECORD.name, base_version: `${GET_RECORD.id}@2`, steps: { copy: [], base: [] } }] };
   const b = await open("wizards", { me: MEMBER, table: libraryTable({ baseupdates: env(up) }) });
   assert.ok(!acts(panelOf(b.tree, V.copy, "own")).some((x) => x.attrs["data-act"] === "wizardrevise"));
   assert.deepEqual((await b.press("wizarddraft", { data: { mode: "from", from: V.copy } })).sent[0].body, { from: V.copy, name: COPY.name });

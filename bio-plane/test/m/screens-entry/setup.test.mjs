@@ -546,3 +546,33 @@ test("R23 part 8's act is setup.admin.invite, explained by setup.admin.invite_do
   assert.ok(isOpen(n, "admins") && actOps(partOf(n, "admins")).includes("memberadd"));
   lacks(n, "screen.setup.admins.shown", { date: { html: date("2026-10-21") } });
 });
+
+// ---- R25: a skipped part reads "Skipped" ----
+test("R25 a skipped part shows screen.setup.state.skipped with its help in the place of its state mark, sends nothing, and un-skipping restores the state its read gives; control: part 1 has no skip, a part never skipped draws its read's state, a refused part keeps its step", async () => {
+  const o = await claimed();
+  const mark = (k) => all(summaryOf(o, k), (e) => (e.attrs.class || "").includes("cs-due"))[0];
+  const markText = (k) => squash(unescape(mark(k).children.filter((c) => c.text).map((c) => c.text).join("")));
+  const was = stateOf(o, "places");
+  assert.equal(markText("places"), squash(word("screen.setup.state." + was)));
+  const before = o.requests.length;
+  o.fields["su-skip-places"] = true; await o.tick(300);
+  assert.deepEqual(o.requests.slice(before), [], "nothing sent");
+  assert.equal(markText("places"), squash(word("screen.setup.state.skipped")));
+  assert.equal(tipOf(mark("places")), said("screen.setup.state.skipped.help"));
+  assert.ok(!isOpen(o, "places"));
+  // the other parts keep what their reads give
+  assert.equal(markText("court"), squash(word("screen.setup.state." + stateOf(o, "court"))));
+  // un-skipping restores the state its read gives
+  o.fields["su-skip-places"] = false; await o.tick(300);
+  assert.equal(markText("places"), squash(word("screen.setup.state." + was)));
+  assert.equal(tipOf(mark("places")), "");
+  // control: part 1 has no skip and is never skipped
+  assert.equal(all(partOf(o, "claim"), (e) => e.attrs["data-skip"]).length, 0);
+  assert.equal(partOf(o, "claim").attrs["data-skipped"], undefined);
+  // control: a refused part keeps its step
+  const n = await claimed({ courtnoticeset: { ok: false, code: "NOT_ALLOWED" } });
+  const b = n.requests.length;
+  await n.press("courtnoticeset", { values: { "su-court-0": true } });
+  assert.deepEqual(n.requests.slice(b).map((x) => x.op), ["courtnoticeset"]);
+  assert.ok(isOpen(n, "court"));
+});
