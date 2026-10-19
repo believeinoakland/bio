@@ -373,14 +373,14 @@ function recreateOne(row, ord, byContent, byStated) {
   const bound = {}, hashes = {};
   for (const inp of inputs || []) {
     hashes[inp.name] = inp.sha;
-    if (!isSha(inp.sha)) { missing.push({ input: inp.name, sha: null, why: "the case states no SHA-256 for this input" }); continue; }
+    if (!isSha(inp.sha)) { missing.push({ input: inp.name, sha: null, why: localize("case-import.index.case_states_no_sha", "the case states no SHA-256 for this input") }); continue; }
     let b = byContent.get(inp.sha);
     if (!b) {
       const listed = byStated.get(inp.sha);
       missing.push(listed
         ? { input: inp.name, sha: inp.sha, carried: listed.got, path: listed.path, why: say("case-import.why.file_carried_input"),
             ...(listed.detail ? { detail: listed.detail } : {}) }
-        : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
+        : { input: inp.name, sha: inp.sha, why: localize("case-import.index.case_file_lacks_input", "the case file does not carry this input; bytes with this SHA-256 complete it") });
       continue;
     }
     if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: say("case-import.why.input_over_bytes", { calc_input_max: CALC_INPUT_MAX }) }); continue; }
@@ -497,10 +497,10 @@ export class CaseImport {
     /* DEC-49 REGION is-import-caller */
     if (!member)
       return { refusal: refuse("MACHINE_CANNOT_IMPORT", str(by)
-        ? "an import, and every act on one, is a member's, signed in as themselves; this caller is not one"
-        : "no member is named as the one acting: this call carries nobody") };
+        ? localize("case-import.index.import_is_a_members_act", "an import, and every act on one, is a member's, signed in as themselves; this caller is not one")
+        : localize("case-import.index.no_member_named_acting", "no member is named as the one acting: this call carries nobody")) };
     if (!this.#isActiveMember(str(viewer) || by))
-      return { refusal: refuse("IMPORT_NOT_A_MEMBER", "only an active member of this team imports, or acts on an import") };
+      return { refusal: refuse("IMPORT_NOT_A_MEMBER", localize("case-import.index.only_active_member_imports", "only an active member of this team imports, or acts on an import")) };
     /* END DEC-49 REGION is-import-caller */
     return { member };
   }
@@ -641,7 +641,7 @@ export class CaseImport {
     const list = Array.isArray(parts) ? parts.map(bytesOf) : [];
     /* DEC-49 REGION is-import-case-file */
     if (!list.length || list.some((p) => !p))
-      return refuse("IMPORT_NOT_A_CASE_FILE", "parts are the case file's parts, each as bytes",
+      return refuse("IMPORT_NOT_A_CASE_FILE", localize("case-import.index.parts_are_the_case_files", "parts are the case file's parts, each as bytes"),
                     { departures: [!list.length ? say("refusal.IMPORT_NOT_A_CASE_FILE.noparts")
                                    : say("refusal.IMPORT_NOT_A_CASE_FILE.notbytes", { n: list.findIndex((p) => !p) + 1 })] });
     /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
@@ -653,14 +653,14 @@ export class CaseImport {
       : [say("case-import.text.copy_holds_check")];
     const named = Array.isArray(checked) ? checked : checked ? [checked] : [];
     if (named.length)
-      return refuse("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
+      return refuse("IMPORT_NOT_A_CASE_FILE", localize("case-import.index.parts_carry_no_manifest", "the parts do not carry a manifest that meets the case-file format"), { departures: named });
     const big = list.findIndex((p) => p.length > PART_MAX);
     if (big >= 0)
       return refuse("IMPORT_PART_TOO_LARGE", localize("case-import.index.part_big_is_length_bytes", "part {big} is {length} bytes, over the part bound of {PART_MAX}", { big: String(big), length: String(list[big].length), PART_MAX: String(PART_MAX) }),
                     { part: big, bytes: list[big].length, bound: PART_MAX });
     const who = CaseImport.#manifestIdentity(read.manifest);
     if (!who.group || !who.case || !who.edition)
-      return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format",
+      return refuse("IMPORT_NOT_A_CASE_FILE", localize("case-import.index.manifest_departs_format", "the manifest departs from the case-file format"),
                     { departures: [say("refusal.IMPORT_NOT_A_CASE_FILE.manifest")] });
     /* END DEC-49 REGION is-import-case-file */
     const listed = new Map(CaseImport.#manifestFiles(read.manifest).map((f) => [f.path, f]));
@@ -689,7 +689,7 @@ export class CaseImport {
     const sourceBar = isObj(fm) && isObj(fm.required_strength) ? fm.required_strength : null;
     const out = this.record.transact(() => {
       if (this.#one(`SELECT 1 AS x FROM case_import_editions WHERE import_id=? AND edition=?`, importId, who.edition))
-        return { ok: false, reason: "RACED", detail: "the edition was imported meanwhile" };
+        return { ok: false, reason: "RACED", detail: localize("case-import.index.edition_imported_meanwhile", "the edition was imported meanwhile") };
       if (!this.#one(`SELECT 1 AS x FROM case_imports WHERE import_id=?`, importId))
         this.sql.exec(`INSERT INTO case_imports (import_id, source_group, case_id, lens, created_by, created_at) VALUES (?,?,?,?,?,?)`,
                       importId, who.group, who.case, lensSha, k.member, at);
@@ -813,7 +813,7 @@ export class CaseImport {
   /* R6–R8 and R4: an edition this import does not hold, answered the same whatever the reason. */
   #noSuchEdition(importId, edition) {
     /* DEC-49 REGION is-import-edition */
-    return refuse("IMPORT_NO_SUCH_EDITION", "no imported edition answers here by that import and edition",
+    return refuse("IMPORT_NO_SUCH_EDITION", localize("case-import.index.no_edition_answers_here", "no imported edition answers here by that import and edition"),
                   { import: str(importId), edition: int(edition) });
     /* END DEC-49 REGION is-import-edition */
   }
@@ -953,7 +953,7 @@ export class CaseImport {
       const asked = new Map();
       for (const id of [...new Set(apps.map((a) => str(a.statement)))].sort())
         asked.set(id, this.#call(() => this.bias.statementInForce({ statement: id, scope: "instance", viewer }),
-                                 { ok: true, statement: id, in_force: null, stated: "undetermined: the lens in force could not be read" }));
+                                 { ok: true, statement: id, in_force: null, stated: localize("case-import.index.lens_could_not_be_read", "undetermined: the lens in force could not be read") }));
       const stateOf = (a) => { const v = asked.get(str(a.statement)); return v && (v.in_force === true || v.in_force === false) ? v.in_force : null; };
       const inForce = [...asked.values()].filter((v) => v && v.in_force === true);
       const reader = { statements: inForce.map((v) => v.statement), applications: [] };
@@ -1034,7 +1034,7 @@ export class CaseImport {
     if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha)) missing.add(m.sha);
     /* DEC-49 REGION is-import-document */
     if (!b || !e || !missing.has(sha))
-      return refuse("IMPORT_DOCUMENT_NOT_MISSING", "the bytes match no material this imported edition records as missing",
+      return refuse("IMPORT_DOCUMENT_NOT_MISSING", localize("case-import.index.bytes_match_no_missing", "the bytes match no material this imported edition records as missing"),
                     { import: str(importId), edition: int(edition), fingerprint: sha });
     /* END DEC-49 REGION is-import-document */
     const ed = Number(e.edition);
@@ -1106,15 +1106,14 @@ export class CaseImport {
       }
       /* DEC-49 REGION is-import-finding */
       if (!results.size)
-        return refuse("IMPORT_NO_SUCH_FINDING", "this edition holds no finding to accept", { import: e.import_id, edition: ed, findings: [] });
+        return refuse("IMPORT_NO_SUCH_FINDING", localize("case-import.index.edition_holds_no_finding", "this edition holds no finding to accept"), { import: e.import_id, edition: ed, findings: [] });
       /* END DEC-49 REGION is-import-finding */
       /* DEC-49 REGION is-import-accept */
       if (!named.length && unstatedAll.length)
-        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", "no finding of this edition can be accepted until each missing entry of a finding "
-          + "recreated in part is stated in the member's words, in order", { import: e.import_id, edition: ed, unstated: unstatedAll,
+        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", localize("case-import.index.no_finding_accepted_until_gaps", "no finding of this edition can be accepted until each missing entry of a finding recreated in part is stated in the member's words, in order"), { import: e.import_id, edition: ed, unstated: unstatedAll,
             not_accepted: notAccepted });
       if (!named.length)
-        return refuse("IMPORT_ACCEPT_NOT_RECREATED", "no finding of this edition recreated, wholly or in part",
+        return refuse("IMPORT_ACCEPT_NOT_RECREATED", localize("case-import.index.no_finding_recreated", "no finding of this edition recreated, wholly or in part"),
                       { import: e.import_id, edition: ed, findings: notAccepted.map((x) => x.finding), not_accepted: notAccepted });
       /* END DEC-49 REGION is-import-accept */
     } else {
@@ -1123,18 +1122,17 @@ export class CaseImport {
       const unknown = named.filter((f) => typeof f !== "string" || !results.has(f));
       /* DEC-49 REGION is-import-finding */
       if (!named.length || unknown.length)
-        return refuse("IMPORT_NO_SUCH_FINDING", named.length ? "a finding named is not one of this edition's" : "no finding is named",
+        return refuse("IMPORT_NO_SUCH_FINDING", named.length ? localize("case-import.index.finding_named_not_this_edition", "a finding named is not one of this edition's") : localize("case-import.index.no_finding_is_named", "no finding is named"),
                       { import: e.import_id, edition: ed, findings: unknown.map((f) => (typeof f === "string" ? f : null)) });
       /* END DEC-49 REGION is-import-finding */
       const notRecreated = named.filter((f) => results.get(f).result === "did_not_recreate");
       /* DEC-49 REGION is-import-accept */
       if (notRecreated.length)
-        return refuse("IMPORT_ACCEPT_NOT_RECREATED", "only a finding that recreated, wholly or in part, is accepted",
+        return refuse("IMPORT_ACCEPT_NOT_RECREATED", localize("case-import.index.only_recreated_is_accepted", "only a finding that recreated, wholly or in part, is accepted"),
                       { import: e.import_id, edition: ed, findings: notRecreated });
       const unstated = named.flatMap(unstatedOf);
       if (unstated.length)
-        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", "each missing entry of a finding recreated in part is stated in the member's words, "
-          + "in order", { import: e.import_id, edition: ed, unstated });
+        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", localize("case-import.index.each_gap_stated_in_order", "each missing entry of a finding recreated in part is stated in the member's words, in order"), { import: e.import_id, edition: ed, unstated });
       /* END DEC-49 REGION is-import-accept */
     }
     const kept = {};
@@ -1169,13 +1167,13 @@ export class CaseImport {
     if (!words(reason))
       return refuse("IMPORT_ACCEPT_NO_REASON", localize("case-import.index.the_reason_for_withdrawing_is", "the reason for withdrawing is 1 to {WORDS_MAX} characters", { WORDS_MAX: String(WORDS_MAX) }), { missing: ["reason"] });
     if (!this.#acceptancesInForce(e.import_id, ed).length)
-      return refuse("IMPORT_NOTHING_ACCEPTED", "no acceptance of this edition is in force", { import: e.import_id, edition: ed });
+      return refuse("IMPORT_NOTHING_ACCEPTED", localize("case-import.index.no_acceptance_in_force", "no acceptance of this edition is in force"), { import: e.import_id, edition: ed });
     /* END DEC-49 REGION is-import-withdraw */
     const at = this.#stamp();
     let rn = null, ids = [], refs = [];
     const out = this.record.transact(() => {
       const live = this.#acceptancesInForce(e.import_id, ed);
-      if (!live.length) return refuse("IMPORT_NOTHING_ACCEPTED", "the acceptance was withdrawn meanwhile", { import: e.import_id, edition: ed });
+      if (!live.length) return refuse("IMPORT_NOTHING_ACCEPTED", localize("case-import.index.acceptance_withdrawn_meanwhile", "the acceptance was withdrawn meanwhile"), { import: e.import_id, edition: ed });
       ids = live.map((a) => idOf("acceptance", a.rn));
       refs = [...new Set(live.flatMap((a) => parse(a.findings, [])))].sort()
         .map((f) => importedFindingRef(e.import_id, f)).filter(Boolean);
@@ -1221,7 +1219,7 @@ export class CaseImport {
     /* DEC-49 REGION is-import-finding */
     if ((finding !== null && finding !== undefined && finding !== "" && !f)
         || (f && !this.#resultsOf(e.import_id, ed).some((r) => r.finding === f)))
-      return refuse("IMPORT_NO_SUCH_FINDING", "the finding named is not one of this edition's",
+      return refuse("IMPORT_NO_SUCH_FINDING", localize("case-import.index.finding_named_is_not_this_edition", "the finding named is not one of this edition's"),
                     { import: e.import_id, edition: ed, findings: [typeof finding === "string" ? finding : null] });
     /* END DEC-49 REGION is-import-finding */
     const at = this.#stamp();
@@ -1246,7 +1244,7 @@ export class CaseImport {
     const open = () => (rn ? this.#one(`SELECT f.* FROM case_import_flags f LEFT JOIN case_import_clears c ON c.flag_rn = f.rn
                                          WHERE f.rn=? AND c.flag_rn IS NULL`, rn) : null);
     /* DEC-49 REGION is-import-flag-open */
-    const notOpen = () => refuse("IMPORT_FLAG_NOT_OPEN", "no open flag answers by that id", { flag: str(flag) });
+    const notOpen = () => refuse("IMPORT_FLAG_NOT_OPEN", localize("case-import.index.no_open_flag_by_id", "no open flag answers by that id"), { flag: str(flag) });
     /* END DEC-49 REGION is-import-flag-open */
     const f = open();
     if (!f) return notOpen();
@@ -1312,8 +1310,7 @@ export class CaseImport {
     const p = typeof publisher === "string" ? publisher.trim() : null;
     /* DEC-49 REGION is-import-watch-address */
     if (!p || !isPublicHttpsLocator(p) || /[?#\s]/.test(p))
-      return refuse("IMPORT_WATCH_BAD_ADDRESS", "the publisher's address is the public https address of their copy, with no "
-        + "query and no fragment", { publisher: typeof publisher === "string" ? publisher.slice(0, 400) : null });
+      return refuse("IMPORT_WATCH_BAD_ADDRESS", localize("case-import.index.publisher_address_is_public", "the publisher's address is the public https address of their copy, with no query and no fragment"), { publisher: typeof publisher === "string" ? publisher.slice(0, 400) : null });
     /* END DEC-49 REGION is-import-watch-address */
     const docket = docketAddressOf(p, i.case_id);
     const held = this.#watchInForce(i.import_id);
@@ -1338,10 +1335,10 @@ export class CaseImport {
     const i = this.#import(importId);
     if (!i) return this.#noSuchEdition(importId, null);
     const w = this.#watchInForce(i.import_id);
-    if (!w) return this.#notWatched(i.import_id, "no watch of this import is in force");
+    if (!w) return this.#notWatched(i.import_id, localize("case-import.index.no_watch_in_force", "no watch of this import is in force"));
     const at = this.#stamp();
     const out = this.record.transact(() => {
-      if (!this.#watchInForce(i.import_id)) return this.#notWatched(i.import_id, "the watch ended meanwhile");
+      if (!this.#watchInForce(i.import_id)) return this.#notWatched(i.import_id, localize("case-import.index.watch_ended_meanwhile", "the watch ended meanwhile"));
       this.sql.exec(`INSERT INTO case_import_watch_ends (watch_rn, by_member, at) VALUES (?,?,?)`, w.rn, k.member, at);
       return { ok: true };
     });
@@ -1416,10 +1413,10 @@ export class CaseImport {
         continue;
       }
       /* check 1: the digest and the form */
-      if (!json || !isSha(digest) || sha256HexSync(json) !== digest) { fail("digest", "the SHA-256 of the entry's JSON is not its digest"); continue; }
+      if (!json || !isSha(digest) || sha256HexSync(json) !== digest) { fail("digest", localize("case-import.index.entry_digest_not_its", "the SHA-256 of the entry's JSON is not its digest")); continue; }
       if (!isObj(f) || !DOCKET_ENTRY_FORMATS.includes(f.format) || f.group !== i.source_group || f.case !== i.case_id
           || seq === null || f.seq !== seq) {
-        fail("form", "the entry is not a docket entry of this team's case at its number"); continue;
+        fail("form", localize("case-import.index.entry_not_a_docket_entry", "the entry is not a docket entry of this team's case at its number")); continue;
       }
       /* check 2: the signature, against the key it embeds; listed when a held manifest lists that key */
       let statement = null;
@@ -1436,7 +1433,7 @@ export class CaseImport {
       /* check 3: the chain */
       const prev = f.previous ?? null;
       if (seq === 1) {
-        if (prev !== null) { fail("chain", "entry 1 names a previous entry"); continue; }
+        if (prev !== null) { fail("chain", localize("case-import.index.entry_one_names_previous", "entry 1 names a previous entry")); continue; }
         row.chain = "checked";
       } else if (!verified.has(seq - 1)) row.chain = "unchecked";
       else if (verified.get(seq - 1) !== prev) { fail("chain", localize("case-import.index.previous_is_not_the_digest", "previous is not the digest of the held entry {v1}", { v1: String(seq - 1) })); continue; }
@@ -1458,7 +1455,7 @@ export class CaseImport {
       if (!i) return this.#noSuchEdition(importId, null);
       const w = this.#watchInForce(i.import_id);
       if (!w || str(docket) !== w.docket)
-        return this.#notWatched(i.import_id, w ? "the watch in force names another docket address" : "no watch of this import is in force",
+        return this.#notWatched(i.import_id, w ? localize("case-import.index.watch_names_another_address", "the watch in force names another docket address") : localize("case-import.index.no_watch_in_force", "no watch of this import is in force"),
                                 { docket: str(docket) });
       const atMs = typeof at === "string" ? Date.parse(at) : NaN;
       const readAt = Number.isFinite(atMs) ? stampInstant("second", atMs) : this.#stamp();
@@ -1476,7 +1473,7 @@ export class CaseImport {
       const rns = [];
       const res = this.record.transact(() => {
         const now = this.#watchInForce(i.import_id);
-        if (!now || now.rn !== w.rn) return this.#notWatched(i.import_id, "the watch changed meanwhile", { docket: str(docket) });
+        if (!now || now.rn !== w.rn) return this.#notWatched(i.import_id, localize("case-import.index.watch_changed_meanwhile", "the watch changed meanwhile"), { docket: str(docket) });
         this.sql.exec(`INSERT INTO case_import_docket_reads (import_id, watch_rn, docket, at, outcome, reason, entries_seen, last_entry,
                                                             recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
                       i.import_id, w.rn, w.docket, readAt, out, why, isObj(answer) && Array.isArray(answer.entries) ? answer.entries.length : 0,
@@ -1787,6 +1784,10 @@ export function caseImportOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
   return CASE_IMPORT_TABLES.includes(name);
 }
+
+/** R2: the ten member ops `caseImportOps` answers, by name (the test set of ops is this declaration). */
+export const CASE_IMPORT_OPS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+  "importedcase", "importedcases", "importflag", "importflagclear", "importunwatch", "importwatch"]);
 
 /** The module's ten member ops: `by` and `viewer` are the control plane's stamps, read from the query, never the
  *  body. `op-declarations` declares them, `control-plane` routes them and `plane` composes them (L11). Bytes arrive in

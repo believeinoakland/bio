@@ -7,7 +7,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { rowOk, refusedThenAccepted, seeded, imp, caseFile, V, MACHINE, SOURCE, CASE, LENS, OTHER_LENS, F1, F2, F3, sha, bytes, zip, world }
   from "./fixture.mjs";
-import { CASE_IMPORT_CHECKS, CASE_IMPORT_TABLES, PART_MAX, importIdOf, caseImportOps, caseImportOwns }
+import { CASE_IMPORT_CHECKS, CASE_IMPORT_TABLES, PART_MAX, importIdOf, caseImportOps, caseImportOwns, CASE_IMPORT_OPS }
   from "../../../src/case-import/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
@@ -224,8 +224,7 @@ test("R2 nothing an import holds is a record bundle, and this module offers no a
   assert.equal(w.count("manifest"), manifest, "no promotion");
   /* the ops: the import, two reads, the completion, R6–R8's four acts and R17's two; none edits, promotes, ratifies or publishes */
   const ops = Object.keys(caseImportOps(w.ci, new URL("https://x/"), {})).sort();
-  assert.deepEqual(ops, ["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw", "importedcase",
-                         "importedcases", "importflag", "importflagclear", "importunwatch", "importwatch"]);
+  assert.deepEqual(ops, [...CASE_IMPORT_OPS].sort());
   /* every later act leaves the imported files and the edition as they were */
   const filesBefore = JSON.stringify(w.rows(`SELECT * FROM case_import_files ORDER BY path`));
   const editionBefore = JSON.stringify(w.rows(`SELECT * FROM case_import_editions`));
