@@ -38,7 +38,7 @@ test("R1 DEC-149: every capture entry names the group's Civicsmith as your group
   /* the fidelity binds */
   assert.equal(cap[OCR_C].bounded_by, "CAPTURE_BOUNDED_BY_FIDELITY");
   assert.equal(cap[OCR_C].why, localize("leg-earning.index.fidelity_bound_bytes_fetched", "{captureWord}, and the bytes as your team's Civicsmith fetched them would be worth {EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that derivation is measured at {bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is {bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.", { captureWord: captureWord(OCR_C), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), bound: "C" }));
-  const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+  const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
   for (const id of [PLAIN, OCR_A, REPLAY, OCR_C]) {
     assert.equal(cap[id].ceiling, ceiling, id);
     assert.doesNotMatch(words(cap[id]), FORBIDDEN, id);
@@ -60,7 +60,7 @@ test("R8 DEC-149: a held standard's capture ceiling names the group's Civicsmith
   const absent = le.earned(null, ["STD-2026-0099"]).earned.capture["STD-2026-0099"];
   assert.equal(held.grade, EARNED_CAPTURE_CEILING);
   assert.equal(absent.undetermined_because, "NO_SUCH_STANDARD");
-  const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is_2", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+  const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
   for (const e of [held, absent]) {
     assert.equal(e.ceiling, ceiling);
     assert.doesNotMatch(words(e), FORBIDDEN);

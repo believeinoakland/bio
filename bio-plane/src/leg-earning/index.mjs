@@ -667,7 +667,7 @@ export class LegEarning {
          immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
          checkEarnedLeg compares this leg against, so the sentence a member reads
          and the refusal that enforces it cannot say different things. */
-      const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+      const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
       /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
          fidelity to bound the bytes by and the answer is the one this record
          has given since REC-18, BYTE FOR BYTE. That identity is not caution: a
@@ -847,7 +847,7 @@ export class LegEarning {
    *  captured text answers undetermined with `STANDARD_NO_TEXT`'s reason; one the record does not hold, undetermined
    *  with `NO_SUCH_STANDARD`. Never throws. */
   #standardCeiling(id) {
-    const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is_2", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+    const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
     const undetermined = (because, why, extra = {}) => ({ mode: "ceiling", axis: "capture", standard: id, grade: null,
       determined: false, undetermined_because: because, why, ...extra, ceiling });
     let read;
