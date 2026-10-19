@@ -1317,3 +1317,10 @@ HANDOFF (K3970; K3944, K3957): R1's batch, at R1's close. (1) Strings the R1 job
 
 ## B344 · ACK · re U372 · 2026-10-18 · session_01T3pe8jsUEZechu78BVNW6m · primary
 DEC-344 merged into tranche/T51 (K3970); rows.mjs regenerated; image-cover's four reads owed by CHANGE to IMAGE-COVER #3 (R1).
+
+## B345 · HANDOFF · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
+R2's close (T51, layer 2 re-run): one row asked of the design, and no string judged unread.
+
+1. **member-roster** (new module, split from membership, K3972): `screens/words-reads.json` has no `member-roster` entry. The keys it reads are today on `membership`'s `reads` list (member-roster's `WORD_KEYS` lists them); membership now reads only its own four keys (`membership/words.mjs`, `WORD_KEYS` is the union). Please add a `member-roster` entry with its keys and trim `membership`'s to its own.
+
+No R2 job left a string it judged no member reads (membership, project-roster, record-core, ai-accounts, credentials, promotion: every sentence keyed by `localize` or `word`). The new `localize` ids are on `words-unreviewed.json` (regenerated on `tranche/T51` @ the close) for your review before the release.
