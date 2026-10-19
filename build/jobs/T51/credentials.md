@@ -78,3 +78,33 @@ Tests and checks:
 - `node checks/run.mjs /home/user/bio`: the only finding naming credentials is the `reevaluation` test copy above, not this module's.
 
 Size (session_01MVQ8cwXNydHkeU6mxmzKQs): test runs 6, module lines 2639
+
+## J4 · COMPLETE
+
+Applied B4 (CR-16, R80 `lastActivity()`), commit 79631222c3 on `job/T51/credentials`.
+
+- `bio-plane/src/credentials/index.mjs`: `lastActivity()` beside `claimed()` (R17). It answers the newest `last_active` over `sessions` as an ISO-8601 string, or `null` when no session holds one. It is a read: it touches no row, and it does not go through `session()`, which would count as activity. It never throws; a store that cannot be read answers `null`, the same answer `instance-setup`'s `#lastActivity` gives today (`bio-plane/src/setup.mjs`:2627, for a dropped `sessions` table).
+- The output is byte-identical to the instance-setup read it replaces (`new Date(ms).toISOString()` over `MAX(last_active)`), so `bootstrapfacts`' `last_used_at` does not change when CR-12 re-points it.
+- Tests: new `bio-plane/test/m/credentials/t51.test.mjs`, three tests each naming R80: the later of two sessions' instants, as ISO-8601, with a control that the read leaves every session row as it was; `null` with no session held and with none recorded; `null`, not a throw, when `sessions` is unreadable.
+
+For BOB, a wording point, not changed here: R80 says "as the ISO-8601 instant it stores", but `sessions.last_active` stores milliseconds (`schema.mjs`:31, 35). The answer is the ISO-8601 string of that instant, as the setup read answers it today. If Bob wants the requirement's wording to say "as the instant it stores, rendered ISO-8601", that is a requirements edit for BOB.
+
+Deferred: nothing.
+
+Found in other modules, not changed here (whole-repo `checks/run.mjs /home/user/bio`):
+- Coverage, 7 failures, none in credentials: `agent-harness` R17; `agent-runner` R36, R37, R38, R40; `extraction` R77; `installer-steps` R26, R31; `journey-check` R19; `screens-inquiry` R81, R82; `setup-words` R19.
+- Words, 15 inline failures, none in credentials: `instance-setup` `setup-fleet.mjs`:30, 32, 35–38, 42, 44, 55, 64, 66, 67 (CR-12's, already accepted by name in the plan); `promotion` `index.mjs`:194, 1151, 1184.
+- Instance-setup's own `#lastActivity` stays in place until CR-12 re-points it to `lastActivity()`, as the plan's CR-12 entry says.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 163, pass 163, fail 0 (the three R80 tests are among them).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 29 product files; 0 failures. Whole run: 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 56 of 56 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 2 files changed by credentials, 0 failures.
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage and words failures only in the modules named above.
+
+No pull request is opened, per the job's rule; BOB merges at the tranche boundary.
+
+Size (session_01XeEQiwMvWUVaEbgAvHSsgC): test runs 1, module lines 2651
