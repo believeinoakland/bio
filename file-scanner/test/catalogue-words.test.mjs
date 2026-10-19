@@ -110,7 +110,7 @@ test('R19 R29 (K4113) the generic templates\' "stated by the administrator" is r
 });
 
 test('R28 R32 the test probe\'s sentences are keyed', () => {
-  assert.equal(served.probes.length, 2);
+  assert.equal(served.probes.length, 3);
   for (const s of served.probes) assert.equal(idsIn(s).length, 1, s);
 });
 
@@ -129,7 +129,7 @@ const CATALOGUE_IDS = [
   'syslog_tls_the_organizations_own_collector', 'https_webhook_the_organizations_own_endpoint',
   'metadefender_get_v4_apikey_before_each', 'joe_sandbox_post_account_info_before_each', 'falcon_sandbox_get_settings_before_each',
 ].map((i) => `file-scanner.catalogue.${i}`);
-const ROUTE_IDS = ['the_eicar_test_file_did', 'no_safe_view'].map((i) => `file-scanner.routes.${i}`);
+const ROUTE_IDS = ['the_eicar_test_file_answered', 'the_eicar_test_file_did', 'no_safe_view'].map((i) => `file-scanner.routes.${i}`);
 
 test('R19 R29 R32 (K874) each id this round wrote is the key of a sentence the member serves', () => {
   const seen = new Set(offered.flatMap((d) => memberTexts(d).flatMap(([, t]) => idsIn(t))));
