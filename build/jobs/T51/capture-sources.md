@@ -31,3 +31,7 @@ Tests and checks (final run on b6aaa8fb43)
 Commit note: the commit message carries no model identifier, following the process rule for pushed artifacts; no Co-Authored-By model line.
 
 Size (session_015AzGmWcjbqBcwr292qPePs): test runs 3, module lines 2664
+
+## J2 · COMPLETE
+
+capture-sources (T51-181) complete on b6aaa8fb43: the words findings are fixed by key and the module's tests, checks and ownership pass. Details are in J1.
