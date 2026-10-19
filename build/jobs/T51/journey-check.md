@@ -93,3 +93,7 @@ CR-25 is done and pushed (R22 Action block by address; R29 pseudo walk proved on
 Merged `tranche/T51` (modules.json `uses` now covers the test's imports). Architecture 0, ownership 0, words 0, format 0; coverage only R19. Suite without `journey.test.mjs`: 83 pass, 0 fail; `pseudo.test.mjs` 7 pass after the fold narrowing.
 Groups: A (Home without an Action door) → "R22 (live arm)" in live.test.mjs (`doors: "project"` passes with the note, `"blockonly"` fails); B (fetched catalogue sentences, `setup`/`security` data, closed fold) → pseudo.test.mjs "R29 (a)", "`setup`", "`security`"; C (`elsewhere` rows, `places` chooser with covers) → pseudo.test.mjs "`places`", "`elsewhere`"; D (comma lists, multi-word fills) → pseudo.test.mjs "R29 (b)" and "Home".
 Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358
+
+## J5 · COMPLETE
+
+COMPLETE (B8 applied, tranche merged). R22 (Action block by address, noted) and R29 (fetched sentences pseudo, data by real markup, fold open) met. Groups: A → R22 (live arm) test in live.test.mjs; B → pseudo.test.mjs R29 (a), setup, security; C → pseudo.test.mjs places, elsewhere; D → pseudo.test.mjs R29 (b) and Home. Suite 83/83 without the walk; architecture, ownership, words, format 0; coverage only R19. Other screens: record text not typed by the walk (project names, queue summaries) counts as data only via the walk's entered list. Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358.
