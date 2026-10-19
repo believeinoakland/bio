@@ -25,3 +25,7 @@ Size (session_01YHA4ZoaUaEuD38r56tWV9k): test runs 8, module lines 1080
 ## J1 · COMPLETE
 
 T51-114 applied: R25 (a skipped setup part reads screen.setup.state.skipped with .skipped.help), both keys added to READS.setup, stale comments gone, the one handlist finding fixed; words check 0 failures for screens-entry, and no line names it over all modules. Module tests 85/85; format, architecture, coverage (25 of 25) and ownership 0 failures. For the design lane: words-reads.json lists neither new key until regenerated (DEC-258); R24 passes meanwhile. Details in build/jobs/T51/screens-entry.md.
+
+## Change B2 (K4093)
+
+Merged `tranche/T51`. No local stand-in of a provider (`BROWSER_ACTS`, shell options, patched registry) is held in the module or its tests; the test kit's stand-in of the shell's kit is the module's interface harness, unchanged. Module tests: tests 85, pass 85, fail 0. format, architecture, coverage (25 of 25), words (0 failures) and ownership: 0 failures. Nothing fails; nothing of another module's found.
