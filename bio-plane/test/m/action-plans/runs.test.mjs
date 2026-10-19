@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE, FIRST } from "./fixture.mjs";
 import { DISCLOSURE, noSuchPlan, actionPlansOf, actionPlansOps } from "../../../src/action-plans/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const propose = (w, run, extra = {}) => w.ap.optionPropose({ plan: w.PL, summary: "Ask the clerk", category: "awareness",
@@ -82,8 +83,7 @@ test("R32: a machine proposal answers its disclosure, why, sources and work_kind
   const { run } = w.openRun({ plan: w.PL, project: w.P });
   assert.equal(w.reviseProject(w.P, "Budget watch", ["work_kinds: [reporting]"], V("alice")).ok, true);
   const p = await propose(w, run, { addressee: OFFICE });
-  const sentence = `Suggested by the assistant (machine work) in run ${run}, under skill version planning@1. It is not the team's `
-    + "decision; it becomes an option only when a member adopts it.";
+  const sentence = localize("action-plans.suggested_assistant_machine", "Suggested by the assistant (machine work) in run {run}, under skill version {skill}. It is not the team's decision; it becomes an option only when a member adopts it.", { run, skill: "planning@1" });
   assert.equal(p.proposal.disclosure, sentence); assert.equal(DISCLOSURE(run, "planning@1"), sentence);
   assert.equal(p.proposal.why, "The clerk holds the records");
   assert.deepEqual(p.proposal.sources, [w.D]);

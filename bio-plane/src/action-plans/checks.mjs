@@ -46,9 +46,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   SUBJECT_MALFORMED: {
     check: 'C-124.4', where: at("refuseMalformed", "is-subject-shaped"),
-    translation: 'A matter is either {kind: inquiry, inquiry} for a question still open, or {kind: outcome, '
-      + 'determination, standard} for one standard\'s outcome of a determination. The one named was neither. '
-      + 'Nothing was written.',
+    translation: word('refusal.SUBJECT_MALFORMED'),
   },
   NO_SUCH_INQUIRY: {
     check: 'C-124.5', where: at("refuseNoSuchInquiry", "is-inquiry-seen"),
@@ -166,7 +164,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   PHASE_MALFORMED: {
     check: 'C-124.32', where: at("#scenarioPhases", "is-phase-shaped"),
-    translation: localize('action-plans.checks.a_phase_has_an_id', 'A phase has an id, a name, the chosen options it holds, when it starts (at the plan\'s start, after another phase, on one outcome of another phase\'s checkpoint, when another matter\'s track reaches a point, or when an obligation\'s occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.'),
+    translation: word('refusal.PHASE_MALFORMED'),
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: 'C-124.33', where: at("#scenarioPhases", "is-phase-option-chosen"),
@@ -220,13 +218,11 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R21: the project's kind of work ---- */
   WORK_KIND_UNKNOWN: {
     check: 'C-124.44', where: at("#workKindsCheck", "is-work-kind-known"),
-    translation: 'A project\'s kinds of work are drawn from: reporting, fixing, legal, oversight, other. Nothing was '
-      + 'written.',
+    translation: word('refusal.WORK_KIND_UNKNOWN'),
   },
   MACHINE_CANNOT_SET_WORK_KIND: {
     check: 'C-124.45', where: at("#workKindsCheck", "is-work-kind-member"),
-    translation: 'A project\'s kinds of work are set by an owner of the project. An automated credential cannot set '
-      + 'them. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_SET_WORK_KIND'),
   },
 
   /* ---- R30, R31, R34: the planning run ---- */
