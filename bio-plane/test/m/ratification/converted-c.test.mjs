@@ -89,7 +89,7 @@ function publishedCaseText({ caseId, edition = 1, project, members, conclusions 
     "## Citations", "", word("case-authoring.body.case_project_cited"), "",
     "## Bias Acknowledgement", "", BACK, "",
     "## Standard Of Evidence", "", word("case-authoring.body.case_production_standard", { project, bar: "" }), "",
-    "## Session Log", "", `### Session ${at} | Case published | alice`, `Trigger: op=publish, case ${caseId} edition ${edition}`, ""];
+    "## Session Log", "", `### Session ${at} | Case published | alice`, localize("case-authoring.document.trigger_op_publish_case", "Trigger: op=publish, case {caseId} edition {edition}", { caseId: String(caseId), edition: String(edition) }), ""];
   return fm.join("\n") + body.join("\n");
 }
 
