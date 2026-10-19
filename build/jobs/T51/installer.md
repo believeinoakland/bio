@@ -71,3 +71,30 @@ NEXT STEPS, in order:
 5. F11 (R74): foreignContainers (index.mjs ~line 505) also examines the Workers on the copy's names (listScripts): a Worker whose name is not one of names.* and carries the copy's slug-scheme marker → stop 'installer.update.stopped.foreign'; a Worker of a retired part named once (installer.update.retired {parts}) and left; run the same check on an install that continues an unfinished copy (installRun's resume branch).
 6. F12: wait for BOB's answer to J8.
 Reports owed at COMPLETE: the plan stop has no check-again key; the limits-API question; scriptHash and readCopyFacts are installer-steps'. Size (session_01CXckEksWGM54HGjBVzGfj2, partial): test runs ~50, module lines 2830.
+
+## J10 · COMPLETE
+
+COMPLETE (B9 and B8 applied; pushed on job/T51/installer, tip cda7c1150d, tranche/T51 merged in).
+
+APPLIED
+(a) readGroup reads the group inside the copy's envelope `{ok, result:{ok, group}, store}`; recordTeam reads the seed answer's code from `result` too. The fixture, wizard.test.mjs' recordsGroup and the seed answers now use the real shape; control (t51 R78): a group at the top level of the answer is not read as recorded (fixture option groupFlat).
+(b) B8 item 1 (S2, R33, R69) was J9. Item 2 (F2, R70): containersState decides positively: an answer listing applications = on; CONTAINERS_OFF = off; a permission refusal = leave it to R38's member check (install continues, as before); anything else = could not tell: `installer.install.stopped.lookup {said}` beside `screen.install.stopped.containers.do`, never "on". The Containers-off stop now offers `screen.install.stopped.containers.done` ("It's on now"): `emit.retry` draws a button that POSTs /begin again with the saved slug, mode and choices (the `again` body, no credential) and goes to Cloudflare again; the shell gained `again()`. KEYS gained that key. Tests t50 R70 (retry label and body, /begin takes it, odd answer stops with nothing created, controls: permission refusal continues).
+Item 3 (F3): `limitReached(api, needs)`; an update computes what the chosen release adds (members not held, container classes not in the account's namespaces, missing buckets) and stops with `screen.install.stopped.limit` before any upload; an update that adds nothing needs no room. Ceilings stay ACCOUNT_LIMITS (no new sentence). Test t50 (workers limit; controls: nothing added, room).
+Item 4 (F4/F6): `exchange` goes through `patiently` (429/5xx/dropped connection wait, drawn through onWait; still failing at the bound = the lasting stop; a refused code is the permission stop as before), in install, update and removal runs. Test t50 "token exchange".
+Item 5 (F11): foreignContainers also examines the Workers on the copy's member names: a Worker whose settings state no `VERSION` plain_text (every member this installer uploads carries it) is foreign and stops with `installer.update.stopped.foreign`; a marked Worker of a member the chosen release no longer has is named once (`installer.update.retired`) and left; one whose settings cannot be read is not judged. The same check runs on an install that continues an unfinished copy (before anything is created; its retired parts join the final panel's notes). Test t51 (update, resumed install, controls: another copy's Worker, the copy's own, retired).
+(c) F12, option A (J8, ruled): `groupNotice` draws `installer.team.unrecorded.how` only for a copy KNOWN unfinished (an install whose mark failed; an update of a copy whose plane lacks INSTALL_COMPLETE); a finished copy, or one the run could not tell, gets head, effect and suggestion with no "how". Nothing is seeded in an update. Tests: t51 R78 (finished install and finished update: no how; controls: mark refused / no mark: how drawn), wizard.test.mjs' 'naming the way' arm now asserts its absence.
+Also: embed.test.mjs held the substring "does not verify" (a code row of case-checker; it showed in the joint words run over every module): now asserts the refusal is a string distinct from the unsigned one.
+
+DEFERRED, with why
+- F7: installer-steps' `offerSubdomain(session, account, slug)` is not on tranche/T51 yet (none in newgroup/src/steps/ at the merge of 6f7be5e65b+), so the offered name before anything is created is not built. Send a CHANGE when it has merged and I call it and show the offered name.
+- fixture.mjs still keeps its own fake account (J4 deferral 1).
+
+FOR BOB
+1. The plan stop (`screen.install.stopped.plan`) has no check-again row; the retry is drawn for the Containers stop only (asked of the design, HANDOFF).
+2. `installer.update.stopped.foreign` says "try the update again"; the install that continues an unfinished copy uses it for want of an install wording. A key for the install is owed.
+3. scriptHash and readCopyFacts (installer-steps' readback.mjs and account.mjs) still use plain fetch (F4/F6): installer-steps' to route through patiently.
+4. The row for a finished copy's `how` is owed by the design; until then the telling omits it.
+5. installer.md: R18/R78 read "run the installer again"; it now holds only for an unfinished copy. newgroup/dist/newgroup.bundled.mjs is stale (t47 R53 red, as before); `npm run build` at L11's close. The retry's new function `again` and the KEYS addition change the bundle's input.
+
+CHECKS (process repo, T51 tip merged): format 0 failures; architecture 0; coverage 70 of 70; ownership 0 failures; words installer: 0 failures (inline 0, testcopy 0); the all-modules words run names no line of installer; setup-words build --check: rows match. Suites: wizard 207; requirements 54; t48 10; t50 19; t51 7; corpus 3; realsize 4; embed 23; steps 78 pass; t47: 4 pass, R53 red only on the stale committed bundle.
+Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~25, module lines 2880
