@@ -14,7 +14,7 @@
 
 **Ran:** `node --test bio-plane/test/m/docket/`: 80 pass, 0 fail. Users' tests (`public-read/docket-real`, `plane/docket`, `network-notices`, `action-holds`): 120 pass, 2 fail (the inherited two). Checks: format 0 failures; architecture 14 files, 0 failures; coverage 30 of 30 ids, 0 failures; ownership 0 failures; words (docket) 0 failures, inline 0, plain 0, testcopy 0, handlist 0; `setup-words/build.mjs --check`: only the expected stale-rows note, no refusal naming docket. (`checks/run.mjs` over the whole product shows other modules' words findings, none docket's.)
 
-Size (session_01LB8wrfssMdqb1sPQdkkUPT): test runs 8, module lines 1327
+Size (session_01LB8wrfssMdqb1sPQdkkUPT): test runs 8, module lines 1635
 
 ## J1 · COMPLETE
 
