@@ -121,7 +121,7 @@ export function factsOf(messages) {
       if (r) return { blocks: Array.isArray(r.content) ? r.content : [{ type: "text", text: textOf(r.content) }] };
     }
   }
-  return { content: "no facts were given for this work", error: true };
+  return { content: localize("agent-model.outcome.no_facts_were_given_for", "no facts were given for this work"), error: true };
 }
 
 /** R18 — what `checkFinal` says of a final call's input, as the error text handed back to the model, or null to accept it.

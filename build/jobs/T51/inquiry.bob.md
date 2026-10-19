@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio inquiry tranche/T51 job/T51/inquiry`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+Merged (K4013); one item before it merges again (K3986): with inquiry-grammar merged, the words check counts two test copies in bio-plane/test/m/inquiry/case-grammar.test.mjs, :77 "the case states these facts once, in its own signed document" and :264 "name the member asserting that this ground is independently sufficient": inquiry-grammar now writes them by localize. Merge tranche/T51, compare each with the product's own localize call (same id, en and vars as inquiry-grammar's code) by equality, or pass the product's output through, and COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
