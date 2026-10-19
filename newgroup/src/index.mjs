@@ -35,7 +35,7 @@ import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_
   relHeaders, hex, vcmp, b64url, rand, cf, special, approve, apiOf, scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, readBack,
   BINDING_OF, membersPresent, instanceAiOk, SEAL_BINDING, heldBindings, hostOf, planeLimits, reportsBuilds, vpcServiceOk,
   uploadInstall, uploadUpdate, planeInSync, putSecret, rotateSecrets, loadFleet, installFleet, bindMembers, ensureSubdomain,
-  verifyInstall, failedLags, verifyServing, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
+  verifyInstall, failedLags, verifyServing, confirmContainers, offerSubdomain, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
   ARMED_SIGNERS } from "./steps/index.mjs";
 /* R63: the words of what a copy already holds. */
 import { describeCopy } from "./held.mjs";
@@ -576,7 +576,7 @@ async function foreignContainers(api, names, release, loaded) {
 
 /* R62, R63: what the account already holds, drawn: each copy by its own worker's answers (stored nowhere), and the installer's
    own counts where the worker states none. */
-async function describeHeld(token, acct, inv, memberNames, only = null) {
+async function describeHeld(token, acct, inv, memberNames, only = null, onWait = null) {
   const api = apiOf(token, acct);
   let prefix = null;
   try { prefix = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; } catch (e) { if (special(e)) throw e; }
@@ -585,7 +585,7 @@ async function describeHeld(token, acct, inv, memberNames, only = null) {
   for (const copy of allCopies(inv)) {
     if (only && copy.slug !== only) continue;
     const address = copy.plane && prefix ? `https://${copy.slug}.${prefix}.workers.dev` : null;
-    const facts = await readCopyFacts(address);
+    const facts = await readCopyFacts(address, onWait);
     const fallback = ["projects", "documents", "published", "members"].some((k) => facts[k].known) ? null
       : await countsViaApi(api, copy, memberNames, inv.scripts, spaces, apps);
     out.push({ ...describeCopy(copy, address, facts, fallback), plane: copy.plane, team: facts.team.known ? facts.team.value : null });
@@ -661,7 +661,7 @@ async function installRun(emit0, code, saved, guard) {
     if (!resumed && !alongside && (inv.planes.length || inv.orphans.legacy.length || inv.orphans.slugged.size)) {
       /* R62: nothing is created or changed; the page offers the three ways on. */
       emit.no("fresh", word("screen.install.stopped.exists"));
-      const held = await describeHeld(token, acct.id, inv, memberNames);
+      const held = await describeHeld(token, acct.id, inv, memberNames, null, onWait);
       return emit.done(existsPanel({ copies: held, version: await newestVersion(), slug }));
     }
     emit.ok("fresh", alongside ? word("installer.install.fresh.alongside") : word("screen.install.progress.single"));
@@ -682,7 +682,8 @@ async function installRun(emit0, code, saved, guard) {
   catch (e) { if (special(e)) throw e; planAnswer = { plan: "unknown", detail: e.message }; }
   if (planAnswer.plan === "free") {
     emit.no("plan");
-    return emit.fail(word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do"));
+    await emit.fail(word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do"));
+    return emit.retry(word("screen.install.stopped.plan.done"));
   }
   if (planAnswer.plan === "unknown") {
     emit.no("plan");
@@ -692,6 +693,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
   await emit.step("room", word("installer.step.room"));
+  let offer = null;
   try {
     const containers = await containersState(api);
     if (containers.state === "off") {
@@ -709,6 +711,8 @@ async function installRun(emit0, code, saved, guard) {
       emit.no("room");
       return emit.fail(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
     }
+    /* F7: the address names that would be tried, fixed now and used as they are (nothing is registered here). */
+    offer = await offerSubdomain(token, acct.id, slug).catch((e) => { if (approve(e)) throw e; return null; });
     emit.ok("room");
   } catch (e) {
     if (special(e)) throw e;
@@ -820,7 +824,7 @@ async function installRun(emit0, code, saved, guard) {
   await emit.step("addr", word("installer.step.address.install"));
   let base = null, addrError = null;
   try {
-    const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
+    const { sub, registered } = await ensureSubdomain(token, acct.id, slug, offer);
     base = `https://${slug}.${sub}.workers.dev`;
     emit.ok("addr", registered ? word("installer.address.prefix", { prefix: registered }) : word("screen.install.progress.address"));
   } catch (e) { if (special(e)) throw e; addrError = e; emit.no("addr"); }
@@ -861,7 +865,9 @@ async function installRun(emit0, code, saved, guard) {
     : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed, onWait)
     : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
   /* R33's read-back, R46's named jobs and R68's container images: each a lag, and no success while one stands. */
-  const verdict = withByteLags(served, [...byteLags, ...logLags, ...(fleet?.imageLags || [])], capable);
+  /* S9: a container member still running the old build after the rollout is restarted, or named as a lag. */
+  const boxes = st ? await confirmContainers(token, acct.id, base, release, fleet, onWait) : { lags: [] };
+  const verdict = withByteLags(served, [...byteLags, ...logLags, ...(fleet?.imageLags || []), ...boxes.lags], capable);
   if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.verify.answers") + " " + UNDETERMINED_BUILDS);
   else if (st) emit.no("verify", word("installer.verify.unconfirmed"));
   else emit.no("verify", word("screen.install.stopped.lasting") + " " + word("screen.install.stopped.lasting.do"));
@@ -974,14 +980,15 @@ function groupUnrecorded(recorded, before) {
 }
 /* F12 (R18, R78, K3892): `runAgain` is true only for a copy KNOWN to be unfinished, where running the installer again resumes it and
    records the name. A finished copy (or one the run could not tell) is sent to the "already holds a copy" page by that advice,
-   which records nothing: the way is then not drawn, the rest is (the design's row for a finished copy is owed). */
+   which records nothing: it is told `installer.team.unrecorded.how.finished` in its place (DEC-365). */
 function groupNotice(kind, slug, before, runAgain = false) {
   if (!kind) return "";
   const why = kind === "certain" ? word("installer.team.unrecorded.certain", { before, first: FIRST_GROUP_RELEASE })
     : kind === "unknown" ? word("installer.team.unrecorded.unknown", { first: FIRST_GROUP_RELEASE }) : "";
   return `<div class="notice" id="team-unrecorded"><p style="margin:0 0 .6em"><b>${esc(word("installer.team.unrecorded.head"))}</b></p>
 <p>${esc(why ? why + " " : "")}${esc(word("installer.team.unrecorded.effect"))}</p>
-${runAgain ? `<p>${esc(word("installer.team.unrecorded.how"))}</p>\n` : ""}<p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
+<p>${esc(runAgain ? word("installer.team.unrecorded.how") : word("installer.team.unrecorded.how.finished"))}</p>
+<p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
 }
 
 /* R78 (K3868, K3878): the copy's own answer about its producing team, read with `Authorization: Bearer` only when a
@@ -1224,8 +1231,9 @@ async function updateRun(emit00, code, saved, guard) {
       return back ? stopped(word("installer.update.stopped.noanswer", { version: beforeText }))
         : stopped(word("screen.install.stopped.lasting"), word("screen.install.stopped.lasting.do"));
     }
+    const boxes = await confirmContainers(token, acct.id, base, release, fleet, onWait);
     verdict = withByteLags(await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || [], onWait),
-      [...byteLags, ...logLags], capable);
+      [...byteLags, ...logLags, ...boxes.lags], capable);
     if (verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.update.verify.answers", { version: release.version }) + " " + UNDETERMINED_BUILDS);
     else emit.no("verify", word("installer.update.verify.unconfirmed"));
   }

@@ -121,6 +121,7 @@ test("R78 an install, a resumed install and an update's read: an install and a r
   /* F12: the copy is finished (its mark is written): running the installer again would land on "already holds a copy" and record
      nothing, so that advice is not drawn; the head, the effect and the suggestion are. */
   assert.ok(!refused.page.done.includes(h(word("installer.team.unrecorded.how"))), "no loop: a finished copy is not told to run the installer again");
+  assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.how.finished"))), "it is told what stays refused and who can set it");
   assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.effect"))));
   /* Control: a copy the install could not finish (its mark refused) is unfinished, and running the installer again resumes and records it. */
   const unfinished = await run({ slug: "r78-nomark", group: null, seedRefused: "GROUP_SLUG_MALFORMED", refuseMark: true });
@@ -141,6 +142,8 @@ test("R78 an install, a resumed install and an update's read: an install and a r
   const fin = await run({ slug: "r78-fin", mode: "update", pre: { "r78-fin": [...planeBase("r78-fin"), { type: "secret_text", name: "INSTALL_COMPLETE" }] }, group: null });
   assert.ok(told(fin));
   assert.ok(!fin.page.done.includes(h(word("installer.team.unrecorded.how"))), "no loop");
+  assert.ok(fin.page.done.includes(h(word("installer.team.unrecorded.how.finished"))));
+  assert.ok(!upd.page.done.includes(h(word("installer.team.unrecorded.how.finished"))), "(an unfinished copy is told the other)");
   assert.ok(fin.page.done.includes(h(word("installer.team.unrecorded.suggest", { slug: "r78-fin" }))));
   assert.deepEqual(fin.seeds, []);
   /* Control: no request the installer makes carries a Claude credential (R36). */
@@ -156,6 +159,21 @@ test("R78 the group is read inside the copy's answer envelope `{ ok, result: { o
   /* Control: the same recorded team at the top level of the answer is not read; an update tells it could not read it. */
   const flat = await run({ slug: "r78-flat", mode: "update", pre: { "r78-flat": planeBase("r78-flat") }, groupFlat: true });
   assert.ok(told(flat), "unread is told, never taken for recorded");
+});
+
+test("R69 R33 (S9) a container member still serving the old build after the rollout is a named lag on an update, and no success is claimed over it; control: members on the release's build confirm", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, container: true });
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  const slug = "s9-lag";
+  const pre = { [slug]: planeBase(slug), [RUNNER]: old };
+  const common = { slug, mode: "update", rel, pre, preClasses: { [RUNNER]: ["AgentRunner"] } };
+  const lagging = await run({ ...common, copy: { memberVersion: "0.0.1" } });
+  assert.ok(lagging.page.status("verify") === "no", "not confirmed");
+  assert.ok(lagging.page.done.includes(h(word("installer.lag.member.version", { name: "agent-runner", version: "0.0.1" }))), "the lag is named");
+  const fine = await run(common);
+  assert.equal(fine.page.status("verify"), "ok");
+  restoreSigners();
 });
 
 /* ------------------------------------------------------------------------------------------------ R79 */

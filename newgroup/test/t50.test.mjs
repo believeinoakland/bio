@@ -493,6 +493,10 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   /* Control: a refusal for want of permission is the container member's own matter (R38): the install continues. */
   const noperm = await run({ slug: "pre-noperm", containers: "read" });
   assert.equal(noperm.page.status("room"), "ok");
+  /* The Workers Paid stop offers its own "Check again", beginning the run again as the Containers stop's does. */
+  const free = await run({ slug: "pre-free", plan: "free" });
+  assert.equal(free.page.retry.label, word("screen.install.stopped.plan.done"));
+  assert.equal(free.page.retry.body.slug, "pre-free");
   /* Control: a clean account passes all four checks. */
   const clean = await run({ slug: "clean-one" });
   assert.equal(clean.page.status("plan"), "ok");
