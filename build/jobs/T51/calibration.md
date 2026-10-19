@@ -35,3 +35,22 @@ Missing word rows (for the design's missing-row batch, K3944; not added by me): 
 **Note on the commit:** the trailer for the model's co-author line is left out of the commit message, because the model-identity rule forbids a model identifier in what is pushed to a repository. The Claude-Session trailer is kept.
 
 Size (session_01PxHWJheiSaeECCE8B1sywP): test runs 2, module lines 1048
+
+## J3 · COMPLETE
+
+**Answer to CHANGE K3988 (B3):** (1) the BETTER test now compares `drifted(DRIFT.BETTER).why` by equality with the same `localize` call the module makes; the words check reads it as 0 failures (a code-written `en` in a test is not flagged). (2) Correction to my REPORT: the plain arm does catch comma-joined lowercase sentences (`isPlainSentence` accepts them), so there is no process-tool gap; the sentences I missed were split literals and templates, and I converted them by hand under R13. No tool change is requested. (3) Noted: code-written ids need no design row; `rows.mjs` gains them at the layer close. The missing-row list in my REPORT stands as information only.
+
+**Merge:** `tranche/T51` merged into `job/T51/calibration` again (no conflict; 4 files from the tranche, not this module's).
+
+**Checks run on the merged tree:**
+- Module tests `node --test test/m/calibration/*.test.mjs`: 73 pass, 0 fail.
+- `node checks/words.mjs bio calibration`: 0 failures.
+- `node checks/ownership.mjs bio calibration tranche/T51 job/T51/calibration`: 5 files (the 4 module files and this record), 0 failures.
+- `node checks/coverage.mjs bio calibration`: 20 of 20 live requirement ids named by a test, 0 failures.
+- `node checks/architecture.mjs bio calibration` and `node checks/format.mjs bio`: 0 failures.
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note for the new code-written ids, expected until the layer close; no refusal naming this module.
+- Earlier full `checks/run.mjs bio`: format and architecture 0 failures; words and coverage fail only in other modules.
+
+**Layer tests:** none named in `build/manifest.md`.
+
+Size (session_01PxHWJheiSaeECCE8B1sywP): test runs 4, module lines 1048
