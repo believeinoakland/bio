@@ -39,3 +39,7 @@ T51-125 applied; plane suite 264/264, migrate-released 1/1; format, architecture
 - Verified with instance-setup's branch merged without committing (`git merge --no-commit`, then aborted): plane suite 265/265. `tranche/T51` does not yet hold instance-setup's change, so the two new assertions need it to merge first; on the tranche alone the admin assertion fails and the route count is 44.
 - Checks: format, architecture, coverage (66/66), words, ownership: 0 failures.
 - Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 7, module lines 2306
+
+## J2 · COMPLETE
+
+CHANGE B2 applied: publicOp hands bootstrapOp the resolved admin caller; door.test counts 45 routes. Suite 265/265 with instance-setup's branch merged uncommitted; tranche/T51 alone needs instance-setup merged first for those two assertions. Checks 0 failures.
