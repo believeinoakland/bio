@@ -18,14 +18,14 @@
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
 import { SIGNIN_HOLD_MS, WAITING_HEADER, TRACE_HEADER } from './waits.mjs';
-import { localize } from '../../bio-plane/src/setup-words/index.mjs';
+import { says } from './says.mjs';
 
 const UNKNOWN = JSON.stringify({ ok: false, code: 'UNKNOWN' });
 const DISABLED = JSON.stringify({ ok: false, code: 'LOCAL_RUNNER_DISABLED' });
 // R25: the one key of the class's own storage, the hold's deadline (ms since the epoch).
 const HOLD_KEY = 'signin_hold_until';
 const LIBRARY_DETAIL_MAX = 120;
-const STARTED_WORDS = localize('agent-runner.worker.your_teams_civicsmith_could_not', 'Your team\'s Civicsmith could not start its Claude connection just now. Wait a minute, then try again.');
+const STARTED_WORDS = says('RUNNER_NOT_STARTED');
 
 const log = (line) => console.log(JSON.stringify(line));
 // The first 12 hex characters of the Durable Object id (R30).
@@ -119,7 +119,7 @@ export class AgentRunner extends Container {
   async passThrough(request) {
     let res;
     try { res = await this.containerFetch(request, this.defaultPort); }
-    catch (e) { res = new Response(localize('agent-runner.worker.failed_to_reach_the_container', 'Failed to reach the container: {v1}', { v1: String(e && e.message ? e.message : e) }), { status: 500 }); }
+    catch (e) { res = new Response(`Failed to reach the container: ${e && e.message ? e.message : e}`, { status: 500 }); }
     if (res.status !== 101 && !/^application\/json\b/i.test(res.headers.get('content-type') || '')) {
       const said = libraryWords(await res.text().catch(() => ''));
       res = new Response(JSON.stringify({ ok: false, code: 'RUNNER_NOT_STARTED', status: res.status, detail: STARTED_WORDS,
