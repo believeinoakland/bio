@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import {open, main, actsIn, button, fill, press, TIMELINE, P, ENT, ORG, SHA, word, drew, notDrew, dayOf, MORE_PATHS, MATTER, SHA2} from "./fixtures.mjs";
+import {open, main, actsIn, button, fill, press, TIMELINE, P, ENT, ORG, SHA, word, drew, notDrew, dayOf, MORE_PATHS, MATTER, SHA2, hasWord} from "./fixtures.mjs";
 
 const at = "/app/timeline/" + P;
 
@@ -212,4 +212,34 @@ test("R34 the timeline's event form chooses the project's documents by title and
   assert.equal(none.doc.getElementById("tl-doc"), null);
   await press(none, "createevent", { reason: "x" });
   assert.equal(none.byOp("createevent").length, 0);
+});
+
+/* R45 (T51-120), K3996 */
+test("R45 each finding draws its state by key (a deferred one \"Deferred\", a set-aside one \"Set aside\"), explained by progression.finding.state.help; control: a finding with no decision draws Open", async () => {
+  const base = MATTER().findings[0];
+  const p = await open(MORE_PATHS.matter, { plane: { instance: ok(MATTER({ findings: [{ ...base, state: "deferred", disposition: { applies: true, state: "deferred", reason: "wait for the reply" } },
+    { ...base, stage_key: "closing", stage_label: "Closing", state: "dismissed" }, { ...base, stage_key: "other", stage_label: "Other" }] })) } });
+  const st = secOf(p, "progression.findings").querySelectorAll("[data-finding-state]").map((e) => [e.getAttribute("data-finding-state"), e.textContent]);
+  assert.deepEqual(st, [["deferred", word("progression.finding.state.deferred")], ["dismissed", word("progression.finding.state.dismissed")], ["open", word("progression.finding.state.open")]]);
+  assert.ok(secOf(p, "progression.findings").querySelector(`[data-tip*="${word("progression.finding.state.help").slice(0, 30)}"]`), "explained by the help");
+});
+
+test("R45 the Define and Revise step fields are labelled by the six keys in order, with the steps help under Define and the revise help under Revise", async () => {
+  const keys = ["key", "label", "after", "within", "required", "cardinality"].map((c) => "progression.steps.label." + c);
+  for (const k of [...keys, "progression.steps.help", "progression.revise.help"]) assert.ok(hasWord(k), k);
+  const p = await open(MORE_PATHS.progression);
+  const cols = main(p).querySelectorAll("[data-columns]");
+  assert.equal(cols.length, 2, "Define and Revise each");
+  for (const c of cols) assert.equal(c.textContent, keys.map((k) => word(k)).join(" | "));
+  drew(main(p), "progression.revise.help");
+  drew(main(p), "progression.steps.help");
+});
+
+test("K3996 an event placed nowhere draws its grade_why, {key, vars}, through its word; control: a bare string draws none of our English", async () => {
+  const p = await open(at);
+  drew(main(p), "events.why.placed_nowhere_event");
+  const t = TIMELINE();
+  t.world.placed_nowhere[0].grade_why = "a sentence written elsewhere";
+  const q = await open(at, { plane: { timeline: ok(t) } });
+  assert.ok(!main(q).textContent.includes("a sentence written elsewhere"));
 });
