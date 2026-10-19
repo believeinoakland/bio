@@ -64,3 +64,29 @@ Tests and checks after the merge:
 - `setup-words/build.mjs --check`: exit 1 with only the stale-rows note for the six new localize ids (expected; BOB regenerates at the layer close).
 
 Size (session_01AMS17zW7T6NQQhJwzerr6u): test runs 8, module lines 3303.
+
+## J4 · COMPLETE
+
+CR-18 · extraction (R77) is done. Commit a248229e02 on job/T51/extraction.
+
+Entries applied:
+- R77: `readingFor`'s answer states `bytes` from provenance's `homeOf(captureSha).bytes`. The module keeps the provenance it is handed (the `provenance` option, previously used only for the testimony slot). `bytes` is absent when the register holds no row for the capture.
+- Test: `bio-plane/test/m/extraction/r77.test.mjs` (new), four tests naming R77. A capture with a register row answers its stored size and every other field equals the answer without provenance; a capture with no row answers no `bytes` key; no provenance joined answers no `bytes` key; a viewer the bundle is withheld from receives no `bytes` (and no `text_units`).
+
+Decision for BOB (lower-level, taken by me, recorded here since the job may not write build/rulings.md): `bytes` is withheld with the bundle, as `text_units` and the unread pages are (R27's "withheld with the bundle"). R77 says only "absent when the register holds no row". A viewer the bundle is withheld from therefore gets no size. Say if you want it always stated.
+
+Deferred: none.
+
+Other modules: none found. The R77 status marker in `build/requirements/extraction.md` still reads "not yet met: T51"; BOB updates it (the job does not write requirements).
+
+Tests and checks:
+- `node --test bio-plane/test/m/extraction/`: 188 tests, 188 pass, 0 fail (184 before, plus the four R77 tests).
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio extraction`: 0 failures.
+- `checks/coverage.mjs /home/user/bio extraction`: 53 of 53 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`: 0 failures (3 files changed by extraction, all inside its paths).
+- `checks/run.mjs /home/user/bio`: no finding in extraction or extractrun. The repository's words total is 15 failures in other modules (promotion and others), none mine.
+- `setup-words/build.mjs --check`: a stale note for `words-unreviewed.json`, no refusal naming extraction. Generated artifacts not touched.
+- Packages installed (`npm ci --ignore-scripts`) in each directory with a tracked lockfile before the test run.
+
+Size (session_011WULPoKT4oA92LsPkDR5nx): test runs 2, module lines 3310 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
