@@ -21,7 +21,7 @@
  * drift from its source (D-106's class)". **That objection is ANSWERED here, not
  * overruled.** The instrument is the one this record always reaches for — a
  * hash-verified copy of exact bytes, never a second codebase
- * (`newgroup/scripts/embed-release.mjs`, `scripts/embed-signpage.mjs`) — and the
+ * (`newgroup/scripts/embed-release.mjs`) — and the
  * shape is `check-versions`': EQUALITY, in both directions, refusing rather than
  * preferring whichever side looks newer.
  *
@@ -632,13 +632,49 @@ export function recordContainerDigest(member, className, digest) {
  * `wrangler.jsonc` and never defaulted. A bucket is named by its ROLE, never by the account's bucket name, so the
  * installer binds the copy's own bucket of that role and a later per-copy name needs no new release. The roles are the
  * plane's two buckets, as this project's configs name them; any other bucket is refused by its binding. The statement's
- * format is unchanged: the part rides `parts=` like every other. */
+ * format is unchanged: the part rides `parts=` like every other.
+ * (K4094) A member with its own Durable Objects adds `durable_objects: {bindings: [{name, class_name}], migrations:
+ * [{tag, classes}]}`, copied the same way: the bindings with no `script_name` (another script's object is not the
+ * member's to bind) and its migrations in order, each `new_sqlite_classes` under its tag. The installer reads them from
+ * the signed release rather than from a table of its own. */
 export const WORKER_PART_PATH = "worker.json";
 export const BUCKET_ROLES = Object.freeze({ "bio-captures": "captures", "bio-published": "published" });
 
-/** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket and states no
- *  cron; `{part: {descriptor, bytes}}`; or `{missing: [what, …]}` naming each binding whose bucket has no role (by its
- *  binding name) and each list that is not one (`r2_buckets`, `triggers.crons`). Never throws. */
+/** A member's own Durable Objects from its parsed config (K4094): `{bindings, migrations}`, or null when it owns none.
+ *  Names each binding without a name or class and each migration that is not `{tag, new_sqlite_classes}` (the forms
+ *  the installer reads) into `missing`. */
+function ownDurableObjects(c, missing) {
+  const dob = c.durable_objects === undefined ? {} : c.durable_objects;
+  const list = isBlock(dob) && dob.bindings !== undefined ? dob.bindings : [];
+  if (!isBlock(dob) || !Array.isArray(list)) missing.push("durable_objects.bindings");
+  const bindings = [];
+  for (const b of Array.isArray(list) ? list : []) {
+    if (isBlock(b) && b.script_name !== undefined) continue;
+    if (!isBlock(b) || typeof b.name !== "string" || !b.name || typeof b.class_name !== "string" || !b.class_name) {
+      missing.push("durable_objects.bindings");
+      continue;
+    }
+    bindings.push({ name: b.name, class_name: b.class_name });
+  }
+  const migs = c.migrations === undefined ? [] : c.migrations;
+  if (!Array.isArray(migs)) missing.push("migrations");
+  const migrations = [];
+  for (const m of Array.isArray(migs) ? migs : []) {
+    const classes = isBlock(m) ? m.new_sqlite_classes : undefined;
+    if (!isBlock(m) || Object.keys(m).some((k) => k !== "tag" && k !== "new_sqlite_classes") || typeof m.tag !== "string" || !/^v[0-9]+$/.test(m.tag)
+        || !Array.isArray(classes) || !classes.every((x) => typeof x === "string" && x)) {
+      missing.push("migrations");
+      continue;
+    }
+    migrations.push({ tag: m.tag, classes: [...classes] });
+  }
+  return bindings.length || migrations.length ? { bindings, migrations } : null;
+}
+
+/** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket, states no cron
+ *  and owns no Durable Object; `{part: {descriptor, bytes}}`; or `{missing: [what, …]}` naming each binding whose bucket
+ *  has no role (by its binding name), each list that is not one (`r2_buckets`, `triggers.crons`) and each Durable Object
+ *  or migration the part cannot state. Never throws. */
 export function workerPart(cfg) {
   const c = isBlock(cfg) ? cfg : {};
   const missing = [];
@@ -655,9 +691,10 @@ export function workerPart(cfg) {
   const crons = isBlock(triggers) && triggers.crons !== undefined ? triggers.crons : (isBlock(triggers) ? [] : null);
   if (!Array.isArray(crons) || !crons.every((x) => typeof x === "string" && x.trim()))
     missing.push("triggers.crons");
+  const objects = ownDurableObjects(c, missing);
   if (missing.length) return { missing };
-  if (!buckets.length && !crons.length) return { part: null };
-  const descriptor = { r2_buckets: buckets, crons: [...crons] };
+  if (!buckets.length && !crons.length && !objects) return { part: null };
+  const descriptor = { r2_buckets: buckets, crons: [...crons], ...(objects ? { durable_objects: objects } : {}) };
   return { part: { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") } };
 }
 

@@ -836,6 +836,39 @@ test("R25: the repository's own members with buckets or crons carry a Worker par
   assert.ok(scanner.crons.length >= 1, "its schedule is stated");
 });
 
+test("R25 (K4094): workerPart states a member's own Durable Objects and migrations in order, each migration as {tag, classes}; another script's object (script_name) is not the member's and is left out; a part the Durable Objects alone need is written, and a member owning none is not", () => {
+  const own = [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }];
+  const cfg = { durable_objects: { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" }, ...own] },
+    migrations: [{ tag: "v1", new_sqlite_classes: ["SegmentDriver"] }, { tag: "v2", new_sqlite_classes: ["CheckRecord"] }] };
+  const w = workerPart(cfg);
+  assert.deepEqual(w.part.descriptor, { r2_buckets: [], crons: [], durable_objects: { bindings: own,
+    migrations: [{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }] } }, "the member's own objects, the migrations in order");
+  assert.equal(w.part.bytes.toString("utf8"), JSON.stringify(w.part.descriptor, null, 2) + "\n");
+  assert.deepEqual(workerPart({ durable_objects: { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" }] } }), { part: null },
+    "only another script's object: nothing of this member's to bind");
+  assert.deepEqual(workerPart({ durable_objects: { bindings: [] }, migrations: [] }), { part: null }, "stated and empty: none");
+
+  const lacks = (c) => workerPart(c).missing;
+  assert.deepEqual(lacks({ durable_objects: { bindings: [{ name: "SCANNER" }] } }), ["durable_objects.bindings"], "a binding with no class");
+  assert.deepEqual(lacks({ durable_objects: [{ name: "SCANNER", class_name: "FileScanner" }] }), ["durable_objects.bindings"], "a list that is not bindings");
+  assert.deepEqual(lacks({ durable_objects: { bindings: [{ name: "SCANNER", class_name: "FileScanner" }] }, migrations: [{ tag: "1", new_sqlite_classes: ["FileScanner"] }] }),
+    ["migrations"], "a tag the installer does not read");
+  assert.deepEqual(lacks({ durable_objects: { bindings: [{ name: "S", class_name: "F" }] }, migrations: [{ tag: "v1", renamed_classes: [{ from: "A", to: "F" }] }] }),
+    ["migrations"], "a migration that is not new classes is refused, never dropped");
+  assert.deepEqual(lacks({ migrations: {} }), ["migrations"]);
+});
+
+test("R25 (K4094): over the repository's own fleet, each member's Worker part states the Durable Objects its configuration owns: agent-worker its two, agent-runner its one, file-scanner its two", () => {
+  const cfgOf = (name) => parseJsonc(readFileSync(join(discoverMembers().find((m) => m.name === name).abs, "wrangler.jsonc"), "utf8"));
+  assert.deepEqual(workerPart(cfgOf("agent-worker")).part.descriptor.durable_objects, {
+    bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }],
+    migrations: [{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }] });
+  assert.deepEqual(workerPart(cfgOf("agent-runner")).part.descriptor.durable_objects,
+    { bindings: [{ name: "AGENT_RUNNER", class_name: "AgentRunner" }], migrations: [{ tag: "v1", classes: ["AgentRunner"] }] });
+  assert.deepEqual(workerPart(cfgOf("file-scanner")).part.descriptor.durable_objects.bindings,
+    [{ name: "SCANNER", class_name: "FileScanner" }, { name: "RENDERER", class_name: "SafeViewRenderer" }]);
+});
+
 
 /* ------------------------------------------------------------------------ R35 */
 
@@ -1247,7 +1280,13 @@ test("R38: over the real fleet, each member that builds carries only the rows it
   for (const m of discoverMembers().filter((x) => x.bundle)) {
     if (!(await realBuildable(m))) continue;     /* dependencies not installed here: freshBuildRunnable says so, as the fleet gate does */
     const built = await buildMember(m);
-    if (built.words?.rows === "all") continue;     /* keeps the whole table for a site of another module: the next test */
+    /* a member whose inputs reach no word table records nothing (`words` null) and carries none of it (agent-runner:
+       its Worker's own data holds the rows its image reads, K4011): the control is that no table input is bundled */
+    if (built.words === null) {
+      assert.ok(!Object.keys(built.metafile.inputs).some((p) => /setup-words\/rows\.mjs$/.test(p)), `${m.name} bundles the word table and records no rows`);
+      continue;
+    }
+    if (built.words.rows === "all") continue;     /* keeps the whole table for a site of another module: the next test */
     const keys = keptKeys(built.bytes);
     assert.ok(keys && keys.length > 0 && keys.length === built.words.rows, `${m.name}: carries a word table of ${built.words?.rows} rows`);
     assert.ok(keys.length < 200, `${m.name}: ${keys.length} rows of ${built.words.total}, not the whole table`);
