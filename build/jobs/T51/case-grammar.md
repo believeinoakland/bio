@@ -54,3 +54,7 @@ What the findings are: (a) `complete.mjs`, `edition.mjs`, `standing.mjs`, `tensi
 My best reading, same as B3 on strength: (a) is signed, versioned text (K1333, B1's exception to K3366 for byte-pinned text). A `localize` id would let a row edit change a signed edition without a new format, and the offline checker has no table. So I leave (a) as code, unkeyed, and list it in a REPORT for the design's `unkeyed` list. For (b) the same applies if the checker prints them offline in the bundled program; I read them as checker output pinned by `program.mjs`'s SHA-256, so also unkeyed. Tests: I replace each test's sentence literal with the module's own exports (`WORDS.team`/`WORDS.group`, section constants) or the pinned golden's SHA, so no test copies a sentence and the byte-pinning stays. Nothing in the module is converted to `localize`.
 
 Alternative: key (b) with `localize` (en identical) if you want the checker's reasons in the table. Tell me if so. I carry on with the tests on my best reading.
+
+## J3 · COMPLETE
+
+T51-227 done on B3's ruling; details in my record (Completion T51-227, R8). casefile.mjs reasons: 45 localize ids case-grammar.casefile.* (list in the record; the program must carry them; case-grammar reaches it via case-checker -> casefile.mjs). Pinned case-document sentences stay code, REPORT in the record for the unkeyed list. Tests copy no sentence (words: testcopy 0); module 164/164. Needs BOB: modules.json case-grammar uses lacks setup-words (architecture 1 failure); program.mjs, plane bundle and rows.mjs stale.
