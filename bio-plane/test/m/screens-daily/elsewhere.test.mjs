@@ -26,7 +26,7 @@ test("R15: elsewhere reads startfrom and draws, under its heading, each kind hol
   assert.equal(unesc(main(p).querySelector("section > h2").getAttribute("data-tip")), word("elsewhere.kind.legalaid_says"));
   const agency = main(p).querySelectorAll("section")[3];
   assert.deepEqual(agency.querySelectorAll(".cs-row b").map((b) => b.textContent), ["Civil Rights Department", "Labor Commissioner"], "the profile's order within a kind");
-  assert.ok(inOrder(text(p, agency), ["Civil Rights DepartmentWhat Civil Rights Department does.", `${word("elsewhere.reach.phone")} (510) 555-0100 · ${word("elsewhere.reach.web")} help.example.org/agency`,
+  assert.ok(inOrder(text(p, agency), ["Civil Rights DepartmentWhat Civil Rights Department does.", `${word("elsewhere.reach.phone")} (510) 555-0100 · ${word("elsewhere.reach.web")} help.example.org`,
     word("elsewhere.source", { source: "Civil Rights Department's website", date: dmy("2026-10-02") })]));
   // A web value is an outside link.
   const web = agency.querySelector("a[target=_blank]");
@@ -36,6 +36,21 @@ test("R15: elsewhere reads startfrom and draws, under its heading, each kind hol
   assert.equal(main(p).querySelectorAll('a[href="/app"]').at(-1).textContent, word("elsewhere.back"));
   assert.deepEqual(ops(p), []);
   assert.ok(!text(p).includes(word("elsewhere.danger")), "the danger line is the none states'");
+});
+
+test("R15 (journey-check R27): a link is drawn by its own label or its site, never by the path of its address: no slug is text; the address itself is the link's target", async () => {
+  const slug = "https://www.oaklandca.gov/My-Household/Report-an-Issue-OAK-311";
+  const pointers = [
+    { kind: "service", name: "Town 311", does: "Takes reports.", contacts: [{ how: "web", value: slug }], source: slug, status: "researched", basis: "2026-10-14" },
+    { kind: "service", name: "Legal line", does: "Gives advice.", contacts: [{ how: "web", value: "https://help.example.org/get-legal-help", label: "Legal line website" }], source: "the line's own page", status: "researched", basis: "2026-10-14" },
+  ];
+  const p = await open("/app/elsewhere", { startfrom: door({ places: ["River Town"], pointers }) });
+  const links = main(p).querySelectorAll("a[target=_blank]");
+  assert.deepEqual(links.map((a) => a.getAttribute("href")), [slug, "https://help.example.org/get-legal-help"], "the whole address is the target");
+  assert.deepEqual(links.map((a) => a.textContent), ["oaklandca.gov", "Legal line website"], "the site, or the profile's own label");
+  assert.doesNotMatch(text(p), /Report-an-Issue|My-Household|get-legal-help/, "control: no slug is drawn as text");
+  assert.ok(text(p).includes(word("elsewhere.source", { source: "oaklandca.gov", date: dmy("2026-10-14") })), "a source address is drawn as its site");
+  assert.ok(text(p).includes(word("elsewhere.source", { source: "the line's own page", date: dmy("2026-10-14") })), "control: a source that is words stays as given");
 });
 
 test("R15: control: a profile with one kind draws only that heading", async () => {

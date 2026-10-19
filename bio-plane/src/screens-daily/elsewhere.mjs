@@ -21,6 +21,12 @@ export const elsewhere = Object.freeze({
     const back = '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app">' + cs.w("elsewhere.back") + "</a></p>";
     const danger = '<p class="mk-note">' + cs.w("elsewhere.danger") + "</p>";
 
+    // An address drawn as text names the site, never the path: the path is an id (a slug), and reads as words nobody wrote. The link
+    // carries the whole address; its text is the contact's own `label` when the profile gives one, else the site's name.
+    const site = function (value) {
+      const m = /^(?:https?:\/\/)?(?:www\.)?([^\/?#\s]+)/i.exec(String(value));
+      return m ? m[1] : String(value);
+    };
     // A web value is an outside link; any other value is the record's text.
     const reach = function (c) {
       const how = String(c && c.how || "");
@@ -29,14 +35,14 @@ export const elsewhere = Object.freeze({
       let v = cs.esc(value);
       if (how === "web") {
         const href = /^https?:\/\//i.test(value) ? value : /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(value) ? "https://" + value : null;
-        if (href) v = '<a href="' + cs.esc(href) + '" target="_blank" rel="noopener noreferrer">' + cs.esc(value) + "</a>";
+        if (href) v = '<a href="' + cs.esc(href) + '" target="_blank" rel="noopener noreferrer">' + cs.esc(typeof c.label === "string" && c.label.trim() ? c.label : site(value)) + "</a>";
       }
       return '<span><span class="muted">' + cs.w("elsewhere.reach." + how) + "</span> " + v + "</span>";
     };
     const pointerRow = function (p) {
       const contacts = (Array.isArray(p.contacts) ? p.contacts : []).map(reach).filter(Boolean).join(" · ");
       const day = cs.date(String(p.basis || ""));
-      const source = p.source ? '<span class="muted">' + cs.w("elsewhere.source", { source: String(p.source), date: { html: day } }) + "</span>" : "";
+      const source = p.source ? '<span class="muted">' + cs.w("elsewhere.source", { source: /^(https?:\/\/|www\.)/i.test(String(p.source)) ? site(p.source) : String(p.source), date: { html: day } }) + "</span>" : "";
       return cs.row("", "<b>" + cs.esc(String(p.name || "")) + "</b>" + (p.does ? '<span class="meta">' + cs.esc(String(p.does)) + "</span>" : "")
         + (contacts ? '<span class="meta">' + contacts + "</span>" : ""), source, "");
     };

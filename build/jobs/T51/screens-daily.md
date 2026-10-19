@@ -53,6 +53,9 @@
 - Tests run: `node --test bio-plane/test/m/screens-daily/` 163 of 163 pass. Checks from the process repository: format 0 failures; architecture screens-daily 0 failures; coverage screens-daily 62 of 62 live requirement ids named by a test, 0 failures; ownership 0 failures (23 files); words for screens-daily 0 (also over every L11 module together, no line naming it); `checks/run.mjs` shows no line naming screens-daily; `setup-words/build.mjs --check`: stale rows, none naming this module.
 - Size (session_01JgsJ8b2USWAbcxeza3CtSa): test runs ~30, module lines 3397
 
+## B9 handled (SCREENS-DAILY #9)
+- `elsewhere` draws a web link by the contact's own `label` when the profile gives one, else by its site's name (never the address's path); a source that is an address is drawn as its site. The whole address stays the link's target. Test with its control in `elsewhere.test.mjs`. Suite 164 of 164; format, architecture, coverage (62 of 62), ownership and words all 0 failures.
+
 ## J1 · BLOCKED
 
 BLOCKED (cause: context). screens-daily #8 is at half its window and has stopped at a clean step; my record (`build/jobs/T51/screens-daily.md`, "Progress") lists what is done, what is next, and the REPORTs/QUESTIONs for you. Pushed: `job/T51/screens-daily` @ d980f1010c.
