@@ -181,7 +181,7 @@ async function pullFailed(token, acct, id, rolloutId) {
 /* The Containers application for one class's namespace, created with the image, or rolled out to it. The application is named
    under the copy's own names (R64: a member with one class by the member and the slug, with several by member, class and slug).
    R60: the size the descriptor states is passed per class, to the create call and to a rollout. F5: a pull the platform could not
-   do is thrown as the member's own refusal (`installer.fleet.why.unpullable`), after the upload was attempted. R68 (S11): the
+   do is thrown as the member's own refusal (`installer.fleet.why.pullfailed`), after the upload was attempted. R68 (S11): the
    image the platform then holds for the application is read back and compared with the digest the release names; where it is
    another (a rollout answered "no changes" and kept the old one), one further rollout is asked, and an image still another is
    returned as a lag, never success. Answers `{action, lag, id, appName, config}`, `lag` null when the image deployed is the release's;
@@ -204,7 +204,7 @@ async function placeContainer(token, acct, m, d, appName, names) {
     id = made && made.id; action = "created";
   } else { id = app.id; rolled = await rolloutApp(token, acct, id, appName, config); action = "rolled out"; }
   if (!id) return { action, lag: null, id: null, appName, config };
-  if (await pullFailed(token, acct, id, rolled && rolled.id)) throw new Error(word("installer.fleet.why.unpullable"));
+  if (await pullFailed(token, acct, id, rolled && rolled.id)) throw new Error(word("installer.fleet.why.pullfailed"));
   let got = await deployed(id);
   if (got !== d.image && action === "rolled out") { await rolloutApp(token, acct, id, appName, config); got = await deployed(id); }
   return { action, id, appName, config, lag: got === d.image ? null
