@@ -602,5 +602,10 @@ export const SCREEN_WORDS = Object.freeze([
   "screen.start-send.kind.public_comment",
   "screen.start-send.name",
   "shell.readonly",
+  "act.reminderanswer.does",
+  "act.reminderanswer.label.dash-action",
+  "act.taskresolve.does",
+  "act.taskresolve.label.dash-action",
+  "screen.queue.reminder.on",
   "shell.unread",
 ]);
