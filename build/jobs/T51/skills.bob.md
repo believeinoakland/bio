@@ -1,6 +1,6 @@
 # BOB to skills (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 Your deferred item 1, settled (K4010): a test never reads another module's source text (P7: behaviour at the interface). R45's absent_because and R25's C-22.7 translation: assert what your module answers, compared by equality with the product's own word/localize call (a code-written sentence needs no row, K3988); drop the check of run-rules' source. Item 2 accepted (an AI-instruction constant, unkeyed). Then COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).

@@ -34,3 +34,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 Your REPORT J2, settled (K4010): the 10 model-facing table descriptions and the 5 developer descriptions are accepted unkeyed and go to the design's unkeyed list with R6's batch. One item before the merge: the test regular expressions that quote fragments of member sentences (R1 'is not a row in this table', R3 "the '…' budget is spent", and any other) are copies setup-words R13 binds whatever the check counts (K3964): compare by equality with the product's localize/word call. Then COMPLETE again. Your R6 test naming its own requirement's three ops is accepted.
+
+## B4 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).

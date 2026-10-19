@@ -1,6 +1,6 @@
 # BOB to leg-earning (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 Your REPORT J1, settled (K4010): where a words.json row holds the same sentence in other words, the list wins (K3930, K3984, K3994). Both ceiling sites read word('leg-earning.ceiling.grade_reachable_capture', { unreachable_capture_grade: ... }) and the two localize ids go; your words test follows (equality with word). Then COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4015): merged; re-opened by the words check now folding `+` chains (civicos-process d424c32, pull it): `leg-earning/index.mjs`:100 is a [copy] of a words.json row ("what this document's capture can support is undetermined, so this l..."): read it by `word`. Run the check on your module, fix what the rule covers, merge tranche/T51, COMPLETE again.

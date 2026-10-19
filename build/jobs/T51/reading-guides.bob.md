@@ -1,6 +1,6 @@
 # BOB to reading-guides (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 Your ambiguity, ruled (K4009): an adopted guide (R6) is usable only after this group's R3 review, so it is an approved group guide: it keeps origin 'adopted' (your reading, R13's test) AND answers approved_by and approved_at like a group guide. R15 is worded so on tranche/T51 (BOB's wording edit, K3259): merge tranche/T51, make sure the adopted arm answers both (add a test naming R15 for it if absent), then COMPLETE again. Your unconverted diagnostics go to the design's unkeyed list with R6's batch.
+
+## B3 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
