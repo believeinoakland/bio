@@ -13963,280 +13963,266 @@
       "en": "a code-block larger than 4096 samples",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 179
+      "line": 182
     },
     {
       "id": "image-codecs.jpxdecode.a_code_block_of_31",
       "en": "a code-block of 31 or more bit-planes",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 804
+      "line": 807
     },
     {
       "id": "image-codecs.jpxdecode.a_colour_transform_over_mixed",
       "en": "a colour transform over mixed wavelets",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 964
+      "line": 967
     },
     {
       "id": "image-codecs.jpxdecode.a_marker_segment_length_under",
       "en": "a marker segment length under 2",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 245
+      "line": 248
     },
     {
       "id": "image-codecs.jpxdecode.a_packets_code_block_data",
       "en": "a packet's code-block data runs past the tile ({v1} bytes)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 727
+      "line": 730
     },
     {
       "id": "image-codecs.jpxdecode.an_image_and_tile_geometry",
       "en": "an image and tile geometry the standard does not allow",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 168
-    },
-    {
-      "id": "image-codecs.jpxdecode.an_image_past_the_memory",
-      "en": "an image past the memory bound",
-      "module": "image-codecs",
-      "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 64
+      "line": 171
     },
     {
       "id": "image-codecs.jpxdecode.marker_0x_m_where_sot",
       "en": "marker 0x{m} where SOT was expected",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 256
+      "line": 259
     },
     {
       "id": "image-codecs.jpxdecode.nc_components_only_1_grey",
       "en": "{nc} components; only 1 (grey) or 3 (colour) are decoded here",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 935
+      "line": 938
     },
     {
       "id": "image-codecs.jpxdecode.no_quantisation_step_for_band",
       "en": "no quantisation step for band {bi}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 620
+      "line": 623
     },
     {
       "id": "image-codecs.jpxdecode.prec_bit_samples_only_8",
       "en": "{prec}-bit samples; only 8-bit are decoded here",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 939
+      "line": 942
     },
     {
       "id": "image-codecs.jpxdecode.size_of_ntiles_tiles_are",
       "en": "{size} of {nTiles} tiles are present",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 947
+      "line": 950
     },
     {
       "id": "image-codecs.jpxdecode.the_codestream_ends_before_any",
       "en": "the codestream ends before any tile",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 242
+      "line": 245
     },
     {
       "id": "image-codecs.jpxdecode.the_codestream_uses_part_15",
       "en": "the codestream uses Part 15 (HTJ2K) block coding",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 59
+      "line": 62
     },
     {
       "id": "image-codecs.jpxdecode.the_decode_would_hold_more",
       "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 64
+      "line": 67
     },
     {
       "id": "image-codecs.jpxdecode.the_image_s_samples_index",
       "en": "the image's samples index a palette (pclr box)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 60
+      "line": 63
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_box_type_runs",
       "en": "the JP2 box '{type}' runs past the data",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 113
+      "line": 116
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_colour_specification_is",
       "en": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 61
+      "line": 64
     },
     {
       "id": "image-codecs.jpxdecode.the_jp2_file_holds_no",
       "en": "the JP2 file holds no codestream (jp2c box)",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 140
+      "line": 143
     },
     {
       "id": "image-codecs.jpxdecode.the_tiles_packets_run_out",
       "en": "the tile's packets run out at packet {v1} of {length}",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 684
+      "line": 687
     },
     {
       "id": "image-codecs.jpxdecode.tile_part_of_tile_isot",
       "en": "tile-part of tile {isot} runs past the codestream",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 262
+      "line": 265
     },
     {
       "id": "image-codecs.jpxdecode.what_runs_past_the_codestream",
       "en": "{what} runs past the codestream",
       "module": "image-codecs",
       "file": "pdf-worker/src/jpxdecode.mjs",
-      "line": 150
+      "line": 153
     },
     {
       "id": "image-codecs.pngdecode.a_chunk_the_decoder_must",
       "en": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 61
+      "line": 64
     },
     {
       "id": "image-codecs.pngdecode.a_chunk_type_that_is",
       "en": "a chunk type that is not four letters at byte {p}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 113
+      "line": 116
     },
     {
       "id": "image-codecs.pngdecode.a_plte_of_length_bytes",
       "en": "a PLTE of {length} bytes",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 202
+      "line": 205
     },
     {
       "id": "image-codecs.pngdecode.an_ihdr_of_len_bytes",
       "en": "an IHDR of {len} bytes, not 13",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 151
-    },
-    {
-      "id": "image-codecs.pngdecode.an_image_past_the_memory",
-      "en": "an image past the memory bound",
-      "module": "image-codecs",
-      "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 62
+      "line": 154
     },
     {
       "id": "image-codecs.pngdecode.bit_depth_depth_with_colour",
       "en": "bit depth {depth} with colour type {colourType}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 158
+      "line": 161
     },
     {
       "id": "image-codecs.pngdecode.filter_type_f_in_row",
       "en": "filter type {f} in row {y}",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 231
+      "line": 234
     },
     {
       "id": "image-codecs.pngdecode.palette_index_v_past_the",
       "en": "palette index {v} past the palette's {entries} entries",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 268
+      "line": 271
     },
     {
       "id": "image-codecs.pngdecode.the_data_ends_at_byte",
       "en": "the data ends at byte {p}, before an IEND chunk",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 110
+      "line": 113
     },
     {
       "id": "image-codecs.pngdecode.the_decode_would_hold_more",
       "en": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 62
+      "line": 65
     },
     {
       "id": "image-codecs.pngdecode.the_first_chunk_is_type",
       "en": "the first chunk is {type}, not IHDR",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 122
+      "line": 125
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_does_not",
       "en": "the image data does not inflate (row {y} of {H})",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 305
+      "line": 308
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_ends_after",
       "en": "the image data ends after {y} of {H} rows",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 312
+      "line": 315
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_inflates_past",
       "en": "the image data inflates past the frame",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 310
+      "line": 313
     },
     {
       "id": "image-codecs.pngdecode.the_image_data_s_zlib",
       "en": "the image data's zlib trailer is damaged or missing",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 305
+      "line": 308
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunk_at_byte",
       "en": "the {type} chunk at byte {p} runs past the data",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 115
+      "line": 118
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunk_declares_a",
       "en": "the {type} chunk declares a length past 2^31 - 1",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 114
+      "line": 117
     },
     {
       "id": "image-codecs.pngdecode.the_type_chunks_crc_does",
       "en": "the {type} chunk's CRC does not match its data",
       "module": "image-codecs",
       "file": "pdf-worker/src/pngdecode.mjs",
-      "line": 119
+      "line": 122
     },
     {
       "id": "image-cover.geometry.area_i_lies_wholly_outside",

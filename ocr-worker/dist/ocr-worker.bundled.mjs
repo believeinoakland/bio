@@ -65,7 +65,6 @@ var WORD_ROWS = Object.freeze([
   ["image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2", null, null, false, "code"],
   ["image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", null, null, false, "code"],
   ["image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow", null, null, false, "code"],
-  ["image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound", null, null, false, "code"],
   ["image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", null, null, false, "code"],
   ["image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", null, null, false, "code"],
   ["image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", null, null, false, "code"],
@@ -85,7 +84,6 @@ var WORD_ROWS = Object.freeze([
   ["image-codecs.pngdecode.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", null, null, false, "code"],
   ["image-codecs.pngdecode.a_plte_of_length_bytes", "a PLTE of {length} bytes", null, null, false, "code"],
   ["image-codecs.pngdecode.an_ihdr_of_len_bytes", "an IHDR of {len} bytes, not 13", null, null, false, "code"],
-  ["image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound", null, null, false, "code"],
   ["image-codecs.pngdecode.bit_depth_depth_with_colour", "bit depth {depth} with colour type {colourType}", null, null, false, "code"],
   ["image-codecs.pngdecode.filter_type_f_in_row", "filter type {f} in row {y}", null, null, false, "code"],
   ["image-codecs.pngdecode.palette_index_v_past_the", "palette index {v} past the palette's {entries} entries", null, null, false, "code"],
@@ -3548,13 +3546,14 @@ var unsupported2 = (feature, extra = {}) => new JpxRefusal("UNSUPPORTED", { feat
 var samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { note, ...extra });
 var corrupt2 = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
 var truncated2 = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
+var MEMORY_FEATURE = "image-past-memory-bound";
 var JPX_REFUSES = Object.freeze({
   "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
   "a JP2 palette": localize("image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)"),
   "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  [localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile")
+  [MEMORY_FEATURE]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile")
 });
 var MEMORY_BOUND = 613e5;
 function workingSet(cs, nTiles) {
@@ -4487,7 +4486,7 @@ function decodeJpx(d) {
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
-    throw unsupported2(localize("image-codecs.jpxdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
+    throw unsupported2(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
   }
   if (cs.tiles.size < nTiles) throw truncated2(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
@@ -4950,7 +4949,7 @@ var REFUSALS = {
 };
 var featureReasons = (declared, named) => Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 var JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
-var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
 var refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
@@ -5755,10 +5754,11 @@ var PngRefusal = class extends Error {
 var unsupported3 = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { feature, ...extra });
 var corrupt3 = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
 var truncated3 = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
+var MEMORY_FEATURE2 = "image-past-memory-bound";
 var PNG_REFUSES = Object.freeze({
   "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
   "an unknown critical chunk": localize("image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines"),
-  [localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound")]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image")
+  [MEMORY_FEATURE2]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image")
 });
 var MEMORY_BOUND2 = 613e5;
 var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -5864,7 +5864,7 @@ async function decodePng(bytes) {
   const rowBytes = Math.ceil(W2 * ch * depth / 8);
   const need = W2 * H * comps + 2 * (rowBytes + 1);
   if (need > MEMORY_BOUND2)
-    throw unsupported3(localize("image-codecs.pngdecode.an_image_past_the_memory", "an image past the memory bound"), { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
+    throw unsupported3(MEMORY_FEATURE2, { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
   if (colourType === 3) {
     if (!plte) throw corrupt3("a palette image with no PLTE chunk before its image data");
@@ -6015,7 +6015,7 @@ var refuse3 = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
 };
-var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { [MEMORY_FEATURE2]: "IMAGE_TOO_LARGE" });
 var PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
 var PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 function sniff(b) {

@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (15346 design words, 933 protected; SHA-256
-   38d11e1bbaf24af47458c27672d6f0a5261d418b1a2a99e91402cdb987ee701f) followed by 3972 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   38d11e1bbaf24af47458c27672d6f0a5261d418b1a2a99e91402cdb987ee701f) followed by 3970 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -17354,7 +17354,6 @@ export const WORD_ROWS = Object.freeze([
   ["image-codecs.jpxdecode.a_marker_segment_length_under","a marker segment length under 2",null,null,false,"code"],
   ["image-codecs.jpxdecode.a_packets_code_block_data","a packet's code-block data runs past the tile ({v1} bytes)",null,null,false,"code"],
   ["image-codecs.jpxdecode.an_image_and_tile_geometry","an image and tile geometry the standard does not allow",null,null,false,"code"],
-  ["image-codecs.jpxdecode.an_image_past_the_memory","an image past the memory bound",null,null,false,"code"],
   ["image-codecs.jpxdecode.marker_0x_m_where_sot","marker 0x{m} where SOT was expected",null,null,false,"code"],
   ["image-codecs.jpxdecode.nc_components_only_1_grey","{nc} components; only 1 (grey) or 3 (colour) are decoded here",null,null,false,"code"],
   ["image-codecs.jpxdecode.no_quantisation_step_for_band","no quantisation step for band {bi}",null,null,false,"code"],
@@ -17374,7 +17373,6 @@ export const WORD_ROWS = Object.freeze([
   ["image-codecs.pngdecode.a_chunk_type_that_is","a chunk type that is not four letters at byte {p}",null,null,false,"code"],
   ["image-codecs.pngdecode.a_plte_of_length_bytes","a PLTE of {length} bytes",null,null,false,"code"],
   ["image-codecs.pngdecode.an_ihdr_of_len_bytes","an IHDR of {len} bytes, not 13",null,null,false,"code"],
-  ["image-codecs.pngdecode.an_image_past_the_memory","an image past the memory bound",null,null,false,"code"],
   ["image-codecs.pngdecode.bit_depth_depth_with_colour","bit depth {depth} with colour type {colourType}",null,null,false,"code"],
   ["image-codecs.pngdecode.filter_type_f_in_row","filter type {f} in row {y}",null,null,false,"code"],
   ["image-codecs.pngdecode.palette_index_v_past_the","palette index {v} past the palette's {entries} entries",null,null,false,"code"],
