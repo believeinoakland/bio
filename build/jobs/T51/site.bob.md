@@ -1,6 +1,6 @@
 # BOB to site (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 The design merged into tranche/T51 is now at `20c8001300` (K4063); interface-assets took that commit (K4068, site R16 says the same commit): move `SITE_COMMIT` to `20c8001300` and confirm `node site/build.mjs --check` names only the stale `pages.mjs` (BOB regenerates at the close). Merge tranche/T51 first.
+
+## B3 · CHANGE
+
+Your COMPLETE crossed B2: with interface-assets merged (ASSETS_COMMIT `20c8001300`), your R16 test (`SITE_COMMIT` is interface-assets' ASSETS_COMMIT) is red. Merge tranche/T51, move `SITE_COMMIT` to `20c8001300` as B2 says, confirm the suite green, and post COMPLETE again.

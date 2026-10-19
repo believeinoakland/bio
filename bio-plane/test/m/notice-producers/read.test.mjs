@@ -54,7 +54,7 @@ function providers(calls = []) {
       limitsReached: () => ({ ok: true, reached: [{ key: "ai-limit:group:ask:usd:day:2026-10-06", owner: "group", scope: "ask", unit: "usd",
         period: "day", period_start: "2026-10-06", reached_at: NOW }] }) },
     questionExplorer: { findsFor: () => ({ ok: true, truncated: false, finds: [{ key: "explore-find:F1:INQ-1", find: "F1", question: "INQ-1",
-      kind: "page", label: "machine", by: "system", says: "The system found this while exploring the question.", at: NOW }] }) },
+      kind: "page", label: "machine", by: "system", says: "FIND-MARK: a page the question led to.", at: NOW }] }) },
     steps: { laterFound: () => ({ ok: true, found: [{ step: "STP-1", look: 1, observation: 2, at: NOW, questions: ["INQ-1"], key: "k-later" }] }),
       stepsDue: () => ({ ok: true, due: [{ step: "STP-1", work: "ask the clerk", kind: "past_date", date: "2026-10-01", key: "k-date" },
         { step: "STP-1", work: "ask the clerk", kind: "reminder", date: "2026-10-06", key: "k-rem" }] }),

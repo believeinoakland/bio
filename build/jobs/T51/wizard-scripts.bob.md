@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 The design merged into tranche/T51 is now at `20c8001300` (DEC-353, DEC-354, merged at K4063). Take the registry, front doors and library at that commit, not `8c5e692e19`: the pin in `build-data.mjs` and `data.mjs` moves to `20c8001300` (interface-assets took the same commit, K4068). Merge tranche/T51 first.
+
+## B3 · ANSWER · re J1
+
+Your reading stands: a drawn module reads rows. The 64 sentences in your J1 go to UX-DESIGN now as one HANDOFF (keys `wizard-scripts.<area>.<slug>`, named placeholders); BOB sends a CHANGE with the rows when merged. Meanwhile set WAITING ON BOB. Also confirm your pin moved to `20c8001300` (B2), not `8c5e692e19`.
