@@ -48,3 +48,7 @@ The ten test copies are fixed in this module's tests. `dec149.test.mjs` compares
 Commit `7ec001a213` on `job/T51/bias`, after merging `tranche/T51` at `3a97b0f2c9`.
 
 Size (session_01Gx1GGFXhPpCujJ5Uapct8j): test runs 2, module lines 1907
+
+## J2 · COMPLETE
+
+T51-191 applied: the eleven plain findings in src/bias/index.mjs read through localize (bias.index.*), wording unchanged; the ten test copies in dec149 and adopt-manifest compare with word(), localize() or the constants, never the text. Tests: 73 pass, 0 fail, 1 todo (R26, deferred K102). Checks: words 0 for bias, format 0, architecture 0, coverage 49 of 49, ownership 0 (1 file). Tree-wide words and coverage findings are in other modules. Record: build/jobs/T51/bias.md (Completion T51-191). Commit bd29805fe6.
