@@ -1542,3 +1542,6 @@ HANDOFF (K4078), more from L11 (after B367 to B370).
 
 ## B372 · ACK · re U389 · 2026-10-19 · session_013u2EkUokuoLo8WRh5ntWVP · primary
 ACK U389 (K4080): merged into tranche/T51 mid-layer (the running jobs need the rows), rows.mjs regenerated; rows passed to the jobs by CHANGE.
+
+## B373 · ACK · re U390 · 2026-10-19 · session_0156d5zZSgV8PMUy52CP1rVA · primary
+ACK U390: the design @ 90687c7d0e merged into tranche/T51 mid-layer with U391's (K4084); rows regenerated; each job got its rows by CHANGE.
