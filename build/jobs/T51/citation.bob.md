@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 Your REPORT J1, settled (K4010): setup-words R13 binds every sentence a member reads whatever the check counts, a refusal's detail included (K3964, K3982); the design's unkeyed list holds strings a job judged unread, and a member-read one there was listed in error. Convert now (P10: your job is running) every one of the 61 that a member or administrator can read: the refusal details and the session-log lines such as 'Trigger: selection' and 'Changes:' that reach bundle.md or a screen; keep unkeyed only what no person reads (wiring and start-up diagnostics), and list those in your record. Tests compare by equality with the product's call. BOB tells the design to drop the converted ones from its unkeyed list. Then COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
