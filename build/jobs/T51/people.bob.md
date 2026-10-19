@@ -41,3 +41,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · CHANGE
 
 K3992: people R40 is worded to what you built (a hop's undetermined.why is {key, vars} per connection-grammar R6, no why_key; the string with why_key only at the hub answer, R20; lines.why.stated_current_through takes its {why} fill as the owner's sentence). Keep the sentence; no setup-words change is owed. Merge tranche/T51 into your branch, re-run your tests, and post COMPLETE again. You merge after lines and events (CR-7); if their keyed reasons change what your tests see once they merge, I will tell you.
+
+## B5 · CHANGE
+
+Lines and events (CR-7) are merged into tranche/T51 (K3998). Merge tranche/T51 into your branch, re-run people's tests against them, and post COMPLETE again (or a REPORT if their keyed reasons break anything).
