@@ -40,16 +40,9 @@ export const END_KINDS = Object.freeze({
   remanded_to: Object.freeze({ from: ["proceeding"], to: ["proceeding"], code: "PROCEEDING_ENDS" }),
 });
 
-/* The members' words for each kind (K1486): positions and memberships, never "knows", "network" or a measure. */
-const WORDS = {
-  part_of: "part of", post_in: word("label.linekinds.post_in"), holds: word("lines.holds.held_post"), reports_to: "reports to", oversees: "oversees",
-  appoints: "appoints", seat_on: word("label.linekinds.seat_on"), funds: "funds", contracts_with: word("label.linekinds.contracts_with"),
-  acts_for: "acts for", responsible_for: "responsible for", custodian_of: word("label.linekinds.custodian_of"),
-  successor_of: "successor of", belongs_to: "a member of", educated_at: "studied at",
-  credentialed_by: word("label.linekinds.credentialed_by"), owns_interest_in: word("label.linekinds.owns_interest_in"), related_to: "related to",
-  associate_of: word("label.linekinds.associate_of"), party_to: word("label.linekinds.party_to"), appeal_of: word("label.linekinds.appeal_of"),
-  consolidated_with: "consolidated with", remanded_to: "remanded to", arises_from: "arises from",
-};
+/* The members' words for each kind (K1486): positions and memberships, never "knows", "network" or a measure. Each is
+   read by DEC-253's key `label.linekinds.<kind>`; `holds` reads as the post held, with its capacity beside it. */
+const WORDS = Object.fromEntries(LINE_KINDS.map((k) => [k, k === "holds" ? word("lines.holds.held_post") : word(`label.linekinds.${k}`)]));
 
 /* R14: one connection kind per line kind, `holds` one per capacity. */
 export const OWNER = "lines";
@@ -58,7 +51,7 @@ export const connectionKind = (kind, capacity = null) =>
   (kind === "holds" ? `line:holds:${slug(capacity ?? "other")}` : `line:${kind}`);
 export const CONNECTION_KINDS = Object.freeze([
   ...LINE_KINDS.filter((k) => k !== "holds").map((k) => Object.freeze({ kind: connectionKind(k), word: WORDS[k], class: "evidentiary" })),
-  ...CAPACITIES.map((c) => Object.freeze({ kind: connectionKind("holds", c), word: `${WORDS.holds} (${c})`, class: "evidentiary" })),
+  ...CAPACITIES.map((c) => Object.freeze({ kind: connectionKind("holds", c), word: `${WORDS.holds} (${word(`label.linecapacities.${slug(c)}`)})`, class: "evidentiary" })),
 ]);
 /* A connection kind back to its line kind and, for `holds`, its capacity; null for none of this owner's. */
 export function lineKindOf(ck) {

@@ -6,6 +6,7 @@ import { world, sha, ANN, MACHINE } from "./fixture.mjs";
 import { STRUCTURE_KINDS, linesOps } from "../../../src/lines/index.mjs";
 import { notAProceeding } from "../../../src/entities/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { reasonText } from "../../../src/lines/index.mjs";
 
 const T = { statement: "The clerk told me at the counter" };
 
@@ -29,7 +30,7 @@ test("R8 withdrawLine refuses NO_REASON and NO_SUCH_LINE; a repeat answers alrea
   const read = w.l.readLine({ lineId: h, viewer: ANN }).line;
   assert.deepEqual([read.withdrawn.by, read.withdrawn.reason, typeof read.withdrawn.at], [ANN, "the source was misread", "string"]);
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM lines`).n, 4, "nothing is deleted");
-  assert.equal(w.l.holderAt({ office: o, at: "2022-01-01", viewer: ANN }).undetermined, word("lines.undetermined.line_covers_date"));
+  assert.deepEqual(w.l.holderAt({ office: o, at: "2022-01-01", viewer: ANN }).why, { key: "lines.why.no_line_covers", vars: {} });
   assert.deepEqual(w.l.structureAt({ entity: o, at: "2022-01-01", viewer: ANN }), { ok: true, entity: o, at: "2022-01-01", held: [], undetermined: [], truncated: false });
   assert.equal(w.l.partiesOf({ proceeding: c, viewer: ANN }).parties.length, 0);
   assert.equal(w.l.proceedingLinks({ proceeding: c, viewer: ANN }).links.length, 0);
@@ -101,9 +102,10 @@ test("R10 structureAt answers the structure lines at either end judged at the da
   assert.deepEqual(r.held.map((x) => x.line_id), [inn]);
   const why = Object.fromEntries(r.undetermined.map((u) => [u.line.line_id, u.why]));
   assert.deepEqual(Object.keys(why).sort(), [open, band, ev].sort());
-  assert.match(why[open], /no end is stated/);
-  assert.match(why[band], /overlaps/);
-  assert.match(why[ev], /bounding event is not resolved/);
+  assert.equal(why[open].key, "civil-time.end_stated");
+  assert.equal(why[band].key, "civil-time.values.overlaps_start");
+  assert.equal(why[ev].key, "civil-time.values.event_unresolved");
+  for (const k of [open, band, ev]) assert.ok(reasonText(why[k]).length > 0, k);
   assert.equal(w.l.structureAt({ entity: o, viewer: ANN }).reason, "NO_DATE");
   assert.equal(w.l.structureAt({ entity: o, at: "next tuesday", viewer: ANN }).reason, "BAD_DATE");
   assert.deepEqual(w.l.structureAt({ entity: o, at: "2022-06-15", kinds: ["part_of"], viewer: ANN }).held.map((x) => x.line_id), [inn]);
@@ -123,7 +125,7 @@ test("R11 holderAt refuses NO_ENTITY, NO_SUCH_ENTITY, NOT_AN_OFFICE, NO_DATE; co
   w.say("holds", ada, org, { capacity: "employee", valid: { from: "2000-01-01", to: "2030-01-01" } }); /* a career, never a holder */
   w.say("seat_on", o, w.ent("body", "Port Board"), { valid: { from: "2000-01-01", to: "2030-01-01" } });
   assert.deepEqual(w.l.holderAt({ office: o, at: "2022-01-01", viewer: ANN }), { ok: true, office: o, at: "2022-01-01", holder: null,
-                                                                             undetermined: word("lines.undetermined.line_covers_date"), lines: [] });
+                                                                             undetermined: true, why: { key: "lines.why.no_line_covers", vars: {} }, lines: [] });
   const e1 = w.say("holds", ada, o, { capacity: "elected", valid: { from: "2018-01-08", to: "2022-01-09" } });
   const one = w.l.holderAt({ office: o, at: "2020-03-01", viewer: ANN });
   assert.deepEqual([one.holder, one.line.line_id, one.capacity, one.assertion, one.ends], [ada, e1, "elected", "D", { from: "D", to: "D" }]);
@@ -132,7 +134,8 @@ test("R11 holderAt refuses NO_ENTITY, NO_SUCH_ENTITY, NOT_AN_OFFICE, NO_DATE; co
   const act = w.say("holds", ben, o, { capacity: "acting", valid: { from: "2020-02-01", to: "2020-04-30" } });
   const two = w.l.holderAt({ office: o, at: "2020-03-01", viewer: ANN });
   assert.equal(two.holder, null);
-  assert.match(two.undetermined, /2 lines/);
+  assert.equal(two.undetermined, true);
+  assert.equal(two.why.key, "lines.why.lines_disagree");
   assert.deepEqual(two.lines.map((x) => x.line_id).sort(), [e1, act].sort());
   /* two overlapping holds, the later one more recent: still undetermined */
   const later = w.say("holds", ben, o, { capacity: "elected", valid: { from: "2022-01-01" } });
@@ -142,7 +145,7 @@ test("R11 holderAt refuses NO_ENTITY, NO_SUCH_ENTITY, NOT_AN_OFFICE, NO_DATE; co
   /* an open-ended holder line is undetermined after its start (K1505 (10)) */
   const open = w.l.holderAt({ office: o, at: "2025-01-01", viewer: ANN });
   assert.equal(open.holder, null);
-  assert.deepEqual(open.lines, [{ line_id: later, why: word("civil-time.end_stated"), state: "undetermined" }]);
+  assert.deepEqual(open.lines, [{ line_id: later, why: { key: "civil-time.end_stated", vars: {} }, state: "undetermined" }]);
 });
 
 test("R12 a holder is a person entity, the same entity across every role it has held; holderAt never answers text", () => {
