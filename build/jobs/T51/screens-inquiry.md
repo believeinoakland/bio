@@ -100,3 +100,14 @@ Not run: the journey-check walk (per your note).
 Draft PR: none opened. The module job's role says to open no pull request, but the harness asks for a draft after a push. Please rule whether a draft is wanted.
 
 Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 7, module lines 4088
+
+## J10 · COMPLETE
+
+COMPLETE, B14 (CHANGE K4129). Commit b0a3df14f5, pushed to job/T51/screens-inquiry; tranche merged first.
+
+Applied R83: the original-file card's kind comes from the reading's stated `format` (extraction R78) through `document.kind.<format>`, and `document.kind.undetermined` for an id with no row. `text_container` is read only when no format is stated. No word row added.
+Tests: cr19-document.test.mjs now names R81, R82 and R83 (7 tests, all pass). R83 controls: an unknown id draws undetermined exactly; no format falls back to text_container. Full module suite: 236 pass, 0 fail.
+Checks: format 175 modules 0 failures; architecture 0 failures; coverage 83 of 83 live ids, 0 failures; ownership screens-inquiry tranche/T51 job/T51/screens-inquiry: 2 files, 0 failures; run.mjs: no findings for screens-inquiry.
+Still open for you: the draft PR question in my earlier COMPLETE (none opened).
+
+Size (session_013FqAXHU9wuVwLZqxBYLrmn): test runs 9, module lines 4090
