@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15737 design words, 934 protected; SHA-256
-   03c16cac4591d4e6995a6817136d25087e07dbdeff774d2520482fdaee961941) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15738 design words, 934 protected; SHA-256
+   92b00141d676670ceb903c574e2ce989a1df5c9d1c202bd4c7d063a2e3575062) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "03c16cac45";
+export const WORDS_COMMIT = "92b00141d6";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8579,7 +8579,8 @@ export const WORD_ROWS = Object.freeze([
   ["screen.home.area.edition.comments","Edition {n} of {case} published {date}; a draft is shared for review until {until}, {count} comments to answer","DEC-360 (B370): screens-daily, Home R64; a draft with recipients' comments",null,false,"design"],
   ["screen.home.area.edition.comments.one","Edition {n} of {case} published {date}; a draft is shared for review until {until}, 1 comment to answer","DEC-360 (B370): screens-daily, Home R64; the same, one comment",null,false,"design"],
   ["screen.home.area.edition.draftonly","A draft of {case} is shared for review until {until}","DEC-360 (B370): screens-daily, Home R64; a draft shared for review on a case with no published edition yet",null,false,"design"],
-  ["screen.home.area.edition.draftonly.comments","A draft of {case} is shared for review until {until}, {count} comments to answer","DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 1 or more: draw \"1 comment\" via .comments.one's wording when 1)",null,false,"design"],
+  ["screen.home.area.edition.draftonly.comments","A draft of {case} is shared for review until {until}, {count} comments to answer","DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 2 or more; .one for one)",null,false,"design"],
+  ["screen.home.area.edition.draftonly.comments.one","A draft of {case} is shared for review until {until}, 1 comment to answer","DEC-363 (B376): the one-comment form of .edition.draftonly.comments",null,false,"design"],
   ["screen.project.standdown.heading","What it takes","DEC-360 (B371 1): screens-inquiry, project R75; the stand-down block's heading",null,false,"design"],
   ["screen.project.standdown.beforevote","Before you vote","DEC-360 (B371 1): screens-inquiry, project R75; the checks' heading",null,false,"design"],
   ["screen.project.standdown.takes","This takes {n} of {total} owners' votes.","DEC-360 (B371 1): screens-inquiry, project R75; when the departing owner's own vote is not one of them; screen.project.this.takes.2.of.2 when it is",null,false,"design"],
