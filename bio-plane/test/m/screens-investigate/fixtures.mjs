@@ -59,6 +59,8 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
   words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "mentioned together", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "stated in a source", group: "step_source" } } } } };
 VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
+VOCAB.vocabularies.proceeding_kinds = [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "writ", label: "Writ", forum_kind: "court" }, { kind: "appeal", label: "Appeal", forum_kind: "court" },
+  { kind: "complaint", label: "Complaint", forum_kind: "commission" }];
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
 export const GRAPH_PERSON = "ENT-2026-0200";
 export const GRAPH = (o = {}) => ({ ok: true, centre: ENT, at: { value: "2026-10-14", precision: "day", zone: "UTC" },
