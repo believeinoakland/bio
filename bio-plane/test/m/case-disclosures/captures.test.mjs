@@ -10,7 +10,7 @@ import { CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE, captureBodyLines } from
 import { unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q4 = "INQ-2026-0004-d";
@@ -119,7 +119,7 @@ test("R2 (C-120.4): a load-bearing Grade B capture not co-attested and not liste
   assert.equal(j.refusals.length, 1);
   refused(j.refusals[0], "CO_ATTESTATION_UNACKNOWLEDGED");
   assert.deepEqual(j.refusals[0].unacknowledged, [{ capture: b, members: [Q], grade: "B", timestamp_at: null, co_archive: null }]);
-  assert.match(j.refusals[0].detail, new RegExp(`load-bearing Grade ${EARNED_CAPTURE_CEILING} document`));
+  assert.ok(j.refusals[0].detail.includes(b), "the document is named");
   assert.deepEqual(w.snapshot(), before, "nothing written");
   const ok = judge(w, [Q], [{ capture: b, reason: REASON }]).j;
   assert.deepEqual([ok.refusals, [...ok.byCapture.values()]], [[], [{ capture: b, ord: 0, reason: REASON }]]);
@@ -193,26 +193,28 @@ test("R3: in disclosureBlocks' captures an acknowledged capture's rows are self_
   void accounts_read;
   /* the byCapture map alone is accepted the same */
   assert.deepEqual(w.cd.disclosureBlocks({ resting, facts, selfAttested: j.byCapture, author: "alice", at: AT }).captures, blocks.captures);
-  assert.equal(SELF_ATTESTED_SENTENCE, "Without co-attestation an outsider can verify the copy has not changed since capture "
-    + "and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.");
+  assert.equal(SELF_ATTESTED_SENTENCE, word("case-disclosures.without_attestation_outsider"));
   const body = captureBodyLines(blocks.captures, []).join("\n");
+  const grade = localize("case-disclosures.document.grade_basis", "grade {grade} ({grade_basis})", { grade: "B", grade_basis: String(facts.get(b).grade_basis) });
   for (const s of [word("case-disclosures.document_grade_attestation"), SELF_ATTESTED_SENTENCE,
-                   `SELF-ATTESTED ONLY, acknowledged by alice on ${AT}: ${REASON}`, text, signature,
-                   `- ${b} (under ${Q}, ${Q2}): grade B`, "; NOT CO-ATTESTED.",
-                   `A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; one that is not is published only as self-attested`])
+                   word("case-disclosures.self_attested_acknowledged", { acknowledged_by: "alice", at: AT, reason: REASON }), text, signature,
+                   localize("case-disclosures.document.capture_under_members_v1_v2", "- {capture} (under {members}): {v1}{v2}.",
+                     { capture: b, members: `${Q}, ${Q2}`, v1: grade, v2: localize("case-disclosures.document.not_co_attested", "; NOT CO-ATTESTED") }),
+                   localize("case-disclosures.document.each_document_this_cases_findings", "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {EARNED_CAPTURE_CEILING} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgement.", { EARNED_CAPTURE_CEILING })])
     assert.ok(body.includes(s), s.slice(0, 50));
-  assert.ok(captureBodyLines([], []).join("\n").includes("This case's findings rest on no document the record holds a capture of"));
+  assert.ok(captureBodyLines([], []).join("\n").includes(word("case-disclosures.case_findings_rest")));
 });
 
 test("R2, R3: a late co-attestation is printed as late, and a capture with only one of the two names what it holds", () => {
   const { w, b } = setup();
   lateRow(w, b, 1, { kind: "timestamp", service: "tsa.example", ok: true, at: "2026-09-28T00:00:00Z" });
   const half = captureBodyLines([{ ...w.cd.captureFacts(b), member: Q, accounts: [] }], []).join("\n");
-  assert.ok(half.includes("NOT CO-ATTESTED (a timestamp at 2026-09-28T00:00:00Z, no co-archive)"));
+  assert.ok(half.includes(`${localize("case-disclosures.document.not_co_attested", "; NOT CO-ATTESTED")} ${word("case-disclosures.timestamp_archive", { timestamp_at: "2026-09-28T00:00:00Z" })}`));
   lateRow(w, b, 2, { kind: "co_archive", service: "archive.example", ok: true, at: "2026-09-28T00:03:00Z",
                      archived_locator: "https://archive.example/web/late2", matches: true });
   const late = captureBodyLines([{ ...w.cd.captureFacts(b), member: Q, accounts: [] }], []).join("\n");
-  assert.match(late, /co-attested: a timestamp at 2026-09-28T00:00:00Z and a co-archive at https:\/\/archive\.example\/web\/late2, obtained LATE: it proves the bytes existed by then, not at capture\./);
+  assert.ok(late.includes(`${localize("case-disclosures.document.co_attested_timestamp", "; co-attested: a timestamp at {timestamp_at} and a co-archive at {co_archive}",
+    { timestamp_at: "2026-09-28T00:00:00Z", co_archive: "https://archive.example/web/late2" })}, ${word("case-disclosures.obtained_late_proves")}.`));
 });
 
 test("R4: sourcesStated states, for a capture given to the group, only what sources.publishableAt answers for the public, with its basis, spelled by publication's sourceStatement; with none, publication's unnamedSourceStatement ('Withheld') with the receipt's digest and time; a fetched capture states nothing; no source or entry id; each statement once", () => {
@@ -241,8 +243,8 @@ test("R4: sourcesStated states, for a capture given to the group, only what sour
   assert.deepEqual([...w.cd.withheldOf(named)], [], "named: not off-the-record");
   for (const leak of [sourceId, name.entry, role.entry, "clerk"]) assert.equal(JSON.stringify(named).includes(leak), false, leak);
   const body = captureBodyLines([], named).join("\n");
-  assert.ok(body.includes(`- ${k}: ${named[0].stated}, stated with the source's consent.`));
-  assert.ok(captureBodyLines([], []).join("\n").includes("No document this case rests on was given to the team by a source"));
+  assert.ok(body.includes(`- ${k}: ${named[0].stated}, ${word("case-disclosures.stated_source_consent")}.`));
+  assert.ok(captureBodyLines([], []).join("\n").includes(word("case-disclosures.document_case_rests")));
 });
 
 test("R4, R18, R23: a source read that fails or throws states the Withheld row — less, never more — and never throws", () => {

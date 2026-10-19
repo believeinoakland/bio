@@ -10,7 +10,7 @@ import { CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOW
          tensionSide, tensionTemplate, tensionSentence, tensionsUnreadStated, tensionFrontmatterLines,
          tensionBodyLines } from "../../../src/case-disclosures/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001";
@@ -130,11 +130,12 @@ test("R1: tensionsDisclosed is a list of {candidate, words?}: a malformed one is
 });
 
 test("R1 (C-120.3): a read that fails, throws, answers nothing or is truncated is TENSIONS_UNDETERMINED, naming each finding and why, alone and before any other refusal; each member is read at its pin, as the viewer; tensionsUndetermined is the same refusal for a caller's own failed read", () => {
-  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: word("case-disclosures.why.read_failed") }, /the read failed/],
-                               [{ ok: false, reason: "X" }, /the read failed/],
-                               [{ ok: true, candidates: [], truncated: true, bound: 200 }, /more than 200/],
-                               [{ ok: true }, /the read failed/],
-                               [null, /no answer/], ["throws", /boom/]]) {
+  const failed = word("case-disclosures.why.read_failed");
+  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: failed }, failed],
+                               [{ ok: false, reason: "X" }, failed],
+                               [{ ok: true, candidates: [], truncated: true, bound: 200 }, word("case-disclosures.why.candidates", { bound: "200" })],
+                               [{ ok: true }, failed],
+                               [null, localize("case-disclosures.why.no_answer", "no answer")], ["throws", "boom"]]) {
     const calls = [];
     const stub = { unresolvedRecordOn(a) { calls.push(a); if (answer === "throws") throw new Error("boom"); return answer; } };
     const w = world({ deps: { contradiction: stub } });
@@ -143,7 +144,7 @@ test("R1 (C-120.3): a read that fails, throws, answers nothing or is truncated i
     const read = w.cd.tensionsRead(prep, V("alice"));
     refused(read, "TENSIONS_UNDETERMINED");
     assert.deepEqual(read.undetermined.map((u) => [u.finding, u.sha]), [[F, w.head(F)]]);
-    assert.match(read.undetermined[0].why, why);
+    assert.equal(read.undetermined[0].why, why);
     assert.deepEqual(calls[0], { finding: F, sha: w.head(F), viewer: V("alice") }, "at the pin, as the viewer");
     const j = w.cd.tensionsJudged(prep, V("alice"), [{ candidate: "c" }]);
     assert.deepEqual(j.refusals.map((r) => r.reason), ["TENSIONS_UNDETERMINED"], "alone");
@@ -152,7 +153,8 @@ test("R1 (C-120.3): a read that fails, throws, answers nothing or is truncated i
   const u = w.cd.tensionsUndetermined([{ finding: null, why: "my own read threw" }]);
   refused(u, "TENSIONS_UNDETERMINED");
   assert.deepEqual(u.undetermined, [{ finding: null, why: "my own read threw" }]);
-  assert.match(u.detail, /this case's findings \(my own read threw\)/);
+  assert.ok(u.detail.includes(localize("case-disclosures.index.finding_why", "{finding} ({why})", {
+    finding: localize("case-disclosures.index.this_cases_findings", "this case's findings"), why: "my own read threw" })));
   w.member("alice"); w.doc(DOC); w.finding(F, [{ target: DOC }]);
   assert.deepEqual(w.cd.tensionsJudged(w.prepared([F]), V("alice"), null).refusals, [], "negative control: a whole read");
 });
@@ -167,8 +169,8 @@ test("R1, R18: a leg the read could name no referent for is answered per member 
   assert.deepEqual(fm.case_tensions_unread.map((u) => [u.target, u.legs]), [[F, 2]]);
   const body = tensionBodyLines([], j.unread).join("\n");
   assert.ok(body.includes(tensionsUnreadStated(j.unread)));
-  assert.match(body, /2 leg\(s\) of INQ-2026-0001-q name no passage the record holds, so a conflict on them could not be looked for; that is stated, not read as none\./);
-  assert.equal(tensionBodyLines([], []).join("\n").includes("name no passage"), false, "negative control");
+  assert.ok(body.includes(word("case-disclosures.leg_name_passage", { legs: "2", finding: F })));
+  assert.equal(tensionBodyLines([], []).join("\n").includes(tensionsUnreadStated(j.unread)), false, "negative control");
 });
 
 test("R1: the section lists each entry — the finding, both sides verbatim with source, date, doctype and capture, its state, kind and explanation, the owner's words, acknowledged_by and the instant, the one-level sentence — and each member's sentence comes from its template", () => {
@@ -191,23 +193,32 @@ test("R1: the section lists each entry — the finding, both sides verbatim with
   assert.ok(["a_date", "a_doctype", "b_date", "b_doctype", "b_capture"].every((k) => k in e));
   assert.deepEqual(fm.case_tension_sentences.map((x) => [x.target, x.candidate, x.template, x.sentence]),
     [[F, id, "explained", tensionSentence(t[0])]]);
-  assert.ok(tensionSentence(t[0]).startsWith(TENSION_TEMPLATES.explained + "the two pages speak of different years — "));
-  assert.match(tensionSentence(t[0]), new RegExp(`\\(conflict ${id}\\)\\. Disclosed by alice on ${AT}\\.$`));
+  const said = (x) => `'${x.text}' (${x.source})`;
+  assert.equal(tensionSentence(t[0]), word("case-disclosures.conflict_disclosed", { tension_templates: TENSION_TEMPLATES.explained,
+    what: localize("case-disclosures.document.explanation_against", "{explanation} — {a} against {b}", { explanation: "the two pages speak of different years", a: said(t[0].a), b: said(t[0].b) }),
+    candidate: id, acknowledged_by: "alice", acknowledged_at: AT }));
   const body = tensionBodyLines(t, j.unread).join("\n");
-  for (const s of ["## Tensions Disclosed", `- **${F}**, conflict ${id}: explained, not yet shown.`,
-                   `  - one side: the page of ${DOC} — source ${DOC}`, `  - the other side: the page of ${DOC2} — source ${DOC2}`,
-                   "  - The explanation recorded: the two pages speak of different years",
-                   "  - In the owner's words: we read the later page as the award", `  - Acknowledged by alice on ${AT}.`,
+  const notStated = localize("case-disclosures.document.not_stated", "not stated");
+  const sideLine = (label, x) => localize("case-disclosures.document.label_v1_source_v2_dated", "  - {label}: {v1} — source {v2}, dated {v3}, {v4}{v5}",
+    { label, v1: x.text, v2: x.source, v3: x.date ?? notStated, v4: x.doctype ?? localize("case-disclosures.document.doctype_not_stated", "doctype not stated"),
+      v5: x.capture ? localize("case-disclosures.document.capture_stated", ", capture {capture}", { capture: x.capture }) : "" });
+  for (const s of [localize("case-disclosures.document.tensions_disclosed_heading", "## Tensions Disclosed"),
+                   localize("case-disclosures.document.tension_entry", "- **{finding}**, conflict {candidate}: {state}{highlighted}.",
+                     { finding: F, candidate: id, state: word("case-grammar.explained_not_shown"), highlighted: "" }),
+                   sideLine(localize("case-disclosures.document.one_side", "one side"), t[0].a), sideLine(word("case-disclosures.side"), t[0].b),
+                   `  ${word("case-disclosures.explanation_recorded", { explanation: "the two pages speak of different years" })}`,
+                   `  - ${word("case-disclosures.owner_words", { words: "we read the later page as the award" })}`,
+                   `  ${word("case-disclosures.acknowledged", { acknowledged_by: "alice", acknowledged_at: AT })}`,
                    TENSIONS_DEPTH_STATED])
     assert.ok(body.includes(s), s);
   /* none: the section still says so, with the one-level sentence */
-  assert.ok(tensionBodyLines([], []).join("\n").includes("The record held no unresolved conflict"));
+  assert.ok(tensionBodyLines([], []).join("\n").includes(word("case-disclosures.record_held_unresolved", { value: TENSIONS_DEPTH_STATED })));
   assert.deepEqual(tensionFrontmatterLines([], []).slice(0, 2), ["tensions_disclosed: 0", "tensions_highlighted: 0"]);
 });
 
 test("R1: the four templates, by the candidate's standing — open or taken up is in tension, explained-not-shown is explained, resolved irreconcilable is held irreconcilable, and a highlighted one the last, not its state's own", () => {
-  assert.deepEqual(TENSION_TEMPLATES, { in_tension: "In tension, not yet resolved: ", explained: "Explained, not yet shown: ",
-    irreconcilable: "Held irreconcilable by the team: ", unseen: "Rests on a side in conflict with a record not shown: " });
+  assert.deepEqual(TENSION_TEMPLATES, { in_tension: `${word("case-disclosures.tension_resolved")} `, explained: `${word("case-disclosures.explained_shown")} `,
+    irreconcilable: `${word("case-disclosures.held_irreconcilable_group")} `, unseen: `${word("case-disclosures.rests_side_conflict")} ` });
   const side = (text) => tensionSide({ kind: "leg", text, source: { bundle: DOC } });
   const base = { candidate: "c1", finding: F, a: side("one"), b: side("two"), acknowledged_by: "alice", acknowledged_at: AT };
   for (const [over, k] of [[{ state: "open" }, "in_tension"], [{ state: "taken_up" }, "in_tension"],
@@ -219,8 +230,9 @@ test("R1: the four templates, by the candidate's standing — open or taken up i
     assert.equal(tensionTemplate(t), k, JSON.stringify(over));
     assert.ok(tensionSentence(t).startsWith(TENSION_TEMPLATES[k]), k);
   }
-  assert.equal(tensionSentence({ ...base, state: "open" }),
-    `In tension, not yet resolved: 'one' (${DOC}) against 'two' (${DOC}) (conflict c1). Disclosed by alice on ${AT}.`);
+  assert.equal(tensionSentence({ ...base, state: "open" }), word("case-disclosures.conflict_disclosed", { tension_templates: TENSION_TEMPLATES.in_tension,
+    what: localize("case-disclosures.document.a_against_b", "{a} against {b}", { a: `'one' (${DOC})`, b: `'two' (${DOC})` }),
+    candidate: "c1", acknowledged_by: "alice", acknowledged_at: AT }));
   /* tensionSide states each field the record states, null where none */
   assert.deepEqual(tensionSide(null), { kind: null, text: null, source: null, date: null, doctype: null, capture: null });
   assert.deepEqual(tensionSide({ kind: "claim", claim: "c", inquiry: "INQ-x", date: "d", doctype: "t", capture_sha: "s" }),
@@ -249,7 +261,7 @@ test("R1, R17 (DEC-85): a tension with a side the owner may not see is named in 
     [HIGHLIGHT_SENTENCE, 1, "unseen"]);
   for (const k of Object.keys(fm.case_tensions[0])) assert.ok(!/^(a|b)_|^explanation$/.test(k), `no field ${k}`);
   assert.ok(bodyLines.join("\n").includes(`  - ${HIGHLIGHT_SENTENCE}`));
-  assert.ok(bodyLines.join("\n").includes(" — HIGHLIGHTED."));
+  assert.ok(bodyLines.join("\n").includes(`${localize("case-disclosures.document.highlighted", " — HIGHLIGHTED")}.`));
   assert.equal(HIGHLIGHT_SENTENCE, word("case-disclosures.finding_rests_side"));
   for (const said of [JSON.stringify(j.refusals), JSON.stringify(ok.entries), fmLines.join("\n"), bodyLines.join("\n"),
                       tensionSentence(t[0])])

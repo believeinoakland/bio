@@ -17,7 +17,8 @@
    R49) is a stand-in the test controls (`lensStandIn`, `w.lens`): the statements in force, per scope, and every ask; it
    is bound to `inquiry` (its R61 asks it) and handed to case-disclosures (R30). `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
-   instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
+   instance (K1619). (T51; R33) `retrieval`'s `zone` (its R69) is a stand-in the test controls (`w.team.zone`, a Pacific zone
+   unless a test sets another or null): the zone a photo's day is read in. Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -186,8 +187,9 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
         return { ok: true, bytes: Uint8Array.from([...bytes, areas.length]), covered: areas.length, width: 8, height: 8 };
       } });
   }
+  const team = { zone: "America/Los_Angeles" };
   const w = {
-    lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    team, lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, acquisition, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -200,7 +202,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
     sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
-    caseCarriage: carriage || marks, bias: lens, now: () => clock.now, ...deps });
+    caseCarriage: carriage || marks, bias: lens, retrieval: { zone: () => team.zone }, now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,

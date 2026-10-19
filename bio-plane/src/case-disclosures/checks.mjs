@@ -29,20 +29,16 @@
 import { word, localize } from '../setup-words/index.mjs';
 
 export const PHOTO_WORDS = Object.freeze({
-  'photo.refused.format': 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or '
-    + 'stop relying on it.',
-  'photo.refused.unchecked': 'Signing waits until every photo in the case is checked, including one that only supports a '
-    + 'finding: {photo}.',
+  'photo.refused.format': word('photo.refused.format', { photo: '{photo}' }),
+  'photo.refused.unchecked': word('photo.refused.unchecked', { photo: '{photo}' }),
 });
 
 /** R22 (T39; N806; K2333; T41: DEC-188 (7)): the words `DOCUMENT_NOT_CLEANABLE` and `DOCUMENT_COPY_PENDING` answer,
  *  `words.json`'s `document.refused.clean` and `document.refused.pending` (C-120.22, C-120.21), read by key, each `en`
  *  verbatim, `{document}` the document named; the UX stream re-words them there. */
 export const DOCUMENT_WORDS = Object.freeze({
-  'document.refused.clean': 'A document a member supplied can\'t be cleaned of the details that could show who made it: '
-    + '{document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.',
-  'document.refused.pending': 'The publication copy of a document a member supplied is still being made: {document}. '
-    + 'Try again in a few minutes.',
+  'document.refused.clean': word('document.refused.clean', { document: '{document}' }),
+  'document.refused.pending': word('document.refused.pending', { document: '{document}' }),
 });
 
 const at = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
