@@ -4,6 +4,7 @@
    its inapplicable `in` check, and R6's date rule is tested here directly. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, MACHINE, OUTSIDER } from "./fixture.mjs";
 import { seeded, cand, RUN, PRINCIPAL, IQ, INFO, M1 } from "./seed.mjs";
 import { defaultRegistry, ownerConformance, derivedId, LOWEST_GRADE, BOUNDS } from "../../../src/connection-grammar/index.mjs";
@@ -16,7 +17,7 @@ const read = (w, node, extra = {}) => w.c.neighbours({ node, kinds: null, at: AT
 test("R58: registered once at load into the plane's registry, owner contradiction, one kind 'in tension with', class derived", () => {
   assert.deepEqual(OWNER_REGISTRATION, { ok: true, owner: "contradiction" });
   assert.deepEqual([CONNECTION_OWNER, CONNECTION_KIND], ["contradiction", "in_tension_with"]);
-  assert.deepEqual(defaultRegistry.kindOf("in_tension_with"), { owner: "contradiction", word: "in tension with", class: "derived" });
+  assert.deepEqual(defaultRegistry.kindOf("in_tension_with"), { owner: "contradiction", word: word("contradiction.word.tension"), class: "derived" });
   assert.deepEqual(defaultRegistry.owners().find((o) => o.owner === "contradiction").kinds, CONNECTION_KINDS.map((k) => ({ ...k })));
   /* a second registration is the registry's to refuse */
   assert.equal(defaultRegistry.registerOwner({ owner: "contradiction", kinds: [...CONNECTION_KINDS], neighbours: ownerNeighbours }).refused,
@@ -40,7 +41,7 @@ test("R58: each candidate on a side's node — an inquiry or a document (a money
   assert.deepEqual(c.grade, { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] });
   assert.deepEqual([c.evidence, c.machine_work, c.judgement.origin, c.judgement.label], [[], true, "machine", "record"]);
   assert.equal(c.label, undefined);
-  assert.equal(typeof c.undetermined.why, "string");
+  assert.deepEqual(c.undetermined.why, { key: "contradiction.undated_why", vars: {} });
   assert.deepEqual(c.valid, { from: null, to: null, precision: "day", zone: "UTC" });
   /* K4 and K1: passages, presented at the documents they are filed in */
   const doc = read(w, INFO.a).items;
@@ -151,7 +152,7 @@ test("R58, connection-grammar R9: the owner-conformance battery over this module
   for (const at of ["1999-01-01", AT, "2100-12-31"]) {
     const got = w.c.neighbours({ node: INFO.a, at, viewer: M1, scope: null }).items;
     assert.deepEqual(got.map((i) => i.id), items.map((i) => i.id), at);
-    assert.ok(got.every((i) => typeof i.undetermined.why === "string"), at);
+    assert.ok(got.every((i) => i.undetermined.why.key === "contradiction.undated_why" && Object.keys(i.undetermined.why.vars).length === 0), at);
   }
   /* R7 directly: the fenced candidate reaches the participant and not the outsider, and is not counted for them */
   const blind = w.c.neighbours({ node: INFO.a, at: AT, viewer: OUTSIDER, scope: null });
