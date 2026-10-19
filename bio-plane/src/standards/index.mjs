@@ -1718,8 +1718,7 @@ export class Standards {
       this.sql.exec(`INSERT INTO standard_force_proposals (proposal_id, standard_id, fields_json, why, proposed_by, proposed_at)
                      VALUES (?,?,?,?,?,?)`, id, r.fields.standard, JSON.stringify(r.fields), why, who, at);
       return { ok: true, proposal: this.#forceProposalAnswer(this.#one(`SELECT * FROM standard_force_proposals WHERE proposal_id=?`, id)),
-               force: false, says: "this is a proposed force and not a force: it moves no answer until a member confirms it "
-                                 + "naming this proposal" };
+               force: false, says: localize("standards.index.proposed_force_moves_no_answer", "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal") };
     });
   }
 
@@ -1779,8 +1778,7 @@ export class Standards {
              proposals: this.#rows(`SELECT * FROM standard_force_proposals WHERE standard_id=? ORDER BY proposal_id`, sid)
                .map((p) => this.#forceProposalAnswer(p)),
              says: { ...this.#t35Answer(this.#row(sid), viewer).says,
-                     note: "a force is read from the provision's own words and confirmed by a member; a proposal moves "
-                         + "nothing" } };
+                     note: localize("standards.index.force_read_from_provision_words", "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing") } };
   }
 
   /** R37: `releaseStandard` (`op=standardrelease`): an owner of the source's project moves a policy held at its source's
@@ -2208,8 +2206,7 @@ export class Standards {
   recordedBy({ captureSha = null, extent = null, limit = null, viewer = null } = {}) {
     try {
       if (viewer === null || viewer === undefined || (typeof viewer === "string" && !viewer.trim()))
-        return readRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator "
-                           + "nor the public");
+        return readRefusal("VIEWER_MISSING", localize("standards.index.read_names_the_member_reading", "a read names the member reading; an absent viewer is neither an administrator nor the public"));
       if (typeof captureSha !== "string" || !captureSha.trim())
         return noSha("who recorded something from a passage is read for a captured document, by its capture sha256");
       let asked = null;
