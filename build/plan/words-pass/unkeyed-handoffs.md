@@ -46,3 +46,4 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 - basis-versions (BASIS-VERSIONS #20 J5): the 15 `where` strings of `checks.mjs` (source locators read by control-plane's region checks).
 - contradiction (CONTRADICTION #11 J3): besides the three pinned prompts, `contradiction/index.mjs`:361, :364 (run-gate registration diagnostics), :2001 ("contradiction {}: candidate {}", an internal label), `text.mjs`:43 (the `## Session Log` marker).
 - skills (SKILLS #25 J5): the seven strings its record names, already on the design's unkeyed list.
+- agent-worker (AGENT-WORKER #33 J3): `agent-worker/src/ops.mjs`:26, :27, :50, :53, the `why` descriptions of the worker's op table. Why: developer descriptions no person reads.
