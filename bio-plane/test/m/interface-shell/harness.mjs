@@ -92,7 +92,7 @@ export function fakeIndexedDB(dbs = new Map()) {
 export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false } = {}) {
   html = html || served(interfacePage(screens, { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}) }));
   const doc = documentOf(html);
-  const requests = [];
+  const requests = [], polls = [];
   const answers = { ...FRAME, ...plane };
   const fetch = async (url, init = {}) => {
     const u = new URL(url, "https://group.example");
@@ -100,7 +100,8 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     const op = u.pathname === "/version" ? "version" : u.searchParams.get("op");
     const req = { url: String(url), op, query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
-    requests.push(req);
+    /* R92: the version poll is a plain-text address of its own, no op: kept apart from `requests`, which are the op door's */
+    (op === "version" ? polls : requests).push(req);
     let a = answers[op];
     if (typeof a === "function") a = await a(req);
     if (a === undefined) a = ok(null);
@@ -158,7 +159,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const fire = (el, type, init = {}) => el.dispatchEvent(new Event(type, { bubbles: true, target: el, ...init }));
   const click = async (el) => { if (typeof el === "string") el = root().querySelector(el); if (!el) throw new Error("nothing to click"); fire(el, "click"); await settle(); return el; };
   const back = async (path2) => { go(path2); for (const f of listeners.popstate || []) f({}); await settle(); };
-  const page = { doc, win, html, requests, root, clock, settle, click, fire, back, assigned, store, local: localMap, location, objectUrls, files, idb };
+  const page = { doc, win, html, requests, polls, root, clock, settle, click, fire, back, assigned, store, local: localMap, location, objectUrls, files, idb };
   if (group) group.pages.push(page);
   if (run) {
     /* the page's clock is the fake one: `Date.now()` advances with `clock.tick` (cs.now, K3002) */
@@ -167,7 +168,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
     await settle();
   }
-  page.byOp = (op) => requests.filter((r) => r.op === op);
+  page.byOp = (op) => (op === "version" ? polls : requests).filter((r) => r.op === op);
   /* R33: the clock run while the member keeps working (a key pressed every ten minutes), so a test that runs the page
      for days is not locked or signed out by the idle limits */
   clock.tickActive = async (ms) => { let left = ms; while (left > 0) { const step = Math.min(left, 10 * 60 * 1000); doc.body.dispatchEvent(new Event("keydown", { bubbles: true, key: "Shift" })); await clock.tick(step); left -= step; } };

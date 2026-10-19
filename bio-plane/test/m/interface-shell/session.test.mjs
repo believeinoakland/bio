@@ -148,12 +148,12 @@ test("R3 driving every screen and act with a sentinel token, the token is in eac
     for (const a of p.root().querySelectorAll("a[data-nav]").slice(0, 4)) await p.click(a);
     for (const r of p.requests) {
       if (r.op === "bootstrap") { assert.equal(r.headers.Authorization, "Bearer " + SENTINEL, "R71: the bootstrap carries the page's session"); assert.ok(!r.url.includes(SENTINEL)); continue; }
-      /* R92: the version poll is public and carries no session at all */
-      if (r.op === "version") { assert.equal(r.headers.Authorization, undefined, "the poll carries no session token"); assert.ok(!r.url.includes(SENTINEL)); continue; }
       assert.equal(r.headers.Authorization, "Bearer " + SENTINEL, r.op);
       assert.ok(!r.url.includes(SENTINEL), r.url);
       assert.ok(!JSON.stringify(r.body ?? "").includes(SENTINEL), r.op);
     }
+    /* R92: the version poll is public and carries no session at all */
+    for (const r of p.polls) { assert.equal(r.headers.Authorization, undefined, "the poll carries no session token"); assert.ok(!r.url.includes(SENTINEL)); }
     assert.ok(!p.root().innerHTML.includes(SENTINEL));
     assert.ok(!pushed.some((u) => u.includes(SENTINEL)));
     for (const [k, v] of p.local) if (k !== STORE_KEY) assert.ok(!String(v).includes(SENTINEL), k);
@@ -214,7 +214,7 @@ test("R24 nothing the shell does records who opened what: no storage holds a rea
   /* the ops the frame and the fixture screens declare they call: the shell's own list, and each fixture screen's reads (R24) */
   const ALLOWED = new Set([...SHELL_OPS, ...SCREENS.flatMap((x) => (x.reads ? Object.values(x.reads({ subject: "s", data: {}, ui: {} })).map((r) => r.op) : []))]);
   for (const op of ALLOWED) assert.ok(Object.hasOwn(OPS, op), op + ": declared by its owner");
-  for (const r of p.requests) assert.ok(ALLOWED.has(r.op) || r.op === "version", r.op);
+  for (const r of p.requests) assert.ok(ALLOWED.has(r.op), r.op);
   await settle();
   assert.ok(ENTRY.length);
 });

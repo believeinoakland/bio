@@ -494,7 +494,13 @@ test("R98 cs.download with verify hashes the bytes in the browser before any fil
     const src = interfacePage([screen]).replace("VERIFY", JSON.stringify(verify));
     return boot({ screens: [screen], path: "/app/finder", html: src.split("__CSP_NONCE__").join("n0nce"), plane: { openoriginal: bytes(body, "application/octet-stream") } });
   };
-  const press = async (p) => { await p.click('button[data-act="search"]'); await p.settle(); return JSON.parse(p.doc.getElementById("dl").textContent); };
+  const press = async (p) => {
+    await p.click('button[data-act="search"]');
+    /* the digest is computed by WebCrypto: let it finish */
+    for (let i = 0; i < 400 && !p.doc.getElementById("dl").textContent; i++) await new Promise((r) => setTimeout(r, 10));
+    await p.settle();
+    return JSON.parse(p.doc.getElementById("dl").textContent);
+  };
   const good = await page(hex(body));
   const a = await press(good);
   assert.equal(a.ok, true);
