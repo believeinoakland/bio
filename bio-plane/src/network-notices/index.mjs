@@ -57,7 +57,7 @@ import {
   ACTIVITY_METHOD_VERSION, ACTIVITY_METHOD_EARLIER_LABELS, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash,
   weekLeafHash, slotsFor, randomHex, randomPositions, treeOf, rootOf, pathOf, verifyOpening, OPENING_FORMAT,
 } from "./seals.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { NETWORK_NOTICE_CHECKS } from "./checks.mjs";
 export { NETWORK_NOTICES_SCHEMA, NETWORK_NOTICES_TABLES } from "./schema.mjs";
@@ -101,6 +101,8 @@ export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 /** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it says
  *  "this group's Civicsmith", never "your group's" nor "this copy" (DEC-149, K1821, K1833). */
 export const COPY_KEY_LABEL = word("network-notices.group_civicsmith_key");
+/** R1, R4: the detail of NOTICE_NO_INSTANCE_KEY, read by key where the list holds it (setup-words R13, R14). */
+export const NO_INSTANCE_KEY_DETAIL = localize("network-notices.index.no_instance_key_detail", "your team's Civicsmith holds no signing key of its own, and a notice is never published without its signed level");
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
@@ -254,10 +256,9 @@ export class NetworkNotices {
       if (!stopping) return { refusal: refuse("NOTICE_PROJECT_CLOSED", "the project is closed; only a stop of its open notice is taken", { project: pid }) };
     }
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", "no team slug is recorded, and there are no anonymous notices") };
+    if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", localize("network-notices.index.no_group_slug_detail", "no team slug is recorded, and there are no anonymous notices")) };
     if (!(await this.#keyBound()))
-      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "your team's Civicsmith holds no signing key of its own, and a notice is never published "
-        + "without its signed level") };
+      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", NO_INSTANCE_KEY_DETAIL) };
     /* END DEC-49 REGION is-notice-caller */
     return { pid, member, slug };
   }
@@ -393,8 +394,7 @@ export class NetworkNotices {
     const att = this.#attestation({ nid: held.nid, pid: held.pid, kind: "posted", asOfMs: nowMs,
                                     revisionDigest: held.digest, revisionStatus: held.revision.status });
     const signed = await this.#sign(att.digest);
-    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "your team's Civicsmith holds no signing key of its own, and a notice is never published "
-        + "without its signed level");
+    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", NO_INSTANCE_KEY_DETAIL);
     const out = this.record.transact(() => {
       const latest = this.#latestRevision(held.nid);
       if ((latest ? latest.revision : 0) !== held.n - 1 || (held.firstRevision && this.#notice(held.nid)))
