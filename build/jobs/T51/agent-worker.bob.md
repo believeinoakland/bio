@@ -44,3 +44,7 @@ CHANGE (K4015): the words check now judges a sentence written as string literals
 ## B5 · RESUME
 
 RESUME (§5.4): nothing pushed on job/T51/agent-worker for over 75 minutes and your RUNNING time (05:35) has passed. Check whether your control drivers are still alive (a container restart kills them); if they finished, read their results; if they died, re-run only what you still need. Then commit and push what you have, set your state honestly (RUNNING until <time> with the command, or WORKING), apply B2–B4 (the folded words check), and COMPLETE. Never stop the agent-worker test run midway (rulings-active §4: its negative controls mutate the tree; restore from HEAD if one was stopped).
+
+## B6 · CHANGE
+
+CHANGE (K4018; K3986): merged; one item before it merges again. With R6 merged, the words check (civicos-process d424c32) counts 7 test copies in your tests of sentences other modules now write by localize: agent-worker.test.mjs:725 and harness.test.mjs:1564 "the one question the run's project confirmed-cites"; harness.test.mjs:1515 and requirements.test.mjs:598 "the run's context question"; requirements.test.mjs:837 "the cited record names no source address, so no version chain can h..."; t42.test.mjs:261 and t46.test.mjs:400 "the AI's reading". Merge tranche/T51, compare each with the product's own call (same id, en, vars) by equality or pass the product's output through, run the words check on your module and your tests (never stop the run midway), and COMPLETE again. The four ops.mjs why strings are accepted unkeyed (R6's design batch).
