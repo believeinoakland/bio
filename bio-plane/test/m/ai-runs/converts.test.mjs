@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, sha, inquiryMd } from "./world.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/run-rules/index.mjs";
 
 const CAP = "c".repeat(64);
@@ -319,9 +319,8 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   const says = (d) => d.slice(d.indexOf("Resumption:"));
   const rows = {
     "index.mjs:1688": [served(w, "INST"), word("ai-runs.says.resumption_handed_agent", { token_id: "tok-org" })],
-    "index.mjs:1694": [served(w, "MEM"), "Resumption: NOT dispatched — a member's credential opened it, and your team's Civicsmith resumes "
-      + "only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would "
-      + "re-attribute its acts). It waits for its own principal."],
+    "index.mjs:1694": [served(w, "MEM"), word("ai-runs.says.resumption_dispatched", { why: localize("ai-runs.index.a_members_credential_opened_it",
+      "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). It waits for its own principal") })],
     "index.mjs:1698": [served(w, "OTHER"), word("ai-runs.says.resumption_dispatched", { why: word("ai-runs.text.principal_opened_organization") })],
   };
   /* :1699 */
