@@ -64,7 +64,7 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
     assert.deepEqual(Object.keys(k.determining_pair).sort(), PAIR_KEYS, "the determining pair's keys, exactly");
     assert.equal(k.determining_pair.a_ref, R); assert.equal(k.determining_pair.b_ref, R);
     assert.ok(k.a_capture_sha < k.b_capture_sha, "ends in canonical order");
-    assert.match(k.basis, new RegExp(`the connection is through the reference ${R} in A and ${R} in B`), "the basis names the pair");
+    assert.equal(k.basis.split(R).length - 1, 2, "the basis names the pair's reference on each end");
   }
   const sortKey = (k) => `${k.a_capture_sha}|${k.b_capture_sha}`;
   assert.deepEqual([...d.connections].sort((x, y) => sortKey(x).localeCompare(sortKey(y))),

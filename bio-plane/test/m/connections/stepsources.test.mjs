@@ -10,6 +10,7 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { defaultRegistry, ownerConformance, BOUNDS, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { STEP_SOURCE_KIND, STEP_SOURCE_KINDS, STEP_SOURCE_DECLARES, STEP_SOURCE_BASIS_MAX, MENTIONED_KIND,
          CONNECTIONS_TABLES, connectionsOps } from "../../../src/connections/index.mjs";
+import { STEP_SOURCE_UNDATED } from "../../../src/connections/stepsources.mjs";
 
 const E = "ENT-2026-0101", F = "ENT-2026-0102", G = "ENT-2026-0103";
 const D1 = "INFO-2026-0101-a", D2 = "INFO-2026-0102-b", H = "INFO-2026-0150-h";
@@ -161,7 +162,7 @@ test("R69: neighbours answers, for an entity at either end, each standing source
       assert.equal(i.evidence[0].relation, rel);
       assert.deepEqual(i.grade.ends, [LOWEST_GRADE, LOWEST_GRADE], "each entity end at the lowest grade, as entities R47 answers them");
       assert.equal(i.derived, null);
-      assert.equal(typeof i.undetermined.why, "string");
+      assert.deepEqual(i.undetermined.why, STEP_SOURCE_UNDATED, "the reason is a key with its fills (R69)");
       assert.deepEqual({ from: i.valid.from, to: i.valid.to }, { from: null, to: null }, "valid unstated");
     }
     const one = r.items.find((i) => i.id === s1.id), two = r.items.find((i) => i.id === s2.id);

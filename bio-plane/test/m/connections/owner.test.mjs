@@ -12,6 +12,7 @@ import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, M
          WARN_BAND, PAIR_RULE,
          CONNECTIONS_TABLES, THEME_ID_RE, THEME_REF_RE, themeLegFindings, mentionedMethod, registeredNeighbours }
   from "../../../src/connections/index.mjs";
+import { MENTIONED_UNDATED } from "../../../src/connections/mentioned.mjs";
 
 const E = "ENT-2026-0001", F = "ENT-2026-0002";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", H = "INFO-2026-0050-h";
@@ -87,7 +88,7 @@ test("R62 (N560; K1563 (2)): its owner-conformance battery (connection-grammar R
      never dropped as out, so the set is the same whatever the date asked. */
   for (const i of all.items) {
     assert.deepEqual(i.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "no valid bound stated");
-    assert.equal(i.undetermined.why.includes("states no dates"), true, "marked undetermined, never out");
+    assert.deepEqual(i.undetermined.why, MENTIONED_UNDATED, "marked undetermined, never out");
   }
   for (const at of ["1900-01-01", "2026-10-01", "2999-12-31", undefined])
     assert.deepEqual(ids(ask(w, { node: A, viewer: MACHINE, at })), ids(all), `the same set at ${at}`);
@@ -119,8 +120,8 @@ test("R63: each item is one derived connection in connection-grammar's shape: fr
   assert.deepEqual(it.evidence.map((e) => [e.source, e.capture, e.ref]), [[A, a, "Ord. 13,579"], [B, b, "Ordinance 13579"]]);
   assert.equal(it.evidence[0].position.ref, "page 3", "where the reference was read, when recorded");
   assert.equal(it.evidence[1].position, null);
-  assert.deepEqual(it.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "co-mention states no dates");
-  assert.match(it.undetermined.why, /undetermined, never out/);
+  assert.deepEqual(it.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "R63: the kind is undated");
+  assert.deepEqual(it.undetermined.why, MENTIONED_UNDATED);
   for (const i of r.items) assert.deepEqual(reg.checkConnection(i), { ok: true });
   /* Through either end, the same connection is the same id; two identical reads are identical. */
   const fromB = ask(w, { node: B, viewer: V("alice") });

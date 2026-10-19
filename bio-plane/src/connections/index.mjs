@@ -52,7 +52,7 @@ import { Themes } from "./themes.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
 import { MENTIONED_KINDS, MENTIONED_OWNER, mentionedNeighbours } from "./mentioned.mjs";
 import { StepSources, STEP_SOURCE_KINDS } from "./stepsources.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
@@ -92,6 +92,12 @@ export const ASSERT_BASIS_MAX = 4000;
 const LINK_VERDICTS = ["contemporaneous", "superseded", "undetermined"];
 /** R29: the machine viewer the system's own re-projection reads through. */
 const SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
+/** R5, R8: where each end's reference was read, as the basis says it: both ends, one end, or neither. */
+const readAt = (a, b) => (a && b
+  ? localize("connections.index.read_at_both_ends", " (read at {ref} and {ref_2})", { ref: String(a.ref), ref_2: String(b.ref) })
+  : a || b
+    ? localize("connections.index.read_at_one_end", " (read at {ref} on one end only; the other reading does not say where)", { ref: String((a || b).ref) })
+    : localize("connections.index.read_at_neither", " (neither reading says where in its document the reference was read)"));
 
 /* §8.1's rank (entities R33, K149): A strongest; a grade outside the vocabulary ranks below every one. */
 const rank = (g) => gradeRank[g] || 0;
@@ -299,9 +305,7 @@ export class Connections {
           if (A.capture_sha > B.capture_sha) { const t = A; A = B; B = t; }
           const grade = weakerGrade(A.grade, B.grade);
           const pairNote = (A.ref && B.ref)
-            ? localize("connections.connection_through_reference", "; the connection is through the reference {ref} in A and {ref_2} in B{ref_3}; each is its document's strongest-graded mention (ties: first reference by sort), not one chosen as on point", { ref: String(A.ref), ref_2: String(B.ref), ref_3: String(A.pos && B.pos ? ` (read at ${A.pos.ref} and ${B.pos.ref})`
-                 : A.pos || B.pos ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)`
-                 : ` (neither reading says where in its document the reference was read)`) })
+            ? localize("connections.connection_through_reference", "; the connection is through the reference {ref} in A and {ref_2} in B{ref_3}; each is its document's strongest-graded mention (ties: first reference by sort), not one chosen as on point", { ref: String(A.ref), ref_2: String(B.ref), ref_3: readAt(A.pos, B.pos) })
             : localize("connections.reference_established_recorded", "; which reference established it is not recorded on this row");
           const basis = localize("connections.why.documents_concern_grade", "both documents concern {label} ({entity_id}); grade is the weaker of the two ends ({grade}, {grade_2}) -> {grade_3}{pair_note}", { label: String(label), entity_id: String(entityId), grade: String(A.grade), grade_2: String(B.grade), grade_3: String(grade), pair_note: String(pairNote) });
           const row = {
@@ -360,13 +364,8 @@ export class Connections {
      LAPSED with its why, or unchosen. `chosen` stays false: it is about the MACHINE's pair, which a choice sits beside. */
   static #pairSelection(rule, states = null) {
     const lead = rule
-      ? "each end is the strongest-graded mention of the subject in its document; between equal "
-        + "grades the tie goes to the first reference by sort order, which says nothing about "
-        + "relevance. It is a machine selection and not the mention on point"
-      : "each end is the strongest-graded mention of the subject in its document; this row was "
-        + "derived before the tie-break was recorded, when equal grades went to the scan's row "
-        + "order, which is not a basis. Re-deriving the subject's connections records it. It is "
-        + "a machine selection and not the mention on point";
+      ? localize("connections.index.pair_selection_by_rule", "each end is the strongest-graded mention of the subject in its document; between equal grades the tie goes to the first reference by sort order, which says nothing about relevance. It is a machine selection and not the mention on point")
+      : localize("connections.index.pair_selection_unrecorded", "each end is the strongest-graded mention of the subject in its document; this row was derived before the tie-break was recorded, when equal grades went to the scan's row order, which is not a basis. Re-deriving the subject's connections records it. It is a machine selection and not the mention on point");
     const st = states || {};
     const endSays = (side) => {
       const e = st[side];
@@ -494,8 +493,7 @@ export class Connections {
   derivationStatement(entityId) {
     if (!this.#derivationProvider)
       return { recorded: false, cause: "NO_PROVIDER",
-               says: "no module that records derivations is registered with this one, so whether this subject's "
-                   + "connections were ever derived, and whether a derivation was cut at its bound, is undetermined" };
+               says: localize("connections.index.no_derivation_provider", "no module that records derivations is registered with this one, so whether this subject's connections were ever derived, and whether a derivation was cut at its bound, is undetermined") };
     /* The provider is handed what only this module and entities hold: whether a connection through the entity is
        held (the pre-log evidence) and when the entity was registered. */
     const e = this.entities && typeof this.entities.readEntity === "function" ? this.entities.readEntity({ entityId }) : null;
@@ -627,8 +625,7 @@ export class Connections {
                       other_capture_sha: side === "a" ? c.b_capture_sha : c.a_capture_sha,
                       other_bundle_id: keep(side === "a" ? c.b_bundle_id : c.a_bundle_id),
                       determining_pair: view.determining_pair };
-      if (whole) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "
-                                                + "connection the document has is inside it" }); continue; }
+      if (whole) { reaching.push({ ...entry, why: localize("connections.index.whole_document_citation", "this citation is of the whole document, so every connection the document has is inside it") }); continue; }
       const mine = states[side] && states[side].choice;
       let lapsed = null;
       if (mine) {
@@ -655,9 +652,7 @@ export class Connections {
       if (lapsed) entry.on_point = lapsed;
       if (!view.determining_pair) {
         undetermined.push({ ...entry, code: "CONNECTION_PAIR_NO_PAIR",
-          why: "this connection was derived before the record kept which reference established it, so "
-             + "whether that reference falls inside this part cannot be asked. Re-deriving the "
-             + "subject's connections records the pair" });
+          why: localize("connections.index.derived_before_pair_kept", "this connection was derived before the record kept which reference established it, so whether that reference falls inside this part cannot be asked. Re-deriving the subject's connections records the pair") });
         continue;
       }
       const bad = checkConnectionPairCovers(view.determining_pair, side, row.extent_kind, extent, readingPositionInExtent);
@@ -691,7 +686,7 @@ export class Connections {
       : conns.length === 0
         ? localize("connections.document_end_connection", "this document is an end of no connection, so there is nothing for {ref} to earn from", { ref: String(row.ref) })
         : unchosenN
-          ? localize("connections.connection_established_reach", "no connection is established to reach {ref}: {unchosen_n} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on {ref_2}, and nobody has chosen which mention is on point{undetermined}; {outside} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none", { ref: String(row.ref), unchosen_n: String(unchosenN), ref_2: String(row.ref), undetermined: String(undetermined.length > unchosenN ? `; ${undetermined.length - unchosenN} cannot be placed` : ``), outside: String(outside.length) })
+          ? localize("connections.connection_established_reach", "no connection is established to reach {ref}: {unchosen_n} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on {ref_2}, and nobody has chosen which mention is on point{undetermined}; {outside} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none", { ref: String(row.ref), unchosen_n: String(unchosenN), ref_2: String(row.ref), undetermined: String(undetermined.length > unchosenN ? localize("connections.index.cannot_be_placed", "; {count} cannot be placed", { count: String(undetermined.length - unchosenN) }) : ``), outside: String(outside.length) })
         : undetermined.length
           ? localize("connections.connection_established_reach_cannot", "no connection is established to reach {ref}: {undetermined} cannot be placed (the record does not hold where the determining reference was read) and {outside} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none — reading this document with positions is what would settle it", { ref: String(row.ref), undetermined: String(undetermined.length), outside: String(outside.length) })
           : localize("connections.document_connections_established", "all {outside} of this document's connections were established by references read outside {ref}, so none of them reaches this citation", { outside: String(outside.length), ref: String(row.ref) });
@@ -760,7 +755,7 @@ export class Connections {
         { capture, entity_id: entityId, ref: ref || null });
     if (named != null && !pick)
       return refusal("CONNECTION_CHOICE_NOT_A_MENTION",
-        localize("connections.index.this_document_does_not_read", "this document does not read '{ref}' {v1}{v2}. It reads it at: {v3}.", { ref: String(mention.ref.slice(0, 80)), v1: String(named ? `at '${named.slice(0, 120)}'` : `at a place it did not record (an empty occurrence= names that read)`), v2: String(byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``), v3: String(reads.map(placeName).join(", ") || "no place the reading recorded") }),
+        localize("connections.index.this_document_does_not_read", "this document does not read '{ref}' {v1}{v2}. It reads it at: {v3}.", { ref: String(mention.ref.slice(0, 80)), v1: String(named ? `at '${named.slice(0, 120)}'` : `at a place it did not record (an empty occurrence= names that read)`), v2: String(byForm.length > 1 ? ` alone — that place is ${byForm.length} occurrences, so name one by its key` : ``), v3: String(reads.map(placeName).join(", ") || localize("connections.index.no_place_recorded", "no place the reading recorded")) }),
         { capture, entity_id: entityId, ref: mention.ref, occurrence: named, occurrences: listed(),
           limit: OCCURRENCES_PER_REF, truncated: occCut });
     if (named == null && reads.length > 1)
@@ -1036,8 +1031,8 @@ export class Connections {
   #upsertSourceConnection(bundle, e, sourceCapture, at) {
     const timing = e.verdict === "contemporaneous" ? "contemporaneous" : "undetermined";
     const basis = localize("connections.why.source_document_linked", "the source document linked to {to} by the address {address}, resolved to a capture the record holds; {value}", { to: String(e.to), address: String(cut(e.address, 300)), value: String(timing === "contemporaneous"
-        ? "the target's bytes were seen unchanged on both sides of the source's retrieval"
-        : "which version of the target the source pointed at is undetermined") });
+        ? word("connections.target_bytes_seen")
+        : word("connections.version_target_source")) });
     this.sql.exec(
       `INSERT INTO asserted_connections (kind, a_bundle_id, b_bundle_id, origin, grade, established, asserted_by, author,
                                          basis, timing, a_address, b_address, at)
@@ -1140,8 +1135,7 @@ export class Connections {
     return { ok: true, bundle_id: id, limit: cap, truncated: rows.length > cap,
              member: shown.filter((r) => r.kind === "member"), source: shown.filter((r) => r.kind === "link"),
              containment: shown.filter((r) => r.kind === "containment"),
-             says: "connections asserted by a member, by a source's own link and by the system's positional inference, "
-                 + "each labelled with who asserts it and kept apart from the connections derived from resolutions" };
+             says: localize("connections.index.asserted_says", "connections asserted by a member, by a source's own link and by the system's positional inference, each labelled with who asserts it and kept apart from the connections derived from resolutions") };
   }
 
   /* R49: which held document an address names: its capture's home. */
@@ -1208,9 +1202,7 @@ export class Connections {
       return { ok: true };
     });
     return { ok: true, capture_sha: sha, stored, pending, unplaced: m.unplaced || [], ...MEMBERSHIP_LABEL,
-             says: "each file is assigned to the agenda item printed above it; a pair is stored as a connection "
-                 + "the system asserts, graded C and never established, once both documents are held, and a member "
-                 + "may confirm or reject it. A pair whose documents are not both held is served only at the read" };
+             says: localize("connections.index.membership_stored_says", "each file is assigned to the agenda item printed above it; a pair is stored as a connection the system asserts, graded C and never established, once both documents are held, and a member may confirm or reject it. A pair whose documents are not both held is served only at the read") };
   }
 
   /** R49: a re-read of either end's capture re-derives the pairs that name its addresses (extraction R24). */
@@ -1256,8 +1248,7 @@ export class Connections {
     return { ok: true, capture_sha: sha, ...MEMBERSHIP_LABEL, stored, pending, limit: cap,
              truncated: storedRows.length > cap || pendingRows.length > cap,
              stored_truncated: storedRows.length > cap, pending_truncated: pendingRows.length > cap,
-             says: "an agenda item's membership in a file, derived from where the file is printed; the publisher "
-                 + "linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link" };
+             says: localize("connections.index.membership_read_says", "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link") };
   }
 
   /** R49 (`op=filemembershipjudge`): a member confirms or rejects a stored containment, with a reason; both acts kept

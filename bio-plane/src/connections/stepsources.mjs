@@ -12,7 +12,7 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 import { checkContentExtent, canonicalExtent, CONTENT_EXTENT_DOCUMENT_ONLY } from "../content/index.mjs";
 import { BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 /** R69: the kind, its class and its members' word (provisional until the design stream gives one; K1486, K1469). */
 export const STEP_SOURCE_KIND = "step_source";
@@ -27,8 +27,10 @@ export const STEP_SOURCE_BASIS_MAX = 4000;
 export const STEP_SOURCE_ID_PREFIX = "STEPSOURCE-";
 
 const VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
-const UNDATED = "a source attached to a declared step states the step, not when it held, so whether it holds at the "
-  + "date asked is undetermined, never out";
+/** R69: the reason an attached source is undetermined at a date, a key with its fills (the words rule, R14); its
+ *  sentence is written here, at its id, so the list holds it. */
+export const STEP_SOURCE_UNDATED = Object.freeze({ key: "connections.stepsources.undated_source", vars: Object.freeze({}) });
+export const STEP_SOURCE_UNDATED_SAYS = localize("connections.stepsources.undated_source", "a source attached to a declared step states the step, not when it held, so whether it holds at the date asked is undetermined, never out");
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : v == null ? "" : String(v).trim());
 const idOf = (n) => `${STEP_SOURCE_ID_PREFIX}${n}`;
@@ -132,7 +134,7 @@ export class StepSources {
     const a = isObj(args) ? args : {};
     const { node, kinds, page, viewer } = a;
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("duties.why.read_names_member") };
     if (Array.isArray(kinds) && !kinds.includes(STEP_SOURCE_KIND)) return { items: [] };
     if (typeof node !== "string" || !node) return { items: [] };
     const keep = this.k.redactor(viewer);
@@ -176,7 +178,7 @@ export class StepSources {
                    relation: r.relation_id }],
       grade: { assertion: g.grade, ends: [LOWEST_GRADE, LOWEST_GRADE] }, grade_says: g.says,
       derived: null, attached_by: r.member, at: r.at,
-      undetermined: { why: UNDATED },
+      undetermined: { why: { ...STEP_SOURCE_UNDATED } },
     };
   }
 }

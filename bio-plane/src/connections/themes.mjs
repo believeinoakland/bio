@@ -254,7 +254,7 @@ export class Themes {
     const ended = this.#one(`SELECT * FROM theme_placement_acts WHERE theme_id = ? AND target = ? ORDER BY act_id DESC LIMIT 1`,
                             row.theme_id, row.target);
     return { ok: true, theme_id: T.theme_id, ...this.endedView(ended, administer), evidence: false,
-             says: word("connections.says.theme_saying_judged", { target: String(tgt.target), state: String(state === "withdrawn" ? "no longer a member of" : "no longer proposed for"), name: String(T.name.slice(0, 80)), who: String(this.#name(who, administer)), state_2: String(state) }) };
+             says: word("connections.says.theme_saying_judged", { target: String(tgt.target), state: String(state === "withdrawn" ? word("connections.says.longer_member") : word("connections.says.longer_proposed")), name: String(T.name.slice(0, 80)), who: String(this.#name(who, administer)), state_2: String(state) }) };
   }
 
   /** R44: one standing placement as this reader is shown it. `membership` is true for `member` alone. */
