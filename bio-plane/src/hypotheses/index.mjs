@@ -53,7 +53,7 @@ export const STATEMENT_MAX = 4000;
 export const REASON_MAX = 2000;
 export const ABOUT_MAX = 50;
 /** R4: why a hunch hop is undetermined at every date: a hunch states no period (K1563 (2), an undated kind). */
-export const UNDATED_WHY = word("hypotheses.hunch_states_period");
+export const UNDATED_WHY = { key: "hypotheses.hunch_states_period", vars: {} };
 /** R6: the form of a derived connection's id (`connection-grammar.derivedId`, a SHA-256 in lowercase hex). */
 export const DERIVED_ID_RE = /^[0-9a-f]{64}$/;
 /** R6 (K1728): a calculation's id, in either form `record-grammar` reads (opaque, and the earlier sequential). */
@@ -498,7 +498,7 @@ export class Hypotheses {
   neighbours({ node, kinds: ks, at, page, viewer, scope } = {}) {
     void at; /* undated: every hop is undetermined at every date (K1563 (2)) */
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: word("hypotheses.why.read_names_member") };
     if (Array.isArray(ks) && !ks.includes("hunch")) return { items: [] };
     if (!filled(node) || !filled(scope)) return { items: [] };
     const b = this.#record.bundleInfo(scope);

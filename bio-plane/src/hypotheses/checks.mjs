@@ -66,7 +66,7 @@ export const HYPOTHESES_CHECKS = {
   NO_SUCH_HYPOTHESIS_PROPOSAL: { check: "C-134.23", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
     translation: word("refusal.NO_SUCH_HYPOTHESIS_PROPOSAL") },
   PROPOSAL_NOT_OPEN: { check: "C-134.24", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
-    translation: "This proposal was already taken up or set aside. Nothing was written." },
+    translation: localize("hypotheses.checks.proposal_not_open", "This proposal was already taken up or set aside. Nothing was written.") },
   PROPOSAL_FORM_UNKNOWN: { check: "C-134.25", where: act("hypothesisTakeUp"),
     translation: word("refusal.PROPOSAL_FORM_UNKNOWN") },
   PROPOSAL_NO_REASON: { check: "C-134.26", where: act("hypothesisSetAside"),
