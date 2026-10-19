@@ -82,3 +82,29 @@ Tranche/T51 was merged at 3ef1afe710 (K3997). Lines and local-facts are not merg
 Waiting on BOB: merge job/T51/lines and job/T51/local-facts into tranche/T51 (and regenerate setup-words rows, or confirm that the `uses` tests may be re-run after that). Then tell me, and I will merge tranche/T51, re-run the duties tests and checks, and post COMPLETE.
 
 Checks run before this report: words 0 failures, format 0, architecture 0, coverage 33 of 33, ownership 0 failures, setup-words --check: stale-rows note only.
+
+## J5 · COMPLETE
+
+T51-194 · duties COMPLETE, after B3, B4 and B5 (lines, events and local-facts merged into tranche/T51; merged here at 3ef1afe710 and later).
+
+Applied since J3:
+- B3 (K3997): the holder read of lines' `holderAt` takes `h.undetermined === true` and `h.why` as a key, through lines' `reasonText`. Drafted group rules carry `effective_from` (local-facts R18, DEC-341) in `response.test.mjs`.
+- Test label in `acts.test.mjs` no longer copies a words row (found by the full run's words arm).
+
+Changes on job/T51/duties: a3e567b71d, 973a345016, 01ddb3a60c, plus the tranche merges. No requirement changed; nothing deferred.
+
+Found in other modules (P9, not changed here):
+- notice-producers `test/m/notice-producers/duties.test.mjs`:256, 410, 423, 427 copy sentences (testcopy in the full run).
+- Handlist arm, other modules' hand-lists of duties' ops: affordances `t33.test.mjs`:63, answers `scope.test.mjs`:23, op-grades `t45.test.mjs`:68.
+
+Tests and checks (on the merged tranche):
+- `node --test bio-plane/test/m/duties/*.test.mjs`: 74 pass, 0 fail.
+- `checks/words.mjs … duties`: 0 failures.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … duties`: 0 failures. `checks/coverage.mjs … duties`: 33 of 33 named.
+- `checks/ownership.mjs … duties tranche/T51 job/T51/duties`: 0 failures.
+- `setup-words/build.mjs --check`: no refusal naming duties (stale-rows note only, expected).
+- `checks/run.mjs /home/user/bio`: exits 1 on other modules only; the duties entries in the full run are the notice-producers and handlist items above, none in duties' own tests except the one fixed in this round.
+
+Ruling for BOB to record: K3990 (proposed in J3), unchanged.
+
+Size (session_015fij5CNkGX79gtEuBYtYeY): test runs 6, module lines 2210.
