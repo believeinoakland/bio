@@ -21,3 +21,7 @@
 - `setup-words/build.mjs --check`: rows match words.json and the source.
 
 Size (session_01YHA4ZoaUaEuD38r56tWV9k): test runs 8, module lines 1080
+
+## J1 · COMPLETE
+
+T51-114 applied: R25 (a skipped setup part reads screen.setup.state.skipped with .skipped.help), both keys added to READS.setup, stale comments gone, the one handlist finding fixed; words check 0 failures for screens-entry, and no line names it over all modules. Module tests 85/85; format, architecture, coverage (25 of 25) and ownership 0 failures. For the design lane: words-reads.json lists neither new key until regenerated (DEC-258); R24 passes meanwhile. Details in build/jobs/T51/screens-entry.md.
