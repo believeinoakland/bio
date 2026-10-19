@@ -74,7 +74,7 @@ export function script(rules, pre = null) {
    are run here against recorders, so a label is read exactly as the page's script receives it. */
 export function parsePage(raw) {
   const events = [];
-  let failed = null, done = null, says = null;
+  let failed = null, done = null, says = null, retry = null;
   const waits = [];
   const scripts = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   const rec = {
@@ -89,6 +89,8 @@ export function parsePage(raw) {
     says: (t) => { says = t; },
     /* R66: the line drawn while a wait goes on. */
     waiting: (t) => { waits.push(t); },
+    /* R70: the one act offered after a stop that waits for something to be turned on: its label and the body it begins again with. */
+    again: (label, body) => { retry = { label, body }; },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
   const status = (id) => { let st = null; for (const e of events) if (e.id === id) st = e.k; return st; };
@@ -97,7 +99,7 @@ export function parsePage(raw) {
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
     failed ? `${failed.said} ${failed.d} ${failed.s}` : "", says || "", done || ""].join("\n");
-  return { raw, events, steps, status, label, failed, done, words, says, waits };
+  return { raw, events, steps, status, label, failed, done, words, says, waits, retry };
 }
 
 export async function callback(qs, cookie) {
@@ -228,16 +230,16 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
 
 /* ---- the world: one install or update, end to end ---- */
 export async function run({ slug, mode = "install", ai, cookie: givenCookie, state: givenState,
-  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
+  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, tokenFlaky = 0, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
   lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {},
   /* R38: the scopes the token response states (null: it states none), and the Containers API. `containers`: "ok", or
      "read" (every Containers call refused), "create" or "rollout" (that call refused); `preApps` the applications held;
      `preClasses` the Durable Object classes each pre-existing script holds. `settingsBlind`: settings answer no bindings.
-     `refuseSecretDelete`: a secret's removal refused. */
+     `refuseSecretDelete`: a secret's removal refused; `refuseMark`: the install's last mark (INSTALL_COMPLETE) refused. */
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
-  refuseSecretDelete = false,
+  refuseSecretDelete = false, refuseMark = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
@@ -250,13 +252,14 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `silentAddress` an address that never answers; `wakeAfter` an address that answers only after that many tries (R66);
      `cfFlaky` Cloudflare answering that status that many times first (R66); `typed` the short name typed to confirm a removal;
      `choice` the mode a /begin carries (R62). */
-  alongside = false, containersOff = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
+  alongside = false, containersOff = false, containersOdd = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
   rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
   builtInFleet = false,
   /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
      recorded it at its first boot), `null` (records none: `group: null`), or "silent" (does not answer `op=instancegroup`);
-     `seedRefused` the code `op=instancegroupseed` refuses with. */
-  group = undefined, seedRefused = null } = {}) {
+     `seedRefused` the code `op=instancegroupseed` refuses with; `groupFlat` answers `op=instancegroup` with the group at the top level
+     (the shape a plane does not answer: the control that the group is read inside `result`). */
+  group = undefined, seedRefused = null, groupFlat = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -356,11 +359,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (!rel || tagged) return new Response("not found", { status: 404 });
       return p in rel.assets ? new Response(rel.assets[p]) : new Response("gone", { status: 404 });
     } },
-    { m: (u) => u === CFG.TOKEN, f: () => tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
+    { m: (u) => u === CFG.TOKEN, f: () => tokenFlaky-- > 0 ? new Response("unavailable", { status: 503 }) : tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
       : jres({ access_token: TOK, ...(grantedScope === null ? {} : { scope: grantedScope }) }) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: (u, init) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       const { name: secret } = JSON.parse(init.body);
+      if (refuseMark && secret === "INSTALL_COMPLETE") return cferr("mark refused <i>by the fake</i>", 400);
       secretPuts.push(`${name}/${secret}`);
       acct.set(name, [...(acct.get(name) || []).filter((b) => b.name !== secret), { type: "secret_text", name: secret }]);
       return cfok({ name: secret });
@@ -382,6 +386,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
+      if (containersOdd) return cferr("Something unexpected happened with the request", 400, 10001);
       if (containersOff) return cferr("Containers are not enabled on this account. Enable Containers in the dashboard.", 403, 10000);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
@@ -508,14 +513,15 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       const v = verOf(acct.get(slug)) || "0.0.0";
       if (q.get("op") === "instancegroup") {
         if (group === "silent") throw new Error("ENOTFOUND " + host);
-        return jres(recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" });
+        if (groupFlat) return jres({ ok: true, group: recordedGroup });
+        return jres({ ok: true, result: recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }, store: "STORE" });
       }
       if (q.get("op") === "instancegroupseed") {
         seeds.push({ u, init });
-        if (seedRefused) return jres({ ok: false, code: seedRefused });
-        if (recordedGroup) return jres({ ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup });
+        if (seedRefused) return jres({ ok: false, result: { ok: false, code: seedRefused } });
+        if (recordedGroup) return jres({ ok: false, result: { ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup } });
         recordedGroup = JSON.parse(init.body).slug;
-        return jres({ ok: true, group: recordedGroup });
+        return jres({ ok: true, result: { ok: true, group: recordedGroup }, store: "STORE" });
       }
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
       if (q.get("op") === "bootstrap") {

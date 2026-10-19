@@ -35,7 +35,7 @@ import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_
   relHeaders, hex, vcmp, b64url, rand, cf, special, approve, apiOf, scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, readBack,
   BINDING_OF, membersPresent, instanceAiOk, SEAL_BINDING, heldBindings, hostOf, planeLimits, reportsBuilds, vpcServiceOk,
   uploadInstall, uploadUpdate, planeInSync, putSecret, rotateSecrets, loadFleet, installFleet, bindMembers, ensureSubdomain,
-  verifyInstall, failedLags, verifyServing, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
+  verifyInstall, failedLags, verifyServing, confirmContainers, offerSubdomain, waitForAnswer, currentDeployment, rollBack, withByteLags, logsStep, copyWorkers,
   ARMED_SIGNERS } from "./steps/index.mjs";
 /* R63: the words of what a copy already holds. */
 import { describeCopy } from "./held.mjs";
@@ -254,18 +254,24 @@ const setCookie = (v, maxAge) =>
 
 /* ---------------------------------------------------- management API glue */
 
-async function exchange(code, verifier) {
+/* R66, R71 (F4, F6): the sign-in's token exchange waits out what waiting can mend, as every call to Cloudflare does: a 429 or a
+   5xx or a dropped connection backs off within the bound (a wait is drawn through `onWait`), and what is still failing at the
+   bound is a lasting failure, named. An answer that refuses the code is the stop it always was. */
+async function exchange(code, verifier, onWait = null) {
   const body = new URLSearchParams({
     grant_type: "authorization_code", code, redirect_uri: CFG.REDIRECT,
     client_id: CFG.CLIENT_ID, code_verifier: verifier,
   });
-  const r = await fetch(CFG.TOKEN, { method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" }, body });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.access_token)
-    throw new Error(j.error_description || j.error || `HTTP ${r.status}`);
-  /* R38: the scopes the operator actually granted, as the token response states them (null when it states none). */
-  return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
+  return patiently(async () => {
+    let r;
+    try { r = await fetch(CFG.TOKEN, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body }); }
+    catch (e) { throw Object.assign(new Error(String(e && e.message || e)), { network: true }); }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.access_token)
+      throw Object.assign(new Error(j.error_description || j.error || `HTTP ${r.status}`), { status: r.status });
+    /* R38: the scopes the operator actually granted, as the token response states them (null when it states none). */
+    return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
+  }, { onWait });
 }
 
 /* R36 (K1502, K1755) — THE INSTALLER BINDS NO CLAUDE CREDENTIAL. The team's Anthropic API key, when the group chooses
@@ -313,6 +319,8 @@ const UNDETERMINED_BUILDS = word("installer.verify.undetermined");
    carried as `fail`'s third argument) is named beside it. The shell holds exactly one script, before every streamed one. */
 
 const STATE_WORD = Object.freeze({ go: word("installer.state.go"), ok: word("installer.state.ok"), no: word("installer.state.no") });
+/* R69: how long a progress page may hear nothing before it says the run stopped (longer than the 5-minute wait it draws for Cloudflare). */
+const STREAM_QUIET_MS = 8 * 60e3;
 function progressShell(title, slug, retry = null) {
   return `${pageHead(title, { noindex: true })}
 <body class="cs"><main class="cs-frame ng">
@@ -322,20 +330,21 @@ ${pageMark()}
 <p class="small" id="says" hidden></p>
 <div id="log" class="cs-sheet ng-log"></div>
 <p class="small" id="waiting" role="status" hidden></p>
-<div id="fail" class="ng-stop" role="alert" hidden><p id="fail-p"></p><p id="fail-d"></p><p class="small" id="fail-s"></p>${retry
+<div id="fail" class="ng-stop" role="alert" hidden><p id="fail-p"></p><p id="fail-d"></p><p class="small" id="fail-s"></p><div class="ng-acts" id="fail-again" hidden></div><p class="err" id="fail-err" role="alert"></p>${retry
   ? `<div class="ng-acts" id="fail-acts"><a class="cs-btn" data-tone="primary" id="try-again" href="${esc(retry)}">${esc(UPDATE_WORDS.tryAgain)}</a></div>` : ""}</div>
 <div id="done" class="ng-stage" hidden></div>
 ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);const rows={};const W=${JSON.stringify(STATE_WORD)};
+let ended=false,seen=Date.now();const touch=()=>{seen=Date.now();};
 function mark(d,r,label){d.dataset.r=r;d.firstChild.textContent=W[r];if(label)d.children[1].textContent=label;}
-function step(id,label){const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
+function step(id,label){touch();const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
  d.innerHTML='<span class="mk"></span><span></span><span></span>';mark(d,"go",label);$("#log").appendChild(d);rows[id]=d;}
-function says(t){$("#says").textContent=t;$("#says").hidden=false;}
-function waiting(t){$("#waiting").textContent=t;$("#waiting").hidden=false;}
-function ok(id,label){const d=rows[id];if(d){mark(d,"ok",label);$("#waiting").hidden=true;}}
-function no(id,label){const d=rows[id];if(d)mark(d,"no",label);}
-function fail(p,d,s){$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";$("#fail-s").textContent=s||"";}
+function says(t){touch();$("#says").textContent=t;$("#says").hidden=false;}
+function waiting(t){touch();$("#waiting").textContent=t;$("#waiting").hidden=false;}
+function ok(id,label){touch();const d=rows[id];if(d){mark(d,"ok",label);$("#waiting").hidden=true;}}
+function no(id,label){touch();const d=rows[id];if(d)mark(d,"no",label);}
+function fail(p,d,s){ended=true;$("#waiting").hidden=true;$("#fail").hidden=false;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";$("#fail-s").textContent=s||"";}
 async function go(body,err){try{const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
  const j=await r.json();if(!j.ok){err.textContent=j.error||"";return;}location.href=j.authorize;}catch(e){err.textContent=String(e.message||e);}}
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
@@ -352,11 +361,18 @@ function wire(){
  const n=E("alongside-no");if(n)n.addEventListener("click",()=>E("alongside-dialog").close());
  const t=E("typed"),c=E("confirm-remove");
  if(t&&c){c.disabled=true;t.addEventListener("input",()=>{c.disabled=t.value.trim()!==c.dataset.slug;});}}
-function done(html){$("#done").innerHTML=html;$("#done").hidden=false;wire();
+function again(label,body){const a=$("#fail-again"),b=document.createElement("button");b.className="cs-btn";b.dataset.tone="primary";b.textContent=label;
+ b.addEventListener("click",()=>go(body,$("#fail-err")));a.appendChild(b);a.hidden=false;}
+function done(html){ended=true;$("#fail").hidden=true;$("#done").innerHTML=html;$("#done").hidden=false;wire();
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
   await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent);
   const t=b.textContent;b.textContent=${jsLit(word("installer.copy.done"))};setTimeout(()=>b.textContent=t,1400);}));
  const h=$("#handover");if(h)h.addEventListener("click",()=>{location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent);});}
+/* R33, R69 (F2): a stream that ends, or goes quiet, with neither a panel nor a stop is a stop too, named at the step in progress. */
+const LOST=${jsLit(word("installer.stopped.unexpected", { said: "\u0001" }))},AT=${jsLit(word("installer.stopped.at", { step: "\u0001" }))};
+function lost(){if(ended)return;const rs=document.querySelectorAll("#log .cs-row");const last=rs[rs.length-1];
+ const at=last&&last.children[1]?AT.replace("\\u0001",last.children[1].textContent):"";fail(LOST.replace("\\u0001",at),"","");ended=false;}
+window.addEventListener("load",lost);setInterval(()=>{if(!ended&&Date.now()-seen>${STREAM_QUIET_MS})lost();},15000);
 </script>`;
 }
 
@@ -387,6 +403,8 @@ function streamPage(headers, shell, run, again = null) {
     /* R66: the line drawn while a wait on Cloudflare or the address goes on. */
     wait: (text)      => write(`<script>waiting(${jsStr(text)})</script>\n`),
     done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
+    /* R70: after a stop that waits for the founder to turn something on, the one act that begins the run again (as R71's). */
+    retry: (label)    => again ? write(`<script>again(${jsStr(label)},${jsLit(again)})</script>\n`) : undefined,
   };
   (async () => {
     await write(shell);
@@ -471,18 +489,41 @@ const ACCOUNT_LIMITS = Object.freeze({
   buckets: { ceiling: 1000, need: 2 },
   containers: { ceiling: 100, need: RELEASE_CONTAINERS.length },
 });
-async function limitReached(api) {
+/* `needs` is what the act adds to each count: the install's table above, or (an update) what the chosen release adds to the copy. */
+async function limitReached(api, needs = null) {
   const [scripts, spaces, buckets, apps] = await Promise.all([listScripts(api), listNamespaces(api), listBuckets(api), listApps(api).catch((e) => { if (special(e)) throw e; return []; })]);
   const have = { workers: scripts.size, classes: spaces.length, buckets: buckets.length, containers: apps.length };
-  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) if (have[k] + l.need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
+  const add = needs ? needs({ scripts, spaces, buckets }) : null;
+  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) {
+    const need = add ? add[k] : l.need;
+    if (need > 0 && have[k] + need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
+  }
   return null;
 }
-/* F2: whether Containers are turned on for the account. The platform answers a list of applications when they are, and a
-   refusal naming the setting when they are not; any other refusal is not read as "off". */
+/* F3 (R70): what an update adds to the account. Only the members and container classes the copy does not hold already, and the
+   storage buckets it lacks, count: an update that adds nothing needs no room. The ceilings stay Cloudflare's published defaults
+   (no endpoint states an account's own). */
+const updateNeeds = (names, loaded) => ({ scripts, spaces, buckets }) => {
+  const inFleet = (loaded?.members || []).filter((L) => !L.error);
+  const newClasses = inFleet.flatMap((L) => (L.classes || []).filter((c) => !spaces.some((s) => s && s.script === names.member(L.m.member) && s.class === c.class_name)));
+  return { workers: inFleet.filter((L) => !scripts.has(names.member(L.m.member))).length, classes: newClasses.length,
+    buckets: [names.captures, names.published].filter((n) => !buckets.includes(n)).length, containers: newClasses.length };
+};
+/* F2 (R70): whether Containers are turned on for the account, decided positively. An answer that lists applications shows it on;
+   a refusal naming the setting shows it off; a refusal for want of permission leaves it to the container member's own check (R38
+   leaves that member out and the install continues); any other answer is "could not tell", and the install stops saying so,
+   never reading it as on. */
 const CONTAINERS_OFF = /(containers?\b.*\b(not|isn'?t|aren'?t)\b.*\benabled|\benable\b.*\bcontainers?|containers?\b.*\bdisabled)/i;
-async function containersOn(api) {
-  try { await api("/containers/applications"); return true; }
-  catch (e) { if (special(e)) throw e; return !CONTAINERS_OFF.test(e.message || ""); }
+const NO_PERMISSION = /(authentication|permission|not authori[sz]ed|forbidden|unauthori[sz]ed|scope)/i;
+async function containersState(api) {
+  try { await api("/containers/applications"); return { state: "on" }; }
+  catch (e) {
+    if (special(e)) throw e;
+    const said = e && e.message || String(e);
+    if (CONTAINERS_OFF.test(said)) return { state: "off" };
+    if (NO_PERMISSION.test(said)) return { state: "permission" };
+    return { state: "unknown", said };
+  }
 }
 
 /* The release version an update from the "already holds a copy" page installs: the repository's newest when it is newer than
@@ -506,7 +547,7 @@ const memberNamesOf = (release) => [...new Set([...BINDING_OF.keys(), ...RELEASE
    read is not a stop (R74 stops on what it finds); an application on another copy's Workers (R64) is not this copy's to judge. */
 async function foreignContainers(api, names, release, loaded) {
   const memberScripts = new Map(memberNamesOf(release).map((m) => [names.member(m), m]));
-  const [spaces, apps] = await Promise.all([listNamespaces(api), listApps(api)]);
+  const [spaces, apps, scripts] = await Promise.all([listNamespaces(api), listApps(api), listScripts(api)]);
   const mine = new Map(spaces.filter((s) => s && (s.script === names.slug || memberScripts.has(s.script))).map((s) => [s.id, s]));
   const wanted = new Set((loaded?.members || []).flatMap((L) => (L.classes || []).map((c) => `${L.m.member}/${c.class_name}`)));
   const retired = [];
@@ -518,12 +559,24 @@ async function foreignContainers(api, names, release, loaded) {
     if (!own) return { foreign: true, retired };
     if (!wanted.has(`${member}/${ns.class}`)) retired.push(a.name);
   }
+  /* F11: the Workers on the copy's member names are examined too. One of this installer's carries the `VERSION` it was
+     uploaded with (every member upload states it); a Worker on a member's name that does not is something else standing on the
+     copy's name: foreign. A Worker with the mark on the name of a member this release no longer has is a retired part: named, left.
+     A Worker whose settings cannot be read is not judged (R74 stops on what it finds). */
+  const inRelease = new Set((release?.man?.fleet || []).map((m) => m && m.member));
+  for (const [script, member] of memberScripts) {
+    if (!scripts.has(script)) continue;
+    const bindings = await bindingsOf(api, script);
+    if (bindings === null) continue;
+    if (!bindings.some((b) => b.name === "VERSION" && b.type === "plain_text")) return { foreign: true, retired };
+    if (!inRelease.has(member) && !(loaded?.members || []).some((L) => L.m.member === member)) retired.push(script);
+  }
   return { foreign: false, retired };
 }
 
 /* R62, R63: what the account already holds, drawn: each copy by its own worker's answers (stored nowhere), and the installer's
    own counts where the worker states none. */
-async function describeHeld(token, acct, inv, memberNames, only = null) {
+async function describeHeld(token, acct, inv, memberNames, only = null, onWait = null) {
   const api = apiOf(token, acct);
   let prefix = null;
   try { prefix = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; } catch (e) { if (special(e)) throw e; }
@@ -532,7 +585,7 @@ async function describeHeld(token, acct, inv, memberNames, only = null) {
   for (const copy of allCopies(inv)) {
     if (only && copy.slug !== only) continue;
     const address = copy.plane && prefix ? `https://${copy.slug}.${prefix}.workers.dev` : null;
-    const facts = await readCopyFacts(address);
+    const facts = await readCopyFacts(address, onWait);
     const fallback = ["projects", "documents", "published", "members"].some((k) => facts[k].known) ? null
       : await countsViaApi(api, copy, memberNames, inv.scripts, spaces, apps);
     out.push({ ...describeCopy(copy, address, facts, fallback), plane: copy.plane, team: facts.team.known ? facts.team.value : null });
@@ -561,9 +614,10 @@ async function installRun(emit0, code, saved, guard) {
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
 
   await emit.step("auth", word("installer.step.auth"));
-  try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
+  try { const ex = await exchange(code, saved.v, onWait); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
+    if (special(e)) throw e;
     return emit.fail(word("installer.install.stopped.permission", { said: e.message }));
   }
 
@@ -607,7 +661,7 @@ async function installRun(emit0, code, saved, guard) {
     if (!resumed && !alongside && (inv.planes.length || inv.orphans.legacy.length || inv.orphans.slugged.size)) {
       /* R62: nothing is created or changed; the page offers the three ways on. */
       emit.no("fresh", word("screen.install.stopped.exists"));
-      const held = await describeHeld(token, acct.id, inv, memberNames);
+      const held = await describeHeld(token, acct.id, inv, memberNames, null, onWait);
       return emit.done(existsPanel({ copies: held, version: await newestVersion(), slug }));
     }
     emit.ok("fresh", alongside ? word("installer.install.fresh.alongside") : word("screen.install.progress.single"));
@@ -628,7 +682,8 @@ async function installRun(emit0, code, saved, guard) {
   catch (e) { if (special(e)) throw e; planAnswer = { plan: "unknown", detail: e.message }; }
   if (planAnswer.plan === "free") {
     emit.no("plan");
-    return emit.fail(word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do"));
+    await emit.fail(word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do"));
+    return emit.retry(word("screen.install.stopped.plan.done"));
   }
   if (planAnswer.plan === "unknown") {
     emit.no("plan");
@@ -638,16 +693,26 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
   await emit.step("room", word("installer.step.room"));
+  let offer = null;
   try {
-    if (!(await containersOn(api))) {
+    const containers = await containersState(api);
+    if (containers.state === "off") {
       emit.no("room");
-      return emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
+      await emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
+      /* R70: the stop waits to be told it is on, and then begins again, the choices kept. */
+      return emit.retry(word("screen.install.stopped.containers.done"));
+    }
+    if (containers.state === "unknown") {
+      emit.no("room");
+      return emit.fail(word("installer.install.stopped.lookup", { said: containers.said }), word("screen.install.stopped.containers.do"));
     }
     const limit = await limitReached(api);
     if (limit) {
       emit.no("room");
       return emit.fail(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
     }
+    /* F7: the address names that would be tried, fixed now and used as they are (nothing is registered here). */
+    offer = await offerSubdomain(token, acct.id, slug).catch((e) => { if (approve(e)) throw e; return null; });
     emit.ok("room");
   } catch (e) {
     if (special(e)) throw e;
@@ -668,6 +733,15 @@ async function installRun(emit0, code, saved, guard) {
   catch (e) {
     if (e && e.source) return emit.fail(word("screen.install.stopped.source"), word("screen.install.stopped.source.do"));
     throw e;
+  }
+  /* R74 (F11): an install that continues an unfinished copy meets the same check as an update, before it creates anything. */
+  let retiredParts = [];
+  if (resumed) {
+    try {
+      const found = await foreignContainers(api, names, release, loaded);
+      if (found.foreign) return emit.fail(word("installer.update.stopped.foreign"));
+      retiredParts = found.retired;
+    } catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds */ }
   }
 
   /* Evidence storage is part of what a team's copy IS: captured documents, web pages, and their timestamp certificates
@@ -750,7 +824,7 @@ async function installRun(emit0, code, saved, guard) {
   await emit.step("addr", word("installer.step.address.install"));
   let base = null, addrError = null;
   try {
-    const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
+    const { sub, registered } = await ensureSubdomain(token, acct.id, slug, offer);
     base = `https://${slug}.${sub}.workers.dev`;
     emit.ok("addr", registered ? word("installer.address.prefix", { prefix: registered }) : word("screen.install.progress.address"));
   } catch (e) { if (special(e)) throw e; addrError = e; emit.no("addr"); }
@@ -791,14 +865,16 @@ async function installRun(emit0, code, saved, guard) {
     : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed, onWait)
     : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
   /* R33's read-back, R46's named jobs and R68's container images: each a lag, and no success while one stands. */
-  const verdict = withByteLags(served, [...byteLags, ...logLags, ...(fleet?.imageLags || [])], capable);
+  /* S9: a container member still running the old build after the rollout is restarted, or named as a lag. */
+  const boxes = st ? await confirmContainers(token, acct.id, base, release, fleet, onWait) : { lags: [] };
+  const verdict = withByteLags(served, [...byteLags, ...logLags, ...(fleet?.imageLags || []), ...boxes.lags], capable);
   if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.verify.answers") + " " + UNDETERMINED_BUILDS);
   else if (st) emit.no("verify", word("installer.verify.unconfirmed"));
   else emit.no("verify", word("screen.install.stopped.lasting") + " " + word("screen.install.stopped.lasting.do"));
 
   /* R78: with the address answering, the installer records the team's short name itself; where it could not, the telling is drawn (R18). */
   const recorded = st ? await recordTeam(emit, base, secrets.boot, slug) : "refused";
-  const told = recorded === "recorded" ? "" : groupNotice("refused", slug);
+
 
   /* R51: the checks the finished panel shows, each as it came out. */
   const servingLags = served ? served.lags.length : null;
@@ -820,7 +896,10 @@ async function installRun(emit0, code, saved, guard) {
   let markLag = null;
   try { await putSecret(token, acct.id, slug, MARK, release.version); }
   catch (e) { if (approve(e)) throw e; markLag = word("installer.mark.failed", { said: e.message }); }
-  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts, markLag ? [markLag] : [], told));
+  /* F12: the telling says "run the installer again" only when the mark failed (the copy is unfinished, so a run resumes and records it). */
+  const told = recorded === "recorded" ? "" : groupNotice("refused", slug, undefined, markLag !== null);
+  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts,
+    [...(retiredParts.length ? [word("installer.update.retired", { parts: retiredParts.join(", ") })] : []), ...(markLag ? [markLag] : [])], told));
 }
 
 const NO_KEY = word("installer.success.nokey");
@@ -899,13 +978,16 @@ function groupUnrecorded(recorded, before) {
   if (recorded === "unread" || before === null || !SEMVER.test(String(before))) return "unknown";
   return vcmp(before, FIRST_GROUP_RELEASE) < 0 ? "certain" : "unknown";
 }
-function groupNotice(kind, slug, before) {
+/* F12 (R18, R78, K3892): `runAgain` is true only for a copy KNOWN to be unfinished, where running the installer again resumes it and
+   records the name. A finished copy (or one the run could not tell) is sent to the "already holds a copy" page by that advice,
+   which records nothing: it is told `installer.team.unrecorded.how.finished` in its place (DEC-365). */
+function groupNotice(kind, slug, before, runAgain = false) {
   if (!kind) return "";
   const why = kind === "certain" ? word("installer.team.unrecorded.certain", { before, first: FIRST_GROUP_RELEASE })
     : kind === "unknown" ? word("installer.team.unrecorded.unknown", { first: FIRST_GROUP_RELEASE }) : "";
   return `<div class="notice" id="team-unrecorded"><p style="margin:0 0 .6em"><b>${esc(word("installer.team.unrecorded.head"))}</b></p>
 <p>${esc(why ? why + " " : "")}${esc(word("installer.team.unrecorded.effect"))}</p>
-<p>${esc(word("installer.team.unrecorded.how"))}</p>
+<p>${esc(runAgain ? word("installer.team.unrecorded.how") : word("installer.team.unrecorded.how.finished"))}</p>
 <p class="small">${esc(word("installer.team.unrecorded.suggest", { slug }))}</p></div>`;
 }
 
@@ -917,8 +999,10 @@ async function readGroup(base, credential = null) {
   try {
     const r = await fetch(`${base}/api/?op=instancegroup`, credential ? { headers: { authorization: `Bearer ${credential}` } } : undefined);
     const j = await r.json();
-    if (!r.ok || !j || typeof j !== "object") return "unread";
-    return typeof j.group === "string" && j.group ? "recorded" : j.group === null ? "none" : "unread";
+    /* The copy answers its envelope, `{ ok, result: { ok, group }, store }`: the group is read inside `result`. */
+    const g = j && typeof j === "object" ? j.result : null;
+    if (!r.ok || !g || typeof g !== "object") return "unread";
+    return typeof g.group === "string" && g.group ? "recorded" : g.group === null ? "none" : "unread";
   } catch { return "unread"; }
 }
 /* R78: the install's step that records the short name. Already recorded: nothing is done and nothing is said. */
@@ -933,7 +1017,8 @@ async function recordTeam(emit, base, boot, slug) {
       const r = await fetch(`${base}/api/?op=instancegroupseed`, { method: "POST",
         headers: { authorization: `Bearer ${boot}`, "content-type": "application/json" }, body: JSON.stringify({ slug }) });
       const j = await r.json().catch(() => null);
-      if (!j || !(j.ok === true || j.code === "GROUP_ALREADY_RECORDED")) said = String((j && (j.code || j.error || j.detail)) || r.status);
+      const g = j && typeof j.result === "object" && j.result ? j.result : j;
+      if (!j || !(j.ok === true || g.code === "GROUP_ALREADY_RECORDED" || j.code === "GROUP_ALREADY_RECORDED")) said = String((j && (g.code || j.code || g.error || j.error || g.detail || j.detail)) || r.status);
     } catch (e) { said = String(e && e.message || e); }
   }
   if (said === null && (await readGroup(base, boot)) !== "recorded") said = word("installer.fact.unknown.silent");
@@ -975,9 +1060,10 @@ async function updateRun(emit00, code, saved, guard) {
   let token, scope;
 
   await emit.step("auth", word("installer.step.auth"));
-  try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
+  try { const ex = await exchange(code, saved.v, onWait); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
+    if (special(e)) throw e;
     return stopped(word("installer.update.stopped.permission", { said: e.message }));
   }
 
@@ -1050,6 +1136,12 @@ async function updateRun(emit00, code, saved, guard) {
     retiredParts = held.retired;
   }
   catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds, and R67 judges what was deployed */ }
+
+  /* R70 (F3): an update that adds members, classes, buckets or containers meets the account's limits first, with nothing changed. */
+  try {
+    const limit = await limitReached(api, updateNeeds(names, loaded));
+    if (limit) return stopped(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
+  } catch (e) { if (special(e)) throw e; /* a count that cannot be read is not a stop: the platform refuses what it will not hold */ }
 
   /* What is it running now? Asked before the upload, so an update that changes
      nothing can say so instead of reading as a success. A no-op reported as
@@ -1139,8 +1231,9 @@ async function updateRun(emit00, code, saved, guard) {
       return back ? stopped(word("installer.update.stopped.noanswer", { version: beforeText }))
         : stopped(word("screen.install.stopped.lasting"), word("screen.install.stopped.lasting.do"));
     }
+    const boxes = await confirmContainers(token, acct.id, base, release, fleet, onWait);
     verdict = withByteLags(await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || [], onWait),
-      [...byteLags, ...logLags], capable);
+      [...byteLags, ...logLags, ...boxes.lags], capable);
     if (verdict.confirmed) emit.ok("verify", capable ? undefined : word("installer.update.verify.answers", { version: release.version }) + " " + UNDETERMINED_BUILDS);
     else emit.no("verify", word("installer.update.verify.unconfirmed"));
   }
@@ -1151,7 +1244,8 @@ async function updateRun(emit00, code, saved, guard) {
 
   /* R18, R78: this run holds no credential to record the team's short name with (an update binds no new ADMIN_TOKEN, K3892), so it
      reads what the copy records and tells the operator when it records none, or when the copy did not answer. */
-  const told = groupNotice(groupUnrecorded(await readGroup(base), before), slug, before);
+  const unfinished = !!held && scheme !== LEGACY_SCHEME && !held.has(MARK);
+  const told = groupNotice(groupUnrecorded(await readGroup(base), before), slug, before, unfinished);
 
   const version = release.version;
   emit.done(versionLines(before, version) + (noop
@@ -1188,7 +1282,7 @@ async function runRemoveView(emit, code, saved) {
   let token, acct;
   await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
@@ -1221,7 +1315,7 @@ async function runRemove(emit0, code, saved, guard) {
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
   await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }

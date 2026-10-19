@@ -474,9 +474,29 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   }
   /* Containers named in plain clicks, with the line that says when it is done. */
   assert.ok(hasWord("screen.install.stopped.containers.done"));
-  /* The stop waits for the founder to say it is done, which begins again: the page offers the way to begin again. */
+  /* The stop waits for the founder to say it is done, which begins again: the page offers "It's on now", which begins the run again
+     with what it held (the same short name and mode), through the same /begin. */
   const containers = await run({ slug: "pre-containers", containersOff: true });
-  assert.ok(containers.raw.includes("Start again") || /approvePanel|Continue to Cloudflare|try-again|<a /.test(containers.raw) || containers.page.failed.d.length > 0);
+  assert.equal(containers.page.retry.label, word("screen.install.stopped.containers.done"));
+  assert.equal(containers.page.retry.body.slug, "pre-containers");
+  assert.equal(containers.page.retry.body.mode, "install");
+  assert.equal(JSON.stringify(containers.page.retry.body).includes("token"), false, "no credential rides it");
+  const { slug: again, mode: how, ...rest } = containers.page.retry.body;
+  const begun = await begin(again, how, rest);
+  assert.equal(begun.j.ok, true, "/begin takes it, and goes to Cloudflare again");
+  /* F2: an answer that does not show Containers on is not read as on: an unknown answer stops, saying it could not tell, beside the plain step. */
+  const odd = await run({ slug: "pre-odd", containersOdd: true });
+  assert.equal(odd.page.failed.said, word("installer.install.stopped.lookup", { said: "Something unexpected happened with the request" }));
+  assert.equal(odd.page.failed.d, word("screen.install.stopped.containers.do"));
+  assert.equal(odd.page.status("install"), null, "nothing installed");
+  assert.deepEqual([...odd.buckets], [], "nothing created");
+  /* Control: a refusal for want of permission is the container member's own matter (R38): the install continues. */
+  const noperm = await run({ slug: "pre-noperm", containers: "read" });
+  assert.equal(noperm.page.status("room"), "ok");
+  /* The Workers Paid stop offers its own "Check again", beginning the run again as the Containers stop's does. */
+  const free = await run({ slug: "pre-free", plan: "free" });
+  assert.equal(free.page.retry.label, word("screen.install.stopped.plan.done"));
+  assert.equal(free.page.retry.body.slug, "pre-free");
   /* Control: a clean account passes all four checks. */
   const clean = await run({ slug: "clean-one" });
   assert.equal(clean.page.status("plan"), "ok");
@@ -486,6 +506,44 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   /* An account just under a limit passes; a limit of another kind is named by its own noun. */
   const under = await run({ slug: "under-one", pre: Object.fromEntries([...Array(480)].map((_, i) => [`other-${i}`, []])) });
   assert.equal(under.page.status("room"), "ok");
+});
+
+test("R70 an update checks the account's limits too when the chosen release adds members, classes, buckets or containers: stopped before an upload, naming the limit; control: an update that adds nothing, or an account with room, goes on", async () => {
+  armWith(SIGNER.line);
+  const slug = "r70-upd";
+  const others = (n) => Object.fromEntries([...Array(n)].map((_, i) => [`other-${i}`, []]));
+  const adds = await release({ version: bump(RELEASE_VERSION), container: true });
+  const adds0 = await release({ version: bump(RELEASE_VERSION), fleet: false });
+  const full = { [slug]: planeBase(slug), ...others(499) };
+  const stop = await run({ slug, mode: "update", rel: adds, pre: full });
+  assert.equal(stop.page.failed.said, word("screen.install.stopped.limit", { limit: word("installer.limit.workers.other", { n: 500 }) }));
+  assert.equal(stop.page.failed.d, word("screen.install.stopped.limit.do"));
+  assert.equal(stop.planePuts.length, 0, "nothing uploaded");
+  /* Control: the same account with a release that adds nothing, and an account with room, update. */
+  const none = await run({ slug, mode: "update", rel: adds0, pre: full });
+  assert.equal(none.page.failed, null);
+  const room = await run({ slug, mode: "update", rel: adds, pre: { [slug]: planeBase(slug), ...others(400) } });
+  assert.equal(room.page.failed, null);
+  restoreSigners();
+});
+
+test("R66 R71 the sign-in's token exchange waits out a 503 as every call does (the wait drawn), a token endpoint that never comes right is the named lasting stop, and a refused code is still the permission stop; the same for an update", async () => {
+  for (const mode of ["install", "update"]) {
+    const slug = "r66-tok-" + mode;
+    const opts = mode === "update" ? { mode, pre: { [slug]: planeBase(slug) } } : {};
+    const flaky = await run({ slug, tokenFlaky: 2, ...opts });
+    assert.equal(flaky.page.status("auth"), "ok", `${mode}: a 503 twice then the token completes`);
+    assert.ok(flaky.page.done, mode);
+    assert.ok(flaky.page.waits.length >= 1, `${mode}: the wait is drawn`);
+    const dead = await run({ slug, tokenFlaky: 100000, ...opts });
+    assert.equal(dead.page.failed.said, word("screen.install.stopped.lasting"), mode);
+    assert.equal(dead.page.status("auth"), "no");
+    assert.equal(dead.page.done, null);
+    /* Control: a code Cloudflare refuses is not waited on. */
+    const refused = await run({ slug, tokenFail: true, ...opts });
+    assert.equal(refused.page.waits.length, 0, `${mode}: no wait`);
+    assert.ok(refused.page.failed.said.includes("code spent"), mode);
+  }
 });
 
 /* ------------------------------------------------------------------------------------------------ R71 */
