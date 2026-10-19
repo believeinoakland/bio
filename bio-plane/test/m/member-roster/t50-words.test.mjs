@@ -15,8 +15,13 @@ import { rowKey, rowWord, keyed, SENTENCE_KEYS } from "../../../src/member-roste
 const TABLES = Object.fromEntries(Object.entries(MEMBER_ROSTER_ROWS));
 /* a key's words as the list gives them, placeholders in place */
 const raw = (key) => WORD_ROWS.find((r) => r[0] === key)[1];
-const reads = async () => JSON.parse(await readFile(
-  new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.membership;
+/* DEC-345 split the list: the keys are this module's own `reads` entry (R70: "the reads list for it"); the note that says
+   which existing words govern stays on `membership`'s entry, where the split left it. */
+const reads = async () => {
+  const modules = JSON.parse(await readFile(
+    new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules;
+  return { reads: modules["member-roster"].reads, note: modules.membership.note };
+};
 
 test("R70 every key the module reads is held by setup-words (hasWord), each once; none is empty", () => {
   assert.ok(Object.isFrozen(WORD_KEYS));
@@ -31,7 +36,7 @@ test("R70 every key the module reads is held by setup-words (hasWord), each once
   assert.throws(() => word("refusal.NO_SUCH_CODE_AT_ALL"), /UNKNOWN_WORD/);
 });
 
-test("R70 every key the module reads is in the `reads` list for `membership` in words-reads.json (DEC-258, the list the module shared before the split), and every key that list names is held by setup-words", async () => {
+test("R70 every key the module reads is in the `reads` list for `member-roster` in words-reads.json (DEC-258; DEC-345's own entry), and every key that list names is held by setup-words", async () => {
   const { reads: list, note } = await reads();
   for (const key of WORD_KEYS) assert.equal(list.includes(key), true, `${key} is on the list`);
   for (const key of list) assert.equal(hasWord(key), true, key);

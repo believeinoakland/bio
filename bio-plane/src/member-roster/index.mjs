@@ -582,9 +582,7 @@ export class Members {
        whole point of 1.3 is that the two statements have two different authors. */
     if (cur === null)
       return { ok: false, reason: "NOT_DECLARED", label: lab,
-               detail: "this member has not declared that. An administrator confirms what a member claims "
-                     + "and never introduces the claim, or it would be an assignment rather than a "
-                     + "confirmation." };
+               detail: localize("member-roster.index.this_member_has_not_declared", "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.") };
     if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
     if (withdraw && cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
     /* Supersede, never overwrite: the earlier confirmation stays readable. */
@@ -1278,8 +1276,7 @@ export class Members {
    *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
    *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
   handleChange() {
-    return Members.#handleFixed("a handle is chosen when a member joins and is never changed, by the member or anyone "
-      + "(DEC-197). Nothing was written.");
+    return Members.#handleFixed(localize("member-roster.index.a_handle_is_chosen_when_a", "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written."));
   }
 
   /* R129, R144: HANDLE_FIXED is minted here alone; `handleChange` and a second `founderHandleSet` answer through it. */
@@ -1338,9 +1335,7 @@ export class Members {
     /* DEC-49 REGION is-admin-requires-vote */
     if (m.role === "admin" && status === "revoked")
       return refusal("ADMIN_REQUIRES_VOTE",
-        "an administrator is removed by a majority of all administrators, counting the target "
-      + "in the denominator but not letting them vote (section 4.7). No administrator may strip "
-      + "another unilaterally.");
+        localize("member-roster.index.an_administrator_is_removed_by", "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."));
     /* END DEC-49 REGION is-admin-requires-vote */
     /* 4.9: reactivating a former administrator must NOT restore their
        administrator status.
@@ -1687,8 +1682,7 @@ export class Members {
     /* END DEC-49 REGION is-join-link-known */
     const label = Members.#doorCover(cover);
     if (!label) return Members.#custodialRefusal("NO_COVER",
-      "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing "
-      + "was written.");
+      localize("member-roster.index.choose_the_name_the_team_will", "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written."));
     /* DEC-49 REGION is-join-link-daily-cap */
     if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
       return Members.#rowRefusal("JOIN_LINK_DAILY_CAP",
