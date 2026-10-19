@@ -2,6 +2,18 @@
 
 **Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · COMPLETE · handled B2
 
+## Completion (MEMBER-ROSTER #2) · CHANGE B3 (K4036): act phrases keyed, op details to REPORT
+
+**Entries applied (B3 (a)).** Every plain act phrase passed to `notAnAdmin`, and to `#custodialBar`, is now a `localize` id with the English unchanged: `member-roster.index.resigning_administrator_status`, `.setting_a_members_capabilities`, `.endorsing_a_proposed_administrator`, `.withdrawing_an_invitation`, `.describing_the_team`, `.adding_a_member`, `.setting_a_members_status`. The capability refusal detail `capabilities is an array` (`memberCaps`, `#doorCapabilities`) is `member-roster.index.capabilities_is_an_array`. The module holds no capability label: its capability words are identifiers (the vocabulary of R1), and their screen labels are not in `words.json` as rows, so none is keyed here. Tests that copied the act phrase or the capabilities sentence now compare with `localize` by the same ids (`not-an-admin-visibility`, `t34-joining`).
+
+**(b).** `TARGET_NOT_AN_ADMIN`'s and `EXPERTISE_IS_NOT_ASSIGNED`'s details name ops for an API caller. They are left in source and listed in a REPORT to BOB (J3), not keyed.
+
+**Merge.** `tranche/T51` merged into the job branch; no tranche commit touched this module, its tests, or `words-reads.json`.
+
+**Tests.** `node --test test/m/member-roster/*.test.mjs`: 164 pass, 0 fail. **Checks.** `checks/words.mjs /home/user/bio member-roster`: 0 failures (inline 0, testcopy 0, unkeyed 0). `checks/ownership.mjs` 0 failures. `checks/format.mjs` 0 failures.
+
+Size (session_013u4GnD6sY4tCk8yKGT2zGx): test runs 36, module lines 2580
+
 ## Completion (MEMBER-ROSTER #2) · words round RW (B2, K4015)
 
 **Entries applied.** The four sentences the words check counted inline in `index.mjs`, each now read through `localize` with a new id and the English unchanged: `member-roster.index.this_member_has_not_declared` (`expertiseConfirm`'s NOT_DECLARED detail), `member-roster.index.a_handle_is_chosen_when_a` (`handleChange`'s HANDLE_FIXED detail), `member-roster.index.an_administrator_is_removed_by` (`memberSet`'s ADMIN_REQUIRES_VOTE detail) and `member-roster.index.choose_the_name_the_team_will` (`joinLinkInvite`'s NO_COVER detail). `node checks/words.mjs /home/user/bio member-roster`: inline 0, unkeyed 0, 0 failures.

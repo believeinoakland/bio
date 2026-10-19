@@ -349,7 +349,7 @@ export class Members {
       return { ok: false, reason: "ROOT_OF_TRUST",
                detail: localize("membership.index.the_founding_administrator_holds_admin", "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the remedy is at the hosting account (section 4.6). Nothing was written.") };
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
-    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");   /* R84 */
+    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, localize("member-roster.index.resigning_administrator_status", "resigning administrator status"));   /* R84 */
     const admins = this.activeAdmins();
     /* DEC-49 REGION is-admin-resign-last */
     if (admins.length <= 1)
@@ -729,11 +729,11 @@ export class Members {
    *  standing cannot use this op to enumerate the roster. */
   memberCaps({ memberId, capabilities, by } = {}) {
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");   /* R84 */
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.setting_a_members_capabilities", "setting a member's capabilities"));   /* R84 */
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const want = Array.isArray(capabilities) ? capabilities : null;
-    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: localize("member-roster.index.capabilities_is_an_array", "capabilities is an array") };
     if (want.includes("administer") || m.role === "admin")
       return { ok: false, reason: "NOT_A_CAPABILITY_GRANT",
                detail: localize("membership.index.administrator_status_is_granted_and", "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.") };
@@ -755,7 +755,7 @@ export class Members {
   async adminEndorse({ memberId, by } = {}) {
     /* R6 (T38, K2276): the caller's standing first, so no one who may not act learns whether a member exists. */
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");   /* R84 */
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.endorsing_a_proposed_administrator", "endorsing a proposed administrator"));   /* R84 */
     const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* N335: C-96.14, this module's row (K275). */
@@ -853,7 +853,7 @@ export class Members {
   async memberAdd({ memberId, cover, role = "member", capabilities = null,
                     expertise = null, expiresInDays = undefined, by = null } = {}) {
     /* REC-159: the roster first — before the id is judged or looked up. */
-    const barAdd = this.#custodialBar(by, "adding a member");
+    const barAdd = this.#custodialBar(by, localize("member-roster.index.adding_a_member", "adding a member"));
     if (barAdd) return barAdd;
     /* K57: the field is a cover, and `name` is no longer read as an alias of it (two words for one thing is how
        drift starts; a legal name is the exposure the cover exists to prevent). */
@@ -1322,7 +1322,7 @@ export class Members {
 
   memberSet({ memberId, status, by = null } = {}) {
     /* REC-159: the roster first, before any lookup; `by` is the plane's stamp. */
-    const barSet = this.#custodialBar(by, "setting a member's status");
+    const barSet = this.#custodialBar(by, localize("member-roster.index.setting_a_members_status", "setting a member's status"));
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
@@ -1415,7 +1415,7 @@ export class Members {
      (each word once, in the order given), or the refusal. */
   static #doorCapabilities(v, required) {
     if (v === undefined || v === null) return required ? ["contribute"] : null;
-    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: localize("member-roster.index.capabilities_is_an_array", "capabilities is an array") };
     const bad = v.filter((c) => !Members.CAPABILITIES.includes(c));
     if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad.map(Members.#echo), known: Members.CAPABILITIES };
     return [...new Set(v)];
@@ -1443,7 +1443,7 @@ export class Members {
   /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
 
   inviteWithdraw({ memberId, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.withdrawing_an_invitation", "withdrawing an invitation"));   /* R84 */
     const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* DEC-49 REGION is-invitation-unused */
@@ -1862,7 +1862,7 @@ export class Members {
 
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");   /* R84 */
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.describing_the_team", "describing the team"));   /* R84 */
     const refuse = (code, detail, extra) => Members.#rowRefusal(code, localize("membership.index.detail_nothing_was_written", "{detail} Nothing was written.", { detail: String(detail) }), extra);
     /* DEC-49 REGION is-group-description */
     if (!Array.isArray(kinds) || kinds.some((k) => !Members.GROUP_KINDS.includes(k)))
