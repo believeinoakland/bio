@@ -47,3 +47,10 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 - contradiction (CONTRADICTION #11 J3): besides the three pinned prompts, `contradiction/index.mjs`:361, :364 (run-gate registration diagnostics), :2001 ("contradiction {}: candidate {}", an internal label), `text.mjs`:43 (the `## Session Log` marker).
 - skills (SKILLS #25 J5): the seven strings its record names, already on the design's unkeyed list.
 - agent-worker (AGENT-WORKER #33 J3): `agent-worker/src/ops.mjs`:26, :27, :50, :53, the `why` descriptions of the worker's op table. Why: developer descriptions no person reads.
+
+## R8 (for R8's batch HANDOFF)
+- publish-schedule (PUBLISH-SCHEDULE #3 J1): `index.mjs`:82, PROVIDER_MALFORMED's detail "the scheduled publisher gives the door publishScheduled": a wiring diagnostic, no member reads it.
+- case-inputs (CASE-INPUTS #5 J5 (1)): the signed case-input document's lines stay code-keyed with the code's own text (K1333); the design rows spelled "acknowledgment" under other ids (`case-inputs.acks.rows.map.participant`, `.given_draft`, `.document.list_stops_acknowledgments`, `case-inputs.listed.*`, `case-inputs.why.case_document_authored`) are not read by those lines: the design says whether they are orphans to drop.
+- case-catalogue (CASE-CATALOGUE #3 J3): `SEARCHED_SUBJECT_SOURCES.case_basis` and `CASE_DOCUMENT_FAMILY[*].what` in `checks.mjs`: developer descriptions read by no screen (not counted by the check).
+- case-account (CASE-ACCOUNT #5 J1): `index.mjs`:523, :526, the MALFORMED and REVIEW_COMMENTS_DECLARED details of `registerReviewComments` (R17: start-up wiring errors).
+- ratification (RATIFICATION #27 J1 (4)): the MALFORMED details in `ops.mjs` (`caseratify requires caseId, edition ...`, `ratify requires bundleId, expectedSha, and sig ...`, `publishat requires ...`) and `index.mjs`'s `registerApprovalReader`/`registerHoldReader` details: API text for a developer caller (not counted by the check).
