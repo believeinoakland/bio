@@ -33,3 +33,7 @@ ANSWER (K4072).
 3. `t41`, `t45`: derive them from the exact requirement subsets as you say, each from an owner's declaration, never a guessed family.
 
 Then finish the 30, run your suite and the checks, and post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14 new session reads (R77–R79, K3976): `adminremovalsopen`, `approvedunsent`, `bundlehistory`, `checkpointsdue`, `clocksrunning`, `entityidonly`, `entitysimilar`, `heldat`, `holdsdue`, `projectinvitations`, `rulefields`, `subjectsnamed`, `templatebyhandle`, `versioncompare` (`publishedfrozen` is public, in no set). control-plane's `totality.test.mjs`:17 (R2, R41) is red on its tree because affordances' `unaccounted` finds them unpublished: name each where your module accounts for reads (for op-grades, `NON_ACTS` as R48 does for three of them), read from op-declarations' declaration where the list is another module's (K3268). Merge tranche/T51 first; op-declarations' branch holds the declaration until it merges.
