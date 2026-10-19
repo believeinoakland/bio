@@ -8,9 +8,9 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { isUpgrade, accept } from './ws.mjs';
 import { converse } from './runner.mjs';
-import { signinOf, memberOk, WORDS } from './signin.mjs';
+import { signinOf, memberOk } from './signin.mjs';
+import { says } from './says.mjs';
 import { WAITING_HEADER, TRACE_HEADER, MEMBER_REF_HEADER } from './waits.mjs';
-import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 export const NAME = 'agent-runner';
 export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
@@ -74,11 +74,11 @@ export function agentRunnerOf({ sdk, tmpRoot, signin = signinOf(), log = (line) 
       const [step, run] = SIGNIN_ROUTES[path];
       const body = await bodyOf(req);
       let r;
-      if (!body) r = { status: 400, body: { ok: false, code: 'BAD_REQUEST', detail: WORDS.BAD_REQUEST }, log: { code: 'BAD_REQUEST' } };
-      else if (!memberOk(body.member)) r = { status: 400, body: { ok: false, code: 'BAD_MEMBER', detail: WORDS.BAD_MEMBER }, log: { code: 'BAD_MEMBER' } };
+      if (!body) r = { status: 400, body: { ok: false, code: 'BAD_REQUEST', detail: says('BAD_REQUEST') }, log: { code: 'BAD_REQUEST' } };
+      else if (!memberOk(body.member)) r = { status: 400, body: { ok: false, code: 'BAD_MEMBER', detail: says('BAD_MEMBER') }, log: { code: 'BAD_MEMBER' } };
       else {
         try { r = await run(signin, body); }
-        catch { r = { status: 502, body: { ok: false, code: 'SIGNIN_UNAVAILABLE', detail: WORDS.NOT_RUN }, log: { code: 'SIGNIN_UNAVAILABLE', arm: 'not_run' } }; }
+        catch { r = { status: 502, body: { ok: false, code: 'SIGNIN_UNAVAILABLE', detail: says('NOT_RUN') }, log: { code: 'SIGNIN_UNAVAILABLE', arm: 'not_run' } }; }
       }
       const ms = Date.now() - t0, uptime_s = Math.round(process.uptime());
       const age = signin.waitingAge ? signin.waitingAge() : undefined;
@@ -94,7 +94,7 @@ export function agentRunnerOf({ sdk, tmpRoot, signin = signinOf(), log = (line) 
   server.on('upgrade', (req, socket, head) => {
     if (req.method !== 'GET' || pathOf(req) !== CONVERSATION_PATH || !isUpgrade(req)) {
       const body = JSON.stringify(unknown);
-      socket.end(localize('agent-runner.entry.http_1_1_404_not', 'HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: {length}\r\nconnection: close\r\n\r\n{body}', { length: String(body.length), body: String(body) }));
+      socket.end(`HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: ${body.length}\r\nconnection: close\r\n\r\n${body}`);
       return;
     }
     served = true;
