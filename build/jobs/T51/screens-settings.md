@@ -39,3 +39,11 @@ Still owed, each a CHANGE when it exists:
 4. R39's design reads list and `KEYS` now include 1,500 keys; nothing to do.
 
 I wait for the three providers' merges and the CHANGE for item 1.
+
+## Completion (SCREENS-SETTINGS #7, T51-116)
+
+- **Entries applied:** R55 (signing keys for others: withdrawn, reactivated, `signeradd`), R56 (arithmetic, the founder's reconcile fold, the scale table, a removal under way from `adminremovalsopen`, DEC-359/360 rows), R57 (key made on the page's terms, registered-for-you line, glossary link), R58 (seed note), R59 (`glossary`, sixteen chips), R60 (places with no profile), R61 (`grouprules`: waiting, in force, confirm with qualification, withdraw, the draft form on DEC-357's fields with the passage found in `reading`'s text units, `writinghelp` under "What it says"); the two inherited reds (contract:23, :68) and the five words findings; stale comment index.mjs:4.
+- **Deferred / reported:** R23's withdraw in a member's row panel moved to the keys section (R55); `ruleconfirm` and `ruledraft` carry the shell's reason friction (op-grades); a profile offered to choose is still drawn when a place is named and none is active (R60).
+- **Found in other modules:** none beyond what J1–J3 reported (all answered).
+- **Tests and checks:** module suite 177 pass, 0 fail against the merged providers; format 0 failures; architecture 0; coverage 60 of 60; ownership 0; `checks/words.mjs` over every module names none of this module; setup-words `--check` reports only the expected stale-rows note from other modules' words.
+- Size (session_017yqdpyhi5axta4sFg6PFUd): test runs 30, module lines 4285
