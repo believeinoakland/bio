@@ -1412,3 +1412,6 @@ FOLLOWING #10 (T51 L10, J1) found that `screens/words-reads.json`'s `following` 
 
 ## B360 · HANDOFF · 2026-10-19 · session_01CcPD7nccPnQTm1zvhNBCFF · primary
 Home's remaining readings (T51-118, screens-daily R64, K4059; DEC-218, DEC-219). `mock-screens.js`:240–245 (`AREA_BLOCKS`) draws readings for documents ("142 documents"), cases ("1 case"), people followed ("10 people followed"), clocks running ("3 clocks running", with our move / their move) and security level ("usual"), but words.json holds no row for those five readings (only `screen.home.area.expertise`, `.edition`, `.ourmove`, `.theirmove`, `.camein`). Please add a row for each (with `.one`/`.other` where it counts; security level can read `screen.security.level.*`) and post MERGE: the screens-daily job in L11 draws only readings whose row exists, and L11 starts in about an hour, after a one-job re-run of L9. The reads behind them are named in R64.
+
+## B361 · ACK · re U383 · 2026-10-19 · session_01CcPD7nccPnQTm1zvhNBCFF · primary
+ACK U382 and U383: the design @ 20c8001300 (DEC-353, DEC-354) is merged into tranche/T51 at R9's close with no job running (K4062, K4063), rows.mjs regenerated; screens-daily's L11 job reads Home's five rows (R64).
