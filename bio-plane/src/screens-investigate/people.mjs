@@ -55,7 +55,7 @@ function render(cs, view) {
   const add = otherMode
     ? cs.field("people-other-name", S + "addother.name", {}) + nearHtml
       + cs.choice("people-other-kind", S + "addother.kind", [["person", S + "add.kind.person"], ["institution", S + "add.kind.organization"],
-        ...["office", "ordinance", "contract", "fund", "program", "place", "parcel", "source"].map((k) => ({ value: k, text: P.plain(cs, "find.row.kind." + k) }))], {})
+        ...["office", "ordinance", "contract", "fund", "program", "place", "parcel", "source"].map((k) => [k, S + "add.kind." + k])], {})
       + `<p class="mk-small">${cs.w(S + "addother.kind.help")}</p>`
       + cs.field("people-other-aliases", S + "addother.aliases", { area: true, help: S + "addother.aliases.help" })
       + cs.field("people-other-note", S + "addother.note", { area: true, rec: true, help: S + "addother.note.help" })
@@ -123,7 +123,7 @@ function render(cs, view) {
   out.push(`<div class="mk-search">${cs.field("people-q", S + "q", { value: f.q || "" })}${cs.act("search", { label: "act.search.label.people", tone: "primary" })}</div>`
     + `<div class="mk-acts">`
     + cs.choice("people-show", S + "show", [["both", S + "show.both"], ["people", S + "show.people"], ["organisations", S + "show.organizations"],
-      ...["offices", "ordinances", "contracts", "funds", "sources"].map((k) => ({ value: k, text: P.plain(cs, "find.row.kind." + OTHER_SHOW[k]) })), ["everything", S + "show.everything"]], { value: f.show || "both" })
+      ...["offices", "ordinances", "contracts", "funds", "sources"].map((k) => [k, S + "show." + k]), ["everything", S + "show.everything"]], { value: f.show || "both" })
     + cs.choice("people-office", S + "office", [{ value: "", text: cs.w(S + "office.any") }].concat(bodies), { value: f.office || "" })
     + cs.choice("people-named", S + "named", [["any", S + "named.any"], ["mine", S + "named.mine"]], { value: f.namedIn || "any" })
     + cs.choice("people-since", S + "since", [["", S + "since.any"], ["30", S + "since.30"], ["90", S + "since.90"], ["365", S + "since.365"]], { value: f.since || "" })
@@ -231,7 +231,7 @@ const PEOPLE_KEYS = [
   "screen.people.add.name", "screen.people.add.kind", "screen.people.add.kind.person", "screen.people.add.kind.organization",
   "screen.people.add.note", "screen.people.add.note.help", "screen.people.add.empty", "screen.people.counts.none", "screen.people.add.submit",
   /* R40, R42 */
-  "screen.people.show.everything", "screen.people.other.note", "screen.people.other.heading", "screen.people.today.heldby",
+  "screen.people.show.offices", "screen.people.show.ordinances", "screen.people.show.contracts", "screen.people.show.funds", "screen.people.show.sources", "screen.people.add.kind.office", "screen.people.add.kind.ordinance", "screen.people.add.kind.contract", "screen.people.add.kind.fund", "screen.people.add.kind.program", "screen.people.add.kind.place", "screen.people.add.kind.parcel", "screen.people.add.kind.source", "screen.people.show.everything", "screen.people.other.note", "screen.people.other.heading", "screen.people.today.heldby",
   "screen.people.addother.head", "screen.people.addother.name", "screen.people.addother.kind", "screen.people.addother.kind.help",
   "screen.people.addother.aliases", "screen.people.addother.aliases.help", "screen.people.addother.note", "screen.people.addother.note.help",
   "screen.people.addother.preflight", "people.nearmatch.same", "people.nearmatch.contains", "people.nearmatch.spelling",
