@@ -1,6 +1,6 @@
 # sheet-worker (T51)
 
-**Status** · session_01QtpnxHgL1z6PkC9WuixPrM · depth 2 · COMPLETE · handled B1
+**Status** · session_01G7yjQ7EPaZVj42HQyis376 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -33,3 +33,29 @@ The sentences reach the caller as the refusal's `detail` and `why`, so none is t
 - `bio-plane/test/system/fleetbundles.test.mjs`: fails on the stale bio-plane bundle (REPORT J1); the sheet-worker arms pass.
 
 **Size (session_01QtpnxHgL1z6PkC9WuixPrM): test runs 2, module lines 1901.** Module lines count `sheet-worker/src`, `test` and `scripts` (843 + 935 + 123); the vendored wasm, the Rust engine and the generated bundle are not counted.
+
+## J3 · COMPLETE
+
+**Entries applied.** B2 (the words round RW, K4015/K4018 folded): the one finding `checks/words.mjs sheet-worker` lists at e8ac153 (civicos-process main), `sheet-worker/src/contract.mjs` `REFUSALS.NOT_ENABLED`, a sentence a member answers (`reason: NOT_ENABLED`, with its `detail`), built as a `+` chain of string literals. It is now `localize("sheet-worker.contract.recompute_is_not_enabled_here", en)`, one literal, same wording. The id follows the `sheet-worker.<file stem>.<slug>` rule and is fixed once.
+
+**Test.** The words test in `test/sheet-worker.test.mjs` now names the new id in its title (K874) and asserts the refusal's `detail` equals `REFUSALS.NOT_ENABLED` for an instance with the setting off, read before any bytes are read. No sentence text is copied in the test.
+
+**Bundle.** `sheet-worker/dist/sheet-worker.bundled.mjs` and `.bundle.json` regenerated with `npm run build` in `sheet-worker/` (this module's own artifact). `npm ci` ran there first (the module had no `node_modules`; `miniflare` was missing, so `worker.test.mjs` could not load until then).
+
+**Deferred.** Nothing.
+
+**Found in another module.** `bio-plane/dist/bio-plane.bundled.mjs` inlines `sheet-worker/src/contract.mjs`, so it is stale again with this change (it was already stale from J1's REPORT). Not rebuilt here (mechanics §14). BOB regenerates it at the layer close. `build/plan/...` setup-words' `rows.mjs` is stale by the new word, as expected; not regenerated (never edited by a job).
+
+**Tests and checks** (the process repository at `e8ac153`, `/home/user/bio` as product):
+- `node --test test/` in `sheet-worker`: 37 tests, 37 pass, 0 fail (after `npm ci`).
+- `node checks/words.mjs /home/user/bio sheet-worker`: 882 string literals read; inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0; 0 failures (was 1 `plain` at this round's start).
+- `node checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio sheet-worker`: 36 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio sheet-worker`: 17 of 17 live requirement ids named by a test; 0 failures.
+- `node checks/run.mjs /home/user/bio`: no finding names `sheet-worker`. The run's other findings are other modules' and predate this job.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note names the new word, as expected; no refusal naming `sheet-worker`.
+- `node checks/ownership.mjs /home/user/bio sheet-worker tranche/T51 job/T51/sheet-worker`: 5 files changed by sheet-worker, 0 failures.
+
+**Commit.** `a618b5f20d` on `job/T51/sheet-worker`, pushed (fast-forward from `cc6f19a2a2`). No pull request, per the job role.
+
+**Size (session_01G7yjQ7EPaZVj42HQyis376): test runs 4, module lines 1904.** Module lines count `sheet-worker/src`, `test` and `scripts` (the vendored wasm, the Rust engine and the generated bundle are not counted).
