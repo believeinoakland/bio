@@ -16,3 +16,7 @@
 **Checks.** `node checks/words.mjs /home/user/bio doorbell`: 0 failures (was 27). `node checks/format.mjs /home/user/bio`: 0 failures. `node checks/architecture.mjs /home/user/bio doorbell`: 0 failures. `node checks/coverage.mjs /home/user/bio doorbell`: 25 of 25 live ids named by a test, 0 failures. `node checks/ownership.mjs /home/user/bio doorbell tranche/T51 job/T51/doorbell`: 0 failures. `node --test bio-plane/test/m/doorbell/`: 73 of 73 pass.
 
 **Size (session_01C6MLP8YoCGd3BrWthJxfJ5): test runs 3, module lines 1144**
+
+## J1 · COMPLETE
+
+T51-182 done: the 13 plain findings and the 10 conversion findings are fixed (commit e8ac15435f on job/T51/doorbell). words check 0 failures (was 27); format, architecture, coverage and ownership 0 failures; doorbell tests 73 of 73 pass. Open for BOB: knocker.test.mjs:205 holds a regex fragment of a product sentence (not counted by the check, left as is); expect.mjs uses one localize id not used by the product (doorbell.checks.group_can_see). Record: build/jobs/T51/doorbell.md, Completion section.
