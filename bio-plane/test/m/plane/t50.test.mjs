@@ -186,7 +186,10 @@ async function askWorld({ wait = 2000 } = {}) {
   await disclosed(x.ctx);
   const r = await credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" });
   assert.equal(r.ok, true, JSON.stringify(r));
-  x.env.STORE.get = () => x.s;   /* the door's arm asks the `bio` object over its RPC: here, this object */
+  /* the door's arm asks the `bio` object over its RPC: here, this object. A Durable Object stub's `fetch` takes an address as
+     well as a Request (the host does), as `groupIdentityOp` and `instanceGroupOp` ask it; the world answers the same. */
+  x.env.STORE.get = () => new Proxy(x.s, { get: (t, k) => (k === "fetch" ? (r, init) => t.fetch(r instanceof Request ? r : new Request(r, init))
+                                                                     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   return { ...x, sent };
 }
 

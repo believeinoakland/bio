@@ -10,8 +10,7 @@
 .claude/settings.local.json
 
 # miniflare's own cache directory. It is created wherever a suite that drives
-# the REAL plane is run from — bio-plane/ has always had one, and UI-13's
-# intent-write harness makes one under civicos-ui/ too. Never part of the tree.
+# the REAL plane is run from — bio-plane/ has always had one. Never part of the tree.
 .wrangler/
 
 # NEGATIVE-CONTROL PENS. A control driver copies pristine sources into a pen
@@ -133,7 +132,7 @@
 _m025/
 .m025-anchor-harness/
 # D-355's pens, each on its OWN line for the reason THE PEN RULE at the head of this section gives.
-# REC-79's driver (`civicos-ui/test/refusal-partition.control.mjs`) wrote `.rec79-control-pristine/` on
+# REC-79's driver (`civicos-ui/test/refusal-partition.control.mjs`, deleted with civicos-ui at T51, K4100) wrote `.rec79-control-pristine/` on
 # EVERY run from 2026-08-09 and never removed it, clean exit or red, and the pen was never listed here —
 # it is the pen in the `check-firing` incident this block's note records. Since D-355 the driver removes
 # each copy by name as its restore verifies and an exit hook removes the rest on every exit; SIGKILL
@@ -322,8 +321,6 @@ bio-plane/.nc-caseratify-conclusion/
 # D-442 (2026-09-23): `bio-plane/test/d442-publish-writes-nothing.control.mjs`'s pen — it edits src/ and checks/ and
 # keeps per-arm pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-d442/
-# FW-20's pen (`civicos-ui/test/nc-fw20.mjs`), same rule as the pens above.
-.fw20-pen/
 
 # D-470's pen (`bio-plane/test/d470-catalog-census.control.mjs`), its own line for
 # the reason every line above has one: the driver removes the pen on success, and

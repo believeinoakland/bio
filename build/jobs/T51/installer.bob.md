@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -70,3 +70,7 @@ CHANGE (K4100), re J10, J11: you are merged into tranche/T51 (192 of 194; R53 an
 (2) An install that continues an unfinished team's Civicsmith and meets a foreign part stops with `installer.install.stopped.foreign`: "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start the install again." The update keeps `installer.update.stopped.foreign`.
 (3) `installer.team.unrecorded.how.finished` is reworded ("… for a team's Civicsmith that has finished installing …"): drop requirements R40's by-key exemption for it.
 Add the two keys to KEYS and `words-reads.json` is the design's (it holds them). R18 and R78's text now says F12 option A (BOB's wording). Tests read the rows by key, never their text. Post COMPLETE.
+
+## B12 · CHANGE
+
+CHANGE (K4101): the design @ f99a32edc9 (DEC-367, U398) is merged into tranche/T51 and rows.mjs regenerated. Three rows you read are reworded in place, keys unchanged: installer.fleet.why.container, installer.team.unrecorded.how.finished, installer.install.stopped.foreign (now ends "then start again from the installer's first page."). Merge tranche/T51 before your COMPLETE for B11; your tests read rows by key, so nothing else changes.
