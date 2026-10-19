@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { listWorld, sweepDef, NOW_MS, DAY, WEEK, site, SEED, U, page, runsOf, filedBundles } from "./fixture.mjs";
 import { SWEEP_TICK_BATCH, SWEEP_ACTOR } from "../../../src/link-sweep/index.mjs";
 import { listFormats } from "../../../src/formats.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { normalizeAddress } from "../../../src/subresources.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -199,7 +200,7 @@ test("R8 held: at or over budget.backlog the sweep does not run and every read s
   assert.equal(w.s.sweepDue(NOW_MS + WEEK), null);
   assert.equal(w.s.sweeps({ viewer: "member:alice", now: NOW_MS + WEEK }).sweeps[0].held, "backlog");
   const check = w.captureRequests.registered[0].fn;
-  assert.deepEqual(await check({ sweep: NAME, locators: [U("x")] }), { ok: false, reason: "held", detail: "the sweep's backlog is at or over its limit" });
+  assert.deepEqual(await check({ sweep: NAME, locators: [U("x")] }), { ok: false, reason: "held", detail: localize("link-sweep.sweep.the_sweep_s_backlog_is", "the sweep's backlog is at or over its limit") });
   w.capture.heldCount = real;
 });
 
