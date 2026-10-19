@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, WORDS, LAW, WHY } from "./fixture.mjs";
 import { FILING_TEXT_MAX } from "../../../src/filings/index.mjs";
 import { createHash } from "node:crypto";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 
@@ -47,8 +48,8 @@ test("R6 FILING_STALE names each change since the draft: the tier, the counterpa
     ["the governing tier", (x, A) => x.actions.actionRiskTier({ target: A, tier: 2, reason: "raised on review", author: V("olive"), viewer: V("olive") })],
     ["the counterparty", (x, A) => x.revise(A, (t) => t.replace('role: "Selectboard"', 'role: "Town Clerk"')
                                                           .replace('body: "Port Ellery Selectboard"', 'body: "City of Port Ellery"'))],
-    ["the determination the action rests on", (x, A) => { const D9 = x.determine(); x.revise(A, (t) => t.replace(`target: ${x.D}`, `target: ${D9}`)); }],
-    ["the governing laws", (x, A) => x.actions.actionLaws({ target: A, laws: [{ level: "state", citation: "Test Stat. § 1.100" }],
+    [word("filings.the_determination_the_action_rests"), (x, A) => { const D9 = x.determine(); x.revise(A, (t) => t.replace(`target: ${x.D}`, `target: ${D9}`)); }],
+    [word("filings.governing_laws"), (x, A) => x.actions.actionLaws({ target: A, laws: [{ level: "state", citation: "Test Stat. § 1.100" }],
                                                            author: V("olive"), viewer: V("olive") })],
     ["superseded", (x) => supersede(x, x.D)],
   ];

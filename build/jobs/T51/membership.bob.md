@@ -1,6 +1,6 @@
 # BOB to membership (T51)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,34 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3838). membership R120's read contract gains `project_participants.invited_by` (the column R118 already writes; a field added, no meaning changed), for project-roster R35, marked `*(not yet met: T51)*` for you. Merge `tranche/T51` into your branch; make the R120 contract test (whatever states the contract's columns) name `invited_by`, change no column, and COMPLETE again. You merge before project-roster.
+
+## B3 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 2 (R2), membership: **CR-4** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/membership.md` (read whole).
+BOB's notes for this job:
+1. You start after member-roster (T51-145) has merged: read the Purpose and Provides of `build/requirements/member-roster.md` and the split map `build/extraction/membership-split-T51.md` §2–§7 whole. Delegate each moved name to member-roster (your new R154, the delegation, is its test; R153 moved to member-roster R75), delete the copies, re-export as map §4 says. BOB has retired the moved ids in your requirements at this START (the text is his; you never edit `build/` but your record) and added `member-roster` to your `uses`. Report your module's own size (about 1,700 lines expected) in your Size line.
+2. The administrator removals read (formerly your R153) is built by member-roster (its R75, K3946); your part is the delegate, routed through membership's ops as map §4 says.
+3. From MEMBER-ROSTER #1's completion (K3976): (a) export `MEMBERSHIP_CHECKS`, `MEMBER_ID_CHECKS` and `CUSTODIAL_CHECKS` as the union of your rows and member-roster's `MEMBER_ROSTER_ROWS` (member-roster exports no `*_CHECKS` name, because answer-envelope's families test reaches every exported `*_CHECKS` table), in the same act that deletes your copies; (b) your `memberList` passes your own `projectsOf` (member-roster R71; its `membersOps` gives none); (c) `checkAddressees` (your R106) asks member-roster R72 `expertiseHolders` and applies your sight; (d) the op `adminremovalsopen` is answered through your ops map.
+4. (K3958, bundler R38) `membership/words.mjs`:11 `keyed(key, names)` reads `word` with a variable key: each read names its key literally or by a literal prefix.
+5. Your words findings are in `build/plan/words-pass/membership.md` (read whole), in up to three sections: the conversion's left findings, "Plain findings (K3957)" and "Test copies of code sentences (K3962)". Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944). The ids you assign are `membership.<file stem>.<slug>`, fixed once.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. setup-words R13 binds every sentence a member reads, whatever the check counts (under five words, punctuated, or held in a test's regular expression): convert those too (K3964, K3965). A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize` by equality, a regular-expression copy included; `localize` answers its `en` while `rows.mjs` is stale. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; BOB regenerates them at the layer close. A word id needs no test of its own (K874 binds R ids; K3965).
+Tests never copy a sentence people read; every new requirement id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9). Merge `tranche/T51` into your branch, never rebase (K1991).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`. Your Size line counts only your module's own code (K2513).
+
+## B4 · CHANGE
+
+CHANGE (K3980). R2's close: `checks/run.mjs` on the tranche (after every R2 merge, @ 7ab05dbb47) shows these test copies of sentences in your tests; they read now because the copied sentences are `localize` text elsewhere in the tree since the other R2 merges (member-roster's, credentials', record-core's):
+
+- testcopy membership bio-plane/test/m/membership/t19-enrol-boot.test.mjs:52 [code] "the invitation is still live"
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:59 [code] "is an administrator's act (Membership Architecture v2 §4.9), and yo..."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:60 [code] "Civicsmith takes who is asking from the signed-in session rather th..."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:61 [code] "the active administrators. Nothing was changed."
+- testcopy membership bio-plane/test/m/membership/t35-words.test.mjs:65 [code] "recording who holds hosting access (4.8)"
+- testcopy membership bio-plane/test/m/membership/t46-handles-doors.test.mjs:35 [code] "reading the team's website key and join link"
+
+Merge `tranche/T51` into your branch (never rebase), make each compare with `localize`/`word` by equality or assert the key (K3810), run `node checks/words.mjs /home/user/bio membership` (0 failures) and your tests, and COMPLETE again.

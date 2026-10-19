@@ -10,7 +10,7 @@
    (T49; K3366; R56) A title or purpose the design stream keys is read through `setup-words` `word(key)`, never held as
    English here: the key is the screen's own (`screen.<key>.name`, `screen.<key>.purpose`). A screen with no key keeps its
    interface's own words. */
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const screen = (id, title, acts, purpose) => Object.freeze({ id, title, acts: Object.freeze(acts), purpose });
 
@@ -19,7 +19,7 @@ export const SCREENS = Object.freeze([
     ["queue", "tasks", "queuemute", "taskresolve", "taskforward", "memberlist", "proposedispose", "allocid", "promote", "affordances"],
     word("screen.queue.purpose")),
   screen("record", "Your accountability record", ["list", "search"],
-    "The whole record as rows: every bundle your team's Civicsmith holds, with its type and its state."),
+    localize("plane.screens.the_whole_record_as_rows", "The whole record as rows: every bundle your team's Civicsmith holds, with its type and its state.")),
   screen("finder", word("screen.finder.name"),
     ["search", "searchfields", "meaningrows", "concerns", "entitybyalias", "select", "selection", "selectionrelease", "cite", "affordances"],
     word("screen.finder.purpose")),
@@ -58,7 +58,7 @@ export const SCREENS = Object.freeze([
     ["image", "projection", "affordances", "actionmove", "actioncorrespond", "actionlaws", "actionrisktier"],
     word("screen.action.purpose")),
   screen("published", "Case files", ["publishedmanifest", "verify"],
-    "The cases your team's Civicsmith has published, readable by somebody holding no credential at all."),
+    localize("plane.screens.the_cases_your_teams_civicsmith", "The cases your team's Civicsmith has published, readable by somebody holding no credential at all.")),
   screen("review-copy", word("screen.review-copy.name"), ["reviewcopy", "casedraft", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
     word("screen.review-copy.purpose")),
   screen("published-case", word("screen.published.name"), ["publishedcase", "publishedmanifest", "verify"],

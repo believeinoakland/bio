@@ -33,6 +33,7 @@ import {
 import { CONTENT_EXTENT_CHECKS } from "./checks.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, CONTENT_EXTENT_A1_RE,
          CONTENT_EXTENT_DOCUMENT_ONLY, imagePartUndetermined, legExtent, legHasAuthoredExtent, CHAIN_KIND_MIXED };
@@ -48,15 +49,15 @@ export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, 
  *  document SAYS. `cited_as` keeps them apart on every row. */
 export const CONTENT_EXTENT_KINDS = Object.freeze({
   ...ALGEBRA_KINDS,
-  envelope: { landed: true, human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" },
+  envelope: { landed: true, human: localize("content.extent.envelope_item_human", "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body") },
 });
 
 /** REC-204 — the item kinds an `envelope` extent names, and the member's word for each: the design's four exactly. */
 export const ENVELOPE_ITEM_KINDS = Object.freeze({
-  "tracked-change": "a tracked change",
+  "tracked-change": word("content.tracked_change"),
   comment:          "a comment",
-  "core-property":  "a core property",
-  "speaker-note":   "a slide's speaker notes",
+  "core-property":  word("content.core_property"),
+  "speaker-note":   word("content.speaker_note"),
 });
 
 /** `cited_as` on an envelope item: neither the body's `text` nor an image's `bytes`, and never presented as either. */
@@ -76,12 +77,7 @@ export const CONTENT_EXTENT_OWN_CHECKS = Object.freeze({
   CONTENT_EXTENT_NOT_USER_SPACE: {
     check: "C-45.13",
     where: "src/content/extent.mjs checkContentExtent > is-content-extent-space",
-    translation: "This citation gives a region of a page in a different measure from the one this record addresses "
-      + "pages in. A region here is measured in points from the corner of the page as the file lays it out; this one "
-      + "is measured in something else — usually the pixels of an image made from the page, as a text-recognition "
-      + "engine reports them. The same four numbers name a different place in each, so recording it as given would "
-      + "point at a region nobody chose, and it is not converted either, because the conversion depends on how the "
-      + "image was made and turned. Cite the region in points on the page, or cite the page.",
+    translation: word("refusal.CONTENT_EXTENT_NOT_USER_SPACE"),
   },
 });
 
@@ -314,10 +310,7 @@ function rectOffPage(e, pageBoxes) {
   const b = held.boxes[i], m = b.media_box, TOL = 0.001 + 1e-9;
   const r = normRect(e.rect);
   if (r[0] >= m[0] - TOL && r[1] >= m[1] - TOL && r[2] <= m[2] + TOL && r[3] <= m[3] + TOL) return null;
-  return `page ${e.page} of this capture is ${b.w} x ${b.h} pt, its MediaBox [${m.join(", ")}] in default user `
-    + `space, and the extent's rect [${r.join(", ")}] reaches outside it`
-    + (b.rotate ? `. The page is shown rotated ${b.rotate} degrees; a rect is measured on the unrotated page, from its `
-      + `MediaBox corners, not from the turned view` : "");
+  return word("content.text.page_capture_pt", { page: String(e.page), width: String(b.w), height: String(b.h), media_box: String(m.join(", ")), rect: String(r.join(", ")), rotated_clause: String(b.rotate ? localize("content.extent.page_rotated_clause", ". The page is shown rotated {rotate} degrees; a rect is measured on the unrotated page, from its MediaBox corners, not from the turned view", { rotate: String(b.rotate) }) : "") });
 }
 
 /** R8 / R9: a `pdf-page` rect admitted without its page's box, stated as `{level: "page_box", why}` naming which
@@ -329,14 +322,11 @@ export function pdfPageBoxUndetermined(extent, ctx = {}) {
   const held = pageBoxesOf(ctx.pageBoxes);
   if (!held)
     return { level: "page_box",
-             why: `this record holds no page boxes for this capture — it was acquired before the reading carried them, `
-               + `or no PDF structure read answered one — so whether the rect lies on page ${e.page} is UNDETERMINED, `
-               + `admitted and stated rather than guessed` };
+             why: word("content.why.record_holds_page", { page: String(e.page) }) };
   const i = e.page < held.of_page.length ? held.of_page[e.page] : null;
   if (i === null || i === undefined)
     return { level: "page_box",
-             why: `the file states no readable MediaBox for page ${e.page}, so whether the rect lies on the page is `
-               + `UNDETERMINED, admitted and stated rather than guessed` };
+             why: word("content.why.file_states_readable", { page: String(e.page) }) };
   return null;
 }
 
@@ -362,47 +352,44 @@ export function containerBoundUndetermined(extent, ctx = {}) {
   const e = isObj(extent) ? extent : null;
   if (!e || !ctx || ctx.known === false) return null;
   const c = isObj(ctx.container) ? ctx.container : {};
-  const u = (level, why) => ({ level, why: `${why}, so whether ${describeExtent({ ...e, ref: undefined })} lies inside `
-    + `the document is UNDETERMINED, admitted and stated rather than guessed` });
+  const u = (level, why) => ({ level, why: word("content.why.lies_inside_document", { why: String(why), ref: String(describeExtent({ ...e, ref: undefined })) }) });
   const pages = Number.isInteger(ctx.pageCount) && ctx.pageCount > 0;
   switch (e.kind) {
     case "pdf-page":
-      return pages ? null : u("page_set", "this record holds no page set for this capture");
+      return pages ? null : u("page_set", localize("content.extent.no_page_set", "this record holds no page set for this capture"));
     case "image":
-      return Number.isInteger(e.page) && !pages ? u("page_set", "this record holds no page set for this capture") : null;
+      return Number.isInteger(e.page) && !pages ? u("page_set", localize("content.extent.no_page_set_2", "this record holds no page set for this capture")) : null;
     case "sheet-cell": case "sheet-range": {
       const sheets = Array.isArray(c.sheets) && c.sheets.length ? c.sheets : null;
-      if (!sheets) return u("sheet_list", "this record holds no sheet list for this capture's workbook");
+      if (!sheets) return u("sheet_list", localize("content.extent.no_sheet_list", "this record holds no sheet list for this capture's workbook"));
       const want = typeof e.sheet === "string" ? e.sheet.trim() : "";
       const sheet = sheets.find((x) => x && x.name === want);
       if (sheet && !(Number.isInteger(sheet.rows) && Number.isInteger(sheet.cols)))
-        return u("sheet_grid", `this record holds no row and column grid for sheet '${want.slice(0, 40)}' (a format `
-          + `that fixes no maximum table size states none)`);
+        return u("sheet_grid", localize("content.extent.this_record_holds_no_row", "this record holds no row and column grid for sheet '{want}' (a format that fixes no maximum table size states none)", { want: String(want.slice(0, 40)) }));
       return null;
     }
     case "doc-para":
       return Number.isInteger(c.paragraphs) && c.paragraphs > 0 ? null
-        : u("paragraph_count", "this record holds no paragraph count for this capture");
+        : u("paragraph_count", localize("content.extent.no_paragraph_count", "this record holds no paragraph count for this capture"));
     case "slide-shape": {
       const slides = Array.isArray(c.slides) && c.slides.length ? c.slides : null;
-      if (!slides) return u("slide_list", "this record holds no slide list for this capture's deck");
+      if (!slides) return u("slide_list", localize("content.extent.no_slide_list", "this record holds no slide list for this capture's deck"));
       const slide = Number.isInteger(e.slide) ? slides[e.slide - 1] : null;
       if (Number.isInteger(e.shape) && !(slide && Number.isInteger(slide.shapes)))
-        return u("shape_count", `this record holds no shape count for slide ${e.slide}`);
+        return u("shape_count", localize("content.extent.this_record_holds_no_shape", "this record holds no shape count for slide {slide}", { slide: String(e.slide) }));
       return null;
     }
     case "doc-table": {
-      if (!Array.isArray(c.tables)) return u("table_list", "this record holds no table list for this capture");
+      if (!Array.isArray(c.tables)) return u("table_list", localize("content.extent.no_table_list", "this record holds no table list for this capture"));
       const t = c.tables[e.table];
       if (typeof e.cell === "string" && e.cell.trim() && !(t && Number.isInteger(t.rows) && Number.isInteger(t.cols)))
-        return u("table_grid", `this record holds no row and column grid for table ${e.table}`);
+        return u("table_grid", localize("content.extent.this_record_holds_no_row_2", "this record holds no row and column grid for table {table}", { table: String(e.table) }));
       return null;
     }
     case "envelope": {
       const at = isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind) ? containerBoundUndetermined(e.at, ctx) : null;
       return at || { level: "envelope_items",
-        why: "this record persists no list of a capture's envelope items to bound one against (they arrive as text "
-           + "units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated" };
+        why: localize("content.extent.envelope_items_no_list", "this record persists no list of a capture's envelope items to bound one against (they arrive as text units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated") };
     }
     default:
       return null;
@@ -435,18 +422,14 @@ export function checkContentExtent(extent, ctx = {}) {
   /* DEC-49 REGION is-content-extent-space */
   if ((e.kind === "pdf-page" || e.kind === "image") && rectSpace(e) !== RECT_USER_SPACE)
     return refusal("CONTENT_EXTENT_NOT_USER_SPACE",
-      `this ${e.kind} extent states its rect in space '${String(e.space).slice(0, 40)}'; the grammar addresses PDF `
-      + `default user space only (points, the page as the file lays it out), so the rect is not converted and not `
-      + `read as points. A text-recognition anchor is in the pixels of the frame it read`);
+      localize("content.extent.this_kind_extent_states_its", "this {kind} extent states its rect in space '{String}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read", { kind: String(e.kind), String: String(String(e.space).slice(0, 40)) }));
   /* END DEC-49 REGION is-content-extent-space */
   const citedAs = contentCitedAs(e);
   if ((citedAs === CONTENT_CITED_AS_ENVELOPE) !== (e.kind === "envelope"))
     return refusal("CONTENT_EXTENT_UNREADABLE",
       e.kind === "envelope"
-        ? `an envelope item is cited as the envelope and never as '${String(citedAs).slice(0, 40)}': a tracked `
-          + `change, comment, core property or speaker note is not the document's body`
-        : `only an envelope item is cited as the envelope. A ${e.kind} extent addresses the document's body, and `
-          + `reading it as an annotation would change what the citation claims`);
+        ? localize("content.extent.an_envelope_item_is_cited", "an envelope item is cited as the envelope and never as '{String}': a tracked change, comment, core property or speaker note is not the document's body", { String: String(String(citedAs).slice(0, 40)) })
+        : localize("content.extent.only_an_envelope_item_is", "only an envelope item is cited as the envelope. A {kind} extent addresses the document's body, and reading it as an annotation would change what the citation claims", { kind: String(e.kind) }));
   if (e.kind === "envelope") return checkEnvelope(e, ctx);
   const bad = coreCheck(e, ctx);
   if (bad) return bad;
@@ -467,31 +450,26 @@ function checkEnvelope(e, ctx) {
   const item = typeof e.item === "string" ? e.item.trim() : "";
   if (!Object.prototype.hasOwnProperty.call(ENVELOPE_ITEM_KINDS, item))
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `an envelope extent names which kind of item, one of ${Object.keys(ENVELOPE_ITEM_KINDS).join(", ")}. This one `
-      + `names '${String(e.item).slice(0, 40)}'`);
+      localize("content.extent.an_envelope_extent_names_which", "an envelope extent names which kind of item, one of {keys}. This one names '{String}'", { keys: String(Object.keys(ENVELOPE_ITEM_KINDS).join(", ")), String: String(String(e.item).slice(0, 40)) }));
   if (typeof e.part !== "string" || !e.part.trim())
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `an envelope extent names the part of the container the item's bytes sit in (word/comments.xml, `
-      + `docProps/core.xml). This one names '${String(e.part).slice(0, 40)}'`);
+      localize("content.extent.an_envelope_extent_names_the", "an envelope extent names the part of the container the item's bytes sit in (word/comments.xml, docProps/core.xml). This one names '{String}'", { String: String(String(e.part).slice(0, 40)) }));
   if (!Number.isInteger(e.n) || e.n < 0)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `an envelope extent names which item, as a 0-based ordinal among items of its kind at the same part and `
-      + `anchor. This one names '${String(e.n).slice(0, 40)}'`);
+      localize("content.extent.an_envelope_extent_names_which_2", "an envelope extent names which item, as a 0-based ordinal among items of its kind at the same part and anchor. This one names '{String}'", { String: String(String(e.n).slice(0, 40)) }));
   if (item === "core-property" && !(typeof e.name === "string" && e.name.trim()))
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      "a core-property envelope item names which property (creator, lastModifiedBy, title), and this one names none");
+      localize("content.extent.core_property_names_which", "a core-property envelope item names which property (creator, lastModifiedBy, title), and this one names none"));
   if (e.at !== undefined && e.at !== null) {
     if (!(isObj(e.at) && ENVELOPE_ANCHOR_KINDS.includes(e.at.kind)))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `an envelope item is anchored at a paragraph or a slide (${ENVELOPE_ANCHOR_KINDS.join(", ")}) or at nothing. `
-        + `This one is anchored at '${String(isObj(e.at) ? e.at.kind : e.at).slice(0, 40)}'`);
+        localize("content.extent.an_envelope_item_is_anchored", "an envelope item is anchored at a paragraph or a slide ({ENVELOPE_ANCHOR_KINDS}) or at nothing. This one is anchored at '{String}'", { ENVELOPE_ANCHOR_KINDS: String(ENVELOPE_ANCHOR_KINDS.join(", ")), String: String(String(isObj(e.at) ? e.at.kind : e.at).slice(0, 40)) }));
     const anchor = coreCheck(e.at, ctx);
     if (anchor) return anchor;
   }
   if (ctx && ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal("CONTENT_EXTENT_NO_CHAIN",
-      `this record holds no extraction chain for the capture this citation names, so there is no transcription over `
-      + `${describeExtent(e)} for the citation to point at`);
+      localize("content.extent.this_record_holds_no_extraction", "this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at", { describeExtent: String(describeExtent(e)) }));
   return null;
 }
 

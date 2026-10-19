@@ -10,6 +10,8 @@ import { readFile } from "node:fs/promises";
 import { world, fictionalView, E, BOB, ZONE } from "./fixture.mjs";
 import { OCCURRENCE_REASONS, DUTIES_REASON_WORDS, NEVER_SAID } from "../../../src/duties/index.mjs";
 import { OCCURRENCE_REASONS as VOCAB_REASONS } from "../../../src/duties/vocab.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { reasonText } from "../../../src/civil-time/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -30,7 +32,7 @@ function plain(says, what) {
 }
 function undetermined(o, code, what) {
   assert.equal(o.state, "undetermined", `${what}: ${o.state} (${o.why})`);
-  assert.ok(typeof o.why === "string" && o.why.length > 10, `${what}: why kept`);
+  assert.ok(reasonText(o.why).length > 10, `${what}: why kept`);
   assert.deepEqual(Object.keys(o.reason).sort(), ["code", "says"], what);
   assert.equal(o.reason.code, code, `${what}: ${o.why}`);
   assert.equal(o.reason.says, DUTIES_REASON_WORDS[`duty.reason.${code}`], `${what}: read by key`);
@@ -98,7 +100,7 @@ test("R33 due_between_days: the possibly-overdue band between candidate days, un
   const w = world();
   const id = w.declare({ trigger: { kind: "date", date: "2026-01-31" }, time: { basis: "rule", rule: "monthly_report", applies_to: "claim" } }).duty_id;
   const o = one(w, id, "2026-03-01T16:00:00Z");
-  assert.match(o.why, /^possibly overdue: undetermined, because/, "why unchanged");
+  assert.equal(o.why.key, "civil-time.rules.possibly_overdue_day", "why unchanged");
   undetermined(o, "due_between_days", "unmatched, between the candidates");
   const ev = w.event({ value: day("2026-03-01"), concerns: [E.group] });
   w.duties.matchEvent({ dutyId: id, occurrenceKey: o.key, eventId: ev, reason: "the report", by: BOB });
@@ -137,11 +139,11 @@ test("R33 control: met, met_late, discharged, pending and overdue answer reason 
   match(late, { eventId: ev("2026-02-20") });
   match(dis, { exception: 0 });
   const want = {
-    met: [met, AS_OF, "the matching event falls on or before the due date"],
-    met_late: [late, AS_OF, "the matching event falls after the due date"],
+    met: [met, AS_OF, localize("duties.why.matching_event_falls", "the matching event falls on or before the due date")],
+    met_late: [late, AS_OF, localize("duties.why.matching_event_falls_due", "the matching event falls after the due date")],
     discharged: [dis, AS_OF, null],
-    pending: [pend, "2026-02-11T12:00:00Z", "the due date has not passed and no matching event is held"],
-    overdue: [pend, AS_OF, "the due date has passed and no matching event is held, as known on the day asked"],
+    pending: [pend, "2026-02-11T12:00:00Z", localize("duties.why.due_date_passed", "the due date has not passed and no matching event is held")],
+    overdue: [pend, AS_OF, localize("duties.why.due_date_passed_matching", "the due date has passed and no matching event is held, as known on the day asked")],
   };
   for (const [state, [id, asOf, why]] of Object.entries(want)) {
     const o = one(w, id, asOf);

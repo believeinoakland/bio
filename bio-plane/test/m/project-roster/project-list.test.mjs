@@ -104,7 +104,7 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
     { id: "PROJ-Z", name: "Zeta", stage: null, owner: null },
   ]);
   for (const p of all.projects) {
-    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "name", "owner", "participation", "stage"], p.id);
+    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "mine", "name", "owner", "participation", "scope", "stage"], p.id);
     assert.equal(p.name, w.core.bundleInfo(p.id).title, `${p.id}: R34's title`);
   }
   /* no question count, no request, nothing of the project beyond its id, title, stage, opener (R27), members and
@@ -194,4 +194,41 @@ test("R34 (T50; N1118) each row's participation is the viewer's own state: joine
     assert.deepEqual(Object.values(mine(viewer)).filter((x) => x !== null), [], String(viewer));
   assert.equal(mine(V("second"))["PROJ-A"], null);
   assert.ok(!JSON.stringify(w.r.projectList({ viewer: V("cal") })).includes('"participation":"leaving"'), "another's state never shown");
+});
+
+test("R38 (T51; N1184, DEC-340) each row answers mine {in, owner}, the viewer's own, and scope (none, own, counsel_matter); an administrator's row for a discoverable project she has not joined is {in: false, owner: false}; no row names another member through mine", async () => {
+  const w = await world().group("ann", "bob", "cal");
+  w.owned("PROJ-A", "ann", ["bob"], ["cal"]);
+  w.owned("PROJ-B", "ann");
+  w.m.projectVisibilitySet({ projectId: "PROJ-B", setting: "discoverable", by: "ann", viewer: V("ann") });
+  w.owned("PROJ-C", "bob");
+  assert.equal(w.r.projectScopeSet({ projectId: "PROJ-C", scope: "counsel_matter", reason: "counsel", by: "bob", viewer: V("bob") }).ok, true);
+  const rows = (viewer) => Object.fromEntries(w.r.projectList({ viewer }).projects.map((p) => [p.id, { mine: p.mine, scope: p.scope }]));
+  /* she joined and owns: {in: true, owner: true}; joined, not an owner; a counsel matter reads counsel_matter */
+  assert.deepEqual(rows(V("ann")), {
+    "PROJ-A": { mine: { in: true, owner: true }, scope: "none" },
+    "PROJ-B": { mine: { in: true, owner: true }, scope: "none" },
+  });
+  assert.deepEqual(rows(V("bob")), {
+    "PROJ-A": { mine: { in: true, owner: false }, scope: "none" },
+    "PROJ-C": { mine: { in: true, owner: true }, scope: "counsel_matter" },
+  });
+  /* invited is not joined */
+  assert.deepEqual(rows(V("cal")), { "PROJ-A": { mine: { in: false, owner: false }, scope: "none" } });
+  /* an administrator sees the discoverable one she has not joined; the founder likewise */
+  for (const viewer of [V("second"), "admin"])
+    assert.deepEqual(rows(viewer), { "PROJ-B": { mine: { in: false, owner: false }, scope: "none" } }, String(viewer));
+  /* a machine credential is no participant of any */
+  for (const p of w.r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}ai` }).projects)
+    assert.deepEqual([p.mine, typeof p.scope], [{ in: false, owner: false }, "string"], p.id);
+  /* scope follows the record: removing it reads none */
+  w.r.projectScopeSet({ projectId: "PROJ-C", scope: "none", reason: "done", by: "bob", viewer: V("bob") });
+  assert.equal(rows(V("bob"))["PROJ-C"].scope, "none");
+  /* control: another member's participation is never named through mine (ann's view holds only booleans) */
+  for (const p of w.r.projectList({ viewer: V("ann") }).projects)
+    assert.deepEqual(Object.keys(p.mine).sort(), ["in", "owner"], p.id);
+  assert.ok(!JSON.stringify(w.r.projectList({ viewer: V("cal") }).projects.map((p) => p.mine)).includes("bob"));
+  /* order and paging are R26's, R36's */
+  const p1 = w.r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}ai`, limit: 2 });
+  assert.deepEqual([p1.truncated, p1.projects.map((p) => p.id), p1.projects.every((p) => p.mine && p.scope)], [true, ["PROJ-A", "PROJ-B"], true]);
 });

@@ -6,9 +6,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, STAMP, sha, projMd, NOW } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, CITE_EXTENT_CHECKS, foundExtentBag } from "../../../src/citation/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 const VERA = { viewer: V("vera"), owner: "v", author: "member:vera", identity: V("vera") };
+/* The trigger line a passage found by search is logged with, read through the list (R14), for the document and capture named. */
+const foundTrigger = (cap) => localize("citation.index.trigger_a_part_found_in_capture",
+  "Trigger: a part of {doc} found by search in capture {capture}", { doc: "INFO-2026-0001", capture: cap });
 
 const carries = (r, family, code) => {
   assert.equal(r.ok, false, JSON.stringify(r).slice(0, 300));
@@ -208,13 +212,13 @@ test("R3: with found the Session Log names the match's document and says the par
     "gradesFilled", "gradesUndetermined", "handle", "legs", "moved", "ok", "project", "question", "role", "rowVersion", "severed", "weight"].sort());
   assert.equal(w.fm(q).last_updated, STAMP);
   assert.match(w.md(q), new RegExp(`## Session Log\\n\\n### Session ${STAMP} \\| Rested this question on 1 record \\(supports\\) \\| member:ann\\n`
-    + `Trigger: a part of INFO-2026-0001 found by search in capture ${cap}; for question INQ-2026-0002\\n`
+    + `${foundTrigger(cap)}; for question INQ-2026-0002\\n`
     + `Changes: basis legs added for INFO-2026-0001, each with role supports\\. Grades: 0 filled from the record's own `
     + `resolutions to this question's subject; 1 left undetermined and stated\\. Note: the line\\.\\n\\n## Review Notes`));
   /* Without a question the entry names none; on a case, a selection with a question names it after the selection. */
   const q2 = w.inquiry("INQ-2026-0005");
   w.cit.cite({ project: q2, found: match, ...ANN, role: "supports" });
-  assert.match(w.md(q2), new RegExp(`\\nTrigger: a part of INFO-2026-0001 found by search in capture ${cap}\\nChanges:`));
+  assert.match(w.md(q2), new RegExp(`\\n${foundTrigger(cap)}\\nChanges:`));
   const h = await w.select(["INFO-2026-0002"]);
   w.cit.cite({ project: p, handle: h, ...ANN, question: "INQ-2026-0001" });
   assert.match(w.md(p), new RegExp(`\\nTrigger: selection ${h}; for question INQ-2026-0001\\nChanges: cites edges added to INFO-2026-0002\\.\\n`));
@@ -233,8 +237,7 @@ test("R12, R13: every member-facing string calls the group's own Civicsmith \"yo
   const h = await w.select(["INFO-2026-0001"]);
   const r = bare.cite({ project: q, handle: h, ...ANN, role: "supports" });
   assert.equal(r.reason, "INQUIRY_UNAVAILABLE");
-  assert.equal(r.detail, "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                       + "registry, and your team's Civicsmith was created without them, so nothing was written.");
+  assert.equal(r.detail, localize("citation.index.citing_onto_a_question_needs", "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your team's Civicsmith was created without them, so nothing was written."));
   assert.equal(bare.cite({ project: q, found: match, ...ANN, role: "supports" }).reason, "INQUIRY_UNAVAILABLE");
   /* No member-facing string names the Civicsmith any other way: every row's translation, and the detail of every refusal
      and answer the three acts give, new and old. */

@@ -23,6 +23,7 @@
  * "XX XX 21") is kept as written with `date: null` and why, never completed. A field not read is
  * absent and named in `missing`. Whether this copy is in force is not this reader's question. */
 import { readerView, vocabulary, vocabRegex } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 export const HEADER_FIELDS = Object.freeze(["type", "number", "title", "effective", "supersedes", "reference",
                                             "coordinator", "review_due", "revision_cycle"]);
@@ -224,7 +225,7 @@ export function readHeader(ctx, raw, locate = () => null) {
   const series = policySeries(ctx);
   const labels = headerLabels(ctx);
   if (!series.length && !labels.length)
-    return { header: null, why: "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read" };
+    return { header: null, why: localize("doctypes.policy-header.no_series_or_labels", "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read") };
   const all = anchors(raw, series, labels);
   const first = all[0] || null;
   let best = readAt(raw, labels, first, locate);
@@ -250,7 +251,7 @@ function readAt(raw, labels, a, locate) {
   })();
   const after = a ? (a.number ? a.number.end : a.end) : firstLabel;
   if (after === null || after === undefined)
-    return { header: null, why: "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it" };
+    return { header: null, why: localize("doctypes.policy-header.no_block", "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it") };
   let end = raw.length, endLine = lines.length;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
@@ -289,7 +290,7 @@ function readAt(raw, labels, a, locate) {
       const beside = field(raw, s.end, vEnd, locate);
       if (beside && !readDate(beside.text) && isPlaceholder(beside.text)) {
         header[s.field] = { ...beside, date: null,
-          why: "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed" };
+          why: localize("doctypes.policy-header.placeholder_date", "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed") };
         continue;
       }
       /* Beside its label; else, as a boxed layout prints it, below labels that are not dates, up to the next date
@@ -306,8 +307,8 @@ function readAt(raw, labels, a, locate) {
         header[s.field] = { text: d.text, date: d.date, start, end: start + d.text.length, source: locate(start) || null };
         continue;
       }
-      why[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header"
-        : "its label is printed with nothing beside it";
+      why[s.field] = beside ? localize("doctypes.policy-header.no_date_beside", "its label is printed with no calendar date beside it or below it in the header")
+        : localize("doctypes.policy-header.nothing_beside", "its label is printed with nothing beside it");
       continue;
     }
     /* A value printed beside its label ends at its line where the next line is set in capitals and the value is not:
@@ -322,7 +323,7 @@ function readAt(raw, labels, a, locate) {
       }
     }
     const f = field(raw, s.end, vEnd, locate);
-    if (f) header[s.field] = f; else why[s.field] = "its label is printed with nothing beside it";
+    if (f) header[s.field] = f; else why[s.field] = localize("doctypes.policy-header.nothing_beside", "its label is printed with nothing beside it");
   }
 
   /* The series and number: the anchor's, or a number label's value in the series' form. */
@@ -336,7 +337,7 @@ function readAt(raw, labels, a, locate) {
   if (header.number && a) {
     const m = a.series.numberOnly ? a.series.numberOnly.exec(header.number.text.trim()) : null;
     if (!m) {
-      why.number = `"${header.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
+      why.number = localize("doctypes.policy-header.number_form", "\"{number}\" is printed as the number, and {series} does not read a number in that form", { number: String(header.number.text), series: String(a.series.labelText) });
       delete header.number;
     } else header.number.normal = normalOf(a.series.normal, m);
   }
@@ -395,7 +396,7 @@ function readAt(raw, labels, a, locate) {
   for (const f of BELOW_TARGET) if (header[f]) header[f].measured = "below_target";
   const missing = HEADER_FIELDS.filter((f) => !header[f]);
   for (const f of missing) if (!why[f]) why[f] = f === "type"
-    ? "no line of this text opens with a policy series the active jurisdiction profiles name"
-    : "no label the active jurisdiction profiles give for this field is printed in the header block";
+    ? localize("doctypes.policy-header.no_series_type", "no line of this text opens with a policy series the active jurisdiction profiles name")
+    : localize("doctypes.policy-header.no_label", "no label the active jurisdiction profiles give for this field is printed in the header block");
   return { header: { ...header, missing, missing_why: why, start: from, end }, why: null };
 }

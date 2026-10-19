@@ -1,5 +1,6 @@
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R9 (was ai-runs R44; K102, K182 (3), N156) and R14 (K660 (5)): THE ONE DEPLOYMENT ORDER, held here because `skills`
  * (whose `skilldoctrine.mjs` wrote it first, SK-4) and `agent-worker` (whose `MODES` is pinned to it) both come after
@@ -80,9 +81,7 @@ export const DEPLOYMENT_SEQUENCE = {
      the one both surfaces carry. (`skillsequencing.test.mjs`, deleted in T20,
      looked both up; no module test reads the documents today.) */
   also_named_in:
-    "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session "
-    + "run with §2's objective against an existing conclusion IS the CHECK role; deploy that mode "
-    + "first. No second architecture.",
+    localize("run-rules.deployment.dec_55s_enacted_check_first", "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with §2's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture."),
   also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
 
   /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
@@ -135,12 +134,7 @@ export const DEPLOYMENT_SEQUENCE = {
   /* REQUIRED, AND MEASURED: each clause was measured against the landed sources
      when written, rather than believed. */
   does_not_reach:
-    "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a "
-    + "build with the flag already flipped, and no instrument reads a release note. The plane's "
-    + "open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; "
-    + "what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: "
-    + "true` is an edit, and the REVIEW of that edit — not this text and not that flag — is what "
-    + "holds CHECK's live verification in front of it.",
+    localize("run-rules.deployment.a_deployment_the_gate_refuses", "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit — not this text and not that flag — is what holds CHECK's live verification in front of it."),
 
   /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
   holds_no_gate:
@@ -298,8 +292,7 @@ export const ENQUIRE_MODE = Object.freeze({
   interactive: true,
   writes_run_row: false,
   writes: "nothing: its proposals are stored by investigation R12, R20 and steps R24, each by its own act",
-  why: "it interviews one member about their matter and proposes questions and steps inside that member's act, and is "
-    + "no run: it writes no run row and keeps nothing itself",
+  why: word("run-rules.why.interviews_member_matter"),
   deploys_apart: true,
   deployed: false,
   when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run "

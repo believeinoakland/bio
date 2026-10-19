@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET } from "./fixture.mjs";
 import { RUNGS } from "../../../src/sources/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 
@@ -19,7 +20,7 @@ test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret)
   const k = await w.pulled({ secret: SECRET });
   const r1 = w.s.rungOf({ source: k.sourceId, viewer: V("carol") });
   assert.equal(r1.rung, "same_knocker");
-  assert.deepEqual(r1.knocker, { pseudonym: k.row.pseudonym, how: "the same knocker secret was presented" });
+  assert.deepEqual(r1.knocker, { pseudonym: k.row.pseudonym, how: word("doorbell.continuity") });
   const l = await w.s.linkClaim({ source: k.sourceId, to: bare.sourceId, evidence: "presented", by: "bob", knockerSecret: SECRET });
   const r1b = w.s.rungOf({ source: bare.sourceId, viewer: V("carol") });
   assert.equal(r1b.rung, "same_knocker", "a same_secret link proves the other side too");
@@ -47,7 +48,7 @@ test("R9 rungOf answers the ladder: unknown; same_knocker (proved by the secret)
   const n = w.disclose(k.sourceId, { recorded: false, revealed: { kind: "name" }, sight: undefined });
   const r3 = w.s.rungOf({ source: k.sourceId, viewer: V("carol") });
   assert.equal(r3.rung, "known_to_group");
-  assert.deepEqual(r3.basis.map((b) => [b.entry, b.note]), [[n.entry, "known to the team, not recorded"]]);
+  assert.deepEqual(r3.basis.map((b) => [b.entry, b.note]), [[n.entry, word("sources.known_group_recorded")]]);
   /* publicly_known: a name known to the public */
   const p = w.disclose(k.sourceId, { knownTo: "public", evidence: { cite: "a filing" }, sight: ["alice"] });
   const r4 = w.s.rungOf({ source: k.sourceId, viewer: V("alice") });

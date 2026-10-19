@@ -28,6 +28,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { CALIBRATION_CHECKS } from "./checks.mjs";
 import { CALIBRATION_SCHEMA, CALIBRATION_TABLES } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence, DRIFT, PROBE_REQUIRED,
          CALIBRATION_CADENCE_MS } from "../calibration.mjs";
@@ -41,6 +42,11 @@ export const CALIBRATION_LIMIT_MAX = 5000;
 
 const safeJson = (s) => { try { return JSON.parse(s); } catch { return null; } };
 const nonEmpty = (v) => typeof v === "string" && v.trim().length > 0;
+
+/** R8: the state of a subject's probe that its `why` names: never probed, or probed at its own cadence. */
+export const subjectProbeState = (lastProbeMs) => lastProbeMs == null
+  ? localize("calibration.index.nothing_has_ever_probed", "Nothing has ever probed it, so a probe is due immediately")
+  : localize("calibration.index.next_probe_at_cadence", "The next probe is due at its own cadence");
 
 class Calibration {
   #sql; #record; #order; #now;
@@ -205,10 +211,7 @@ class Calibration {
        machine minting a grade just as much as an upgrade is. */
     if (p.regrade !== undefined || p.apply_to_transcriptions !== undefined)
       return this.#refuse("CAL_CANNOT_REGRADE",
-        `this call asks the new measurement to re-grade the transcriptions already made by ${String(p.engine)}. `
-        + `A calibration records what an engine scores; it never moves a grade, in EITHER direction — a grade `
-        + `rises or falls only by an authored act (DEC-4, no machine mints a grade). Record the measurement, then `
-        + `read op=calibrationdrift for exactly which transcriptions a member should look at`);
+        localize("calibration.index.this_call_asks_the_new", "this call asks the new measurement to re-grade the transcriptions already made by {String}. A calibration records what an engine scores; it never moves a grade, in EITHER direction — a grade rises or falls only by an authored act (DEC-4, no machine mints a grade). Record the measurement, then read op=calibrationdrift for exactly which transcriptions a member should look at", { String: String(String(p.engine)) }));
     /* END DEC-49 REGION is-calibration-regrade */
     const bad = checkCalibration(cal);
     if (bad) return { ok: false, reason: bad.code, ...bad };
@@ -264,10 +267,7 @@ class Calibration {
                obligations,
                obligations_truncated: truncated,
                regraded: 0,
-               why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} ${cal.version} on `
-                  + `${cal.at}: fidelity ${cal.cap ?? "undetermined"}. ${d.why}`
-                  + (obligations ? `` : `. No module derives obligations from calibrations in your team's Civicsmith, so `
-                                      + `none are named here (null, not none found)`) };
+               why: word("calibration.why.records_probe_measured", { id: String(id), probe_id: String(cal.probe_id), engine: String(cal.engine), version: String(cal.version), at: String(cal.at), cap: String(cal.cap ?? "undetermined"), why: String(d.why), value: obligations ? "" : word("calibration.why.module_derives_obligations") }) };
     });
   }
 
@@ -298,9 +298,8 @@ class Calibration {
                note: r.note ?? null })),
              subjects, subjects_truncated: subj.truncated,
              why: subjects.length
-               ? `your team's Civicsmith probes ${subjects.length} engine(s) — ` + cadenceSentence()
-               : `no engine is registered for calibration in your team's Civicsmith, so no probe is scheduled `
-                 + `and this consumer holds no alarm at all` };
+               ? word("calibration.why.group_civicsmith_probes", { subjects: String(subjects.length), value: String(cadenceSentence()) })
+               : word("calibration.why.engine_registered_calibration") };
   }
 
   /* ---------------------------------------------------------------- R7: the announcement watch */
@@ -342,11 +341,7 @@ class Calibration {
              next_probe: next,
              armed: !!subject,
              changed_grades: 0, stood_in_for_probe: false,
-             why: `recorded that ${sig.source} announced something about ${sig.engine}. An announcement may only `
-                + `SHORTEN the interval to the next probe: it does not stand in for one and it changes no grade, `
-                + `because a vendor's documentation is a claim and a grade here rests on a measurement`
-                + (subject ? `` : `. No calibration subject is registered for this engine, so there is no probe `
-                                + `for it to accelerate — the announcement is kept as a fact and does nothing else`) };
+             why: word("calibration.why.recorded_announced_something", { source: String(sig.source), engine: String(sig.engine), value: subject ? "" : word("calibration.why.calibration_subject_registered") }) };
   }
 
   /* ---------------------------------------------------------------- R8: registering an engine */
@@ -365,11 +360,10 @@ class Calibration {
        written for a MEASUREMENT: untrue of an act that measures nothing and asks no version (one code, one
        condition, D-484). */
     if (!engine)
-      return this.#refuse("CAL_SUBJECT_UNNAMED", `registering a calibration subject names the engine to be probed`);
+      return this.#refuse("CAL_SUBJECT_UNNAMED", localize("calibration.index.registering_names_the_engine", "registering a calibration subject names the engine to be probed"));
     if (!probeId)
       return this.#refuse("CAL_SUBJECT_NO_PROBE",
-        `registering a calibration subject names the PROBE that will measure it. A subject with no probe is a `
-        + `promise to measure something by some means nobody stated`);
+        localize("calibration.index.registering_names_the_probe", "registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated"));
     /* END DEC-49 REGION is-calibration-subject */
     const enabled = p.enabled === false ? 0 : 1;
     this.#sql.exec(
@@ -388,10 +382,7 @@ class Calibration {
              cadence_ms: CALIBRATION_CADENCE_MS, cadence: cadenceSentence(),
              next_probe: next,
              measured: false,
-             why: `${engine} is registered for calibration in your team's Civicsmith. Registering is not measuring: no `
-                + `fidelity is claimed for it and nothing rests on it until a probe runs. ${s.last_probe_ms == null
-                    ? `Nothing has ever probed it, so a probe is due immediately`
-                    : `The next probe is due at its own cadence`} — ${cadenceSentence()}` };
+             why: word("calibration.why.registered_calibration_group", { engine: String(engine), last_probe_ms: subjectProbeState(s.last_probe_ms), cadence_sentence: String(cadenceSentence()) }) };
   }
 
   /* ---------------------------------------------------------------- R9: for the scheduler */
@@ -433,10 +424,8 @@ class Calibration {
     }
     return { due: due.length, subjects: due, truncated, probes_run: 0, calibrations_written: 0,
              why: due.length
-               ? `${due.length} engine(s) are due a calibration probe. Your team's Civicsmith runs no derivation `
-                 + `engine of its own, so the probe is OWED and not RUN — and the record says owed rather than quietly treating `
-                 + `the last measurement as current`
-               : `no engine is due a probe` };
+               ? word("calibration.why.engine_due_calibration", { due: String(due.length) })
+               : word("calibration.why.engine_due_probe") };
   }
 
   /* ---------------------------------------------------------------- R10, R11: for extraction */

@@ -174,7 +174,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   const pdf = manifests.get("pdf-worker");
   const cross = (pdf?.inputs || []).filter((i) => i.path.startsWith("../bio-plane/")).map((i) => i.path).sort();
   t("pdf-worker's build reaches into the PLANE's source, and the manifest hashes those files too",
-    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs"]);
+    cross, ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/setup-words/index.mjs", "../bio-plane/src/setup-words/rows.mjs", "../bio-plane/src/subresources.mjs"]); // setup-words since the words pass (K3949): pdfstructure and subresources read their sentences by key
   const agent = manifests.get("agent-worker");
   /* CORRECTED 2026-09-12 BY FL-6, never exempted: the roster was three modules
      when FL-9 pinned it. FL-6 added `src/cascade.mjs` AND the member's first

@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, stepsStub, OPEN, INQ, ORG, ANN, T0, TEST_SET } from "./world.mjs";
 import { AiRuns } from "../../../src/ai-runs/index.mjs";
 import { RUN_BOUNDS, CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CAP = "d".repeat(64);
 const look = (state, extra = {}) => ({ level: "content", subject: CAP, state, detail: state, ...extra });
@@ -117,7 +118,7 @@ test("R74 (B4 (5); J5 (8), (9), (11)): openMany, a member's batch — no member'
   assert.equal(w.dump(), before, "nothing written");
   const r = await batch();
   assert.equal(r.ok, true);
-  assert.deepEqual(r.estimate, { ok: true, owner: "member:ann", use: "run", mode: "check", count: 4, estimate: "not known yet" },
+  assert.deepEqual(r.estimate, { ok: true, owner: "member:ann", use: "run", mode: "check", count: 4, estimate: word("question-explorer.known") },
     "ai-use R10, asked once for the batch");
   assert.deepEqual(r.runs.map((x) => [x.step, x.run ?? null, x.refusal ? x.refusal.code : null]),
     [["STP-A", "RUN-STP-A-1", null], ["STP-H", null, "AI_RUN_STEP_UNKNOWN"], ["STP-G", null, "AI_RUN_NO_CONTEXT"],

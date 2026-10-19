@@ -4,12 +4,14 @@
  * disclosures", held here and nowhere else (K174). Each code is minted at one site, the DEC-49 region its `where`
  * names. No translation names a place (R14, `layers.md` rule 1), and none carries a value (R13). */
 
+import { word, localize } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/sources/checks.mjs ${fn} > ${region}`;
 
 export const SOURCES_CHECKS = Object.freeze({
   NO_SUCH_SOURCE: Object.freeze({
     check: 'C-121.1', where: at("noSuchSource", "is-source-held"),
-    translation: 'No source you can see answers to that id. Nothing was written.',
+    translation: word('refusal.NO_SUCH_SOURCE'),
   }),
   BAD_DISCLOSURE: Object.freeze({
     check: 'C-121.2', where: at("badDisclosure", "is-disclosure-well-formed"),
@@ -19,36 +21,32 @@ export const SOURCES_CHECKS = Object.freeze({
   }),
   NO_EVIDENCE: Object.freeze({
     check: 'C-121.3', where: at("noEvidence", "is-evidence-named"),
-    translation: 'What is recorded about a source is recorded with its evidence. Name the evidence. Nothing was written.',
+    translation: word('refusal.NO_EVIDENCE'),
   }),
   NO_SIGHT_LIST: Object.freeze({
     check: 'C-121.4', where: at("noSightList", "is-sight-listed"),
-    translation: 'A detail about a source that is stored can be read only by the members listed for it, and none is '
-      + 'listed. List at least one member, or record that the detail is known without storing it. Nothing was written.',
+    translation: word("refusal.NO_SIGHT_LIST"),
   }),
   CONSENT_NOT_STANDING: Object.freeze({
     check: 'C-121.5', where: at("consentNotStanding", "is-consent-standing"),
-    translation: 'That consent cannot be recorded: the detail it names is not in this source\'s history, or consent to '
-      + 'a wider audience already stands. Nothing was written.',
+    translation: word("refusal.CONSENT_NOT_STANDING"),
   }),
   SECRET_NOT_RECOGNISED: Object.freeze({
     check: 'C-121.6', where: at("secretNotRecognised", "is-secret-recognised"),
-    translation: 'That secret was not recognised, so nothing was recorded. Check it and try again.',
+    translation: localize('sources.checks.that_secret_was_not_recognised', 'That secret was not recognised, so nothing was recorded. Check it and try again.'),
   }),
   /* R16 (T33-22; K1492 (3), K1449): marking a member-keyed result. */
   MACHINE_CANNOT_MARK: Object.freeze({
     check: 'C-121.7', where: at("machineCannotMark", "is-member-marking"),
-    translation: 'Only a member, acting for themselves, can mark a result from a paid or account-gated service; no '
-      + 'machine, scheduled task or unattended process can. Nothing was written.',
+    translation: localize("sources.checks.only_a_member_acting_for", "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written."),
   }),
   NOT_YOUR_CAPTURE: Object.freeze({
     check: 'C-121.8', where: at("notYourCapture", "is-own-capture"),
-    translation: 'Only the member who captured a result can mark it as from their own account on a paid service. '
-      + 'Nothing was written.',
+    translation: word("refusal.NOT_YOUR_CAPTURE"),
   }),
   NO_SUCH_CAPTURE: Object.freeze({
     check: 'C-121.9', where: at("noSuchCapture", "is-capture-held"),
-    translation: 'No capture the record holds answers to that digest. Nothing was written.',
+    translation: word('refusal.NO_SUCH_CAPTURE'),
   }),
   NO_SERVICE: Object.freeze({
     check: 'C-121.10', where: at("noService", "is-service-named"),

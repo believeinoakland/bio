@@ -5,6 +5,7 @@
 import { compare } from '../civil-time/index.mjs';
 import { BASIS_GRADES } from '../record-grammar/index.mjs';
 import { DECLARED_LABEL, HUNCH_LABEL, LOWEST_GRADE } from './shape.mjs';
+import { word } from '../setup-words/index.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const rank = (g) => BASIS_GRADES.indexOf(g);
@@ -17,16 +18,16 @@ const pathOk = (hops) => Array.isArray(hops) && hops.length > 0 && hops.every(is
  * @param {unknown} path
  */
 export function chainGrade(path) {
-  if (!pathOk(path)) return { refused: 'PATH_EMPTY', why: 'a path is a non-empty list of connections' };
+  if (!pathOk(path)) return { refused: 'PATH_EMPTY', why: word('connection-grammar.why.path_non_empty') };
   let assertion = BASIS_GRADES[0], end = BASIS_GRADES[0];
   for (const hop of /** @type {any[]} */ (path)) {
     if (hop.label === HUNCH_LABEL) {
-      return { assertion: null, end: null, why: `hop ${hop.id} is a hunch, which carries no grade, so the chain has none` };
+      return { assertion: null, end: null, why: word('connection-grammar.why.hop_hunch_carries', { id: String(hop.id) }) };
     }
     if (hop.label === DECLARED_LABEL) { assertion = end = LOWEST_GRADE; continue; }
     const g = hop.grade;
     if (!isObj(g) || rank(g.assertion) < 0 || !Array.isArray(g.ends) || g.ends.length !== 2 || g.ends.some((x) => rank(x) < 0)) {
-      return { refused: 'GRADE_INVALID', why: `hop ${hop.id} carries no grade in the letters ${BASIS_GRADES.join(' ')}` };
+      return { refused: 'GRADE_INVALID', why: word('connection-grammar.why.hop_carries_grade', { id: String(hop.id), basis_grades: String(BASIS_GRADES.join(' ')) }) };
     }
     assertion = weaker(assertion, g.assertion);
     end = weaker(end, weaker(g.ends[0], g.ends[1]));
@@ -40,7 +41,7 @@ export function chainGrade(path) {
  * @param {unknown} path
  */
 export function chainLabel(path) {
-  if (!pathOk(path)) return { refused: 'PATH_EMPTY', why: 'a path is a non-empty list of connections' };
+  if (!pathOk(path)) return { refused: 'PATH_EMPTY', why: word('connection-grammar.why.path_non_empty') };
   const hops = /** @type {any[]} */ (path).filter((h) => h.label === DECLARED_LABEL || h.label === HUNCH_LABEL).map((h) => h.id);
   return hops.length ? { label: 'lead', hops, basis_for_finding: false } : { label: 'evidenced' };
 }
@@ -78,7 +79,7 @@ export function orderPaths(paths, opts = {}) {
     return { refused: 'PATHS_INVALID', why: 'paths is a list, each a non-empty list of connections or {hops, quantities}' };
   }
   const by = opts?.by;
-  if (by !== undefined && (typeof by !== 'string' || by === '')) return { refused: 'BY_INVALID', why: 'by names a quantity carried on the paths' };
+  if (by !== undefined && (typeof by !== 'string' || by === '')) return { refused: 'BY_INVALID', why: word('connection-grammar.why.names_quantity_carried') };
   const rows = paths.map((p) => {
     const hops = /** @type {any[]} */ (hopsOf(p));
     const q = by !== undefined && !Array.isArray(p) && isObj(p.quantities) ? p.quantities[by] : undefined;

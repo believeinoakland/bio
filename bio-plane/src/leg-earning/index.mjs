@@ -33,6 +33,7 @@ import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs"
 import { standardsOf, STANDARDS_CHECKS } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { LEG_EARNING_TABLES, migrateLegEarning } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { LEG_EARNING_SCHEMA, LEG_EARNING_TABLES, migrateLegEarning } from "./schema.mjs";
 
@@ -60,15 +61,15 @@ export const AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "
  *  `route` (its R26 `unrecorded`, R51 `doorbell`, R63 `upload`), in the order they are named. A received route this
  *  table does not know is named by its own spelling, never as the doorbell. */
 export const AUTHORED_ROUTE_WORDS = Object.freeze({
-  [DOORBELL_VIA]: "received through the doorbell",
-  [UPLOAD_VIA]: "uploaded by a member",
-  unrecorded: "no fetch route recorded",
+  [DOORBELL_VIA]: word("leg-earning.freeze.received_through_doorbell"),
+  [UPLOAD_VIA]: word("leg-earning.freeze.uploaded_member"),
+  unrecorded: word("leg-earning.unrecorded"),
 });
 const authoredRouteWords = (vias) => {
   const order = Object.keys(AUTHORED_ROUTE_WORDS);
   const rank = (v) => { const i = order.indexOf(v); return i === -1 ? order.length : i; };
   return [...new Set(vias)].sort((a, b) => rank(a) - rank(b) || String(a).localeCompare(String(b)))
-    .map((v) => AUTHORED_ROUTE_WORDS[v] ?? `received by route ${v}`).join("; ");
+    .map((v) => AUTHORED_ROUTE_WORDS[v] ?? word("leg-earning.map.received_route", { v: String(v) })).join("; ");
 };
 
 /** R8, R9: the viewer this module reads a held standard and a duty's occurrences as: a machine credential, which sees
@@ -96,14 +97,11 @@ export function legCapped(stated, earned, targetId) {
   if (earned.grade == null)
     return { grade: null,
              why: earned.why
-               ?? `what this document's capture can support is undetermined, so this leg claims nothing `
-                + `on the capture axis` };
+               ?? word("leg-earning.why.document_capture_support") };
   if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;
   /* The letters are interpolated and never typed: the grade vocabulary is their one home. */
   return { grade: earned.grade,
-           why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg `
-              + `is read at ${earned.grade} here and not at the ${stated} it carries. `
-              + `${earned.why ?? ""}`.trimEnd() };
+           why: word("leg-earning.why.record_support_leg", { grade: String(earned.grade), target_id: String(targetId), stated: String(stated), why: String(`${earned.why ?? ""}`.trimEnd()) }) };
 }
 
 /* ------------------------------------------------------------------ the module */
@@ -154,7 +152,7 @@ export class LegEarning {
    *  `target_type` is derived here from the target's prefix, never taken from a caller. Asked inside the caller's
    *  transaction (the promotion's); answers the number of legs written. */
   writeBasis(bundleId, legs = []) {
-    if (typeof bundleId !== "string" || !bundleId) return { ok: false, reason: "NO_ID", detail: "writeBasis requires a bundle id" };
+    if (typeof bundleId !== "string" || !bundleId) return { ok: false, reason: "NO_ID", detail: localize("leg-earning.index.write_basis_requires_bundle_id", "writeBasis requires a bundle id") };
     const list = Array.isArray(legs) ? legs : [];
     this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
     let written = 0;
@@ -335,15 +333,14 @@ export class LegEarning {
       `SELECT bundle_id, ord, target_id, target_type, content_id
          FROM inquiry_basis WHERE bundle_id=? AND ord=?`, bundleId, ord);
     if (!leg) return { ok: false, reason: "NO_LEG",
-                       detail: `no basis leg ${ord} on ${bundleId}` };
+                       detail: localize("leg-earning.index.no_basis_leg_ord_on", "no basis leg {ord} on {bundleId}", { ord: String(ord), bundleId: String(bundleId) }) };
     if (leg.content_id)
       return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
     /* R3 (N522): another group's finding is no document of this record: its grades are the edition's it names. */
     if (isImportedRef(leg.target_id))
       return { ok: true, content_id: null, minted: false, backfilled: false,
                null_case: "IMPORTED_TARGET",
-               why: `basis[${ord}] rests on ${leg.target_id}, another team's finding, graded as the edition this leg `
-                  + `names publishes it. This record holds no part of it, so it has no content row here` };
+               why: localize("leg-earning.index.basis_ord_rests_on_target", "basis[{ord}] rests on {target_id}, another team's finding, graded as the edition this leg names publishes it. This record holds no part of it, so it has no content row here", { ord: String(ord), target_id: String(leg.target_id) }) };
     /* REC-83: THE CASE IS NAMED, NOT ONLY DESCRIBED. IC-83's AMENDMENT 2 says
        the reads must state WHICH of the two legitimate nulls they met and never
        collapse them, and a reader that has to pattern-match an English sentence
@@ -353,17 +350,12 @@ export class LegEarning {
     if (leg.target_type !== "information")
       return { ok: true, content_id: null, minted: false, backfilled: false,
                null_case: "INQUIRY_TARGET",
-               why: `basis[${ord}] rests on ${leg.target_id}, which is an inquiry rather than a `
-                  + `document. An inquiry has no capture and therefore no part to point at — the `
-                  + `content axis ranges over documents (DEC-21), and this is undetermined and `
-                  + `stated rather than a document-extent row invented for it` };
+               why: localize("leg-earning.index.basis_ord_rests_on_target_2", "basis[{ord}] rests on {target_id}, which is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at — the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it", { ord: String(ord), target_id: String(leg.target_id) }) };
     const sha = this.content.captureFor(leg.target_id);
     if (!sha)
       return { ok: true, content_id: null, minted: false, backfilled: false,
                null_case: "NO_BYTES_HELD",
-               why: `this record holds no capture of ${leg.target_id}, so there are no bytes for a `
-                  + `content row to address. Absence here is a fact about what was captured and `
-                  + `never evidence about what the document says (CLAUDE.md's sparse rule)` };
+               why: localize("leg-earning.index.this_record_holds_no_capture", "this record holds no capture of {target_id}, so there are no bytes for a content row to address. Absence here is a fact about what was captured and never evidence about what the document says (CLAUDE.md's sparse rule)", { target_id: String(leg.target_id) }) };
     const out = this.content.mint({ bundleId: leg.target_id, captureSha: sha,
                                    extent: { kind: "document" },
                                    mintedBy: CONTENT_MINTED_BY_PLANE });
@@ -548,10 +540,7 @@ export class LegEarning {
         /* mode 'value': `resolutions` holds the grade ITSELF, so the leg must
            state this letter and no other. */
         e.mode = "value",
-        e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} — the `
-              + `strongest of the ${e.captures} capture(s) of that document the recogniser matched to this `
-              + `subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the `
-              + `document is.`;
+        e.why = localize("leg-earning.index.id_resolves_to_subjectentity_v1", "{id} resolves to {subjectEntity}{v1} at grade {grade} — the strongest of the {captures} capture(s) of that document the recogniser matched to this subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the document is.", { id: String(id), subjectEntity: String(subjectEntity), v1: String(ent ? ` (${ent.label})` : ""), grade: String(e.grade), captures: String(e.captures) });
     }
     /* THE CAPTURE RECORD IS BOTH PLACES A CAPTURE LANDS, and asking only one of
        them would earn nothing for half the corpus. `register` holds the captures
@@ -660,35 +649,24 @@ export class LegEarning {
            then rests on two testimonies, each at this letter. */
         (out.earned.testimony ||= {})[bundleId] = {
           mode: "value", grade: TESTIMONY_GRADE, authored: e.authored,
-          why: `${bundleId} is a member's own firsthand observation, recorded through op=testify: it is `
-             + `graded as testimony, ${TESTIMONY_GRADE}, and stands on the observing member's trust. Nothing `
-             + `raises it — another member agreeing with it is a co-signature, not a second observation.` };
+          why: localize("leg-earning.index.bundleid_is_a_members_own", "{bundleId} is a member's own firsthand observation, recorded through op=testify: it is graded as testimony, {TESTIMONY_GRADE}, and stands on the observing member's trust. Nothing raises it — another member agreeing with it is a co-signature, not a second observation.", { bundleId: String(bundleId), TESTIMONY_GRADE: String(TESTIMONY_GRADE) }) };
         out.earned.capture[bundleId] = {
           mode: "ceiling", grade: null, captures: 0, authored: e.authored,
           determined: false,
           undetermined_because: "CAPTURE_AXIS_AUTHORED",
           /* CORRECTED BY MK-2, never exempted: this read "this build does not
              yet carry that axis", which was true until the axis landed. */
-          empty_level: "testimony — this document is a member's own firsthand observation, graded on that "
-                     + `member's trust on the testimony axis at ${TESTIMONY_GRADE} `
-                     + "(MEMBER-KNOWLEDGE-DESIGN.md section 3); the capture axis does not apply to it",
-          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, `
-             + `recorded through op=testify, and nothing was read in from anywhere. The capture axis `
-             + `measures that act, so it earns no letter here — a ${EARNED_CAPTURE_CEILING} would be true of `
-             + `the bytes and would read as strength the observation does not have. A leg may state NO `
-             + `capture grade, which suspends the axis and names it; it may not state a letter. Its grade `
-             + `is testimony, ${TESTIMONY_GRADE}, on the testimony axis.` };
+          empty_level: localize("leg-earning.index.testimony_this_document_is_a", "testimony — this document is a member's own firsthand observation, graded on that member's trust on the testimony axis at {TESTIMONY_GRADE} (MEMBER-KNOWLEDGE-DESIGN.md section 3); the capture axis does not apply to it", { TESTIMONY_GRADE: String(TESTIMONY_GRADE) }),
+          why: localize("leg-earning.index.bundleid_is_a_members_authored", "{bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here — a {EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter. Its grade is testimony, {TESTIMONY_GRADE}, on the testimony axis.", { bundleId: String(bundleId), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), TESTIMONY_GRADE: String(TESTIMONY_GRADE) }) };
         continue;
       }
       if (!e.n) continue;
-      const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
+      const captureWord = word("leg-earning.capture_word", { bundle_id: String(bundleId), n: String(e.n) });
       /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
          immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
          checkEarnedLeg compares this leg against, so the sentence a member reads
          and the refusal that enforces it cannot say different things. */
-      const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
-                    + `needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not `
-                    + `claim (CAPTURE-FIDELITY.md).`;
+      const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
       /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
          fidelity to bound the bytes by and the answer is the one this record
          has given since REC-18, BYTE FOR BYTE. That identity is not caution: a
@@ -700,10 +678,7 @@ export class LegEarning {
          captures came by named in words (provenance's answered `route`), in `AUTHORED_ROUTE_WORDS`' order. */
       const asAuthored = !e.measured && e.authoredRoutes.length ? {
         stated_as: "authored", route_basis: [...e.authoredRoutes].sort(),
-        why: `${captureWord}, and none of them was fetched by a route that measures a capture grade (`
-           + `${authoredRouteWords(e.authoredVias)}), so a leg on `
-           + `it keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored `
-           + `and never as measured.` } : null;
+        why: word("leg-earning.why.fetched_route_measures", { captures: String(captureWord), routes: String(authoredRouteWords(e.authoredVias)), ceiling: String(EARNED_CAPTURE_CEILING) }) } : null;
       if (!e.transcribed && e.bound === EARNED_CAPTURE_CEILING) {
         out.earned.capture[bundleId] = {
           /* mode 'ceiling', and the difference from the connection axis is not a
@@ -717,9 +692,7 @@ export class LegEarning {
              route and stays theirs. */
           mode: "ceiling",
           grade: EARNED_CAPTURE_CEILING, captures: e.n,
-          why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as your team's Civicsmith fetched them, hashed at `
-             + `receipt.`,
+          why: word("leg-earning.why.strongest_capture_grade", { capture_word: String(captureWord), earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }),
           ceiling, ...(asAuthored || {}) };
         continue;
       }
@@ -738,10 +711,8 @@ export class LegEarning {
           mode: "ceiling", grade: null, captures: e.n,
           determined: false,
           undetermined_because: "CAPTURE_GRADE_VIA_UNRULED",
-          empty_level: "capture route — the bytes of this document were served by a route no ruling grades",
-          why: `${captureWord}, but every one of them was served by a route no ruling grades, so what a leg `
-             + `resting on it may claim about how it was captured is undetermined. A leg may state NO capture `
-             + `grade, which suspends the axis and names it; it may not state a letter this record cannot support.`,
+          empty_level: localize("leg-earning.index.capture_route_no_ruling", "capture route — the bytes of this document were served by a route no ruling grades"),
+          why: word("leg-earning.why.served_route_ruling", { capture_word: String(captureWord) }),
           ceiling };
         continue;
       }
@@ -750,16 +721,8 @@ export class LegEarning {
           mode: "ceiling", grade: null, captures: e.n,
           determined: false,
           undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-          empty_level: "transcription fidelity — this document's text was derived by a machine and no "
-                     + "step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, "
-                     + "per version)",
-          why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the `
-             + `provenance of this document's text carries a measured fidelity, so what a leg resting on `
-             + `that text may claim about how it was captured is undetermined. That is a statement, not a `
-             + `permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, `
-             + `so an unmeasured derivation bounds it to nothing rather than to ${EARNED_CAPTURE_CEILING}. `
-             + `A leg may state NO capture grade, which suspends the axis and names it; it may not state a `
-             + `letter this record cannot support.`,
+          empty_level: localize("leg-earning.index.transcription_fidelity_unmeasured", "transcription fidelity — this document's text was derived by a machine and no step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, per version)"),
+          why: localize("leg-earning.index.captureword_but_every_transcription_of", "{captureWord}, but every transcription of its text is UNMEASURED: no step in the provenance of this document's text carries a measured fidelity, so what a leg resting on that text may claim about how it was captured is undetermined. That is a statement, not a permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, so an unmeasured derivation bounds it to nothing rather than to {EARNED_CAPTURE_CEILING}. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter this record cannot support.", { captureWord: String(captureWord), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING) }),
           ceiling };
         continue;
       }
@@ -774,9 +737,7 @@ export class LegEarning {
         out.earned.capture[bundleId] = {
           mode: "ceiling",
           grade: EARNED_CAPTURE_CEILING, captures: e.n,
-          why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as your team's Civicsmith fetched them, hashed at `
-             + `receipt.`,
+          why: word("leg-earning.why.strongest_capture_grade", { capture_word: String(captureWord), earned_capture_ceiling: String(EARNED_CAPTURE_CEILING) }),
           ceiling, ...(asAuthored || {}) };
         continue;
       }
@@ -785,26 +746,18 @@ export class LegEarning {
         out.earned.capture[bundleId] = {
           mode: "ceiling", grade: e.bound, captures: e.n,
           bounded_by: "CAPTURE_BOUNDED_BY_ROUTE",
-          why: `${captureWord}, and the strongest route by which your team's Civicsmith received them earns `
-             + `${e.bound} on the capture axis (provenance's capture grade: an archive replay stands one party `
-             + `further from the publisher than a direct fetch), so the strongest capture grade this document can `
-             + `earn is ${e.bound}.`,
+          why: word("leg-earning.why.strongest_route_group", { capture_word: String(captureWord), bound: String(e.bound) }),
           ceiling };
         continue;
       }
       out.earned.capture[bundleId] = {
         mode: "ceiling", grade: e.bound, captures: e.n,
         bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
-        why: `${captureWord}, and the bytes as your team's Civicsmith fetched them would be worth `
-           + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
-           + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
-           /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
-              home and are composed from the constant, never typed beside the
-              word "grade" (found by `hygiene.test.mjs` detector (B), deleted in
-              T20, which could not tell the article from the letter). */
-           + `byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest `
-           + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
-           + `grade, and it is not a separate measurement a member can cite instead.`,
+        /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
+           home and are composed from the constant, never typed beside the
+           word "grade" (found by `hygiene.test.mjs` detector (B), deleted in
+           T20, which could not tell the article from the letter). */
+        why: localize("leg-earning.index.fidelity_bound_bytes_fetched", "{captureWord}, and the bytes as your team's Civicsmith fetched them would be worth {EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that derivation is measured at {bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is {bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.", { captureWord: String(captureWord), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), bound: String(e.bound) }),
         ceiling };
     }
     /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
@@ -856,30 +809,21 @@ export class LegEarning {
     const attested = st.transcription && st.transcription.determinant === "attestation";
     if (!attested) {
       st.capture = { ...base, grade: null, determined: false, undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-        empty_level: "a member's check — this passage's text is the AI's reading of the page, graded undetermined "
-                   + "until its accuracy is measured or a member checks it against the page",
-        why: `${ref} of ${st.bundle_id} was read off the page by an AI, and that reading is graded undetermined until `
-           + `its accuracy is measured, so what a leg resting on this passage may claim about how it was captured is `
-           + `undetermined. A member who checks the passage against the page (op=attesttext) gives it the capture's `
-           + `own grade. A leg may state NO capture grade; it may not state a letter.` };
+        empty_level: localize("leg-earning.index.passage_ai_reading_member_check", "a member's check — this passage's text is the AI's reading of the page, graded undetermined until its accuracy is measured or a member checks it against the page"),
+        why: localize("leg-earning.index.ref_of_bundle_id_was", "{ref} of {bundle_id} was read off the page by an AI, and that reading is graded undetermined until its accuracy is measured, so what a leg resting on this passage may claim about how it was captured is undetermined. A member who checks the passage against the page (op=attesttext) gives it the capture's own grade. A leg may state NO capture grade; it may not state a letter.", { ref: String(ref), bundle_id: String(st.bundle_id) }) };
       return;
     }
     const by = Array.isArray(st.transcription.by) ? st.transcription.by : [];
     const l = this.#captureLetter(st.capture_sha, null);
     if (l.byteGrade == null) {
       st.capture = { ...base, grade: null, determined: false, undetermined_because: "CAPTURE_GRADE_VIA_UNRULED", by,
-        why: `${ref} of ${st.bundle_id} was read off the page by an AI and checked against the page by a member, so `
-           + `its text is as good as the capture it was read from; but that capture was served by a route no ruling `
-           + `grades, so what a leg resting on it may claim on the capture axis is undetermined.` };
+        why: word("leg-earning.why.read_off_page", { ref: String(ref), bundle_id: String(st.bundle_id) }) };
       return;
     }
     st.capture = { ...base, grade: l.byteGrade, determined: true, determinant: "attestation", by,
       ...(l.authoredRoute ? { stated_as: "authored", route_basis: [l.authoredRoute] } : {}),
-      why: `${ref} of ${st.bundle_id} was read off the page by an AI, and ${by.join(", ") || "a member"} checked it `
-         + `against the page over an extent covering it, so the passage earns the capture's own grade, `
-         + `${l.byteGrade}, on the capture axis`
-         + (l.authoredRoute ? ` — the letter its author may give under the ceiling, stated as authored and never `
-                            + `as measured (${authoredRouteWords([l.authoredVia])}).` : ".") };
+      why: word("leg-earning.why.read_off_page_ai", { passage: String(ref), capture: String(st.bundle_id), attestor: String(by.join(", ") || "a member"), grade: String(l.byteGrade), rest: String(l.authoredRoute ? ` — the letter its author may give under the ceiling, stated as authored and never `
+                            + `as measured (${authoredRouteWords([l.authoredVia])}).` : ".") }) };
   }
 
   /* R8, R9: the entries a held standard and a duty occurrence earn, added to `out` (an `occurrence` map only when an
@@ -902,20 +846,16 @@ export class LegEarning {
    *  captured text answers undetermined with `STANDARD_NO_TEXT`'s reason; one the record does not hold, undetermined
    *  with `NO_SUCH_STANDARD`. Never throws. */
   #standardCeiling(id) {
-    const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a `
-                  + `chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
+    const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
     const undetermined = (because, why, extra = {}) => ({ mode: "ceiling", axis: "capture", standard: id, grade: null,
       determined: false, undetermined_because: because, why, ...extra, ceiling });
     let read;
     try { read = this.standards.standardRead({ id, viewer: SYSTEM_READER }); } catch { read = null; }
     if (!read || read.ok !== true)
-      return undetermined("NO_SUCH_STANDARD", `the record holds no standard ${id}, so what a leg resting on it may claim `
-        + `about how its text was captured is undetermined. A leg may state NO capture grade; it may not state a letter.`);
+      return undetermined("NO_SUCH_STANDARD", localize("leg-earning.index.the_record_holds_no_standard", "the record holds no standard {id}, so what a leg resting on it may claim about how its text was captured is undetermined. A leg may state NO capture grade; it may not state a letter.", { id: String(id) }));
     const noText = () => {
       const row = STANDARDS_CHECKS && STANDARDS_CHECKS.STANDARD_NO_TEXT;
-      return undetermined("STANDARD_NO_TEXT", `${id} holds no captured text at this version, so nothing bounds what a `
-        + `leg resting on it may claim on the capture axis: undetermined. A leg may state NO capture grade; it may not `
-        + `state a letter.`, row ? { check: row.check, translation: row.translation } : {});
+      return undetermined("STANDARD_NO_TEXT", localize("leg-earning.index.id_holds_no_captured_text", "{id} holds no captured text at this version, so nothing bounds what a leg resting on it may claim on the capture axis: undetermined. A leg may state NO capture grade; it may not state a letter.", { id: String(id) }), row ? { check: row.check, translation: row.translation } : {});
     };
     const caps = [...new Set((Array.isArray(read.text) ? read.text : [])
       .map((cid) => { try { return this.content.contentRow(cid); } catch { return null; } })
@@ -928,18 +868,14 @@ export class LegEarning {
     let weakest = null, bounded = null;
     for (const r of rows) {
       if (r.authored === 1)
-        return undetermined("CAPTURE_AXIS_AUTHORED", `${id}'s text is held in a member's authored words, which nobody `
-          + `read in from anywhere: the capture axis does not apply to it, and a leg may state no letter on it.`,
+        return undetermined("CAPTURE_AXIS_AUTHORED", localize("leg-earning.index.id_s_text_is_held", "{id}'s text is held in a member's authored words, which nobody read in from anywhere: the capture axis does not apply to it, and a leg may state no letter on it.", { id: String(id) }),
           { captures: caps.length });
       const l = this.#captureLetter(r.capture_sha, r.chain);
       if (l.byteGrade == null)
-        return undetermined("CAPTURE_GRADE_VIA_UNRULED", `${id}'s text is held in a capture served by a route no ruling `
-          + `grades, so what a leg resting on it may claim about how it was captured is undetermined.`,
+        return undetermined("CAPTURE_GRADE_VIA_UNRULED", localize("leg-earning.index.id_s_text_is_held_2", "{id}'s text is held in a capture served by a route no ruling grades, so what a leg resting on it may claim about how it was captured is undetermined.", { id: String(id) }),
           { captures: caps.length });
       if (l.bound == null)
-        return undetermined("CAPTURE_FIDELITY_UNMEASURED", `${id}'s text was derived by a machine and no step in that `
-          + `derivation carries a measured fidelity, so what a leg resting on it may claim about how it was captured is `
-          + `undetermined (DEC-4).`, { captures: caps.length });
+        return undetermined("CAPTURE_FIDELITY_UNMEASURED", localize("leg-earning.index.id_s_text_was_derived", "{id}'s text was derived by a machine and no step in that derivation carries a measured fidelity, so what a leg resting on it may claim about how it was captured is undetermined (DEC-4).", { id: String(id) }), { captures: caps.length });
       if (weakest == null || BASIS_GRADES.indexOf(l.bound) > BASIS_GRADES.indexOf(weakest)) {
         weakest = l.bound;
         bounded = l.bound === EARNED_CAPTURE_CEILING ? null
@@ -948,9 +884,7 @@ export class LegEarning {
     }
     return { mode: "ceiling", axis: "capture", standard: id, grade: weakest, captures: caps.length,
              ...(bounded ? { bounded_by: bounded } : {}),
-             why: `${id}'s text is held in ${caps.length} capture(s) in the record, and the weakest of them earns `
-                + `${weakest} on the capture axis, so a leg resting on this standard may claim no more than ${weakest} `
-                + `there. A standard earns no connection grade: what it says is cited, not matched to a subject.`,
+             why: word("leg-earning.why.text_held_capture", { id: String(id), caps: String(caps.length), weakest: String(weakest) }),
              ceiling };
   }
 
@@ -970,22 +904,18 @@ export class LegEarning {
     try { r = this.duties.occurrencesOf({ dutyId: parsed.duty, asOf: this.#when(), viewer: SYSTEM_READER }); }
     catch (e) { r = { ok: false, reason: "DUTIES_UNREADABLE", detail: String(e && e.message || e).slice(0, 200) }; }
     if (!r || r.ok !== true)
-      return undetermined(r && r.reason ? r.reason : "NO_SUCH_DUTY", `the record could not derive ${ref}: `
-        + `${(r && (r.detail || r.reason)) || "duties answered nothing"}. Its derivation is undetermined.`);
+      return undetermined(r && r.reason ? r.reason : "NO_SUCH_DUTY", localize("leg-earning.index.the_record_could_not_derive", "the record could not derive {ref}: {v1}. Its derivation is undetermined.", { ref: String(ref), v1: String((r && (r.detail || r.reason)) || "duties answered nothing") }));
     const occ = (Array.isArray(r.occurrences) ? r.occurrences : []).find((o) => o && o.key === parsed.key);
     if (!occ)
-      return undetermined("OCCURRENCE_NOT_DERIVED", `${parsed.duty} derives no occurrence ${parsed.key} between ${r.from} `
-        + `and ${r.to} as of ${r.as_of}, so this leg's derivation is undetermined`
-        + `${Array.isArray(r.source_errors) && r.source_errors.length ? " (a source of its triggers could not be read whole)" : ""}.`,
+      return undetermined("OCCURRENCE_NOT_DERIVED", localize("leg-earning.index.duty_derives_no_occurrence_key", "{duty} derives no occurrence {key} between {from} and {to} as of {as_of}, so this leg's derivation is undetermined{v1}.", { duty: String(parsed.duty), key: String(parsed.key), from: String(r.from), to: String(r.to), as_of: String(r.as_of), v1: String(Array.isArray(r.source_errors) && r.source_errors.length ? " (a source of its triggers could not be read whole)" : "") }),
         { as_of: r.as_of });
     const derived = { ...base, derivation: occ.derivation ?? null, state: occ.state ?? null, as_of: r.as_of,
                       trigger: occ.trigger ?? null, due: occ.due ?? null };
     if (occ.state === "undetermined")
       return { ...derived, determined: false, undetermined_because: "OCCURRENCE_UNDETERMINED",
-               why: `duties answers ${ref} undetermined: ${occ.why}` };
+               why: word("leg-earning.why.duties_answers_undetermined", { ref: String(ref), why: String(occ.why) }) };
     return { ...derived, determined: true,
-             why: `${ref} is derived by duties as of ${r.as_of} (${occ.state}: ${occ.why}). The leg earns no grade of its `
-                + `own here; its grade is derived from its source text and its trigger's attestation.` };
+             why: word("leg-earning.why.derived_duties_leg", { ref: String(ref), as_of: String(r.as_of), state: String(occ.state), why: String(occ.why) }) };
   }
 
   /* The registry as the WRITE PATH and the GATE need it: the subject this
@@ -1129,10 +1059,7 @@ export class LegEarning {
       l.version = pin ? { state: "pinned", by: pin, capture: cap }
                 : n === 1 ? { state: "only_capture", capture: cap }
                 : { state: "undetermined", resolved_capture: cap, captures_held: n,
-                    detail: `the record holds ${n} captures of ${l.target} and this leg's bytes name none of `
-                          + `them, so which version it was made against is undetermined. The capture named is `
-                          + `the one the record resolved when this question was first projected; it is not `
-                          + `a record of what the member read, and nothing here moves it` };
+                    detail: localize("leg-earning.index.the_record_holds_n_captures", "the record holds {n} captures of {target} and this leg's bytes name none of them, so which version it was made against is undetermined. The capture named is the one the record resolved when this question was first projected; it is not a record of what the member read, and nothing here moves it", { n: String(n), target: String(l.target) }) };
     }
   }
 
@@ -1156,9 +1083,7 @@ export class LegEarning {
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id,
-               detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about `
-                     + `an INQUIRY's legs — what each candidate target earns against the question's subject `
-                     + `— and only an inquiry has a basis.` };
+               detail: localize("leg-earning.index.id_is_a_normalizetype_an", "{id} is a {normalizeType}. An earned basis grade is a fact about an INQUIRY's legs — what each candidate target earns against the question's subject — and only an inquiry has a basis.", { id: String(id), normalizeType: String(normalizeType(b.object_type)) }) };
     const asked = targets
       ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, EARNED_TARGETS_MAX)
       : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id)
@@ -1240,9 +1165,7 @@ export class LegEarning {
       if (l.content_id) continue;
       if (!l.null_case && !l.why_no_content) {
         l.null_case = "NOT_YET_RESOLVED";
-        l.why_no_content = `this read's backfill bound (${LEG_BACKFILL_MAX} legs) stopped before `
-          + `this leg. Nothing is wrong with it — ask again and the next read continues, because the `
-          + `content id is a pure function of the leg and needs no cursor`;
+        l.why_no_content = word("leg-earning.why_no_content", { leg_backfill_max: String(LEG_BACKFILL_MAX) });
       }
     }
     return { ok: true, bundleId: id, ...reg, asked: visible,
@@ -1255,15 +1178,8 @@ export class LegEarning {
                 because the count IS the leak (op=backlinks' posture). */
              ...(withheld ? { out_of_view: true } : {}),
              detail: reg.subject_entity
-               ? `${id} names ${reg.subject_entity}${reg.subject_label ? ` (${reg.subject_label})` : ""} as its `
-               + `subject. A target listed under earned.connection may be written as a leg with `
-               + `grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be `
-               + `written with grade_source: capture at that grade. A target absent from a list earns nothing `
-               + `on that axis — the honest leg is testimony (grade D, with an author and a date) or no grade `
-               + `at all, which suspends the axis and names the leg rather than pretending to a number.`
-               : `${id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a `
-               + `stated position, not a defect (DEC-15): the capture axis still earns from the capture `
-               + `record, and a connection a member can account for is testimony at grade D.` };
+               ? localize("leg-earning.index.id_names_subject_entity_v1", "{id} names {subject_entity}{v1} as its subject. A target listed under earned.connection may be written as a leg with grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be written with grade_source: capture at that grade. A target absent from a list earns nothing on that axis — the honest leg is testimony (grade D, with an author and a date) or no grade at all, which suspends the axis and names the leg rather than pretending to a number.", { id: String(id), subject_entity: String(reg.subject_entity), v1: String(reg.subject_label ? ` (${reg.subject_label})` : "") })
+               : localize("leg-earning.index.id_names_no_subject_entity", "{id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a stated position, not a defect (DEC-15): the capture axis still earns from the capture record, and a connection a member can account for is testimony at grade D.", { id: String(id) }) };
   }
 
 }

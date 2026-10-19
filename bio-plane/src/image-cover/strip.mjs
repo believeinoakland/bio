@@ -23,9 +23,10 @@
 import { CoverRefusal, orientationOf, orientationTiff } from "./geometry.mjs";
 import { exifOrientation } from "./jpeg.mjs";
 import { crc32 } from "./png.mjs";
+import { localize } from "../setup-words/index.mjs";
 
-const truncated = (fmt, why) => new CoverRefusal("TRUNCATED_IMAGE_DATA", `the ${fmt} data ends before the image does: ${why}`);
-const corrupt = (fmt, why) => new CoverRefusal("IMAGE_DATA_CORRUPT", `the ${fmt}'s structure cannot be walked: ${why}`);
+const truncated = (fmt, why) => new CoverRefusal("TRUNCATED_IMAGE_DATA", localize("image-cover.strip.the_fmt_data_ends_before", "the {fmt} data ends before the image does: {why}", { fmt: String(fmt), why: String(why) }));
+const corrupt = (fmt, why) => new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.strip.the_fmt_s_structure_cannot", "the {fmt}'s structure cannot be walked: {why}", { fmt: String(fmt), why: String(why) }));
 const notStrippable = (why) => new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", why);
 const animated = (why) => new CoverRefusal("ANIMATED_IMAGE", why);
 
@@ -61,17 +62,17 @@ function stripJpeg(d) {
   let p = 2, frame = false, hierarchical = false, scans = 0, jfif = false, adobe = null;
   for (;;) {
     if (p >= d.length) throw truncated("JPEG", "the file ends before EOI");
-    if (d[p] !== 0xff) throw corrupt("JPEG", `no marker at byte ${p}`);
+    if (d[p] !== 0xff) throw corrupt("JPEG", localize("image-cover.strip.no_marker_at_byte_p", "no marker at byte {p}", { p: String(p) }));
     while (p + 1 < d.length && d[p + 1] === 0xff) p++;                // fill bytes
-    if (p + 1 >= d.length) throw truncated("JPEG", "the file ends inside a marker");
+    if (p + 1 >= d.length) throw truncated("JPEG", localize("image-cover.strip.the_file_ends_inside_a_marker", "the file ends inside a marker"));
     const m = d[p + 1];
     if (m === 0xd9) { kept.push(d.subarray(p, p + 2)); break; }
-    if (m === 0xd8) throw corrupt("JPEG", `a second SOI at byte ${p}`);
+    if (m === 0xd8) throw corrupt("JPEG", localize("image-cover.strip.a_second_soi_at_byte", "a second SOI at byte {p}", { p: String(p) }));
     if (m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { kept.push(d.subarray(p, p + 2)); p += 2; continue; }
-    if (p + 4 > d.length) throw truncated("JPEG", `marker ${hex(m)}'s length runs past the end of the file`);
+    if (p + 4 > d.length) throw truncated("JPEG", localize("image-cover.strip.marker_hex_s_length_runs", "marker {hex}'s length runs past the end of the file", { hex: String(hex(m)) }));
     const len = u16(d, p + 2), end = p + 2 + len;
-    if (len < 2) throw corrupt("JPEG", `marker ${hex(m)} declares length ${len}`);
-    if (end > d.length) throw truncated("JPEG", `marker ${hex(m)} runs past the end of the file`);
+    if (len < 2) throw corrupt("JPEG", localize("image-cover.strip.marker_hex_declares_length_len", "marker {hex} declares length {len}", { hex: String(hex(m)), len: String(len) }));
+    if (end > d.length) throw truncated("JPEG", localize("image-cover.strip.marker_hex_runs_past_the", "marker {hex} runs past the end of the file", { hex: String(hex(m)) }));
     const body = d.subarray(p + 4, end);
     if (m >= 0xe0 && m <= 0xef) {
       /* left behind; before the first scan, JFIF's and Adobe's presence decide the colour transform */
@@ -80,13 +81,13 @@ function stripJpeg(d) {
     } else if (m === 0xfe) {
       /* a comment: left behind */
     } else if (m === 0xda) {
-      if (!frame) throw corrupt("JPEG", "a scan before the frame header");
+      if (!frame) throw corrupt("JPEG", localize("image-cover.strip.a_scan_before_the_frame_header", "a scan before the frame header"));
       scans++;
       let q = end;
       for (;;) {
-        if (q >= d.length) throw truncated("JPEG", `the file ends inside scan ${scans}'s data`);
+        if (q >= d.length) throw truncated("JPEG", localize("image-cover.strip.the_file_ends_inside_scan", "the file ends inside scan {scans}'s data", { scans: String(scans) }));
         if (d[q] !== 0xff) { q++; continue; }
-        if (q + 1 >= d.length) throw truncated("JPEG", `the file ends inside scan ${scans}'s data`);
+        if (q + 1 >= d.length) throw truncated("JPEG", localize("image-cover.strip.the_file_ends_inside_scan_2", "the file ends inside scan {scans}'s data", { scans: String(scans) }));
         const n = d[q + 1];
         if (n === 0 || (n >= 0xd0 && n <= 0xd7)) { q += 2; continue; }
         if (n === 0xff) { q++; continue; }
@@ -98,7 +99,7 @@ function stripJpeg(d) {
     } else if (JPEG_KEEP.has(m)) {
       if (m === 0xde) hierarchical = true;
       if (JPEG_SOF.has(m)) {
-        if (frame && !hierarchical) throw corrupt("JPEG", `a second frame header ${hex(m)} outside a hierarchical image`);
+        if (frame && !hierarchical) throw corrupt("JPEG", localize("image-cover.strip.a_second_frame_header_hex", "a second frame header {hex} outside a hierarchical image", { hex: String(hex(m)) }));
         frame = true;
       }
       kept.push(d.subarray(p, end));
@@ -107,7 +108,7 @@ function stripJpeg(d) {
     } else if (m === 0xc8) {
       throw notStrippable("the JPEG holds the reserved JPG marker 0xc8, which this module cannot judge");
     } else {
-      throw corrupt("JPEG", `reserved marker ${hex(m)} at byte ${p}`);
+      throw corrupt("JPEG", localize("image-cover.strip.reserved_marker_hex_at_byte", "reserved marker {hex} at byte {p}", { hex: String(hex(m)), p: String(p) }));
     }
     p = end;
   }
@@ -128,12 +129,12 @@ function stripPng(d) {
   const kept = [];
   let p = 8, first = true, idat = false, orientation = 0, exifAt = -1;
   for (;;) {
-    if (p + 12 > d.length) throw truncated("PNG", "a chunk runs past the end of the file");
+    if (p + 12 > d.length) throw truncated("PNG", localize("image-cover.strip.a_chunk_runs_past_the_end_of_the_file", "a chunk runs past the end of the file"));
     const len = u32(d, p), type = ascii(d, p + 4, 4);
-    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt("PNG", `a chunk type that is not four letters at byte ${p}`);
-    if (len > 0x7fffffff) throw corrupt("PNG", `chunk ${type} declares length ${len}`);
+    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt("PNG", localize("image-cover.strip.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", { p: String(p) }));
+    if (len > 0x7fffffff) throw corrupt("PNG", localize("image-cover.strip.chunk_type_declares_length_len", "chunk {type} declares length {len}", { type: String(type), len: String(len) }));
     const end = p + 12 + len;
-    if (end > d.length) throw truncated("PNG", `chunk ${type} runs past the end of the file`);
+    if (end > d.length) throw truncated("PNG", localize("image-cover.strip.chunk_type_runs_past_the_end_of_the_file", "chunk {type} runs past the end of the file", { type: String(type) }));
     if (first && type !== "IHDR") throw corrupt("PNG", "the first chunk is not IHDR");
     if (!first && type === "IHDR") throw corrupt("PNG", "a second IHDR");
     first = false;
@@ -173,7 +174,7 @@ function stripPng(d) {
 /** The end of the data sub-blocks starting at `q` (past the zero-length terminator). */
 function subBlocks(d, q, what) {
   for (;;) {
-    if (q >= d.length) throw truncated("GIF", `the file ends inside ${what}`);
+    if (q >= d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_inside_what", "the file ends inside {what}", { what: String(what) }));
     const n = d[q];
     q += 1 + n;
     if (n === 0) return q;
@@ -181,18 +182,18 @@ function subBlocks(d, q, what) {
 }
 
 function stripGif(d) {
-  if (d.length < 13) throw truncated("GIF", "the file ends inside the screen descriptor");
+  if (d.length < 13) throw truncated("GIF", localize("image-cover.strip.the_file_ends_inside_the_screen_descriptor", "the file ends inside the screen descriptor"));
   const gct = d[10] & 0x80 ? 3 << ((d[10] & 7) + 1) : 0;
   let p = 13 + gct;
-  if (p > d.length) throw truncated("GIF", "the file ends inside the global colour table");
+  if (p > d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_inside_the_global_colour_table", "the file ends inside the global colour table"));
   const kept = [d.subarray(0, p)];
   let gce = null, image = false;
   for (;;) {
-    if (p >= d.length) throw truncated("GIF", "the file ends before the trailer");
+    if (p >= d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_before_the_trailer", "the file ends before the trailer"));
     const b = d[p];
     if (b === 0x3b) { kept.push(d.subarray(p, p + 1)); break; }
     if (b === 0x21) {
-      if (p + 2 > d.length) throw truncated("GIF", "the file ends inside an extension");
+      if (p + 2 > d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_inside_an_extension", "the file ends inside an extension"));
       const label = d[p + 1], end = subBlocks(d, p + 2, `extension ${hex(label)}`);
       if (label === 0xf9) gce = d.subarray(p, end);                    // the last before the image is the image's
       p = end;
@@ -200,11 +201,11 @@ function stripGif(d) {
     }
     if (b === 0x2c) {
       if (image) throw animated("a GIF of more than one frame");
-      if (p + 10 > d.length) throw truncated("GIF", "the file ends inside the image descriptor");
+      if (p + 10 > d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_inside_the_image_descriptor", "the file ends inside the image descriptor"));
       const lct = d[p + 9] & 0x80 ? 3 << ((d[p + 9] & 7) + 1) : 0;
       const at = p + 10 + lct;
-      if (at + 1 > d.length) throw truncated("GIF", "the file ends before the image data");
-      if (d[at] < 1 || d[at] > 11) throw corrupt("GIF", `an LZW minimum code size of ${d[at]}`);
+      if (at + 1 > d.length) throw truncated("GIF", localize("image-cover.strip.the_file_ends_before_the_image_data", "the file ends before the image data"));
+      if (d[at] < 1 || d[at] > 11) throw corrupt("GIF", localize("image-cover.strip.an_lzw_minimum_code_size", "an LZW minimum code size of {v1}", { v1: String(d[at]) }));
       const end = subBlocks(d, at + 1, "the image data");
       if (gce) kept.push(gce);
       kept.push(d.subarray(p, end));
@@ -213,9 +214,9 @@ function stripGif(d) {
       p = end;
       continue;
     }
-    throw corrupt("GIF", `block ${hex(b)} at byte ${p} is neither an extension, an image nor the trailer`);
+    throw corrupt("GIF", localize("image-cover.strip.block_hex_at_byte_p", "block {hex} at byte {p} is neither an extension, an image nor the trailer", { hex: String(hex(b)), p: String(p) }));
   }
-  if (!image) throw corrupt("GIF", "the trailer before any image");
+  if (!image) throw corrupt("GIF", localize("image-cover.strip.the_trailer_before_any_image", "the trailer before any image"));
   return join(kept);
 }
 
@@ -238,10 +239,10 @@ function stripWebp(d) {
   while (p < riffEnd) {
     if (p + 8 > riffEnd) throw truncated("WebP", "a chunk header runs past the RIFF's end");
     const fourcc = ascii(d, p, 4), n = le32(d, p + 4), end = p + 8 + n + (n & 1);
-    if (p + 8 + n > riffEnd) throw truncated("WebP", `chunk ${fourcc.trim()} runs past the RIFF's end`);
+    if (p + 8 + n > riffEnd) throw truncated("WebP", localize("image-cover.strip.chunk_fourcc_runs_past_the", "chunk {fourcc} runs past the RIFF's end", { fourcc: String(fourcc.trim()) }));
     const body = d.subarray(p + 8, p + 8 + n);
     if (fourcc === "VP8X") {
-      if (p !== 12 || n < 10) throw corrupt("WebP", "a VP8X chunk out of place or short");
+      if (p !== 12 || n < 10) throw corrupt("WebP", localize("image-cover.strip.a_vp8x_chunk_out_of_place_or_short", "a VP8X chunk out of place or short"));
       if (body[0] & VP8X_ANIM) throw animated("an animated WebP");
       vp8x = kept.length;
       kept.push(d.subarray(p, Math.min(end, riffEnd)));
@@ -279,11 +280,11 @@ function stripCodestream(d, fmt) {
   const parts = [];                // each tile-part: {sot piece index, old Psot, removed bytes}
   let p = 2, removed = 0;
   const marker = (at) => {
-    if (at + 4 > d.length) throw truncated(fmt, "a marker runs past the end of the codestream");
-    if (d[at] !== 0xff) throw corrupt(fmt, `no marker at byte ${at}`);
+    if (at + 4 > d.length) throw truncated(fmt, localize("image-cover.strip.a_marker_runs_past_the_end_of_the_codestream", "a marker runs past the end of the codestream"));
+    if (d[at] !== 0xff) throw corrupt(fmt, localize("image-cover.strip.no_marker_at_byte_at", "no marker at byte {at}", { at: String(at) }));
     const len = u16(d, at + 2);
-    if (len < 2) throw corrupt(fmt, `marker ${hex(d[at + 1])} declares length ${len}`);
-    if (at + 2 + len > d.length) throw truncated(fmt, `marker ${hex(d[at + 1])} runs past the end of the codestream`);
+    if (len < 2) throw corrupt(fmt, localize("image-cover.strip.marker_hex_declares_length_len_2", "marker {hex} declares length {len}", { hex: String(hex(d[at + 1])), len: String(len) }));
+    if (at + 2 + len > d.length) throw truncated(fmt, localize("image-cover.strip.marker_hex_runs_past_the_2", "marker {hex} runs past the end of the codestream", { hex: String(hex(d[at + 1])) }));
     return { m: d[at + 1], end: at + 2 + len };
   };
   /* the main header, to the first SOT */
@@ -300,22 +301,22 @@ function stripCodestream(d, fmt) {
   /* the tile-parts */
   while (!(d[p] === 0xff && d[p + 1] === 0xd9)) {
     const { m, end: sotEnd } = marker(p);
-    if (m !== 0x90 || sotEnd - p !== 12) throw corrupt(fmt, `expected SOT at byte ${p}`);
+    if (m !== 0x90 || sotEnd - p !== 12) throw corrupt(fmt, localize("image-cover.strip.expected_sot_at_byte_p", "expected SOT at byte {p}", { p: String(p) }));
     const psot = u32(d, p + 6), start = p;
     const last = psot === 0;
     const partEnd = last ? d.length - 2 : start + psot;
-    if (!last && psot < 14) throw corrupt(fmt, `a tile-part length of ${psot}`);
+    if (!last && psot < 14) throw corrupt(fmt, localize("image-cover.strip.a_tile_part_length_of", "a tile-part length of {psot}", { psot: String(psot) }));
     if (partEnd > d.length || (last && !(d[d.length - 2] === 0xff && d[d.length - 1] === 0xd9)))
-      throw truncated(fmt, "a tile-part runs past the end of the codestream");
+      throw truncated(fmt, localize("image-cover.strip.a_tile_part_runs_past_the_end_of_the_codestream", "a tile-part runs past the end of the codestream"));
     const sotAt = out.length;
     out.push(d.subarray(p, sotEnd));
     p = sotEnd;
     let cut = 0;
     for (;;) {
-      if (p + 2 > partEnd) throw truncated(fmt, "a tile-part header runs past its tile-part");
+      if (p + 2 > partEnd) throw truncated(fmt, localize("image-cover.strip.a_tile_part_header_runs_past_its_tile_part", "a tile-part header runs past its tile-part"));
       if (d[p] === 0xff && d[p + 1] === 0x93) break;                         // SOD
       const { m: tm, end } = marker(p);
-      if (end > partEnd) throw corrupt(fmt, "a tile-part header marker runs past its tile-part");
+      if (end > partEnd) throw corrupt(fmt, localize("image-cover.strip.a_tile_part_header_marker_runs_past_its_tile_part", "a tile-part header marker runs past its tile-part"));
       if (tm === 0x64) cut += end - p;
       else out.push(d.subarray(p, end));
       p = end;
@@ -362,16 +363,16 @@ const JP2H_KEEP = new Set(["ihdr", "bpcc", "pclr", "cmap", "cdef"]);
 function boxes(d, p, end) {
   const out = [];
   while (p < end) {
-    if (p + 8 > end) throw truncated("JP2", "a box header runs past its container");
+    if (p + 8 > end) throw truncated("JP2", localize("image-cover.strip.a_box_header_runs_past_its_container", "a box header runs past its container"));
     let len = u32(d, p), head = 8;
     const type = ascii(d, p + 4, 4), xl = len === 1, zero = len === 0;
     if (xl) {
-      if (p + 16 > end) throw truncated("JP2", `box ${type}'s length runs past its container`);
+      if (p + 16 > end) throw truncated("JP2", localize("image-cover.strip.box_type_s_length_runs", "box {type}'s length runs past its container", { type: String(type) }));
       len = u32(d, p + 8) * 0x100000000 + u32(d, p + 12);
       head = 16;
     } else if (zero) len = end - p;
-    if (len < head) throw corrupt("JP2", `box ${type} declares length ${len}`);
-    if (p + len > end) throw truncated("JP2", `box ${type} runs past its container`);
+    if (len < head) throw corrupt("JP2", localize("image-cover.strip.box_type_declares_length_len", "box {type} declares length {len}", { type: String(type), len: String(len) }));
+    if (p + len > end) throw truncated("JP2", localize("image-cover.strip.box_type_runs_past_its", "box {type} runs past its container", { type: String(type) }));
     out.push({ type, at: p, head, end: p + len, xl, zero });
     p += len;
   }
@@ -392,7 +393,7 @@ function box(b, type, body) {
 function stripJp2(d) {
   const top = boxes(d, 12, d.length);
   const ftyp = top[0];
-  if (!ftyp || ftyp.type !== "ftyp") throw corrupt("JP2", "the box after the signature is not ftyp");
+  if (!ftyp || ftyp.type !== "ftyp") throw corrupt("JP2", localize("image-cover.strip.the_box_after_the_signature_is_not_ftyp", "the box after the signature is not ftyp"));
   const fb = d.subarray(ftyp.at + ftyp.head, ftyp.end);
   const brands = [ascii(fb, 0, 4)];
   for (let q = 8; q + 4 <= fb.length; q += 4) brands.push(ascii(fb, q, 4));

@@ -43,7 +43,7 @@ const drawnSeen = new Set();
 // group-identity) keep "group". These rows keep the word in another sense: a grouping of reasons, legs or cases, or a kind of
 // organization in the world (a community group, neighborhood groups).
 const TEAM_WORD = /(^|[^{\w.-])[Gg]roups?\b(?![}\w-])/;
-const GROUP_SENSE = /^(refusal\.PARTITION_INDEPENDENCE_\w+|inquiry\.next\.group_strength_weakest|calculations\.(says\.group_two_like|why\.act_undetermined_falls|why\.groups_act_like)|basis-versions\.(claimed|unclaimed|unstated)|entity\.relation\.kind\.help|screen\.group-identity\.kind\.(community|issue|professional)|screen\.site\.line2|public-read\.neighborhood_issue_groups|refusal\.ADDRESSEE_REFUSED)$/;
+const GROUP_SENSE = /^(refusal\.PARTITION_INDEPENDENCE_\w+|inquiry\.next\.group_strength_weakest|calculations\.(says\.group_two_like|why\.act_undetermined_falls|why\.groups_act_like)|basis-versions\.(claimed|unclaimed|unstated)|entity\.relation\.kind\.help|screen\.group-identity\.kind\.(community|issue|professional)|screen\.site\.line2|public-read\.neighborhood_issue_groups|refusal\.ADDRESSEE_REFUSED|refusal\.(BAD_TERMS|NO_PARTITION|BAD_PARTITION|BAD_STATEMENT))$/;
 const add = (key, en, prot, source, note) => {
   if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
   if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + ((T49.rewrite_dec || {})[key] || 'DEC-256') + ': reworded'; }

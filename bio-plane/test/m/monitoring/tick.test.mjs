@@ -7,6 +7,7 @@ import { monitorOp, monitoringOps, MONITOR_AUTHOR, DRIVE_TICK_CHECKS } from "../
 import { identify } from "../../../../docprofile/registry.mjs";
 import { substanceDigests, DRIVE_CAPTURE_CHECKS } from "../../../src/acquisition/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LOC = "https://records.example.org/minutes.txt";
 const DOC = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcd/edit";
@@ -194,7 +195,7 @@ test("R3 the baseline: the Drive export row, else the locator's row, else the ar
   w.promote(u, infoMd(u, LOC), { files: [{ path: "data/provenance.json", text: "{nope", bytes: 5, sha256: sha("{nope") }] });
   const ur = await tick(w, u);
   assert.equal(ur.body.baseline, null);
-  assert.equal(ur.body.note, "no captured baseline to compare against; recorded the check only");
+  assert.equal(ur.body.note, word("monitoring.note.captured_baseline_compare"));
 });
 
 test("R3 the tick's Drive export row, else locator row, is the row capture-sources R45 chooses, the one the Drive shell sweep (R26) judges; the archive hop is only the tick's fallback after it", async () => {
@@ -319,7 +320,7 @@ test("R5 comparison: rendered frame, no baseline, evidentiary only when both sid
   w.net.routes[LOC] = serve("raw-v1");
   const raw = await tick(w, p);
   assert.deepEqual([raw.body.compared, raw.body.status], ["raw", "unchanged"]);
-  assert.equal(raw.body.compared_basis, "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared");
+  assert.equal(raw.body.compared_basis, word("monitoring.captured_baseline_recorded"));
   /* evidentiary: an ASP.NET page whose machinery moved, whose substance did not */
   const aloc = "https://agendas.example.org/Agenda.aspx";
   const page = (vs, body) => `<!DOCTYPE html><html><head><title>Agenda</title></head><body><form method="post" action="./Agenda.aspx" id="form1"><input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="${vs}" /><input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="${vs}x" /><div id="content"><h1>Agenda</h1><p>${body}</p></div></form></body></html>`;
@@ -341,7 +342,7 @@ test("R5 comparison: rendered frame, no baseline, evidentiary only when both sid
   assert.notEqual(ev.body.seen, ev.body.baseline);
   w.net.routes[aloc] = at(page("CCCC", "Item two"));
   const ch = await tick(w, e);
-  assert.deepEqual([ch.body.compared, ch.body.status, ch.body.note], ["evidentiary", "modified", "the substance of the source differs from the capture"]);
+  assert.deepEqual([ch.body.compared, ch.body.status, ch.body.note], ["evidentiary", "modified", word("monitoring.note.substance_source_differs")]);
   /* a handler mismatch compares raw, and says why */
   const e2 = "INFO-2026-0044-mismatch";
   const base2 = page("AAAB", "Item one");
@@ -376,22 +377,22 @@ test("R6 assess over the baseline's own bytes, verified by hash; each way it can
   w.bkt.held.set(`bio/captures/${b.cap}`, new TextEncoder().encode("tampered"));
   const bad = await tick(w, id);
   assert.equal(bad.body.assessment, null);
-  assert.equal(bad.body.assessment_basis, "the bytes held under the baseline's capture key do not hash to it, so they are not compared");
+  assert.equal(bad.body.assessment_basis, word("monitoring.why.bytes_held_baseline"));
   /* not held */
   w.bkt.held.delete(`bio/captures/${b.cap}`);
-  assert.equal((await tick(w, id)).body.assessment_basis, "the baseline's bytes are not held under its capture key");
+  assert.equal((await tick(w, id)).body.assessment_basis, word("monitoring.why.baseline_bytes_held"));
   /* not text */
   w.net.routes[LOC] = serve(new Uint8Array([0, 1, 2, 3]), "application/octet-stream");
-  assert.equal((await tick(w, id)).body.assessment_basis, "the fetched document is not read as text, and assess reads text documents only");
+  assert.equal((await tick(w, id)).body.assessment_basis, word("monitoring.why.fetched_document_read"));
   /* no document served */
   w.net.routes[LOC] = serve("x", "text/plain", 500);
-  assert.equal((await tick(w, id)).body.assessment_basis, "the source served no document to assess");
+  assert.equal((await tick(w, id)).body.assessment_basis, word("monitoring.why.source_served_document"));
   /* no baseline */
   const n = "INFO-2026-0051-nobase";
   w.monitored(n, LOC, null);
   w.net.routes[LOC] = serve("hello");
   const nb = await tick(w, n);
-  assert.equal(nb.body.assessment_basis, "no captured baseline to compare against");
+  assert.equal(nb.body.assessment_basis, word("monitoring.why.captured_baseline_compare"));
   assert.equal(nb.body.cadence.source, "contract");
   /* no capture store on the instance */
   const x = world({ evidence: false });

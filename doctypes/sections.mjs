@@ -22,6 +22,7 @@
  * law relation: a definition or an exception is a reading, and a member records what it
  * means, in `standards` (R15). */
 import { vocabulary } from "../docprofile/doctypes/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ---------------------------------------------------------------- the view's forms */
 
@@ -219,13 +220,13 @@ export function readSections(raw, form, ctx, locate) {
   const heads = form === "code" ? codeHeadings(lines, forms) : form === "instrument" ? instrumentHeadings(lines) : [];
   if (!heads.length) {
     const why = form === "code"
-      ? (forms.length ? "no line of this text opens with a section number of a code the active jurisdiction profiles name, "
-                        + "followed by a title, so it is not divided into sections"
-                      : "no active jurisdiction profile gives a section-number form for any code, so no code section is read")
+      ? (forms.length ? localize("doctypes.sections.no_code_heading", "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections")
+                      : localize("doctypes.sections.no_code_forms", "no active jurisdiction profile gives a section-number form for any code, so no code section is read"))
       : form === "instrument"
         ? "no `SECTION 1.` heading opens a line of this instrument, so its text is not divided into sections"
-        : "this text was read as neither an instrument nor a code section, so it is not divided into sections"
-          + (forms.length ? "" : "; and no active jurisdiction profile gives a section-number form for any code");
+        : forms.length
+          ? localize("doctypes.sections.neither_form", "this text was read as neither an instrument nor a code section, so it is not divided into sections")
+          : localize("doctypes.sections.neither_form_no_codes", "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code");
     return { sections: [], sections_why: why };
   }
   const sections = [];
@@ -246,8 +247,8 @@ function holder(sections, offset) {
   return best;
 }
 const unplacedWhy = (sections) => (sections.length
-  ? "no section read from this text holds this passage (it stands before the first heading)"
-  : "this text was not divided into sections, so no section can be named for this passage");
+  ? localize("doctypes.sections.unplaced", "no section read from this text holds this passage (it stands before the first heading)")
+  : localize("doctypes.sections.not_divided", "this text was not divided into sections, so no section can be named for this passage"));
 
 /* ------------------------------------------------------------------ the definitions */
 

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a";
@@ -104,7 +105,7 @@ test("R7 every deadline names its basis kind: rule (a law or order, which may na
   const by = Object.fromEntries(w.c.overdueClocks({ viewer: M }).items.map((x) => [x.ord, x.basis_of]));
   assert.deepEqual(by[0], { kind: "dependency", citation: "the board's budget calendar", precedes: "the fiscal year, 2026-10-01", lead: "10 days",
     why: "a budget must be in place before its period begins",
-    says: "a date derived from the event it must precede; missing it is a dated fact about sequence, never a violation" });
+    says: word("action-clocks.says.date_derived_event") });
   assert.deepEqual(by[1], { kind: "commitment", citation: "letter of 2026-09-02", committed_by: "the Town Clerk" });
   assert.deepEqual(by[2], { kind: "window", citation: "the group's plan" });
   assert.deepEqual(by[3], { kind: null, citation: "Act s.2" }, "an entry written before T33-74 states no kind");

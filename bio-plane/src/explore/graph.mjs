@@ -9,9 +9,10 @@ import { LOWEST_GRADE, orderPaths, exhausted } from '../connection-grammar/index
 import { checkWalkArgs, traverse, depthStop } from './walk.mjs';
 import { readEntities, labelIn, idKindOf } from './labels.mjs';
 import { refuse, isObj, DECLARED_MARK, HUNCH_MARK, NOT_ASSERTED } from './answer.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** The sentence every stop carries (R21, K1469). */
-export const STOPPED_SENTENCE = 'Where the walk stopped short, what lies beyond is undetermined, not absent.';
+export const STOPPED_SENTENCE = word('explore.stopped_sentence');
 /** The rings a graph may be asked for (R21). */
 export const RINGS = Object.freeze([1, 2]);
 
@@ -54,7 +55,7 @@ export function neighbourhood(ctx, arg) {
   const k = checkWalkArgs(ctx.registry, { ...rest, from: centre, to: undefined, sortBy: undefined, depth: undefined }, 'centre');
   if (k.refusal) return k.refusal;
   const rings = a.rings === undefined || a.rings === null ? 2 : a.rings;
-  if (!RINGS.includes(rings)) return refuse('BAD_RINGS', 'rings is 1 or 2: the graph shows the records one or two steps from the centre');
+  if (!RINGS.includes(rings)) return refuse('BAD_RINGS', localize('explore.graph.rings_is_one_or_two', 'rings is 1 or 2: the graph shows the records one or two steps from the centre'));
   const t = traverse(ctx, { from: centre, at: a.at, viewer: a.viewer, scope: a.scope ?? null, kinds: /** @type {string[]} */ (k.kinds), depth: rings });
   const s = t.r.s;
   const elapsed_ms = t.r.elapsed();

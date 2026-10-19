@@ -13,6 +13,7 @@ import { unnamedSourceStatement } from "../../../src/publication/index.mjs";
 import { GRADING_METHOD_VERSION, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -27,12 +28,12 @@ const textSha = (bundle) => sha(canonicalJson([{ extent: { kind: "doc-para", par
 const account = (w, capture, text = "I saved it myself.") => w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq,
   by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, 'SIG-of-alice-7f3', 'AAAA', ?)`, capture, text, "2026-09-27T12:00:00Z");
 
-test("R14, R55 (case-disclosures R5): the document is bio-case-document/7, which requires the materials blocks as /6 does, and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
+test("R14, R55 (case-disclosures R5): the document is bio-case-document/8, which requires the materials blocks as /6 does, and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
   const w = world(); w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const r = w.publish(w.project("Team", "alice", [Q]), "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const fm = w.fm(docOf(w, r));
-  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/7", "bio-case-document/7", true]);
+  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/8", "bio-case-document/8", true]);
   assert.deepEqual(methodOf(fm), { grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION });
   assert.ok(bodyOf(docOf(w, r)).includes(`by the grading method ${GRADING_METHOD_VERSION}`));
 });
@@ -52,7 +53,7 @@ test("R55 (case-disclosures R7, R6): materials: lists every document a member's 
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false,
       rests_under: "supporting", obscured: null }]);
   const body = bodyOf(docOf(w, r));
-  assert.ok(body.includes("## What This Case Carries"));
+  assert.ok(body.includes(word("case-disclosures.case_carries")));
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
 });
 

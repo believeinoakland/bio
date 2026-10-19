@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J2
+**Read** · handled J6
 
 ## B1 · START
 
@@ -24,3 +24,31 @@ CHANGE (K3835). Your job re-opens for one item, in your own tests, following you
 1. `fleetbundles.test.mjs`: remove the import of `../../scripts/embed-signpage.mjs` and the "GENERATED-INPUT LOOP" assertion (the render of `src/signpage.mjs` against `sign-release.html`, ~line 620–626, and its header note at :13); with R16 there is no generated input left to guard. `bio-plane/test/fleetbundles.control.mjs`: remove control (7) for the same reason, keeping every other control.
 2. `bio-plane/test/m/bundler/repo.mjs`:231, 235: stop copying `embed-signpage.mjs` and `sign-release.html` into the scratch repository (the build no longer needs them); `release.test.mjs`:211–222 may keep proving R16 by an absent or stale `signpage.mjs` without importing it.
 3. Nothing else changes; rerun your tests and `fleetbundles`, then COMPLETE again.
+
+## B3 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 1 (R1), bundler: **T51-144** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/bundler.md` (read whole); R36's second half (T51-144) is marked not yet met: T51 and is yours.
+BOB's notes for this job:
+1. Today the real fleet agrees (agent-runner `fleet-member.json`:17 and `wrangler.jsonc`:29; file-scanner `fleet-member.json`:27, :56 and `wrangler.jsonc`:41, :47, checked by BOB at this START). Your test reads those files; it never edits agent-runner's or file-scanner's files. The control is a fixture whose two digests differ; the failure names the member and the class.
+2. If `bundles.mjs --record-image` writes only one of the two files today, make it write both (that code is yours) and test it on a fixture copy, never on the real members' files.
+3. You have no words findings.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize`. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; `localize` answers `en` until BOB regenerates them at the layer close. Your words file's findings must all read zero in `node checks/run.mjs` before COMPLETE.
+Tests never copy a sentence people read; every new id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module) and `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. Your Size line counts only your module's own code (K2513).
+
+## B4 · CHANGE
+
+CHANGE (K3953, BOB's): a new requirement in your module, bundler R38, folded on the tranche branch (merge `tranche/T51` into your branch first). Every fleet member's bundle today carries the whole word table (`setup-words/rows.mjs`, 3.4 MB raw, 18,691 rows) though each member reads 10 to 50 keys: a production Worker loads it on every cold start for nothing. R38: a member's bundle carries only the rows its own bundled inputs can read (literal keys at `word`/`localize`/`hasWord` calls, plus every row under a literal prefix a call builds a key from); a key with no literal prefix fails the build naming the site; the plane's bundle unchanged; the manifest records the kept rows and `verifyFresh` covers them. How you substitute the trimmed rows in the bundle (an esbuild plugin replacing the `rows.mjs` import, a generated per-member module) is yours; read the calls with the vendored parser setup-words uses (`bio-plane/src/setup-words/vendor/`), never a pattern. You never write the bundles themselves: BOB regenerates them at R1's close and measures each member. Add R38 to your entry's work and to your COMPLETE; if it is more than you can do at your model, post BLOCKED with cause `tests` and BOB restarts the job one model up.
+
+## B5 · RESUME · re J4
+
+RESUME (K3955): BUNDLER #21 blocked on B4 (R38) at its model, as B4 allowed; you are BUNDLER #22 on claude-sonnet-5-5. T51-144 is done on this branch (J3: the real-fleet digest test, 122 pass); do not redo it. Your work is B4: bundler R38 (read it whole in build/requirements/bundler.md; the tranche is already merged into your branch at b7f9585831). Keep the plane's bundle unchanged; never commit a rebuilt dist/ bundle (BOB regenerates every one at R1's close); prove R38 on fixtures and on the real members' inputs by your test, stating each member's kept row count in your record. Then COMPLETE with T51-144 and R38 both named.
+
+## B6 · ANSWER · re J5
+
+ANSWER (K3958): neither reading as you framed it. R38 is amended on the tranche (merge it): a member whose inputs hold a word read with a variable key (no literal prefix) keeps the WHOLE table, and its manifest lists every such site by file and line (words: "all"); the build never fails for it. Every other member keeps only its own rows. Your real-fleet test names each member keeping the whole table with its sites (agent-worker today: the five sites you found) and states every other member's kept row count. The five sites are entries in their modules' R jobs (CR-4 membership, T51-157 project-roster, T51-180 capture, T51-189 extraction, T51-218 run-rules); BOB updates your test's expectation when they merge. Do not treat every literal equal to a key as read.

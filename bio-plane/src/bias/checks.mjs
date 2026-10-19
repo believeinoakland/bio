@@ -9,6 +9,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { idPattern } from "../record-grammar/ids.mjs";
 import { PROMOTION_ROW_CHECKS } from "../promotion/checks.mjs";
+import { word, localize } from '../setup-words/index.mjs';
 
 /* C-26.2's key shape (R3), a subject registry key: an `ENT-` id as record-grammar's `ID_TABLE` states it, read through
    its `idPattern` and never copied here (T33-38, S0-9), so `ENT-2026-10000` is a key and `ENT-2026-999` is not. */
@@ -348,73 +349,50 @@ export const BIAS_CHECKS = {
   BIAS_STATEMENT_MALFORMED_SHAPE: {
     check: 'C-26.1',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'One of these bias statements is missing something the record needs to apply it: '
-      + 'a stable name, one of the three kinds it can be, or the sentence itself. '
-      + 'The three kinds are raising scrutiny on a source, blocking or licensing an inference, '
-      + 'and asserting an evidenced pattern — a standard of evidence is not one of them; that is a bar.',
+    translation: word('refusal.BIAS_STATEMENT_MALFORMED_SHAPE'),
   },
   /* Safeguard 4: subjects are registry entries, not free text. */
   BIAS_STATEMENT_SUBJECT_NOT_REGISTERED: {
     check: 'C-26.2',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'That statement names its subject in prose rather than pointing at the subject registry. '
-      + 'Registry entries are what let the record notice when a project statement and a team '
-      + 'statement are about the same thing — in prose, nothing can tell, and a collision that is '
-      + 'quiet is the one this construct exists to prevent.',
+    translation: word('refusal.BIAS_STATEMENT_SUBJECT_NOT_REGISTERED'),
   },
   /* The justification requirement, on every kind. */
   BIAS_STATEMENT_NO_JUSTIFICATION: {
     check: 'C-26.3',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'That statement does not say why the lens is held. '
-      + 'A declared bias the system honours is one its author justified; without that it is an '
-      + 'unstated prior with a form around it.',
+    translation: localize('bias.checks.that_statement_does_not_say', 'That statement does not say why the lens is held. A declared bias the system honours is one its author justified; without that it is an unstated prior with a form around it.'),
   },
   /* kind=pattern IS analysis, so it cites or it stays in draft. */
   BIAS_PATTERN_UNCITED: {
     check: 'C-26.4',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'A pattern statement is a claim about how an institution actually behaves, so it is '
-      + 'analysis and needs evidence in the record. It can be written in draft without one; '
-      + 'it cannot leave draft without one.',
+    translation: word('refusal.BIAS_PATTERN_UNCITED'),
   },
   /* DEC-54 scope FOUR: the malformedness refusal. */
   BIAS_STATEMENT_ISSUES_A_VERDICT: {
     check: 'C-26.5',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'That statement assigns a truth value to a source wholesale, and declared bias may '
-      + 'never issue verdicts. It may raise scrutiny, it may block an inference, and it may assert '
-      + 'a pattern it can evidence. The construct that fights undeclared distortion is held to a '
-      + 'higher standard than the distortion, so this is refused whoever declares it.',
+    translation: word('refusal.BIAS_STATEMENT_ISSUES_A_VERDICT'),
   },
   /* DEC-54 scope ONE: split bars from bias. */
   BIAS_STATEMENT_IS_A_BAR: {
     check: 'C-26.6',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate; '
          + 'and src/bias/index.mjs biasInhale, which routes the same sentences into bars[] instead',
-    translation: 'That is a standard of evidence — how strong support must be before you assert it — '
-      + 'and a standard is a BAR rather than a lens. Declare it as your project\'s required strength, '
-      + 'where it will actually refuse work that falls short. Filed here it would refuse nothing, '
-      + 'because a declared bias is disclosed and never gates.',
+    translation: word('refusal.BIAS_STATEMENT_IS_A_BAR'),
   },
   /* DEC-54 scope TWO: the unenforceable residue is a published output. */
   BIAS_RESIDUE_UNSTATED: {
     check: 'C-26.7',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
-    translation: 'This bias set is adopted and does not say what it does NOT check. '
-      + 'A case held to a standard has to say which parts of that standard this system verifies and '
-      + 'which it does not — the parts that can be counted are rarely the parts that protect, and '
-      + 'enforcing only the countable half while staying silent would carry the authority of the '
-      + 'whole policy without its substance.',
+    translation: word('refusal.BIAS_RESIDUE_UNSTATED'),
   },
   /* DEC-54 scope THREE: inhale proposes, never installs. */
   BIAS_INHALE_CANNOT_ADOPT: {
     check: 'C-26.8',
     where: 'src/bias/index.mjs biasInhale, reached from op=biasinhale',
-    translation: 'Reading a policy proposes a bias set; it never adopts one. '
-      + 'Adopting is something a member does with their name on it, because otherwise a team could '
-      + 'say it follows an organisation\'s standards without anybody in the team having agreed to '
-      + 'anything.',
+    translation: localize('bias.checks.reading_a_policy_proposes_a', 'Reading a policy proposes a bias set; it never adopts one. Adopting is something a member does with their name on it, because otherwise a team could say it follows an organisation\'s standards without anybody in the team having agreed to anything.'),
   },
   /* The adoption's own two. A machine credential holds no name to put on an
      authored act (DEC-46, D-90, D-82), and an adoption of a set that was never
@@ -422,8 +400,7 @@ export const BIAS_CHECKS = {
   BIAS_ADOPTION_NOT_AUTHORED: {
     check: 'C-26.9',
     where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
-    translation: 'Adopting a bias set is an authored, attributed act and an automated credential '
-      + 'has no name to put on it. Sign in as a member.',
+    translation: word('refusal.BIAS_ADOPTION_NOT_AUTHORED'),
   },
   /* THE WRITE PATH'S OWN REFUSAL, and it is here because VF-2's DEC-49 guard
      found it missing — which is the guard working exactly as its ruling
@@ -453,18 +430,14 @@ export const BIAS_CHECKS = {
   BIAS_REFUSED: {
     check: 'C-26.11',
     where: 'src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote',
-    translation: 'That bias set was not written. One or more of its statements is not something the '
-      + 'record can honour, and each one is named below with what is wrong with it. '
-      + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',
+    translation: localize('bias.checks.that_bias_set_was_not', 'That bias set was not written. One or more of its statements is not something the record can honour, and each one is named below with what is wrong with it. Nothing was saved, so nothing needs undoing — correct the statements and write it again.'),
   },
   /* C-26.12, BIAS_ILLEGAL_TRANSITION, is promotion's (its R15, `bias-state-edge`): promotion mints it and holds its
      row, and cannot import this module; it joins this family by reference, below (R29, K586). */
   BIAS_ADOPTION_NOT_PROPOSED: {
     check: 'C-26.10',
     where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
-    translation: 'That bias set has not been proposed for adoption, so there is nothing to adopt yet. '
-      + 'A set is written, then proposed, then adopted — and the middle step is what stops a set '
-      + 'becoming binding without anybody having offered it.',
+    translation: word('refusal.BIAS_ADOPTION_NOT_PROPOSED'),
   },
 
   /* ---------------------------------------------------------------------------
@@ -486,53 +459,37 @@ export const BIAS_CHECKS = {
   BIAS_DEBT_NO_RUN: {
     check: 'C-26.13',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled, because the request did not say which piece of work it is about. '
-      + 'A bias debt belongs to one assistant run — the one whose lens changed — so settling it has to '
-      + 'name that run.',
+    translation: word('refusal.BIAS_DEBT_NO_RUN'),
   },
   BIAS_DEBT_NO_ACTOR: {
     check: 'C-26.14',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled, because this request has no member behind it. Deciding that a '
-      + 'change in the team\'s declared lens does not affect a piece of work is somebody\'s judgement, '
-      + 'and the record keeps whose it was. Sign in and do it as yourself.',
+    translation: localize('bias.checks.nothing_was_settled_because_this', 'Nothing was settled, because this request has no member behind it. Deciding that a change in the team\'s declared lens does not affect a piece of work is somebody\'s judgement, and the record keeps whose it was. Sign in and do it as yourself.'),
   },
   BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
     check: 'C-26.15',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled. This was asked by a machine credential, and saying that a lens '
-      + 'change does not affect a finding is a person\'s judgement about the work — not something an '
-      + 'automated account can decide on anyone\'s behalf. A machine may raise this and show it to you; '
-      + 'answering it is yours.',
+    translation: localize('bias.checks.nothing_was_settled_this_was', 'Nothing was settled. This was asked by a machine credential, and saying that a lens change does not affect a finding is a person\'s judgement about the work — not something an automated account can decide on anyone\'s behalf. A machine may raise this and show it to you; answering it is yours.'),
   },
   BIAS_DEBT_NO_REASON: {
     check: 'C-26.16',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled, because no reason was given. The whole of what this act puts on '
-      + 'the record is why you judged that the change in the lens does not bear on this work — without '
-      + 'it the record would say only that somebody decided, and a later reader could not tell whether '
-      + 'the question was answered or waved away. Say why, and it is settled.',
+    translation: word('refusal.BIAS_DEBT_NO_REASON'),
   },
   BIAS_DEBT_REASON_TOO_LONG: {
     check: 'C-26.17',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled, because the reason given is longer than this record holds for one. '
-      + 'Nothing about it was wrong — it is a size limit and not a judgement about what you wrote. Put '
-      + 'the reasoning where it belongs in the work and give the short form of it here.',
+    translation: localize('bias.checks.nothing_was_settled_because_the', 'Nothing was settled, because the reason given is longer than this record holds for one. Nothing about it was wrong — it is a size limit and not a judgement about what you wrote. Put the reasoning where it belongs in the work and give the short form of it here.'),
   },
   BIAS_DEBT_NO_SUCH_DEBT: {
     check: 'C-26.18',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
-    translation: 'Nothing was settled, because there is no open bias debt on that run here. Either the '
-      + 'run never carried one, or it has already been settled, or it is not a run you can open.',
+    translation: word('refusal.BIAS_DEBT_NO_SUCH_DEBT'),
   },
   BIAS_DEBT_ALREADY_SETTLED: {
     check: 'C-26.19',
     where: 'src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve',
-    translation: 'Nothing was added, because this one has already been settled — by the lens moving back, '
-      + 'by a re-run under the lens now in force, or by a member who gave their reason. What settled it '
-      + 'is on the record and is not overwritten. If the lens changes again, the obligation is raised '
-      + 'again as a new one.',
+    translation: word('refusal.BIAS_DEBT_ALREADY_SETTLED'),
   },
   /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
      instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
@@ -543,9 +500,7 @@ export const BIAS_CHECKS = {
   BIAS_ADOPTION_NO_REASON: {
     check: 'C-26.21',
     where: 'src/bias/index.mjs biasAdopt, reached from op=biasadopt',
-    translation: 'Nothing was adopted, because no reason was given. Adopting a lens changes how this team reads '
-      + 'evidence, so the record keeps, beside your name, why you are adopting it. Say why in a sentence or a '
-      + 'short paragraph (at most 2,000 characters) and adopt it again.',
+    translation: word('refusal.BIAS_ADOPTION_NO_REASON'),
   },
   BIAS_ILLEGAL_TRANSITION: PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION,
 };

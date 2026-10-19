@@ -76,6 +76,7 @@ import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs"
 import * as caseChecker from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { evaluate as evaluateRecipe, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const { checkCaseFile, readCaseFile } = caseChecker;
 
@@ -641,7 +642,8 @@ export class CaseImport {
     /* DEC-49 REGION is-import-case-file */
     if (!list.length || list.some((p) => !p))
       return refuse("IMPORT_NOT_A_CASE_FILE", "parts are the case file's parts, each as bytes",
-                    { departures: [!list.length ? "no part was given" : `part ${list.findIndex((p) => !p)} is not bytes`] });
+                    { departures: [!list.length ? say("refusal.IMPORT_NOT_A_CASE_FILE.noparts")
+                                   : say("refusal.IMPORT_NOT_A_CASE_FILE.notbytes", { n: list.findIndex((p) => !p) + 1 })] });
     /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
        whose bytes differ from the manifest is the checker's to report (its R2), never a refusal here. */
     const read = this.#call(() => readCaseFile(list), { manifest: null, files: [], departures: [say("case-import.departures")] });
@@ -654,12 +656,12 @@ export class CaseImport {
       return refuse("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
     const big = list.findIndex((p) => p.length > PART_MAX);
     if (big >= 0)
-      return refuse("IMPORT_PART_TOO_LARGE", `part ${big} is ${list[big].length} bytes, over the part bound of ${PART_MAX}`,
+      return refuse("IMPORT_PART_TOO_LARGE", localize("case-import.index.part_big_is_length_bytes", "part {big} is {length} bytes, over the part bound of {PART_MAX}", { big: String(big), length: String(list[big].length), PART_MAX: String(PART_MAX) }),
                     { part: big, bytes: list[big].length, bound: PART_MAX });
     const who = CaseImport.#manifestIdentity(read.manifest);
     if (!who.group || !who.case || !who.edition)
       return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format",
-                    { departures: ["the manifest does not name its team, case and edition"] });
+                    { departures: [say("refusal.IMPORT_NOT_A_CASE_FILE.manifest")] });
     /* END DEC-49 REGION is-import-case-file */
     const listed = new Map(CaseImport.#manifestFiles(read.manifest).map((f) => [f.path, f]));
     const files = (Array.isArray(read.files) ? read.files : []).filter((f) => isObj(f) && str(f.path) && f.content instanceof Uint8Array);
@@ -677,7 +679,7 @@ export class CaseImport {
     const gf = groupFieldsOf(groupFields, who.group);
     /* DEC-49 REGION is-import-case-file */
     if (held)
-      return refuse("IMPORT_EDITION_DIFFERS", `edition ${who.edition} of this case is held with other bytes; an edition never changes`,
+      return refuse("IMPORT_EDITION_DIFFERS", localize("case-import.index.edition_edition_of_this_case", "edition {edition} of this case is held with other bytes; an edition never changes", { edition: String(who.edition) }),
                     { import: importId, edition: who.edition, held: held.manifest_sha, given: manifestSha });
     /* END DEC-49 REGION is-import-case-file */
     const answer = await this.#recreate(list, []);
@@ -718,7 +720,7 @@ export class CaseImport {
       if (again && again.manifest_sha === manifestSha)
         return { ok: true, existed: true, import: importId, group: who.group, case: who.case, lens: lensSha, edition: who.edition,
                  manifest_sha: manifestSha, wrote: false };
-      return again ? refuse("IMPORT_EDITION_DIFFERS", `edition ${who.edition} of this case is held with other bytes`,
+      return again ? refuse("IMPORT_EDITION_DIFFERS", localize("case-import.index.edition_edition_of_this_case_2", "edition {edition} of this case is held with other bytes", { edition: String(who.edition) }),
                             { import: importId, edition: who.edition, held: again.manifest_sha, given: manifestSha }) : out;
     }
     return { ok: true, existed: false, import: importId, group: who.group, case: who.case, lens: lensSha, edition: who.edition,
@@ -1072,7 +1074,7 @@ export class CaseImport {
     const ed = Number(e.edition);
     /* DEC-49 REGION is-import-accept */
     if (!words(checked) || !words(reason))
-      return refuse("IMPORT_ACCEPT_NO_REASON", `what was checked and the reason are each 1 to ${WORDS_MAX} characters`,
+      return refuse("IMPORT_ACCEPT_NO_REASON", localize("case-import.index.what_was_checked_and_the", "what was checked and the reason are each 1 to {WORDS_MAX} characters", { WORDS_MAX: String(WORDS_MAX) }),
                     { missing: [!words(checked) ? "checked" : null, !words(reason) ? "reason" : null].filter(Boolean) });
     /* END DEC-49 REGION is-import-accept */
     const results = new Map(this.#resultsOf(e.import_id, ed).map((r) => [r.finding, r]));
@@ -1165,7 +1167,7 @@ export class CaseImport {
     const ed = Number(e.edition);
     /* DEC-49 REGION is-import-withdraw */
     if (!words(reason))
-      return refuse("IMPORT_ACCEPT_NO_REASON", `the reason for withdrawing is 1 to ${WORDS_MAX} characters`, { missing: ["reason"] });
+      return refuse("IMPORT_ACCEPT_NO_REASON", localize("case-import.index.the_reason_for_withdrawing_is", "the reason for withdrawing is 1 to {WORDS_MAX} characters", { WORDS_MAX: String(WORDS_MAX) }), { missing: ["reason"] });
     if (!this.#acceptancesInForce(e.import_id, ed).length)
       return refuse("IMPORT_NOTHING_ACCEPTED", "no acceptance of this edition is in force", { import: e.import_id, edition: ed });
     /* END DEC-49 REGION is-import-withdraw */
@@ -1200,7 +1202,7 @@ export class CaseImport {
   /* R8's refusals after R1's: the issue or reason, then the edition and the finding. */
   #flagRefusal(text, what) {
     /* DEC-49 REGION is-import-flag */
-    if (!words(text)) return refuse("IMPORT_FLAG_NO_ISSUE", `${what} is 1 to ${WORDS_MAX} characters`);
+    if (!words(text)) return refuse("IMPORT_FLAG_NO_ISSUE", localize("case-import.index.what_is_1_to_words", "{what} is 1 to {WORDS_MAX} characters", { what: String(what), WORDS_MAX: String(WORDS_MAX) }));
     /* END DEC-49 REGION is-import-flag */
     return null;
   }
@@ -1410,7 +1412,7 @@ export class CaseImport {
       const fail = (check, detail) => { row.failed = check; row.detail = detail; out.push(row); };
       if (seq !== null && verified.has(seq) && verified.get(seq) !== digest) {
         row.held_digest = verified.get(seq);
-        fail("seq", `entry ${seq} is held with digest ${row.held_digest}; this one has ${digest}; the held entry stands`);
+        fail("seq", localize("case-import.index.entry_seq_is_held_with", "entry {seq} is held with digest {held_digest}; this one has {digest}; the held entry stands", { seq: String(seq), held_digest: String(row.held_digest), digest: String(digest) }));
         continue;
       }
       /* check 1: the digest and the form */
@@ -1428,7 +1430,7 @@ export class CaseImport {
         v = await verifySshsig(signature, statement, NS_DOCKET, [v.keyB64]);
         keyListed = false;
       }
-      if (!v.ok) { fail("signature", `the signature does not verify over the entry's statement (${v.reason})`); continue; }
+      if (!v.ok) { fail("signature", localize("case-import.index.the_signature_does_not_verify", "the signature does not verify over the entry's statement ({reason})", { reason: String(v.reason) })); continue; }
       row.key_b64 = v.keyB64;
       row.key_listed = keyListed;
       /* check 3: the chain */
@@ -1437,7 +1439,7 @@ export class CaseImport {
         if (prev !== null) { fail("chain", "entry 1 names a previous entry"); continue; }
         row.chain = "checked";
       } else if (!verified.has(seq - 1)) row.chain = "unchecked";
-      else if (verified.get(seq - 1) !== prev) { fail("chain", `previous is not the digest of the held entry ${seq - 1}`); continue; }
+      else if (verified.get(seq - 1) !== prev) { fail("chain", localize("case-import.index.previous_is_not_the_digest", "previous is not the digest of the held entry {v1}", { v1: String(seq - 1) })); continue; }
       else row.chain = "checked";
       row.status = "verified";
       verified.set(seq, digest);
@@ -1513,7 +1515,7 @@ export class CaseImport {
                new_entries: rows.length, new_moves: moves.length, new_refused: rows.filter((r) => r.status === "refused").length,
                ...(moves.length ? { reevaluation: told } : {}), ...(failed.length ? { listeners_failed: failed } : {}) };
     } catch (err) {
-      return { ok: false, failed: true, detail: `the read could not be recorded: ${String(err && err.message ? err.message : err).slice(0, 200)}` };
+      return { ok: false, failed: true, detail: localize("case-import.index.the_read_could_not_be", "the read could not be recorded: {String}", { String: String(String(err && err.message ? err.message : err).slice(0, 200)) }) };
     }
   }
 

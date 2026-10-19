@@ -6,6 +6,7 @@ import { world, sha } from "./fixture.mjs";
 import { contentObservationsFor, CAPTURE_TEXT_UNIT_CONTAINERS, INDEX_NOTICE_UNIT_CONTAINERS, observationLogOf, OBSERVATION_LOG_MODULE }
   from "../../../src/observation-log/index.mjs";
 import { CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../../../src/extraction/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LAYER = (tier = 1, extent = null) => ({ step: "layer", tier, container: "pdf", cap: null, ...(extent ? { extent } : {}) });
 const OCR_PAGES = (pages) => [
@@ -260,7 +261,7 @@ test("R8 the meaning level: the reader run per capture (PRESENT with the count, 
   w.obs.observeReaderRun("B", "c3", reading(), { readerRegistered: false });
   assert.equal(last().state, "LOOKED_INDETERMINATE");
   // resolution attempts, entities' notice payload (its R13)
-  w.obs.observeResolutionAttempt({ captureSha: "c1", bundleId: "B", ref: "k:1", matches: [], considered: "the composite key", resolvedBy: null });
+  w.obs.observeResolutionAttempt({ captureSha: "c1", bundleId: "B", ref: "k:1", matches: [], considered: word("entities.considered.composite_key"), resolvedBy: null });
   assert.deepEqual([last().subject_kind, last().subject, last().authority, last().state, last().actor_class], ["reference", "k:1", "c1", "LOOKED_ABSENT", "plane"]);
   assert.match(last().detail, /it tried the composite key/);
   w.obs.observeResolutionAttempt({ captureSha: "c1", ref: "k:2", matches: [{ entity_id: "ENT-1", grade: "B" }], resolvedBy: "member:bob" });

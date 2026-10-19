@@ -102,6 +102,7 @@ import { rowOf } from "./checks.mjs";
 import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
 import { keyed, sentencesOf, isQuestion, verdictsOf, asks, askAllowed, disclosureLines, OVERRIDE_HEAD,
          overrideDisclosure, matterWords } from "./outward.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
@@ -574,7 +575,7 @@ export class Filings {
         : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none(word("filings.determination_names_standard"));
       const fs = det.findings;
       out.findings = det.withheld ? none(cut)
-        : fs.length ? { value: fs.map((f) => `${f.id} (case ${f.case ?? "undetermined"}, edition ${f.edition ?? "undetermined"})`).join("; "),
+        : fs.length ? { value: fs.map((f) => localize("filings.index.id_case_v1_edition_v2", "{id} (case {v1}, edition {v2})", { id: String(f.id), v1: String(f.case ?? "undetermined"), v2: String(f.edition ?? "undetermined") })).join("; "),
                         source: fs.map((f) => `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`).join(", ") }
           : none(word("filings.determination_names_finding"));
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
@@ -985,8 +986,8 @@ export class Filings {
                  source: null });
       if (marks.audience === "violating_party") {
         const c = a.clock.find((x) => realDate(x.date) && str(x.basis) && (x.status ?? "pending") === "pending");
-        out.push(c ? { part: "a time for review and response", text: word("filings.invite_review_response", { date: c.date, basis: c.basis }), source: `${a.id}/clock` }
-          : { part: "a time for review and response", text: word("filings.time_review_response_undetermined"),
+        out.push(c ? { part: localize("filings.time_review_response", "a time for review and response"), text: word("filings.invite_review_response", { date: c.date, basis: c.basis }), source: `${a.id}/clock` }
+          : { part: localize("filings.time_review_response", "a time for review and response"), text: word("filings.time_review_response_undetermined"),
               source: null, undetermined: true });
       }
       return out;
@@ -994,13 +995,13 @@ export class Filings {
     /* chance_to_fix */
     const asks = this.#allowedAsks(det, v.view, viewer).filter((x) => x.what !== ASK_WHAT.route);
     const requires = asks.filter((x) => x.what === ASK_WHAT.requirement);
-    out.push(requires.length ? { part: "correcting the act", text: word("filings.correcting_act_look", { requires: requires.map((r) => r.words).join("; ") }),
+    out.push(requires.length ? { part: localize("filings.correcting_act", "correcting the act"), text: word("filings.correcting_act_look", { requires: requires.map((r) => r.words).join("; ") }),
                                  source: requires.map((r) => r.source).join(", ") }
-      : { part: "correcting the act", text: word("filings.correcting_act_undetermined"), source: null, undetermined: true });
+      : { part: localize("filings.correcting_act", "correcting the act"), text: word("filings.correcting_act_undetermined"), source: null, undetermined: true });
     const harm = asks.filter((x) => x.what === ASK_WHAT.consequence);
-    out.push(harm.length ? { part: "remedying the harm", text: word("filings.remedying_harm_look", { harm: harm.map((r) => r.words).join("; ") }),
+    out.push(harm.length ? { part: localize("filings.remedying_harm", "remedying the harm"), text: word("filings.remedying_harm_look", { harm: harm.map((r) => r.words).join("; ") }),
                              source: harm.map((r) => r.source).join(", ") }
-      : { part: "remedying the harm", text: word("filings.remedying_harm_consequence"), source: null });
+      : { part: localize("filings.remedying_harm", "remedying the harm"), text: word("filings.remedying_harm_consequence"), source: null });
     const law = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.find((d) => d.applies_to === a.kind && !d.defends) : null;
     const window = a.clock.find((x) => realDate(x.date) && (x.basis_kind === "window"));
     out.push(law ? { part: "a time", text: word("filings.time_law_allows", { days: law.days ?? law.amount ?? "a period", count: law.count ?? law.units ?? "days",
@@ -1735,7 +1736,7 @@ export class Filings {
       word("filings.reason_stated", { reason: latest.reason ?? word("filings.reason_recorded") }),
       word("filings.keep_outside_civicsmith", { kinds: word("filings.documents_letters_emails") }),
     ];
-    const sources = [{ part: "the place", source: p.project || p.target }, { part: "the reason and the date", source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
+    const sources = [{ part: "the place", source: p.project || p.target }, { part: localize("filings.reason_date", "the reason and the date"), source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
     const at = this.#when();
     const text = lines.join("\n");
     return this.record.transact(() => {
@@ -2325,7 +2326,7 @@ export class Filings {
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
       return { ok: false, reason: "MACHINE_CANNOT_NAME_COUNSEL",
-               detail: who ? `'${who.slice(0, 60)}' is a machine identity: the team names its counsel`
+               detail: who ? localize("filings.index.who_is_a_machine_identity", "'{who}' is a machine identity: the team names its counsel", { who: String(who.slice(0, 60)) })
                            : "no member is named as the one naming counsel" };
     /* R8 (DEC-88, C-115.44): the author's words on why, kept as written. Blank is empty after trim; the bound counts
        code points, as publication's attribution reason does (K1030). Asked before the action, so nothing is read or
@@ -2588,7 +2589,7 @@ export class Filings {
     const a = this.#action(read.action, viewer);
     const stakeProject = (a && str(a.project)) || project;
     const { bytes, inband } = await this.#stamped(Filings.render(read),
-      { what: `counsel packet ${read.id} version ${read.version}`, date: at, author: who, project,
+      { what: localize("filings.index.counsel_packet_id_version_version", "counsel packet {id} version {version}", { id: String(read.id), version: String(read.version) }), date: at, author: who, project,
         stake: { project: stakeProject, matter: a ? this.#matterStake(a, stakeProject) : null } });
     const sha = sha256HexSync(bytes);
     this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)

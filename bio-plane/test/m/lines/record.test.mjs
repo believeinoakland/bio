@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, ANN, MACHINE } from "./fixture.mjs";
 import { LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const T = { statement: "I attended the meeting where this was said" };
 const count = (w) => w.one(`SELECT COUNT(*) AS n FROM lines`).n;
@@ -14,7 +15,7 @@ test("R1 recordLine refuses in order: UNKNOWN_LINE_KIND (naming the closed list,
   const u = w.l.recordLine({ kind: "gave_to", from: p, to: o, basis: T, by: ANN });
   assert.equal(u.reason, "UNKNOWN_LINE_KIND");
   for (const k of LINE_KINDS) assert.ok(u.detail.includes(k), k);
-  assert.match(u.detail, /money fact/);
+  assert.equal(u.detail, localize("lines.index.a_lines_kind_is_one", "a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line", { LINE_KINDS: LINE_KINDS.join(", ") }));
   assert.equal(w.l.recordLine({ from: p, basis: T, by: ANN }).reason, "UNKNOWN_LINE_KIND", "the kind is asked first");
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, basis: T, by: ANN }).reason, "NO_ENDS");
   assert.equal(w.l.recordLine({ kind: "part_of", to: o, basis: T, by: ANN }).reason, "NO_ENDS");

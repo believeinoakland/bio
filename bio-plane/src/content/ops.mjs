@@ -9,6 +9,11 @@
  *  never a throw. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
+/** R50: the op names this module's arms answer, the module's own declaration of them (`contentOps` holds one arm per
+ *  name, and a test checks the two agree). */
+export const CONTENT_OP_NAMES = Object.freeze(["content", "contentcrop", "contentmint", "textattest", "attesttext",
+  "transcribe", "transcriptionattest", "transcription"]);
+
 /** R50: the module's route arms, keyed by op name, each a function of no arguments answering what its service answers. */
 export function contentOps(content, url, body) {
   const q = (k) => url.searchParams.get(k);

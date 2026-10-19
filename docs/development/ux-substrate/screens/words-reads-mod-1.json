@@ -4884,12 +4884,7 @@
    "label.linekinds.post_in",
    "label.linekinds.seat_on",
    "lines.holds.held_post",
-   "lines.text.date_read",
-   "lines.text.line_naming_office",
-   "lines.text.lines_hold_post",
-   "lines.text.lines_read_holds",
    "lines.text.recorded",
-   "lines.undetermined.line_covers_date",
    "lines.why.entity_lines_kinds",
    "lines.why.stated_current_through"
   ],

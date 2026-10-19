@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, M, BOB, MACHINE, INQ, INQ2, INQ3, INFO, RFC, RFC2, REQ, leg } from "./fixture.mjs";
 import { ACTION_REPLY_CHECKS, BEARINGS, BEARING_PROPOSALS_READ_MAX } from "../../../src/action-replies/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* A request for comment putting two inquiries and resting on a document, sent, then answered. */
 function answered() {
@@ -86,7 +87,7 @@ test("R1 BEARING_REFUSED: a claim not among the legs (the control's opposite), a
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "BEARING_REFUSED", "BEARING_REFUSED", "C-150.3"], JSON.stringify(claims));
     /* R9 (T47) amends this: the row's sentence with its `{item}` filled (t47.test.mjs) */
     assert.equal(r.translation, ACTION_REPLY_CHECKS.BEARING_REFUSED.translation.replace("{item}",
-      item === null ? "The list of claims" : `Claim ${item + 1}${claims[item] && claims[item].claim ? ` (${claims[item].claim})` : ""}`));
+      item === null ? word("action-replies.list_claims") : `Claim ${item + 1}${claims[item] && claims[item].claim ? ` (${claims[item].claim})` : ""}`));
     assert.ok(r.findings.length >= 1 && r.findings.every((f) => f.check === "C-2.10"), JSON.stringify(r.findings));
     if (item !== null) assert.equal(r.item, item, "the item is named");
   }

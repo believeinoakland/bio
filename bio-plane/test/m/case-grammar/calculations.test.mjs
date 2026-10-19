@@ -9,7 +9,8 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { doc, sha } from "./helpers.mjs";
 import { CALCS, RECIPE, INPUT_BYTES, caseFileFixture, manifestFor } from "./casefile-fixture.mjs";
 
-const V7 = CG.CASE_DOCUMENT_FORMAT;
+const V7 = CG.CASE_DOCUMENT_FORMAT_V7;
+const V8 = CG.CASE_DOCUMENT_FORMAT;
 const OLDER = ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2",
                "bio-case-document/1", null];
 const fmOf = (text) => { const p = parseFrontmatter(text); assert.deepEqual(p.findings, [], "the grammar reads every line"); return p.data; };
@@ -77,15 +78,19 @@ test("R18 R6 negative controls: no block, an older format and odd input answer a
                       recompute: null, disclosed: null }]);
 });
 
-test("R1 R18 R20 the blocks join /7 with no /8: the format written is still /7, every predicate as before, and a /7 document without them reads none", () => {
-  assert.equal(CG.CASE_DOCUMENT_FORMAT, "bio-case-document/7");
-  assert.equal(CG.CASE_DOCUMENT_FORMATS_ACCEPTED.includes("bio-case-document/8"), false);
+test("R1 R18 R20 R33 the blocks joined /7 and /8 states them as /7 does: every predicate as before, and a /7 or /8 document without them reads none", () => {
+  assert.equal(CG.CASE_DOCUMENT_FORMAT, "bio-case-document/8");
+  assert.equal(CG.CASE_DOCUMENT_FORMATS_ACCEPTED.includes("bio-case-document/7"), true);
   const text = doc(V7, [...CG.calculationsLines(CALCS), ...CG.timelineLines([]), ...CG.methodBlockLines({ grading: "bio-grading/1" })]);
   const fm = fmOf(text);
   assert.deepEqual([CG.caseDocumentRequiresMaterials(fm), CG.caseDocumentRequiresTensionSection(fm)], [true, true]);
   assert.equal(CG.calculationsOf(fm).length, 1);
   assert.deepEqual(CG.methodOf(fm), { grading: "bio-grading/1", checks: null }, "the earlier blocks read as before");
   assert.deepEqual([CG.calculationsOf(fmOf(doc(V7))), CG.timelineOf(fmOf(doc(V7)))], [[], { they_did: [], we_did: [] }]);
+  /* /8 reads the same blocks the same way (R33: it differs from /7 in words only) */
+  const text8 = doc(V8, [...CG.calculationsLines(CALCS), ...CG.timelineLines([]), ...CG.methodBlockLines({ grading: "bio-grading/3" })]);
+  assert.deepEqual([CG.calculationsOf(fmOf(text8)), CG.methodOf(fmOf(text8))], [CG.calculationsOf(fm), { grading: "bio-grading/3", checks: null }]);
+  assert.deepEqual([CG.calculationsOf(fmOf(doc(V8))), CG.timelineOf(fmOf(doc(V8)))], [[], { they_did: [], we_did: [] }]);
   /* /6 is read the same way (R17's precedent) */
   assert.equal(CG.calculationsOf(fmOf(doc("bio-case-document/6", CG.calculationsLines(CALCS)))).length, 1);
 });

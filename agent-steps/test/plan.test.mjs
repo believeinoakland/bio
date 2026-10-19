@@ -12,9 +12,11 @@ import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
 import { MODES, PLAN_FLOW, CONTROL_FLOW, OPTION_KEYS, PLAN_BUDGET_BOUNDS, nextPlanStep, planStopBecause, applyPlanJudgement, planDedup, earlierPlans, whyWithUndetermined, flowFor, resumeFrom, publishableState } from "../../agent-harness/src/harness.mjs";
-const WRITE_OPS = ["airuntick", "airunclose", "optionpropose", "suggest", "capturerequest", "airunspawn", "optionadd"];
-const READ_OPS = ["whoami", "airun", "airunlog", "plan", "plans", "determination", "standard", "consequencesof", "availableactions", "publishededitions", "profiles", "action", "reading", "procedureguides", "agentpack"];
-const DECLARED = [...WRITE_OPS.filter((o) => o !== "optionadd"), ...READ_OPS];
+/* The plane's ops, as its own declaration states them (`op-declarations`' OPS): a read is not mutating, a write is. */
+const DECLARED = Object.keys(OPS);
+const WRITE_OPS = DECLARED.filter((op) => OPS[op].mutating);
+const READ_OPS = DECLARED.filter((op) => !OPS[op].mutating);
+import { PLAN_OPS as OPS } from "../src/ops.mjs";
 import worker from "./shell.mjs";
 
 let pass = 0, fail = 0;

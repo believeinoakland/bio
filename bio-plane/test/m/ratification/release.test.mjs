@@ -10,6 +10,7 @@ import { Ratification, ratificationOf, ratificationOps, RELEASE_ACK_MAX,
          RELEASE_CHECKS } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -275,7 +276,7 @@ test("R24, R26: every member is released as a new version authored by the member
     assert.match(fm.last_updated, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, "to the second");
     assert.deepEqual([fm.current_state, fm.prior_state, fm.criticality], ["verified", "collected", "supporting"]);
     assert.deepEqual(fm.state_history, [{ timestamp: fm.last_updated, from_state: "collected", to_state: "verified",
-      blurb: `batch release via selection ${h}; acknowledgment and mitigation in Session Log`, author: WHO }]);
+      blurb: word("ratification.blurb", { handle: String(h) }), author: WHO }]);
     const log = text.slice(text.indexOf("## Session Log"), text.indexOf("## Review Notes"));
     assert.ok(log.endsWith(`### Session ${fm.last_updated} | Released (batch) | ${WHO}\nTrigger: selection ${h}\n`
       + `Changes: state collected to verified.\nAcknowledgment: ${ACK}\nMitigation: ${MIT}\n\n`), log);

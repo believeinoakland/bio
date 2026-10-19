@@ -135,6 +135,7 @@
  * ========================================================================= */
 
 import { levelEmptyHolds } from "../../bio-plane/src/run-rules/index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* THE FOUR LEVELS, IN FAN-OUT ORDER.
  *
@@ -195,9 +196,9 @@ export const REPORTING_LEVEL = Object.freeze({
  * gate the caller holds. */
 export const MODES = {
   check:       { deployed: true,
-                 does: "read an EXISTING conclusion adversarially (DEC-24's CHECK role, §2)" },
+                 does: localize("agent-harness.harness.mode_check_does", "read an EXISTING conclusion adversarially (DEC-24's CHECK role, §2)") },
   investigate: { deployed: false,
-                 does: "investigate fresh — enabled only after CHECK's first live run is verified (VF-5/SK-4)" },
+                 does: localize("agent-harness.harness.mode_investigate_does", "investigate fresh — enabled only after CHECK's first live run is verified (VF-5/SK-4)") },
   /* THE EXTRACT ROW, landed 2026-09-14 on SK-8's DELEGATION and NOT deployed.
      SK-8 built the plane half — `op=extractpropose` inside DEC-62's run, under
      the `mints` bound — and measured that nothing could DRIVE such a run,
@@ -210,17 +211,14 @@ export const MODES = {
      act — an EDIT here under review, never a request parameter — and it is not
      the act that added the row. */
   extract:     { deployed: false,
-                 does: "propose citable passages and readings over a SUBJECT a member named, under the run's "
-                     + "`mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; "
-                     + "not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)" },
+                 does: localize("agent-harness.harness.mode_extract_does", "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)") },
   /* R10 (T46; N919; Bob's, K2892): THE PLANNING SKILL, DEPLOYED. It walks its own table (`PLAN_FLOW`, R6) and proposes
      options to one action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is
      deployed by the one reviewed change that also sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s
      copy (its R53), never by model turns running; this copy must agree with run-rules', and the suite holds it to that.
      The flag marks served code and lifts no bar: an open in mode `plan` is still admitted only through `run-rules` R29. */
   plan:        { deployed: true,
-                 does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, "
-                     + "starts, prepares and sends nothing (BIO_Action_v0_1.md §4)" },
+                 does: localize("agent-harness.harness.mode_plan_does", "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md §4)") },
 };
 
 /* §14b.6's budget, in the plane's OWN bound names (run-rules'
@@ -273,7 +271,7 @@ export const NOT_OUR_BOUNDS = {
  * §14b.4 table is visible as data: what is scripted, and what is judged. */
 export const CONTROL_FLOW = {
   "gate-mode": {
-    does:   "SK-4's gate: refuse a mode that is not deployed, before anything is spent",
+    does:   localize("agent-harness.harness.sk_4s_gate_refuse_a", "SK-4's gate: refuse a mode that is not deployed, before anything is spent"),
     judged: null,
     logs:   true,
     to:     ["resume", "close"],
@@ -388,25 +386,22 @@ export function runContextTarget(session) {
   const ctx = session && typeof session === "object" ? session.context : null;
   const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
   const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
-  if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
+  if (!id) return { target: null, basis: localize("agent-harness.harness.undetermined_the_run_read_published", "UNDETERMINED: the run read published no context id") };
   if (type === "project") {
     if (!Array.isArray(ctx.questions))
       return { target: null,
-               basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the "
-                    + "run read does not publish that set; a candidate names its own target, never the project id" };
+               basis: localize("agent-harness.harness.undetermined_a_run_over_a_project", "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id") };
     const qs = [...new Set(ctx.questions.filter((q) => typeof q === "string" && q.trim() !== "")
                                         .map((q) => q.trim()))];
-    if (qs.length === 1) return { target: qs[0], basis: "the one question the run's project confirmed-cites" };
+    if (qs.length === 1) return { target: qs[0], basis: localize("agent-harness.harness.the_one_question_the_runs", "the one question the run's project confirmed-cites") };
     if (qs.length === 0)
       return { target: null,
-               basis: "UNDETERMINED: the run's project confirmed-cites no question this run can see; a candidate "
-                    + "names its own target, never the project id" };
+               basis: localize("agent-harness.harness.undetermined_the_runs_project_confirms_no", "UNDETERMINED: the run's project confirmed-cites no question this run can see; a candidate names its own target, never the project id") };
     return { target: null,
-             basis: `UNDETERMINED: the run's project confirmed-cites ${qs.length} questions and this member does `
-                  + "not pick one of several; a candidate names its own target, never the project id" };
+             basis: localize("agent-harness.harness.undetermined_the_runs_project_confirmed", "UNDETERMINED: the run's project confirmed-cites {length} questions and this member does not pick one of several; a candidate names its own target, never the project id", { length: String(qs.length) }) };
   }
-  if (type === "inquiry") return { target: id, basis: "the run's context question" };
-  return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
+  if (type === "inquiry") return { target: id, basis: localize("agent-harness.harness.the_runs_context_question", "the run's context question") };
+  return { target: null, basis: localize("agent-harness.harness.undetermined_the_runs_context_kind", "UNDETERMINED: the run's context kind {stringify} is not one this member reads", { stringify: String(JSON.stringify(type)) }) };
 }
 
 /** §9's EMPTY-LEVEL KIND, DERIVED BY THE TABLE AND NEVER BY THE MODEL.
@@ -496,9 +491,7 @@ export function emptyLevelCandidates(state, target) {
          in the run's log, which this description points to. */
       /* R13 (R085-23; K3510): the description names the question as "this question", never its record id. The id
          is the plane's to show with the question, and a raw id here reached the reader verbatim (`question.mjs`). */
-      description: `this run searched the ${reported} level of this question `
-        + `and found nothing supportable there; the search that establishes it is written in the `
-        + `run's observation log at ${String(r.observed_at ?? "(no address)")}.`,
+      description: localize("agent-harness.harness.this_run_searched_the_reported", "this run searched the {reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at {String}.", { reported: String(reported), String: String(String(r.observed_at ?? "(no address)")) }),
     });
   }
   return out;
@@ -611,17 +604,12 @@ export function gateStep(state) {
     const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
     const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
     const which = !mode
-      ? `mode '${key || "(none)"}' is not deployed — it is no mode this table knows at all `
-        + `(the table holds: ${Object.keys(MODES).join(", ")})`
-      : `mode '${key}' is not deployed yet — it is a row in this table (${mode.does}), and enabling it `
-        + "is an EDIT to this file under review, never a request parameter";
+      ? localize("agent-harness.harness.mode_v1_is_not_deployed", "mode '{v1}' is not deployed — it is no mode this table knows at all (the table holds: {keys})", { v1: String(key || "(none)"), keys: String(Object.keys(MODES).join(", ")) })
+      : localize("agent-harness.harness.mode_key_is_not_deployed", "mode '{key}' is not deployed yet — it is a row in this table ({does}), and enabling it is an EDIT to this file under review, never a request parameter", { key: String(key), does: String(mode.does) });
     return { step: "close", bound: "mode-not-deployed",
-             why: `${which}. CHECK is the first deployed mode (§2); deployed now: ${deployed.join(", ")}; `
-                + `not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run `
-                + `is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence `
-                + "in the skill." };
+             why: localize("agent-harness.harness.which_check_is_the_first", "{which}. CHECK is the first deployed mode (§2); deployed now: {deployed}; not yet: {waiting}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.", { which: String(which), deployed: String(deployed.join(", ")), waiting: String(waiting.join(", ")) }) };
   }
-  return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
+  return { step: "resume", why: localize("agent-harness.harness.the_mode_is_deployed_read_this", "the mode is deployed; read this run's own log before doing anything else") };
 }
 
 /** THE TABLE, AS A FUNCTION. Pure: same state in, same step out, every time.
@@ -646,8 +634,8 @@ function nothingWrittenReason(state) {
   const composed = countOf(s.composed);
   const kept = s.kept === undefined || s.kept === null ? composed : countOf(s.kept);
   if (kept <= 0 || Math.max(countOf(s.wrote), countOf(s.written)) > 0) return null;
-  return `nothing written: ${composed} candidate(s) composed, ${kept} sent to be written, none written`
-       + `${s.refusal ? ` (the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}')` : ""}`;
+  const refused = s.refusal ? localize("agent-harness.harness.the_plane_refused_code", " (the plane refused '{code}')", { code: String(s.refusal.code || s.refusal.reason || "?") }) : "";
+  return localize("agent-harness.harness.nothing_written_composed_candidate_s", "nothing written: {composed} candidate(s) composed, {kept} sent to be written, none written{v1}", { composed: String(composed), kept: String(kept), v1: refused });
 }
 
 function nothingWrittenGuard(s, decision) {
@@ -660,7 +648,7 @@ function tableStep(state) {
   const s = state || {};
   const at = String(s.step || FIRST_STEP);
   const row = CONTROL_FLOW[at];
-  if (!row) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
+  if (!row) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row", "'{at}' is not a row in this table", { at: String(at) }), bound: "completed" };
 
   /* THE GATE FIRST, and before any bound is consulted (`gateStep`). */
   if (at === "gate-mode") return gateStep(s);
@@ -670,28 +658,26 @@ function tableStep(state) {
   if (stopped && at !== "close")
     return { step: "close", bound: stopped,
              why: stopped === "completed"
-               ? `${s.pass} of ${passLimit(s.maxPasses)} passes are done; the loop's termination is the table's and not the model's`
-               : `the '${stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where` };
+               ? localize("agent-harness.harness.pass_of_passlimit_passes_are", "{pass} of {passLimit} passes are done; the loop's termination is the table's and not the model's", { pass: String(s.pass), passLimit: String(passLimit(s.maxPasses)) })
+               : localize("agent-harness.harness.the_stopped_budget_is_spent", "the '{stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where", { stopped: String(stopped) }) };
 
   switch (at) {
     case "resume":
       /* R11, N153: the published state names where the last segment stopped, and the table continues there. */
       if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
         return { step: s.resumeAt,
-                 why: `this run's last tick published its state at '${s.resumeAt}' with ${Number(s.pass) || 0} `
-                    + `pass(es) done, and its log carries ${Number(s.resumedFrom) || 0} observation(s); `
-                    + "continuing rather than restarting (§14b.7)" };
+                 why: localize("agent-harness.harness.this_runs_last_tick_published", "this run's last tick published its state at '{resumeAt}' with {v1} pass(es) done, and its log carries {v2} observation(s); continuing rather than restarting (§14b.7)", { resumeAt: String(s.resumeAt), v1: String(Number(s.pass) || 0), v2: String(Number(s.resumedFrom) || 0) }) };
       return { step: "plan",
                why: (s.resumedFrom > 0
-                 ? `this run's log carries ${s.resumedFrom} observation(s); continuing rather than restarting (§14b.7)`
-                 : "this run's log is empty; starting the first pass")
+                 ? localize("agent-harness.harness.this_runs_log_carries_observations", "this run's log carries {resumedFrom} observation(s); continuing rather than restarting (§14b.7)", { resumedFrom: String(s.resumedFrom) })
+                 : localize("agent-harness.harness.this_runs_log_is_empty", "this run's log is empty; starting the first pass"))
                   + (s.resumeBasis ? `. ${s.resumeBasis}` : "") };
 
     case "plan":
-      return { step: "fanout", why: `pass ${Number(s.pass) + 1}: fan out across all ${LEVELS.length} levels` };
+      return { step: "fanout", why: localize("agent-harness.harness.pass_v1_fan_out_across", "pass {v1}: fan out across all {length} levels", { v1: String(Number(s.pass) + 1), length: String(LEVELS.length) }) };
 
     case "fanout":
-      return { step: "collect", why: `${LEVELS.length} sub-sessions spawned, one per level, in LEVELS order` };
+      return { step: "collect", why: localize("agent-harness.harness.length_sub_sessions_spawned_one", "{length} sub-sessions spawned, one per level, in LEVELS order", { length: String(LEVELS.length) }) };
 
     case "collect": {
       /* THE SENTENCE NAMES BOTH NUMBERS, AND BEFORE FL-5 IT NAMED NEITHER. It
@@ -703,11 +689,9 @@ function tableStep(state) {
          UNDETERMINED and stays stated. */
       const refused = (s.reportsRefused || []).length;
       return { step: "compose",
-               why: `${(s.reports || []).length} REPORT(s) honoured the return contract`
-                  + (refused
-                      ? `; ${refused} return(s) REFUSED — a sub-session that returns documents has `
-                        + `defeated the architecture, and those levels are UNDETERMINED, not empty`
-                      : "; none refused") };
+               why: localize("agent-harness.harness.length_report_s_honoured_the", "{length} REPORT(s) honoured the return contract{v1}", { length: String((s.reports || []).length), v1: refused
+                      ? localize("agent-harness.harness.return_s_refused_a_sub", "; {refused} return(s) REFUSED — a sub-session that returns documents has defeated the architecture, and those levels are UNDETERMINED, not empty", { refused: String(refused) })
+                      : localize("agent-harness.harness.none_refused", "; none refused") }) };
     }
 
     case "compose":
@@ -715,22 +699,21 @@ function tableStep(state) {
          goes through `dedup` — a candidate list of zero is a real answer and
          §9's `level-empty` kind is written from it, so short-circuiting here
          would skip the row that produces the empty-run instrument's object. */
-      return { step: "dedup", why: `${(s.candidates || []).length} candidate(s) composed; nothing may be written before dedup` };
+      return { step: "dedup", why: localize("agent-harness.harness.length_candidate_s_composed_nothing", "{length} candidate(s) composed; nothing may be written before dedup", { length: String((s.candidates || []).length) }) };
 
     case "dedup": {
       const queue = s.queue || [];
       if (!queue.length)
-        return { step: "next-pass", why: "no candidate differs in substance from what the record already holds" };
-      return { step: "submit", why: `${queue.length} candidate(s) survived dedup; they are written ONE AT A TIME, as formed` };
+        return { step: "next-pass", why: localize("agent-harness.harness.no_candidate_differs_in_substance", "no candidate differs in substance from what the record already holds") };
+      return { step: "submit", why: localize("agent-harness.harness.length_candidate_s_survived_dedup", "{length} candidate(s) survived dedup; they are written ONE AT A TIME, as formed", { length: String(queue.length) }) };
     }
 
     case "submit": {
       /* A REFUSAL ROUTES TO `adjust`. Never back here. */
-      if (s.refusal) return { step: "adjust", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}'; `
-                                                 + `F10 routes a refusal to an ADJUST step, never to a verbatim retry` };
+      if (s.refusal) return { step: "adjust", why: localize("agent-harness.harness.the_plane_refused_string_f10", "the plane refused '{String}'; F10 routes a refusal to an ADJUST step, never to a verbatim retry", { String: String(String(s.refusal.code || s.refusal.reason || "?")) }) };
       const queue = s.queue || [];
-      if (queue.length) return { step: "submit", why: `${queue.length} candidate(s) still to write, one at a time` };
-      return { step: "next-pass", why: "every candidate this pass formed has been written or dropped" };
+      if (queue.length) return { step: "submit", why: localize("agent-harness.harness.length_candidate_s_still_to", "{length} candidate(s) still to write, one at a time", { length: String(queue.length) }) };
+      return { step: "next-pass", why: localize("agent-harness.harness.every_candidate_this_pass_formed", "every candidate this pass formed has been written or dropped") };
     }
 
     case "adjust": {
@@ -743,15 +726,11 @@ function tableStep(state) {
       const queue = s.queue || [];
       if (!s.adjusted && queue.length)
         return { step: "submit",
-                 why: "the refusal could not be answered by changing the submission, so the candidate is DROPPED "
-                    + `and never resent (that would climb PL-3's \`repeats\` counter); ${queue.length} candidate(s) `
-                    + "behind it in this pass are still written, one at a time" };
+                 why: localize("agent-harness.harness.the_refusal_could_not_be", "the refusal could not be answered by changing the submission, so the candidate is DROPPED and never resent (that would climb PL-3's `repeats` counter); {length} candidate(s) behind it in this pass are still written, one at a time", { length: String(queue.length) }) };
       if (!s.adjusted)
         return { step: "next-pass",
-                 why: "the refusal could not be answered by changing the submission, so the candidate is DROPPED. "
-                    + "Resending the same bytes would return the stored refusal without re-evaluation and climb "
-                    + "PL-3's `repeats` counter, which is the loop F10 exists to make visible" };
-      return { step: "submit", why: "the submission was ADJUSTED and differs from the one that was refused" };
+                 why: localize("agent-harness.harness.the_refusal_could_not_be_2", "the refusal could not be answered by changing the submission, so the candidate is DROPPED. Resending the same bytes would return the stored refusal without re-evaluation and climb PL-3's `repeats` counter, which is the loop F10 exists to make visible") };
+      return { step: "submit", why: localize("agent-harness.harness.the_submission_was_adjusted", "the submission was ADJUSTED and differs from the one that was refused") };
     }
 
     case "next-pass":
@@ -759,9 +738,8 @@ function tableStep(state) {
          already held, or it composed none) closes the run: a further pass would search the same ground. */
       if (s.passAdded !== true)
         return { step: "close", bound: "completed",
-                 why: `pass ${s.pass} added no new candidate (each one composed was already held, or none was composed); `
-                    + "a further pass would find nothing the record does not hold, so the run closes" };
-      return { step: "plan", why: `pass ${s.pass} done; the table decides there is another` };
+                 why: localize("agent-harness.harness.pass_pass_added_no_new", "pass {pass} added no new candidate (each one composed was already held, or none was composed); a further pass would find nothing the record does not hold, so the run closes", { pass: String(s.pass) }) };
+      return { step: "plan", why: localize("agent-harness.harness.pass_pass_done_the_table", "pass {pass} done; the table decides there is another", { pass: String(s.pass) }) };
 
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
@@ -770,7 +748,7 @@ function tableStep(state) {
        without a case here falls to the unreachable return below, which the
        suite drives as its own arm. */
   }
-  return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
+  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition", "'{at}' has no transition", { at: String(at) }), bound: "completed" };
 }
 
 /** THE MOVE FROM ONE ROW TO THE NEXT, as the driver applies it. Pure. `adjust` alone carries the refusal and the
@@ -874,15 +852,13 @@ export function resumeFrom(published, flow = CONTROL_FLOW) {
   if (!p || !Object.prototype.hasOwnProperty.call(p, "step") || p.step == null)
     return { at: null, state: null,
              basis: published == null
-               ? "The run publishes no state it can be read back from, so this segment starts from the resume row"
-               : "The run's published state names no step yet, so this segment starts from the resume row" };
+               ? localize("agent-harness.harness.the_run_publishes_no_state", "The run publishes no state it can be read back from, so this segment starts from the resume row")
+               : localize("agent-harness.harness.the_runs_published_state_names", "The run's published state names no step yet, so this segment starts from the resume row") };
   const at = String(p.step);
   const pass = Number(p.pass);
   if (!resumeTargets(flow).includes(at) || !Number.isInteger(pass) || pass < 0)
     return { at: null, state: null,
-             basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at).slice(0, 60)} at pass `
-                  + `${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so `
-                  + "this segment starts the pass over rather than guess where the last one stopped" };
+             basis: localize("agent-harness.harness.undetermined_the_runs_published_state", "UNDETERMINED: the run's published state names step {stringify} at pass {stringify_2}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped", { stringify: String(JSON.stringify(at).slice(0, 60)), stringify_2: String(JSON.stringify(p.pass ?? null).slice(0, 20)) }) };
   return { at, basis: null, state: {
     pass, targets: list(p.targets), reports: list(p.reports), reportsRefused: list(p.reportsRefused),
     rereads: Number(p.rereads) > 0 ? Number(p.rereads) : 0, holdings: record(p.holdings),
@@ -930,10 +906,8 @@ export function resumeFrom(published, flow = CONTROL_FLOW) {
  * (`present_unbacked`) so the downgrade is visible rather than silent. When a
  * look that can carry a referent exists (a sub-session's capture), it is the
  * PLANE's writers that record it with one — the capture drain already does. */
-export const PRESENT_UNBACKED_NOTE =
-  "the model judged PRESENT at this step, but this entry can name nothing that was found, "
-  + "and the record refuses a PRESENT that names nothing (C-22.10) — so it is recorded as "
-  + "LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
+export const PRESENT_UNBACKED_NOTE = localize("agent-harness.harness.the_model_judged_present_at",
+  "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) — so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there");
 
 export function stepLog(state, decision) {
   const s = state || {};
@@ -1031,17 +1005,13 @@ export function applyJudgement(state, judgement) {
   const overreach = Object.keys(j).filter((k) => NOT_JUDGEABLE.includes(k));
   if (overreach.length)
     return { ok: false, overreach,
-             detail: `a judgement may not set ${overreach.join(", ")}. Loop bounds, the pass counter, the `
-                   + `budget, the mode and the step are the TABLE's and never the model's (§14b.4). The `
-                   + `evidential case is measured: TREC 2011 found searchers erring by up to +95/-87 points `
-                   + `on their own recall and stopping early on a false belief of high coverage.` };
+             detail: localize("agent-harness.harness.a_judgement_may_not_set", "a judgement may not set {overreach}. Loop bounds, the pass counter, the budget, the mode and the step are the TABLE's and never the model's (§14b.4). The evidential case is measured: TREC 2011 found searchers erring by up to +95/-87 points on their own recall and stopping early on a false belief of high coverage.", { overreach: String(overreach.join(", ")) }) };
   /* R19: a malformed list is refused by key, at any step; a well-formed one is applied at `compose` only. */
   if (Object.prototype.hasOwnProperty.call(j, "disagreements")) {
     const bad = badDisagreements(j.disagreements);
     if (bad.length)
       return { ok: false, overreach: bad,
-               detail: `a judgement's disagreements are at most ${DISAGREEMENTS_MAX} pairs, each a record id and two `
-                     + `different levels of ${LEVELS.join(", ")} and nothing else; ${bad.join(", ")} breaks that.` };
+               detail: localize("agent-harness.harness.a_judgements_disagreements_are_at", "a judgement's disagreements are at most {DISAGREEMENTS_MAX} pairs, each a record id and two different levels of {LEVELS} and nothing else; {bad} breaks that.", { DISAGREEMENTS_MAX: String(DISAGREEMENTS_MAX), LEVELS: String(LEVELS.join(", ")), bad: String(bad.join(", ")) }) };
   }
   const next = { ...state };
   for (const k of JUDGEABLE) {
@@ -1141,48 +1111,46 @@ export function planStopBecause(state) {
 export function nextPlanStep(state) {
   const s = state || {};
   const at = String(s.step || FIRST_STEP);
-  if (!PLAN_FLOW[at]) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
+  if (!PLAN_FLOW[at]) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row_2", "'{at}' is not a row in this table", { at: String(at) }), bound: "completed" };
   if (at === "gate-mode") return gateStep(s);
   const stopped = planStopBecause(s);
   if (stopped && at !== "close")
     return { step: "close", bound: stopped,
              why: stopped === "completed"
-               ? "the plan's one pass is done; the loop's termination is the table's and not the model's"
-               : `the '${stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where` };
+               ? localize("agent-harness.harness.the_plans_one_pass_is_done", "the plan's one pass is done; the loop's termination is the table's and not the model's")
+               : localize("agent-harness.harness.the_stopped_budget_is_spent_2", "the '{stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where", { stopped: String(stopped) }) };
   const done = (why) => ({ step: "close", bound: "completed", why, pass_done: true });
   const queue = s.queue || [];
   switch (at) {
     case "resume":
       if (typeof s.resumeAt === "string" && ["dedup", "submit", "adjust"].includes(s.resumeAt))
         return { step: s.resumeAt,
-                 why: `this run's last tick published its state at '${s.resumeAt}'; continuing rather than restarting (§14b.7)` };
+                 why: localize("agent-harness.harness.this_runs_last_tick_published_2", "this run's last tick published its state at '{resumeAt}'; continuing rather than restarting (§14b.7)", { resumeAt: String(s.resumeAt) }) };
       return { step: "read",
-               why: (s.resumeAt ? `this run's last tick published its state at '${s.resumeAt}', which works from reads a `
-                                  + "state does not carry, so the reads are made again"
-                                : "starting the plan's one pass: read what the record holds")
+               why: (s.resumeAt
+                 ? localize("agent-harness.harness.this_runs_last_tick_published_3", "this run's last tick published its state at '{resumeAt}', which works from reads a state does not carry, so the reads are made again", { resumeAt: String(s.resumeAt) })
+                 : localize("agent-harness.harness.starting_the_plans_one_pass", "starting the plan's one pass: read what the record holds"))
                   + (s.resumeBasis ? `. ${s.resumeBasis}` : "") };
     case "read":
-      return { step: "compose", why: `${(s.reads || []).length} read(s) made, ${(s.undetermined || []).length} UNDETERMINED` };
+      return { step: "compose", why: localize("agent-harness.harness.length_read_s_made_length", "{length} read(s) made, {length_2} UNDETERMINED", { length: String((s.reads || []).length), length_2: String((s.undetermined || []).length) }) };
     case "compose":
-      return { step: "dedup", why: `${(s.candidates || []).length} candidate(s) composed, strongest first; nothing may be proposed before dedup` };
+      return { step: "dedup", why: localize("agent-harness.harness.length_candidate_s_composed_strongest", "{length} candidate(s) composed, strongest first; nothing may be proposed before dedup", { length: String((s.candidates || []).length) }) };
     case "dedup":
-      if (!queue.length) return done("no candidate differs from what the plan already holds");
-      return { step: "submit", why: `${queue.length} candidate(s) survived dedup; they are proposed ONE AT A TIME, in order` };
+      if (!queue.length) return done(localize("agent-harness.harness.no_candidate_differs_from_what_the_plan", "no candidate differs from what the plan already holds"));
+      return { step: "submit", why: localize("agent-harness.harness.length_candidate_s_survived_dedup_2", "{length} candidate(s) survived dedup; they are proposed ONE AT A TIME, in order", { length: String(queue.length) }) };
     case "submit":
-      if (s.refusal) return { step: "adjust", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}'; `
-                                                   + "F10 routes a refusal to an ADJUST step, never to a verbatim retry" };
-      if (queue.length) return { step: "submit", why: `${queue.length} candidate(s) still to propose, one at a time, in order` };
-      return done("every candidate this pass composed has been proposed or dropped");
+      if (s.refusal) return { step: "adjust", why: localize("agent-harness.harness.the_plane_refused_string_f10_2", "the plane refused '{String}'; F10 routes a refusal to an ADJUST step, never to a verbatim retry", { String: String(String(s.refusal.code || s.refusal.reason || "?")) }) };
+      if (queue.length) return { step: "submit", why: localize("agent-harness.harness.length_candidate_s_still_to_2", "{length} candidate(s) still to propose, one at a time, in order", { length: String(queue.length) }) };
+      return done(localize("agent-harness.harness.every_candidate_this_pass_composed", "every candidate this pass composed has been proposed or dropped"));
     case "adjust":
-      if (s.adjusted) return { step: "submit", why: "the proposal was ADJUSTED, differs from the refused one and keeps its place" };
+      if (s.adjusted) return { step: "submit", why: localize("agent-harness.harness.the_proposal_was_adjusted", "the proposal was ADJUSTED, differs from the refused one and keeps its place") };
       if (queue.length)
-        return { step: "submit", why: "the refusal could not be answered by changing the proposal, so it is DROPPED and never "
-                                    + `resent; ${queue.length} candidate(s) behind it are still proposed, in order` };
-      return done("the refusal could not be answered by changing the proposal, so it is DROPPED; none remain");
+        return { step: "submit", why: localize("agent-harness.harness.the_refusal_could_not_be_3", "the refusal could not be answered by changing the proposal, so it is DROPPED and never resent; {length} candidate(s) behind it are still proposed, in order", { length: String(queue.length) }) };
+      return done(localize("agent-harness.harness.the_refusal_could_not_be_none_remain", "the refusal could not be answered by changing the proposal, so it is DROPPED; none remain"));
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
+  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition_2", "'{at}' has no transition", { at: String(at) }), bound: "completed" };
 }
 
 /** The move, `advance`'s twin for `PLAN_FLOW`: the pass counts when it is done (a `completed` close from a work row). */
@@ -1219,10 +1187,7 @@ export function applyPlanJudgement(state, judgement) {
   }
   if (overreach.length || shapes.length)
     return { ok: false, overreach: [...overreach, ...shapes],
-             detail: `a plan-mode judgement at '${step}' may carry only ${allowed.join(", ") || "nothing"}, and a proposal only `
-                   + `${OPTION_KEYS.join(", ")} (optionPropose's fields). ${[...overreach, ...shapes].join(", ")} `
-                   + "may not be set: the order of the candidates is the only sign of their strength, so no candidate "
-                   + "carries a score, a rank or a strength, and the step, the pass, the budget and the plan are the table's." };
+             detail: localize("agent-harness.harness.a_plan_mode_judgement_at", "a plan-mode judgement at '{step}' may carry only {v1}, and a proposal only {OPTION_KEYS} (optionPropose's fields). {v2} may not be set: the order of the candidates is the only sign of their strength, so no candidate carries a score, a rank or a strength, and the step, the pass, the budget and the plan are the table's.", { step: String(step), v1: String(allowed.join(", ") || "nothing"), OPTION_KEYS: String(OPTION_KEYS.join(", ")), v2: String([...overreach, ...shapes].join(", ")) }) };
   const next = { ...state };
   for (const k of allowed) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
   if ("candidates" in j) next.candidates = j.candidates.map((c) => ({ ...c }));
@@ -1308,8 +1273,8 @@ export function whyWithUndetermined(why, undetermined) {
   const own = typeof why === "string" ? why.trim() : "";
   const u = list(undetermined);
   if (!u.length) return own.slice(0, WHY_MAX);
-  const note = " UNDETERMINED, not absent: " + u.map((x) => `${x.op}${x.id ? ` ${x.id}` : ""} (${x.code ?? "no answer"})`)
-    .join("; ") + ".";
+  const note = localize("agent-harness.harness.undetermined_not_absent_map", " UNDETERMINED, not absent: {map}.", { map: String(u.map((x) => `${x.op}${x.id ? ` ${x.id}` : ""} (${x.code ?? "no answer"})`)
+    .join("; ")) });
   const tail = note.length > WHY_MAX ? note.slice(0, WHY_MAX) : note;
   const room = WHY_MAX - tail.length;
   const head = own.length > room ? `${own.slice(0, Math.max(0, room - 1))}…` : own;

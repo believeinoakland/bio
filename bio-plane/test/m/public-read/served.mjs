@@ -90,6 +90,7 @@ export async function everyAnswer() {
                    { id: "NOPE" }, { sha256: NEVER }, { id: CASE, edition: 9 }]) store("publishedcase", q);
   store("publishedlist"); store("publishedmanifest");
   store("publishededitions", { id: F }); store("publishededitions", { id: DOC }); store("publishededitions", {});
+  store("publishedfrozen", { id: F }); store("publishedfrozen", { id: DOC }); store("publishedfrozen", {}); store("publishedfrozen", { id: "NOPE" });
   store("publicread", { name: "nosuchread" });
   add("store docketpublic", await w.read("docketpublic", { case: CASE }));
   add("store docketfeed", await w.read("docketfeed", { case: CASE }));

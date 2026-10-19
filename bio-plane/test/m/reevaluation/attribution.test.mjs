@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, U, V, MACHINE, sha } from "./fixture.mjs";
 import { CAUSE_SOURCES } from "../../../src/reevaluation/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OBS = "INFO-2026-0001-observed", ELSE = "INFO-2026-0002-fetched", LONE = "INFO-2026-0003-lone";
 const D = "INQ-2026-0001-passage", W = "INQ-2026-0002-whole", O = "INQ-2026-0003-other";
@@ -203,7 +204,7 @@ test("R32 R29 R2: a capture's attesting member's level moved gives the attributi
     assert.equal(more.length, 0, "once per move");
     assert.deepEqual([c.source, c.since, c.ord, c.capture_sha, c.level_before, c.level_after, c.case, c.edition, c.observation],
       ["attribution", AT, 0, CAP, "group", "name", CASE, 2, undefined]);
-    assert.match(c.detail, new RegExp(`the member attesting capture ${CAP.slice(0, 12)} moved from group to name in case ${CASE} at edition 2`));
+    assert.ok(c.detail.startsWith(word("reevaluation.credit_level_member", { capture_sha: CAP.slice(0, 12), level_before: "group", level_after: "name", case_id: ` in case ${CASE}`, edition: " at edition 2", at: AT })));
     assert.ok(!/alice|member:/.test(JSON.stringify(c)), "no member is named");
   }
   assert.equal(r.obligations.find((o) => o.bundle_id === D).legs[0].grade, "B", "it never regrades");

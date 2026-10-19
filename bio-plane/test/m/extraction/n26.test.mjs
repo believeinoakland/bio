@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle, hold, wp, wr, wtbl, box, alt, docx, doc, bucket } from "./fixture.mjs";
 import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK, Extraction } from "../../../src/extraction/index.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { docxRenumbering } from "../../../src/docx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
 
@@ -205,7 +206,7 @@ test("R66 (DEC-149): with no evidence store set up, the stored reading is left a
   f.core.evidenceStore = () => null;
   const out = await f.x.migrateDocxReadings();
   assert.deepEqual(out.skipped.map((s) => s.why),
-                   ["your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again"]);
+                   [localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again")]);
   assert.deepEqual(f.x.readingFor(f.digest).reading, f.old);
 });
 

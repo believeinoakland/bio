@@ -179,7 +179,7 @@ test("R20 start registers setPassword as membership's password setter (its R95):
   };
   const w = world();
   const c = credentialsOf({ storage: { sql: w.sql } }, { record: { declarePurge() { return { ok: true }; } }, membership });
-  assert.equal(held.length, 1, "registered once, at start");
+  assert.equal(held.length, 1, "held once, from the first start");
   assert.deepEqual(c.start().password, { ok: false, reason: "LISTENER_DECLARED" }, "a second start is membership's refusal");
   /* the setter is R3's: a salted derived hash for the role, the password never stored, the answer {ok, role} */
   const r = await held[0]({ role: "member:ann", password: "ann-passphrase-x" });

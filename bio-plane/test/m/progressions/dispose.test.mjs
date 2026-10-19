@@ -6,6 +6,7 @@ import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES, n
 import * as PROGRESSIONS_CHECKS_MODULE from "../../../src/progressions/checks.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { DISPOSITIONS as PROMOTION_DISPOSITIONS, REOPENABLE_FROM } from "../../../src/promotion/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const X = (w, b = {}) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1,
                                                decidedBy: "member:alice", ...b });
@@ -58,8 +59,7 @@ test("R35: notADisposition is the one answer to a word that is no disposition: n
   assert.throws(() => { "use strict"; DISPOSITIONS.push("adopted"); }, TypeError);
   assert.deepEqual([...DISPOSITIONS], ["deferred", "dismissed"]);
   for (const word of DISPOSITIONS) assert.equal(notADisposition(word), null, word);
-  const TRANSLATION = "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up "
-    + "is a different act. Choose deferred or dismissed. Nothing was written.";
+  const TRANSLATION = word("refusal.NOT_A_DISPOSITION");
   const row = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
   assert.deepEqual(row, { check: "C-100.20", where: "src/progressions/checks.mjs notADisposition > is-disposition-word", translation: TRANSLATION });
   // every other word, compared exactly (a caller trims first), with `to` as given and null when blank

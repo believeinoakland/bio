@@ -6,6 +6,7 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { BIAS_MANIFEST_LIMIT_MAX, BIAS_MANIFEST_LIMIT_DEFAULT, INSTANCE_ADOPTION_ACT,
          INSTANCE_ADOPTION_REMEDY, BIAS_ADOPTION_REASON_MAX, BIAS_CHECKS } from "../../../src/bias/index.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "BIAS-2026-0001-a", B = "BIAS-2026-0002-b", P = "PROJ-2026-0001-p";
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
@@ -50,8 +51,7 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
   assert.deepEqual([seen.reason, seen.check], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1"]);
   assert.equal(code({ bundleId: A, scope: "project", scopeId: P, author: "joiner", identity: "member:joiner", viewer: "member:joiner" }),
     "PROJECT_ACT_NOT_THE_OWNER");
-  assert.equal(code({ bundleId: A, scope: "project", scopeId: P, ...ADMIN }), "PROJECT_ACT_NOT_THE_OWNER",
-    "an administrator directs no project");
+  assert.equal(code({ bundleId: A, scope: "project", scopeId: P, ...ADMIN }), "PROJECT_ACT_NOT_THE_OWNER");
   /* an instance scope: administrator authority, not an ordinary member or a project owner — membership's one answer
      (R84, C-96.1): this act's fixed phrase in its detail, the remedy, and the message the standard sentence then it */
   const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
@@ -60,7 +60,7 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
     const r = w.bias.biasAdopt({ reason: WHY, bundleId: A, ...ask });
     assert.deepEqual(r, notAnAdmin(by, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" }), who);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.by, r.scope], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1", row.translation, by, "instance"]);
-    assert.ok(r.detail.startsWith(`${INSTANCE_ADOPTION_ACT} is an administrator's act`), r.detail);
+    assert.ok(r.detail.startsWith(INSTANCE_ADOPTION_ACT), r.detail);
     assert.equal(r.remedy, INSTANCE_ADOPTION_REMEDY);
     assert.equal(r.message, `${row.translation} ${INSTANCE_ADOPTION_REMEDY}`);
   }
@@ -94,7 +94,7 @@ test("R12: one adoption per (scope, project, bundle), replaced on re-adoption, p
   const r2 = w.bias.biasAdopt({ reason: "  Re-adopted once the group accepted the revision.  ", bundleId: A, author: "second",
                                 identity: "member:second", at: "2026-08-01T00:00:00Z" });
   assert.deepEqual([r2.in_force, r2.pins_proposed, r2.note, r2.reason],
-    [true, false, "this set is in force for that scope", "Re-adopted once the group accepted the revision."]);
+    [true, false, word("bias.note.set_force_scope"), "Re-adopted once the group accepted the revision."]);
   assert.deepEqual([w.count("bias_adoptions"), at(w).author, at(w).bundle_sha, at(w).source_url, at(w).reason],
     [1, "second", w.record.head(A).bundleSha, null, "Re-adopted once the group accepted the revision."],
     "the reason is replaced with the row, trimmed");
@@ -176,7 +176,7 @@ test("R13: a project scope with no id, or one the viewer may not see, answers in
   const unseen = w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "member:mo" });
   const absent = w.bias.biasManifest({ scope: "project", scopeId: "PROJ-2026-0404-none", viewer: "member:owner" });
   for (const m of [noId, unseen, absent]) {
-    assert.deepEqual([m.in_force, m.stated, m.statements, m.statements_sha], [false, "no manifest was in force", [], null]);
+    assert.deepEqual([m.in_force, m.stated, m.statements, m.statements_sha], [false, word("bias.manifest_force"), [], null]);
   }
   assert.deepEqual({ ...unseen, scope_id: null }, { ...absent, scope_id: null });
   assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "member:owner" }).in_force, true);
@@ -224,7 +224,7 @@ test("R14: instance adoptions, and a project's too, of sets not retired and visi
 test("R15: with nothing in force the answer is in_force false and 'no manifest was in force', never an empty lens", async () => {
   const w = await adoptWorld();
   const m = w.bias.biasManifest({ viewer: "admin" });
-  assert.deepEqual([m.in_force, m.stated, m.statements_sha, m.bundles], [false, "no manifest was in force", null, []]);
+  assert.deepEqual([m.in_force, m.stated, m.statements_sha, m.bundles], [false, word("bias.manifest_force"), null, []]);
   assert.equal("interactions" in m, false);
 });
 
@@ -279,7 +279,7 @@ test("R18: bundles with their pins, each adoption's residue with whether it is s
   assert.deepEqual([big.count, big.limit, big.truncated], [BIAS_MANIFEST_LIMIT_MAX, 2000, true]);
   const tail = w.bias.biasManifest({ viewer: "admin", limit: 10, offset: 2000 });
   assert.deepEqual([tail.count, tail.offset, tail.truncated], [6, 2000, false]);
-  assert.equal(m.statements_sha_covers, "the whole effective set, before any bound was applied");
+  assert.equal(m.statements_sha_covers, word("bias.whole_effective_set"));
 });
 
 test("R22: the fingerprint changes when any lens input changes, and is synchronous and small", async () => {

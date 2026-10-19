@@ -288,6 +288,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 
 ### Uses
 
+- `setup-words`: `word`, `localize` (the words rule, K3930; K4018).
 - `promotion` (N345): `promote` (R35, R36) and `registerStep` (R38).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`; `bundles` by its read contract (R37 there), including the inquiry's subject entity column, and its `title`, for a revealed party's name (R52).

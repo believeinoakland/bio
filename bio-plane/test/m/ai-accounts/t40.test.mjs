@@ -10,6 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, SIGNIN_TOKEN } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { AI_ACCOUNT_CHECKS, USE_KINDS, USE_SWITCHES, EXPLORE_VALUES, AI_ACCOUNTS_PROJECT_TABLES, AiAccounts }
   from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin, noSuchProject, notTheOwner } from "../../../src/membership/index.mjs";
@@ -63,7 +64,7 @@ test("R14 (was credentials R55): accountUsesSet sets one switch of one account b
   /* the group: administrators only */
   for (const by of ["ann", "class:admin", null])
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "ask", on: false, by }),
-      notAnAdmin(by, "switching the team key's assistant settings"), String(by));
+      notAnAdmin(by, localize("ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings")), String(by));
   /* a project: its owners only, after sight */
   assert.deepEqual(w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "bob" }), notTheOwner("bob", "P"));
   assert.deepEqual(w.c.accountUsesSet({ owner: "project:P", switch: "ask", on: false, by: "class:admin" }), notTheOwner("class:admin", "P"));

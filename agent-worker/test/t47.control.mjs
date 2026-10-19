@@ -40,7 +40,7 @@ const ARMS = [
   { name: "trace not added to a relayed answer", file: SIGNIN, ids: ["R84"],
     from: `const relayed = typeof out.trace === "string" ? out : { ...out, trace };`, to: `const relayed = out;` },
   { name: "a refusal's detail in the old words (the place named)", file: SIGNIN, ids: ["R84"],
-    from: `  BAD_BODY: "Your team's Civicsmith could not read`, to: `  BAD_BODY: "The plane instance could not read` },
+    from: `  BAD_BODY: localize("agent-worker.signin.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read`, to: `  BAD_BODY: localize("agent-worker.signin.control_old_words_unlisted", "The plane instance could not read` },
   { name: "a runner code left out of SIGNIN_CODES", file: SIGNIN, ids: ["R84", "R85"],
     from: `"BAD_CODE", "SIGNIN_REFUSED", "SIGNOUT_FAILED",`, to: `"BAD_CODE", "SIGNIN_REFUSED",` },
   { name: "the attempt not passed on", file: SIGNIN, ids: ["R85"],

@@ -1,6 +1,6 @@
 # agent-steps (T51)
 
-**Status** · session_014xZJjPy87dzogFnfVQBDhH · depth 2 · COMPLETE · handled B1
+**Status** · session_01YAwmmYXXALThsEWDUkRnFx · depth 2 · COMPLETE · handled B4
 
 ## Completion (AGENT-STEPS #1)
 
@@ -37,3 +37,35 @@ Suites that stay in agent-worker and differ from the map: versions.test/versions
 One finding for you: agent-steps.md R40's Test sentence is reversed (documents 2 keeps its absence, documents 0 gets none, per agent-harness R18 and t50's R118 arms); I tested the behaviour. agent-worker.md R118 may read the same.
 
 agent-worker's bundle is not stale (it does not import agent-steps yet).
+
+## J2 · BLOCKED
+
+Cause: needs Bob.
+
+T51-208 (agent-steps, words pass) is applied and pushed (cc2e3f080b on job/T51/agent-steps): every sentence the words check listed for this module is now read through localize(id, en, vars) with a fixed id, the English unchanged. The plan test's plane op lists are taken from op-declarations' OPS (no hand-list).
+
+Results: words check on agent-steps, 0 failures. Tests all pass as before: plan 53, interface 70, readers 43, subsessions 35, fanout 62, r096 22, r101 12, r103 14, r107 22, t49r90 14. Format: 0 failures. Ownership: 0 failures. setup-words --check: rows.mjs stale, the expected note (regenerated at layer close); it names this module's new ids only as stale.
+
+The one blocker is architecture. test/plan.test.mjs imports bio-plane/src/op-declarations (OPS, layer 11, index 152), but agent-steps is layer 6 (index 98), so the check fails: "imports ... which is not earlier in the order". Using OPS is the only own-declaration source for the plane's op names; the hand-list it replaces is the words check's handlist finding. Both cannot pass at once, and I did not add a workaround.
+
+Decision for you (layers and order are yours): (A, my recommendation) rule which earlier module declares the plane's op names the plan test needs, or move that declaration to one, and I import it from there; (B) rule that op-declarations may be used by a test of an earlier layer; (C) rule another source. Until then this job is not COMPLETE: the architecture check and handlist finding are open, and I changed nothing else.
+
+## Completion (AGENT-STEPS #2, T51-208)
+
+**Entries applied.** T51-208 (words pass): every sentence the words check listed in `drive.mjs`, `work.mjs` and `plane.mjs` is read through `localize(id, en, vars)` with a fixed id, English unchanged; none judged developer-only. `plan.test.mjs` reads its plane op lists from `agent-steps/src/ops.mjs` (`PLAN_OPS`, this module's own declaration, per BOB's ruling B3 on J2), not from `op-declarations` (layer 11, later than this module).
+
+**Tests.** plan 53/0, interface 70/0, readers 43/0, subsessions 35/0, fanout 62/0, r096 22/0, r101 12/0, r103 14/0, r107 22/0, t49r90 14/0. Every R1–R49 still named by a test.
+
+**Checks.** format 0 failures; architecture agent-steps 0 failures; words agent-steps 0 failures; coverage agent-steps 49 of 49, 0 failures; ownership 0 failures; `setup-words --check`: the stale-rows note only (regenerated at layer close).
+
+**Deferred.** None. **Another module.** None.
+
+Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700
+
+## J3 · COMPLETE
+
+T51-208 (agent-steps, words pass) is complete on job/T51/agent-steps (e43c73904b and the record commit). Per your B3 ruling: plan.test.mjs reads its ops from src/ops.mjs (PLAN_OPS, this module's declaration). Checks: format 0, architecture 0, words 0, coverage 49/49 ids, ownership 0; setup-words --check shows only the stale-rows note. Tests all pass with unchanged counts. Record: build/jobs/T51/agent-steps.md. Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700.
+
+## J4 · COMPLETE
+
+CHANGE B4 applied. Merged tranche/T51 into job/T51/agent-steps (5713f46431). Words check on agent-steps under d424c32: 0 failures, no findings, so nothing new to key or list for the unkeyed list. Tests unchanged: plan 53, interface 70, readers 43, subsessions 35, fanout 62, r096 22, r101 12, r103 14, r107 22, t49r90 14, all 0 failed. Checks: format 0, architecture 0, coverage 49 of 49 ids, ownership 0. setup-words --check shows only the stale-rows note (expected; regenerated at layer close). Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 36, module lines 1700.

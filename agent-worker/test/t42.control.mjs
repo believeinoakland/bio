@@ -10,6 +10,7 @@
  * from `spawnSync().status`. `git checkout` is never used.
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -54,12 +55,13 @@ const ARMS = [
   { name: "the label left to the model's words", file: TRANSCRIBE, ids: ["R74"],
     from: `label: TRANSCRIBE_LABEL,`, to: `label: { kind: "machine" },` },
   { name: "a BAD_PAGES refusal quoting the faulty entry", file: TRANSCRIBE, ids: ["R75"],
-    from: "return { fault: `pages[${i}].media_type is not ${TRANSCRIBE_MEDIA_TYPE}` };",
+    from: 'return { fault: localize("agent-worker.transcribe.pages_i_media_type_is", "pages[{i}].media_type is not {TRANSCRIBE_MEDIA_TYPE}", { i: String(i), TRANSCRIBE_MEDIA_TYPE: String(TRANSCRIBE_MEDIA_TYPE) }) };',
     to: "return { fault: `pages[${i}].media_type is not ${TRANSCRIBE_MEDIA_TYPE}: ${JSON.stringify(p)}` };" },
   { name: "the route left out of SURFACE", file: INDEX, ids: ["R34"],
     from: `  transcribe: { method: "POST", mutating: false },\n`, to: "" },
   { name: "the UNKNOWN refusal not naming the route", file: INDEX, ids: ["R31"],
-    from: "POST /signin, POST /transcribe or GET /version only.", to: "POST /signin or GET /version only." },
+    from: `localize("agent-worker.index.post_run_post_ask_post", ${JSON.stringify(localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only."))})`,
+    to: `localize("agent-worker.index.control_unlisted_route_words", ${JSON.stringify(localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.").replace(" POST /transcribe or", " or"))})` },
   { name: "the one sentence not naming /transcribe", file: INDEX, ids: ["R58"],
     from: "or transcription (/transcribe) has turns", to: "has turns" },
 ];

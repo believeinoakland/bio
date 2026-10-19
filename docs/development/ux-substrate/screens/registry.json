@@ -3742,11 +3742,12 @@
      ]
     },
     {
-     "op": "actionhold",
-     "label": "Record a litigation hold",
+     "op": "procedureguides",
+     "label": "Show the routes",
      "status": "declared",
      "modules": [
-      "action-holds"
+      "agent-worker",
+      "reading-guides"
      ]
     },
     {
@@ -3799,6 +3800,130 @@
     7,
     22
    ]
+  },
+  {
+   "id": "hold",
+   "name": "Litigation hold",
+   "frame": "working",
+   "purpose": "A litigation hold (Actions D10; action-holds R2, R12): any member who can see the action or the case places one, with a reason, from a reply marked as a legal threat, a docket mark, pressure recorded outside any action or a counsel matter; the team keeps what the matter may reach.",
+   "acts": [
+    {
+     "op": "actionhold",
+     "label": "Place the hold, with a reason",
+     "status": "declared",
+     "modules": [
+      "action-holds"
+     ]
+    },
+    {
+     "op": "pressurerecord",
+     "label": "Record pressure from elsewhere",
+     "status": "declared",
+     "modules": [
+      "action-holds"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "holdnotice",
+   "name": "Hold notice",
+   "frame": "working",
+   "purpose": "The plain-words notice telling members what to keep outside Civicsmith, prepared from the record and sent by a member's own hand, with no record of any member (Actions D10; filings R47; action-holds R11).",
+   "acts": [
+    {
+     "op": "holdnoticeprepare",
+     "label": "Prepare the notice",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "holdnoticesent",
+     "label": "Record that I sent it",
+     "status": "declared",
+     "modules": [
+      "action-holds"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "counsel",
+   "name": "Brief counsel",
+   "frame": "working",
+   "purpose": "A packet for the team's lawyer, for a claim or for a defense: each matter's support as it stands, never refused for lack of a determination (Actions D9; filings R8, R9).",
+   "acts": [
+    {
+     "op": "counselpacket",
+     "label": "Assemble the packet, with a reason",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "grouprules",
+   "name": "Your team's own rules",
+   "frame": "working",
+   "purpose": "A deadline or a legal fact the jurisdiction's profile lacks, drafted by a member from its primary source and applied only after a second member confirms it (Actions D8; local-facts R10 to R13).",
+   "acts": [
+    {
+     "op": "ruledraft",
+     "label": "Draft the rule",
+     "status": "declared",
+     "modules": [
+      "local-facts"
+     ]
+    },
+    {
+     "op": "ruleconfirm",
+     "label": "Confirm this rule",
+     "status": "declared",
+     "modules": [
+      "local-facts"
+     ]
+    },
+    {
+     "op": "rulewithdraw",
+     "label": "Withdraw this rule, with a reason",
+     "status": "function",
+     "modules": [
+      "local-facts"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
   },
   {
    "id": "matter",

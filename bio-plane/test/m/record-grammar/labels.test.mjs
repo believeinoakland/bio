@@ -7,6 +7,10 @@ import * as RG from "../../../src/record-grammar/index.mjs";
 import { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
   contentMintState, isMachineIdentity, SHARED_ACT_CHECKS, NON_MEMBER_AUTHORS, ACTOR_CLASSES }
   from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+
+/* A table sentence is compared with its design row, never with a copy of its text (K3810). */
+const row = (subject, state) => word(`record-grammar.proposal.${subject}.${state}`);
 
 const STATES3 = ["machine_proposed", "member_proposed", "unstated"];
 const MACHINES = ["token:member", "class:ai", " Token:x ", "claude", "AGENT", ...NON_MEMBER_AUTHORS, ...ACTOR_CLASSES];
@@ -30,7 +34,7 @@ test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195'
     assert.deepEqual(Object.keys(t), STATES3, subject);
     for (const s of STATES3) { assert.equal(typeof t[s], "string"); assert.ok(t[s].length > 20); said.add(t[s]); }
     if (subject !== "governing_laws") assert.ok(Object.isFrozen(t), subject);
-    assert.match(t.machine_proposed, /machine work, labelled as machine work/, subject);
+    for (const s of STATES3) assert.equal(t[s], row(subject, s), `${subject} ${s}`);
   }
   assert.equal(said.size, 17 * 3, "no two sentences are the same");
 });
@@ -44,12 +48,7 @@ test("R42 PROPOSAL_STATES.template: after communication, frozen, three sentences
   const t = PROPOSAL_STATES.template;
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
-  for (const s of STATES3) {
-    assert.match(t[s], /wording for a filing template/, s);
-    assert.match(t[s], /not a template's text until a member adopts it into a draft|not that until a member adopts it into a draft/, s);
-  }
-  assert.match(t.machine_proposed, /machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template/);
-  assert.match(t.member_proposed, /the record holds who proposed it/);
+  for (const s of STATES3) assert.equal(t[s], row("template", s), s);
   for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
     const state = lawProposalState(w);
     assert.deepEqual(proposalLabel(w, "template"), { by: w ?? null, state, machine_work: state === "machine_proposed", says: t[state] });
@@ -58,21 +57,13 @@ test("R42 PROPOSAL_STATES.template: after communication, frozen, three sentences
 
 /* R43, R44 and R45: each a frozen table of the three states, after the one before it, every sentence saying what the
    proposal is and that it is not the member's or the group's own until a member acts; machine work is a draft. */
-function newSubject(subject, after, what, until) {
+function newSubject(subject, after) {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf(subject), keys.indexOf(after) + 1, `${subject} after ${after}`);
   const t = PROPOSAL_STATES[subject];
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
-  for (const s of STATES3) {
-    assert.match(t[s], what, s);
-    assert.match(t[s], until, s);
-  }
-  assert.match(t.machine_proposed, /^a machine credential /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it is a draft/);
-  assert.match(t.member_proposed, /^a member /);
-  assert.match(t.member_proposed, /It is a proposal and not .*the record holds who proposed it$/);
-  assert.match(t.unstated, /^the record does not say who /);
+  for (const s of STATES3) assert.equal(t[s], row(subject, s), s);
   for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
     const state = lawProposalState(w);
     assert.deepEqual(proposalLabel(w, subject), { by: w ?? null, state, machine_work: state === "machine_proposed", says: t[state] });
@@ -82,19 +73,15 @@ function newSubject(subject, after, what, until) {
 }
 
 test("R43 PROPOSAL_STATES.edition_statement: after template, frozen, a new edition's statement of what changed and why, not the group's until a member adopts or rewrites it; machine work a draft", () => {
-  newSubject("edition_statement", "template", /statement of what changed in this edition, and why/,
-    /not the team's statement until a member adopts or rewrites it/);
+  newSubject("edition_statement", "template");
 });
 
 test("R44 PROPOSAL_STATES.escalation_reason: after edition_statement, frozen, a reason for opening an escalation assembled from the determination's record, not a member's until a member sends it; machine work a draft", () => {
-  newSubject("escalation_reason", "edition_statement", /reason for opening an escalation from the determination's record/,
-    /not a member's reason until a member sends it, as offered or edited/);
+  newSubject("escalation_reason", "edition_statement");
 });
 
 test("R45 PROPOSAL_STATES.wizard: after escalation_reason, frozen, steps proposed for a wizard script, not a script's until its author adopts them into a version; machine work a draft that never drafts, submits or approves a script", () => {
-  newSubject("wizard", "escalation_reason", /proposed these steps for a wizard script/,
-    /not a script's steps until its author adopts them into a version/);
-  assert.match(PROPOSAL_STATES.wizard.machine_proposed, /it is a draft, which can propose steps and can never draft, submit or approve a script/);
+  newSubject("wizard", "escalation_reason");
   /* The tables before it are unchanged in number and order (R42's eight first, then R43's and R44's); R49's follows it,
      then R50's, then R54's two, then R60's, then R61's. */
   assert.deepEqual(Object.keys(PROPOSAL_STATES), SUBJECTS);
@@ -108,15 +95,7 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
   const t = PROPOSAL_STATES.law_relation;
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
-  for (const s of STATES3) {
-    assert.match(t[s], /law relation, court link or treatment/, s);
-    assert.match(t[s], /not one the record holds until a member records it themselves/, s);
-  }
-  assert.match(t.machine_proposed, /^a machine credential proposed /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose one and it can never record one\./);
-  assert.match(t.member_proposed, /^a member proposed /);
-  assert.match(t.member_proposed, /It is a proposal and not one the record holds .*the record holds who proposed it$/);
-  assert.match(t.unstated, /^the record does not say who proposed /);
+  for (const s of STATES3) assert.equal(t[s], row("law_relation", s), s);
   /* It names what was proposed, never a standard: standards' lawPropose labels through it, not through `standard`. */
   for (const s of STATES3) assert.doesNotMatch(t[s], /standard/, s);
   for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
@@ -131,8 +110,9 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
 });
 
 /* The twelve tables as they stood before R50, every sentence, as one digest over their canonical JSON (taken at T37's
-   START, before the change). */
-const TWELVE_BEFORE_R50 = "091d110cdba03a5023d00bda44184a87699ba5cc8eb521b2e79b48aa8c4dda7c";
+   START, before the change). Re-pinned at the words change (T51-171 B3): the machine sentences now read the design rows, which
+   spell "labeled"; with that one spelling reversed the digest is T37's, so only the spelling moved. */
+const TWELVE_BEFORE_R50 = "83fb8224a5e9d6c1cf4a75c84d7fb877b359ade581fc2a988a0ea25fe630c773";
 
 test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two), frozen, a draft translation of an interface word shown as \"Draft\", not the group's wording until a member granted that language adopts it; machine work can draft one and never adopt or confirm one; the other tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
@@ -141,17 +121,7 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
   const t = PROPOSAL_STATES.translation;
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
-  for (const s of STATES3) {
-    assert.match(t[s], /translation of an interface word/, s);
-    assert.match(t[s], /It is a draft, shown to members as "Draft",/, s);
-    assert.match(t[s], /not the team's wording until a member granted that language adopts it/, s);
-  }
-  assert.match(t.machine_proposed, /^a machine credential drafted /);
-  assert.match(t.machine_proposed,
-    /That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one\./);
-  assert.match(t.member_proposed, /^a member proposed /);
-  assert.match(t.member_proposed, /the record holds who proposed it$/);
-  assert.match(t.unstated, /^the record does not say who drafted /);
+  for (const s of STATES3) assert.equal(t[s], row("translation", s), s);
   /* Only the machine's sentence says machine work; no sentence says the wording is adopted or confirmed. */
   for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine/, s);
   for (const s of STATES3) assert.doesNotMatch(t[s], /\b(is|was) (adopted|confirmed)\b/, s);
@@ -172,9 +142,9 @@ test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two)
 
 /* The thirteen tables as they stood before R54, every sentence, as one digest over their canonical JSON (taken at T42's
    START from the committed module, before the change). */
-const THIRTEEN_BEFORE_R54 = "bd280de102e5754ec0ce6ef4e4bd5d366ce18e367e3079392e9bc72fc635009e";
+const THIRTEEN_BEFORE_R54 = "45ad0b0d9434d816a02cf3b5150ade783a85916e892c3060ab9fadbd2ada595c";
 
-test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labelled as machine work; the other thirteen tables unchanged", () => {
+test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labeled as machine work; the other thirteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.length, 17, "R60's bearing and R61's status_report follow them");
   assert.deepEqual(keys.slice(-5), ["translation", "case_account", "account_check", "bearing", "status_report"]);
@@ -182,11 +152,7 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
   for (const [subject, t] of [["case_account", ca], ["account_check", ac]]) {
     assert.ok(Object.isFrozen(t), subject);
     assert.deepEqual(Object.keys(t), STATES3, subject);
-    assert.match(t.machine_proposed, /^a machine credential /, subject);
-    assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it is a draft/, subject);
-    assert.match(t.member_proposed, /^a member /, subject);
-    assert.match(t.member_proposed, /the record holds who proposed it$/, subject);
-    assert.match(t.unstated, /^the record does not say who /, subject);
+    for (const s of STATES3) assert.equal(t[s], row(subject, s), `${subject} ${s}`);
     /* Only the machine's sentence says machine work. */
     for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine/, `${subject} ${s}`);
     /* Every state, every identity: the label R38 composes, through this subject's own sentence. */
@@ -202,19 +168,7 @@ test("R54 PROPOSAL_STATES gains case_account and account_check after translation
   }
   /* case_account: a draft of a case's account drawn from its cited evidence, never the case's account, which a member
      writes in her own words, in every state. */
-  for (const s of STATES3) {
-    assert.match(ca[s], /account of a case from its cited evidence/, s);
-    assert.match(ca[s], /never (be )?the case's account/, s);
-    assert.match(ca[s], /a member writes in her own words/, s);
-    assert.doesNotMatch(ca[s], /\bis the case's account\b/, s);
-  }
-  /* account_check: the sentences flagged are a member's account's that the evidence they cite does not support, a draft and
-     never a finding of the group, in every state. */
-  for (const s of STATES3) {
-    assert.match(ac[s], /flagged these sentences of a member's account as not supported by the evidence they cite/, s);
-    assert.match(ac[s], /never a finding of the team/, s);
-    assert.match(ac[s], /draft/, s);
-  }
+  for (const s of STATES3) assert.doesNotMatch(ca[s], /\bis the case's account\b/, s);
   /* The two subjects say different things: no sentence of one is the other's, and each names only its own object. */
   for (const s of STATES3) {
     assert.notEqual(ca[s], ac[s]);
@@ -281,24 +235,14 @@ test("R37 CONTENT_MINT_STATES and contentMintState: blank unstated, the plane's 
   assert.ok(!("isMachineMinted" in RG));
 });
 
-const NO_BASIS_T = "This asks the record to stand behind something without saying what it rests on. Say what that is first — "
-  + "what the question is grounded in, what you personally observed, or why a settled thing is being changed — and the record "
-  + "carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that "
-  + "nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an "
-  + "empty basis reads as one nobody checked.";
-const NO_CITATION_T = "A citation is the address of something somebody who was not here can go and read. Without one, what you "
-  + "have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is "
-  + "published or held — if it is not public, say who holds it and how it was seen, which is still an address and is still "
-  + "checkable.";
-
 test("R29 the shared act rows: NO_BASIS C-33.40 and NO_CITATION C-33.41, {check, where, translation}, numbers and words unchanged", () => {
   assert.ok(Object.isFrozen(SHARED_ACT_CHECKS));
   assert.deepEqual(Object.keys(SHARED_ACT_CHECKS), ["NO_BASIS", "NO_CITATION", "ACCEPT_MUST_REAUTHOR"]);
   for (const row of Object.values(SHARED_ACT_CHECKS)) assert.deepEqual(Object.keys(row), ["check", "where", "translation"]);
   assert.equal(SHARED_ACT_CHECKS.NO_BASIS.check, "C-33.40");
   assert.equal(SHARED_ACT_CHECKS.NO_CITATION.check, "C-33.41");
-  assert.equal(SHARED_ACT_CHECKS.NO_BASIS.translation, NO_BASIS_T);
-  assert.equal(SHARED_ACT_CHECKS.NO_CITATION.translation, NO_CITATION_T);
+  assert.equal(SHARED_ACT_CHECKS.NO_BASIS.translation, word("refusal.NO_BASIS"));
+  assert.equal(SHARED_ACT_CHECKS.NO_CITATION.translation, word("refusal.NO_CITATION"));
 });
 
 /* N827, K2467 (T42): C-33.40's where names every site that answers with its row, not inquiry's alone. The modules named
@@ -357,9 +301,9 @@ test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs
 
 /* The fifteen tables as they stood before R60, every sentence, as one digest over their canonical JSON (taken at T46's
    START from the committed module, before the change). */
-const FIFTEEN_BEFORE_R60 = "6206024c35bda51065196a3b0e7eee3f16472a81e9b638f05e40f40fc7b49197";
+const FIFTEEN_BEFORE_R60 = "93650050b988d923b0d9e594118d266d78ffba6f5fbd170dae18241c985f4f54";
 
-test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the three states: a proposed reading of how a reply bears on each claim of an action, never the group's reading until a member records it; machine work labelled as machine work, which can propose a layout and never record one; the other fifteen tables unchanged", () => {
+test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the three states: a proposed reading of how a reply bears on each claim of an action, never the group's reading until a member records it; machine work labeled as machine work, which can propose a layout and never record one; the other fifteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf("bearing"), keys.indexOf("account_check") + 1);
   assert.equal(keys.indexOf("status_report"), keys.indexOf("bearing") + 1, "R61's follows it");
@@ -367,15 +311,9 @@ test("R60 PROPOSAL_STATES gains bearing after account_check, frozen with the thr
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
   for (const s of STATES3) {
-    assert.match(t[s], /layout of how a reply bears on each claim of an action/, s);
-    assert.match(t[s], /It is a proposed reading and never the team's reading until a member records it/, s);
+    assert.equal(t[s], row("bearing", s), s);
     assert.doesNotMatch(t[s], /\bis the team's reading\b/, s);
   }
-  assert.match(t.machine_proposed, /^a machine credential proposed /);
-  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose a layout and it can never record one\./);
-  assert.match(t.member_proposed, /^a member proposed /);
-  assert.match(t.member_proposed, /the record holds who proposed it$/);
-  assert.match(t.unstated, /^the record does not say who proposed /);
   /* Only the machine's sentence says machine work. */
   for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine/, s);
   for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
@@ -403,9 +341,9 @@ test("R60 R61 negative control: near spellings of bearing throw a RangeError nam
 
 /* The sixteen tables as they stood before R61, every sentence, as one digest over their canonical JSON (taken at T47's
    START from the committed module, before the change). */
-const SIXTEEN_BEFORE_R61 = "9b72a96870248a85f1fcc945fad900b4153c0cb98bf2bdec71b01e20d35370f8";
+const SIXTEEN_BEFORE_R61 = "e3b110dca515d5e98e4afe6cd602167102aa30f9392aacadfee014801094b773";
 
-test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with the three states: a draft of a status report on a plan, kept with the plan and never published, the report kept the member's; machine work the assistant's draft, labelled as machine work, which can draft a report and never keep or publish one; the other sixteen tables unchanged", () => {
+test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with the three states: a draft of a status report on a plan, kept with the plan and never published, the report kept the member's; machine work the assistant's draft, labeled as machine work, which can draft a report and never keep or publish one; the other sixteen tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf("status_report"), keys.indexOf("bearing") + 1);
   assert.equal(keys.at(-1), "status_report");
@@ -414,17 +352,10 @@ test("R61 PROPOSAL_STATES gains status_report after bearing, last, frozen with t
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
   for (const s of STATES3) {
-    assert.match(t[s], /this status report on a plan/, s);
-    assert.match(t[s], /kept with the plan and never published/, s);
-    assert.match(t[s], /the report kept is the member's/, s);
+    assert.equal(t[s], row("status_report", s), s);
     /* No state says the draft is published or is the report kept. */
-    assert.doesNotMatch(t[s], /(is|was) published|is the report kept/, s);
+    assert.doesNotMatch(t[s], /\b(is|was) published\b|\bis the report kept\b/, s);
   }
-  assert.match(t.machine_proposed, /^a machine credential drafted /);
-  assert.match(t.machine_proposed, /It is the assistant's draft: machine work, labelled as machine work, which can draft a report and can never keep or publish one\./);
-  assert.match(t.member_proposed, /^a member drafted /);
-  assert.match(t.member_proposed, /the record holds who proposed it$/);
-  assert.match(t.unstated, /^the record does not say who drafted /);
   /* Only the machine's sentence says machine work or names the assistant. */
   for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine|assistant/, s);
   /* Every state, every identity: the label R38 composes, through this subject's own sentence. */

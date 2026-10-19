@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { CAPTURE_REQUEST_CHECKS, captureRequestAttribution, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 
 const ROW = CAPTURE_REQUEST_CHECKS.CAPTURE_SWEEP_OUT_OF_SCOPE;
@@ -94,7 +95,7 @@ test("R45 a held sweep, an unratified one, an unknown one and an address out of 
   for (const [why, id] of Object.entries(ids)) refusedOutOfScope(w, d, id, why);
   assert.match(w.req(ids.held).detail, /INQ-1#full is held \(backlog 40 of 40\)/);
   assert.match(w.req(ids.unratified).detail, /INQ-1#draft is not ratified/);
-  assert.match(w.req(ids.unknown).detail, /INQ-1#nothing is not a sweep your team's Civicsmith holds/);
+  assert.ok(w.req(ids.unknown).detail.includes(localize("capture-requests.index.is_not_a_sweep_your_team", "is not a sweep your team's Civicsmith holds")));
   assert.match(w.req(ids.out).detail, /INQ-1#agendas does not reach this address/);
   assert.equal(check.asked.length, 5);
   assert.equal(w.capture.calls.length, 0, "nothing was fetched");

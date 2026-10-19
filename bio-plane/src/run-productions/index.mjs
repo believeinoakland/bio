@@ -39,6 +39,7 @@ import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS }
 import { RUN_PRODUCTIONS_TABLES, migrateRunProductions, passageProposalId } from "./schema.mjs";
 import { CONNECTION_TARGET_KINDS, CONNECTION_HOW, READ_PAGES_AT_A_TIME, READING_RUN_MODES, BEARING_SENTENCES_MAX,
          BEARING_SENTENCE_MAX_CHARS, ACCEPT_WORDS_MAX, unitContaining, pagesOf, connectionLink } from "./reading.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECK_KEYS,
          EXTRACT_PROPOSE_CHECK_KEYS, ROWLESS_CODES } from "./checks.mjs";
@@ -72,22 +73,14 @@ export const EXTRACT_PROPOSALS_LIMIT_MAX = 500;
  *  answer says when it was. */
 export const EXTRACT_RATIO_DOCUMENTS_MAX = 64;
 
-export const EXTRACT_PROPOSALS_SAYS = "these readings are PROPOSALS. A machine read text this record already holds and "
-  + "said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction "
-  + "coverage";
-export const EXTRACT_PROPOSAL_ROW_SAYS = "a machine proposed this reading. It is not extraction coverage and it is not "
-  + "part of any finding — it becomes part of one when a MEMBER cites it, and not before";
+export const EXTRACT_PROPOSALS_SAYS = localize("run-productions.index.extract_proposals_says", "these readings are PROPOSALS. A machine read text this record already holds and said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction coverage");
+export const EXTRACT_PROPOSAL_ROW_SAYS = localize("run-productions.index.extract_proposal_row_says", "a machine proposed this reading. It is not extraction coverage and it is not part of any finding — it becomes part of one when a MEMBER cites it, and not before");
 /** R21: on every proposed connection. */
-export const PROPOSED_CONNECTION_SAYS = "the system proposed this connection. It is not a connection of the record and "
-  + "not part of any finding until a member takes it up; its grade is worked out from how the link is established, "
-  + "never from the machine's say-so";
+export const PROPOSED_CONNECTION_SAYS = localize("run-productions.index.proposed_connection_says", "the system proposed this connection. It is not a connection of the record and not part of any finding until a member takes it up; its grade is worked out from how the link is established, never from the machine's say-so");
 /** R23: on every bearing note. */
-export const BEARING_NOTE_SAYS = "the system's note on what this document says about the question, and what it does "
-  + "not. Each sentence is tied to the document's own words. It is shown beside the document, never in its place; it "
-  + "is not the document's content and is never cited as evidence";
+export const BEARING_NOTE_SAYS = localize("run-productions.index.bearing_note_says", "the system's note on what this document says about the question, and what it does not. Each sentence is tied to the document's own words. It is shown beside the document, never in its place; it is not the document's content and is never cited as evidence");
 /** R24: on every slice a run reads. */
-export const READ_PAGES_SAYS = "the text the record holds for these pages, read by a run a few pages at a time within "
-  + "its pages bound";
+export const READ_PAGES_SAYS = localize("run-productions.index.read_pages_says", "the text the record holds for these pages, read by a run a few pages at a time within its pages bound");
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -391,13 +384,13 @@ export class RunProductions {
     if (args.claim !== undefined && args.claim !== null && args.claim !== ""
         && isBoilerplate(args.claim)) filler.push("claim");
     if (str(args.description) && str(args.claim)
-        && str(args.description).toLowerCase() === str(args.claim).toLowerCase()) filler.push("claim (repeats the description verbatim)");
+        && str(args.description).toLowerCase() === str(args.claim).toLowerCase()) filler.push(word("run-productions.claim_repeats_description"));
     for (const g of groundsIn)
       if (g && g.statement !== undefined && g.statement !== null && g.statement !== ""
-          && isBoilerplate(g.statement)) filler.push(`a statement on '${String(g.ground).slice(0, 40)}'`);
+          && isBoilerplate(g.statement)) filler.push(word("run-productions.statement", { ground: String(String(g.ground).slice(0, 40)) }));
     for (let i = 0; i < legsIn.length; i++)
       if (legsIn[i] && legsIn[i].note !== undefined && legsIn[i].note !== null && legsIn[i].note !== ""
-          && isBoilerplate(legsIn[i].note)) filler.push(`the note on leg ${i}`);
+          && isBoilerplate(legsIn[i].note)) filler.push(word("run-productions.note_leg", { n: String(i) }));
     if (filler.length)
       return remember(refusal("SUGGEST_BOILERPLATE",
         `${filler.join(", ")} carries filler rather than an account of anything. §6 rule 1 holds a `
@@ -419,13 +412,13 @@ export class RunProductions {
       if (!t) { unreachable.push({ ord: i, target: null, why: "no address" }); continue; }
       const retired = this.citation.retiredNotCitable(t);
       const row = this.#one(`SELECT b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, t, ...gate.args);
-      if (!row) { unreachable.push({ ord: i, target: t, why: "not in the record, or not readable from here" }); continue; }
-      if (retired) { unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" }); continue; }
+      if (!row) { unreachable.push({ ord: i, target: t, why: word("run-productions.why.record_readable") }); continue; }
+      if (retired) { unreachable.push({ ord: i, target: t, why: word("run-productions.why.record_retired") }); continue; }
       const named = legsIn[i]?.extent_capture;
       const isDoc = normalizeType(row.object_type) === "information";
       if (named !== undefined && named !== null && named !== "") {
         const held = isDoc && typeof named === "string" && HEX64.test(named) ? this.content.captureFor(t, named) : null;
-        if (!held) { unreachable.push({ ord: i, target: t, why: "the capture it names is not one this record holds for it" }); continue; }
+        if (!held) { unreachable.push({ ord: i, target: t, why: word("run-productions.why.capture_names_record") }); continue; }
         pins[i] = held;
       } else if (isDoc) pins[i] = this.content.captureFor(t) || null;
     }
@@ -628,15 +621,12 @@ export class RunProductions {
     /* DEC-49 REGION is-production-run */
     if (typeof run !== "string" || !run.trim())
       return { refusal: this.#refuse("NO_RUN",
-        `the EXTRACT role works in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, `
-        + `resumes it and checks it plane-side. A production outside one would be a second place a machine writes`) };
+        localize("run-productions.index.the_extract_role_works", "the EXTRACT role works in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes")) };
     const runId = run.trim();
     const r = this.aiRuns.runFor(runId, viewer);
     if (!r)
       return { refusal: this.#refuse("NO_SUCH_RUN",
-        `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the `
-        + `objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would `
-        + `help; it may not start one`, { run: runId }) };
+        localize("run-productions.index.no_such_run_is_open", "no run is open under {runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one", { runId }), { run: runId }) };
     /* END DEC-49 REGION is-production-run */
     const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane, act });
     if (notPrincipal)
@@ -666,8 +656,7 @@ export class RunProductions {
     /* DEC-49 REGION is-held-document */
     if (normalizeType(b.object_type) !== "information")
       return { refusal: this.#refuse("NOT_A_DOCUMENT",
-        `${bundleId} is not a document, so there is no text to have read. The content axis ranges over documents `
-        + `(DEC-21)`, { target: bundleId, target_type: normalizeType(b.object_type) ?? null }) };
+        localize("run-productions.index.bundleid_is_not_a_document", "{bundleId} is not a document, so there is no text to have read. The content axis ranges over documents (DEC-21)", { bundleId: String(bundleId) }), { target: bundleId, target_type: normalizeType(b.object_type) ?? null }) };
     const sha = this.content.captureFor(bundleId);
     if (!sha)
       return { refusal: this.#refuse("NO_BYTES_HELD",
@@ -809,12 +798,12 @@ export class RunProductions {
         const q = proposedReadingGrade({ ref: "connection", label: link.grounds, quote: c.quote, source: c.source },
                                        textAt(c.source));
         const verified = q.verified_quote === true;
+        const linkWhy = { A: localize("run-productions.index.link_source_own", "the source's own link"),
+          B: localize("run-productions.index.link_shared_identifier", "an identifier the two share"),
+          C: c.how === "date" ? localize("run-productions.index.link_date_alone", "a date alone") : localize("run-productions.index.link_name_alone", "a name alone") };
         const why = verified
-          ? `earned ${link.letter}: the link rests on ${{ A: "the source's own link", B: "an identifier the two share",
-              C: `a ${c.how === "date" ? "date" : "name"} alone` }[link.letter]} (${String(link.grounds).slice(0, 80)}), `
-            + `standing in words that are the capture's own text at this place`
-          : `earned undetermined: the quote is not the capture's own text at the place given, so how the link is `
-            + `established cannot be read from the record. A letter would be the machine's say-so`;
+          ? word("run-productions.earned_link_rests", { letter: String(link.letter), first: String(linkWhy[link.letter]), grounds: String(String(link.grounds).slice(0, 80)) })
+          : localize("run-productions.index.earned_undetermined_quote", "earned undetermined: the quote is not the capture's own text at the place given, so how the link is established cannot be read from the record. A letter would be the machine's say-so");
         linkRows.push({ id: connectionProposalId(runId, sha, c.to_kind, c.to.trim(), c.quote, pos), kind: c.to_kind,
                         to: c.to.trim(), role: c.to_kind === "person" ? String(c.role).trim().slice(0, 200) : null,
                         how: c.how, grounds: String(link.grounds).slice(0, 400), quote: c.quote, pos,
@@ -932,8 +921,7 @@ export class RunProductions {
         `a ${kind} is named by the record's entity id (ENT-…), and ${to.slice(0, 80)} is not one`, { at_index, to: to.slice(0, 80) });
     if (kind === "person" && !nonBlank(c.role))
       return this.#refuse("CONNECTION_PERSON_NO_ROLE",
-        `a connection to a person is to their part in a public matter (D13), so it names the public role its quote `
-        + `shows`, { at_index });
+        localize("run-productions.index.connection_person_no_role", "a connection to a person is to their part in a public matter (D13), so it names the public role its quote shows"), { at_index });
     if (typeof c.quote !== "string" || c.quote === "" || readingSource(c.source) == null)
       return this.#refuse("CONNECTION_NO_QUOTE",
         `a proposed connection carries its exact quote and the readable place it stands (IC-1's element-reference `
@@ -1051,8 +1039,7 @@ export class RunProductions {
     /* DEC-49 REGION is-read-run */
     if (!READING_RUN_MODES.includes(String(r.mode || "")))
       return this.#refuse("NOT_A_READING_RUN",
-        `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}', and only a run in mode `
-        + `${READING_RUN_MODES.join(" or ")} reads inside documents (run-rules R26)`, { run: runId, mode: r.mode ?? null });
+        localize("run-productions.index.this_run_was_opened_in", "this run was opened in mode '{v1}', and only a run in mode {READING_RUN_MODES} reads inside documents (run-rules R26)", { v1: String(r.mode == null ? "(none)" : String(r.mode)), READING_RUN_MODES: String(READING_RUN_MODES.join(" or ")) }), { run: runId, mode: r.mode ?? null });
     /* END DEC-49 REGION is-read-run */
     const doc = this.#heldDocument(bundleId, viewer);
     if (doc.refusal) return doc.refusal;
@@ -1125,8 +1112,7 @@ export class RunProductions {
              read_in_run: { pages: already.size, as_far_as: howFar() },
              bound: after ? { bound: "pages", allowed: Number(after.allowed), consumed: Number(after.consumed) } : null,
              says: stopped
-               ? `${READ_PAGES_SAYS}. This run stopped at its pages bound after page ${Math.min(readTo, pages.length)} `
-                 + `of ${pages.length}`
+               ? word("run-productions.says.run_stopped_pages", { read_pages_says: String(READ_PAGES_SAYS), read_to: String(Math.min(readTo, pages.length)), pages: String(pages.length) })
                : READ_PAGES_SAYS };
   }
 
@@ -1152,7 +1138,7 @@ export class RunProductions {
     /* DEC-49 REGION is-accept */
     if (!who || isMachineIdentity(who))
       return this.#refuse("ACCEPT_NOT_A_MEMBER",
-        `accepting a proposal is a member's act (record-grammar R52); ${who ? "a machine" : "no one"} asked`);
+        localize("run-productions.index.accepting_a_proposal_is_a", "accepting a proposal is a member's act (record-grammar R52); {v1} asked", { v1: String(who ? "a machine" : "no one") }));
     const seen = this.#proposalSeen(id, viewer ?? who);
     const runRow = seen ? this.aiRuns.runFor(seen.row.run, viewer ?? who) : null;
     if (!seen || !runRow)
@@ -1182,7 +1168,7 @@ export class RunProductions {
     const meaning = form === "as_proposed"
       ? (seen.kind === "passage"
           ? `${r.label || r.ref}${r.quote ? `: "${r.quote}"` : ""}`
-          : `${r.to_kind} ${r.to_id}${r.role ? ` (${r.role})` : ""}, by ${r.how} (${r.grounds}): "${r.quote}"`)
+          : localize("run-productions.index.to_kind_to_id_v1", "{to_kind} {to_id}{v1}, by {how} ({grounds}): \"{quote}\"", { to_kind: String(r.to_kind), to_id: String(r.to_id), v1: String(r.role ? ` (${r.role})` : ""), how: String(r.how), grounds: String(r.grounds), quote: String(r.quote) }))
       : words;
     const meaningOf = form === "as_proposed" ? "proposal" : "member";
     this.sql.exec(
@@ -1192,8 +1178,8 @@ export class RunProductions {
              ...(seen.kind === "passage" ? { content_id: r.content_id ?? null } : { to_kind: r.to_kind, to: r.to_id }),
              set_aside: form === "own_instead",
              says: form === "own_instead"
-               ? "the machine's reading is set aside and hers is recorded in its place; she may cite the passage as hers"
-               : "taken up; she may cite it as hers" };
+               ? word("run-productions.says.machine_reading_set")
+               : word("run-productions.says.taken_she_cite") };
   }
 
   /** R22: whether a member has taken up a proposal (by its name) or the machine-proposed passage a content row is
@@ -1314,12 +1300,12 @@ export class RunProductions {
     for (const [i, s] of list.entries()) {
       const text = s && typeof s.text === "string" ? s.text.trim() : "";
       if (!text || text.length > BEARING_SENTENCE_MAX_CHARS) {
-        leftOut.push({ index: i, why: `no sentence of 1 to ${BEARING_SENTENCE_MAX_CHARS} characters` }); continue;
+        leftOut.push({ index: i, why: word("run-productions.why.sentence_characters", { bearing_sentence_max_chars: String(BEARING_SENTENCE_MAX_CHARS) }) }); continue;
       }
       const v = proposedReadingGrade({ ref: "bearing", label: text, quote: s.quote, source: s.source },
                                      typeof s.quote === "string" ? textAt(s.source) : null);
       if (v.verified_quote !== true) {
-        leftOut.push({ index: i, why: "its quote is not the document's own words at the place given" }); continue;
+        leftOut.push({ index: i, why: word("run-productions.why.quote_document_words") }); continue;
       }
       kept.push({ text, quote: s.quote, position: readingSource(s.source), check: v.check });
     }

@@ -1,0 +1,289 @@
+# installer: the words check after the conversion (K3949)
+
+Layer 11. 249 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `newgroup/src/images.mjs:34` [copy] "The built-in file scanner and safe view" — drawn module: its L11 job
+- inline `newgroup/src/images.mjs:58` "<div class=\"notice\" id=\"left-out\"><p style=\"margin:0 0 .6em\"><b>Wha..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1014` [stitched] "the permission you approved could not be shown to include Workers C..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1021` [stitched] "your account's Workers plan could not be verified ({})" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1056` "the container {} of your team's Civicsmith still runs {}, not the o..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1076` "The public repository was not reachable, so no capability workers were" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1077` "installed this time. Your team's Civicsmith works without them; the..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1078` "This release names no capability workers, so there was nothing further" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1080` "is a fact about the release, not about your team's Civicsmith." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1081` "This installer carries no signing key, so the capability workers" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1083` "Civicsmith itself installed normally." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1094` [stitched] "The release names capability workers but its manifest does not stat..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1100` [stitched] "The fleet signature did not verify ({}), so no capability workers w..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1105` "The capability workers are signed against a different release of Ci..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1106` "installed, so no capability workers were installed. The next update..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1154` "Installing the capability workers beside your team's Civicsmith" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1187` "{} is connected to the Workers VPC service you named ({})" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1192` "{} could not be connected to the Workers VPC service you named (Clo..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1199` "{} was installed, but its schedule ({}) could not be set (Cloudflar..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1247` "the Workers VPC service you named was not connected: {} was not ins..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1249` [stitched] "One cleanup note: the tiny probe script \"{}\" could not be deleted a..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1254` [stitched] "All {} capability workers installed and verified: {}.{}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1257` [stitched] "{} capability worker(s) installed ({});" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1257` [stitched] "{} left out: {}. Your team's Civicsmith works without them; the nex..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1282` "Connecting your team's Civicsmith to its capability workers" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1283` [copy] "Telling your team's Civicsmith its own address" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1287` [stitched] "Your team's Civicsmith is connected to {}." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1288` [stitched] "Your team's Civicsmith now knows its own address ({}), which it rea..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1292` [stitched] "The capability workers were installed, but connecting your team's C..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1294` "Telling your team's Civicsmith its own address was refused, so it d..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1379` "the capability worker {} could not be installed, so your team's Civ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1380` "connection to use ({})" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1388` "the address of your team's Civicsmith answers {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1393` "the record store of your team's Civicsmith still runs {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1400` "the capability worker {} still runs {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1401` "the connection of your team's Civicsmith to {} reaches a different ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1402` [stitched] "your team's Civicsmith cannot get an answer from the capability wor..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1405` "the capability worker {} was installed, but your team's Civicsmith ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1408` "the capability worker {} was installed, but your team's Civicsmith ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:148` "Checking the public repository for the newest release" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1493` [copy] "the list came back unreadable" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1497` "the Logpush job {} (id {}{})" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1498` "keeps a record of each request to your team's Civicsmith (its datas..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1499` "{}), which would be a log of who opened which file: delete it, or g..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1502` "Checking that no log on your account records who opened which file" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1505` [copy] "No Logpush job on your Cloudflare account keeps a record of each re..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1509` [stitched] "Undetermined: the installer could not read your account's Logpush j..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1516` [stitched] "{} Logpush jobs on your Cloudflare account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1516` [stitched] "{} would keep a log of who opened which file: {}." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1522` "This release cannot report which version the record store of your t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1523` "workers are running, so only its address was checked; those parts a..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:159` [stitched] "The repository has {}, newer than the built-in {}. {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:162` "It carries a valid signature from a key this installer trusts, so t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1626` "Something went wrong that this page did not anticipate" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1627` "The step in progress did not finish. Nothing secret was stored anyw..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1628` [stitched] "Start again from the installer's first page; if it happens again, t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:163` "Its integrity checked out, so that is what installs." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1648` "To continue: run the update again in a minute from the update page;..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1649` "To continue: start again from the installer's first page in a minut..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1654` "Your organisation's AI credential" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1655` "The organisation AI credential you gave was stored in your team's C..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1656` "(it is not shown here). It uses it to resume assistant runs that cr..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1658` "No organisation AI credential was given, so none was sent. One your..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1659` "this installer never creates one." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:166` [stitched] "The repository has {}, but it {}, so it was NOT used. The installer..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1660` "No organisation AI credential was given, so your team's Civicsmith ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1661` "own. A member mints one inside your team's Civicsmith; running the ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1669` "Your members' own accounts, and what earlier installers left behind" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1670` "The settings of your team's Civicsmith could not be read, so the in..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1672` "retired (a team-wide Claude credential, the shared member key, the ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1673` "Running this update again checks once more." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1675` [copy] "Your team's Civicsmith now holds the secret that seals each member'..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1676` [copy] "Your team's Civicsmith already held the secret that seals each memb..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1682` [stitched] "{} was removed by this update: the installer binds none now." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1685` [stitched] "{} was removed: the installer binds none now." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1688` [stitched] "{} is still held, and removing it was refused (Cloudflare said: {})..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:169` [stitched] "The built-in release ({}) is current." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:175` [stitched] "The installer's own built-in release ({}) installs instead, which i..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1779` [copy] "Confirming your permission with Cloudflare" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1783` "Cloudflare did not confirm the permission" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1784` "The sign-in came back but the final handshake failed, so nothing wa..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:179` [stitched] "The repository's copy did not pass its integrity check, so it was N..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1794` "Using the account \"{}\"" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1798` "Could not read your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1799` "Permission was granted but the account list came back empty or refu..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1806` [copy] "Nothing was changed." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:181` [stitched] "The repository's copy carries no signature, and this installer only..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1811` "Checking the name is free and what your account holds" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1833` [copy] "The name is free; the Civicsmith already in your account is not tou..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1837` "Could not check your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1838` "The check for an existing installation failed, so to be safe nothin..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:184` [stitched] "The repository's copy is signed, but not by a key this installer tr..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1847` "Checking your account's Workers plan" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1853` "Your team's Civicsmith runs on Cloudflare Workers, and the work it ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1855` "storage this installer sets up needs as well. Nothing was created, ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:186` [stitched] "The public repository was not reachable just now, so the built-in r..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1860` "Could not verify your account's Workers plan" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1861` "The check that establishes your plan did not get a readable answer,..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1863` "degrades. Nothing was created, so there is nothing to clean up." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1864` [stitched] "To continue: run the installer again in a minute; this is usually t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1868` [stitched] ". One cleanup note: the tiny probe script \"{}\" could not be deleted..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1872` "Checking that Containers are on and that nothing in your account is..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1887` "Could not check your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1887` "The check of what your account holds failed, so to be safe nothing ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1895` "This installer cannot say which limits your team's Civicsmith runs ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1896` [stitched] "Nothing was created, so there is nothing to clean up. {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1897` "This is for the publisher of {} releases to fix with a release that..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1910` "Setting up your evidence storage" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1916` "One Cloudflare setting is needed first" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1917` "Your team's Civicsmith keeps captured documents (PDFs, web pages, t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1920` "requirement, not a charge. Nothing was created, so there is nothing..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1921` [stitched] "To continue: sign in at dash.cloudflare.com with this same account,..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:194` [stitched] "This installer's built-in release ({}) {}. The limits your team's C..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1945` "Your team's Civicsmith's software is already in place, exactly as t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1947` [copy] "the software's connections" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1973` "The software did not install" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1974` "Your account was reachable but the install was refused, so there is..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1977` [stitched] "Your team's Civicsmith is installed. One optional part — the part t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:1995` "Turning on your web address" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2001` "Your account had no web address prefix yet, so it is now \"{}\". Ever..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2017` "Your team's Civicsmith installed but has no address yet" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2018` "The software is on your account. Only the public web address failed..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2019` "Cloudflare dashboard under Workers, without starting over. Until it..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2020` "address of its own; running the updater once the address works tell..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2021` [stitched] "To continue: in the Cloudflare dashboard, open Workers & Pages, the..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2047` [stitched] "Your team's Civicsmith answers. {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2048` "Your team's Civicsmith answers, but not everything is confirmed yet..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2054` [copy] "Its address has not answered yet." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2055` [copy] "Which release each part runs: not checked yet, as its address has n..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2056` "Which release its record store and capability workers run: undeterm..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2057` "Every part runs release {}: its address, its record store and each ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2058` [copy] "Not every part is confirmed to run this release yet: the list above..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2059` "Its software did not read back as the release's own bytes: the list..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2060` "Its software reads back as release {}'s own bytes." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2063` [copy] "A log on your Cloudflare account would record who opens which file:..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2064` "Whether a log on your Cloudflare account records who opens which fi..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2071` [stitched] "the installer could not mark this installation finished (Cloudflare..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:210` "Checking release {} is {}'s own" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2107` "No one else holds a key to it, the publisher of {} releases included." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2126` [stitched] "<b>Your team's Civicsmith is running.</b> It answered its own check..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2130` "<b>Your team's Civicsmith is installed{}, but not everything about ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2133` "<b>Your team's Civicsmith is installed. Its new address has not wok..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:216` "this installer lists no keys to check release {}'s signature against" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:218` "the public repository was not reachable just now, so release {} cou..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:219` "the public repository holds no release {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2195` "Your team&#39;s Civicsmith ran {} before this update, and an instal..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2198` "The installer could not read which version your team&#39;s Civicsmi..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2221` [copy] ", signed by Civicsmith" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2226` "<div class=\"cs-row\" data-r=\"ok\"><span class=\"mk\">After</span><span>..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:223` "release {} did not pass its integrity check, so it was not used" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:224` "release {} carries no signature, and this installer only installs s..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:225` "release {} is signed, but not by a key {} releases are signed with ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2253` [copy] "Confirming your permission with Cloudflare" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2257` "Cloudflare did not confirm the permission" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2258` "The sign-in came back but the final handshake failed. Your team's C..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:226` "release {} could not be fetched" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2268` "Using the account \"{}\"" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2272` "Could not read your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2273` "Permission was granted but the account list came back empty or refu..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2280` [copy] "Nothing was changed." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2284` "Finding your team's Civicsmith, installed as \"{}\"" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2288` "No installation named \"{}\" exists on your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2289` [copy] "Nothing was changed." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2290` "To continue: check the name against your team's address (it is the ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2296` "Could not check your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2297` "The lookup failed, so to be safe nothing was changed." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2325` [copy] "Nothing was changed." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2335` "Reading the release your team's Civicsmith runs" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2345` [stitched] "The release your team's Civicsmith runs could not be read, so it is..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2356` "Your team's Civicsmith already runs {}. Re-uploading the same version" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2390` [copy] "Finding the address of your team's Civicsmith" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2397` "Your team's Civicsmith is at {}, and this update told it that addre..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2398` "No web address was found for your team's Civicsmith, so it was not ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2399` "running this update again tells it." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2423` [stitched] "The address of your team's Civicsmith answers {}. {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2425` "Not everything about your team's Civicsmith is confirmed yet: the l..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2426` "still running the old version is normal for a few minutes after an ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2437` [stitched] "<div class=\"notice\"><p style=\"margin:0\"><b>Nothing changed: {}, so ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2442` "<div class=\"notice\"><p style=\"margin:0\">Not everything about your t..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2445` "<div class=\"notice\"><p style=\"margin:0\"><b>Uploaded {}{}; not yet c..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2473` [copy] "Confirming your permission with Cloudflare" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2475` "Cloudflare did not confirm the permission" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2477` "Using the account \"{}\"" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2478` "Could not read your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2479` [copy] "Reading what is in your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2485` "No installation named \"{}\" exists on your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2489` "Could not check your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2489` "The lookup failed, so nothing was deleted." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2506` [copy] "Confirming your permission with Cloudflare" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2508` "Cloudflare did not confirm the permission" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2510` "Using the account \"{}\"" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2511` "Could not read your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2518` "Listing everything this Civicsmith holds in your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2524` "No installation named \"{}\" exists on your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2530` "Could not check your account" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2530` "The lookup failed, so nothing was deleted." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2585` "The name needs 3 to 40 characters: lower-case letters, digits, and ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2593` [stitched] "{} Open your team's Civicsmith, go to Settings › Updates and choose..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2604` "The organisation AI credential does not look like one: paste it exa..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2613` "The Workers VPC service does not look like one: paste its ID as Clo..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2640` [copy] "Permission was not granted" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2641` [copy] "Cloudflare did not approve the request, so nothing was created." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2646` "This sign-in could not be verified" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2647` "The reply from Cloudflare does not match a request this browser mad..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2648` "Start again from the beginning, in this same tab." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2652` "Nothing was changed. Open your team's Civicsmith, go to Settings › ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2669` [copy] "Nothing lives at this address" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2670` [copy] "The installer starts at the front page." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2678` "For the team <b class=\"mono\" id=\"group\">{}</b>." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:2678` "Setting up your team&#39;s {}." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:412` "the software your Cloudflare account holds for your team's Civicsmi..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:413` "the software your Cloudflare account holds for your team's Civicsmi..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:603` [stitched] "it states them {} different ways" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:629` [stitched] "its bundle states its limits unreadably ({})" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:643` [copy] "An update never changes which jurisdiction profiles your team's Civ..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:644` [copy] "The jurisdiction profiles must be a list of the profiles offered." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:646` [stitched] "Not a jurisdiction profile this installer offers: {}." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:647` [copy] "A jurisdiction profile was chosen twice." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:963` "its container part {} is not named for its class (container/<class_..." — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:966` "its container part {} describes the class {}" — drawn module: its L11 job
+- inline `newgroup/src/index.mjs:967` "it describes the class {} twice" — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:107` "The assistant is optional. Its two settings are made in your team's..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:115` [copy] "The assistant, if your team uses it, needs a Claude plan with cloud..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:116` "<details class=\"ng-fold\" id=\"about-assistant\"><summary>About the as..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:121` "Your organization's own security tools (file scanners, safe-copy ma..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:126` "<details class=\"ng-fold\" id=\"security-fold\"><summary>For an organiz..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:142` "<section class=\"cs-section ng-sec\" id=\"allowed\"> <h2>{}</h2> <ul cl..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:219` "<section class=\"cs-section ng-sec\" id=\"need\"> <h2>What you need</h2..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:276` "{} <body class=\"cs\"> <main class=\"cs-frame ng\"> {} <div class=\"ng-s..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:344` "Your team's Civicsmith runs {}as before; nothing changed." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:345` "Try again; if it stops again, the stop names the step and what to do." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:358` "Update your team's {}" — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:359` [copy] "If a step stops, your team's Civicsmith keeps running as it was." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:361` [copy] "No release was chosen." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:37` "This installer is run by the publisher of {} releases." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:384` "{} <body class=\"cs\"> <main class=\"cs-frame ng\"> {} <div class=\"ng-s..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:443` "<section id=\"exists\"><h2>{}</h2> <p>{}</p> <h2>{}</h2> {} <p>{}</p>..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:77` "<dialog id=\"confirm\" class=\"cs-dialog\" aria-labelledby=\"confirm-h\">..." — drawn module: its L11 job
+- inline `newgroup/src/ui.mjs:90` "<section class=\"cs-section ng-sec\" id=\"places\"> <h2>Your team's pla..." — drawn module: its L11 job
+- testcopy `newgroup/test/realsize.test.mjs:72` "Your team's Civicsmith is running." — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:1390` "Your team's Civicsmith is running." — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:1711` "Your team's Civicsmith is running." — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:1885` "The name your team's Civicsmith was installed under" — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:1902` "Finding the address of your team's Civicsmith" — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:538` "Your team's Civicsmith is running." — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:839` "This installer is run by the publisher of Civicsmith releases." — drawn module: its L11 job
+- testcopy `newgroup/test/requirements.test.mjs:843` "This installer is run by the publisher of Civicsmith releases." — drawn module: its L11 job
+- testcopy `newgroup/test/t47.test.mjs:205` "If a step stops, your team's Civicsmith keeps running as it was." — drawn module: its L11 job
+- testcopy `newgroup/test/t48.test.mjs:42` [part] "Cloudflare refused the upload" — part test copy
+
+## Plain findings (K3957)
+
+31 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('installer.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `newgroup/src/account.mjs:254` "objects in its evidence storage"
+- plain `newgroup/src/account.mjs:255` "objects in its published storage"
+- plain `newgroup/src/cfx.mjs:24` "the permission was revoked or has expired"
+- plain `newgroup/src/images.mjs:14` "this release does not pin its image to one exact build (a sha256 digest), so it cannot ..."
+- plain `newgroup/src/images.mjs:15` "this release's image is not yet published where your Cloudflare account can pull it"
+- plain `newgroup/src/images.mjs:28` "scanned, and a high-risk file opens only in its safe view once one can be made"
+- plain `newgroup/src/images.mjs:30` "what it provides is missing from your team's Civicsmith until it is installed"
+- plain `newgroup/src/index.mjs:548` "the Claude credential an earlier installer bound into your team's Civicsmith"
+- plain `newgroup/src/index.mjs:549` "the shared member key an earlier installer bound into your team's Civicsmith (members n..."
+- plain `newgroup/src/index.mjs:550` "the assistant choice an earlier installer bound into your team's Civicsmith (the assist..."
+- plain `newgroup/src/index.mjs:616` "states no limits for your team's Civicsmith to run under"
+- plain `newgroup/src/index.mjs:617` "states the limits your team's Civicsmith runs under unreadably"
+- plain `newgroup/src/index.mjs:934` "its container description does not parse"
+- plain `newgroup/src/index.mjs:935` "its container description is not an object"
+- plain `newgroup/src/index.mjs:936` "its container description names no class"
+- plain `newgroup/src/index.mjs:940` "its scheduling policy is not the default one"
+- plain `newgroup/src/index.mjs:942` "its container description states no maximum number of instances"
+- plain `newgroup/src/index.mjs:945` "its container description states its size unreadably"
+- plain `newgroup/src/index.mjs:949` "its container description names its bindings unreadably"
+- plain `newgroup/src/index.mjs:978` "its Worker description does not parse"
+- plain `newgroup/src/index.mjs:979` "its Worker description is not an object"
+- plain `newgroup/src/index.mjs:983` "its Worker description names its buckets unreadably"
+- plain `newgroup/src/index.mjs:985` "its Worker description states its schedule unreadably"
+- plain `newgroup/src/index.mjs:992` "captured files or refresh its virus signatures, and files are not scanned until a relea..."
+- plain `newgroup/src/index.mjs:1011` "the permission you approved does not include Workers Containers"
+- plain `newgroup/src/index.mjs:1020` "your account is on Workers Free, and containers need Workers Paid"
+- plain `newgroup/src/index.mjs:1385` "the address of your team's Civicsmith did not answer"
+- plain `newgroup/src/index.mjs:1391` "the record store of your team's Civicsmith has not reported its version, so it is still..."
+- plain `newgroup/src/index.mjs:1392` "the record store of your team's Civicsmith cannot say which version it runs"
+- plain `newgroup/src/index.mjs:1396` "your team's Civicsmith did not report its capability workers"
+- plain `newgroup/src/index.mjs:2193` "the address of your team&#39;s Civicsmith"

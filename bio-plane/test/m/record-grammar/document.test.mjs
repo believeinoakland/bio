@@ -5,13 +5,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { HEADINGS, HEADINGS_WHEN, STATES, vocabFor, isCaseMemberBytes, sectionText, INQUIRY_TITLE_MAX, deriveInquiryTitle,
   inquiryQuestionOf, OBJECT_TYPES, normalizeType } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const FOCUS_HEADINGS = ["## Statement", "## Why It Matters", "## Open Questions", "## Session Log", "## Review Notes"];
 
 test("R32 HEADINGS: the literal heading set per type; problem is the same array as focus", () => {
   assert.deepEqual({ ...HEADINGS }, {
     information: ["## Summary", "## Provenance Notes", "## Session Log", "## Review Notes"],
-    inquiry: ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"],
+    inquiry: ["## Question", word("conformance.rests"), "## Conclusion", word("conformance.falsify"), "## Session Log", "## Review Notes"],
     focus: FOCUS_HEADINGS,
     project: ["## Thesis Summary", "## Open Questions", "## Ruled Out", "## Session Log", "## Review Notes"],
     action: ["## Plan", "## Status", "## Correspondence", "## Session Log", "## Review Notes"],

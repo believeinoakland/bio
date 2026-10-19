@@ -29,6 +29,8 @@
  *  NEVER RAISES A CAPTURE GRADE. `C` is the letter `textchain.mjs`'s own D-252
  *  note already uses for an OCR pass, so this member reports the letter this
  *  estate already means rather than minting a second convention. */
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
+
 export const CAP = "C";
 
 /** Where that letter's measurement lives. A free string a HUMAN follows — the
@@ -37,14 +39,7 @@ export const CAP = "C";
  *  measurement must not acquire a second home; extraction's
  *  `bio-plane/src/extraction/pipeline.mjs` says so at the join). */
 export const MEASURED_BY =
-  "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the "
-  + "deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one "
-  + "human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible "
-  + "over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the "
-  + "invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed "
-  + "page, ONE engine version, ONE model. Every other corpus figure in that row is "
-  + "agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER "
-  + "local model passes the noise control, so no agreement figure may be read as accuracy at all.";
+  localize("ocr-worker.contract.measurements_md_2026_09_10", "MEASUREMENTS.md 2026-09-10 (CPDF-15) — tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy — and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.");
 
 /** The largest RGBA frame CPDF-15 measured COMPLETING on the deployed runtime,
  *  in bytes. **A WORKLOAD SIZE, NEVER A SHARE OF 128 MB** — D-312 exists because
@@ -89,24 +84,22 @@ export const PLANE_OPS = Object.freeze({});
 export const REFUSALS = {
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
   BAD_SHA: "capture_sha must be 64 lowercase hex",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  BAD_STORE: localize("ocr-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none"),
   /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
      reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
      namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
-  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing "
-                   + "was read; the two that exist are listed beside this message. This is not NOT_FOUND, which "
-                   + "says the namespace exists and holds no such capture",
-  BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
-  NOT_FOUND: "no capture with that sha in that store",
+  NAMESPACE_UNKNOWN: localize("ocr-worker.contract.no_namespace_by_that_name", "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture"),
+  BAD_PAGES: localize("ocr-worker.contract.pages_must_be_a_non", "pages must be a non-empty array of 0-based page numbers"),
+  NOT_FOUND: localize("ocr-worker.contract.no_capture_with_that", "no capture with that sha in that store"),
   ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
-  PAGE_NOT_RENDERABLE: "the page could not be turned into pixels, and the renderer says why",
-  FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
-  PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
-  ENGINE_FAILED: "the engine refused or failed on this frame",
-  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page",
+  PAGE_NOT_RENDERABLE: localize("ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why"),
+  FRAME_OVER_MEASURED_BOUND: localize("ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete"),
+  PIXELS_UNREADABLE: localize("ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples"),
+  ENGINE_FAILED: localize("ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame"),
+  NOTHING_TRANSCRIBED: localize("ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page"),
   /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
      stated before any pixel is made, so the page asked for is named. */
-  NO_SUCH_PAGE: "a picture is a one-page document (page 0); the page asked for does not exist",
+  NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist"),
 };
 
 /** R23 · THE LONG EDGE A PICTURE IS REDUCED TO, in pixels. Not a measurement: it is `PICTURE_FRAME_MAX`'s own

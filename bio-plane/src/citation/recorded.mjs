@@ -21,6 +21,7 @@
 import { normalizeType } from "../record-grammar/types.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalExtent, extentRelation, citationExtent, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R13 (events R49): `limit` is clamped to 1–500, 100 by default. */
 export const RECORDED_LIMIT_DEFAULT = 100;
@@ -132,12 +133,12 @@ export function recordedBy(c, memo, args) {
   try {
     const a = isObj(args) ? args : {};
     if (a.viewer === undefined || a.viewer === null || (typeof a.viewer === "string" && a.viewer.trim() === ""))
-      return refused("VIEWER_MISSING", "a read names the member reading; with none, nothing is answered");
-    if (!said(a.captureSha)) return refused("NO_SHA", "who cited a passage is read for one captured document, named by its capture sha256");
+      return refused("VIEWER_MISSING", localize("citation.recorded.a_read_names_the_member", "a read names the member reading; with none, nothing is answered"));
+    if (!said(a.captureSha)) return refused("NO_SHA", localize("citation.recorded.who_cited_a_passage", "who cited a passage is read for one captured document, named by its capture sha256"));
     let asked = null;
     if (a.extent !== undefined && a.extent !== null) {
       if (!known(a.extent))
-        return refused("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
+        return refused("EXTENT_MALFORMED", localize("citation.recorded.an_extent_is_an_object", "an extent is an object of one of the kinds {kinds}", { kinds: Object.keys(CONTENT_EXTENT_KINDS).join(", ") }));
       asked = JSON.parse(canonicalExtent(a.extent));
     }
     const sha = a.captureSha.trim().toLowerCase();
@@ -149,8 +150,7 @@ export function recordedBy(c, memo, args) {
     const doc = home && said(home.bundleId) ? home.bundleId : null;
     if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
     if (!c.inquiry || typeof c.inquiry.restingOn !== "function")
-      return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: "the legs that cite a passage are found through the inquiry "
-               + "module's leg projection, and your team's Civicsmith was created without it, so this read could not be made." };
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: localize("citation.recorded.the_legs_that_cite_a", "the legs that cite a passage are found through the inquiry module's leg projection, and your team's Civicsmith was created without it, so this read could not be made.") };
 
     /* The citing objects: a capture's legs through `inquiry`'s leg projection (its R12, which projects every leg this
        module writes; K2132), the inquiries holding a leg on the document; a project's `cites` edges, whose pin no

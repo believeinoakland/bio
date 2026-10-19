@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
 import { WORD, FILLED } from "./words.mjs";
 import { ACTION_WORDS, WORDS_CANON, KEPT } from "../../../src/action-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function people(fakes) {
   const w = world(fakes);
@@ -30,7 +31,7 @@ test("R21, R11: R1's item offers actioncorrespond, then the met-or-waived door (
   const door = it.options[1];
   assert.deepEqual(door, { id: "promote", label: WORD("door.clockentrystate"), weight: "single",
     revision: { action: "ACT-1", entry: 0, field: "status", to: ["met", "waived"] } }, "the door is the action's revision of that entry's status");
-  assert.equal(door.label, "Mark it met or waived");
+  assert.equal(door.label, word("door.clockentrystate"));
   /* the door keys each item to its own entry */
   entries = [entry(), entry({ ord: 4 })];
   assert.deepEqual(byId(w.read("alice"))["CONDITION::action-clock-overdue::ACT-1::4"].options[1].revision,
@@ -169,7 +170,7 @@ test("R23, R11: each door's label is words.json's door.<op> where it holds one; 
     assert.ok(seen.has(op), `the world offers ${op}`);
     assert.equal(seen.get(op), WORD(key), `${op}: ${key}`);
   }
-  assert.equal(seen.get("actionholdrelease"), "Record that no hold is needed, with a reason", "control: no door.actionholdrelease, its label stays");
+  assert.equal(seen.get("actionholdrelease"), word("action-producers.label.record_hold_needed"), "control: no door.actionholdrelease, its label stays");
   assert.throws(() => WORD("door.actionholdrelease"), /holds no word/);
   assert.throws(() => WORD("door.factconfirm"), /holds no word/);
 });

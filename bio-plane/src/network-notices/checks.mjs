@@ -4,84 +4,74 @@
  * these rows only say why an act was refused and that nothing was published. A member reads the group's own
  * installation named "your group's Civicsmith", never "this copy" (DEC-149, T34-87). */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/network-notices/index.mjs ${fn} > ${region}`;
 
 export const NETWORK_NOTICE_CHECKS = Object.freeze({
   MACHINE_CANNOT_POST_NOTICE: {
     check: "C-127.1", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Only a member, signed in as themselves, prepares or posts a notice that the team is working on "
-      + "something. A machine, the assistant or an operator token cannot. Nothing was published.",
+    translation: word("refusal.MACHINE_CANNOT_POST_NOTICE"),
   },
   NOTICE_NOT_THE_OWNER: {
     check: "C-127.2", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Only an owner of the project tells the network the team is working on it. Nothing was published.",
+    translation: word("refusal.NOTICE_NOT_THE_OWNER"),
   },
   NOTICE_PROJECT_CLOSED: {
     check: "C-127.3", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "The project is closed, so it takes no new notice and no change to one. An owner may still stop an "
-      + "open notice, with a note on where the work went. Nothing was published.",
+    translation: word("refusal.NOTICE_PROJECT_CLOSED"),
   },
   NOTICE_NO_GROUP_SLUG: {
     check: "C-127.4", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Your team has no name recorded yet, and a notice is never anonymous. Record the team's name "
-      + "first. Nothing was published.",
+    translation: word("refusal.NOTICE_NO_GROUP_SLUG"),
   },
   NOTICE_NO_INSTANCE_KEY: {
     check: "C-127.5", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "Your team's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
-      + "notice is always published with. The operator binds one. Nothing was published.",
+    translation: word("refusal.NOTICE_NO_INSTANCE_KEY"),
   },
   NOTICE_WORDING_MALFORMED: {
     check: "C-127.6", where: at("#fieldRefusal", "is-notice-fields"),
-    translation: "Say what the team is working on in one line of at most 280 characters. A subject or a body named "
-      + "with it is one line of at most 120 characters, and a hand-off note one line of at most 280, given only when "
-      + "stopping. Nothing was published.",
+    translation: word("refusal.NOTICE_WORDING_MALFORMED"),
   },
   NOTICE_SINCE_MALFORMED: {
     check: "C-127.7", where: at("#fieldRefusal", "is-notice-fields"),
-    translation: "Give the date the work began as a calendar date, year-month-day. Nothing was published.",
+    translation: word("refusal.NOTICE_SINCE_MALFORMED"),
   },
   NOTICE_SINCE_BEFORE_PROJECT: {
     check: "C-127.8", where: at("#fieldRefusal", "is-notice-fields"),
-    translation: "The date the work began is earlier than the project itself, whose first record is dated as named. "
-      + "A notice never claims work from before its project. Nothing was published.",
+    translation: word("refusal.NOTICE_SINCE_BEFORE_PROJECT"),
   },
   NOTICE_SINCE_IN_FUTURE: {
     check: "C-127.9", where: at("#fieldRefusal", "is-notice-fields"),
-    translation: "The date the work began is later than today. Nothing was published.",
+    translation: word("refusal.NOTICE_SINCE_IN_FUTURE"),
   },
   NOTICE_ALREADY_OPEN: {
     check: "C-127.10", where: at("#noticeRefusal", "is-notice-state"),
-    translation: "The project already has an open notice, as named. Change that notice with a new revision of it, "
-      + "or stop it, rather than opening a second. Nothing was published.",
+    translation: word("refusal.NOTICE_ALREADY_OPEN"),
   },
   NOTICE_WARNING_NOT_ACKNOWLEDGED: {
     check: "C-127.11", where: at("postNotice", "is-notice-post"),
-    translation: "A notice is public and permanent, and posting it says you have read that. Nothing was published.",
+    translation: word("refusal.NOTICE_WARNING_NOT_ACKNOWLEDGED"),
   },
   NOTICE_STALE: {
     check: "C-127.12", where: at("postNotice", "is-notice-post"),
-    translation: "Your team's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared "
-      + "more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
+    translation: word("refusal.NOTICE_STALE"),
   },
   NOTICE_SIGNATURE_REFUSED: {
     check: "C-127.13", where: at("postNotice", "is-notice-post"),
-    translation: "The signature is not a valid signature of this notice by one of your own registered signing keys, "
-      + "for the reason named. Nothing was published.",
+    translation: word("refusal.NOTICE_SIGNATURE_REFUSED"),
   },
   NOTICE_NOT_OPEN: {
     check: "C-127.14", where: at("#noticeRefusal", "is-notice-state"),
-    translation: "That notice is not this project's open notice: it was stopped, or another one is open, or there is "
-      + "none to change or stop. A stopped notice takes no further revision. Nothing was published.",
+    translation: word("refusal.NOTICE_NOT_OPEN"),
   },
   NOTICE_SINCE_EARLIER: {
     check: "C-127.15", where: at("#noticeRefusal", "is-notice-state"),
-    translation: "A change may move the date the work began later, never earlier than the notice already says. "
-      + "Nothing was published.",
+    translation: word("refusal.NOTICE_SINCE_EARLIER"),
   },
   NOTICE_UNCHANGED: {
     check: "C-127.16", where: at("#noticeRefusal", "is-notice-state"),
-    translation: "This revision says exactly what the notice already says, so there is nothing to publish.",
+    translation: word("refusal.NOTICE_UNCHANGED"),
   },
 });
 

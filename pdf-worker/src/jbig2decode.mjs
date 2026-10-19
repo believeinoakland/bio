@@ -38,6 +38,7 @@
  */
 
 import { MqDecoder, mqContexts } from "./mq.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export class Jbig2Refusal extends Error {
   constructor(code, detail = {}) {
@@ -53,21 +54,21 @@ const truncated = (note, extra = {}) => new Jbig2Refusal("TRUNCATED", { note, ..
 /** What this decoder refuses, by name — every `feature` an UNSUPPORTED refusal
  *  can carry. Exported so the suite can drive each one. */
 export const JBIG2_REFUSES = Object.freeze({
-  "colour extension": "a region's colour-extension flag (T.88 Amendment 3) is set",
+  "colour extension": localize("image-codecs.jbig2decode.a_region_s_colour_extension", "a region's colour-extension flag (T.88 Amendment 3) is set"),
   "12 adaptive-template pixels": "a generic region's extended template (EXTTEMPLATE) is used",
-  "reused bitmap coding contexts": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
-  "Huffman-coded refinement": "a Huffman-coded symbol dictionary or text region refines its symbols",
-  "a necessary extension segment": "an extension segment the decoder must understand and does not",
-  "segment type": "a segment type T.88 does not define",
-  "several pages": "the stream holds more than one page",
-  "no page": "the stream holds no page information segment",
+  "reused bitmap coding contexts": localize("image-codecs.jbig2decode.a_symbol_dictionary_reuses_a", "a symbol dictionary reuses a previous dictionary's arithmetic contexts"),
+  "Huffman-coded refinement": localize("image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary", "a Huffman-coded symbol dictionary or text region refines its symbols"),
+  "a necessary extension segment": localize("image-codecs.jbig2decode.an_extension_segment_the_decoder", "an extension segment the decoder must understand and does not"),
+  "segment type": localize("image-codecs.jbig2decode.a_segment_type_t_88", "a segment type T.88 does not define"),
+  "several pages": localize("image-codecs.jbig2decode.the_stream_holds_more_than", "the stream holds more than one page"),
+  "no page": localize("image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment"),
 });
 
 /* ── bitmaps ──────────────────────────────────────────────────────────────── */
 
 const bitmap = (w, h, fill = 0) => {
   if (!(Number.isInteger(w) && Number.isInteger(h)) || w < 0 || h < 0) throw corrupt(`bitmap size ${w}x${h}`);
-  if (w * h > 1 << 28) throw corrupt(`bitmap of ${w}x${h} pixels is beyond any page`);
+  if (w * h > 1 << 28) throw corrupt(localize("image-codecs.jbig2decode.bitmap_of_w_x_h", "bitmap of {w}x{h} pixels is beyond any page", { w: String(w), h: String(h) }));
   const d = new Uint8Array(w * h);
   if (fill) d.fill(1);
   return { w, h, d };
@@ -98,7 +99,7 @@ function compose(dst, src, x, y, op) {
 
 class Reader {
   constructor(d, p = 0, end = d.length) { this.d = d; this.p = p; this.end = end; }
-  need(n, what) { if (this.p + n > this.end) throw truncated(`${what}: ${n} bytes needed, ${this.end - this.p} left`); }
+  need(n, what) { if (this.p + n > this.end) throw truncated(localize("image-codecs.jbig2decode.what_n_bytes_needed_v1", "{what}: {n} bytes needed, {v1} left", { what: String(what), n: String(n), v1: String(this.end - this.p) })); }
   u8(what = "a byte") { this.need(1, what); return this.d[this.p++]; }
   u16(what = "a 16-bit field") { this.need(2, what); const v = (this.d[this.p] << 8) | this.d[this.p + 1]; this.p += 2; return v; }
   u32(what = "a 32-bit field") { this.need(4, what); const d = this.d, p = this.p; this.p += 4; return ((d[p] << 24) | (d[p + 1] << 16) | (d[p + 2] << 8) | d[p + 3]) >>> 0; }
@@ -141,7 +142,7 @@ function iaidDecode(mq, ctx, len) {
   return prev - (1 << len);
 }
 
-const intOrThrow = (v, what) => { if (v === OOB) throw corrupt(`OOB where ${what} is required`); return v; };
+const intOrThrow = (v, what) => { if (v === OOB) throw corrupt(localize("image-codecs.jbig2decode.oob_where_what_is_required", "OOB where {what} is required", { what: String(what) })); return v; };
 
 /* ── Huffman tables (T.88 Annex B) ────────────────────────────────────────── */
 
@@ -210,7 +211,7 @@ class Bits {
   read(n) {
     let v = 0;
     for (let i = 0; i < n; i++) {
-      if (this.p >= this.end) throw truncated("Huffman-coded data ends early");
+      if (this.p >= this.end) throw truncated(localize("image-codecs.jbig2decode.huffman_coded_data_ends_early", "Huffman-coded data ends early"));
       v = v * 2 + ((this.d[this.p] >> (7 - this.bit)) & 1);
       if (++this.bit === 8) { this.bit = 0; this.p++; }
     }
@@ -229,7 +230,7 @@ class Bits {
       const off = this.read(rangeLen);
       return kind === "low" ? low - off : low + off;
     }
-    throw corrupt("a Huffman code no table line holds");
+    throw corrupt(localize("image-codecs.jbig2decode.a_huffman_code_no_table", "a Huffman code no table line holds"));
   }
 }
 
@@ -246,7 +247,7 @@ function parseTableSegment(data) {
     const p = b.read(htps), rl = b.read(htrs);
     lines.push(L(p, rl, cur));
     cur += 2 ** rl;
-    if (lines.length > 1 << 16) throw corrupt("a custom Huffman table with no end");
+    if (lines.length > 1 << 16) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_with", "a custom Huffman table with no end"));
   }
   lines.push(L(b.read(htps), 32, low - 1, "low"));
   lines.push(L(b.read(htps), 32, high, "high"));
@@ -273,7 +274,7 @@ function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at, skip = null) {
   const nat = template === 0 ? 4 : 1;
   for (let i = 0; i < nat; i++) {
     const ax = at[2 * i], ay = at[2 * i + 1];
-    if (ay > 0 || (ay === 0 && ax >= 0)) throw corrupt(`adaptive template pixel (${ax},${ay}) is not yet decoded`);
+    if (ay > 0 || (ay === 0 && ax >= 0)) throw corrupt(localize("image-codecs.jbig2decode.adaptive_template_pixel_ax_ay", "adaptive template pixel ({ax},{ay}) is not yet decoded", { ax: String(ax), ay: String(ay) }));
   }
   const px = (x, y) => (x < 0 || x >= w || y < 0 ? 0 : D[y * w + x]);
   let ltp = 0;
@@ -423,7 +424,7 @@ function decodeMmr(d, p, end, w, h) {
   const br = new MmrBits(d, p, end);
   let ref = [w, w];
   for (let y = 0; y < h; y++) {
-    if (br.peek(24) === 0x001001 && br.left >= 24) throw truncated(`MMR data ends (EOFB) after ${y} of ${h} rows`);
+    if (br.peek(24) === 0x001001 && br.left >= 24) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_eofb_after", "MMR data ends (EOFB) after {y} of {h} rows", { y: String(y), h: String(h) }));
     const cur = [];
     let a0 = -1, colour = 0;
     const b1 = () => {
@@ -444,13 +445,13 @@ function decodeMmr(d, p, end, w, h) {
       if (++guard > 4 * w + 16) throw corrupt("an MMR row that does not end");
       let hit = null;
       for (const m of MODES) if (br.left >= m[0] && br.peek(m[0]) === m[1]) { hit = m; break; }
-      if (!hit) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+      if (!hit) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_or_breaks", "MMR data ends or breaks in row {y} of {h}", { y: String(y), h: String(h) }));
       br.skip(hit[0]);
       if (hit[2] === "H") {
         const start = a0 < 0 ? 0 : a0;
         const r1 = mmrRun(br, colour ? BLACK_LUT : WHITE_LUT);
         const r2 = r1 < 0 ? -1 : mmrRun(br, colour ? WHITE_LUT : BLACK_LUT);
-        if (r1 < 0 || r2 < 0) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+        if (r1 < 0 || r2 < 0) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_or_breaks_2", "MMR data ends or breaks in row {y} of {h}", { y: String(y), h: String(h) }));
         const m1 = Math.min(w, start + r1), m2 = Math.min(w, m1 + r2);
         cur.push(m1, m2);
         a0 = m2;
@@ -459,7 +460,7 @@ function decodeMmr(d, p, end, w, h) {
         a0 = i + 1 < ref.length ? ref[i + 1] : w;
       } else {
         const a1 = Math.max(0, Math.min(w, b1() + hit[3]));
-        if (a1 < a0) throw corrupt(`MMR row ${y} runs backwards`);
+        if (a1 < a0) throw corrupt(localize("image-codecs.jbig2decode.mmr_row_y_runs_backwards", "MMR row {y} runs backwards", { y: String(y) }));
         cur.push(a1);
         a0 = a1;
         colour ^= 1;
@@ -484,7 +485,7 @@ function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at) {
   const bm = bitmap(w, h);
   const D = bm.d, R = ref.d, rw = ref.w, rh = ref.h;
   if (template === 0) {
-    if (at[1] > 0 || (at[1] === 0 && at[0] >= 0)) throw corrupt("refinement adaptive pixel is not yet decoded");
+    if (at[1] > 0 || (at[1] === 0 && at[0] >= 0)) throw corrupt(localize("image-codecs.jbig2decode.refinement_adaptive_pixel_is_not", "refinement adaptive pixel is not yet decoded"));
   }
   const g = (x, y) => (x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x]);
   const r = (x, y) => (x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R[y * rw + x]);
@@ -559,13 +560,13 @@ function decodeTextRegion(p, syms, dec) {
       if (p.strips !== 1) curt = huff ? dec.bits.read(p.logStrips) : intOrThrow(iaDecode(dec.mq, dec.ia.IT), "a symbol's T");
       const t = stript + curt;
       const id = huff ? intOrThrow(dec.bits.huff(dec.symCodes), "a symbol id") : iaidDecode(dec.mq, dec.ia.ID, dec.idLen);
-      if (id < 0 || id >= syms.length || !syms[id]) throw corrupt(`symbol id ${id} of ${syms.length}`);
+      if (id < 0 || id >= syms.length || !syms[id]) throw corrupt(localize("image-codecs.jbig2decode.symbol_id_id_of_length", "symbol id {id} of {length}", { id: String(id), length: String(syms.length) }));
       let ib = syms[id];
       const ri = p.refine ? (huff ? dec.bits.read(1) : intOrThrow(iaDecode(dec.mq, dec.ia.RI), "a refinement flag")) : 0;
       if (ri) {
         const rdw = intOrThrow(iaDecode(dec.mq, dec.ia.RDW), "RDW"), rdh = intOrThrow(iaDecode(dec.mq, dec.ia.RDH), "RDH");
         const rdx = intOrThrow(iaDecode(dec.mq, dec.ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(dec.mq, dec.ia.RDY), "RDY");
-        if (ib.w + rdw < 0 || ib.h + rdh < 0) throw corrupt("a refined symbol of negative size");
+        if (ib.w + rdw < 0 || ib.h + rdh < 0) throw corrupt(localize("image-codecs.jbig2decode.a_refined_symbol_of_negative", "a refined symbol of negative size"));
         ib = decodeRefinement(dec.mq, dec.gr, ib.w + rdw, ib.h + rdh, p.rTemplate, ib,
           (rdw >> 1) + rdx, (rdh >> 1) + rdy, false, p.rAt);
       }
@@ -584,7 +585,7 @@ function decodeTextRegion(p, syms, dec) {
       if (!p.transposed && p.refCorner < 2) curs += ib.w - 1;
       else if (p.transposed && (p.refCorner & 1)) curs += ib.h - 1;
       n++;
-      if (n > p.numInstances + 1e6) throw corrupt("a text region with no end");
+      if (n > p.numInstances + 1e6) throw corrupt(localize("image-codecs.jbig2decode.a_text_region_with_no", "a text region with no end"));
     }
   }
   return reg;
@@ -599,16 +600,16 @@ function readSymbolIdTable(bits, numSyms) {
   const lens = [];
   while (lens.length < numSyms) {
     const code = bits.huff(runTable);
-    if (code === OOB || code > 34) throw corrupt("a symbol-id length code outside the run table");
+    if (code === OOB || code > 34) throw corrupt(localize("image-codecs.jbig2decode.a_symbol_id_length_code", "a symbol-id length code outside the run table"));
     if (code < 32) lens.push(code);
     else {
       const [rep, val] = code === 32 ? [3 + bits.read(2), lens.length ? lens[lens.length - 1] : -1]
         : code === 33 ? [3 + bits.read(3), 0] : [11 + bits.read(7), 0];
-      if (val < 0) throw corrupt("a repeated symbol-id length with nothing before it");
+      if (val < 0) throw corrupt(localize("image-codecs.jbig2decode.a_repeated_symbol_id_length", "a repeated symbol-id length with nothing before it"));
       for (let i = 0; i < rep; i++) lens.push(val);
     }
   }
-  if (lens.length > numSyms) throw corrupt("more symbol-id lengths than symbols");
+  if (lens.length > numSyms) throw corrupt(localize("image-codecs.jbig2decode.more_symbol_id_lengths_than", "more symbol-id lengths than symbols"));
   bits.align();
   return table(lens.map((len, i) => L(len, 0, i)));
 }
@@ -651,7 +652,7 @@ function readSegments(d, into, limit = d.length) {
     let length = r.u32("a segment data length");
     const start = r.p;
     if (length === 0xffffffff) {
-      if (type !== 38 && type !== 39) throw corrupt(`segment ${number} of type ${type} has an unknown length`);
+      if (type !== 38 && type !== 39) throw corrupt(localize("image-codecs.jbig2decode.segment_number_of_type_type", "segment {number} of type {type} has an unknown length", { number: String(number), type: String(type) }));
       length = unknownLengthGeneric(d, start, limit);
     }
     r.need(length, `segment ${number}'s data`);
@@ -670,7 +671,7 @@ function unknownLengthGeneric(d, start, limit) {
   for (let i = start + hdr; i + 6 <= limit; i++) {
     if (mmr ? d[i] === 0 && d[i + 1] === 0 : d[i] === 0xff && d[i + 1] === 0xac) return i + 6 - start;
   }
-  throw truncated("a generic region of unknown length never ends");
+  throw truncated(localize("image-codecs.jbig2decode.a_generic_region_of_unknown", "a generic region of unknown length never ends"));
 }
 
 /**
@@ -711,7 +712,7 @@ export function decodeJbig2(data, globals = null) {
         const flags = r.u8("page flags");
         const striping = r.u16("page striping");
         const unknownHeight = h === 0xffffffff;
-        if (unknownHeight && !(striping & 0x8000)) throw corrupt("a page of unknown height that is not striped");
+        if (unknownHeight && !(striping & 0x8000)) throw corrupt(localize("image-codecs.jbig2decode.a_page_of_unknown_height", "a page of unknown height that is not striped"));
         pageInfo = { w, h: unknownHeight ? 0 : h, unknownHeight, defPixel: (flags >> 2) & 1, op: (flags >> 3) & 3,
                      maxStripe: striping & 0x7fff };
         page = bitmap(w, unknownHeight ? 0 : h, pageInfo.defPixel);
@@ -806,12 +807,12 @@ function decodeGenericSegment(seg, r, info, used) {
     return bm;
   }
   const at = readAt(r, template === 0 ? 4 : 1);
-  used.add(`generic region, arithmetic, template ${template}${tpgdon ? ", TPGDON" : ""}`);
+  used.add(localize("image-codecs.jbig2decode.generic_region_arithmetic_template_template", "generic region, arithmetic, template {template}{v1}", { template: String(template), v1: String(tpgdon ? ", TPGDON" : "") }));
   let end = seg.data.length;
   /* An unknown-length region carries its row count after the data. */
   const mq = new MqDecoder(seg.data, r.p, end);
   const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at);
-  if (mq.overrun) throw truncated(`the generic region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 
@@ -831,10 +832,10 @@ function decodeRefinementSegment(seg, r, info, results, page, used) {
     ref = bitmap(info.w, info.h);
     compose(ref, page, -info.x, -info.y, 4);
   }
-  used.add(`generic refinement region, template ${template}${tpgron ? ", TPGRON" : ""}`);
+  used.add(localize("image-codecs.jbig2decode.generic_refinement_region_template_template", "generic refinement region, template {template}{v1}", { template: String(template), v1: String(tpgron ? ", TPGRON" : "") }));
   const mq = new MqDecoder(seg.data, r.p, seg.data.length);
   const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at);
-  if (mq.overrun) throw truncated(`the refinement region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 
@@ -854,10 +855,10 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   let ci = 0;
   const pick = (sel, std) => {
     if (sel === 3 || (std.length === 1 && sel === 1)) {
-      if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to");
+      if (ci >= custom.length) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to"));
       return custom[ci++];
     }
-    if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+    if (sel >= std.length) throw corrupt(localize("image-codecs.jbig2decode.huffman_table_selection_sel", "Huffman table selection {sel}", { sel: String(sel) }));
     return standardTable(std[sel]);
   };
   let tDH, tDW, tBM;
@@ -897,7 +898,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
         continue;
       }
       const nInst = intOrThrow(iaDecode(mq, ia.AI), "REFAGGNINST");
-      if (nInst <= 0) throw corrupt("a refinement/aggregate symbol of no instances");
+      if (nInst <= 0) throw corrupt(localize("image-codecs.jbig2decode.a_refinement_aggregate_symbol_of", "a refinement/aggregate symbol of no instances"));
       const syms = [...inSyms, ...newSyms];
       if (nInst > 1) {
         newSyms.push(decodeTextRegion({ w: symWidth, h: hcHeight, numInstances: nInst, strips: 1, logStrips: 0,
@@ -906,7 +907,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
       } else {
         const id = iaidDecode(mq, ia.ID, idLen);
         const rdx = intOrThrow(iaDecode(mq, ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(mq, ia.RDY), "RDY");
-        if (id >= syms.length) throw corrupt(`refinement of symbol ${id} of ${syms.length}`);
+        if (id >= syms.length) throw corrupt(localize("image-codecs.jbig2decode.refinement_of_symbol_id_of", "refinement of symbol {id} of {length}", { id: String(id), length: String(syms.length) }));
         newSyms.push(decodeRefinement(mq, gr, symWidth, hcHeight, rTemplate, syms[id], rdx, rdy, false, rAt));
       }
     }
@@ -942,13 +943,13 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   let exFlag = 0, i = 0;
   while (i < all.length) {
     const run = intOrThrow(huff ? bits.huff(standardTable(1)) : iaDecode(mq, ia.EX), "an export run");
-    if (run < 0 || i + run > all.length) throw corrupt("an export run past the symbols");
+    if (run < 0 || i + run > all.length) throw corrupt(localize("image-codecs.jbig2decode.an_export_run_past_the", "an export run past the symbols"));
     if (exFlag) exported.push(...all.slice(i, i + run));
     i += run;
     exFlag ^= 1;
   }
-  if (exported.length !== numEx) throw corrupt(`${exported.length} symbols exported where SDNUMEXSYMS is ${numEx}`);
-  if (mq && mq.overrun) throw truncated(`the symbol dictionary's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (exported.length !== numEx) throw corrupt(localize("image-codecs.jbig2decode.length_symbols_exported_where_sdnumexsyms", "{length} symbols exported where SDNUMEXSYMS is {numEx}", { length: String(exported.length), numEx: String(numEx) }));
+  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return { exported };
 }
 
@@ -973,8 +974,8 @@ function decodeTextSegment(seg, r, info, results, tables, used) {
     const custom = referredTables(seg, tables);
     let ci = 0;
     const pick = (sel, std) => {
-      if (sel === 3) { if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to"); return custom[ci++]; }
-      if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+      if (sel === 3) { if (ci >= custom.length) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to")); return custom[ci++]; }
+      if (sel >= std.length) throw corrupt(localize("image-codecs.jbig2decode.huffman_table_selection_sel_2", "Huffman table selection {sel}", { sel: String(sel) }));
       return standardTable(std[sel]);
     };
     const tbl = {
@@ -995,7 +996,7 @@ function decodeTextSegment(seg, r, info, results, tables, used) {
   const ia = { DT: iaCtx(), FS: iaCtx(), DS: iaCtx(), IT: iaCtx(), RI: iaCtx(), RDW: iaCtx(), RDH: iaCtx(),
                RDX: iaCtx(), RDY: iaCtx(), ID: mqContexts(1 << (idLen + 1)) };
   const reg = decodeTextRegion(p, syms, { mq, ia, idLen, gr: mqContexts(1 << 13) });
-  if (mq.overrun) throw truncated(`the text region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return reg;
 }
 
@@ -1003,7 +1004,7 @@ function decodePatternDict(seg, r, used) {
   const flags = r.u8("pattern dictionary flags");
   const mmr = flags & 1, template = (flags >> 1) & 3;
   const pw = r.u8("HDPW"), ph = r.u8("HDPH"), grayMax = r.u32("GRAYMAX");
-  if (!pw || !ph) throw corrupt("a pattern of no size");
+  if (!pw || !ph) throw corrupt(localize("image-codecs.jbig2decode.a_pattern_of_no_size", "a pattern of no size"));
   const w = (grayMax + 1) * pw;
   used.add(`pattern dictionary, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
   let coll;
@@ -1012,7 +1013,7 @@ function decodePatternDict(seg, r, used) {
     const at = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
     const mq = new MqDecoder(seg.data, r.p, seg.data.length);
     coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at);
-    if (mq.overrun) throw truncated("the pattern dictionary's arithmetic data ran out");
+    if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out"));
   }
   const pats = [];
   for (let g = 0; g <= grayMax; g++) {
@@ -1030,7 +1031,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
   const gw = r.u32("HGW"), gh = r.u32("HGH"), gx = r.i32("HGX"), gy = r.i32("HGY");
   const rx = r.u16("HRX"), ry = r.u16("HRY");
   const dict = seg.refs.map((n) => results.get(n)).find((s) => s && s.kind === "patterns");
-  if (!dict) throw corrupt("a halftone region with no pattern dictionary");
+  if (!dict) throw corrupt(localize("image-codecs.jbig2decode.a_halftone_region_with_no", "a halftone region with no pattern dictionary"));
   const pats = dict.patterns;
   const pw = pats[0].w, ph = pats[0].h;
   used.add(`halftone region, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
@@ -1057,7 +1058,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
     else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at, skip);
     if (j < bpp - 1) for (let i = 0; i < planes[j].d.length; i++) planes[j].d[i] ^= planes[j + 1].d[i];
   }
-  if (mq && mq.overrun) throw truncated("the halftone region's arithmetic data ran out");
+  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out"));
   for (let m = 0; m < gh; m++) for (let n = 0; n < gw; n++) {
     let g = 0;
     for (let j = bpp - 1; j >= 0; j--) g = (g << 1) | planes[j].d[m * gw + n];

@@ -10,6 +10,7 @@ import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
   ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX, WATCHED_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const P = "PROJ-2026-0001-alpha", H = "PROJ-2026-0002-hidden";
@@ -49,7 +50,7 @@ function providers(calls = []) {
     provenance: { homeOf: () => ({ bundleId: P }) },
     /* R16 (ai-use R5, R9) and R17 (steps, question-explorer, investigation, review): one entry each, as each answers */
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [{ key: `explore-ask:project:${P}:2026-10-06`, owner: `project:${P}`, day: "2026-10-06",
-        what: ["What did the council vote?"], asked_at: NOW, estimate: "not known yet" }] }),
+        what: ["What did the council vote?"], asked_at: NOW, estimate: word("question-explorer.known") }] }),
       limitsReached: () => ({ ok: true, reached: [{ key: "ai-limit:group:ask:usd:day:2026-10-06", owner: "group", scope: "ask", unit: "usd",
         period: "day", period_start: "2026-10-06", reached_at: NOW }] }) },
     questionExplorer: { findsFor: () => ({ ok: true, truncated: false, finds: [{ key: "explore-find:F1:INQ-1", find: "F1", question: "INQ-1",

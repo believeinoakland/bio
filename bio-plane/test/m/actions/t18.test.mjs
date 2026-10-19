@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, NOW_MS, NONCOMPLIANT } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
@@ -63,7 +64,7 @@ test("R9 the addressee's arms: office, press, organisation, group, audience, und
   refused(["counterparty:", "  state: audience", '  description: "readers"', "  role: Editor"], "audience");
   refused(["counterparty:", "  state: undetermined", '  basis: "unknown"', "  organisation: Union"], "undetermined");
   refused(["counterparty:", "  state: named", "  role: Town Clerk"], "office");
-  const ph = w.promote(B, md(B, named("press", "to be named", "Gazette")));
+  const ph = w.promote(B, md(B, named("press", word("action-grammar.named"), "Gazette")));
   assert.equal(ph.reason, "COUNTERPARTY_REFUSED", "the placeholder anywhere");
   /* R3, R27: the matching name, "role, organisation" for the named non-office arms, none for an audience. */
   assert.equal(grammar.counterpartyName({ state: "named", kind: "press", role: "Reporter", organisation: "Gazette" }), "Reporter, Gazette");

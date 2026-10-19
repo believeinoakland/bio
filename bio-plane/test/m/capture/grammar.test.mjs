@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { storage, provenance } from "./fixture.mjs";
 import { captureOf, MONITOR_FREQ, INFORMATION_GRAMMAR, checkInformationExtension } from "../../../src/capture/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { checkBundle, canonicalJson } from "../../../src/record-grammar/index.mjs";
 
 const hex = (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -72,7 +73,7 @@ const EXPECTED = {
   "INFO-2026-0007-badhash": [["error", "content_hash 'md5:abc…' is not sha256:<64 hex>"]],
   "INFO-2026-0008-mismatch": [["error", "content_hash does not match the canonicalized data/dataset.json (declared 000000000000…, actual eb51f16c324f…)", ["refresh content_hash and append a change record", "restore data/dataset.json from history"]]],
   "INFO-2026-0009-hashok": [],
-  "INFO-2026-0010-verified": [["error", "verified state requires a well-formed content_hash"], ["error", "verified state requires data/dataset.json"], ["error", "verified state requires at least one file in snapshots/"]],
+  "INFO-2026-0010-verified": [["error", "verified state requires a well-formed content_hash"], ["error", "verified state requires data/dataset.json"], ["error", localize("capture.grammar.verified_needs_snapshot", "verified state requires at least one file in snapshots/")]],
   "INFO-2026-0011-changes": [["error", "changes.json records[0] lacks detected/kind/summary in the required shape"]],
   "INFO-2026-0012-changeshape": [["error", "data/changes.json must be {\"records\": [...]}"]],
   "PROJ-2026-0001-notinfo": [],

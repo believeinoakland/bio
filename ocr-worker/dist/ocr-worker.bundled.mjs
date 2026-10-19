@@ -1,6 +1,200 @@
+// ../bio-plane/src/setup-words/rows.mjs
+var WORD_ROWS = Object.freeze([
+  ["pdfstructure.image_page", "an image on page {page}", null, null, false, "design"],
+  ["image-codecs.dctdecode.bogus_huffman_table_definition_get", "bogus Huffman table definition: {get}", null, null, false, "code"],
+  ["image-codecs.dctdecode.dc_symbol_s_past_15", "DC symbol {s} past 15", null, null, false, "code"],
+  ["image-codecs.dctdecode.entropy_coded_data_ended_before", "entropy-coded data ended before the last MCU ({fabricated} bits zero-filled)", null, null, false, "code"],
+  ["image-codecs.dctdecode.huffman_code_longer_than_16", "Huffman code longer than 16 bits", null, null, false, "code"],
+  ["image-codecs.dctdecode.huffman_table_class_or_id", "Huffman table class or id past the four tables", null, null, false, "code"],
+  ["image-codecs.dctdecode.huffman_table_counts_run_past", "Huffman table counts run past their DHT", null, null, false, "code"],
+  ["image-codecs.dctdecode.huffman_table_missing_for_component", "Huffman table missing for component {id}", null, null, false, "code"],
+  ["image-codecs.dctdecode.huffman_table_of_total_symbols", "Huffman table of {total} symbols {v1}", null, null, false, "code"],
+  ["image-codecs.dctdecode.length_of_nc_components_in", "{length} of {nc} components in the first scan", null, null, false, "code"],
+  ["image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components", null, null, false, "code"],
+  ["image-codecs.dctdecode.marker_0x_m_runs_past", "marker 0x{m} runs past end", null, null, false, "code"],
+  ["image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", null, null, false, "code"],
+  ["image-codecs.dctdecode.v1_codes_of_l_bits", "{v1} codes of {l} bits overflow the code space, or use the all-ones code", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_custom_huffman_table_with", "a custom Huffman table with no end", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_generic_region_of_unknown", "a generic region of unknown length never ends", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_halftone_region_with_no", "a halftone region with no pattern dictionary", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_huffman_code_no_table", "a Huffman code no table line holds", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary", "a Huffman-coded symbol dictionary or text region refines its symbols", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_page_of_unknown_height", "a page of unknown height that is not striped", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_pattern_of_no_size", "a pattern of no size", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_refined_symbol_of_negative", "a refined symbol of negative size", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_refinement_aggregate_symbol_of", "a refinement/aggregate symbol of no instances", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_region_s_colour_extension", "a region's colour-extension flag (T.88 Amendment 3) is set", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_repeated_symbol_id_length", "a repeated symbol-id length with nothing before it", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_segment_type_t_88", "a segment type T.88 does not define", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_symbol_dictionary_reuses_a", "a symbol dictionary reuses a previous dictionary's arithmetic contexts", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_symbol_id_length_code", "a symbol-id length code outside the run table", null, null, false, "code"],
+  ["image-codecs.jbig2decode.a_text_region_with_no", "a text region with no end", null, null, false, "code"],
+  ["image-codecs.jbig2decode.adaptive_template_pixel_ax_ay", "adaptive template pixel ({ax},{ay}) is not yet decoded", null, null, false, "code"],
+  ["image-codecs.jbig2decode.an_export_run_past_the", "an export run past the symbols", null, null, false, "code"],
+  ["image-codecs.jbig2decode.an_extension_segment_the_decoder", "an extension segment the decoder must understand and does not", null, null, false, "code"],
+  ["image-codecs.jbig2decode.bitmap_of_w_x_h", "bitmap of {w}x{h} pixels is beyond any page", null, null, false, "code"],
+  ["image-codecs.jbig2decode.generic_refinement_region_template_template", "generic refinement region, template {template}{v1}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.generic_region_arithmetic_template_template", "generic region, arithmetic, template {template}{v1}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.huffman_coded_data_ends_early", "Huffman-coded data ends early", null, null, false, "code"],
+  ["image-codecs.jbig2decode.huffman_table_selection_sel", "Huffman table selection {sel}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.huffman_table_selection_sel_2", "Huffman table selection {sel}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.length_symbols_exported_where_sdnumexsyms", "{length} symbols exported where SDNUMEXSYMS is {numEx}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.mmr_data_ends_eofb_after", "MMR data ends (EOFB) after {y} of {h} rows", null, null, false, "code"],
+  ["image-codecs.jbig2decode.mmr_data_ends_or_breaks", "MMR data ends or breaks in row {y} of {h}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.mmr_data_ends_or_breaks_2", "MMR data ends or breaks in row {y} of {h}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.mmr_row_y_runs_backwards", "MMR row {y} runs backwards", null, null, false, "code"],
+  ["image-codecs.jbig2decode.more_symbol_id_lengths_than", "more symbol-id lengths than symbols", null, null, false, "code"],
+  ["image-codecs.jbig2decode.oob_where_what_is_required", "OOB where {what} is required", null, null, false, "code"],
+  ["image-codecs.jbig2decode.refinement_adaptive_pixel_is_not", "refinement adaptive pixel is not yet decoded", null, null, false, "code"],
+  ["image-codecs.jbig2decode.refinement_of_symbol_id_of", "refinement of symbol {id} of {length}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.segment_number_of_type_type", "segment {number} of type {type} has an unknown length", null, null, false, "code"],
+  ["image-codecs.jbig2decode.symbol_id_id_of_length", "symbol id {id} of {length}", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_stream_holds_more_than", "the stream holds more than one page", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", null, null, false, "code"],
+  ["image-codecs.jbig2decode.what_n_bytes_needed_v1", "{what}: {n} bytes needed, {v1} left", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_code_block_larger_than", "a code-block larger than 4096 samples", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_code_block_of_31", "a code-block of 31 or more bit-planes", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_colour_transform_over_mixed", "a colour transform over mixed wavelets", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2", null, null, false, "code"],
+  ["image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", null, null, false, "code"],
+  ["image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow", null, null, false, "code"],
+  ["image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", null, null, false, "code"],
+  ["image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", null, null, false, "code"],
+  ["image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", null, null, false, "code"],
+  ["image-codecs.jpxdecode.prec_bit_samples_only_8", "{prec}-bit samples; only 8-bit are decoded here", null, null, false, "code"],
+  ["image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_codestream_ends_before_any", "the codestream ends before any tile", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_jp2_box_type_runs", "the JP2 box '{type}' runs past the data", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_jp2_file_holds_no", "the JP2 file holds no codestream (jp2c box)", null, null, false, "code"],
+  ["image-codecs.jpxdecode.the_tiles_packets_run_out", "the tile's packets run out at packet {v1} of {length}", null, null, false, "code"],
+  ["image-codecs.jpxdecode.tile_part_of_tile_isot", "tile-part of tile {isot} runs past the codestream", null, null, false, "code"],
+  ["image-codecs.jpxdecode.what_runs_past_the_codestream", "{what} runs past the codestream", null, null, false, "code"],
+  ["image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines", null, null, false, "code"],
+  ["image-codecs.pngdecode.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", null, null, false, "code"],
+  ["image-codecs.pngdecode.a_plte_of_length_bytes", "a PLTE of {length} bytes", null, null, false, "code"],
+  ["image-codecs.pngdecode.an_ihdr_of_len_bytes", "an IHDR of {len} bytes, not 13", null, null, false, "code"],
+  ["image-codecs.pngdecode.bit_depth_depth_with_colour", "bit depth {depth} with colour type {colourType}", null, null, false, "code"],
+  ["image-codecs.pngdecode.filter_type_f_in_row", "filter type {f} in row {y}", null, null, false, "code"],
+  ["image-codecs.pngdecode.palette_index_v_past_the", "palette index {v} past the palette's {entries} entries", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_data_ends_at_byte", "the data ends at byte {p}, before an IEND chunk", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_first_chunk_is_type", "the first chunk is {type}, not IHDR", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_ends_after", "the image data ends after {y} of {H} rows", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_inflates_past", "the image data inflates past the frame", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_image_data_s_zlib", "the image data's zlib trailer is damaged or missing", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_type_chunk_at_byte", "the {type} chunk at byte {p} runs past the data", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_type_chunk_declares_a", "the {type} chunk declares a length past 2^31 - 1", null, null, false, "code"],
+  ["image-codecs.pngdecode.the_type_chunks_crc_does", "the {type} chunk's CRC does not match its data", null, null, false, "code"],
+  ["ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist", null, null, false, "code"],
+  ["ocr-worker.contract.measurements_md_2026_09_10", "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.", null, null, false, "code"],
+  ["ocr-worker.contract.no_capture_with_that", "no capture with that sha in that store", null, null, false, "code"],
+  ["ocr-worker.contract.no_namespace_by_that_name", "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture", null, null, false, "code"],
+  ["ocr-worker.contract.pages_must_be_a_non", "pages must be a non-empty array of 0-based page numbers", null, null, false, "code"],
+  ["ocr-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
+  ["ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame", null, null, false, "code"],
+  ["ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page", null, null, false, "code"],
+  ["ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why", null, null, false, "code"],
+  ["ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples", null, null, false, "code"],
+  ["ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete", null, null, false, "code"],
+  ["ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", null, null, false, "code"],
+  ["ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", null, null, false, "code"],
+  ["ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", null, null, false, "code"],
+  ["ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", null, null, false, "code"],
+  ["ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", null, null, false, "code"],
+  ["ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", null, null, false, "code"],
+  ["ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement", null, null, false, "code"],
+  ["ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require", null, null, false, "code"],
+  ["ocr-worker.tessengine.the_language_model_is_v1", "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) \u2014 a different model is a different measurement and this member's stated fidelity would not be about it", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.a_colour_space_other_than", "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.a_jbig2_image_is_1", "a JBIG2 image is 1 bit per sample", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.an_inline_image_reading_inline", "an inline image; reading inline images is not built", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_colour_space_has_pdfcomps", "the colour space has {pdfComps} components; the image has {comps}", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_decoded_image_is_short", "the decoded image is short of its declared height", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_s_filter_chain", "the image's filter chain has no decoder here", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_s_sample_layout", "the image's sample layout has no decoder here", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_image_xobject_s_stream", "the image XObject's stream could not be read", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_jbig2globals_stream_could_not", "the /JBIG2Globals stream could not be read", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_jpeg_2000_image_is", "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_carries_a_text", "the page carries a text layer; it does not need pixels", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_carries_marks_that", "the page carries marks that are not an embedded image", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_composes_several_images", "the page composes several images; compositing is not built", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_index_is_outside", "the page index is outside the document", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_object_could_not", "the page object could not be read", null, null, false, "code"],
+  ["pdf-pixels.pagepixels.the_page_paints_no_image", "the page paints no image", null, null, false, "code"],
+  ["subresources.subresources.a_scheme_reference_is_not", "a {scheme} reference is not something this surface fetches", null, null, false, "code"],
+  ["subresources.subresources.a_viewer_must_be_able", "a viewer must be able to verify every byte it substitutes against the record before showing it", null, null, false, "code"],
+  ["subresources.subresources.and_earlier_capture_undetermined", " (and {count} earlier capture whose page the record does not name, counted as undetermined)", null, null, false, "code"],
+  ["subresources.subresources.and_earlier_captures_undetermined", " (and {count} earlier captures whose page the record does not name, counted as undetermined)", null, null, false, "code"],
+  ["subresources.subresources.by_a_capture_undetermined", " by a capture the record does not name (undetermined)", null, null, false, "code"],
+  ["subresources.subresources.by_capture", " by capture {capture}", null, null, false, "code"],
+  ["subresources.subresources.cross_origin_script_image_or_media", "cross-origin script, image, or media: advertising, analytics, and social widgets are not part of the document", null, null, false, "code"],
+  ["subresources.subresources.derived_banner", "<!-- DERIVED ARTIFACT, not evidence. Generated by bio-plane from the capture\n     {primarySha}\n     at {when}. The raw bytes as served are the evidence and are stored\n     separately, unmodified. This file has had scripts and frames removed and\n     every subresource reference replaced with an about:capture#<sha256>\n     placeholder resolved from data/snapshot-manifest.json. Opened without a\n     resolving viewer it renders blank, on purpose. -->\n", null, null, false, "code"],
+  ["subresources.subresources.entries_with_fetched_this_capture", "entries with fetched_this_capture:false were NOT fetched during this capture; their bytes come from an earlier fetch of the same address on this host, made by the capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. A capture ratified as evidence must re-fetch them.", null, null, false, "code"],
+  ["subresources.subresources.every_a_the_page_carried", "Every <a> the page carried, characterised. `intra` resolves inside this record and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another record is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.", null, null, false, "code"],
+  ["subresources.subresources.every_entry_the_viewer_renders", "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion.", null, null, false, "code"],
+  ["subresources.subresources.found_in_region_basis_which", "found in {region_basis}, which belongs to the site rather than to this document", null, null, false, "code"],
+  ["subresources.subresources.held_back_from_a_previously_observed", "held back from a previously observed runtime limit so the invocation ends on our terms rather than mid-fetch", null, null, false, "code"],
+  ["subresources.subresources.index_of_the_render_companion", "index of the render companion's placeholders to the content-addressed captures they resolve to", null, null, false, "code"],
+  ["subresources.subresources.no_limit_was_reached", "no limit was reached, so the ceiling is at least spent_this_invocation and its true value is unknown", null, null, false, "code"],
+  ["subresources.subresources.not_fetched_during_this_capture", "not fetched during this capture: the source was seen serving these exact bytes at {last_fetched}{v1}, across {documents} documents on this host{v2}, and they are reused from the record rather than requested again", null, null, false, "code"],
+  ["subresources.subresources.one_of_family_size_responsive", "one of {family_size} responsive candidates for one picture; the largest is captured", null, null, false, "code"],
+  ["subresources.subresources.the_address_is_not_public_https", "the address is not public https, and the fence that guards the primary locator guards this one", null, null, false, "code"],
+  ["subresources.subresources.the_capturing_worker_s_clock", "the capturing Worker's clock, stamped as this capture issued the request", null, null, false, "code"],
+  ["subresources.subresources.the_earliest_and_latest_instants", "the earliest and latest instants at which this composite's parts were fetched, per clock. `capture` instants were stamped by this capture; `record` instants are when an earlier capture's fetch of a reused part was filed, on the Store's clock. The two are never ordered against each other, so a composite holding both states each and leaves the composite-wide earliest and latest null. undetermined counts held parts whose instant the record does not give.", null, null, false, "code"],
+  ["subresources.subresources.the_fanout_cap_was_reached", "the fanout cap was reached before this reference; it is recorded rather than dropped so the truncation is visible", null, null, false, "code"],
+  ["subresources.subresources.the_raw_capture_is_the", "the raw capture is the evidence and is never rewritten, so showing the page as it was needs a separate artifact that says it is one", null, null, false, "code"],
+  ["subresources.subresources.the_runtime_refused_an_outbound", "the runtime refused an outbound request at this count; record it and pass it back as platformCeiling", null, null, false, "code"],
+  ["subresources.subresources.the_runtime_refused_another", "the runtime refused another outbound request in this invocation; the source was never asked, and this says nothing about whether it would have answered", null, null, false, "code"],
+  ["subresources.subresources.this_invocation_reached_the_runtime", "this invocation reached the runtime's outbound request limit; the reference is outstanding, not failed, and a continuation can fetch it", null, null, false, "code"]
+]);
+
+// ../bio-plane/src/setup-words/index.mjs
+var table;
+var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
+var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
+var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
+var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
+function fill(key, text, vars) {
+  return text.replace(PLACEHOLDER, (_, name) => {
+    const v = vars?.[name];
+    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    return String(v);
+  });
+}
+function word(key, vars = {}) {
+  const row = typeof key === "string" ? rowsByKey().get(key) : void 0;
+  if (!row) throw fail("UNKNOWN_WORD", `no word ${typeof key === "string" ? key : String(key)}`);
+  return fill(key, row[1], vars);
+}
+function localize(id, en, vars = {}) {
+  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
+  const row = rowsByKey().get(id);
+  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
+  return fill(id, row ? row[1] : en, vars);
+}
+
 // ../bio-plane/src/subresources.mjs
 var SUBRESOURCE_MAX = 8 * 1024 * 1024;
 var SUBRESOURCE_BUDGET = 64 * 1024 * 1024;
+var SPREAD_CLOCKS = {
+  capture: { instant: "fetched_at", clock: localize("subresources.subresources.the_capturing_worker_s_clock", "the capturing Worker's clock, stamped as this capture issued the request") },
+  record: { instant: "reused_from_fetched_at", clock: "the Store's clock (site_assets.last_fetched), stamped when an earlier capture's fetch was filed" }
+};
 var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 
 // ../bio-plane/src/pdfstructure.mjs
@@ -862,7 +1056,7 @@ var r3 = (v) => {
   return x === 0 ? 0 : x;
 };
 function pdfImageRef(page, rect, extra = {}) {
-  return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
+  return { kind: "image", ref: word("pdfstructure.image_page", { page: String(page + 1) }), page, rect, ...extra };
 }
 function mulMatrix(m, c) {
   return [
@@ -1170,7 +1364,7 @@ function readJpegHeader(d) {
     if (p + 2 > d.length) throw new DctRefusal("TRUNCATED", { note: "marker length past end" });
     const len = d[p] << 8 | d[p + 1];
     const seg = d.subarray(p + 2, p + len);
-    if (p + len > d.length) throw new DctRefusal("TRUNCATED", { note: `marker 0x${m.toString(16)} runs past end` });
+    if (p + len > d.length) throw new DctRefusal("TRUNCATED", { note: localize("image-codecs.dctdecode.marker_0x_m_runs_past", "marker 0x{m} runs past end", { m: String(m.toString(16)) }) });
     if (m in SOF_PROCESS) {
       if (!DECODED_SOF.has(m))
         throw new DctRefusal("UNSUPPORTED_PROCESS", { process: SOF_PROCESS[m], marker: `0x${m.toString(16)}` });
@@ -1199,23 +1393,23 @@ function readJpegHeader(d) {
     } else if (m === 196) {
       let q = 0;
       while (q < seg.length) {
-        const tc = seg[q] >> 4, th = seg[q] & 15, table2 = `${tc === 0 ? "dc" : "ac"} ${th}`;
-        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
-        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table: table2 });
+        const tc = seg[q] >> 4, th = seg[q] & 15, table3 = `${tc === 0 ? "dc" : "ac"} ${th}`;
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_class_or_id", "Huffman table class or id past the four tables"), class: tc, id: th });
+        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_counts_run_past", "Huffman table counts run past their DHT"), table: table3 });
         const counts = seg.subarray(q + 1, q + 17);
         let total = 0;
         for (let i = 0; i < 16; i++) total += counts[i];
         if (total > 256 || q + 17 + total > seg.length)
-          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total} symbols ${total > 256 ? "past 256" : "runs past its DHT"}`, table: table2 });
+          throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_of_total_symbols", "Huffman table of {total} symbols {v1}", { total: String(total), v1: String(total > 256 ? "past 256" : "runs past its DHT") }), table: table3 });
         const symbols = seg.subarray(q + 17, q + 17 + total);
         const why = bogusHuffman(counts, symbols, tc === 0);
         const list = tc === 0 ? hts.dc : hts.ac;
         if (why) {
           delete list[th];
-          bogus.set(table2, why);
+          bogus.set(table3, why);
         } else {
           list[th] = buildHuffman(counts, symbols);
-          bogus.delete(table2);
+          bogus.delete(table3);
         }
         q += 17 + total;
       }
@@ -1234,9 +1428,9 @@ function readJpegHeader(d) {
       const ns = seg[0];
       const scomps = [];
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
-      for (const sc of scomps) for (const table2 of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
-        if (bogus.has(table2))
-          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table2)}`, table: table2, component: sc.id });
+      for (const sc of scomps) for (const table3 of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
+        if (bogus.has(table3))
+          throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.bogus_huffman_table_definition_get", "bogus Huffman table definition: {get}", { get: String(bogus.get(table3)) }), table: table3, component: sc.id });
       }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p + len } };
     }
@@ -1247,11 +1441,11 @@ function bogusHuffman(counts, symbols, isDC) {
   let code = 0;
   for (let l = 1; l <= 16; l++) {
     code += counts[l - 1];
-    if (code >= 1 << l) return `${counts[l - 1]} codes of ${l} bits overflow the code space, or use the all-ones code`;
+    if (code >= 1 << l) return localize("image-codecs.dctdecode.v1_codes_of_l_bits", "{v1} codes of {l} bits overflow the code space, or use the all-ones code", { v1: String(counts[l - 1]), l: String(l) });
     code <<= 1;
   }
   if (isDC) {
-    for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+    for (const s of symbols) if (s > 15) return localize("image-codecs.dctdecode.dc_symbol_s_past_15", "DC symbol {s} past 15", { s: String(s) });
   }
   return null;
 }
@@ -1342,7 +1536,7 @@ var Bits = class {
     for (; ; ) {
       code = code << 1 | this.bits(1);
       l++;
-      if (l > 16) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman code longer than 16 bits" });
+      if (l > 16) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_code_longer_than_16", "Huffman code longer than 16 bits") });
       if (h.maxcode[l] >= 0 && code <= h.maxcode[l]) return h.symbols[h.valptr[l] + code - h.mincode[l]];
     }
   }
@@ -1510,7 +1704,7 @@ function colourTransformOf(h) {
   if (h.jfif) return { ycc: true, why: "JFIF" };
   if (h.adobe) return { ycc: h.adobe.transform !== 0, why: `Adobe APP14 transform=${h.adobe.transform}` };
   if (ids[0] === 82 && ids[1] === 71 && ids[2] === 66) return { ycc: false, why: "component ids R,G,B" };
-  return { ycc: true, why: "libjpeg's default for three components" };
+  return { ycc: true, why: localize("image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components") };
 }
 function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
   const deg = ((rotate | 0) % 360 + 360) % 360;
@@ -1575,14 +1769,14 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
       throw new DctRefusal("COLOR_TRANSFORM_CONFLICT", { pdf: colorTransform, stream: colour });
   }
   if (scan.comps.length !== nc)
-    throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "multi-scan sequential", note: `${scan.comps.length} of ${nc} components in the first scan` });
+    throw new DctRefusal("UNSUPPORTED_PROCESS", { process: "multi-scan sequential", note: localize("image-codecs.dctdecode.length_of_nc_components_in", "{length} of {nc} components in the first scan", { length: String(scan.comps.length), nc: String(nc) }) });
   const hmax = Math.max(...frame.comps.map((c) => c.h)), vmax = Math.max(...frame.comps.map((c) => c.v));
   const sampling = frame.comps.map((c) => `${c.h}x${c.v}`).join(",");
   for (const c of frame.comps) {
     const hx = hmax / c.h, vx = vmax / c.v;
     const ok = (hx === 1 || hx === 2) && (vx === 1 || vx === 2) && Number.isInteger(hx) && Number.isInteger(vx);
     if (!ok || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
-    if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
+    if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.quantisation_table_tq_missing", "quantisation table {tq} missing", { tq: String(c.tq) }) });
   }
   const W2 = frame.width, H = frame.height;
   const single = nc === 1;
@@ -1592,7 +1786,7 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
   const outPerStrip = single ? 8 : 8 * vmax;
   const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
-    if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
+    if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: localize("image-codecs.dctdecode.huffman_table_missing_for_component", "Huffman table missing for component {id}", { id: String(c.id) }) });
     const hx = single ? 1 : hmax / c.h, vx = single ? 1 : vmax / c.v;
     const stride = mcux * c.h * 8, rowsPer = single ? 8 : 8 * c.v;
     const dw = Math.ceil(W2 * c.h / hmax);
@@ -1744,7 +1938,7 @@ function decodeStrips(d, expectComps, colorTransform, emit) {
     }
   }
   if (br.fabricated())
-    throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
+    throw new DctRefusal("TRUNCATED", { note: localize("image-codecs.dctdecode.entropy_coded_data_ended_before", "entropy-coded data ended before the last MCU ({fabricated} bits zero-filled)", { fabricated: String(br.fabricated()) }) });
   return {
     width: W2,
     height: H,
@@ -1927,20 +2121,20 @@ var unsupported = (feature, extra = {}) => new Jbig2Refusal("UNSUPPORTED", { fea
 var corrupt = (note, extra = {}) => new Jbig2Refusal("CORRUPT", { note, ...extra });
 var truncated = (note, extra = {}) => new Jbig2Refusal("TRUNCATED", { note, ...extra });
 var JBIG2_REFUSES = Object.freeze({
-  "colour extension": "a region's colour-extension flag (T.88 Amendment 3) is set",
+  "colour extension": localize("image-codecs.jbig2decode.a_region_s_colour_extension", "a region's colour-extension flag (T.88 Amendment 3) is set"),
   "12 adaptive-template pixels": "a generic region's extended template (EXTTEMPLATE) is used",
-  "reused bitmap coding contexts": "a symbol dictionary reuses a previous dictionary's arithmetic contexts",
-  "Huffman-coded refinement": "a Huffman-coded symbol dictionary or text region refines its symbols",
-  "a necessary extension segment": "an extension segment the decoder must understand and does not",
-  "segment type": "a segment type T.88 does not define",
-  "several pages": "the stream holds more than one page",
-  "no page": "the stream holds no page information segment"
+  "reused bitmap coding contexts": localize("image-codecs.jbig2decode.a_symbol_dictionary_reuses_a", "a symbol dictionary reuses a previous dictionary's arithmetic contexts"),
+  "Huffman-coded refinement": localize("image-codecs.jbig2decode.a_huffman_coded_symbol_dictionary", "a Huffman-coded symbol dictionary or text region refines its symbols"),
+  "a necessary extension segment": localize("image-codecs.jbig2decode.an_extension_segment_the_decoder", "an extension segment the decoder must understand and does not"),
+  "segment type": localize("image-codecs.jbig2decode.a_segment_type_t_88", "a segment type T.88 does not define"),
+  "several pages": localize("image-codecs.jbig2decode.the_stream_holds_more_than", "the stream holds more than one page"),
+  "no page": localize("image-codecs.jbig2decode.the_stream_holds_no_page", "the stream holds no page information segment")
 });
-var bitmap = (w, h, fill = 0) => {
+var bitmap = (w, h, fill2 = 0) => {
   if (!(Number.isInteger(w) && Number.isInteger(h)) || w < 0 || h < 0) throw corrupt(`bitmap size ${w}x${h}`);
-  if (w * h > 1 << 28) throw corrupt(`bitmap of ${w}x${h} pixels is beyond any page`);
+  if (w * h > 1 << 28) throw corrupt(localize("image-codecs.jbig2decode.bitmap_of_w_x_h", "bitmap of {w}x{h} pixels is beyond any page", { w: String(w), h: String(h) }));
   const d = new Uint8Array(w * h);
-  if (fill) d.fill(1);
+  if (fill2) d.fill(1);
   return { w, h, d };
 };
 function compose(dst, src, x, y, op) {
@@ -1979,7 +2173,7 @@ var Reader = class {
     this.end = end;
   }
   need(n, what) {
-    if (this.p + n > this.end) throw truncated(`${what}: ${n} bytes needed, ${this.end - this.p} left`);
+    if (this.p + n > this.end) throw truncated(localize("image-codecs.jbig2decode.what_n_bytes_needed_v1", "{what}: {n} bytes needed, {v1} left", { what: String(what), n: String(n), v1: String(this.end - this.p) }));
   }
   u8(what = "a byte") {
     this.need(1, what);
@@ -2047,7 +2241,7 @@ function iaidDecode(mq, ctx, len) {
   return prev - (1 << len);
 }
 var intOrThrow = (v, what) => {
-  if (v === OOB) throw corrupt(`OOB where ${what} is required`);
+  if (v === OOB) throw corrupt(localize("image-codecs.jbig2decode.oob_where_what_is_required", "OOB where {what} is required", { what: String(what) }));
   return v;
 };
 var L = (p, r, low, kind = "") => [p, r, low, kind];
@@ -2241,7 +2435,7 @@ var STANDARD_TABLES = {
     L(7, 32, 25, "high")
   ]
 };
-function table(lines) {
+function table2(lines) {
   const maxLen = Math.max(0, ...lines.map((l) => l[0]));
   const count = new Array(maxLen + 1).fill(0);
   for (const l of lines) if (l[0]) count[l[0]]++;
@@ -2255,7 +2449,7 @@ function table(lines) {
   return { maxLen, byLen };
 }
 var STD = {};
-var standardTable = (n) => STD[n] ||= table(STANDARD_TABLES[n]);
+var standardTable = (n) => STD[n] ||= table2(STANDARD_TABLES[n]);
 var Bits2 = class {
   constructor(d, p, end) {
     this.d = d;
@@ -2266,7 +2460,7 @@ var Bits2 = class {
   read(n) {
     let v = 0;
     for (let i = 0; i < n; i++) {
-      if (this.p >= this.end) throw truncated("Huffman-coded data ends early");
+      if (this.p >= this.end) throw truncated(localize("image-codecs.jbig2decode.huffman_coded_data_ends_early", "Huffman-coded data ends early"));
       v = v * 2 + (this.d[this.p] >> 7 - this.bit & 1);
       if (++this.bit === 8) {
         this.bit = 0;
@@ -2293,7 +2487,7 @@ var Bits2 = class {
       const off = this.read(rangeLen);
       return kind === "low" ? low - off : low + off;
     }
-    throw corrupt("a Huffman code no table line holds");
+    throw corrupt(localize("image-codecs.jbig2decode.a_huffman_code_no_table", "a Huffman code no table line holds"));
   }
 };
 function parseTableSegment(data) {
@@ -2308,12 +2502,12 @@ function parseTableSegment(data) {
     const p = b.read(htps), rl = b.read(htrs);
     lines.push(L(p, rl, cur));
     cur += 2 ** rl;
-    if (lines.length > 1 << 16) throw corrupt("a custom Huffman table with no end");
+    if (lines.length > 1 << 16) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_with", "a custom Huffman table with no end"));
   }
   lines.push(L(b.read(htps), 32, low - 1, "low"));
   lines.push(L(b.read(htps), 32, high, "high"));
   if (htoob) lines.push(L(b.read(htps), 0, 0, "oob"));
-  return table(lines);
+  return table2(lines);
 }
 var TPGD_CONTEXT = [39717, 1941, 229, 405];
 function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at, skip = null) {
@@ -2322,7 +2516,7 @@ function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at, skip = null) {
   const nat = template === 0 ? 4 : 1;
   for (let i = 0; i < nat; i++) {
     const ax = at[2 * i], ay = at[2 * i + 1];
-    if (ay > 0 || ay === 0 && ax >= 0) throw corrupt(`adaptive template pixel (${ax},${ay}) is not yet decoded`);
+    if (ay > 0 || ay === 0 && ax >= 0) throw corrupt(localize("image-codecs.jbig2decode.adaptive_template_pixel_ax_ay", "adaptive template pixel ({ax},{ay}) is not yet decoded", { ax: String(ax), ay: String(ay) }));
   }
   const px = (x, y) => x < 0 || x >= w || y < 0 ? 0 : D[y * w + x];
   let ltp = 0;
@@ -2648,7 +2842,7 @@ function decodeMmr(d, p, end, w, h) {
   const br = new MmrBits(d, p, end);
   let ref = [w, w];
   for (let y = 0; y < h; y++) {
-    if (br.peek(24) === 4097 && br.left >= 24) throw truncated(`MMR data ends (EOFB) after ${y} of ${h} rows`);
+    if (br.peek(24) === 4097 && br.left >= 24) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_eofb_after", "MMR data ends (EOFB) after {y} of {h} rows", { y: String(y), h: String(h) }));
     const cur = [];
     let a0 = -1, colour = 0;
     const b12 = () => {
@@ -2672,13 +2866,13 @@ function decodeMmr(d, p, end, w, h) {
         hit = m;
         break;
       }
-      if (!hit) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+      if (!hit) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_or_breaks", "MMR data ends or breaks in row {y} of {h}", { y: String(y), h: String(h) }));
       br.skip(hit[0]);
       if (hit[2] === "H") {
         const start = a0 < 0 ? 0 : a0;
         const r1 = mmrRun(br, colour ? BLACK_LUT : WHITE_LUT);
         const r2 = r1 < 0 ? -1 : mmrRun(br, colour ? WHITE_LUT : BLACK_LUT);
-        if (r1 < 0 || r2 < 0) throw truncated(`MMR data ends or breaks in row ${y} of ${h}`);
+        if (r1 < 0 || r2 < 0) throw truncated(localize("image-codecs.jbig2decode.mmr_data_ends_or_breaks_2", "MMR data ends or breaks in row {y} of {h}", { y: String(y), h: String(h) }));
         const m1 = Math.min(w, start + r1), m2 = Math.min(w, m1 + r2);
         cur.push(m1, m2);
         a0 = m2;
@@ -2687,7 +2881,7 @@ function decodeMmr(d, p, end, w, h) {
         a0 = i + 1 < ref.length ? ref[i + 1] : w;
       } else {
         const a1 = Math.max(0, Math.min(w, b12() + hit[3]));
-        if (a1 < a0) throw corrupt(`MMR row ${y} runs backwards`);
+        if (a1 < a0) throw corrupt(localize("image-codecs.jbig2decode.mmr_row_y_runs_backwards", "MMR row {y} runs backwards", { y: String(y) }));
         cur.push(a1);
         a0 = a1;
         colour ^= 1;
@@ -2710,7 +2904,7 @@ function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at) {
   const bm = bitmap(w, h);
   const D = bm.d, R3 = ref.d, rw = ref.w, rh = ref.h;
   if (template === 0) {
-    if (at[1] > 0 || at[1] === 0 && at[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
+    if (at[1] > 0 || at[1] === 0 && at[0] >= 0) throw corrupt(localize("image-codecs.jbig2decode.refinement_adaptive_pixel_is_not", "refinement adaptive pixel is not yet decoded"));
   }
   const g = (x, y) => x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x];
   const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R3[y * rw + x];
@@ -2765,13 +2959,13 @@ function decodeTextRegion(p, syms, dec) {
       if (p.strips !== 1) curt = huff ? dec.bits.read(p.logStrips) : intOrThrow(iaDecode(dec.mq, dec.ia.IT), "a symbol's T");
       const t = stript + curt;
       const id = huff ? intOrThrow(dec.bits.huff(dec.symCodes), "a symbol id") : iaidDecode(dec.mq, dec.ia.ID, dec.idLen);
-      if (id < 0 || id >= syms.length || !syms[id]) throw corrupt(`symbol id ${id} of ${syms.length}`);
+      if (id < 0 || id >= syms.length || !syms[id]) throw corrupt(localize("image-codecs.jbig2decode.symbol_id_id_of_length", "symbol id {id} of {length}", { id: String(id), length: String(syms.length) }));
       let ib = syms[id];
       const ri = p.refine ? huff ? dec.bits.read(1) : intOrThrow(iaDecode(dec.mq, dec.ia.RI), "a refinement flag") : 0;
       if (ri) {
         const rdw = intOrThrow(iaDecode(dec.mq, dec.ia.RDW), "RDW"), rdh = intOrThrow(iaDecode(dec.mq, dec.ia.RDH), "RDH");
         const rdx = intOrThrow(iaDecode(dec.mq, dec.ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(dec.mq, dec.ia.RDY), "RDY");
-        if (ib.w + rdw < 0 || ib.h + rdh < 0) throw corrupt("a refined symbol of negative size");
+        if (ib.w + rdw < 0 || ib.h + rdh < 0) throw corrupt(localize("image-codecs.jbig2decode.a_refined_symbol_of_negative", "a refined symbol of negative size"));
         ib = decodeRefinement(
           dec.mq,
           dec.gr,
@@ -2812,7 +3006,7 @@ function decodeTextRegion(p, syms, dec) {
       if (!p.transposed && p.refCorner < 2) curs += ib.w - 1;
       else if (p.transposed && p.refCorner & 1) curs += ib.h - 1;
       n++;
-      if (n > p.numInstances + 1e6) throw corrupt("a text region with no end");
+      if (n > p.numInstances + 1e6) throw corrupt(localize("image-codecs.jbig2decode.a_text_region_with_no", "a text region with no end"));
     }
   }
   return reg;
@@ -2820,21 +3014,21 @@ function decodeTextRegion(p, syms, dec) {
 function readSymbolIdTable(bits, numSyms) {
   const runLines = [];
   for (let i = 0; i < 35; i++) runLines.push(L(bits.read(4), 0, i));
-  const runTable = table(runLines);
+  const runTable = table2(runLines);
   const lens = [];
   while (lens.length < numSyms) {
     const code = bits.huff(runTable);
-    if (code === OOB || code > 34) throw corrupt("a symbol-id length code outside the run table");
+    if (code === OOB || code > 34) throw corrupt(localize("image-codecs.jbig2decode.a_symbol_id_length_code", "a symbol-id length code outside the run table"));
     if (code < 32) lens.push(code);
     else {
       const [rep, val] = code === 32 ? [3 + bits.read(2), lens.length ? lens[lens.length - 1] : -1] : code === 33 ? [3 + bits.read(3), 0] : [11 + bits.read(7), 0];
-      if (val < 0) throw corrupt("a repeated symbol-id length with nothing before it");
+      if (val < 0) throw corrupt(localize("image-codecs.jbig2decode.a_repeated_symbol_id_length", "a repeated symbol-id length with nothing before it"));
       for (let i = 0; i < rep; i++) lens.push(val);
     }
   }
-  if (lens.length > numSyms) throw corrupt("more symbol-id lengths than symbols");
+  if (lens.length > numSyms) throw corrupt(localize("image-codecs.jbig2decode.more_symbol_id_lengths_than", "more symbol-id lengths than symbols"));
   bits.align();
-  return table(lens.map((len, i) => L(len, 0, i)));
+  return table2(lens.map((len, i) => L(len, 0, i)));
 }
 function regionInfo(r) {
   const w = r.u32("region width"), h = r.u32("region height"), x = r.u32("region x"), y = r.u32("region y");
@@ -2869,7 +3063,7 @@ function readSegments(d, into, limit = d.length) {
     let length = r.u32("a segment data length");
     const start = r.p;
     if (length === 4294967295) {
-      if (type !== 38 && type !== 39) throw corrupt(`segment ${number} of type ${type} has an unknown length`);
+      if (type !== 38 && type !== 39) throw corrupt(localize("image-codecs.jbig2decode.segment_number_of_type_type", "segment {number} of type {type} has an unknown length", { number: String(number), type: String(type) }));
       length = unknownLengthGeneric(d, start, limit);
     }
     r.need(length, `segment ${number}'s data`);
@@ -2885,7 +3079,7 @@ function unknownLengthGeneric(d, start, limit) {
   for (let i = start + hdr; i + 6 <= limit; i++) {
     if (mmr ? d[i] === 0 && d[i + 1] === 0 : d[i] === 255 && d[i + 1] === 172) return i + 6 - start;
   }
-  throw truncated("a generic region of unknown length never ends");
+  throw truncated(localize("image-codecs.jbig2decode.a_generic_region_of_unknown", "a generic region of unknown length never ends"));
 }
 function decodeJbig2(data, globals = null) {
   const segs = [];
@@ -2917,7 +3111,7 @@ function decodeJbig2(data, globals = null) {
         const flags = r.u8("page flags");
         const striping = r.u16("page striping");
         const unknownHeight = h === 4294967295;
-        if (unknownHeight && !(striping & 32768)) throw corrupt("a page of unknown height that is not striped");
+        if (unknownHeight && !(striping & 32768)) throw corrupt(localize("image-codecs.jbig2decode.a_page_of_unknown_height", "a page of unknown height that is not striped"));
         pageInfo = {
           w,
           h: unknownHeight ? 0 : h,
@@ -3003,8 +3197,8 @@ function decodeJbig2(data, globals = null) {
     decoded: [...used].sort()
   } };
 }
-function grow(bm, h, fill) {
-  const nb = bitmap(bm.w, h, fill);
+function grow(bm, h, fill2) {
+  const nb = bitmap(bm.w, h, fill2);
   nb.d.set(bm.d.subarray(0, Math.min(bm.d.length, nb.d.length)));
   return nb;
 }
@@ -3029,11 +3223,11 @@ function decodeGenericSegment(seg, r, info, used) {
     return bm2;
   }
   const at = readAt(r, template === 0 ? 4 : 1);
-  used.add(`generic region, arithmetic, template ${template}${tpgdon ? ", TPGDON" : ""}`);
+  used.add(localize("image-codecs.jbig2decode.generic_region_arithmetic_template_template", "generic region, arithmetic, template {template}{v1}", { template: String(template), v1: String(tpgdon ? ", TPGDON" : "") }));
   let end = seg.data.length;
   const mq = new MqDecoder(seg.data, r.p, end);
   const bm = decodeGenericArith(mq, mqContexts(1 << 16), info.w, info.h, template, tpgdon, at);
-  if (mq.overrun) throw truncated(`the generic region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_generic_regions_arithmetic_data", "the generic region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 function decodeRefinementSegment(seg, r, info, results, page, used) {
@@ -3048,10 +3242,10 @@ function decodeRefinementSegment(seg, r, info, results, page, used) {
     ref = bitmap(info.w, info.h);
     compose(ref, page, -info.x, -info.y, 4);
   }
-  used.add(`generic refinement region, template ${template}${tpgron ? ", TPGRON" : ""}`);
+  used.add(localize("image-codecs.jbig2decode.generic_refinement_region_template_template", "generic refinement region, template {template}{v1}", { template: String(template), v1: String(tpgron ? ", TPGRON" : "") }));
   const mq = new MqDecoder(seg.data, r.p, seg.data.length);
   const bm = decodeRefinement(mq, mqContexts(1 << 13), info.w, info.h, template, ref, 0, 0, tpgron, at);
-  if (mq.overrun) throw truncated(`the refinement region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_refinement_regions_arithmetic_data", "the refinement region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return bm;
 }
 function decodeSymbolDict(seg, r, results, tables, used) {
@@ -3070,10 +3264,10 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   let ci = 0;
   const pick = (sel, std) => {
     if (sel === 3 || std.length === 1 && sel === 1) {
-      if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to");
+      if (ci >= custom.length) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to"));
       return custom[ci++];
     }
-    if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+    if (sel >= std.length) throw corrupt(localize("image-codecs.jbig2decode.huffman_table_selection_sel", "Huffman table selection {sel}", { sel: String(sel) }));
     return standardTable(std[sel]);
   };
   let tDH, tDW, tBM;
@@ -3132,7 +3326,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
         continue;
       }
       const nInst = intOrThrow(iaDecode(mq, ia.AI), "REFAGGNINST");
-      if (nInst <= 0) throw corrupt("a refinement/aggregate symbol of no instances");
+      if (nInst <= 0) throw corrupt(localize("image-codecs.jbig2decode.a_refinement_aggregate_symbol_of", "a refinement/aggregate symbol of no instances"));
       const syms = [...inSyms, ...newSyms];
       if (nInst > 1) {
         newSyms.push(decodeTextRegion({
@@ -3153,7 +3347,7 @@ function decodeSymbolDict(seg, r, results, tables, used) {
       } else {
         const id = iaidDecode(mq, ia.ID, idLen);
         const rdx = intOrThrow(iaDecode(mq, ia.RDX), "RDX"), rdy = intOrThrow(iaDecode(mq, ia.RDY), "RDY");
-        if (id >= syms.length) throw corrupt(`refinement of symbol ${id} of ${syms.length}`);
+        if (id >= syms.length) throw corrupt(localize("image-codecs.jbig2decode.refinement_of_symbol_id_of", "refinement of symbol {id} of {length}", { id: String(id), length: String(syms.length) }));
         newSyms.push(decodeRefinement(mq, gr, symWidth, hcHeight, rTemplate, syms[id], rdx, rdy, false, rAt));
       }
     }
@@ -3187,13 +3381,13 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   let exFlag = 0, i = 0;
   while (i < all.length) {
     const run = intOrThrow(huff ? bits.huff(standardTable(1)) : iaDecode(mq, ia.EX), "an export run");
-    if (run < 0 || i + run > all.length) throw corrupt("an export run past the symbols");
+    if (run < 0 || i + run > all.length) throw corrupt(localize("image-codecs.jbig2decode.an_export_run_past_the", "an export run past the symbols"));
     if (exFlag) exported.push(...all.slice(i, i + run));
     i += run;
     exFlag ^= 1;
   }
-  if (exported.length !== numEx) throw corrupt(`${exported.length} symbols exported where SDNUMEXSYMS is ${numEx}`);
-  if (mq && mq.overrun) throw truncated(`the symbol dictionary's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (exported.length !== numEx) throw corrupt(localize("image-codecs.jbig2decode.length_symbols_exported_where_sdnumexsyms", "{length} symbols exported where SDNUMEXSYMS is {numEx}", { length: String(exported.length), numEx: String(numEx) }));
+  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_symbol_dictionarys_arithmetic_data", "the symbol dictionary's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return { exported };
 }
 function decodeTextSegment(seg, r, info, results, tables, used) {
@@ -3231,10 +3425,10 @@ function decodeTextSegment(seg, r, info, results, tables, used) {
     let ci = 0;
     const pick = (sel, std) => {
       if (sel === 3) {
-        if (ci >= custom.length) throw corrupt("a custom Huffman table the segment does not refer to");
+        if (ci >= custom.length) throw corrupt(localize("image-codecs.jbig2decode.a_custom_huffman_table_the", "a custom Huffman table the segment does not refer to"));
         return custom[ci++];
       }
-      if (sel >= std.length) throw corrupt(`Huffman table selection ${sel}`);
+      if (sel >= std.length) throw corrupt(localize("image-codecs.jbig2decode.huffman_table_selection_sel_2", "Huffman table selection {sel}", { sel: String(sel) }));
       return standardTable(std[sel]);
     };
     const tbl = {
@@ -3264,14 +3458,14 @@ function decodeTextSegment(seg, r, info, results, tables, used) {
     ID: mqContexts(1 << idLen + 1)
   };
   const reg = decodeTextRegion(p, syms, { mq, ia, idLen, gr: mqContexts(1 << 13) });
-  if (mq.overrun) throw truncated(`the text region's arithmetic data ran out (${mq.overrun} bytes short)`);
+  if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_text_regions_arithmetic_data", "the text region's arithmetic data ran out ({overrun} bytes short)", { overrun: String(mq.overrun) }));
   return reg;
 }
 function decodePatternDict(seg, r, used) {
   const flags = r.u8("pattern dictionary flags");
   const mmr = flags & 1, template = flags >> 1 & 3;
   const pw = r.u8("HDPW"), ph = r.u8("HDPH"), grayMax = r.u32("GRAYMAX");
-  if (!pw || !ph) throw corrupt("a pattern of no size");
+  if (!pw || !ph) throw corrupt(localize("image-codecs.jbig2decode.a_pattern_of_no_size", "a pattern of no size"));
   const w = (grayMax + 1) * pw;
   used.add(`pattern dictionary, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
   let coll;
@@ -3280,7 +3474,7 @@ function decodePatternDict(seg, r, used) {
     const at = template === 0 ? [-pw, 0, -3, -1, 2, -2, -2, -2] : [-pw, 0];
     const mq = new MqDecoder(seg.data, r.p, seg.data.length);
     coll = decodeGenericArith(mq, mqContexts(1 << 16), w, ph, template, 0, at);
-    if (mq.overrun) throw truncated("the pattern dictionary's arithmetic data ran out");
+    if (mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_pattern_dictionary_s_arithmetic", "the pattern dictionary's arithmetic data ran out"));
   }
   const pats = [];
   for (let g = 0; g <= grayMax; g++) {
@@ -3297,7 +3491,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
   const gw = r.u32("HGW"), gh = r.u32("HGH"), gx = r.i32("HGX"), gy = r.i32("HGY");
   const rx = r.u16("HRX"), ry = r.u16("HRY");
   const dict = seg.refs.map((n) => results.get(n)).find((s) => s && s.kind === "patterns");
-  if (!dict) throw corrupt("a halftone region with no pattern dictionary");
+  if (!dict) throw corrupt(localize("image-codecs.jbig2decode.a_halftone_region_with_no", "a halftone region with no pattern dictionary"));
   const pats = dict.patterns;
   const pw = pats[0].w, ph = pats[0].h;
   used.add(`halftone region, ${mmr ? "MMR" : `arithmetic, template ${template}`}`);
@@ -3329,7 +3523,7 @@ function decodeHalftoneSegment(seg, r, info, results, used) {
     } else planes[j] = decodeGenericArith(mq, gb, gw, gh, template, 0, at, skip);
     if (j < bpp - 1) for (let i = 0; i < planes[j].d.length; i++) planes[j].d[i] ^= planes[j + 1].d[i];
   }
-  if (mq && mq.overrun) throw truncated("the halftone region's arithmetic data ran out");
+  if (mq && mq.overrun) throw truncated(localize("image-codecs.jbig2decode.the_halftone_region_s_arithmetic", "the halftone region's arithmetic data ran out"));
   for (let m = 0; m < gh; m++) for (let n = 0; n < gw; n++) {
     let g = 0;
     for (let j = bpp - 1; j >= 0; j--) g = g << 1 | planes[j].d[m * gw + n];
@@ -3352,13 +3546,14 @@ var unsupported2 = (feature, extra = {}) => new JpxRefusal("UNSUPPORTED", { feat
 var samples = (note, extra = {}) => new JpxRefusal("UNSUPPORTED_SAMPLES", { note, ...extra });
 var corrupt2 = (note, extra = {}) => new JpxRefusal("CORRUPT", { note, ...extra });
 var truncated2 = (note, extra = {}) => new JpxRefusal("TRUNCATED", { note, ...extra });
+var MEMORY_FEATURE = "image-past-memory-bound";
 var JPX_REFUSES = Object.freeze({
-  "high-throughput coding": "the codestream uses Part 15 (HTJ2K) block coding",
-  "a JP2 palette": "the image's samples index a palette (pclr box)",
-  "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
+  "high-throughput coding": localize("image-codecs.jpxdecode.the_codestream_uses_part_15", "the codestream uses Part 15 (HTJ2K) block coding"),
+  "a JP2 palette": localize("image-codecs.jpxdecode.the_image_s_samples_index", "the image's samples index a palette (pclr box)"),
+  "sYCC colour": localize("image-codecs.jpxdecode.the_jp2_colour_specification_is", "the JP2 colour specification is sYCC, whose conversion is not bit-defined"),
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"
+  [MEMORY_FEATURE]: localize("image-codecs.jpxdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile")
 });
 var MEMORY_BOUND = 613e5;
 function workingSet(cs, nTiles) {
@@ -3384,7 +3579,7 @@ function boxes(d, p, end) {
       len = ((d[p + 8] << 24 | d[p + 9] << 16 | d[p + 10] << 8 | d[p + 11]) >>> 0) * 2 ** 32 + ((d[p + 12] << 24 | d[p + 13] << 16 | d[p + 14] << 8 | d[p + 15]) >>> 0);
       hdr = 16;
     } else if (len === 0) len = end - p;
-    if (len < hdr || p + len > end) throw truncated2(`the JP2 box '${type}' runs past the data`);
+    if (len < hdr || p + len > end) throw truncated2(localize("image-codecs.jpxdecode.the_jp2_box_type_runs", "the JP2 box '{type}' runs past the data", { type: String(type) }));
     out.push({ type, start: p + hdr, end: p + len });
     p += len;
   }
@@ -3410,7 +3605,7 @@ function container(d) {
       }
     }
   }
-  if (!cs) throw truncated2("the JP2 file holds no codestream (jp2c box)");
+  if (!cs) throw truncated2(localize("image-codecs.jpxdecode.the_jp2_file_holds_no", "the JP2 file holds no codestream (jp2c box)"));
   if (palette) throw unsupported2("a JP2 palette");
   if (colour && colour.method === "enumerated" && colour.enumCs === 18) throw unsupported2("sYCC colour");
   return { cs, colour, jp2: true };
@@ -3422,7 +3617,7 @@ var R = class {
     this.end = end;
   }
   need(n, what) {
-    if (this.p + n > this.end) throw truncated2(`${what} runs past the codestream`);
+    if (this.p + n > this.end) throw truncated2(localize("image-codecs.jpxdecode.what_runs_past_the_codestream", "{what} runs past the codestream", { what: String(what) }));
   }
   u8(w = "a field") {
     this.need(1, w);
@@ -3453,7 +3648,7 @@ function readSiz(r, len) {
   }
   r.p = end;
   if (!s.XT || !s.YT || s.X <= s.XO || s.Y <= s.YO || s.XTO > s.XO || s.YTO > s.YO || s.XTO + s.XT <= s.XO || s.YTO + s.YT <= s.YO)
-    throw corrupt2("an image and tile geometry the standard does not allow");
+    throw corrupt2(localize("image-codecs.jpxdecode.an_image_and_tile_geometry", "an image and tile geometry the standard does not allow"));
   if (rsiz & 16384) throw unsupported2("high-throughput coding");
   if (rsiz & 32768) throw unsupported2("an extended capability", { rsiz });
   return s;
@@ -3467,7 +3662,7 @@ function readSpcod(r, precincts) {
     qmfbid: r.u8("the wavelet")
   };
   if (c.nl > 32) throw corrupt2(`${c.nl} decomposition levels`);
-  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt2("a code-block larger than 4096 samples");
+  if (c.xcb + c.ycb > 12 || c.xcb > 10 || c.ycb > 10) throw corrupt2(localize("image-codecs.jpxdecode.a_code_block_larger_than", "a code-block larger than 4096 samples"));
   if (c.cblksty & 64) throw unsupported2("high-throughput coding");
   c.prc = [];
   for (let i = 0; i <= c.nl; i++) {
@@ -3556,10 +3751,10 @@ function parseCodestream(d, start, end) {
       r.p -= 2;
       break;
     }
-    if (m === 65497) throw truncated2("the codestream ends before any tile");
+    if (m === 65497) throw truncated2(localize("image-codecs.jpxdecode.the_codestream_ends_before_any", "the codestream ends before any tile"));
     if ((m & 65280) !== 65280) throw corrupt2("a main-header marker expected");
     const len = r.u16("a marker segment length");
-    if (len < 2) throw corrupt2("a marker segment length under 2");
+    if (len < 2) throw corrupt2(localize("image-codecs.jpxdecode.a_marker_segment_length_under", "a marker segment length under 2"));
     r.need(len - 2, "a marker segment");
     if (m === 65361) {
       siz = readSiz(r, len);
@@ -3572,14 +3767,14 @@ function parseCodestream(d, start, end) {
   while (r.p + 2 <= end) {
     const m = r.u16("a tile-part marker");
     if (m === 65497) break;
-    if (m !== 65424) throw corrupt2(`marker 0x${m.toString(16)} where SOT was expected`);
+    if (m !== 65424) throw corrupt2(localize("image-codecs.jpxdecode.marker_0x_m_where_sot", "marker 0x{m} where SOT was expected", { m: String(m.toString(16)) }));
     const sotAt = r.p - 2;
     r.u16("Lsot");
     const isot = r.u16("Isot"), psot = r.u32("Psot");
     r.u8("TPsot");
     r.u8("TNsot");
     const tpEnd = psot ? sotAt + psot : end;
-    if (tpEnd > end) throw truncated2(`tile-part of tile ${isot} runs past the codestream`);
+    if (tpEnd > end) throw truncated2(localize("image-codecs.jpxdecode.tile_part_of_tile_isot", "tile-part of tile {isot} runs past the codestream", { isot: String(isot) }));
     let t = tiles.get(isot);
     const first = !t;
     if (!t) {
@@ -3980,7 +4175,7 @@ function tileLayout(cs, t, tileNo) {
         const B = { bandno, x0: ceilDiv(x0 - hx, s), y0: ceilDiv(y0 - hy, s), x1: ceilDiv(x1 - hx, s), y1: ceilDiv(y1 - hy, s) };
         const bi = r === 0 ? 0 : 3 * (r - 1) + bandno;
         const st = qc.style === 1 ? { expn: Math.max(0, qc.steps[0].expn - (r === 0 ? 0 : Math.floor((bi - 1) / 3))), mant: qc.steps[0].mant } : qc.steps[bi];
-        if (!st) throw corrupt2(`no quantisation step for band ${bi}`);
+        if (!st) throw corrupt2(localize("image-codecs.jpxdecode.no_quantisation_step_for_band", "no quantisation step for band {bi}", { bi: String(bi) }));
         B.numbps = st.expn + qc.guard - 1;
         const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
         B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
@@ -4044,7 +4239,7 @@ function decodeTile(cs, t, tileNo) {
     if (sop && bp + 6 <= body.length && body[bp] === 255 && body[bp + 1] === 145) bp += 6;
     const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated2(localize("image-codecs.jpxdecode.the_tiles_packets_run_out", "the tile's packets run out at packet {v1} of {length}", { v1: String(packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1), length: String(packets.length) }));
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -4093,7 +4288,7 @@ function decodeTile(cs, t, tileNo) {
     bp = bio.p;
     if (eph && bp + 2 <= body.length && body[bp] === 255 && body[bp + 1] === 146) bp += 2;
     for (const k of contrib) {
-      if (bp + k.len > body.length) throw truncated2(`a packet's code-block data runs past the tile (${bp + k.len - body.length} bytes)`);
+      if (bp + k.len > body.length) throw truncated2(localize("image-codecs.jpxdecode.a_packets_code_block_data", "a packet's code-block data runs past the tile ({v1} bytes)", { v1: String(bp + k.len - body.length) }));
       k.seg.chunks.push(body.subarray(bp, bp + k.len));
       k.seg.passes += k.n;
       bp += k.len;
@@ -4152,7 +4347,7 @@ var BandRows = class {
       cb.segs = null;
       if (!segs.length) continue;
       const bpn = x.roi + cb.numbps;
-      if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
+      if (bpn >= 31) throw corrupt2(localize("image-codecs.jpxdecode.a_code_block_of_31", "a code-block of 31 or more bit-planes"));
       tmp.fill(0, 0, cw * ch);
       decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, this.t1.flags);
       if (x.roi) {
@@ -4281,19 +4476,19 @@ function decodeJpx(d) {
   const cs = parseCodestream(d, box.cs[0], box.cs[1]);
   const { siz } = cs;
   const nc = siz.comps.length;
-  if (nc !== 1 && nc !== 3) throw samples(`${nc} components; only 1 (grey) or 3 (colour) are decoded here`, { components: nc });
+  if (nc !== 1 && nc !== 3) throw samples(localize("image-codecs.jpxdecode.nc_components_only_1_grey", "{nc} components; only 1 (grey) or 3 (colour) are decoded here", { nc: String(nc) }), { components: nc });
   for (const cp of siz.comps) {
     if (cp.dx !== 1 || cp.dy !== 1) throw samples("a sub-sampled component", { dx: cp.dx, dy: cp.dy });
     if (cp.sgnd) throw samples("signed samples");
-    if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
+    if (cp.prec !== 8) throw samples(localize("image-codecs.jpxdecode.prec_bit_samples_only_8", "{prec}-bit samples; only 8-bit are decoded here", { prec: String(cp.prec) }), { precision: cp.prec });
   }
   const W2 = siz.X - siz.XO, H = siz.Y - siz.YO;
   const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
   const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
-    throw unsupported2("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
+    throw unsupported2(MEMORY_FEATURE, { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
   }
-  if (cs.tiles.size < nTiles) throw truncated2(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  if (cs.tiles.size < nTiles) throw truncated2(localize("image-codecs.jpxdecode.size_of_ntiles_tiles_are", "{size} of {nTiles} tiles are present", { size: String(cs.tiles.size), nTiles: String(nTiles) }));
   let out = null;
   const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };
   const pool = new Pool();
@@ -4310,7 +4505,7 @@ function decodeJpx(d) {
     const irreversible = tc.map((x) => x.sp.qmfbid === 0);
     transform ??= irreversible[0] ? "9/7" : "5/3";
     const mct = cod2.mct && nc >= 3;
-    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt2("a colour transform over mixed wavelets");
+    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt2(localize("image-codecs.jpxdecode.a_colour_transform_over_mixed", "a colour transform over mixed wavelets"));
     pool.i = 0;
     const src = tc.map((x, c) => componentRows(x, irreversible[c], t1, pool));
     const w = tile.x1 - tile.x0, h = tile.y1 - tile.y0;
@@ -4591,15 +4786,15 @@ var BitReader = class {
     this.pos = this.pos + 7 & ~7;
   }
 };
-function readRun(br, table2) {
+function readRun(br, table3) {
   let total = 0;
   for (; ; ) {
     let hit = null;
     const window = br.peek(MAX_CODE_BITS);
     for (let len = 2; len <= MAX_CODE_BITS; len++) {
       const key = `${len}:${window.slice(0, len)}`;
-      if (key in table2) {
-        hit = { len, run: table2[key] };
+      if (key in table3) {
+        hit = { len, run: table3[key] };
         break;
       }
     }
@@ -4737,24 +4932,24 @@ var LATIN1 = new TextDecoder("latin1");
 var REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
   NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
-  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
-  NO_SUCH_PAGE: "the page index is outside the document",
-  PAGE_UNREADABLE: "the page object could not be read",
-  PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
-  NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page paints no image",
-  MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
-  IMAGE_UNREADABLE: "the image XObject's stream could not be read",
-  UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
-  UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
-  TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
-  DECODE_FAILED: "the decoder could not read the image data",
+  ENCRYPTED: localize("pdf-pixels.pagepixels.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader"),
+  NO_SUCH_PAGE: localize("pdf-pixels.pagepixels.the_page_index_is_outside", "the page index is outside the document"),
+  PAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_page_object_could_not", "the page object could not be read"),
+  PAGE_HAS_TEXT_LAYER: localize("pdf-pixels.pagepixels.the_page_carries_a_text", "the page carries a text layer; it does not need pixels"),
+  NOT_IMAGE_ONLY: localize("pdf-pixels.pagepixels.the_page_carries_marks_that", "the page carries marks that are not an embedded image"),
+  NO_IMAGE_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_paints_no_image", "the page paints no image"),
+  MULTIPLE_IMAGES_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_composes_several_images", "the page composes several images; compositing is not built"),
+  IMAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_image_xobject_s_stream", "the image XObject's stream could not be read"),
+  UNSUPPORTED_FILTER: localize("pdf-pixels.pagepixels.the_image_s_filter_chain", "the image's filter chain has no decoder here"),
+  UNSUPPORTED_SAMPLES: localize("pdf-pixels.pagepixels.the_image_s_sample_layout", "the image's sample layout has no decoder here"),
+  TRUNCATED_IMAGE_DATA: localize("pdf-pixels.pagepixels.the_decoded_image_is_short", "the decoded image is short of its declared height"),
+  DECODE_FAILED: localize("pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data"),
   UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
-  IMAGE_TOO_LARGE: "decoding the image would need more memory than a decode may use here"
+  IMAGE_TOO_LARGE: localize("pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here")
 };
 var featureReasons = (declared, named) => Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 var JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
-var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
 var refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
@@ -4943,7 +5138,7 @@ async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   }
   const im = a._images[0];
   if (!im.obj) {
-    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: localize("pdf-pixels.pagepixels.an_inline_image_reading_inline", "an inline image; reading inline images is not built") });
   }
   const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
@@ -5073,9 +5268,9 @@ async function decodeImage(doc, im, opts) {
     if (p && p.JBIG2Globals !== void 0) {
       const g = doc.resolve(p.JBIG2Globals);
       globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
-      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: localize("pdf-pixels.pagepixels.the_jbig2globals_stream_could_not", "the /JBIG2Globals stream could not be read") });
     }
-    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: localize("pdf-pixels.pagepixels.a_jbig2_image_is_1", "a JBIG2 image is 1 bit per sample") });
     let out;
     try {
       out = decodeJbig2(data, globals);
@@ -5111,7 +5306,7 @@ async function decodeImage(doc, im, opts) {
     if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
     if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
     const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
-    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: localize("pdf-pixels.pagepixels.a_colour_space_other_than", "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased") });
     let out;
     try {
       out = decodeJpx(data);
@@ -5121,10 +5316,10 @@ async function decodeImage(doc, im, opts) {
       return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
     }
     if (pdfComps !== null && pdfComps !== out.comps) {
-      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: localize("pdf-pixels.pagepixels.the_colour_space_has_pdfcomps", "the colour space has {pdfComps} components; the image has {comps}", { pdfComps: String(pdfComps), comps: String(out.comps) }) });
     }
     if (out.width !== im.width || out.height !== im.height) {
-      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+      return refuse("DECODE_FAILED", { filters, note: localize("pdf-pixels.pagepixels.the_jpeg_2000_image_is", "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}", { width: String(out.width), height: String(out.height), width_2: String(im.width), height_2: String(im.height) }) });
     }
     const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
     out.samples = null;
@@ -5436,8 +5631,8 @@ var PNG_REFUSALS = {
   PNG_NO_IDAT: "the PNG carries no image data",
   PNG_INTERLACED: "the PNG is interlaced; this reader reads only the non-interlaced form it writes",
   PNG_UNSUPPORTED_SHAPE: "the PNG's colour type / bit depth pair is not one this estate writes",
-  PNG_FILTER_UNSUPPORTED: "a scanline uses a filter type this reader does not implement",
-  PNG_SHORT_RASTER: "the inflated raster is shorter than the header's dimensions require"
+  PNG_FILTER_UNSUPPORTED: localize("ocr-worker.pngsamples.a_scanline_uses_a_filter", "a scanline uses a filter type this reader does not implement"),
+  PNG_SHORT_RASTER: localize("ocr-worker.pngsamples.the_inflated_raster_is_shorter", "the inflated raster is shorter than the header's dimensions require")
 };
 var refuse2 = (code, detail = {}) => ({ ok: false, reason: code, detail: PNG_REFUSALS[code], ...detail });
 var SIG2 = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -5559,10 +5754,11 @@ var PngRefusal = class extends Error {
 var unsupported3 = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { feature, ...extra });
 var corrupt3 = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
 var truncated3 = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
+var MEMORY_FEATURE2 = "image-past-memory-bound";
 var PNG_REFUSES = Object.freeze({
   "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
-  "an unknown critical chunk": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"
+  "an unknown critical chunk": localize("image-codecs.pngdecode.a_chunk_the_decoder_must", "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines"),
+  [MEMORY_FEATURE2]: localize("image-codecs.pngdecode.the_decode_would_hold_more", "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image")
 });
 var MEMORY_BOUND2 = 613e5;
 var SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -5590,19 +5786,19 @@ function readChunks(d) {
   let p = 8, ihdr = null, plte = null, trns = null, ended = false;
   const idat = [];
   while (!ended) {
-    if (p + 8 > d.length) throw truncated3(`the data ends at byte ${p}, before an IEND chunk`);
+    if (p + 8 > d.length) throw truncated3(localize("image-codecs.pngdecode.the_data_ends_at_byte", "the data ends at byte {p}, before an IEND chunk", { p: String(p) }));
     const len = u32(d, p);
     const type = String.fromCharCode(d[p + 4], d[p + 5], d[p + 6], d[p + 7]);
-    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt3(`a chunk type that is not four letters at byte ${p}`, { at: p });
-    if (len > 2147483647) throw corrupt3(`the ${type} chunk declares a length past 2^31 - 1`, { chunk: type });
-    if (p + 12 + len > d.length) throw truncated3(`the ${type} chunk at byte ${p} runs past the data`, { chunk: type });
+    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt3(localize("image-codecs.pngdecode.a_chunk_type_that_is", "a chunk type that is not four letters at byte {p}", { p: String(p) }), { at: p });
+    if (len > 2147483647) throw corrupt3(localize("image-codecs.pngdecode.the_type_chunk_declares_a", "the {type} chunk declares a length past 2^31 - 1", { type: String(type) }), { chunk: type });
+    if (p + 12 + len > d.length) throw truncated3(localize("image-codecs.pngdecode.the_type_chunk_at_byte", "the {type} chunk at byte {p} runs past the data", { type: String(type), p: String(p) }), { chunk: type });
     const start = p + 8, end = start + len;
     const critical = (d[p + 4] & 32) === 0;
     if (critical || USED_ANCILLARY.has(type)) {
-      if (crc322(d, p + 4, end) !== u32(d, end)) throw corrupt3(`the ${type} chunk's CRC does not match its data`, { chunk: type, at: p });
+      if (crc322(d, p + 4, end) !== u32(d, end)) throw corrupt3(localize("image-codecs.pngdecode.the_type_chunks_crc_does", "the {type} chunk's CRC does not match its data", { type: String(type) }), { chunk: type, at: p });
     }
     if (critical && !KNOWN_CRITICAL.has(type)) throw unsupported3("an unknown critical chunk", { chunk: type });
-    if (!ihdr && type !== "IHDR") throw corrupt3(`the first chunk is ${type}, not IHDR`, { chunk: type });
+    if (!ihdr && type !== "IHDR") throw corrupt3(localize("image-codecs.pngdecode.the_first_chunk_is_type", "the first chunk is {type}, not IHDR", { type: String(type) }), { chunk: type });
     switch (type) {
       case "IHDR":
         if (ihdr) throw corrupt3("a second IHDR chunk");
@@ -5630,7 +5826,7 @@ function readChunks(d) {
   return { ihdr, plte, trns, idat };
 }
 function readIhdr(d, p, len) {
-  if (len !== 13) throw corrupt3(`an IHDR of ${len} bytes, not 13`);
+  if (len !== 13) throw corrupt3(localize("image-codecs.pngdecode.an_ihdr_of_len_bytes", "an IHDR of {len} bytes, not 13", { len: String(len) }));
   const h = {
     width: u32(d, p),
     height: u32(d, p + 4),
@@ -5644,7 +5840,7 @@ function readIhdr(d, p, len) {
     throw corrupt3(`an image of ${h.width}x${h.height}`, { width: h.width, height: h.height });
   if (!(h.colourType in DEPTHS)) throw corrupt3(`colour type ${h.colourType}`, { colour_type: h.colourType });
   if (!DEPTHS[h.colourType].includes(h.depth))
-    throw corrupt3(`bit depth ${h.depth} with colour type ${h.colourType}`, { colour_type: h.colourType, bit_depth: h.depth });
+    throw corrupt3(localize("image-codecs.pngdecode.bit_depth_depth_with_colour", "bit depth {depth} with colour type {colourType}", { depth: String(h.depth), colourType: String(h.colourType) }), { colour_type: h.colourType, bit_depth: h.depth });
   if (h.compression !== 0) throw corrupt3(`compression method ${h.compression}`);
   if (h.filter !== 0) throw corrupt3(`filter method ${h.filter}`);
   if (h.interlace > 1) throw corrupt3(`interlace method ${h.interlace}`);
@@ -5668,11 +5864,11 @@ async function decodePng(bytes) {
   const rowBytes = Math.ceil(W2 * ch * depth / 8);
   const need = W2 * H * comps + 2 * (rowBytes + 1);
   if (need > MEMORY_BOUND2)
-    throw unsupported3("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
+    throw unsupported3(MEMORY_FEATURE2, { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
   let palette = null, alphaOf = null, key = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
   if (colourType === 3) {
     if (!plte) throw corrupt3("a palette image with no PLTE chunk before its image data");
-    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt3(`a PLTE of ${plte.length} bytes`);
+    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt3(localize("image-codecs.pngdecode.a_plte_of_length_bytes", "a PLTE of {length} bytes", { length: String(plte.length) }));
     palette = plte;
     alphaOf = new Uint8Array(256).fill(255);
     if (trns) {
@@ -5690,7 +5886,7 @@ async function decodePng(bytes) {
   const out = new Uint8Array(W2 * H * comps);
   const bpp = Math.max(1, ch * depth >> 3);
   let cur = new Uint8Array(rowBytes + 1), prev = new Uint8Array(rowBytes + 1);
-  let fill = 0, y = 0;
+  let fill2 = 0, y = 0;
   const emit = () => {
     const f = cur[0], r = cur, q = prev, n = rowBytes + 1;
     if (f === 1) {
@@ -5705,7 +5901,7 @@ async function decodePng(bytes) {
         const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
         r[i] = r[i] + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c) & 255;
       }
-    } else if (f !== 0) throw corrupt3(`filter type ${f} in row ${y}`, { row: y, filter: f });
+    } else if (f !== 0) throw corrupt3(localize("image-codecs.pngdecode.filter_type_f_in_row", "filter type {f} in row {y}", { f: String(f), y: String(y) }), { row: y, filter: f });
     writeRow(r, y);
     [cur, prev] = [prev, cur];
     y++;
@@ -5754,7 +5950,7 @@ async function decodePng(bytes) {
     }
   };
   const paletteOut = (v, o) => {
-    if (v >= entries) throw corrupt3(`palette index ${v} past the palette's ${entries} entries`, { index: v, entries });
+    if (v >= entries) throw corrupt3(localize("image-codecs.pngdecode.palette_index_v_past_the", "palette index {v} past the palette's {entries} entries", { v: String(v), entries: String(entries) }), { index: v, entries });
     const a = alphaOf[v], p = 3 * v;
     out[o] = overWhite(palette[p], a);
     out[o + 1] = overWhite(palette[p + 1], a);
@@ -5780,12 +5976,12 @@ async function decodePng(bytes) {
           extra += value.length - i;
           break;
         }
-        const take = Math.min(value.length - i, rowBytes + 1 - fill);
-        cur.set(value.subarray(i, i + take), fill);
-        fill += take;
+        const take = Math.min(value.length - i, rowBytes + 1 - fill2);
+        cur.set(value.subarray(i, i + take), fill2);
+        fill2 += take;
         i += take;
-        if (fill === rowBytes + 1) {
-          fill = 0;
+        if (fill2 === rowBytes + 1) {
+          fill2 = 0;
           emit();
         }
       }
@@ -5799,16 +5995,16 @@ async function decodePng(bytes) {
     }
     const why = String(e && e.message || e && e.code || e);
     throw corrupt3(
-      y < H ? `the image data does not inflate (row ${y} of ${H})` : "the image data's zlib trailer is damaged or missing",
+      y < H ? localize("image-codecs.pngdecode.the_image_data_does_not", "the image data does not inflate (row {y} of {H})", { y: String(y), H: String(H) }) : localize("image-codecs.pngdecode.the_image_data_s_zlib", "the image data's zlib trailer is damaged or missing"),
       { rows: y, height: H, inflater: why }
     );
   }
   if (extra) {
     reader.cancel().catch(() => {
     });
-    throw corrupt3("the image data inflates past the frame", { height: H, row_bytes: rowBytes });
+    throw corrupt3(localize("image-codecs.pngdecode.the_image_data_inflates_past", "the image data inflates past the frame"), { height: H, row_bytes: rowBytes });
   }
-  if (y < H) throw truncated3(`the image data ends after ${y} of ${H} rows`, { rows: y, height: H });
+  if (y < H) throw truncated3(localize("image-codecs.pngdecode.the_image_data_ends_after", "the image data ends after {y} of {H} rows", { y: String(y), H: String(H) }), { rows: y, height: H });
   return { width: W2, height: H, comps, samples: out, detail: { colour_type: colourType, bit_depth: depth, transparency } };
 }
 
@@ -5819,7 +6015,7 @@ var refuse3 = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
 };
-var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { [MEMORY_FEATURE2]: "IMAGE_TOO_LARGE" });
 var PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
 var PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 function sniff(b) {
@@ -6036,7 +6232,7 @@ function pngRefusal(e) {
 
 // src/contract.mjs
 var CAP = "C";
-var MEASURED_BY = "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.";
+var MEASURED_BY = localize("ocr-worker.contract.measurements_md_2026_09_10", "MEASUREMENTS.md 2026-09-10 (CPDF-15) \u2014 tesseract-wasm@0.11.0 SIMD + tessdata_fast eng on the deployed Workers runtime: 99.89% characters and 89/90 digits with ZERO minted on the one human-ground-truthed page (Oakland Legistar attachment 15721260 p2, 300 dpi), reproducible over identical bytes (9 images x 3 runs, no image gave more than one distinct text), the invention band EMPTY at every rung of CPDF-11's ladder. REACH, STATED: ONE ground-truthed page, ONE engine version, ONE model. Every other corpus figure in that row is agreement-with-the-local-floor and NOT accuracy \u2014 and D-314/CPDF-16 measured that NEITHER local model passes the noise control, so no agreement figure may be read as accuracy at all.");
 var MAX_FRAME_BYTES = 613e5;
 var frameBytesOf = (w, h) => w * h * 4;
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
@@ -6044,22 +6240,22 @@ var PLANE_OPS = Object.freeze({});
 var REFUSALS2 = {
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
   BAD_SHA: "capture_sha must be 64 lowercase hex",
-  BAD_STORE: "store must be named: this member reads a capture from one namespace and guesses none",
+  BAD_STORE: localize("ocr-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none"),
   /* D-478. Deliberately says what it is NOT as well as what it is: the answer this replaces was NOT_FOUND, and a
      reader who cannot tell the two apart reads "there is no such capture" where the truth is "there is no such
      namespace" (CLAUDE.md §1 — *not found* is not *absent*). */
-  NAMESPACE_UNKNOWN: "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
-  BAD_PAGES: "pages must be a non-empty array of 0-based page numbers",
-  NOT_FOUND: "no capture with that sha in that store",
+  NAMESPACE_UNKNOWN: localize("ocr-worker.contract.no_namespace_by_that_name", "no namespace by that name exists on any instance this member can be bound to, so nothing was read; the two that exist are listed beside this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture"),
+  BAD_PAGES: localize("ocr-worker.contract.pages_must_be_a_non", "pages must be a non-empty array of 0-based page numbers"),
+  NOT_FOUND: localize("ocr-worker.contract.no_capture_with_that", "no capture with that sha in that store"),
   ENGINE_ABSENT: "the OCR engine did not load; this member cannot transcribe anything",
-  PAGE_NOT_RENDERABLE: "the page could not be turned into pixels, and the renderer says why",
-  FRAME_OVER_MEASURED_BOUND: "this page's frame is larger than the largest frame measured to complete",
-  PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
-  ENGINE_FAILED: "the engine refused or failed on this frame",
-  NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page",
+  PAGE_NOT_RENDERABLE: localize("ocr-worker.contract.the_page_could_not", "the page could not be turned into pixels, and the renderer says why"),
+  FRAME_OVER_MEASURED_BOUND: localize("ocr-worker.contract.this_page_s_frame_is", "this page's frame is larger than the largest frame measured to complete"),
+  PIXELS_UNREADABLE: localize("ocr-worker.contract.the_rendered_container_could_not", "the rendered container could not be read back to samples"),
+  ENGINE_FAILED: localize("ocr-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this frame"),
+  NOTHING_TRANSCRIBED: localize("ocr-worker.contract.the_engine_returned_no_anchorable", "the engine returned no anchorable word for this page"),
   /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
      stated before any pixel is made, so the page asked for is named. */
-  NO_SUCH_PAGE: "a picture is a one-page document (page 0); the page asked for does not exist"
+  NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist")
 };
 var PICTURE_MAX_EDGE = 4096;
 function isPicture(bytes) {
@@ -6116,7 +6312,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         page,
         route: rendered.route,
         mediaType: rendered.mediaType,
-        why: `the ${rendered.route} route hands back ${rendered.mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.`
+        why: localize("ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member \u2014 workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", { route: String(rendered.route), mediaType: String(rendered.mediaType) })
       };
     const frame = frameBytesOf(rendered.width, rendered.height);
     if (frame > MAX_FRAME_BYTES)
@@ -6129,7 +6325,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         height: rendered.height,
         frame_bytes: frame,
         bound_bytes: MAX_FRAME_BYTES,
-        why: `a ${rendered.width}x${rendered.height} page needs a ${frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is ${MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.`
+        why: localize("ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling \u2014 the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", { width: String(rendered.width), height: String(rendered.height), frame: String(frame), MAX_FRAME_BYTES: String(MAX_FRAME_BYTES) })
       };
     const samples2 = await pngToSamples(rendered.bytes);
     if (!samples2.ok)
@@ -6207,7 +6403,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         boxes: boxes2,
         blank,
         unanchored,
-        why: `the engine boxed ${boxes2} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.`
+        why: localize("ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", { boxes: String(boxes2) })
       };
     return {
       ok: true,
@@ -6237,7 +6433,7 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
     const one = await transcribeOnePage(bytes, take, opts);
     const notes = [];
     if (deferred.length)
-      notes.push(`this member transcribes ONE PAGE PER INVOCATION and ${deferred.length} further page(s) (${deferred.join(", ")}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.`);
+      notes.push(localize("ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed \u2014 call again per page. Those pages keep their markers and stay honestly unread.", { length: String(deferred.length), deferred: String(deferred.join(", ")) }));
     if (!one.ok)
       return {
         ok: false,
@@ -6249,9 +6445,9 @@ function makeMember(engine, { render = renderPageToPixels, renderPicture = rende
         refusal: one
       };
     if (one.unanchored)
-      notes.push(`${one.unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.`);
+      notes.push(localize("ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded \u2014 text nobody can point at a page to verify is exactly what this path refuses to put in the record.", { unanchored: String(one.unanchored) }));
     if (one.unrated)
-      notes.push(`${one.unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.`);
+      notes.push(localize("ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", { unrated: String(one.unrated) }));
     return {
       ok: true,
       engine: engine.name,
@@ -8987,7 +9183,7 @@ function engineCheck() {
   if (!(wasmModule instanceof WebAssembly.Module))
     return "the wasm core did not arrive as a compiled module \u2014 a one-part upload cannot carry it, and this member must be installed with its `assets/tesseract-core.wasm` part";
   if (!MODEL || typeof MODEL.byteLength !== "number" || MODEL.byteLength !== MODEL_BYTES)
-    return `the language model is ${MODEL && MODEL.byteLength} B, the measured pair is ${MODEL_BYTES} B (tessdata_fast eng) \u2014 a different model is a different measurement and this member's stated fidelity would not be about it`;
+    return localize("ocr-worker.tessengine.the_language_model_is_v1", "the language model is {v1} B, the measured pair is {MODEL_BYTES} B (tessdata_fast eng) \u2014 a different model is a different measurement and this member's stated fidelity would not be about it", { v1: String(MODEL && MODEL.byteLength), MODEL_BYTES: String(MODEL_BYTES) });
   return null;
 }
 var REGION_GRAIN = "line";

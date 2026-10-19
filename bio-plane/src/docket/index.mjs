@@ -62,6 +62,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { DOCKET_CHECKS, rowOf } from "./checks.mjs";
 import { DOCKET_TABLES, migrateDocket } from "./schema.mjs";
 import { renderFeed, docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { DOCKET_CHECKS, DOCKET_WORDS } from "./checks.mjs";
 export { DOCKET_SCHEMA, DOCKET_TABLES } from "./schema.mjs";
@@ -115,20 +116,19 @@ export const PREPARED_TTL_MS = 60 * 60 * 1000;   /* R4: `expires` */
 /** R10: the prefix record entry ids are minted under (record-core R6). */
 export const RECORD_ID_PREFIX = "DKT";
 /** R8: the fixed head of a receipt's published reason; the manager's words follow it. */
-export const RECEIPT_REASON = "names a private person";
+export const RECEIPT_REASON = word("docket.names_private_person");
 /** R15: what a citing copy says when it cannot read a docket (DEC-116 item 8). */
-export const DOCKET_UNREADABLE = "Could not read the publisher's docket";
+export const DOCKET_UNREADABLE = word("docket.read_publisher_docket");
 /** R4: the outward-act warning, as a code and its meaning; its words are the UX design stream's. */
 export const OUTWARD_ACT_WARNING = Object.freeze({
   code: "docket_outward_act",
-  meaning: "The public will see this entry; a later entry can take it back but never unsay it.",
+  meaning: word("docket.public_see_entry"),
 });
 /** R8: the request to resend a reply without the private person's name, as a code and its meaning; its words are the
  *  UX design stream's, and this module sends nothing. */
 export const RESEND_INVITATION = Object.freeze({
   code: "docket_resend_without_name",
-  meaning: "Your reply names a private person, so the team lists it as received without its text. Please send it "
-    + "again without the name, and the team will list it whole.",
+  meaning: word("docket.reply_names_private"),
 });
 /** R3: the plan checkpoint a contesting entry offers; `action-plans`' own act, never performed here. */
 export const CHECKPOINT_OFFER = Object.freeze({ code: "plan_checkpoint", act: "action-plans", performed: false });
@@ -902,7 +902,7 @@ export class Docket {
              receipt: { seq: Number(s.pub.seq), entry: publicId(r.case_id, s.pub.seq) },
              invitation: { ...RESEND_INVITATION, case: r.case_id, edition: Number(r.edition), received: pub.received ?? null,
                            answers: id, docket: docketAddress(r.case_id) },
-             sends: "nothing: a member sends this by their own means" };
+             sends: word("docket.nothing_member_sends") };
   }
 
   /* ================================================================ R9: the required core */
@@ -1166,8 +1166,8 @@ export class Docket {
       for (const e of this.#entries(c.case)) {
         const j = parse(e.json) || {};
         const add = (at, label) => { if (at && (!lo || at >= lo) && (!hi || at <= hi)) items.push({ at, label, ref: publicId(c.case, e.seq), kind: j.kind ?? e.kind, public: true }); };
-        add(day(j.date), `docket: ${j.kind}, edition ${j.edition}`);
-        if (e.record_entry) add(day(j.received), `docket: ${j.kind} received, edition ${j.edition}`);
+        add(day(j.date), localize("docket.index.docket_kind_edition_edition", "docket: {kind}, edition {edition}", { kind: String(j.kind), edition: String(j.edition) }));
+        if (e.record_entry) add(day(j.received), localize("docket.index.docket_kind_received_edition_edition", "docket: {kind} received, edition {edition}", { kind: String(j.kind), edition: String(j.edition) }));
       }
     }
     items.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : a.label < b.label ? -1 : 1));

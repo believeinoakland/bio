@@ -11,6 +11,7 @@ import { world, sha, V, provDoc } from "./fixture.mjs";
 import { observerRef, registerChecks } from "../../../src/provenance/index.mjs";
 import { TESTIMONY_CHECKS, PROVENANCE_ACT_CHECKS } from "../../../src/provenance/checks.mjs";
 import { checkBundle, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* A refusal's code, catalogue id and translation, and what its row says they are. */
 const refused = (r) => [r && r.ok, r && r.reason, r && r.check, r && r.translation];
@@ -48,7 +49,7 @@ test("R3: the liar — a promotion claiming authored in the document, its regist
   const w = world();
   const t = w.prov.testify({ words: "I counted.", observedAt: "2026-09-21", author: V("sam") });
   assert.equal(t.ok, true);
-  const upload = (c, extra = {}) => provDoc(c, { capture: { ...provDoc(c).capture, method: "uploaded by a member", grade: "C",
+  const upload = (c, extra = {}) => provDoc(c, { capture: { ...provDoc(c).capture, method: word("leg-earning.freeze.uploaded_member"), grade: "C",
                                                             actor_class: "member" }, origin: { kind: "member" }, ...extra });
   const s0 = w.snapshot();
   const c = w.cap("forged");
@@ -71,7 +72,7 @@ test("R3: the liar — a promotion claiming authored in the document, its regist
 
 test("R3: a member-uploaded document (origin member, not authored) and `authored: false` are accepted, and neither is authored", () => {
   const w = world();
-  const upload = (c, extra = {}) => provDoc(c, { capture: { ...provDoc(c).capture, method: "uploaded by a member", grade: "C",
+  const upload = (c, extra = {}) => provDoc(c, { capture: { ...provDoc(c).capture, method: word("leg-earning.freeze.uploaded_member"), grade: "C",
                                                             actor_class: "member" }, origin: { kind: "member" }, ...extra });
   const u = w.cap("upload"), f = w.cap("upload-false");
   const up = w.promoteInfo("INFO-2026-0301-upload", { captures: [u], docs: [upload(u)] });

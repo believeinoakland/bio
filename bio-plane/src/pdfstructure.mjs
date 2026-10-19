@@ -49,6 +49,7 @@
  */
 
 import { LINK_TYPES, linkWrapper } from "./subresources.mjs";
+import { word } from "./setup-words/index.mjs";
 
 /* Partition vocabulary, mirrored from subresources.mjs and extended by the one
  * first-class value a byte-level reader needs that a DOM reader does not:
@@ -2417,7 +2418,7 @@ const r3 = (v) => { const x = Math.round(v * 1000) / 1000; return x === 0 ? 0 : 
  *  form `describeExtent` derives for the same address (IC-1's parity rule):
  *  R16 here and text-chain's R98 state the same `an image on page <n+1>`. */
 export function pdfImageRef(page, rect, extra = {}) {
-  return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
+  return { kind: "image", ref: word("pdfstructure.image_page", { page: String(page + 1) }), page, rect, ...extra };
 }
 
 /** CTM composition: `cm` sets CTM' = M x CTM (row-vector convention). */

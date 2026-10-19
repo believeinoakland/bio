@@ -26,6 +26,7 @@ import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reus
          findingAnswer, statedIn, editionsToAssemble } from "./finding.mjs";
 import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal } from "./refusals.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R17 (N339, N349; control-plane R23, R25, R30; K421, K444): ONE RULE FOR EVERY RELAY, the sub-reads inside a longer
    act included. A reply `doAnswer` reads as the store's OWN REFUSAL (`refused`: `ok: false` below 500, such as
@@ -276,12 +277,9 @@ async function caseCeremony(req, stub, ctx, later) {
                      the unit of truth — the container becomes assemblable when
                      the last of them lands. */
                   next: r.awaiting?.length
-                    ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify `
-                      + `(op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a `
-                      + `container when the last of them lands.`
-                    : "the case is committed and every member finding is already ratified at the version "
-                      + "this case pinned" + (container && container.manifest_sha
-                        ? `, so its container is assembled (${container.zip}).` : "."),
+                    ? localize("ratification.ops.the_case_is_committed_length", "the case is committed. {length} member finding(s) still to ratify (op=ratify): {awaiting}. This edition becomes servable as a container when the last of them lands.", { length: String(r.awaiting.length), awaiting: String(r.awaiting.join(", ")) })
+                    : localize("ratification.ops.the_case_is_committed_and", "the case is committed and every member finding is already ratified at the version this case pinned{v1}", { v1: String(container && container.manifest_sha
+                        ? `, so its container is assembled (${container.zip}).` : ".") }),
                   store: storeName, tokenClass: cls });
 }
 
@@ -333,8 +331,7 @@ export async function ratifyOp(req, stub, ctx) {
     if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
       return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY", ...rowOf("MACHINE_CANNOT_RATIFY"),
         op, tokenClass: cls,
-        detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and "
-              + "may never carry the signature in, whoever's key made it (DEC-24 rule 4)." }, 403);
+        detail: localize("ratification.ops.ratifying_is_a_members_signed", "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4).") }, 403);
     /* END DEC-49 REGION is-machine-ratify-bundle */
     /* DEC-49 REGION is-operator-ratify-bundle — REC-125 / C-32.14. D-421, DECIDED by
        BOB #14 applying `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new
@@ -359,10 +356,7 @@ export async function ratifyOp(req, stub, ctx) {
     if (!viaSession)
       return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
         ...rowOf("OPERATOR_TOKEN_CANNOT_RATIFY"), op, tokenClass: cls,
-        detail: `ratifying is a member's own signed act, delivered through that member's own signed-in `
-              + `session. The credential that asked is the operator's \`${cls}\`-class bearer token: the `
-              + `signature says who authorised publication, and the credential that delivers it decides `
-              + `when the record changes, so a bearer token may not carry it in (D-421).` }, 403);
+        detail: localize("ratification.ops.ratifying_is_a_members_own", "ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's `{cls}`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).", { cls: String(cls) }) }, 403);
     /* END DEC-49 REGION is-operator-ratify-bundle */
     const body = await req.json().catch(() => null);
     if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")

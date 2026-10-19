@@ -23,7 +23,7 @@ import { WIZARD_SCRIPTS_CHECKS } from "../wizard-scripts/index.mjs";
 import { proposalLabel, isMachineIdentity } from "../record-grammar/index.mjs";
 /* R2 (T39, N807): the interface's word list is setup-words' (its R1, R2), read, never copied; every sentence this module
    answers to a member is read by key (R15). */
-import { WORD_ROWS, WORDS_COMMIT, word } from "../setup-words/index.mjs";
+import { WORD_ROWS, WORDS_COMMIT, word, localize } from "../setup-words/index.mjs";
 import { TRANSLATIONS_CHECKS } from "./checks.mjs";
 import { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA } from "./schema.mjs";
 export { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA };
@@ -77,8 +77,7 @@ const draftAccount = (assistant) => {
   const { project: _none, ...account } = a;
   return { account };
 };
-const projectAccount = (what) => draftUnavailable(`a draft carries no project, and the account resolved for this one is `
-  + `a project's, so nothing was drafted and ${what}.`);
+const projectAccount = (what) => draftUnavailable(localize("translations.index.a_draft_carries_no_project", "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.", { what: String(what) }));
 
 /* =====================================================================
  * THE MODULE ON ONE DURABLE OBJECT'S STORAGE (K61, R12): `translationsOf(ctx, deps)`.
@@ -167,8 +166,8 @@ export class Translations {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `whether your team keeps its material away from every assistant did not answer (${String(e && e.message || e)
-                 .slice(0, 160)}), so no ask is put to an assistant and no run starts.` };
+               detail: localize("translations.index.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.", { String: String(String(e && e.message || e)
+                 .slice(0, 160)) }) };
     }
   }
 
@@ -211,8 +210,7 @@ export class Translations {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-translation-actor */
     if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_TRANSLATE", "translating the screens is a member's own act, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
+      return refusal("MACHINE_CANNOT_TRANSLATE", localize("translations.index.translating_the_screens_is_a", "translating the screens is a member's own act, from their own signed-in session. Nothing was changed."), { by: by ?? null });
     /* END DEC-49 REGION is-translation-actor */
     return null;
   }
@@ -221,8 +219,8 @@ export class Translations {
     const tag = typeof language === "string" ? language.trim() : "";
     /* DEC-49 REGION is-translation-language */
     if (!isLocale(tag))
-      return { refused: refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no "
-        + "language, and one is named as"} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.`) };
+      return { refused: refusal("LANGUAGE_MALFORMED", localize("translations.index.v1_one_well_formed_bcp", "{v1} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.", { v1: String(tag ? `'${tag.slice(0, 40)}' is not` : "the request names no "
+        + "language, and one is named as") })) };
     /* END DEC-49 REGION is-translation-language */
     return { tag: canonicalTag(tag) };
   }
@@ -232,8 +230,8 @@ export class Translations {
     const w = WORD_BY_KEY.get(k);
     /* DEC-49 REGION is-translation-word */
     if (!w)
-      return { refused: refusal("NO_SUCH_WORD", `${k ? `'${k.slice(0, 80)}' is not` : "the request names no word, and "
-        + "one is named by"} a key of the interface's word list. Nothing was changed.`, { key: k || null }) };
+      return { refused: refusal("NO_SUCH_WORD", localize("translations.index.v1_a_key_of_the", "{v1} a key of the interface's word list. Nothing was changed.", { v1: String(k ? `'${k.slice(0, 80)}' is not` : "the request names no word, and "
+        + "one is named by") }), { key: k || null }) };
     /* END DEC-49 REGION is-translation-word */
     return { word: w };
   }
@@ -262,8 +260,7 @@ export class Translations {
   #translationSpeaker(by, tag) {
     /* DEC-49 REGION is-translation-speaker */
     if (!this.translationGranted({ member: by, language: tag }))
-      return refusal("TRANSLATION_NOT_GRANTED", `working on the words of ${tag} is for the administrators and the members `
-        + "an administrator has asked to translate it. Nothing was changed.", { by, language: tag });
+      return refusal("TRANSLATION_NOT_GRANTED", localize("translations.index.working_on_the_words_of", "working on the words of {tag} is for the administrators and the members an administrator has asked to translate it. Nothing was changed.", { tag: String(tag) }), { by, language: tag });
     /* END DEC-49 REGION is-translation-speaker */
     return null;
   }
@@ -327,8 +324,7 @@ export class Translations {
     const h = this.#wordHistory(tag, entry.key);
     /* DEC-49 REGION is-translation-awaiting */
     if (h.state !== "awaiting")
-      return { refused: refusal("TRANSLATION_NOT_AWAITING", `${entry.key} is ${h.state === "missing" ? "not translated" : "shown"} `
-        + `in ${tag}, so it is not waiting for a second check. Nothing was changed.`, { key: entry.key, language: tag, state: h.state }) };
+      return { refused: refusal("TRANSLATION_NOT_AWAITING", localize("translations.index.key_is_v1_in_tag", "{key} is {v1} in {tag}, so it is not waiting for a second check. Nothing was changed.", { key: String(entry.key), v1: String(h.state === "missing" ? "not translated" : "shown"), tag: String(tag) }), { key: entry.key, language: tag, state: h.state }) };
     /* END DEC-49 REGION is-translation-awaiting */
     return { history: h };
   }
@@ -383,8 +379,7 @@ export class Translations {
     /* DEC-49 REGION is-translation-draft */
     if (keys !== undefined && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX
         || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
-      return { refused: refusal("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} `
-        + "different keys, or none for the first words still missing. Nothing was sent.") };
+      return { refused: refusal("TRANSLATION_KEYS_MALFORMED", localize("translations.index.the_words_to_draft_are", "the words to draft are a list of 1 to {TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.", { TRANSLATION_DRAFT_MAX: String(TRANSLATION_DRAFT_MAX) })) };
     /* END DEC-49 REGION is-translation-draft */
     const shown = this.#shownAdoptions(tag);
     let asked;
@@ -395,8 +390,7 @@ export class Translations {
         if (w.refused) return w;
         /* DEC-49 REGION is-translation-draft */
         if (shown.has(w.word.key))
-          return { refused: refusal("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag}, so the `
-            + "assistant does not draft it. Nothing was sent.", { key: w.word.key, language: tag }) };
+          return { refused: refusal("TRANSLATION_NOT_MISSING", localize("translations.index.key_already_has_a_kept", "{key} already has a kept translation in {tag}, so the assistant does not draft it. Nothing was sent.", { key: String(w.word.key), tag: String(tag) }), { key: w.word.key, language: tag }) };
         /* END DEC-49 REGION is-translation-draft */
         asked.push(w.word);
       }
@@ -413,8 +407,8 @@ export class Translations {
     }
     /* DEC-49 REGION is-translation-draft */
     if (!words.length)
-      return { refused: refusal("TRANSLATION_NOTHING_TO_DRAFT", `every word asked for is ${asked.length ? "an official name, "
-        + "shown as it is" : "translated already"} in ${tag}, so there is nothing to draft. Nothing was sent.`,
+      return { refused: refusal("TRANSLATION_NOTHING_TO_DRAFT", localize("translations.index.every_word_asked_for_is", "every word asked for is {v1} in {tag}, so there is nothing to draft. Nothing was sent.", { v1: String(asked.length ? "an official name, "
+        + "shown as it is" : "translated already"), tag: String(tag) }),
         { language: tag, offered_official }) };
     /* END DEC-49 REGION is-translation-draft */
     return { direction, tag, words, offered_official };
@@ -449,7 +443,7 @@ export class Translations {
       return req.refused || null;
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the words to draft could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was sent.` };
+               detail: localize("translations.index.the_words_to_draft_could", "the words to draft could not be read ({String}). Nothing was sent.", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -487,12 +481,12 @@ export class Translations {
       ? words.map((w) => (w && typeof w.key === "string" ? w.key : null)).filter(Boolean) : keys;
     const req = this.#draftRequest({ language, direction, keys: asked, key, by });
     if (req.refused) return req.refused;
-    const unavailable = (why) => draftUnavailable(`${why} Nothing was saved.`);
+    const unavailable = (why) => draftUnavailable(localize("translations.index.why_nothing_was_saved", "{why} Nothing was saved.", { why: String(why) }));
     const at = this.#iso();
     const askedBy = this.#nameOf(by);
     if (req.direction === "to_english") {
       if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
-        return unavailable("the assistant did not answer a reading of this word back into English.");
+        return unavailable(localize("translations.index.the_assistant_did_not_answer", "the assistant did not answer a reading of this word back into English."));
       const sent = Array.isArray(words) && words[0] && words[0].key === req.key && typeof words[0].text === "string"
         ? words[0].text : req.words[0].text;
       this.#sql.exec(`INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -502,7 +496,7 @@ export class Translations {
                note: word("setup.note.machine_work_reading") };
     }
     const got = draft && typeof draft === "object" && Array.isArray(draft.words) ? draft.words : null;
-    if (!got) return unavailable("the assistant did not answer a draft of these words.");
+    if (!got) return unavailable(localize("translations.index.the_assistant_did_not_answer_2", "the assistant did not answer a draft of these words."));
     const label = proposalLabel(TRANSLATION_DRAFTER, "translation");
     const drafted = [], refusedHere = [];
     const answered = new Map();
@@ -511,7 +505,7 @@ export class Translations {
       if (!answered.has(w.key)) { refusedHere.push({ key: w.key, why: "the assistant did not draft it" }); continue; }
       const text = answered.get(w.key);
       if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)) {
-        refusedHere.push({ key: w.key, why: `the draft is not one line of 1 to ${TRANSLATION_TEXT_MAX} characters, so it is not stored` });
+        refusedHere.push({ key: w.key, why: localize("translations.index.the_draft_is_not_one", "the draft is not one line of 1 to {TRANSLATION_TEXT_MAX} characters, so it is not stored", { TRANSLATION_TEXT_MAX: String(TRANSLATION_TEXT_MAX) }) });
         continue;
       }
       if (!samePlaceholders(text, w.en)) {
@@ -547,17 +541,15 @@ export class Translations {
       d = Number.isSafeInteger(id) ? this.#one(`SELECT seq, text FROM translation_drafts WHERE seq = ? AND language = ? AND key = ?`, id, tag, entry.key) : null;
       /* DEC-49 REGION is-translation-adopt */
       if (!d)
-        return refusal("NO_SUCH_DRAFT", `there is no stored draft ${String(draft).slice(0, 40)} of ${entry.key} in ${tag}. `
-          + "Nothing was changed.", { key: entry.key, language: tag, draft });
+        return refusal("NO_SUCH_DRAFT", localize("translations.index.there_is_no_stored_draft", "there is no stored draft {String} of {key} in {tag}. Nothing was changed.", { String: String(String(draft).slice(0, 40)), key: String(entry.key), tag: String(tag) }), { key: entry.key, language: tag, draft });
       /* END DEC-49 REGION is-translation-adopt */
     }
     /* DEC-49 REGION is-translation-adopt */
     if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)
         || !samePlaceholders(text, entry.en))
       return refusal("TRANSLATION_TEXT_REFUSED", typeof text === "string" && text.trim() && [...text].length <= TRANSLATION_TEXT_MAX && oneLine(text)
-        ? `the text's placeholders (${placeholdersOf(text).map((x) => `{${x}}`).join(", ") || "none"}) differ from the English's `
-          + `(${placeholdersOf(entry.en).map((x) => `{${x}}`).join(", ") || "none"}). Nothing was changed.`
-        : `a translated word is one line of 1 to ${TRANSLATION_TEXT_MAX} characters. Nothing was changed.`, { key: entry.key, language: tag });
+        ? localize("translations.index.the_texts_placeholders_v1_differ", "the text's placeholders ({v1}) differ from the English's ({v2}). Nothing was changed.", { v1: String(placeholdersOf(text).map((x) => `{${x}}`).join(", ") || "none"), v2: String(placeholdersOf(entry.en).map((x) => `{${x}}`).join(", ") || "none") })
+        : localize("translations.index.a_translated_word_is_one", "a translated word is one line of 1 to {TRANSLATION_TEXT_MAX} characters. Nothing was changed.", { TRANSLATION_TEXT_MAX: String(TRANSLATION_TEXT_MAX) }), { key: entry.key, language: tag });
     /* END DEC-49 REGION is-translation-adopt */
     const h = this.#wordHistory(tag, entry.key);
     /* DEC-157 (3), (4); K2200 (1): an ordinary word shows once kept; a protected one only when kept exactly as drafted. */
@@ -590,8 +582,7 @@ export class Translations {
     const self = adoption.by_member === by;
     /* DEC-49 REGION is-translation-confirm */
     if (self && !admin)
-      return refusal("TRANSLATION_CONFIRM_SELF", `you kept this translation of ${w.word.key}, so its second check is `
-        + "someone else's. Nothing was changed.", { key: w.word.key, language: tag });
+      return refusal("TRANSLATION_CONFIRM_SELF", localize("translations.index.you_kept_this_translation_of", "you kept this translation of {key}, so its second check is someone else's. Nothing was changed.", { key: String(w.word.key) }), { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-confirm */
     const secondSpeaker = !self && this.#liveGrant(by, tag) && this.#isActiveMember(by);
     let readBack = null;
@@ -601,8 +592,7 @@ export class Translations {
                             ORDER BY seq DESC LIMIT 1`, tag, w.word.key, by, sha);
       /* DEC-49 REGION is-translation-confirm */
       if (!readBack)
-        return refusal("TRANSLATION_NOT_READ_BACK", `${w.word.key} has not been read back into English for its current text `
-          + `in ${tag}. Read it back into English first, then confirm. Nothing was changed.`, { key: w.word.key, language: tag });
+        return refusal("TRANSLATION_NOT_READ_BACK", localize("translations.index.key_has_not_been_read", "{key} has not been read back into English for its current text in {tag}. Read it back into English first, then confirm. Nothing was changed.", { key: String(w.word.key), tag: String(tag) }), { key: w.word.key, language: tag });
       /* END DEC-49 REGION is-translation-confirm */
     }
     const at = this.#iso();
@@ -626,7 +616,7 @@ export class Translations {
     const h = this.#wordHistory(tag, w.word.key);
     /* DEC-49 REGION is-translation-revert */
     if (!h.latest)
-      return refusal("TRANSLATION_NOTHING_TO_UNDO", `${w.word.key} has never been translated into ${tag}. Nothing was changed.`,
+      return refusal("TRANSLATION_NOTHING_TO_UNDO", localize("translations.index.key_has_never_been_translated", "{key} has never been translated into {tag}. Nothing was changed.", { key: String(w.word.key), tag: String(tag) }),
         { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-revert */
     const from = h.adoption ? h.adoption.seq : null;
@@ -653,11 +643,11 @@ export class Translations {
     const h = this.#wordHistory(tag, w.word.key);
     /* DEC-49 REGION is-translation-mark */
     if (h.state !== "shown")
-      return refusal("TRANSLATION_NOT_SHOWN", `${w.word.key} shows no translation in ${tag}. Nothing was recorded.`,
+      return refusal("TRANSLATION_NOT_SHOWN", localize("translations.index.key_shows_no_translation_in", "{key} shows no translation in {tag}. Nothing was recorded.", { key: String(w.word.key), tag: String(tag) }),
         { key: w.word.key, language: tag });
     const n = note === null || note === undefined ? null : typeof note === "string" ? note.trim() : undefined;
     if (n === undefined || (n !== null && [...n].length > TRANSLATION_NOTE_MAX))
-      return refusal("TRANSLATION_NOTE_REFUSED", `a note is text of at most ${TRANSLATION_NOTE_MAX} characters. Nothing was recorded.`,
+      return refusal("TRANSLATION_NOTE_REFUSED", localize("translations.index.a_note_is_text_of", "a note is text of at most {TRANSLATION_NOTE_MAX} characters. Nothing was recorded.", { TRANSLATION_NOTE_MAX: String(TRANSLATION_NOTE_MAX) }),
         { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-mark */
     const notMember = this.#translationMember(by);
@@ -710,7 +700,7 @@ export class Translations {
       return { ok: true, language: tag, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag), words };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the translation workspace could not be read (${String(e && e.message || e).slice(0, 160)}).` };
+               detail: localize("translations.index.the_translation_workspace_could_not", "the translation workspace could not be read ({String}).", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -739,7 +729,7 @@ export class Translations {
         : { key: w.key, text: w.en, en: w.en, fallback: true })) };
     } catch {
       return { ok: true, language: null, words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
-               detail: "the team's translations could not be read, so every word is shown in English." };
+               detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
   }
 
@@ -763,13 +753,12 @@ export class Translations {
       const tag = typeof own === "string" && isLocale(own) ? canonicalTag(own) : null;
       /* DEC-49 REGION is-reading-language */
       if (!tag)
-        return refusal("LANGUAGE_NOT_SET", `${typeof member === "string" && member.trim() ? "this member has" : "the request names no member and"} `
-          + "no language chosen for the screens, and the request names none. Nothing was translated.");
+        return refusal("LANGUAGE_NOT_SET", localize("translations.index.v1_no_language_chosen_for", "{v1} no language chosen for the screens, and the request names none. Nothing was translated.", { v1: String(typeof member === "string" && member.trim() ? "this member has" : "the request names no member and") }));
       /* END DEC-49 REGION is-reading-language */
       return { ok: true, language: tag, source: "member" };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the language could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was translated.` };
+               detail: localize("translations.index.the_language_could_not_be", "the language could not be read ({String}). Nothing was translated.", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }}
 

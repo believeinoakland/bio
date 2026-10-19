@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
 import { notAnAdmin, noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
 
@@ -27,7 +28,7 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
   for (const keyB64 of [undefined, null, "", "ssh-ed25519 AAAA", "BBBBx", "AAAA x", 7]) {
     const r = w.c.signerAdd({ keyB64, memberId: "nobody", by: "admin" });
     assert.deepEqual(r, { ok: false, reason: "BAD_KEY", code: "BAD_KEY", check: "C-96.8",
-      translation: CREDENTIALS_CHECKS.BAD_KEY.translation, detail: "expected the base64 field of an ssh-ed25519 public key" },
+      translation: CREDENTIALS_CHECKS.BAD_KEY.translation, detail: localize("credentials.index.expected_the_base64_field", "expected the base64 field of an ssh-ed25519 public key") },
       String(keyB64));
   }
   assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "nobody", by: "admin" }), noSuchMember("nobody"),

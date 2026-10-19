@@ -78,7 +78,7 @@ import { caseCheckOf } from "../case-check/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
@@ -101,39 +101,31 @@ export const LIMITS = Object.freeze({ findings: 50, standards: 50, rows: 200, qu
 /** The longest text of one part (a description, a row's `requires` or `did`, a question), in characters. */
 export const TEXT_MAX = 4000;
 /** R12: the sentence every proposal is answered with. */
-export const PROPOSAL_SAYS = "This is a comparison, not a determination: it sets out what the standards require and what "
-  + "was done, and it never states whether the act complied. Only a member's determination records that.";
+export const PROPOSAL_SAYS = word("conformance.comparison_determination_sets");
 /** R10: the sentence beside the flag. */
-export const FLAG_SAYS = "This is a notice: something this determination rests on changed. The determination and its "
-  + "outcomes are unchanged until a member supersedes it.";
+export const FLAG_SAYS = word("conformance.notice_something_determination");
 /** R22: the longest cause statement, in characters. */
 export const CAUSE_MAX = 2000;
 /** R22: the sentence a determination with no cause reads. */
-export const CAUSE_NOT_ESTABLISHED = "cause not established";
+export const CAUSE_NOT_ESTABLISHED = word("conformance.cause_established");
 /** R22: the keys no determination carries: a recommendation is a proposed action, recorded by `actions`. */
 export const RECOMMENDATION_KEYS = Object.freeze(["recommendation", "policy"]);
 /** R21: the sentence every answer of `comparisonFacts` carries. */
-export const FACTS_SAY = "These are facts the record holds, as the two sides of the question state them: what one side "
-  + "says the standard requires, and what the other says was done. They are the record's, not an outcome: whether the "
-  + "act complied is a member's determination.";
+export const FACTS_SAY = word("conformance.facts_record_holds");
 /** R9: the sentence beside `outcomes_differ` (DEC-84 item 3): a statement, with no duty. */
-export const OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per "
-  + "standard, and none is composed into one verdict.";
+export const OUTCOMES_DIFFER_SAYS = word("conformance.outcomes_differ_standard");
 
 /** R25: the event roles read beside the act as who took part in it (K1465), never as its actor. */
 export const ACT_ROLES = Object.freeze(["decider", "author", "signatory", "implementer"]);
 /** R25: the sentence beside those participants. */
-export const PARTICIPANTS_SAY = "These are the people the record states took part in the act (who decided, wrote, signed "
-  + "or carried it out), each with what attests it. The actor is the office; they are never the actor, and nothing about "
-  + "them changes the outcomes.";
+export const PARTICIPANTS_SAY = word("conformance.people_record_states");
 /** R25: the sentence an actor with no office entity carries. */
 export const NO_OFFICE_ENTITY = "no office entity is held for this role and body, so the actor stands as the office's "
   + "role and body only";
 /** R26: the sentence an actor recorded before T33 carries (no actor then carried an entity). */
-export const ACTOR_BEFORE_ENTITIES = "this actor was recorded before an act's office carried an entity";
+export const ACTOR_BEFORE_ENTITIES = word("conformance.actor_recorded_act");
 /** R26: the sentence an act no member has yet linked to an event carries. */
-export const UNALIASED_SAYS = "This act was recorded before acts were events, and no event is linked to it yet. It reads "
-  + "as recorded; a member links it to its event (events' aliasAct) before it is determined again.";
+export const UNALIASED_SAYS = word("conformance.act_recorded_acts");
 
 /** R28: the entity kinds a comparison's actor may be: an office, or an organisation of any sector (K1453). */
 export const ACTOR_KINDS = Object.freeze(["office", "institution", "body", "movement"]);
@@ -142,19 +134,17 @@ export const NONCONFORMING_WORDS = Object.freeze(["violated", "violates", "viola
   "nonconformity", "nonconformance"]);
 const NONCONFORMING_RE = new RegExp(`(?<![A-Za-z0-9-])(${NONCONFORMING_WORDS.join("|")})(?![A-Za-z0-9-])`, "i");
 /** R27: how a `diverges` reading against a benchmark is answered (never as a breach). */
-export const BELOW_BENCHMARK = "below the benchmark";
+export const BELOW_BENCHMARK = word("conformance.below_benchmark");
 /** R27: a standard's bindingness on a determination recorded before bindingness was read. */
-export const BINDS_NOT_READ = "this was recorded before whether a standard binds the body was read";
+export const BINDS_NOT_READ = word("conformance.recorded_whether_standard");
 /** R29: the sentence beside a measure (DEC-145 (8): what the office does, never "practice"). */
-export const MEASURE_SAYS = "What the office does, measured: the calculation's result with what it counted and out of "
-  + "how many, held beside the provision and never as the rule.";
+export const MEASURE_SAYS = word("conformance.office_measured_calculation");
 /** R29: what a measure row's `did` holds in words. */
-const measureWords = (calc) => `what the office does, as measured by ${calc}`;
+const measureWords = (calc) => word("conformance.office_measured", { calc: String(calc) });
 
 const ACT_RE = idPattern("ACT");
 /** R32: an accepted finding's label. */
-export const ACCEPTED_SAYS = "Another team's finding, accepted by this team at the edition named: read-only, never "
-  + "stronger than that edition.";
+export const ACCEPTED_SAYS = word("conformance.group_finding_accepted");
 /** R32 (K2832; DEC-328 (6)): what an accepted finding reads while the source's identity and stake are not recorded at
  *  import; the key `case-import.group_fields_none`, read by key (plan rule 6). */
 export const SOURCE_FACTS_UNRECORDED = word("case-import.group_fields_none");
@@ -162,8 +152,7 @@ export const SOURCE_FACTS_UNRECORDED = word("case-import.group_fields_none");
  *  recorded at import; the key `case-import.group_fields_label`, read by key. */
 export const SOURCE_DECLARATION_SAYS = word("case-import.group_fields_label");
 /** R33: the sentence beside a void determination. */
-export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
-  + "until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
+export const VOID_SAYS = word("conformance.finding_determination_rests");
 /* R33: the most pages of publisher moves one read takes (200 each). */
 const MOVE_PAGES_MAX = 50;
 /* R11, R33: the most batches of 200 one page filtered by `void` reads. */
@@ -300,8 +289,7 @@ export class Conformance {
     const denied = member ? this.membership.projectAuthority(project, author, "joined", "determine") : true;
     /* DEC-49 REGION is-project-joined */
     if (denied)
-      return refusal("DETERMINATION_NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. "
-        + "Nothing was written.", { project, author: str(author) });
+      return refusal("DETERMINATION_NOT_A_PARTICIPANT", localize("conformance.index.only_a_member_who_has", "only a member who has joined the project records its determinations. Nothing was written."), { project, author: str(author) });
     /* END DEC-49 REGION is-project-joined */
     return null;
   }
@@ -371,8 +359,7 @@ export class Conformance {
     const imported = isObj(input) && typeof input.supersedes === "string" && /^imported:/.test(input.supersedes.trim());
     /* DEC-49 REGION is-own-determination */
     if (keys.length || imported)
-      return refusal("DETERMINATION_NOT_ADOPTABLE", "another team's determination is never adopted as this team's: a "
-        + "member of this team determines, against standards in this team's record. Nothing was written.",
+      return refusal("DETERMINATION_NOT_ADOPTABLE", localize("conformance.index.another_teams_determination_is_never", "another team's determination is never adopted as this team's: a member of this team determines, against standards in this team's record. Nothing was written."),
         { keys: imported ? [...keys, "supersedes"] : keys });
     /* END DEC-49 REGION is-own-determination */
     return null;
@@ -475,8 +462,7 @@ export class Conformance {
     const named = str(a.event) ?? str(a.id);
     /* DEC-49 REGION is-act-event-named */
     if (!named)
-      return refusal("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. "
-        + "Nothing was written.", { part: "event" });
+      return refusal("ACT_NO_EVENT", localize("conformance.index.the_act_names_no_event", "the act names no event: a government act is the event that records what was done. Nothing was written."), { part: "event" });
     /* END DEC-49 REGION is-act-event-named */
     let eventId = named;
     if (ACT_RE.test(named)) {
@@ -638,8 +624,8 @@ export class Conformance {
     const w = act.when;
     const nowhere = (why) => [{ date: null, why }];
     if (w === null || w === undefined)
-      return nowhere(`the act's event is placed nowhere${act.why ? ` (${act.why})` : ": no attestation of it is dated"}`);
-    if (!isObj(w)) return nowhere(`the act's event's date is undetermined${act.why ? ` (${act.why})` : ""}`);
+      return nowhere(word("conformance.act_event_placed", { why: String(act.why ? ` (${act.why})` : ": no attestation of it is dated") }));
+    if (!isObj(w)) return nowhere(word("conformance.act_event_date", { why: String(act.why ? ` (${act.why})` : "") }));
     const day = (instant, back = false) => {
       if (typeof instant !== "string" || !w.zone) return null;
       const t = Date.parse(instant);
@@ -651,12 +637,12 @@ export class Conformance {
       return [{ date: w.value.slice(0, 10), why: null }];
     if (w.precision === "upper_bound") {
       const end = typeof w.value === "string" && isDate(w.value.slice(0, 10)) ? w.value.slice(0, 10) : day(w.end, true);
-      return [{ date: null, why: "the act's event is held only as on or before a date, so its start is not stated" },
-              end ? { date: end, why: null } : { date: null, why: "the act's event's latest date is not stated" }];
+      return [{ date: null, why: word("conformance.why.act_event_held") },
+              end ? { date: end, why: null } : { date: null, why: word("conformance.why.act_event_latest") }];
     }
     const from = day(w.start), to = day(w.end, true);
-    return [from ? { date: from, why: null } : { date: null, why: "the start of the act's event's band is not stated" },
-            to ? { date: to, why: null } : { date: null, why: "the end of the act's event's band is not stated" }];
+    return [from ? { date: from, why: null } : { date: null, why: word("conformance.why.start_act_event") },
+            to ? { date: to, why: null } : { date: null, why: word("conformance.why.end_act_event") }];
   }
 
   /* R2 (T45: three kinds), R31, R32: each finding, pinned. An item is an id or `{finding, version?, case?, edition?}`
@@ -670,8 +656,7 @@ export class Conformance {
     const list = Array.isArray(findings) ? findings : [];
     /* DEC-49 REGION is-finding-named */
     if (!list.length)
-      return refusal("NO_FINDINGS", "a determination rests on at least one finding: published, checked and held, or "
-        + "accepted from another team (R14). Nothing was written.");
+      return refusal("NO_FINDINGS", localize("conformance.index.a_determination_rests_on_at", "a determination rests on at least one finding: published, checked and held, or accepted from another team (R14). Nothing was written."));
     /* END DEC-49 REGION is-finding-named */
     const pins = [], seen = new Set();
     for (const item of list) {
@@ -741,7 +726,7 @@ export class Conformance {
     try { found = this.acceptedWork.acceptedLegRefusals({ legs: [{ target: f.finding, target_edition: edition, ord: 0 }],
                                                             viewer }); } catch { found = null; }
     if (!Array.isArray(found)) found = [{ code: "ACCEPTED_WORK_UNREADABLE", check: null, translation: null,
-                                          detail: "accepted work could not be read" }];
+                                          detail: word("reevaluation.why.accepted_work_read") }];
     if (found.length) {
       const x = found[0];
       return { ok: false, reason: x.code, code: x.code, check: x.check, translation: x.translation,
@@ -777,8 +762,7 @@ export class Conformance {
       const not = answers.find((x) => x.answer === "not_in_force");
       /* DEC-49 REGION is-standard-in-force */
       if (not)
-        return refusal("STANDARD_NOT_IN_FORCE", `${id} was not in force on ${not.date}${not.why ? ` (${not.why})` : ""}. `
-          + "Nothing was written.", { standard: id, date: not.date });
+        return refusal("STANDARD_NOT_IN_FORCE", localize("conformance.index.id_was_not_in_force", "{id} was not in force on {date}{v1}. Nothing was written.", { id: String(id), date: String(not.date), v1: String(not.why ? ` (${not.why})` : "") }), { standard: id, date: not.date });
       /* END DEC-49 REGION is-standard-in-force */
       const und = answers.find((x) => x.answer !== "in_force");
       if (byId.has(id)) { byId.get(id).outcomes.push(outcome); continue; }
@@ -810,19 +794,19 @@ export class Conformance {
       if (out.has(id)) continue;
       const answers = dates.map((d) => {
         if (!d.date) return { state: "undetermined", why: d.why, rests_on: [] };
-        if (!body) return { state: "undetermined", why: "the act names no body", rests_on: [] };
+        if (!body) return { state: "undetermined", why: word("conformance.why.act_names_body"), rests_on: [] };
         let r = null;
         try { r = this.standards.bindsAt({ standard: id, body, date: d.date, viewer }); } catch { r = null; }
         if (!isObj(r) || r.ok === false || !["binds", "benchmark", "undetermined"].includes(r.state))
           return { state: "undetermined", rests_on: [],
-                   why: `whether ${id} binds the body could not be read${isObj(r) && r.detail ? ` (${oneLine(r.detail)})` : ""}` };
+                   why: word("conformance.why.whether_binds_body", { id: String(id), row: String(isObj(r) && r.detail ? ` (${oneLine(r.detail)})` : "") }) };
         return { state: r.state, why: r.why ?? null, rests_on: Array.isArray(r.rests_on) ? r.rests_on : [], date: d.date };
       });
       const all = (state) => answers.every((x) => x.state === state);
       const binds = all("binds") ? true : all("benchmark") ? false : "undetermined";
       const open = answers.find((x) => x.state === "undetermined");
       const why = binds === "undetermined"
-        ? (open ? open.why : "it binds the body at one end of the act's band and not at the other")
+        ? (open ? open.why : word("conformance.binds_body_end"))
         : answers.map((x) => x.why).filter(Boolean).join("; ") || null;
       out.set(id, { body, binds, why, rests_on: answers.flatMap((x) => x.rests_on).slice(0, 20),
                     label: bindingLabel(binds, bodyLabel ?? "the body") });
@@ -890,7 +874,7 @@ export class Conformance {
     return { ok: true, measure: { calc, result_key: key, result_key_now: r.result_key ?? null,
       result_key_differs: !!key && key !== r.result_key, result: output, denominator, population,
       derivation: { recipe: r.calculation ? r.calculation.recipe ?? null : null, method_version: r.method_version ?? null,
-                    says: app && str(app.derivation) ? app.derivation : "the recipe stored with this calculation" },
+                    says: app && str(app.derivation) ? app.derivation : word("conformance.says.recipe_stored_calculation") },
       computed_at: r.computed_at ?? null, says: MEASURE_SAYS } };
   }
 
@@ -901,7 +885,7 @@ export class Conformance {
     try { r = this.standards.inForceAt({ standard: id, date, viewer }); } catch { r = null; }
     const ok = isObj(r) && r.ok !== false;
     const answer = ok && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
-    return { date, answer, why: ok ? (r.why ?? null) : (isObj(r) ? (r.detail ?? r.reason ?? null) : "standards did not answer") };
+    return { date, answer, why: ok ? (r.why ?? null) : (isObj(r) ? (r.detail ?? r.reason ?? null) : word("conformance.why.standards_answer")) };
   }
 
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. R29:
@@ -983,8 +967,7 @@ export class Conformance {
     const prevEvent = this.#eventOfRow(prev);
     /* DEC-49 REGION is-same-act */
     if (act.event !== prevEvent)
-      return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.event}. `
-        + "Nothing was written.", { supersedes: id, act: act.event, predecessor_act: prevEvent ?? prev.act_id });
+      return refusal("SUPERSEDES_ANOTHER_ACT", localize("conformance.index.id_is_a_determination_of", "{id} is a determination of {act_id}, and this names {event}. Nothing was written.", { id: String(id), act_id: String(prev.act_id), event: String(act.event) }), { supersedes: id, act: act.event, predecessor_act: prevEvent ?? prev.act_id });
     /* END DEC-49 REGION is-same-act */
     const why = Conformance.#reason(reason);
     const bad = this.#reasonRefusal(why, "superseding a determination", { supersedes: id });
@@ -1087,9 +1070,7 @@ export class Conformance {
         return refusal("STANDARD_NOT_BINDING", b.binds === false
           ? `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record `
             + "the comparison as a benchmark (below, slower than, or above). Nothing was written."
-          : `whether ${x.standard} binds ${b.body ?? "the body"} is undetermined (${b.why ?? "not recorded"}), and an act is `
-            + "found noncompliant only against a standard that binds its body: a member settles it in standards first. "
-            + "Nothing was written.", { standard: x.standard, body: b.body, binds: b.binds });
+          : localize("conformance.index.whether_standard_binds_v1_is", "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.", { standard: String(x.standard), v1: String(b.body ?? "the body"), v2: String(b.why ?? "not recorded") }), { standard: x.standard, body: b.body, binds: b.binds });
       /* END DEC-49 REGION is-standard-binding */
     }
     const said = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x.question : x));
@@ -1190,10 +1171,9 @@ export class Conformance {
       "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
       "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
       "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "", question, "",
-      "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+      word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "", "## Session Log", "",
       `### Session ${at} | Opened | ${oneLine(author)}`,
-      `Changes: opened by the determination ${determination} in the project ${project}, whose outcome is unclear on this `
-      + "question.", "", "## Review Notes", ""].join("\n");
+      word("conformance.changes_opened_determination", { determination: String(determination), project: String(project) }), "", "## Review Notes", ""].join("\n");
     return this.promotion.promote({ bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${rand(4)}`, author,
       files: [{ path: "bundle.md", text: md }],
       meta: { object_type: "inquiry", current_state: "open", created: at, last_updated: at },
@@ -1227,7 +1207,7 @@ export class Conformance {
         const hidden = viewer != null && (!isObj(fenced) || fenced === THREW || fenced.ok === false);
         const held = { kind: "checked_held", case: x.case_id, edition: Number(x.edition), ...check };
         if (!isObj(st) || st === THREW || st.ok === false) {
-          causes.push({ finding: x.finding_id, cause: "unreadable", what: "the held check could not be read", date: null });
+          causes.push({ finding: x.finding_id, cause: "unreadable", what: word("conformance.held_check_read"), date: null });
           pins.set(x, { basis: held, hidden });
         } else if (st.state === "published") {
           /* R34: the check's edition is published; read as published when it holds the same pinned version */
@@ -1239,15 +1219,15 @@ export class Conformance {
                                   frozen: item.strength ?? null, hidden });
           else {
             causes.push({ finding: x.finding_id, cause: "published_version_differs", check: x.check_id, date: null,
-                          what: "the case edition was published without the version this determination rests on" });
+                          what: word("conformance.case_edition_published") });
             pins.set(x, { basis: held, hidden });
           }
         } else if (st.state === "held") pins.set(x, { basis: held, hidden });
         else {
           causes.push({ finding: x.finding_id, cause: st.state === "void" ? "check_void" : "check_undetermined",
                         check: x.check_id, ...(Array.isArray(st.why) ? { why: st.why } : {}), date: null,
-                        what: st.state === "void" ? "the check it was held under was voided"
-                          : "whether the check it was held under still stands could not be determined" });
+                        what: st.state === "void" ? word("conformance.check_held_voided")
+                          : word("conformance.whether_check_held") });
           pins.set(x, { basis: held, hidden });
         }
         continue;
@@ -1269,22 +1249,22 @@ export class Conformance {
                              says: ACCEPTED_SAYS }, live, hidden });
       const moves = once("moves", () => this.#allMoves());
       if (!Array.isArray(moves)) {
-        causes.push({ finding: x.finding_id, cause: "unreadable", what: "the source team's moves could not be read", date: null });
+        causes.push({ finding: x.finding_id, cause: "unreadable", what: word("conformance.source_group_moves"), date: null });
         continue;
       }
       for (const m of moves) {
         if (m.import !== imp || m.taken_back || !m.at || instantOrder(m.at, r.at) <= 0) continue;
         if (m.kind === "withdrawal" && (m.edition === "all" || Number(m.edition) === ed))
           causes.push({ finding: x.finding_id, cause: "source_withdrawn", edition: m.edition, date: m.date ?? null, at: m.at,
-                        what: "the source team withdrew the edition this determination rests on" });
+                        what: word("conformance.source_group_withdrew") });
         else if (m.kind === "edition" && typeof m.edition === "number" && m.edition > ed) {
           const acc = once(`acc:${x.finding_id}:${m.edition}:`, () =>
             this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: m.edition, viewer: null }));
           if (acc === THREW || (isObj(acc) && (acc.absent || acc.unreadable)))
-            causes.push({ finding: x.finding_id, cause: "unreadable", what: "whether the revision is accepted could not be read", date: null });
+            causes.push({ finding: x.finding_id, cause: "unreadable", what: word("conformance.whether_revision_accepted"), date: null });
           else if (!isObj(acc) || !isObj(acc.acceptance))
             causes.push({ finding: x.finding_id, cause: "source_revised", edition: m.edition, date: m.date ?? null, at: m.at,
-                          what: "the source team published a newer edition, not accepted here" });
+                          what: word("conformance.source_group_published") });
         }
       }
     }
@@ -1369,9 +1349,9 @@ export class Conformance {
       const readings = mine.map((x) => x.reading);
       /* R4: the member's outcome stands; a disagreement with the rows is stated beside it, never corrected. */
       const disagreement = s.outcome === "noncompliant" && readings.length && readings.every((x) => x === "aligns")
-        ? "every row reads aligns, and the member's outcome is noncompliant"
+        ? word("conformance.row_reads_aligns")
         : s.outcome === "compliant" && readings.includes("diverges")
-          ? "a row reads diverges, and the member's outcome is compliant" : null;
+          ? word("conformance.row_reads_diverges") : null;
       const b = bindingRead(s);
       return { standard: s.standard_id, outcome: s.outcome, in_force: s.in_force, in_force_why: s.in_force_why, ...b,
                rows: mine.map((x) => rowRead(x, b.binds, seen)), disagreement };
@@ -1776,8 +1756,7 @@ export class Conformance {
     const side = typeof standardSide === "string" ? standardSide : null;
     /* DEC-49 REGION is-standard-side-named */
     if (side !== "a" && side !== "b")
-      return refusal("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or "
-        + "b: your team's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
+      return refusal("STANDARD_SIDE_UNNAMED", localize("conformance.index.name_which_side_of_the", "name which side of the question states what the standard requires, a or b: your team's Civicsmith never chooses it. Nothing was written."), { contradiction: from.inquiry });
     /* END DEC-49 REGION is-standard-side-named */
     let listed = null;
     try { listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer }); } catch { listed = null; }
@@ -1980,8 +1959,8 @@ export class Conformance {
     const c = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, l.cure_id);
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, l.cure_id);
     const causes = c ? this.#voidCauses(c, memo) : [];
-    const why = !c ? "the curing determination is not held" : by ? "the curing determination has been superseded"
-      : causes.length ? "the curing determination is void: a finding it rests on no longer stands" : null;
+    const why = !c ? word("conformance.curing_determination_held") : by ? word("conformance.curing_determination_superseded")
+      : causes.length ? word("conformance.curing_determination_void") : null;
     return { link: l.link_id, cure: l.cure_id, standard: l.standard_id, by: l.by, at: l.at, reason: l.reason ?? null,
              cure_standing: !why, ...(why ? { cure_why: why } : {}) };
   }
@@ -2069,8 +2048,8 @@ export class Conformance {
 /* R27 (DEC-145 (2)): a standard's bindingness on the body in the members' words. */
 function bindingLabel(binds, bodyLabel) {
   if (binds === true) return `Standard · binds ${bodyLabel}`;
-  if (binds === false) return `Benchmark · not binding on ${bodyLabel}`;
-  return `Whether this binds ${bodyLabel} is not recorded`;
+  if (binds === false) return word("standard.binding.benchmark", { body: String(bodyLabel) });
+  return word("standard.binding.unknown", { body: String(bodyLabel) });
 }
 
 /* R27: a determination's standard's bindingness as recorded (a row written before T35 read none: undetermined). */
@@ -2189,28 +2168,25 @@ export function determinationDoc({ id, project, act, pins, standards, rows, ques
     ...(proposal ? [`drew_on: ${proposal}`] : []),
     "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "---", "",
-    "## Act", "", `The ${oneLine(act.kind ?? "act")} ${act.event}, ${whenWords(act.when, act.why)}.`, "",
-    `Done by the office ${oneLine(act.actor.role)}, ${oneLine(act.actor.body)}`
-      + `${act.actor.entity_id ? ` (${act.actor.entity_id})` : ` (${NO_OFFICE_ENTITY})`}. Shown by: ${act.evidence.join(", ")}.`, "",
-    "## Standards and Outcomes", "",
+    "## Act", "", word("conformance.the", { kind: String(oneLine(act.kind ?? "act")), event: String(act.event), when: String(whenWords(act.when, act.why)) }), "",
+    word("conformance.done_office_shown", { role: String(oneLine(act.actor.role)), body: String(oneLine(act.actor.body)), entity_id: String(act.actor.entity_id ? ` (${act.actor.entity_id})` : ` (${NO_OFFICE_ENTITY})`), evidence: String(act.evidence.join(", ")) }), "",
+    word("conformance.standards_outcomes"), "",
     ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.label ? ` (${oneLine(s.label)})` : ""}${s.in_force === "undetermined"
       ? ` (whether it was in force is undetermined: ${oneLine(s.in_force_why)})` : ""}`), "",
     "## Comparison", "",
     ...rows.map((r) => {
       const binds = (standards.find((s) => s.standard === r.standard) || {}).binds;
-      return `- ${r.standard} requires: ${oneLine(r.requires)}. Done: ${oneLine(r.did)}`
-        + `${r.measure ? ` (${r.measure.calc}${r.measure.result_key ? `, result ${r.measure.result_key}` : ""})` : ""}. `
-        + `Reading: ${readingSays(r.reading, binds) ?? r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "");
+      return word("conformance.requires_done_reading", { standard: String(r.standard), requires: String(oneLine(r.requires)), did: String(oneLine(r.did)), measure: String(r.measure ? ` (${r.measure.calc}${r.measure.result_key ? `, result ${r.measure.result_key}` : ""})` : ""), reading_says: String(readingSays(r.reading, binds) ?? r.reading), content: String(r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "") });
     }), "",
     "## Findings", "",
-    ...pins.map((p) => `- ${p.finding}, pinned at ${p.case} edition ${p.edition}${p.version_sha ? ` (${p.version_sha})` : ""}`),
+    ...pins.map((p) => word("conformance.pinned_edition", { finding: String(p.finding), case: String(p.case), edition: String(p.edition), version_sha: String(p.version_sha ? ` (${p.version_sha})` : "") })),
     "", "## Open Questions", "",
     ...(questions.length ? questions.map((x) => `- ${oneLine(x.question)} (${x.inquiry})`) : ["None."]), "",
     "## Cause", "", ...(cause ? [oneLine(cause.statement), "", `Shown by: ${cause.evidence.join(", ")}.`]
                                 : [`${CAUSE_NOT_ESTABLISHED[0].toUpperCase()}${CAUSE_NOT_ESTABLISHED.slice(1)}.`]), "",
     ...(sup && sup.prev ? ["## Supersedes", "", `${sup.prev.determination_id}: ${oneLine(sup.reason)}`, ""] : []),
     "## Session Log", "", `### Session ${at} | Determined | ${oneLine(author)}`,
-    `Changes: determination recorded in ${project}.`, ""];
+    word("conformance.changes_determination_recorded", { project: String(project) }), ""];
   return lines.join("\n");
 }
 

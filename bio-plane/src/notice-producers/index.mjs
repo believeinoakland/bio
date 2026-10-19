@@ -79,6 +79,7 @@ import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
 import { reviewOf } from "../review/index.mjs";
 import { wordsOf, hasWords, untilWords, dayInSentence } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -87,7 +88,7 @@ const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons:
 export const NOTICED_LABEL = "noticed";
 /** R11 (DEC-131): the mark on every member-facing sentence of an R2 or R3 item; what the machine raised is a "hint",
  *  never a "signal". R4's, R5's and R6's items are not hints and never carry it. */
-export const HINT_MARK = "Hint · machine work";
+export const HINT_MARK = localize("mark.hint.label", "Hint · machine work");
 /** R9: the gate (K1504, M-C8): a check or detector is shown only at a measured false-alarm rate of at most 20%. */
 export const GATE_RATE_MAX = 0.2;
 /** R2, R3 (as queue-producers R4): the projects whose checks and detectors one read asks about, in id order. */
@@ -98,9 +99,9 @@ export const STANDING_PAGES_MAX = 5;
 export const DUTIES_MAX = 500;
 /** R8: the one act an R2 or R3 item offers beside its disposal (queue's own): take it up as the member's hunch or
  *  hypothesis (`hypotheses`, `op=hypothesishold`). Nothing else: never a citation, never a grade, never a finding. */
-export const TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take this hint up as your own hunch or hypothesis", weight: "single" });
+export const TAKE_UP = Object.freeze({ id: "hypothesishold", label: localize("notice-producers.label.take_hint_hunch", "Take this hint up as your own hunch or hypothesis"), weight: "single" });
 /** R6: the setter's own answer to a wait come round: record that they looked (`inquiry` R56, `op=waitlook`). */
-export const WAIT_LOOK = Object.freeze({ id: "waitlook", label: "Record that you looked", weight: "single" });
+export const WAIT_LOOK = Object.freeze({ id: "waitlook", label: localize("notice-producers.label.record_looked", "Record that you looked"), weight: "single" });
 /** R12: the levels `credentials.securityLevel` answers (its R45); anything else is no answer, never `Ordinary`. */
 export const SECURITY_LEVELS = Object.freeze(["Ordinary", "Raised", "High"]);
 /** R12: the hours one `securityMap` read covers, so it answers hour by hour (its R45: `hour` up to 48 hours). */
@@ -404,7 +405,7 @@ export class NoticeProducers {
         label: NOTICED_LABEL, layer: "hypothesis", by: "the machine's", mark: HINT_MARK,
         case: this.#homesAt(ps, viewer),
         subject: { kind: "interest_check_result", id: x.result_id, check: c.check, version: c.version, name: c.name ?? x.name ?? null },
-        summary: `${HINT_MARK}: a pattern the check "${c.name ?? c.check}" finds in held facts`,
+        summary: localize("notice-producers.summary.pattern_check_finds", "{hint_mark}: a pattern the check \"{name}\" finds in held facts", { hint_mark: String(HINT_MARK), name: String(c.name ?? c.check) }),
         detail: `${HINT_MARK}. A check noticed this hint, the machine's work, in the hypothesis layer. The check's condition is data: `
               + `${condition ? JSON.stringify(condition) : "as its definition states"}. It is counted against `
               + `${den.label || "its stated set"}${Number.isFinite(den.counted) ? ` (${den.counted} counted on the last full pass)` : ""}, `
@@ -412,8 +413,7 @@ export class NoticeProducers {
               + "a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.",
         basis: { source: "people.checkResults", check: c.check, version: c.version, result: x.result_id, condition,
                  denominator: den, derivation: x.derivation ?? null, gate: "open", projects: ps,
-                 detail: "an interest check's result is people's (its R23–R25): shown only once its version's gate is "
-                       + "recorded open, switched on for the project, and to a viewer who may see every input." },
+                 detail: localize("notice-producers.index.an_interest_checks_result_is", "an interest check's result is people's (its R23–R25): shown only once its version's gate is recorded open, switched on for the project, and to a viewer who may see every input.") },
         age: ageFrom(x.at, now, "no_result_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -453,7 +453,7 @@ export class NoticeProducers {
         case: this.#homesAt(ps, viewer),
         subject: { kind: "money_detector_result", id: x.result_id, detector: x.detector_id, version: x.version,
                    about: x.subject ?? null },
-        summary: `${HINT_MARK}: a pattern the detector "${x.detector_label ?? x.detector_id}" finds in held money facts`,
+        summary: localize("notice-producers.summary.pattern_detector_finds", "{hint_mark}: a pattern the detector \"{detector_label}\" finds in held money facts", { hint_mark: String(HINT_MARK), detector_label: String(x.detector_label ?? x.detector_id) }),
         detail: `${HINT_MARK}. A detector noticed this hint, the machine's work, in the hypothesis layer: ${figure(x.numerator) ?? "a part"} of `
               + `${figure(x.denominator) ?? "its stated population"}, by the derivation it cites over each input. This hint is a `
               + "pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. "
@@ -461,8 +461,7 @@ export class NoticeProducers {
         basis: { source: "money-checks.noticed", detector: x.detector_id, version: x.version, result: x.result_id,
                  numerator: x.numerator ?? null, denominator: x.denominator ?? null, derivation: x.derivation ?? null,
                  inputs: Array.isArray(x.inputs) ? x.inputs : [], gate: x.gate, projects: ps,
-                 detail: "a detector's result is money-checks' (its R6–R10): shown only for a version gated at or under "
-                       + "20% and switched on for the project, to a viewer who may see every input." },
+                 detail: localize("notice-producers.index.a_detectors_result_is_money", "a detector's result is money-checks' (its R6–R10): shown only for a version gated at or under 20% and switched on for the project, to a viewer who may see every input.") },
         age: ageFrom(x.at, now, "no_result_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -498,18 +497,15 @@ export class NoticeProducers {
       const n = finds && Array.isArray(finds.ids) ? finds.ids.length : null;
       items.push({
         id: `FINDING::standing-answer::${q.id}::${e.run}`, class: "FINDING", kind: "standing-answer",
-        label: e.label ?? "machine work, from your standing question", by: "the assistant's",
+        label: e.label ?? localize("answers.machine_work_standing", "machine work, from your standing question"), by: "the assistant's",
         case: this.#homesOf([]),
         subject: { kind: "standing_question", id: q.id, question: q.question ?? null, run: e.run },
-        summary: `Your standing question found something new: ${q.question ?? q.id}`,
-        detail: `Machine work, from your standing question. ${n === null ? "New finds are held" : `${n} new ${n === 1 ? "find" : "finds"}`}`
-              + (answered ? (sentences.length ? `; the assistant's answer: ${sentences.join(" ")}` : "; the assistant's answer is held with it")
-                : `; the assistant did not answer, because ${NoticeProducers.heldBackWords(e.held_back)}`)
-              + ". This is told once.",
+        summary: localize("notice-producers.summary.standing_question_found", "Your standing question found something new: {question}", { question: String(q.question ?? q.id) }),
+        detail: localize("notice-producers.index.machine_work_from_your_standing", "Machine work, from your standing question. {v1}{v2}. This is told once.", { v1: String(n === null ? "New finds are held" : `${n} new ${n === 1 ? "find" : "finds"}`), v2: String(answered ? (sentences.length ? `; the assistant's answer: ${sentences.join(" ")}` : "; the assistant's answer is held with it")
+                : `; the assistant did not answer, because ${NoticeProducers.heldBackWords(e.held_back)}`) }),
         basis: { source: "answers.standingAnswersFor", question: q.id, run: e.run, finds, answer: e.answer ?? null,
                  held_back: e.held_back ?? null, withheld: Array.isArray(e.withheld) ? e.withheld : [],
-                 detail: "a standing question's run is answers' (its R17–R20), seen only by its author; one entry per "
-                       + "run that found something new, so each new find is told once (DEC-94)." },
+                 detail: localize("notice-producers.index.a_standing_questions_run_is", "a standing question's run is answers' (its R17–R20), seen only by its author; one entry per run that found something new, so each new find is told once (DEC-94).") },
         age: ageFrom(e.at, now, "no_run_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -523,14 +519,14 @@ export class NoticeProducers {
    *  limit (`ai-use`'s `AI_LIMIT_REACHED`, its words as answers carries them; the retired ceiling's codes are gone,
    *  run-rules R20). The group's Civicsmith is "your group's Civicsmith" to the member (DEC-149, T34-87). */
   static heldBackWords(h) {
-    if (!h || typeof h !== "object") return "it was held back";
-    if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off"
-      : "the assistant's half of standing questions is switched off in your team's Civicsmith";
-    if (h.condition === "no_account") return "you have no account of your own set for the assistant";
+    if (!h || typeof h !== "object") return localize("notice-producers.held_back", "it was held back");
+    if (h.condition === "switch_off") return h.switch === "member" ? localize("notice-producers.switch_standing_questions", "your own switch for standing questions is off")
+      : localize("notice-producers.assistant_half_standing", "the assistant's half of standing questions is switched off in your team's Civicsmith");
+    if (h.condition === "no_account") return localize("notice-producers.account_set_assistant", "you have no account of your own set for the assistant");
     if (h.condition === "limit") return filled(h.translation) ? h.translation.replace(/\.$/, "")
-      : "the limits of the account that would pay could not be checked";
-    if (h.condition === "not_deployed") return "the assistant is not available in your team's Civicsmith";
-    return filled(h.translation) ? h.translation.replace(/\.$/, "") : "it was held back";
+      : localize("notice-producers.limits_account_pay", "the limits of the account that would pay could not be checked");
+    if (h.condition === "not_deployed") return localize("notice-producers.assistant_available_group", "the assistant is not available in your team's Civicsmith");
+    return filled(h.translation) ? h.translation.replace(/\.$/, "") : localize("notice-producers.held_back", "it was held back");
   }
 
   /* ================================================================== R5 · duty occurrences come due (duties R7–R11)
@@ -679,8 +675,7 @@ export class NoticeProducers {
       basis: { source: "duties.occurrencesOf", duty: d.duty_id, occurrence: occ.key, state: occ.state, why: occ.why ?? null,
                trigger: occ.trigger ?? null, due: occ.due ?? null, derivation: occ.derivation ?? null, as_of: asOf,
                recipients_rule: to.rule,
-               detail: "an occurrence's state is duties' (its R9–R11), derived on read as of this read's instant; a "
-                     + "body is overdue only after the latest candidate due date, possibly overdue between (K1444 (i))." },
+               detail: localize("notice-producers.index.an_occurrences_state_is_duties", "an occurrence's state is duties' (its R9–R11), derived on read as of this read's instant; a body is overdue only after the latest candidate due date, possibly overdue between (K1444 (i)).") },
       age: ageFrom(sinceDay, now, "no_due_day", sinceZone),
       assignee: null, assignee_role: null,
       recipients: to.members,
@@ -749,15 +744,15 @@ export class NoticeProducers {
     if (lv.level !== "High") return { items: [], facts: {} };
     const { start, through, truncated } = this.#episode(me, now);
     const from = instantOf(start), to = instantOf(now);
-    const got = through === 0 ? "nothing got through"
-      : `${through} ${through === 1 ? "sign-in or recovery" : "sign-ins or recoveries"} got through under a paused role`;
+    const got = through === 0 ? localize("notice-producers.nothing_got_through", "nothing got through")
+      : localize("notice-producers.got_through_paused", "{through} {through_2} got through under a paused role", { through: String(through), through_2: String(through === 1 ? "sign-in or recovery" : "sign-ins or recoveries") });
     return { items: [{
       id: `FINDING::security-level-high::${from}`, class: "FINDING", kind: "security-level-high",
       label: NOTICED_LABEL, by: "the machine's",
       case: this.#homesOf([]),
       subject: { kind: "civicsmith", id: null, episode: from },
-      summary: "The security level of your team's Civicsmith is High",
-      detail: `The security level of your team's Civicsmith has been High since ${from}, and in that time ${got}.`,
+      summary: localize("notice-producers.summary.security_level_group", "The security level of your team's Civicsmith is High"),
+      detail: localize("notice-producers.index.the_security_level_of_your", "The security level of your team's Civicsmith has been High since {from}, and in that time {got}.", { from: String(from), got: String(got) }),
       screen: { op: "securitymap", from, to },
       basis: { source: "credentials.securityLevel", level: lv.level, level_at: lv.levelAt ?? null, episode: { from, to },
                through, threshold: { ...SECURITY_THRESHOLD },
@@ -874,9 +869,7 @@ export class NoticeProducers {
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "following.policyChanges", standard: c.standard, watch: c.watch, address: c.address ?? null,
                  before: c.before, after: c.after, amendment_held: false, recipients_rule: to.rule, zone,
-                 detail: "a difference between two captures of a policy's published copy (following R21), never a "
-                       + "finding of the record and never what the change means; it leaves when an amendment is held "
-                       + "for it or its recipient disposes of it." },
+                 detail: localize("notice-producers.index.a_difference_between_two_captures", "a difference between two captures of a policy's published copy (following R21), never a finding of the record and never what the change means; it leaves when an amendment is held for it or its recipient disposes of it.") },
         age: ageFrom(c.after.at, now, "no_capture_instant"),
         assignee: null, assignee_role: null,
         recipients: to.members,
@@ -939,9 +932,7 @@ export class NoticeProducers {
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "file-safety.scanFindings", capture: f.captureSha, note: f.note_id, tool: f.tool ?? null,
                  engine: f.engine ?? null, at: f.at ?? null, findings: explained, home, zone,
-                 detail: "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not "
-                       + "open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a "
-                       + "hold the built-in scanner alone placed (its R18) open it again." },
+                 detail: localize("notice-producers.index.a_scanners_found_note_file", "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a hold the built-in scanner alone placed (its R18) open it again.") },
         age: ageFrom(f.at, now, "no_scan_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -988,14 +979,13 @@ export class NoticeProducers {
       const summaryKey = "queue.security-tool-off.summary", detailKey = "queue.security-tool-off.detail";
       items.push({
         id: `FINDING::security-tool-off::${e.tool_id}::${e.at}`, class: "FINDING", kind: "security-tool-off",
-        by: "the team's Civicsmith",
+        by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
         case: this.#homesOf([]),
         subject: { kind: "civicsmith", id: null, tool: e.tool_id, provider: tool ? tool.provider_id ?? null : null },
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "file-safety.securityToolEvents", tool: e.tool_id, event: e.event, at: e.at,
                  off_reason: tool ? tool.off_reason ?? null : null, state: tool ? tool.state ?? null : null, zone,
-                 detail: "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again "
-                       + "only once an administrator's test passes (its R29)." },
+                 detail: localize("notice-producers.index.a_tool_answering_private_mode", "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again only once an administrator's test passes (its R29).") },
         age: ageFrom(e.at, now, "no_event_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -1069,14 +1059,13 @@ export class NoticeProducers {
       const text = wordsOf(word, fills);
       return {
         id: keyed("FINDING", "ai-limit-reached", e.key), class: "FINDING", kind: "ai-limit-reached",
-        label: NOTICED_LABEL, by: "the team's Civicsmith",
+        label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
         case: o.project ? this.#homesAt([o.project], viewer) : this.#homesOf([]),
         subject: { kind: "ai_account", id: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period, period_start: e.period_start ?? null },
         summary: text, detail: text, word, fills,
         basis: { source: "ai-use.limitsReached", key: e.key, owner: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period,
                  period_start: e.period_start ?? null, reached_at: e.reached_at ?? null, zone,
-                 detail: "a limit first reached in its current period is ai-use's (its R5), answered to that account's "
-                       + "owners; it is told once a period, and names no member." },
+                 detail: localize("notice-producers.index.a_limit_first_reached_in", "a limit first reached in its current period is ai-use's (its R5), answered to that account's owners; it is told once a period, and names no member.") },
         age: ageFrom(e.reached_at, now, "no_reached_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -1096,13 +1085,12 @@ export class NoticeProducers {
       const text = wordsOf("ai.queue.suspended", fills);
       return {
         id: keyed("FINDING", "project-account-suspended", e.key), class: "FINDING", kind: "project-account-suspended",
-        label: NOTICED_LABEL, by: "the team's Civicsmith",
+        label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
         case: this.#homesAt([e.project], viewer),
         subject: { kind: "project", id: e.project, since: e.since ?? null },
         summary: text, detail: text, word: "ai.queue.suspended", fills,
         basis: { source: "ai-accounts.projectAccountsSuspended", key: e.key, project: e.project, since: e.since ?? null,
-                 detail: "a project's sign-in account serves only while the project has one member (ai-accounts R13); "
-                       + "answered to the project's owners, naming no member." },
+                 detail: localize("notice-producers.index.a_projects_sign_in_account", "a project's sign-in account serves only while the project has one member (ai-accounts R13); answered to the project's owners, naming no member.") },
         age: ageFrom(e.since, now, "no_suspension_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -1171,8 +1159,7 @@ export class NoticeProducers {
         basis: { source: "question-explorer.findsFor", key: f.key, find: f.find ?? null, question: f.question,
                  bearing: f.bearing ?? null, how: f.how ?? null, false_alarm_rate: f.false_alarm_rate ?? null,
                  gold_set: f.gold_set ?? null, ...(owned ? { enabled_by: f.enabled_by } : {}),
-                 detail: "a find is the system's work (question-explorer R5), offered once to each of the question's "
-                       + "recipients who may see it; it is not evidence until a member takes it in." },
+                 detail: localize("notice-producers.index.a_find_is_the_systems", "a find is the system's work (question-explorer R5), offered once to each of the question's recipients who may see it; it is not evidence until a member takes it in.") },
         options: [f.question],
       });
     });
@@ -1193,8 +1180,7 @@ export class NoticeProducers {
         subject: { kind: "step", id: e.step, look: e.look ?? null, observation: e.observation ?? null, questions: qs },
         basis: { source: "steps.laterFound", key: e.key, step: e.step, look: e.look ?? null, observation: e.observation ?? null,
                  looked_at: e.looked_at ?? null, at: e.at ?? null,
-                 detail: "a later arrival is steps' (its R23): told once to each recipient of a referring question who may "
-                       + "see the step and what arrived, and to the member who did the step; no outcome moves by itself." },
+                 detail: localize("notice-producers.index.a_later_arrival_is_steps", "a later arrival is steps' (its R23): told once to each recipient of a referring question who may see the step and what arrived, and to the member who did the step; no outcome moves by itself.") },
       });
     });
     return { items, facts: { truncated: c.truncated } };
@@ -1212,8 +1198,7 @@ export class NoticeProducers {
         fills: { step: filled(e.work) ? e.work : this.#workOf(e.step, viewer), date: dayInSentence(dayOf(e.date), today) },
         subject: { kind: "step", id: e.step, work: e.work ?? null, date: e.date ?? null },
         basis: { source: "steps.stepsDue", key: e.key, step: e.step, kind: e.kind, date: e.date ?? null,
-                 detail: "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or "
-                       + "asked for the reminder, and to nobody else." },
+                 detail: localize("notice-producers.index.a_steps_date_and_a", "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or asked for the reminder, and to nobody else.") },
       });
     });
     /* R19 (T46; steps R12): `stepsDue` read its 1,000 dated steps or 1,000 reminders: a bound reached is never silent */
@@ -1233,8 +1218,7 @@ export class NoticeProducers {
                  projects: projects.map((p) => p.name ?? p.id).join(", ") },
         subject: { kind: "step", id: e.step, totals, projects: projects.map((p) => ({ id: p.id, name: p.name ?? null })) },
         basis: { source: "steps.costShares", key: e.key, step: e.step, totals, projects: projects.map((p) => p.id),
-                 detail: "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never "
-                       + "when any of them is hidden; told once per step, totals and project set." },
+                 detail: localize("notice-producers.index.a_shared_cost_is_steps", "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never when any of them is hidden; told once per step, totals and project set.") },
       });
     });
     return { items, facts: { truncated: c.truncated } };
@@ -1250,8 +1234,7 @@ export class NoticeProducers {
       fills: { step: this.#workOf(m.step, viewer), member: m.writer ?? null, text: m.text ?? "" },
       subject: { kind: "step", id: m.step, message: m.message },
       basis: { source: "steps.costMessages", key: String(m.message), step: m.step, message: m.message,
-               detail: "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with "
-                     + "its writer's handle, naming no project unless its writer did." },
+               detail: localize("notice-producers.index.a_cost_message_is_steps", "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with its writer's handle, naming no project unless its writer did.") },
     }));
     return { items, facts: { truncated: c.truncated } };
   }
@@ -1269,8 +1252,7 @@ export class NoticeProducers {
         subject: { kind: "milestone", id: e.milestone ?? null, project: e.project ?? null, name: e.name ?? null, date: e.date ?? null },
         basis: { source: "investigation.milestonesOverdue", key: e.key, kind: e.kind, milestone: e.milestone ?? null,
                  project: e.project ?? null, date: e.date ?? null, state: e.state ?? null,
-                 detail: "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder "
-                       + "to the member who asked, on its day, and to nobody else." },
+                 detail: localize("notice-producers.index.a_milestone_overdue_is_investigations", "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder to the member who asked, on its day, and to nobody else.") },
       });
     });
     return { items, facts: { truncated: c.truncated, ...(r.undetermined === true ? { undetermined: r.why ?? true } : {}) } };
@@ -1291,8 +1273,7 @@ export class NoticeProducers {
                    condition: e.condition ?? null, gaps, doors: Array.isArray(e.doors) ? [...e.doors] : [] },
         basis: { source: "investigation.quietPrompts", key: e.key, project: e.project, spell: e.spell ?? null,
                  progress: e.progress ?? null,
-                 detail: "a quiet spell is investigation's (its R18): told once per spell to the project's joined "
-                       + "participants; no member act declares the objective met." },
+                 detail: localize("notice-producers.index.a_quiet_spell_is_investigations", "a quiet spell is investigation's (its R18): told once per spell to the project's joined participants; no member act declares the objective met.") },
       });
     });
     return { items, facts: { truncated: c.truncated } };
@@ -1307,8 +1288,7 @@ export class NoticeProducers {
       fills: { case: this.#titleOf(e.case, viewer) ?? e.case },
       subject: { kind: "case", id: e.case, edition: e.edition ?? null, comments: Array.isArray(e.comments) ? [...e.comments] : [] },
       basis: { source: "review.reviewCommentsLeftOut", key: e.key, case: e.case, edition: e.edition ?? null, left_out: e.left_out ?? null,
-               detail: "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may "
-                     + "file a response in the case's docket." },
+               detail: localize("notice-producers.index.a_reviewers_comments_left_out", "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may file a response in the case's docket.") },
     }));
     return { items, facts: { truncated: c.truncated || r.truncated === true } };
   }
@@ -1385,8 +1365,7 @@ export class NoticeProducers {
         subject: { kind: w.kind ?? null, id: w.id, title: w.title ?? null, last_changed: w.last_changed },
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "retrieval.browse", item: w.id, last_changed: w.last_changed, marked_at: mark.at, zone,
-                 detail: "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch "
-                       + "mark was set (following R35); told once per change, to her alone, and it says nothing of what changed." },
+                 detail: localize("notice-producers.index.a_watched_items_last_change", "a watched item's last change is retrieval's (its R85), later than the instant this member's own watch mark was set (following R35); told once per change, to her alone, and it says nothing of what changed.") },
         age: ageFrom(w.last_changed, now, "no_change_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -1435,7 +1414,7 @@ export class NoticeProducers {
   /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; its own first ten characters when it
    *  is no instant civil-time reads, else "an earlier date". */
   static #localDate(at, zone) {
-    return NoticeProducers.#localDay(at, zone) ?? dayOf(at) ?? "an earlier date";
+    return NoticeProducers.#localDay(at, zone) ?? dayOf(at) ?? localize("notice-producers.earlier_date", "an earlier date");
   }
 }
 

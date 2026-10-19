@@ -81,8 +81,9 @@
 import { openPdf, pageShowsText, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { decodeBaselineJpeg, DctRefusal } from "./dctdecode.mjs";
 import { decodeJbig2, Jbig2Refusal, JBIG2_REFUSES } from "./jbig2decode.mjs";
-import { decodeJpx, JpxRefusal, JPX_REFUSES } from "./jpxdecode.mjs";
+import { decodeJpx, JpxRefusal, JPX_REFUSES, MEMORY_FEATURE } from "./jpxdecode.mjs";
 import { ccittDecode } from "./ccittdecode.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const LATIN1 = new TextDecoder("latin1");
 
@@ -92,20 +93,20 @@ const LATIN1 = new TextDecoder("latin1");
 export const REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
   NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
-  ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
-  NO_SUCH_PAGE: "the page index is outside the document",
-  PAGE_UNREADABLE: "the page object could not be read",
-  PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
-  NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page paints no image",
-  MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
-  IMAGE_UNREADABLE: "the image XObject's stream could not be read",
-  UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
-  UNSUPPORTED_SAMPLES: "the image's sample layout has no decoder here",
-  TRUNCATED_IMAGE_DATA: "the decoded image is short of its declared height",
-  DECODE_FAILED: "the decoder could not read the image data",
+  ENCRYPTED: localize("pdf-pixels.pagepixels.the_document_is_encrypted_streams", "the document is encrypted; streams are ciphertext to this reader"),
+  NO_SUCH_PAGE: localize("pdf-pixels.pagepixels.the_page_index_is_outside", "the page index is outside the document"),
+  PAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_page_object_could_not", "the page object could not be read"),
+  PAGE_HAS_TEXT_LAYER: localize("pdf-pixels.pagepixels.the_page_carries_a_text", "the page carries a text layer; it does not need pixels"),
+  NOT_IMAGE_ONLY: localize("pdf-pixels.pagepixels.the_page_carries_marks_that", "the page carries marks that are not an embedded image"),
+  NO_IMAGE_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_paints_no_image", "the page paints no image"),
+  MULTIPLE_IMAGES_ON_PAGE: localize("pdf-pixels.pagepixels.the_page_composes_several_images", "the page composes several images; compositing is not built"),
+  IMAGE_UNREADABLE: localize("pdf-pixels.pagepixels.the_image_xobject_s_stream", "the image XObject's stream could not be read"),
+  UNSUPPORTED_FILTER: localize("pdf-pixels.pagepixels.the_image_s_filter_chain", "the image's filter chain has no decoder here"),
+  UNSUPPORTED_SAMPLES: localize("pdf-pixels.pagepixels.the_image_s_sample_layout", "the image's sample layout has no decoder here"),
+  TRUNCATED_IMAGE_DATA: localize("pdf-pixels.pagepixels.the_decoded_image_is_short", "the decoded image is short of its declared height"),
+  DECODE_FAILED: localize("pdf-pixels.pagepixels.the_decoder_could_not_read", "the decoder could not read the image data"),
   UNSUPPORTED_JPEG_PROCESS: "the JPEG is not baseline (progressive, arithmetic-coded, lossless, hierarchical or not 8-bit); only baseline is decoded here",
-  IMAGE_TOO_LARGE: "decoding the image would need more memory than a decode may use here",
+  IMAGE_TOO_LARGE: localize("pdf-pixels.pagepixels.decoding_the_image_would_need", "decoding the image would need more memory than a decode may use here"),
 };
 
 /* R25: the REFUSALS reason for each feature a codec refuses as UNSUPPORTED —
@@ -115,7 +116,7 @@ export const REFUSALS = {
 export const featureReasons = (declared, named) =>
   Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 const JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
-const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { [MEMORY_FEATURE]: "IMAGE_TOO_LARGE" });
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
@@ -377,7 +378,7 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
 
   const im = a._images[0];
   if (!im.obj) {
-    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+    return refuse("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: localize("pdf-pixels.pagepixels.an_inline_image_reading_inline", "an inline image; reading inline images is not built") });
   }
   const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
   if (!out.ok) return { ...out, page: pageIndex };
@@ -528,9 +529,9 @@ export async function decodeImage(doc, im, opts) {
     if (p && p.JBIG2Globals !== undefined) {
       const g = doc.resolve(p.JBIG2Globals);
       globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
-      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+      if (!globals) return refuse("IMAGE_UNREADABLE", { filters, note: localize("pdf-pixels.pagepixels.the_jbig2globals_stream_could_not", "the /JBIG2Globals stream could not be read") });
     }
-    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: localize("pdf-pixels.pagepixels.a_jbig2_image_is_1", "a JBIG2 image is 1 bit per sample") });
     let out;
     try {
       out = decodeJbig2(data, globals);
@@ -571,7 +572,7 @@ export async function decodeImage(doc, im, opts) {
     if (doc.resolve(dict.Decode)) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
     if (im.isMask) return refuse("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
     const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
-    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    if (pdfComps === false) return refuse("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: localize("pdf-pixels.pagepixels.a_colour_space_other_than", "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased") });
     let out;
     try {
       out = decodeJpx(data);
@@ -582,10 +583,10 @@ export async function decodeImage(doc, im, opts) {
       return refuse(reason, { filter: last, filters, jpx: e.code, ...e.detail });
     }
     if (pdfComps !== null && pdfComps !== out.comps) {
-      return refuse("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+      return refuse("UNSUPPORTED_SAMPLES", { filters, note: localize("pdf-pixels.pagepixels.the_colour_space_has_pdfcomps", "the colour space has {pdfComps} components; the image has {comps}", { pdfComps: String(pdfComps), comps: String(out.comps) }) });
     }
     if (out.width !== im.width || out.height !== im.height) {
-      return refuse("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+      return refuse("DECODE_FAILED", { filters, note: localize("pdf-pixels.pagepixels.the_jpeg_2000_image_is", "the JPEG 2000 image is {width}x{height}; the PDF declares {width_2}x{height_2}", { width: String(out.width), height: String(out.height), width_2: String(im.width), height_2: String(im.height) }) });
     }
     const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
     out.samples = null;

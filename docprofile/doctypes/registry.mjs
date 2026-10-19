@@ -20,6 +20,7 @@
  * noisy and honest; with no fallback registered at all, NO_TYPE below says so. */
 import { makeRegistry } from "../../site-profiles/index.mjs";
 import { CONTRACT } from "./index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* THE SEAM (T33-12; K1513; T34-8). `registerDoctype` (exported further down) is how a
    composer registers types: a type whose key is already held REPLACES it in its own
@@ -40,7 +41,7 @@ const rebuild = () => { types = makeRegistry(); for (const m of members) types.r
    `readText` states that it has no reader and `assess` claims nothing about what changed
    (R13). R4's "always returns a type" holds, and R35's no says which no. */
 export const NO_TYPE = Object.freeze({
-  key: "unregistered", label: "no content type is registered", version: 0, fallback: true,
+  key: "unregistered", label: localize("docprofile.registry.no_content_type_is_registered", "no content type is registered"), version: 0, fallback: true,
   contract: CONTRACT.SUBSTANCE,
 });
 
@@ -52,7 +53,7 @@ export function registerDoctype(type) {
   if (!type || typeof type !== "object" || typeof type.key !== "string" || !type.key)
     return { ok: false, why: "a content type is registered by its key, and this one carries no key" };
   if (typeof type.detect !== "function")
-    return { ok: false, why: `the ${type.key} content type has no detect function, so it could never recognise a document` };
+    return { ok: false, why: localize("docprofile.registry.the_key_content_type_has", "the {key} content type has no detect function, so it could never recognise a document", { key: String(type.key) }) };
   const i = members.findIndex((m) => m.key === type.key);
   if (i >= 0) members[i] = type; else members.push(type);
   rebuild();
@@ -90,11 +91,9 @@ export function doctypeFor(ctx) {
                 also: alsoFor(ctx, r.member.key) };
   /* A "no" says which no (R35): nothing recognised, and so the registered fallback's reading. */
   if (r.member === NO_TYPE)
-    out.why = "no content type is registered to recognise documents, so this one is not read as any type: "
-            + "nothing is read from it and what changes in it is not described";
+    out.why = localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described");
   else if (!r.matched)
-    out.why = "no registered content type recognised this document, so it is read as a document of no "
-            + "recognised type: any substantive difference is reported and not described";
+    out.why = localize("docprofile.registry.no_registered_content_type_recognised", "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described");
   return out;
 }
 

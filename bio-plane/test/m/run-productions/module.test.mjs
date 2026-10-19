@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as RP from "../../../src/run-productions/index.mjs";
 import { world, Q, Q2, DOC, DOC2, RUN, ALICE, BOB, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AK = "class:ai/k1";
 const CHAIN = [{ step: "pixels", extent: { kind: "pages", pages: [0, 1, 2] } },
@@ -230,7 +231,7 @@ test("R3 through the extracted providers: strength's candidatePair and candidate
   const leg = (target, over = {}) => ({ target, role: "supports", ground: "paper", ...over });
   const retired = w.suggest({ name: "r", legs: [leg(DOC2)], grounds: PART });
   assert.equal(retired.code, "SUGGEST_LEG_UNREACHABLE");
-  assert.equal(retired.legs[0].why, "the record has RETIRED it");
+  assert.equal(retired.legs[0].why, word("run-productions.why.record_retired"));
   const ok = w.suggest({ name: "g", legs: [leg(DOC, { grade: "B", grade_axis: "capture", grade_source: "capture" })], grounds: PART });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
   assert.deepEqual([ok.pair.capture.state, ok.pair.capture.grade, ok.pair.connection.state, ok.pair.testimony.state],

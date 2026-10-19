@@ -9,7 +9,7 @@ import { AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS, SIGN_IN_CHECKS, CREDENTIALS_CHECK
          KEYED_SERVICE_CHECKS, AI_CREDENTIAL_EXPIRY_DAYS, CREDENTIALS_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const D = 24 * 3600e3;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -183,33 +183,31 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   const has = (text, s) => assert.ok(String(text).includes(s), `${s}\n  in: ${text}`);
   /* checks.mjs :21, :27 (C-63.1, C-63.2) */
   const cal = w.c.signerAdd({ keyB64: "AAAAk", memberId: "cal", by: "admin" });
-  has(cal.translation, "until then your team's Civicsmith would refuse anything signed with it");
-  has(w.c.signerAdd({ keyB64: "AAAAk", memberId: "dee", by: "admin" }).translation,
-    "so your team's Civicsmith would refuse anything signed with their key");
+  has(cal.translation, word("refusal.SIGNER_MEMBER_NOT_ENROLLED"));
+  has(w.c.signerAdd({ keyB64: "AAAAk", memberId: "dee", by: "admin" }).translation, word("refusal.SIGNER_MEMBER_NOT_ACTIVE"));
   /* index.mjs :342 (the bar's detail) */
-  has(cal.detail, "one your team's Civicsmith would refuse. Nothing was written.");
+  has(cal.detail, localize("credentials.index.memberid_has_not_enrolled_status", "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.", { memberId: cal.memberId, status: cal.member_status }));
   /* :39, :53, :66 (C-29.1, C-29.3, C-29.5) and index :588, :631 */
-  has(w.c.aiCredentialMint({ who: "class:ai" }).translation, "Only a named person signed in to your team's Civicsmith can create an agent credential.");
+  has(w.c.aiCredentialMint({ who: "class:ai" }).translation, localize("credentials.checks.only_a_named_person_signed", "Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it — not even about itself."));
   w.c.aiCredentialMint({ tokenId: "t", secretSha: SHA("a"), principalKind: "member", who: "ann" });
   const taken = w.c.aiCredentialMint({ tokenId: "t", secretSha: SHA("b"), principalKind: "member", who: "ann" });
-  has(taken.translation, "That name already belongs to an agent credential in your team's Civicsmith.");
-  has(taken.detail, "'t' already names a credential in your team's Civicsmith.");
+  has(taken.translation, word("refusal.AI_CREDENTIAL_IDENTITY_TAKEN"));
+  has(taken.detail, localize("credentials.index.id_already_names_a_credential", "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.", { id: "t" }));
   const unknown = w.c.aiCredentialRevoke({ who: "ann", tokenId: "nope" });
-  has(unknown.translation, "There is no agent credential by that name in your team's Civicsmith, so nothing was");
-  has(unknown.detail, "no credential in your team's Civicsmith is called 'nope'.");
+  has(unknown.translation, word("refusal.AI_CREDENTIAL_UNKNOWN"));
+  has(unknown.detail, localize("credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", { v1: "nope" }));
   /* :153, :154 (C-29.22) and index :794 */
   const bare = await world({ sealSecret: null }).group("ann");
   const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
   /* (T50; plan rule 6) ai-accounts' rows are read by key, never quoted: the row's translation is the word itself */
   assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
-  has(unsealed.detail, "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
+  has(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
-  has(refused.detail, "Either no active credential is held under that role");
-  has(refused.detail, "which roles hold a credential.");
+  assert.equal(refused.detail, localize("credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."));
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
   /* index :880, :1060, :1243: a sealed key that no longer opens */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
@@ -220,12 +218,12 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by: "admin" });
   const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
   has((await other.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
-    "the reference does not open under the seal secret of your team's Civicsmith, which has changed");
+    localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
   w.c.groupKeyNoticeSeen({ member: "second", by: "second" });
   has((await other.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
-    "the team's key does not open under the seal secret of your team's Civicsmith, which has changed");
+    localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
   has((await other.keyedServiceFor({ service: "courtlistener" })).detail,
-    "the key does not open under the seal secret of your team's Civicsmith, which has changed");
+    localize("ai-accounts.index.the_key_does_not_open", "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
 });
 
 test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {

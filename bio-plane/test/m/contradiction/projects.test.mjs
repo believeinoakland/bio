@@ -3,6 +3,7 @@
    projects, each hidden from the other, drawing on the two sides of one duty. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { refusedWith } from "./seed.mjs";
 import { CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_NAMED_SENTENCE, NOTICE_RESPONSES_MAX, EMAIL_MAX, PAGE_MAX } from "../../../src/contradiction/index.mjs";
@@ -76,7 +77,7 @@ test("R50, R55: a notice carries the seen side verbatim and the fixed sentence, 
   assert.deepEqual([n.side.content_id, n.side.capture_sha, n.side.ref, n.side.doctype, n.side.date, n.side.source.bundle],
                    [HA, "capHA", "p. 3 of alpha's minutes", "minutes", "2026-01-01", PA]);
   assert.equal(n.says, NOTICE_SENTENCE);
-  assert.equal(NOTICE_SENTENCE, "Something this project rests on is in conflict with a record you cannot see. Neither that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, the projects are named to each other's members, and you can respond.");
+  assert.equal(NOTICE_SENTENCE, word("contradiction.notice_sentence"));
   assert.deepEqual([n.opted_in, n.asked_by_another, n.revealed, n.parties, n.responses], [null, false, false, undefined, []]);
   const bytes = JSON.stringify(notices(w, PA, M2));
   for (const leak of [HB, "capHB", PB, "beta", IY, "report", "K4", "disagree", "why", "explanation"]) assert.ok(!bytes.includes(leak), leak);
@@ -89,7 +90,7 @@ test("R50, R55: a notice carries the seen side verbatim and the fixed sentence, 
 });
 
 test("R50, R55 (T41, D64): a non-hidden party the viewer may see by name is named from the start, {id, name}, with the fixed sentence; its side, members and contents stay withheld; a hidden party is never named or counted", () => {
-  assert.equal(NOTICE_NAMED_SENTENCE, "Your project's conclusion conflicts with that project's.");
+  assert.equal(NOTICE_NAMED_SENTENCE, word("contradiction.notice_named_sentence"));
   const named = (w) => notices(w, PA, M2).notices[0];
   /* beta discoverable: named to alpha's member from the start, before any opt-in */
   const w = twoHidden({ discoverable: [PB] });
@@ -254,7 +255,7 @@ test("R53: respond — R51's first seven, not before opt-in, a text, its cap, a 
   w.c.optIn({ candidate: w.id, project: PA, viewer: M2, author: M2 });
   for (const text of [null, "", "   "]) refused(say({ text }), "RESPONSE_NO_TEXT");
   refused(say({ text: "x".repeat(2001) }), "WORDS_MALFORMED");
-  for (const [disclose, part] of [["cover", "the disclosure itself"], [{ name: "x" }, "name"], [{ cover: 3 }, "cover"],
+  for (const [disclose, part] of [["cover", word("contradiction.text.disclosure_itself")], [{ name: "x" }, "name"], [{ cover: 3 }, "cover"],
                                   [{ email: "a@b" }, "email"], [{ email: "a@b.org, c@d.org" }, "email"],
                                   [{ email: `${"a".repeat(EMAIL_MAX)}@b.org` }, "email"]]) {
     const r = say({ disclose });
@@ -264,7 +265,7 @@ test("R53: respond — R51's first seven, not before opt-in, a text, its cap, a 
   refused(say({ disclose: { cover: "Cover m3" } }), "DISCLOSURE_NOT_YOURS");
   assert.equal(w.count("contradiction_responses"), 0);
   const mine = say({ disclose: { cover: true, email: "m2@example.org" } });
-  assert.deepEqual([mine.ok, mine.shared, mine.email_says], [true, { cover: true, email: true }, "stated, not verified"]);
+  assert.deepEqual([mine.ok, mine.shared, mine.email_says], [true, { cover: true, email: true }, word("contradiction.email_says.stated_verified")]);
   assert.deepEqual(w.one(`SELECT cover, email, author FROM contradiction_responses`), { cover: "Cover m2", email: "m2@example.org", author: M2 });
   /* an email another member already disclosed is not theirs to share */
   w.c.optIn({ candidate: w.id, project: PB, viewer: M3, author: M3 });
@@ -294,7 +295,7 @@ test("R54: the relay — nothing before the reveal, then every response of the o
   w.c.respond({ candidate: w.id, project: PB, text: "beta replies", disclose: { email: "beta@example.org" }, viewer: M3, author: M3 });
   assert.deepEqual(notices(w, PB, M3).notices[0].responses, []);
   const toA = notices(w, PA, M2).notices[0].responses;
-  assert.deepEqual(toA.map((r) => [r.text, r.email, r.email_says]), [["beta replies", "beta@example.org", "stated, not verified"]]);
+  assert.deepEqual(toA.map((r) => [r.text, r.email, r.email_says]), [["beta replies", "beta@example.org", word("contradiction.email_says.stated_verified")]]);
   for (let i = 0; i < 21; i++) w.c.respond({ candidate: w.id, project: PB, text: `more ${i}`, viewer: M3, author: M3 });
   const many = notices(w, PA, M2).notices[0];
   assert.equal(NOTICE_RESPONSES_MAX, 20);

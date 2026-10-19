@@ -62,6 +62,8 @@
  *  said an investigation fetch *"introduces or reuses deliberately"*; `acquire`
  *  is the existing one and is admitted so a run re-fetching a source a member
  *  already named does not have to misdescribe that either. */
+import { word } from '../setup-words/index.mjs';
+
 export const CAPTURE_PURPOSES = Object.freeze(['investigate', 'acquire']);
 
 /** The two LEGIBLE user-agent forms, and there is no third. `civicsmith` is the
@@ -100,23 +102,17 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_NO_RUN: {
     check: 'C-28.1',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This request did not name the piece of work asking for it, or named one that is not '
-      + 'running here. Every fetch your team\'s Civicsmith makes on its own is traceable to a session somebody '
-      + 'opened, because that opening is what authorises it.',
+    translation: word('refusal.CAPTURE_REQUEST_NO_RUN'),
   },
   CAPTURE_REQUEST_NOT_PUBLIC: {
     check: 'C-28.2',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'What was asked for is not a public web address. What an investigation session may '
-      + 'reach is what anybody could reach by typing it into a browser, so an address that is not '
-      + 'public on its face is not asked for at all.',
+    translation: word('refusal.CAPTURE_REQUEST_NOT_PUBLIC'),
   },
   CAPTURE_REQUEST_NOT_AN_INQUIRY: {
     check: 'C-28.3',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'A capture is requested under a question, and the thing named here is not one. '
-      + 'The question is what the request is accountable to, and a fetch belonging to nothing is a '
-      + 'fetch nobody can later account for.',
+    translation: word('refusal.CAPTURE_REQUEST_NOT_AN_INQUIRY'),
   },
   /* THE SPINE, AT THE DOOR. Section 4: *"capturing a document (with provenance
      preserved) is something the daemon does (sometimes at the suggestion of an
@@ -128,10 +124,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
     check: 'C-28.4',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'A request asks for a document; it never brings one. The fetch is performed by your '
-      + 'team\'s Civicsmith itself so that where the bytes came from is something the record established rather '
-      + 'than something it was told, and a provenance chain anybody could hand us is one anybody could '
-      + 'invent.',
+    translation: word('refusal.CAPTURE_REQUEST_CARRIES_A_CAPTURE'),
   },
   /* WHAT IS NOT HERE, AND WHY IT WAS REMOVED RATHER THAN KEPT FOR SYMMETRY.
      The door also refused an incomplete attribution at one point in this item's
@@ -150,9 +143,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_CONDUCT_UA_ILLEGIBLE: {
     check: 'C-28.6',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'Your team\'s Civicsmith will not fetch without saying who is asking and how to reach whoever '
-      + 'is running it. Being refused honestly is a fact that can be recorded; being admitted by '
-      + 'disguise is a claim that could not be defended later.',
+    translation: word('refusal.CAPTURE_CONDUCT_UA_ILLEGIBLE'),
   },
   /* CONDUCT 1b: the member-browser form, which is DELEGATION and not disguise —
      but only if the member's own agent was actually RECORDED. Inventing one
@@ -161,31 +152,24 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_CONDUCT_UA_UNRECORDED: {
     check: 'C-28.7',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'This request asked to fetch as the member\'s own browser, and the record does not '
-      + 'hold what that browser is. Presenting an agent nobody actually used would be inventing a '
-      + 'client rather than speaking as one, so it asks rather than guessing.',
+    translation: word('refusal.CAPTURE_CONDUCT_UA_UNRECORDED'),
   },
   /* CONDUCT 2: the purpose token. */
   CAPTURE_CONDUCT_NO_PURPOSE: {
     check: 'C-28.8',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'Every request your team\'s Civicsmith makes says what it is for, so a source can tell a first '
-      + 'capture from a routine re-check and throttle one without blocking the other. This one names '
-      + 'a purpose that is not one of the things it could truthfully be doing.',
+    translation: word('refusal.CAPTURE_CONDUCT_NO_PURPOSE'),
   },
   /* CONDUCT 3: rate. */
   CAPTURE_CONDUCT_HOST_HELD: {
     check: 'C-28.9',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'The site this would fetch from has asked us to slow down, or has refused us recently, '
-      + 'and we are waiting the interval it named. The request is still queued and will be made when '
-      + 'the wait is over — nothing has been lost and nothing needs re-asking.',
+    translation: word('refusal.CAPTURE_CONDUCT_HOST_HELD'),
   },
   CAPTURE_CONDUCT_TICK_SPENT: {
     check: 'C-28.10',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'This round of fetching has already been to that site once. Requests are spread out '
-      + 'rather than sent in a burst, so this one waits for the next round. It is still queued.',
+    translation: word('refusal.CAPTURE_CONDUCT_TICK_SPENT'),
   },
 
   /* ---- THE ATTRIBUTION, composed at the drain, and its own two refusals. ---- */
@@ -199,9 +183,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: {
     check: 'C-28.11',
     where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
-    translation: 'This capture could not be recorded as belonging to anybody in particular, so it was '
-      + 'not made. An act that names one party where two acted reads as though a person did something '
-      + 'a machine did, or the other way round, and that is worse than a missing document.',
+    translation: word('refusal.CAPTURE_ATTRIBUTION_ONE_PRINCIPAL'),
   },
   /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION AND HAS NO CODE, which is
      the second thing driving this family corrected. REC-2's `token:<class>`
@@ -233,17 +215,12 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: {
     check: 'C-28.14',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This says the document bears on another question, but what it names is not a '
-      + 'question. The whole point of noting a lead is that somebody working that question will be '
-      + 'told about it, and there is nobody to tell if it does not name one.',
+    translation: word('refusal.CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY'),
   },
   CAPTURE_REQUEST_LEAD_IS_THE_TARGET: {
     check: 'C-28.15',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This names the same question twice — the one being worked, and the one the '
-      + 'document supposedly bears on. Evidence for the question you are already working is just '
-      + 'evidence for it, and flagging it as belonging somewhere else would put a note in front of '
-      + 'you saying a document you just asked for is about something other than what you asked.',
+    translation: word('refusal.CAPTURE_REQUEST_LEAD_IS_THE_TARGET'),
   },
   /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
      ONE LAYER UP. op=acquire refuses a `render` that is present and not `true`
@@ -263,10 +240,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_RENDER_MALFORMED: {
     check: 'C-28.16',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This asked for the page as a visitor would see it in a form your team\'s Civicsmith does not '
-      + 'recognise. It reads render: true, or nothing at all for the document as the site serves it, so a '
-      + 'request for the rendered page is never quietly turned into a request for the page\'s empty frame. '
-      + 'Nothing was queued.',
+    translation: word('refusal.CAPTURE_REQUEST_RENDER_MALFORMED'),
   },
   /* D-584 (capture-requests R19; T6, legacy-checks) — THE DRAIN'S OWN HOLD WHEN A FETCH DOES NOT LAND.
      Every other failure of a fire (not captured, not refused by the source, not a render op=acquire could
@@ -280,10 +254,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_FETCH_FAILED: {
     check: 'C-28.17',
     where: 'src/capture-requests/index.mjs drain > is-capture-fetch-failed',
-    translation: 'Your team\'s Civicsmith tried to fetch the document and the fetch did not land, so nothing was '
-      + 'captured. That says nothing about the document or the site beyond this one attempt, and it is '
-      + 'recorded as a look that could not tell. The request is still queued and is tried again on a later '
-      + 'round, until it expires.',
+    translation: word('refusal.CAPTURE_FETCH_FAILED'),
   },
   /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
      (op=capturerequestretry) returns a request to the queue only when it was refused for the SOURCE's reason
@@ -294,9 +265,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_NOT_RETRYABLE: {
     check: 'C-28.18',
     where: 'src/capture-requests/index.mjs captureRequestRetry > is-capture-request-retry',
-    translation: 'This request cannot be asked again. Only a request the source itself turned away, under a '
-      + 'question you can see, goes back into the queue; a request that is still waiting, was captured, has '
-      + 'expired, or was refused for any other reason does not. Nothing was changed.',
+    translation: word('refusal.CAPTURE_REQUEST_NOT_RETRYABLE'),
   },
   /* R45 (T23; Intake Doctrine §4, the AI's "relevant nearby" arm; K1036, K1099) — A RUN'S REQUEST NAMING A SWEEP IS
      FILED UNDER THAT SWEEP ONLY WHEN THE SWEEP'S SCOPE ADMITS IT. A sweep names a query members ratified up front, and
@@ -309,9 +278,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_SWEEP_OUT_OF_SCOPE: {
     check: 'C-28.19',
     where: 'src/capture-requests/index.mjs sweepOutOfScope > is-capture-sweep-scope',
-    translation: 'This request asked to be filed under a sweep, and that sweep does not take it: the sweep is not '
-      + 'ratified, is held, or does not reach this address. Nothing was fetched or filed under it. A request filed '
-      + 'under a sweep answers to what members ratified for that sweep, so it is never stretched to fit.',
+    translation: word('refusal.CAPTURE_SWEEP_OUT_OF_SCOPE'),
   },
   /* R46 (T33-51; K1492 (2), (4); K1449: never unattended) — A PERSONAL SITE OR A LOGIN-GATED PLATFORM IS CAPTURED ONLY
      BY A MEMBER'S OWN ACT IN THEIR OWN BROWSER. Bob's ruling (K1492): what law firms, newsrooms and activists do is read
@@ -324,18 +291,14 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   MEMBER_CAPTURE_ONLY: {
     check: 'C-28.20',
     where: 'src/capture-requests/index.mjs memberCaptureOnly > is-capture-member-only',
-    translation: 'This page is a private person\'s own site, or sits on a platform that asks for a login, and such a '
-      + 'page is captured only by a member, in their own browser, as their own act. Your team\'s Civicsmith does not fetch it '
-      + 'unattended or sign in to it, so nothing was fetched; a member who wants it captures it themselves.',
+    translation: word('refusal.MEMBER_CAPTURE_ONLY'),
   },
   /* R46: the run's judgement of the site is one of two words or none; any other value is refused by name rather than
      read as none, so a request meant as "personal" under a misspelling is never fetched by the daemon. */
   CAPTURE_REQUEST_SITE_KIND_UNKNOWN: {
     check: 'C-28.21',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This request described the site it asks for in a way your team\'s Civicsmith does not recognise. It reads '
-      + 'site_kind: "personal" for a private person\'s own site, "platform" for a page on a platform that asks for a '
-      + 'login, or nothing for an ordinary public page. Nothing was queued.',
+    translation: word('refusal.CAPTURE_REQUEST_SITE_KIND_UNKNOWN'),
   },
   /* R46: how a member marks a host a login-gated platform (R41's scope record, kind `platform`), settled by this job:
      a group-wide mark with no secret. Its one refusal: the act is a member's (or the administrator's), never a machine
@@ -343,8 +306,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_PLATFORM_MARK_REFUSED: {
     check: 'C-28.22',
     where: 'src/capture-requests/index.mjs #platformRefused > is-capture-platform-mark',
-    translation: 'This mark could not be made or withdrawn. Marking a site as a platform that asks for a login is a '
-      + 'member\'s own act, and it names one site by its plain host name, such as www.example.org. Nothing was written.',
+    translation: word('refusal.CAPTURE_PLATFORM_MARK_REFUSED'),
   },
   /* R49 (T35; F2 as Bob ruled it, K1880, with BOB's final rule; K1881 for the bound) — AN ADDRESS THE RECORD ALREADY
      HOLDS. The assistant reads any public site while it searches and nothing it reads that way enters the record; what
@@ -355,29 +317,24 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_ADDRESS_TOO_LONG: {
     check: 'C-28.23',
     where: 'src/capture-requests/index.mjs addressRefusal > is-capture-address-held',
-    translation: 'This web address is longer than 2,048 characters, the most a capture request may carry. A longer one is '
-      + 'refused whole, never cut, because a shortened address would name a different page. Nothing was queued or fetched.',
+    translation: word('refusal.CAPTURE_REQUEST_ADDRESS_TOO_LONG'),
   },
   CAPTURE_REQUEST_ADDRESS_NOT_HELD: {
     check: 'C-28.24',
     where: 'src/capture-requests/index.mjs addressRefusal > is-capture-address-held',
-    translation: 'The assistant may read anywhere while it searches, but it asks to capture only an address the record '
-      + 'already holds: one a held document was captured from, or one a held document links to, exactly as written, '
-      + 'its query and anchor included. This address is not one of them, so nothing was queued or fetched.',
+    translation: word('refusal.CAPTURE_REQUEST_ADDRESS_NOT_HELD'),
   },
   /* R50 (T35; K1888 (4)) — THE MEMBER'S CO-ARCHIVE CHOICE, carried from the request to the drain's fetch. Two door
      refusals, each before anything is written, through one region (`coArchiveRefusal`). New at T35, awaiting stamp. */
   CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS: {
     check: 'C-28.25',
     where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
-    translation: 'Whether a capture also asks a public archive to keep a copy is a member\'s choice, or else the team\'s '
-      + 'setting. This request was not made by a member, so it cannot choose. Nothing was queued.',
+    translation: word('refusal.CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS'),
   },
   CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED: {
     check: 'C-28.26',
     where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
-    translation: 'The choice about a public archive copy reads co_archive: true (ask for one), false (ask for none), or '
-      + 'nothing to let the team\'s setting decide. This request sent something else. Nothing was queued.',
+    translation: word('refusal.CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED'),
   },
   /* R51–R53 (T35; N646, POLICIES L2 PO3; K1724, K1740) — A RECORDS REQUEST FOR A POLICY KNOWN ONLY BY CITATION. The
      group's own record of asking the issuer for a policy's text, and of the answer; it fetches nothing and sends
@@ -385,44 +342,37 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   MACHINE_CANNOT_REQUEST_RECORDS: {
     check: 'C-28.27',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'Asking an office for its records, and recording what it answered, is a member\'s own act. This was not '
-      + 'made by a member, so nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_REQUEST_RECORDS'),
   },
   RECORDS_REQUEST_NOT_CITED: {
     check: 'C-28.28',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'A records request is opened for a policy the record knows only because something it holds cites it. '
-      + 'This one is held another way, so nothing was written.',
+    translation: word('refusal.RECORDS_REQUEST_NOT_CITED'),
   },
   RECORDS_ANSWER_NO_CAPTURE: {
     check: 'C-28.29',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'An answer saying the office produced the policy names the captured document it produced, one the '
-      + 'record holds and you can see. None was named, or the one named is not held, so nothing was written.',
+    translation: word('refusal.RECORDS_ANSWER_NO_CAPTURE'),
   },
   RECORDS_ANSWER_NO_GROUND: {
     check: 'C-28.30',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'An answer saying the office withheld the policy records the ground it gave, in at most 1,000 '
-      + 'characters. None was given, so nothing was written.',
+    translation: word('refusal.RECORDS_ANSWER_NO_GROUND'),
   },
   NO_SUCH_RECORDS_REQUEST: {
     check: 'C-28.31',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'No records request you can see answers to that id. One about a policy you may not see is answered '
-      + 'exactly as one that does not exist. Nothing was written.',
+    translation: word('refusal.NO_SUCH_RECORDS_REQUEST'),
   },
   RECORDS_REQUEST_ANSWERED: {
     check: 'C-28.32',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'This records request already holds its answer, and an answer is never replaced. Nothing was written.',
+    translation: word('refusal.RECORDS_REQUEST_ANSWERED'),
   },
   RECORDS_ANSWER_UNKNOWN: {
     check: 'C-28.33',
     where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
-    translation: 'The answer to a records request is one of four: produced (the office produced the text), none_exists '
-      + '(it says no such record exists), withheld (it declined, and why) or no_answer (none came). This was none of '
-      + 'them, so nothing was written.',
+    translation: word('refusal.RECORDS_ANSWER_UNKNOWN'),
   },
   /* R55 (T41-25; N820) — A REQUEST FOR A STEP. A request may name the step it is work for, and only one its run's
      principal sees: an unseen step and one that does not exist answer alike, so the door cannot be used to learn that a
@@ -430,9 +380,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
   CAPTURE_REQUEST_NO_STEP: {
     check: 'C-28.34',
     where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
-    translation: 'This request names a step of work that is not one you can see here. A request made for a step is tied '
-      + 'to it, so the step it names must be one its asker can see; one that does not exist answers the same. Nothing '
-      + 'was queued.',
+    translation: word('refusal.CAPTURE_REQUEST_NO_STEP'),
   },
 });
 
@@ -447,8 +395,6 @@ export const CAPTURE_SOURCE_CHECKS = Object.freeze({
   CAPTURE_SOURCE_REFUSED: {
     check: "C-108.1",
     where: "src/capture-requests/index.mjs drain > is-capture-source-refused",
-    translation: "The site turned this request away: it asked for a login, a payment or a different browser, or refused "
-      + "for another reason it gave. Nothing was captured. A member who can see the question may supply what the site "
-      + "asked for and ask again.",
+    translation: word('refusal.CAPTURE_SOURCE_REFUSED'),
   },
 });

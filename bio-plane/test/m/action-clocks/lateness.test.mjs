@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CP, actionMd } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
@@ -63,8 +64,8 @@ test("R15 lateness counts the group's own entries (owed_by: group, whatever thei
   /* T45 controls: a body's commitment (A:8) and a stated date not marked the group's (A:9) are never counted. */
   for (const ord of [4, 8, 9]) assert.ok(!r.entries.some((x) => x.action === A && x.ord === ord), `A:${ord}`);
   assert.deepEqual(r.not_counted.map((x) => [x.action, x.ord, x.why]), [
-    [A, 5, "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated"],
-    [D, 0, "met, and the day it was met is not held"]]);
+    [A, 5, localize("action-clocks.why.entry_names_basis", "the entry names no basis kind and no owed_by, so whether it is the team's own is not stated")],
+    [D, 0, localize("action-clocks.why.met_day_met", "met, and the day it was met is not held")]]);
   /* the method is calc-grammar's: its recipe and trace answered, the counts its exact outputs. */
   assert.equal(r.method.recipe.method, "bio-calc/1");
   assert.deepEqual(r.method.trace.map((s) => s.step), ["on_time_rows", "on_time", "late_rows", "late", "days_late", "pending_rows", "pending_past", "denominator"]);

@@ -102,6 +102,7 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
    The import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs"; import vm from "vm"; import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -112,12 +113,12 @@ const TITLE = "The marina money";
    subject is the surface READING it, never this re-derivation. */
 function ownerMath(nn){
   if(nn<=1) return { owners:nn, votesNeeded:0, eligibleVoters:0, targetMayVote:false, possible:false,
-                     why:"one owner is the floor, so the last owner is not removable" };
+                     why:word("membership.why.owner_floor_last") };
   if(nn===2) return { owners:2, votesNeeded:2, eligibleVoters:2, targetMayVote:true, possible:true,
-                      why:"both owners must agree, the departing one included: resignation with the other's assent" };
+                      why:word("membership.why.both_owners_agree") };
   const votesNeeded = Math.floor(nn/2)+1, eligibleVoters = nn-1;
   return { owners:nn, votesNeeded, eligibleVoters, targetMayVote:false, possible: votesNeeded<=eligibleVoters,
-           why:"a majority of all owners, the target counted in the denominator and not voting" };
+           why:word("membership.why.majority_all_owners") };
 }
 
 /* THE PARTICIPATION TABLE, as the store holds it. Three owners, so the live row
@@ -307,7 +308,7 @@ const asOwner = await open("alice");
   ok("the objective renders as the record holds it", asOwner.includes(OBJECTIVE));
 
   /* the readiness ladder — the record's rung, and the RECORDED evaluations */
-  for(const w of ["Draft","Internally checked","Externally compliant","Distributed"])
+  for(const w of ["Draft",word("screen.case-editor.rung.internal"),word("screen.case-editor.rung.external"),"Distributed"])
     ok(`the readiness ladder shows the rung "${w}"`, asOwner.includes(w));
   ok("the rung the RECORD declares is the one marked",
      /pf-row ok[\s\S]{0,200}Internally checked/.test(asOwner));
@@ -457,7 +458,7 @@ const ROSTER_OP = { projectinvite:"projectinvite", projectjoin:"projectjoin", pr
   ok("the invited member is NOT shown the participant list",
      !asErin.includes("alice") && !asErin.includes("bella") && !asErin.includes("cass"));
   ok("the invited member is NOT shown the work product or its evaluations",
-     !asErin.includes("Internally checked") && !asErin.includes("data/eval-argument-1.json"));
+     !asErin.includes(word("screen.case-editor.rung.internal")) && !asErin.includes("data/eval-argument-1.json"));
   ok("the invited member is NOT shown the ownership arithmetic",
      !asErin.includes("takes <b>") && !asErin.includes("the divergence"));
   ok("the withholding is SAID, in this page's own voice, and claims nothing about what the record would answer",

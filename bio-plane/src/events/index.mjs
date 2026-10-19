@@ -25,15 +25,16 @@ import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } f
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
 import { recordedBy } from "./recorded.mjs";
-import { word } from "../setup-words/index.mjs";
+import { reason } from "./reasons.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
 /* K1569 (R6, R11, R14, R17, R21): THE ONE ANSWER TO ONE CONDITION, no event with the id asked is held (an alias resolves
    to its kept event first). Every act of any module answering it answers through here (duties among them). `extra` adds
    a caller's own fields (such as `end`) and never replaces these. Writes nothing and never throws. */
-const NO_SUCH_EVENT_DETAIL = "no event with that id is held; an event is created with op=eventcreate before anything can name it";
-const NO_SUCH_DATED_FACT_DETAIL = "no dated fact with that id is held where the asker can see it; a document's date is held with op=datedfact";
+const NO_SUCH_EVENT_DETAIL = localize("events.index.no_event_with_that_id", "no event with that id is held; an event is created with op=eventcreate before anything can name it");
+const NO_SUCH_DATED_FACT_DETAIL = localize("events.index.no_dated_fact_with_that", "no dated fact with that id is held where the asker can see it; a document's date is held with op=datedfact");
 const own = (extra, fixed) => {
   try {
     return extra && typeof extra === "object" && !Array.isArray(extra)
@@ -104,11 +105,11 @@ const ID_FIELDS = ["event_id", "entity_id", "end_id", "from_event", "to_event", 
 function oneHome(row) {
   if (!isObj(row)) return null;
   const k = Object.keys(row).find((x) => AMOUNT_KEYS.test(x));
-  if (k) return { code: "AMOUNT_NOT_HERE", detail: `an event row holds no amount (${k}); an amount's one home is the money fact` };
+  if (k) return { code: "AMOUNT_NOT_HERE", detail: localize("events.index.an_event_row_holds_no", "an event row holds no amount ({k}); an amount's one home is the money fact", { k: String(k) }) };
   if (row.role === "payer" || row.role === "payee")
-    return { code: "UNKNOWN_ROLE", detail: "a payer or payee lives on the money fact, never on an event" };
+    return { code: "UNKNOWN_ROLE", detail: localize("events.index.a_payer_or_payee_lives", "a payer or payee lives on the money fact, never on an event") };
   const h = ID_FIELDS.find((f) => isHypothesisId(row[f]));
-  if (h) return { code: "HYPOTHESIS_ID", detail: `a hypothesis (${row[h]}) is never held in an event's ${h} (K1467)` };
+  if (h) return { code: "HYPOTHESIS_ID", detail: localize("events.index.a_hypothesis_v1_is_never", "a hypothesis ({v1}) is never held in an event's {h} (K1467)", { v1: String(row[h]), h: String(h) }) };
   return null;
 }
 const GATED = ["events", "event_attestations", "event_participants", "event_concerns", "event_relations", "event_uses", "event_unmet"];
@@ -288,18 +289,18 @@ export class Events {
 
   /** R1, R2: a document's own date, cited at its extent. */
   recordDatedFact({ captureSha, extent, kind, value, method, question = null, by = null } = {}) {
-    if (!said(captureSha)) return noSha("a dated fact is a captured document's own statement, named by its capture sha256");
+    if (!said(captureSha)) return noSha(localize("events.index.a_dated_fact_is_a", "a dated fact is a captured document's own statement, named by its capture sha256"));
     const held = this.#heldCapture(captureSha, by);
-    if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
-    if (!isObj(extent)) return refuse("NO_EXTENT", "a dated fact names the extent of the capture that states it");
+    if (!held) return refuse("CAPTURE_NOT_HELD", localize("events.index.the_record_holds_no_such", "the record holds no such capture you can see"));
+    if (!isObj(extent)) return refuse("NO_EXTENT", localize("events.index.a_dated_fact_names_the", "a dated fact names the extent of the capture that states it"));
     const bad = this.#extentRefusal(held.sha, extent);
     if (bad) return bad;
-    if (!DATED_KINDS.includes(kind)) return refuse("UNKNOWN_DATED_KIND", `a dated fact is one of ${DATED_KINDS.join(", ")}`, { kinds: [...DATED_KINDS] });
+    if (!DATED_KINDS.includes(kind)) return refuse("UNKNOWN_DATED_KIND", localize("events.index.a_dated_fact_is_one", "a dated fact is one of {DATED_KINDS}", { DATED_KINDS: String(DATED_KINDS.join(", ")) }), { kinds: [...DATED_KINDS] });
     const d = readDate(value, this.zone());
     if (d.bad) return refuse("BAD_DATE", d.bad);
-    if (!said(method)) return refuse("NO_METHOD", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)");
+    if (!said(method)) return refuse("NO_METHOD", localize("events.index.a_dated_fact_says_how", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)"));
     if (question !== null && question !== undefined && !(said(question) && this.#questionSeen(question.trim(), by)))
-      return refuse("QUESTION_NOT_HELD", "no question with that id is held where you can see it; a question is an inquiry the record holds");
+      return refuse("QUESTION_NOT_HELD", localize("events.index.no_question_with_that_id", "no question with that id is held where you can see it; a question is an inquiry the record holds"));
     return this.#record.transact(() => this.#holdFact({ sha: held.sha, bundleId: held.bundleId, extent, kind, date: d,
       method: method.trim().slice(0, 400), by, question: question == null ? null : question.trim() }));
   }
@@ -311,7 +312,7 @@ export class Events {
       const c = this.#content;
       bad = checkContentExtent(extent, c && typeof c.contentContextFor === "function" ? c.contentContextFor(sha) : {});
     } catch (e) { bad = { code: "CONTENT_EXTENT_UNREADABLE", detail: String(e && e.message || e) }; }
-    return bad ? refuse("EXTENT_NOT_IN_CAPTURE", "the extent names no part of that capture", { extent_refusal: bad }) : null;
+    return bad ? refuse("EXTENT_NOT_IN_CAPTURE", localize("events.index.the_extent_names_no_part", "the extent names no part of that capture"), { extent_refusal: bad }) : null;
   }
 
   /* R1, R2: one dated fact, inside the caller's transaction; its grade is the capture's own, never above it. */
@@ -353,9 +354,9 @@ export class Events {
     const m = this.#membership;
     const member = typeof by === "string" ? by.replace(/^member:/, "") : null;
     const admin = !!member && !!m && typeof m.isAdministrator === "function" && m.isAdministrator(member);
-    if (!admin || isMachineIdentity(by)) return notAnAdmin(by, "choosing which readings' dates are held");
+    if (!admin || isMachineIdentity(by)) return notAnAdmin(by, localize("events.index.choosing_which_readings_dates_are", "choosing which readings' dates are held"));
     if (!Array.isArray(captureClasses) || !captureClasses.every(said))
-      return refuse("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
+      return refuse("NO_CLASSES", localize("events.index.the_opt_in_set_is", "the opt-in set is a list of capture classes (content-type keys), empty for none"));
     const classes = [...new Set(captureClasses.map((c) => c.trim()))].sort();
     const at = this.#instant();
     this.#sql.exec(`INSERT INTO event_read_optin (classes, by_actor, at) VALUES (?,?,?)`, JSON.stringify(classes), stamp(by), at);
@@ -391,12 +392,12 @@ export class Events {
   /** R5: edit acts from office metadata, on request: the created and modified values a captured office file states
    *  about itself, held as dated facts `issued` and `edited`, the method naming the field (and the author as written). */
   recordEditActs({ captureSha, by = null } = {}) {
-    if (!said(captureSha)) return noSha("edit acts are read from a captured office document, named by its capture sha256");
+    if (!said(captureSha)) return noSha(localize("events.index.edit_acts_are_read_from", "edit acts are read from a captured office document, named by its capture sha256"));
     const held = this.#heldCapture(captureSha, by);
-    if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
+    if (!held) return refuse("CAPTURE_NOT_HELD", localize("events.index.the_record_holds_no_such", "the record holds no such capture you can see"));
     const c = this.#content;
     const m = c && typeof c.officeMetadataOf === "function" ? c.officeMetadataOf(held.sha) : null;
-    if (!m || !m.metadata) return refuse("NO_OFFICE_METADATA", m && m.why ? m.why : "the capture's reading holds no office metadata");
+    if (!m || !m.metadata) return refuse("NO_OFFICE_METADATA", m && m.why ? m.why : localize("events.index.the_capture_s_reading_holds", "the capture's reading holds no office metadata"));
     const md = m.metadata, zone = this.zone(), out = [], skipped = [];
     return this.#record.transact(() => {
       for (const [field, kind, who] of [["created", "issued", md.author], ["modified", "edited", md.lastModifiedBy]]) {
@@ -404,10 +405,8 @@ export class Events {
         if (v == null || v === "") continue;
         const d = readDate(v, zone);
         if (d.bad) { skipped.push({ field, value: v, why: d.bad }); continue; }
-        const method = `office metadata: the file's ${field} value`
-          + (said(who) ? word("events.transact.file_writes", { by: field === "created" ? "author" : word("events.transact.last_modified"),
-                                                               who: String(who).slice(0, 200) }) : "")
-          + "; what the file states about itself, never a finding";
+        const method = localize("events.index.office_metadata_the_files_field", "office metadata: the file's {field} value{v1}; what the file states about itself, never a finding", { field: String(field), v1: String(said(who) ? word("events.transact.file_writes", { by: field === "created" ? localize("events.index.author", "author") : word("events.transact.last_modified"),
+                                                               who: String(who).slice(0, 200) }) : "") });
         out.push(this.#holdFact({ sha: held.sha, bundleId: held.bundleId,
           extent: { kind: "envelope", item: "core-property", name: field }, kind, date: d, method, by }).dated_fact);
       }
@@ -417,7 +416,7 @@ export class Events {
 
   /** R27: a capture's dated facts in extent order, answered only to a viewer who may see the capture (R40). */
   datedFactsFor({ captureSha, viewer = null } = {}) {
-    if (!said(captureSha)) return noSha("dated facts are read for a captured document, by its capture sha256");
+    if (!said(captureSha)) return noSha(localize("events.index.dated_facts_are_read_for", "dated facts are read for a captured document, by its capture sha256"));
     const rows = this.#rows(`SELECT * FROM dated_facts WHERE capture_sha=? ORDER BY extent, source_row, kind, value`, captureSha.trim().toLowerCase());
     const sees = this.#seer(viewer);
     const seen = rows.filter((r) => sees(r.bundle_id));
@@ -444,7 +443,7 @@ export class Events {
 
   /* R7: an attestation as given, read into its row, or a refusal. `by` is the stamp whose sight a capture is asked in. */
   #attestationFrom(a, by) {
-    if (!isObj(a)) return refuse("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
+    if (!isObj(a)) return refuse("NO_ATTESTATION", localize("events.index.an_attestation_is_a_held", "an attestation is a held dated fact, a passage of a captured document, or a member's testimony"));
     if (a.datedFactId !== undefined) {
       const f = said(a.datedFactId) ? this.#one(`SELECT * FROM dated_facts WHERE dated_fact_id=?`, a.datedFactId.trim()) : null;
       if (!f || !this.#sees(f.bundle_id, by)) return noSuchDatedFact(typeof a.datedFactId === "string" ? a.datedFactId : null);
@@ -453,10 +452,10 @@ export class Events {
         bundle_id: f.bundle_id, grade: f.grade, upper_bound: f.upper_bound } };
     }
     if (a.captureSha !== undefined) {
-      if (!said(a.captureSha)) return noSha("an attestation from a captured document names its capture sha256");
+      if (!said(a.captureSha)) return noSha(localize("events.index.an_attestation_from_a_captured", "an attestation from a captured document names its capture sha256"));
       const held = this.#heldCapture(a.captureSha, by);
-      if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
-      if (!isObj(a.extent)) return refuse("NO_EXTENT", "a capture attestation names the extent that attests the event");
+      if (!held) return refuse("CAPTURE_NOT_HELD", localize("events.index.the_record_holds_no_such", "the record holds no such capture you can see"));
+      if (!isObj(a.extent)) return refuse("NO_EXTENT", localize("events.index.a_capture_attestation_names_the", "a capture attestation names the extent that attests the event"));
       const bad = this.#extentRefusal(held.sha, a.extent);
       if (bad) return bad;
       return { ok: true, row: { form: "extent", dated_fact_id: null, capture_sha: held.sha, extent: canonicalExtent(a.extent),
@@ -464,8 +463,8 @@ export class Events {
         bundle_id: held.bundleId, grade: this.#captureGrade(held.sha) } };
     }
     if (a.testimony !== undefined) {
-      if (!said(a.testimony)) return refuse("NO_STATEMENT", "testimony carries the member's own account of the event");
-      if (!said(by) || isMachineIdentity(by)) return refuse("MEMBER_ACT_ONLY", "testimony is a member's own account, never the machine's");
+      if (!said(a.testimony)) return refuse("NO_STATEMENT", localize("events.index.testimony_carries_the_member_s", "testimony carries the member's own account of the event"));
+      if (!said(by) || isMachineIdentity(by)) return refuse("MEMBER_ACT_ONLY", localize("events.index.testimony_is_a_member_s", "testimony is a member's own account, never the machine's"));
       let date = null;
       if (a.value !== undefined && a.value !== null) {
         const d = readDate(a.value, this.zone());
@@ -482,7 +481,7 @@ export class Events {
         statement: a.testimony.trim().slice(0, 4000), value: date ? date.value : null, precision: date ? date.precision : null,
         zone: date ? date.zone : null, bundle_id: bundleId, grade: TESTIMONY_GRADE } };
     }
-    return refuse("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
+    return refuse("NO_ATTESTATION", localize("events.index.an_attestation_is_a_held", "an attestation is a held dated fact, a passage of a captured document, or a member's testimony"));
   }
 
   /* A relation's citation (R17) is held as `relation:<from>`, so it is never one of the event's own attestations (R9, the
@@ -495,8 +494,8 @@ export class Events {
 
   /* R6: a concerns end, an entity or another event; a hypothesis id is never held (R39). */
   #concernRefusal(end) {
-    if (!said(end)) return noEntity("an event concerns a registered subject or another event, named by its id");
-    if (isHypothesisId(end)) return refuse("HYPOTHESIS_ID", "a hypothesis is never what an event concerns (K1467)");
+    if (!said(end)) return noEntity(localize("events.index.an_event_concerns_a_registered", "an event concerns a registered subject or another event, named by its id"));
+    if (isHypothesisId(end)) return refuse("HYPOTHESIS_ID", localize("events.index.a_hypothesis_is_never_what", "a hypothesis is never what an event concerns (K1467)"));
     if (EVT_RE.test(end)) return this.has(end) ? null : noSuchEvent(end);
     const e = this.#ents;
     return e && e.has(end) ? null : noSuchEntity(end, { end: "concerns" });
@@ -504,15 +503,15 @@ export class Events {
 
   /* R11: a participant's refusals after its event: the entity, the role, the attestation, the vote. */
   #participantRefusal({ entityId, role, attestation, voteValue }, { attestationGiven = true } = {}) {
-    if (!said(entityId)) return noEntity("a participant is a registered subject, named by its id");
-    if (isHypothesisId(entityId)) return refuse("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
+    if (!said(entityId)) return noEntity(localize("events.index.a_participant_is_a_registered", "a participant is a registered subject, named by its id"));
+    if (isHypothesisId(entityId)) return refuse("HYPOTHESIS_ID", localize("events.index.a_hypothesis_is_never_a", "a hypothesis is never a participant (K1467)"));
     const e = this.#ents;
     if (!e || !e.has(entityId)) return noSuchEntity(entityId);
     if (!ROLES.includes(role))
-      return refuse("UNKNOWN_ROLE", `a role is one of ${ROLES.join(", ")}; a payer or payee lives on the money fact, never on an event`,
+      return refuse("UNKNOWN_ROLE", localize("events.index.a_role_is_one_of", "a role is one of {ROLES}; a payer or payee lives on the money fact, never on an event", { ROLES: String(ROLES.join(", ")) }),
                     { roles: [...ROLES] });
     if (!attestationGiven || attestation === undefined || attestation === null)
-      return refuse("NO_ATTESTATION", "a participant is what a document states or a member testifies, never filled from who held an office");
+      return refuse("NO_ATTESTATION", localize("events.index.a_participant_is_what_a", "a participant is what a document states or a member testifies, never filled from who held an office"));
     if (role === "voted") return this.#voteRefusal(voteValue);
     return null;
   }
@@ -529,13 +528,13 @@ export class Events {
      source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
      `value` is held (K1788). With none held, the value is kept as written, unchecked. */
   #voteMatch(voteValue, { fromSource = false } = {}) {
-    if (!said(voteValue)) return refuse("NO_VOTE_VALUE", "a vote is held with the value the record states");
+    if (!said(voteValue)) return refuse("NO_VOTE_VALUE", localize("events.index.a_vote_is_held_with", "a vote is held with the value the record states"));
     const v = voteValue.trim(), entries = this.#voteEntries();
     if (!entries) return { ok: true, value: v };
     const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
     if (hit) return { ok: true, value: hit.value };
     const values = entries.map((x) => x.value);
-    return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
+    return refuse("UNKNOWN_VOTE_VALUE", localize("events.index.a_vote_value_is_one", "a vote value is one of the profile's: {values}", { values: String(values.join(", ")) }), { values });
   }
   #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
 
@@ -543,17 +542,16 @@ export class Events {
    *  of a use's kind (R43, R44) is held only with its facet, through its own act. */
   createEvent(args = {}) {
     if (USE_KINDS.includes(args && args.kind))
-      return refuse("USE_NEEDS_ITS_ACT", `an event of kind ${args.kind} is held only with its provision, reason and outcome: `
-        + `it is recorded with op=${args.kind === "assessment" ? "assessmentrecord" : "discretionrecord"}`, { kind: args.kind });
+      return refuse("USE_NEEDS_ITS_ACT", localize("events.index.an_event_of_kind_kind", "an event of kind {kind} is held only with its provision, reason and outcome: it is recorded with op={v1}", { kind: String(args.kind), v1: String(args.kind === "assessment" ? "assessmentrecord" : "discretionrecord") }), { kind: args.kind });
     const c = this.#checkCreate(args || {});
     return c.ok ? this.#writeEvent(c) : c;
   }
   /* R6's refusals, in order, writing nothing: the kind, the status, the attestations, the concerns, the participants. */
   #checkCreate({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
-    if (!EVENT_KINDS.includes(kind)) return refuse("UNKNOWN_EVENT_KIND", `an event is one of ${EVENT_KINDS.join(", ")}`, { kinds: [...EVENT_KINDS] });
-    if (!STATUSES.includes(status)) return refuse("UNKNOWN_STATUS", `a status is one of ${STATUSES.join(", ")}`, { statuses: [...STATUSES] });
+    if (!EVENT_KINDS.includes(kind)) return refuse("UNKNOWN_EVENT_KIND", localize("events.index.an_event_is_one_of", "an event is one of {EVENT_KINDS}", { EVENT_KINDS: String(EVENT_KINDS.join(", ")) }), { kinds: [...EVENT_KINDS] });
+    if (!STATUSES.includes(status)) return refuse("UNKNOWN_STATUS", localize("events.index.a_status_is_one_of", "a status is one of {STATUSES}", { STATUSES: String(STATUSES.join(", ")) }), { statuses: [...STATUSES] });
     if (!Array.isArray(attestations) || !attestations.length)
-      return refuse("NO_ATTESTATION", "an event is held only with at least one attestation");
+      return refuse("NO_ATTESTATION", localize("events.index.an_event_is_held_only", "an event is held only with at least one attestation"));
     const rows = [];
     for (const a of attestations) { const r = this.#attestationFrom(a, by); if (!r.ok) return r; rows.push(r.row); }
     const ends = Array.isArray(concerns) ? concerns : [];
@@ -563,7 +561,7 @@ export class Events {
       const r = this.#participantRefusal(isObj(p) ? p : {});
       if (r) return r;
       if (!(Number.isInteger(p.attestation) && p.attestation >= 0 && p.attestation < rows.length))
-        return refuse("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
+        return refuse("NO_ATTESTATION", localize("events.index.a_participant_names_the_attestation", "a participant names the attestation that states it, by its index in attestations"));
     }
     return { ok: true, kind, status, where, ends, rows, parts, by };
   }
@@ -599,7 +597,7 @@ export class Events {
         catch (e) {
           if (e && e.refusal) return e.refusal;
           if (e instanceof ListenerFailure)
-            return refuse("LISTENER_FAILED", `the write was undone because ${e.module}'s listener failed: ${e.message}`, { module: e.module });
+            return refuse("LISTENER_FAILED", localize("events.index.the_write_was_undone_because", "the write was undone because {module}'s listener failed: {message}", { module: String(e.module), message: String(e.message) }), { module: e.module });
           throw e;
         }
       });
@@ -633,8 +631,8 @@ export class Events {
     const id = this.#resolve(eventId);
     if (!id) return noSuchEvent(eventId ?? null);
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, Number(attestationId), id);
-    if (!a) return refuse("NO_SUCH_ATTESTATION", "that event holds no such attestation");
-    if (a.value == null) return refuse("ATTESTATION_UNDATED", "an attestation with no date of its own cannot govern when the event happened");
+    if (!a) return refuse("NO_SUCH_ATTESTATION", localize("events.index.that_event_holds_no_such", "that event holds no such attestation"));
+    if (a.value == null) return refuse("ATTESTATION_UNDATED", localize("events.index.an_attestation_with_no_date", "an attestation with no date of its own cannot govern when the event happened"));
     return this.#tx(() => {
       this.#sql.exec(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
                      id, a.attestation_id, said(reason) ? reason.trim().slice(0, REASON_MAX) : null, stamp(by), this.#instant());
@@ -734,7 +732,7 @@ export class Events {
       const h = held.get(id), r = rebuilt.get(id);
       const stale = (() => { try { return this.#record.readDerived("events", "event_when_cache", id).stale; } catch { return true; } })();
       const same = h && ["start", "end", "precision", "zone", "value", "attestation_id"].every((k) => String(h[k] ?? "") === String(r[k] ?? ""));
-      out.set(id, !h || stale || !same ? { when: "undetermined", why: "cache stale", governing: null }
+      out.set(id, !h || stale || !same ? { when: "undetermined", why: reason("events.why.cache_stale"), governing: null }
                                          : { when: Events.#whenOfRow(h), governing: h.attestation_id });
     }
     return out;
@@ -754,7 +752,7 @@ export class Events {
     let attRow = null, attId = null;
     if (Number.isInteger(attestation)) {
       const a = this.#one(`SELECT attestation_id FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, attestation, id);
-      if (!a) return refuse("NO_SUCH_ATTESTATION", "that event holds no such attestation");
+      if (!a) return refuse("NO_SUCH_ATTESTATION", localize("events.index.that_event_holds_no_such", "that event holds no such attestation"));
       attId = Number(a.attestation_id);
     } else {
       const x = this.#attestationFrom(attestation, by);
@@ -778,13 +776,13 @@ export class Events {
 
   /** R13: a participant re-resolved to another entity; the corrected row stays, superseded with who, when and why. */
   correctParticipant({ participantId, entityId, reason, by = null } = {}) {
-    if (!said(reason)) return refuse("NO_REASON", "a correction says why the participant was wrong; it is kept beside the row");
+    if (!said(reason)) return refuse("NO_REASON", localize("events.index.a_correction_says_why_the", "a correction says why the participant was wrong; it is kept beside the row"));
     const p = this.#one(`SELECT * FROM event_participants WHERE participant_id=?`, Number(participantId));
-    if (!p) return refuse("NO_SUCH_PARTICIPANT", "no participant with that id is held");
-    if (p.superseded_by != null) return refuse("PARTICIPANT_SUPERSEDED", "that row was already corrected; correct the row that replaced it",
+    if (!p) return refuse("NO_SUCH_PARTICIPANT", localize("events.index.no_participant_with_that_id", "no participant with that id is held"));
+    if (p.superseded_by != null) return refuse("PARTICIPANT_SUPERSEDED", localize("events.index.that_row_was_already_corrected", "that row was already corrected; correct the row that replaced it"),
                                                { superseded_by: Number(p.superseded_by) });
-    if (!said(entityId)) return noEntity("a correction names the subject the participant is, by its id");
-    if (isHypothesisId(entityId)) return refuse("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
+    if (!said(entityId)) return noEntity(localize("events.index.a_correction_names_the_subject", "a correction names the subject the participant is, by its id"));
+    if (isHypothesisId(entityId)) return refuse("HYPOTHESIS_ID", localize("events.index.a_hypothesis_is_never_a", "a hypothesis is never a participant (K1467)"));
     if (!this.#ents.has(entityId)) return noSuchEntity(entityId);
     return this.#tx(() => {
       const at = this.#instant();
@@ -803,22 +801,22 @@ export class Events {
 
   #memberAct(by) {
     return !said(by) || isMachineIdentity(by)
-      ? refuse("MEMBER_ACT_ONLY", "only a member merges or splits events; the machine's rows are corrected by a member's act") : null;
+      ? refuse("MEMBER_ACT_ONLY", localize("events.index.only_a_member_merges_or", "only a member merges or splits events; the machine's rows are corrected by a member's act")) : null;
   }
 
   /** R14: `absorb` joins `keep`; `absorb` stays as an alias resolving to `keep`. */
   mergeEvents({ keep, absorb, reason, by = null } = {}) {
     const m = this.#memberAct(by); if (m) return m;
-    if (!said(reason)) return refuse("NO_REASON", "a merge says why the two records are one happening");
+    if (!said(reason)) return refuse("NO_REASON", localize("events.index.a_merge_says_why_the", "a merge says why the two records are one happening"));
     const k = this.#resolve(keep), a = this.#resolve(absorb);
     if (!k) return noSuchEvent(keep ?? null, { end: "keep" });
     if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
-    if (k === a) return refuse("SAME_EVENT", "an event is not merged into itself");
+    if (k === a) return refuse("SAME_EVENT", localize("events.index.an_event_is_not_merged", "an event is not merged into itself"));
     return this.#tx(() => {
       const at = this.#instant(), why = reason.trim().slice(0, REASON_MAX);
       const g = this.#governing(k);
       if (g) this.#sql.exec(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
-                            k, g.attestation_id, "kept as governing when another event was merged into this one", stamp(by), at);
+                            k, g.attestation_id, localize("events.index.kept_as_governing_when_another", "kept as governing when another event was merged into this one"), stamp(by), at);
       this.#sql.exec(`UPDATE event_attestations SET event_id=? WHERE event_id=?`, k, a);
       this.#sql.exec(`UPDATE event_participants SET event_id=? WHERE event_id=?`, k, a);
       this.#sql.exec(`UPDATE event_choices SET event_id=? WHERE event_id=?`, k, a);
@@ -828,7 +826,7 @@ export class Events {
       this.#sql.exec(`UPDATE event_relations SET from_event=? WHERE from_event=?`, k, a);
       this.#sql.exec(`UPDATE event_relations SET to_event=? WHERE to_event=?`, k, a);
       this.#sql.exec(`UPDATE event_relations SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE from_event=? AND to_event=? AND withdrawn_at IS NULL`,
-                     stamp(by), at, "its two ends were merged into one event", k, k);
+                     stamp(by), at, localize("events.index.its_two_ends_were_merged", "its two ends were merged into one event"), k, k);
       this.#sql.exec(`UPDATE event_aliases SET event_id=? WHERE event_id=?`, k, a);
       this.#sql.exec(`UPDATE event_sources SET target_id=? WHERE target='event' AND target_id=?`, k, a);
       this.#sql.exec(`UPDATE events SET alias_of=? WHERE event_id=?`, k, a);
@@ -845,16 +843,16 @@ export class Events {
   /** R14: the named attestations (and the participants resting on them) move to a new event of the same kind. */
   splitEvent({ eventId, attestations, reason, by = null } = {}) {
     const m = this.#memberAct(by); if (m) return m;
-    if (!said(reason)) return refuse("NO_REASON", "a split says why one record held two happenings");
+    if (!said(reason)) return refuse("NO_REASON", localize("events.index.a_split_says_why_one", "a split says why one record held two happenings"));
     const id = this.#resolve(eventId);
     if (!id) return noSuchEvent(eventId ?? null);
     const ids = Array.isArray(attestations) ? [...new Set(attestations.map(Number))] : [];
-    if (!ids.length) return refuse("NO_ATTESTATION", "a split names the attestations that move to the new event");
+    if (!ids.length) return refuse("NO_ATTESTATION", localize("events.index.a_split_names_the_attestations", "a split names the attestations that move to the new event"));
     for (const x of ids)
       if (!this.#one(`SELECT 1 AS y FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, x, id))
-        return refuse("NO_SUCH_ATTESTATION", "that event holds no such attestation", { attestation_id: x });
+        return refuse("NO_SUCH_ATTESTATION", localize("events.index.that_event_holds_no_such", "that event holds no such attestation"), { attestation_id: x });
     const left = Number(this.#one(`SELECT COUNT(*) AS n FROM event_attestations WHERE event_id=? AND serves='event'`, id).n);
-    if (left <= ids.length) return refuse("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
+    if (left <= ids.length) return refuse("SPLIT_EMPTIES", localize("events.index.a_split_leaves_at_least", "a split leaves at least one attestation on the event it splits"));
     const ev = this.#one(`SELECT * FROM events WHERE event_id=?`, id);
     return this.#tx(() => {
       const at = this.#instant(), why = reason.trim().slice(0, REASON_MAX);
@@ -922,32 +920,31 @@ export class Events {
 
   /** R17–R19: a cited relation between two events. */
   relate({ from, to, kind, attestation, by = null } = {}) {
-    if (!RELATION_KINDS.includes(kind)) return refuse("UNKNOWN_RELATION", `a relation is one of ${RELATION_KINDS.join(", ")}`, { kinds: [...RELATION_KINDS] });
-    if (!said(from) || !said(to)) return refuse("NO_ENDS", "a relation names two events by id: from and to");
-    if (isHypothesisId(from) || isHypothesisId(to)) return refuse("HYPOTHESIS_ID", "a hypothesis is never an end of an event's relation (K1467)");
+    if (!RELATION_KINDS.includes(kind)) return refuse("UNKNOWN_RELATION", localize("events.index.a_relation_is_one_of", "a relation is one of {RELATION_KINDS}", { RELATION_KINDS: String(RELATION_KINDS.join(", ")) }), { kinds: [...RELATION_KINDS] });
+    if (!said(from) || !said(to)) return refuse("NO_ENDS", localize("events.index.a_relation_names_two_events", "a relation names two events by id: from and to"));
+    if (isHypothesisId(from) || isHypothesisId(to)) return refuse("HYPOTHESIS_ID", localize("events.index.a_hypothesis_is_never_an", "a hypothesis is never an end of an event's relation (K1467)"));
     const f = this.#resolve(from), t = this.#resolve(to);
-    if (f && t && f === t) return refuse("SELF_RELATION", "a relation is between two distinct events");
+    if (f && t && f === t) return refuse("SELF_RELATION", localize("events.index.a_relation_is_between_two", "a relation is between two distinct events"));
     if (!f) return noSuchEvent(from, { end: "from" });
     if (!t) return noSuchEvent(to, { end: "to" });
-    if (attestation === undefined || attestation === null) return refuse("NO_ATTESTATION", "every relation is cited");
+    if (attestation === undefined || attestation === null) return refuse("NO_ATTESTATION", localize("events.index.every_relation_is_cited", "every relation is cited"));
     const machine = isMachineIdentity(by);
     if (kind === "stated_cause") {
-      if (machine) return refuse("CAUSE_NOT_MACHINE", "a stated cause is held only from a named source by a member; the machine never writes one");
+      if (machine) return refuse("CAUSE_NOT_MACHINE", localize("events.index.a_stated_cause_is_held", "a stated cause is held only from a named source by a member; the machine never writes one"));
       if (isObj(attestation) && attestation.testimony !== undefined)
-        return refuse("CAUSE_NEEDS_SOURCE", "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)");
+        return refuse("CAUSE_NEEDS_SOURCE", localize("events.index.a_cause_is_held_only", "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)"));
     } else if (kind === "precedes") {
-      if (machine || !said(by)) return refuse("MEMBER_ACT_ONLY", "only a member records which of two events came first; the machine infers no order (R41)");
+      if (machine || !said(by)) return refuse("MEMBER_ACT_ONLY", localize("events.index.only_a_member_records_which", "only a member records which of two events came first; the machine infers no order (R41)"));
     } else if (machine && kind !== "within")
-      return refuse("RELATION_NOT_MACHINE", "the machine writes no relation but within (R41)");
+      return refuse("RELATION_NOT_MACHINE", localize("events.index.the_machine_writes_no_relation", "the machine writes no relation but within (R41)"));
     const x = this.#attestationFrom(attestation, by);
     if (!x.ok) return x;
-    if (kind === "within" && this.#withinLoops(f, t)) return refuse("WITHIN_CYCLE", "that within would make an event lie within itself");
+    if (kind === "within" && this.#withinLoops(f, t)) return refuse("WITHIN_CYCLE", localize("events.index.that_within_would_make_an", "that within would make an event lie within itself"));
     /* R51: an order is cited only where the two events' dates leave it undetermined (R31) at the act */
     if (kind === "precedes") {
       const d = this.#datedOrder(f, t);
       if (d.answer !== "undetermined")
-        return refuse("ORDER_ALREADY_DATED", `the two events' dates already answer which came first: ${f} ${d.answer} ${t}; `
-          + "a cited order is held only for a pair no date settles", { answer: d.answer });
+        return refuse("ORDER_ALREADY_DATED", localize("events.index.the_two_events_dates_already", "the two events' dates already answer which came first: {f} {answer} {t}; a cited order is held only for a pair no date settles", { f: String(f), answer: String(d.answer), t: String(t) }), { answer: d.answer });
     }
     const prior = this.#one(`SELECT r.relation_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
                               WHERE r.from_event=? AND r.to_event=? AND r.kind=? AND r.withdrawn_at IS NULL AND a.form=?
@@ -963,9 +960,9 @@ export class Events {
 
   /** R20: a relation withdrawn, never deleted. */
   withdrawRelation({ relationId, reason, by = null } = {}) {
-    if (!said(reason)) return refuse("NO_REASON", "a withdrawal says why the relation was wrong; it is kept beside it");
+    if (!said(reason)) return refuse("NO_REASON", localize("events.index.a_withdrawal_says_why_the", "a withdrawal says why the relation was wrong; it is kept beside it"));
     const r = this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, Number(relationId));
-    if (!r) return refuse("NO_SUCH_RELATION", "no relation with that id is held");
+    if (!r) return refuse("NO_SUCH_RELATION", localize("events.index.no_relation_with_that_id", "no relation with that id is held"));
     if (r.withdrawn_at) return { ok: true, already: true, relation: this.#relationView(r, "class:admin") };
     this.#sql.exec(`UPDATE event_relations SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE relation_id=?`,
                    stamp(by), this.#instant(), reason.trim().slice(0, REASON_MAX), r.relation_id);
@@ -976,7 +973,7 @@ export class Events {
   #relationView(r, viewer) {
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, r.attestation_id);
     const end = (id) => { const g = this.#governing(id); return g ? g.grade : null; };
-    const source = a && a.capture_sha ? `the document ${a.capture_sha.slice(0, 12)}…` : word("events.text.member_testimony");
+    const source = a && a.capture_sha ? word("events.text.document_sha", { sha: String(a.capture_sha.slice(0, 12)) }) : word("events.text.member_testimony");
     return { relation_id: Number(r.relation_id), from: r.from_event, to: r.to_event, kind: r.kind,
              attestation: a ? this.#attestationView(a, viewer) : null,
              grade: { assertion: a ? a.grade : null, ends: [end(r.from_event), end(r.to_event)] },
@@ -990,12 +987,12 @@ export class Events {
    * ===================================================================== */
 
   aliasAct({ actId, eventId, by = null } = {}) {
-    if (!said(actId) || !ACT_RE.test(actId.trim())) return refuse("NO_ACT", "an act is named by its ACT- id");
+    if (!said(actId) || !ACT_RE.test(actId.trim())) return refuse("NO_ACT", localize("events.index.an_act_is_named_by", "an act is named by its ACT- id"));
     const id = this.#resolve(eventId);
     if (!id) return noSuchEvent(eventId ?? null);
     const held = this.#one(`SELECT event_id FROM event_aliases WHERE alias=?`, actId.trim());
     if (held && held.event_id === id) return { ok: true, already: true, act_id: actId.trim(), event_id: id };
-    if (held) return refuse("ACT_ALIASED", "that act already names another event", { event_id: held.event_id });
+    if (held) return refuse("ACT_ALIASED", localize("events.index.that_act_already_names_another", "that act already names another event"), { event_id: held.event_id });
     this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#instant());
     return { ok: true, act_id: actId.trim(), event_id: id };
   }
@@ -1092,7 +1089,7 @@ export class Events {
 
   /** R26: one event, by its id or an alias of it. */
   readEvent({ eventId, viewer = null } = {}) {
-    if (!said(eventId)) return refuse("NO_EVENT", "an event is read by its id (op=event&id=EVT-…)");
+    if (!said(eventId)) return refuse("NO_EVENT", localize("events.index.an_event_is_read_by", "an event is read by its id (op=event&id=EVT-…)"));
     const id = this.#resolve(eventId);
     const v = id ? this.#eventView(id, viewer) : null;
     if (!v) return { ok: true, found: false, event_id: eventId };
@@ -1123,7 +1120,7 @@ export class Events {
       if (!roles.length && !x.concerns && x.parts.length) continue;
       const w = this.#whenRead(id);
       const when = w.when === "undetermined" || (w.governing != null && !seen.has(Number(w.governing))) ? null : w.when;
-      const item = { event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: "cache stale" } : {}),
+      const item = { event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: reason("events.why.cache_stale") } : {}),
                      roles: roles.sort(), concerns: x.concerns };
       /* R45: a use answers its facet in every list too */
       if (USE_KINDS.includes(ev.kind)) {
@@ -1151,7 +1148,7 @@ export class Events {
 
   /** R27: the events an entity takes part in or that concern it, ordered by R31, bounded. */
   eventsFor({ entity, kinds = null, from = null, to = null, limit = null, viewer = null } = {}) {
-    if (!said(entity)) return noEntity("events are read for one registered subject, named by its id");
+    if (!said(entity)) return noEntity(localize("events.index.events_are_read_for_one", "events are read for one registered subject, named by its id"));
     const ks = Array.isArray(kinds) && kinds.length ? kinds : typeof kinds === "string" && kinds ? kinds.split(",") : null;
     const r = this.#range(this.#eventsOfEntity(entity, viewer, { kinds: ks }), from, to);
     if (r.bad) return refuse("BAD_DATE", r.bad);
@@ -1168,12 +1165,12 @@ export class Events {
     const shas = [...new Set((Array.isArray(captures) ? captures : typeof captures === "string" ? captures.split(",") : [])
       .filter(said).map((s) => s.trim().toLowerCase()))];
     if (!ids.length && !shas.length)
-      return refuse("NO_SET", "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller");
+      return refuse("NO_SET", localize("events.index.a_timeline_is_of_an", "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller"));
     /* R28: any audience but "public" or none is refused before anything is read */
     if (audience !== undefined && audience !== null && audience !== "public")
-      return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the team's own reading`, { audiences: ["public"] });
+      return refuse("AUDIENCE_UNKNOWN", localize("events.index.a_timeline_s_audience_is", "a timeline's audience is \"public\", or none for the team's own reading"), { audiences: ["public"] });
     if (shas.length > CAPTURES_MAX)
-      return refuse("TOO_MANY_CAPTURES", `a timeline reads the dated facts of at most ${CAPTURES_MAX} captures`, { bound: CAPTURES_MAX });
+      return refuse("TOO_MANY_CAPTURES", localize("events.index.a_timeline_reads_the_dated", "a timeline reads the dated facts of at most {CAPTURES_MAX} captures", { CAPTURES_MAX: String(CAPTURES_MAX) }), { bound: CAPTURES_MAX });
     const told = audience === "public" ? { audience } : {};
     const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours", ...(shas.length ? ["dated"] : [])];
     const answer = { ok: true, set: ids, ...(shas.length ? { captures: shas } : {}) };
@@ -1261,9 +1258,9 @@ export class Events {
         const placed = !!item.when && g && attById.has(Number(g.attestation_id));
         return { participants, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
                  grade: placed ? g.grade ?? null : null,
-                 ...(placed ? {} : { grade_why: item.why === "cache stale"
-                   ? "its time could not be read (cache stale), so no governing attestation is answered"
-                   : "placed nowhere: no attestation you can see dates this event, so none governs its time" }) };
+                 ...(placed ? {} : { grade_why: item.why && item.why.key === "events.why.cache_stale"
+                   ? word("events.why.grade_time_unread")
+                   : word("events.why.grade_placed_nowhere") }) };
       });
     }
     return out;
@@ -1284,7 +1281,7 @@ export class Events {
   /* R31: the order two events' whens give, `{answer, why?, stale?}`, from their dates alone. */
   #datedOrder(ia, ib) {
     const wa = this.#whenRead(ia), wb = this.#whenRead(ib);
-    if (wa.when === "undetermined" || wb.when === "undetermined") return { answer: "undetermined", why: "cache stale", stale: true };
+    if (wa.when === "undetermined" || wb.when === "undetermined") return { answer: "undetermined", why: reason("events.why.cache_stale"), stale: true };
     const s = sequenceOf(wa.when, wb.when);
     return typeof s === "string" ? { answer: s } : { answer: "undetermined", why: s.why };
   }
@@ -1315,7 +1312,7 @@ export class Events {
     if (!cited.length) return { ...base, answer: "undetermined", why: d.why };
     const ids = cited.map((c) => c.relation_id);
     if (new Set(cited.map((c) => c.answer)).size > 1)
-      return { ...base, answer: "undetermined", why: word("events.why.cited_orders_disagree"), relation_ids: ids, dates_why: d.why };
+      return { ...base, answer: "undetermined", why: reason("events.why.cited_orders_disagree"), relation_ids: ids, dates_why: d.why };
     const c = cited[0];
     return { ...base, answer: c.answer, basis: "cited", relation_id: c.relation_id, grade: c.grade, relation_ids: ids,
              dates_why: d.why, says: word("events.says.cited_relation_states") };
@@ -1326,17 +1323,17 @@ export class Events {
     const r = this.readEvent({ eventId, viewer });
     if (!r.ok || !r.found) return r;
     if (!["communication", "issuance", "meeting"].includes(r.event.kind))
-      return refuse("NOT_A_COMMUNICATION", "who was sent something is read of a communication, an issuance or a meeting");
-    const WORDS = { sender: "sent by", recipient: "sent to", copied: "copied", present: "present" };
+      return refuse("NOT_A_COMMUNICATION", localize("events.index.who_was_sent_something_is", "who was sent something is read of a communication, an issuance or a meeting"));
+    const WORDS = { sender: word("events.sent.by"), recipient: word("events.sent.to"), copied: word("events.sent.copied"), present: word("events.sent.present") };
     const list = r.event.participants.filter((p) => !p.superseded && WORDS[p.role])
       .map((p) => ({ entity_id: p.entity_id, role: p.role, words: WORDS[p.role], attestation: r.event.attestations.find((a) => a.attestation_id === p.attestation_id) || null }));
     return { ok: true, event_id: r.event.event_id, kind: r.event.kind, participants: list,
-             detail: "this says to whom the record states it was sent, copied or who was present; it never says who knew or saw anything" };
+             detail: word("events.sent.detail") };
   }
 
   /** R33: an entity's statements and communications in R31's order. */
   statementsOf({ entity, from = null, to = null, limit = null, viewer = null } = {}) {
-    if (!said(entity)) return noEntity("statements are read for one registered subject, named by its id");
+    if (!said(entity)) return noEntity(localize("events.index.statements_are_read_for_one", "statements are read for one registered subject, named by its id"));
     const items = this.#eventsOfEntity(entity, viewer, { kinds: ["statement", "communication"], roles: ["speaker", "sender", "author", "actor"] });
     const r = this.#range(items, from, to);
     if (r.bad) return refuse("BAD_DATE", r.bad);
@@ -1346,22 +1343,22 @@ export class Events {
 
   /** R34: the stage of the profile's flow the proceeding's held events reach on `at`, or undetermined with why. */
   proceedingStatusAt({ proceeding, at, viewer = null } = {}) {
-    if (!said(proceeding)) return noEntity("a proceeding's status is read by its entity id");
+    if (!said(proceeding)) return noEntity(localize("events.index.a_proceeding_s_status_is", "a proceeding's status is read by its entity id"));
     const ents = this.#ents;
     if (!ents.has(proceeding)) return noSuchEntity(proceeding);
     const e = ents.readEntity({ entityId: proceeding, viewer: "class:admin" });
     if (!e || !e.entity || e.entity.kind !== "proceeding")
       /* R52 (K231): the one site minting NOT_A_PROCEEDING is entities' (its R53) */
-      return notAProceeding("status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
+      return notAProceeding(localize("events.index.status_as_of_a_date", "status as of a date is read of an entity of kind proceeding"), { entity_id: proceeding });
     const und = (why, extra = {}) => ({ ok: true, proceeding, at: at ?? null, stage: "undetermined", why, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : (e.entity.proceeding || null);
     const kind = facet && facet.kind;
-    if (!kind) return und(word("events.und.proceeding_kind_held"));
+    if (!kind) return und(localize("events.und.proceeding_kind_held", "the proceeding's kind is not held, so no flow can be read for it"));
     const flows = this.view().proceeding_flows;
     const flow = Array.isArray(flows) ? flows.find((f) => f && f.kind === kind) : isObj(flows) ? flows[kind] : null;
-    if (!flow || !Array.isArray(flow.stages)) return und(word("events.und.active_profile_holds", { kind }));
+    if (!flow || !Array.isArray(flow.stages)) return und(localize("events.und.active_profile_holds", "no active profile holds a flow for proceedings of kind {kind}", { kind: String(kind) }));
     const point = spanOfBound(at, this.zone());
-    if (!point || point.bad) return refuse("BAD_DATE", point && point.bad ? point.bad : "a status is read as of a date");
+    if (!point || point.bad) return refuse("BAD_DATE", point && point.bad ? point.bad : localize("events.index.a_status_is_read_as", "a status is read as of a date"));
     const events = this.#eventsOfEntity(proceeding, viewer);
     let reached = null, rests = [], open = [];
     flow.stages.forEach((st, i) => {
@@ -1372,9 +1369,9 @@ export class Events {
         else if (place === "open" || place === "nowhere") open.push({ event_id: ev.event_id, stage: st.stage, when: ev.when, i });
       }
     });
-    if (!reached && !open.length) return und(word("events.und.held_event_bears"));
+    if (!reached && !open.length) return und(localize("events.und.held_event_bears", "no held event bears on this proceeding's flow on that date"));
     const later = open.filter((o) => !reached || o.i > reached.i);
-    if (later.length) return und(word("events.und.order_deciding_events"), { events: later.map(({ i, ...x }) => x) });
+    if (later.length) return und(localize("events.und.order_deciding_events", "the order of the deciding events against that date is undetermined at the precision held"), { events: later.map(({ i, ...x }) => x) });
     return { ok: true, proceeding, at, kind, stage: reached.stage.stage, label: reached.stage.label,
              rests_on: rests.filter((x) => x.stage === reached.stage.stage), citation: flow.citation ?? null };
   }

@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, R } from "../calculations/fixture.mjs";
 import { strengthOf, recomputePair, STRENGTH_AXES } from "../../../src/strength/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const F = [{ name: "dept", type: "string" }, { name: "amount", type: "number", currency: "USD" }, { name: "status", type: "string" }];
 const PERIOD = { from: "2025-07-01", to: "2026-06-30" };
@@ -59,15 +60,16 @@ test("R36: an accepted calculation leg counts on the capture axis at the weakest
   assert.equal(p.capture.grade, "B", "the table's capture, through the read");
   const m = p.capture.weakest;
   assert.deepEqual([m.target_id, m.via, m.grade], [b, "derived", "B"]);
-  assert.match(m.why, /the weakest capture among its inputs/);
-  assert.match(m.why, new RegExp(`Its method is stated beside the grade \\(method ${facts.method.version.replace("/", "\\/")}\\) and is not graded`));
+  assert.equal(m.why, word("strength.why.counts_weakest_capture",
+    { id: b, grade: "B", named: ` (method ${facts.method.version}${facts.method.note ? `: ${facts.method.note}` : ""})` }));
   /* A typed value is testimony (D): the weakest input sets the leg, and the leg sets the axis beside a stronger one. */
   assert.equal(s.candidatePair({ legs: [{ target: d }] }).pair.capture.grade, "D");
   assert.equal(s.candidatePair({ legs: [{ target: b }, { target: d }] }).pair.capture.weakest.target_id, d);
   /* A calculation calculations does not hold: unknown, named. */
   const none = s.candidatePair({ legs: [{ target: "CALC-2026-aaaaaaaaaaaaaaaa" }] }).pair;
   assert.equal(none.capture.state, "undetermined");
-  assert.match(none.capture.undetermined_at[0].why, /is not a calculation your team's Civicsmith holds/);
+  assert.equal(none.capture.undetermined_at[0].why,
+    word("strength.stopped.calculation_group_civicsmith", { id: "CALC-2026-aaaaaaaaaaaaaaaa" }));
 });
 
 test("R36, R6, R35, R32: strengthOf and gradingFacts read the same grade, recomputePair over the facts agrees, and inquiryStrength withholds a calculation calculations withholds from the viewer (its R10) while the grade stays the record's", async () => {

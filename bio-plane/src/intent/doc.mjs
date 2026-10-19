@@ -7,6 +7,7 @@
  * byte alone. */
 
 import { parseFrontmatter, deriveInquiryTitle, BASIS_GRADES } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const ASPIRATION = "aspiration", GOAL = "goal";
 export const ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
@@ -154,7 +155,7 @@ export function aspirationDoc({ id, scope, owner, statement, entities, progressi
     `scope: ${scope}`, `owner: ${owner ?? "null"}`, `entities: [${entities.join(", ")}]`,
     `progressions: [${progressions.join(", ")}]`, `author: ${TOKEN.test(author) ? author : q(author)}`,
     ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Dead Ends", "",
-    "## Session Log", "", `### Session ${at} | Declared | ${author}`, `Changes: ${scope} aspiration declared.`, ""].join("\n");
+    "## Session Log", "", `### Session ${at} | Declared | ${author}`, word("intent.changes_aspiration_declared", { scope: String(scope) }), ""].join("\n");
 }
 
 /** R26: a new goal's document, `open`. */
@@ -163,7 +164,7 @@ export function goalDoc({ id, statement, bounds, aspiration, author, at }) {
     "current_state: open", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
     `aspiration: ${aspiration ?? "null"}`, `author: ${TOKEN.test(author) ? author : q(author)}`, "objectives: []",
     ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Bounds", "",
-    bounds.trim(), "", "## Session Log", "", `### Session ${at} | Declared | ${author}`, "Changes: goal declared.", ""]
+    bounds.trim(), "", "## Session Log", "", `### Session ${at} | Declared | ${author}`, word("intent.changes_goal_declared"), ""]
     .join("\n");
 }
 

@@ -1,10 +1,11 @@
 /* explore at its interface: the walk (R1–R9) and the invariants that bind every answer (R16–R18). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { exploreOf, HUB_WORDS, LEAD_SENTENCE } from "../../../src/explore/index.mjs";
-import { BOUNDS, LOWEST_GRADE, createRegistry, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
+import { exploreOf, HUB_WORDS, LEAD_SENTENCE, PATH_ORDER, QUANTITY_OF_PATH } from "../../../src/explore/index.mjs";
+import { BOUNDS, DECLARED_LABEL, LOWEST_GRADE, createRegistry, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
 import { AT, INQUIRY, ZONE, valid, ent, evt, conn, world, byOwner, makeStore, makeOwner } from "./fixtures/owners.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E = ent(5), F = ent(6);
@@ -88,7 +89,7 @@ test("R3 each path's hops as their owners answered them, its grade the weakest h
   const all = ask(x).paths;
   assert.deepEqual(all.map((q) => q.hops.length), [...all.map((q) => q.hops.length)].sort((a, b) => a - b), "fewest hops first");
   assert.deepEqual(all.filter((q) => q.hops.length === 1).map(ids), ["h-ab", "h-da"], "ties by ids");
-  assert.match(r.order.by, /fewest steps/);
+  assert.equal(r.order.by, PATH_ORDER);
   // Validity orders before ids: the later-starting path goes after.
   const v = make([conn("line:part_of", A, B, { id: "a-late", valid: valid("2025-01-01", "2027-01-01") }), conn("line:part_of", A, C, { id: "z-early", valid: valid("2024-01-01", "2027-01-01") })]).x;
   assert.deepEqual(ask(v).paths.map(ids), ["z-early", "a-late"]);
@@ -99,7 +100,7 @@ test("R3 each path's hops as their owners answered them, its grade the weakest h
   const two = ask(make([conn("payment", A, B, { id: "p-small", quantities: { amount: 5 } }), conn("payment", A, C, { id: "p-big", quantities: { amount: 70 } })]).x, { sortBy: "amount" });
   assert.deepEqual(two.paths.map(ids), ["p-big", "p-small"], "descending by the stated quantity");
   assert.deepEqual(s.order.by, "amount");
-  assert.match(s.order.quantity, /last step states/);
+  assert.equal(s.order.quantity, QUANTITY_OF_PATH);
   for (const q of [...all, ...s.paths]) for (const key of Object.keys(q)) assert.ok(!/score|rank|centrality|weight/i.test(key), key);
 });
 
@@ -118,7 +119,7 @@ test("R4 only hops valid at the date are walked; an undetermined hop is walked, 
   for (const k of ["open", "open>after-open"]) {
     assert.equal(by[k].at_date, "undetermined");
     assert.deepEqual(by[k].undetermined.hops, ["open"]);
-    assert.match(by[k].undetermined.why, /no end is stated/);
+    assert.deepEqual(by[k].undetermined.why, [{ hop: "open", why: { key: "civil-time.end_stated", vars: {} } }]);
   }
   // The date is the walk's: before B's line began, nothing holds.
   assert.deepEqual(ask(x, { at: { value: "1999-01-01", precision: "day", zone: ZONE } }).paths.map(ids), []);
@@ -256,7 +257,7 @@ test("R6 a declared hop is marked declared at the lowest grade; a hunch is walke
   const by = Object.fromEntries(r.paths.map((p) => [ids(p), p]));
   assert.equal(by["other-hunch"], undefined, "a hunch of another inquiry is not walked");
   assert.deepEqual(by.declared.grade, { assertion: LOWEST_GRADE, end: LOWEST_GRADE });
-  assert.deepEqual(by.declared.marks, [{ hop: "declared", mark: "declared, not evidenced" }]);
+  assert.deepEqual(by.declared.marks, [{ hop: "declared", mark: DECLARED_LABEL }]);
   assert.equal(by.declared.label, "lead");
   assert.equal(by.declared.lead.sentence, LEAD_SENTENCE);
   assert.equal(by["declared>after-declared"].label, "lead");
@@ -286,17 +287,16 @@ test("R7 a hop the owner withholds from the viewer is not walked, and nothing in
 });
 
 test("R8 an answer with no path states its level in observation-log's vocabulary, how far it searched, and what owners hold as tables not read", () => {
-  const unread = { [A]: [{ what: "a payroll table", why: "held as a table, not read" }] };
+  const unread = { [A]: [{ what: "a payroll table", why: word("people.held_as_a_table_not") }] };
   const { x } = make([conn("line:part_of", B, C)], { opts: { money: { unread } } });
   const r = ask(x, { to: D, depth: 3 });
   assert.deepEqual(r.paths, []);
   assert.equal(r.absence.level, "meaning");
   assert.equal(r.absence.state, "LOOKED_ABSENT");
   assert.equal(r.absence.meaning, OBSERVATION_STATES.LOOKED_ABSENT);
-  assert.match(r.absence.searched, /as of 2026-03-01/);
-  assert.match(r.absence.searched, /to depth 3/);
-  assert.match(r.absence.reach, /Only what the record holds/);
-  assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: "held as a table, not read" }]);
+  assert.equal(r.absence.searched, word("explore.searched", { kinds: String(r.kinds.length), s: r.kinds.length === 1 ? "" : "s", at: `${AT.value} (${AT.precision}, ${AT.zone})`, depth: "3", from: A, to: ` toward ${D}` }));
+  assert.equal(r.absence.reach, word("explore.reach"));
+  assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: word("people.held_as_a_table_not") }]);
   // A walk that was cut short cannot say the path is not there.
   const hub = [];
   for (let i = 0; i < 1001; i++) hub.push(conn("line:seat_on", ent(3000 + i), A));
@@ -334,7 +334,7 @@ test("R16 no answer states two nodes connected beyond the cited hops, and no out
     const prev = p.hops[i - 1], hop = p.hops[i];
     assert.ok([prev.from, prev.to].some((n) => n === hop.from || n === hop.to), "each hop joins the last: no step is asserted between them");
   }
-  assert.match(r.note, /asserts nothing beyond them/);
+  assert.equal(r.note, word("explore.not_asserted"));
 });
 
 test("R17 a constitutive relation is walked only as a declared hop: it never resolves a reference or carries a grade of its own", () => {
@@ -342,7 +342,7 @@ test("R17 a constitutive relation is walked only as a declared hop: it never res
   const r = ask(x);
   const p = r.paths.find((q) => ids(q) === "proxy>line");
   assert.deepEqual(p.grade, { assertion: LOWEST_GRADE, end: LOWEST_GRADE }, "the declared hop gives the lowest grade, not the line's A");
-  assert.equal(p.marks[0].mark, "declared, not evidenced");
+  assert.equal(p.marks[0].mark, DECLARED_LABEL);
   assert.notEqual(p.hops[0].from, p.hops[0].to);
   assert.ok(r.paths.some((q) => q.hops[0].to === B), "A and B stay two records: nothing resolves one to the other");
 });

@@ -1,0 +1,241 @@
+# strength: the words check after the conversion (K3949)
+
+Layer 6. 213 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/strength/arithmetic.mjs:141` [stitched] "this {} axis has NO computed strength: {}, so what lies below is un..." — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:143` "EVERY one of the {} sets of reasons it rests on is undetermined, and" — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:158` [stitched] "UNRATED on {}: no leg on this axis carries an established grade{}, ..." — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:159` "on any of the {} sets of reasons" — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:162` "UNRATED on {}: this inquiry rests on nothing on this axis." — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:173` "{} {} — the STRONGEST of the {} sets of reasons" — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:174` "that each carry this conclusion on their own, which is {}, and no s..." — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:175` "than the weakest {} WITHIN that set, which is {}" — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:176` "{} {} — no stronger than the weakest {} it rests on," — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:181` "That leg is needed by every one of those sets, so no set can be str..." — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:80` "the basis walk reached its depth bound of {} at {}" — signed or pinned text
+- inline `bio-plane/src/strength/arithmetic.mjs:81` "nothing here establishes what {} rests on" — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:103` "This answer tried to report one overall figure for a question, and ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:106` "state something neither of them says." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:118` "This answer did not say which readings it counted, and a strength s..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:120` "the record's own or a view somebody constructed." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:125` "More kinds of reading were named than this record has. The bound is..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:126` "rather than applied quietly, so nothing is dropped without you bein..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:164` "This asks whether the groups of reasons behind one question share a..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:165` "question was named. There is no default question here and there mus..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:170` "That is not a question you can read here, so it has no reasons to g..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:177` "The grouping of reasons could not be read. Send it as a list of gro..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:179` "positions. Every group needs at least one reason and a name no othe..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:184` "The grouping names a reason this question does not have. It was not..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:185` "because an answer about groups the question does not hold would be ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:190` "One reason was put in two groups. Each reason belongs to exactly on..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:191` "reason shared by two groups would make them share a source by const..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:196` "Some of this question's reasons are in no group. A grouping covers ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:197` "written reading does, so that what is checked here is what would be..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:202` "This question rests on more reasons than a written reading may hold..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:213` "Both a written reading and a proposed grouping were named. This ans..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:214` "at a time, and which one was meant is not something to guess, so na..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:219` "No reading by that name belongs to this question, so there are no w..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:220` "to check. Nothing was substituted for it." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:233` "How much evidence this team requires of itself is the team's own de..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:234` "about the standard it works to, and everything filed afterwards is ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:235` "An automated credential cannot set that bar for the people it works..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:241` "The standard of evidence a new project starts from is set for the w..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:242` "an administrator can change it. A project can still declare its own..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:243` [copy] "Nothing was changed." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:251` "were captured and one for how firmly they connect. One of the two g..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:259` "works to this standard, in at most 2,000 characters. The reason is ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:260` [copy] "Nothing was changed." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:269` "this standard, in at most 2,000 characters. The reason is kept with..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:47` "This asks how strongly one question is answered, and no question wa..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:48` "There is no default question here and there must not be one." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:53` "That is not a question, so there is nothing here to say how strongl..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:54` "Only a question carries readings of the evidence, and only a readin..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:63` "Say which reading of the evidence to measure, or say which project ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:65` "reported for a reading nobody meant is a number about something else." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:70` "No reading by that name belongs to this question, or this project h..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:72` "when the truth is that nobody has pointed at anything yet." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:77` "One of the words used to say which readings to count is not one thi..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:78` "The set is closed on purpose: a strength that quietly counted readi..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:79` "would be a number no reader could check." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:89` "Nobody has adopted that reading, so it is not what this record answ..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:90` "You can still see what it would come to — ask for it as a what-if b..." — signed or pinned text
+- inline `bio-plane/src/strength/checks.mjs:91` "reading to count — and the answer will say on its face that that is..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1053` "reasons, and there is no default question." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1056` "{} is not a question, so it has no reasons to group." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1059` "no question by that id is readable here, so there are no reasons of..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1066` "both: this answers for one of them, and does not guess which one wa..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1074` "no reading named '{}' belongs to {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1095` "{} groups were proposed and a written reading holds at most {} reas..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1122` "{} rests on more than {} reasons." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1129` "'{}' names reason position {}, and {} has" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1134` "reason position {} is in both '{}' and '{}'." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1141` "reason position(s) {} are in no group." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1205` "{} is a {}, not an inquiry. Only a question rests on testimony." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1214` "no reading named '{}' belongs to {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1256` "{} is a {}, not an inquiry. Only a question has grading facts." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1265` "no reading named '{}' belongs to {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1359` "required by {}, the project whose production this case is:" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1361` "The bar is the project's own declaration about its own work, stated..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1362` "is never set by who a reader is." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1364` "{} declares no required evidentiary strength, so nothing in this ca..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1367` "into the project's document as an authored, dated, on-the-record en..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1380` "the default bar is declared for the whole team, so only an active a..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:139` [copy] "Part of what this rests on is out of your view." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1392` "and this store records none. Nothing was declared." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1399` "one, and an absent bar is stated as absent rather than written as a..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1408` "the reason given is blank; say in your own words why the team sets ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1409` "the reason given is {} characters, and a reason is at most {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1421` "into the project's document as an authored, dated, on-the-record en..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1422` "It gates nothing. {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1434` "{} is a {}, and a standard of evidence is a property of a" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1468` "the reason given is blank; say in your own words why the project se..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1469` "the reason given is {} characters, and a reason is at most {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1470` [copy] "Nothing was changed." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1482` "the project's document has no front-matter block to hold its bar. N..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1488` "Changes: the project's standard of evidence from {} to {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1519` "what governed it was whichever project published it, at the moment ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:152` "Civicsmith has no guidance yet on what particular audiences expect...." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1521` "for the default a new project starts from." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1532` "read. An absent bar gates nothing and is not a bar of zero." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1536` "no team default is declared. An absent bar gates nothing and is not..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1621` "this answer carries a top-level '{}', which can only be one figure" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1623` "— {} — and there is no value that is all of them." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1634` "the pair holds {} where it must hold exactly {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1635` "One answer per population, and nothing beside them that reads as a ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1640` "line is exactly what makes the two indistinguishable." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:1644` "have to parse prose to learn what it counted." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:165` "no bar set on the {} axis" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:183` "the required evidentiary strength is the {} declaration about its o..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:184` "machine credential may not make it. Sign in as a member." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:195` "{} must be one of {}, or null" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:229` "{} ## Session Log {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:443` "this leg rests on another team's finding that your team's Civicsmit..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:472` "the walk reached its depth bound of {} here" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:494` "nothing here establishes what the record holds for the text of {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:524` "the grade facts of {} cannot be read here, so what this leg rests o..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:525` "{} is not a calculation your team's Civicsmith holds, so what this ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:526` "the result of {} is not accepted, so what this leg rests on is unknown" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:530` "{} uses a value another program computed ({}), and that" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:534` "the capture strength of {} is unknown: {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:540` "{} counts at {}, the weakest capture among its inputs, each no stro..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:542` "{} and is not graded." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:550` "{}: {}, so what this leg rests on is unknown" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:552` [copy] "the obligation cannot be read here" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:554` "{} is not an obligation your team's Civicsmith holds" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:558` [copy] "no occurrence by that key is derived" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:560` "its due date is undetermined{}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:562` "whether its source is in force is undetermined: {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:564` [copy] "its source holds no captured text" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:568` "what the record holds for the text of {} is undetermined{}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:569` "the text of {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:577` "the date of {}, which started it, is not attested here" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:578` "the record of {}'s date" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:580` [copy] "the date that started it is undetermined" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:583` "{} counts at {}, set by {}: the weaker of the text of the rule in f..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:584` "of the date that started it. It is {} as known" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:585` "today; that is stated beside the grade and never changes it." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:683` "{} is a {}, not an inquiry. The derived pair is a property of a" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:684` "question and what it rests on; a document has no basis to derive on..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:834` [copy] "this leg states no axis, so there is no population it belongs to" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:843` "{} carries a member's own signed account of how it connects to this..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:845` "neither mints that letter nor erases it." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:846` "the record has earned nothing connecting {} to this question's" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:855` "{} is not a member's own firsthand observation, so the record holds no" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:864` "nothing here establishes what the record holds for the text of {}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:869` "the record holds no captured bytes for {}, so there is nothing here" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:872` "{} is captured, but no capture grade was authored for this leg and" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:876` "{} This leg was authored at {} and is reported at {}, because the" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:877` "record cannot support the stronger claim." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:906` "of its evidence, and there is no default question." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:909` "{} is not a question, so it holds no readings of evidence and has no" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:919` "{} kinds of reading were named and this record has" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:920` "{}. The bound is published here rather than applied" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:921` "silently, so nothing is dropped without the caller being told." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:926` "'{}' is not one of the states a reading can be in:" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:927` "{}. The set is closed, because a strength that quietly" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:928` "counted readings in states nobody recognises is a number no reader ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:937` "no question by that id is readable here, so there is no reading of ..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:949` "{} has not said which reading of {} it stands on, and there is" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:950` "no default reading. Name one explicitly to measure it." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:952` "so the reading it stands on can be used. There is no default readin..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:959` [stitched] "no reading named '{}' belongs to {}.{}" — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:961` "{} points at it, so the pointer has outlived the reading it names." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:968` "'{}' is {} and this answer counts {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:969` "Ask again naming {} among the states to see what it would come to —..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:970` "will say on its face that it is a view you constructed and not what..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:983` "WHAT-IF — a view you constructed, not what this record stands on." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:984` "Computed over the reading '{}', counting readings that are: {}." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:985` "Computed over the reading '{}', counting only readings a member has..." — signed or pinned text
+- inline `bio-plane/src/strength/index.mjs:986` "({}). This is the record's own answer for this question and is not ..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:116` "this leg carries testimony at {}, and a member's firsthand observat..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:117` "{} on the testimony axis and at no other value, so it is read at" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:124` "the target is another team's finding, not a document, so a {} grade..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:125` "the target is an inquiry, not a document, so a {} grade on this leg..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:126` [copy] "the leg carries no grade" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:133` "the leg's grade is on the {} axis" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:137` [copy] "nothing here establishes what this leg rests on" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:154` "{}, and that edition publishes {} as undetermined" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:155` "{} is undetermined on {}: {}" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:167` "{}, and that edition publishes no grade on {}, so it is" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:169` "{}, counted at the grade that accepted edition publishes and" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:171` "{} is UNRATED on {}, so it is not load-bearing here" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:188` "the target is a held standard, so a {} grade on this leg has no ref..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:189` [copy] "this leg counts on the capture axis only" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:193` [copy] "nothing here establishes what this leg rests on" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:201` "the leg's grade is on the {} axis" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:201` [copy] "the leg carries no grade" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:215` "this leg rests on another team's finding, in that team's case {} at..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:216` "{}, published by {}" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:282` "How {} grades a finding (method {})." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:287` "for it, and they are never combined into one figure. Grades run fro..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:291` "on a leg to another question, or to another {}'s finding, has nothi..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:294` "strength is stated as undetermined: unknown, not low." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:295` "4. Another {}'s work. A leg to a finding of another {}'s case that ..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:297` "that finding cannot be read, the strength is undetermined. Withdraw..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:301` "strength is then the weaker of the legs needed by every set and tha..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:304` "stronger, and is named. A strength with no counted leg is unrated, ..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:305` "7. Anonymous testimony and evidence. Testimony from a member credit..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:311` "name is graded as usual." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:312` "8. What is named. Each strength names the leg that sets it, and eve..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:313` "It also states how many hunches it left out." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:324` "that cannot be read, makes the strength undetermined." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:326` "that standard at the version cited; if the record holds no text at ..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:329` "the grade and never changes it. Where any part of how it was worked..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:33` [copy] "this leg is marked as a hunch, so it is visible here and does not c..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:402` [copy] "the case file states no answer for what this leg rests on, so it is..." — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:406` [copy] "the capture strength the case file states for what this leg rests on" — signed or pinned text
+- inline `bio-plane/src/strength/method.mjs:407` [copy] "the case file states no capture strength for what this leg rests on..." — signed or pinned text
+- testcopy `bio-plane/test/m/strength/fixture.mjs:98` "the record can support no more than" — signed or pinned text
+- testcopy `bio-plane/test/m/strength/imported.test.mjs:81` "nothing here establishes what" — signed or pinned text
+- testcopy `bio-plane/test/m/strength/legs.test.mjs:167` "as known today; that is stated beside the grade and never changes it" — signed or pinned text
+- testcopy `bio-plane/test/m/strength/reads.test.mjs:239` "Civicsmith has no guidance yet on what particular audiences expect...." — signed or pinned text
+- testcopy `bio-plane/test/m/strength/version.test.mjs:134` "the leg carries no grade" — signed or pinned text
+- testcopy `bio-plane/test/m/strength/version.test.mjs:294` [part] "claim about how it was captured is undetermined." — part test copy
+- testcopy `bio-plane/test/m/strength/words.test.mjs:18` [part] "this leg rests on another team's finding, and your team's Civicsmit..." — part test copy
+- testcopy `bio-plane/test/m/strength/words.test.mjs:19` [part] "from, so what it rests on is unknown here" — part test copy
+- testcopy `bio-plane/test/m/strength/words.test.mjs:23` [part] "so what it rests on is unknown here" — part test copy
+- testcopy `bio-plane/test/m/strength/words.test.mjs:31` "is not a calculation your team's Civicsmith holds, so what this leg..." — signed or pinned text
+
+## Plain findings (K3957)
+
+12 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('strength.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/strength/index.mjs:438` "from, so what it rests on is unknown here"
+- plain `bio-plane/src/strength/index.mjs:444` "so what it rests on is unknown here"
+- plain `bio-plane/src/strength/index.mjs:531` "program's agreement is not measured, so what this leg rests on is unknown"
+- plain `bio-plane/src/strength/index.mjs:541` "from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade"
+- plain `bio-plane/src/strength/index.mjs:824` "accepted edition publishes on each axis"
+- plain `bio-plane/src/strength/index.mjs:847` "subject, so this leg is present and not yet load-bearing"
+- plain `bio-plane/src/strength/index.mjs:856` "testimony grade for it and this leg is present and not yet load-bearing"
+- plain `bio-plane/src/strength/index.mjs:870` "to measure how it was captured"
+- plain `bio-plane/src/strength/index.mjs:873` "the record cannot mint one — what it holds is a ceiling, not a measurement"
+- plain `bio-plane/src/strength/method.mjs:36` "this rests on bears it out, so it is visible here and does not count as evidence"
+- plain `bio-plane/src/strength/method.mjs:132` "so it does not apply here"
+- plain `bio-plane/src/strength/method.mjs:384` "this grading method version is not one that has been published, so the grade cannot be ..."
+
+## Test copies of code sentences (K3962)
+
+2 test strings that copy the `en` of a product `localize` call (the check's testcopy arm, tag `code`, civicos-process ea6cd83). Each test compares with `localize(id, en)` or `word(id)` instead, or asserts the key (K3810). A copy of another module's sentence is fixed in this module's own test.
+
+- testcopy `bio-plane/test/m/strength/version.test.mjs:292` "\", but every transcription of its text is UNMEASURED: no step in the\""
+- testcopy `bio-plane/test/m/strength/version.test.mjs:293` "\"provenance of this document's text carries a measured fidelity, so ...\""

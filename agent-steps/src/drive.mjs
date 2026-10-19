@@ -9,6 +9,7 @@ import { SEGMENT_END_BY } from "./names.mjs";
 import { loggable, conditionFault, CONDITIONS, JUDGED_WITH_CONDITION, LOG_DETAIL_MAX } from "./entries.mjs";
 import { planeAnswer, publishedPack, loadableLayers, loadLayer } from "./plane.mjs";
 import { performStep, performPlanStep } from "./work.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* THE ONLY BOUND ON THE DRIVER ITSELF, and it is not the run's budget.
  *
@@ -77,9 +78,7 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
   const session = runRead.result?.session ?? null;
   if (!session)
     return { refusal: refusal("NO_SUCH_RUN",
-      "the plane holds no run under that id in this namespace, so there is nothing to continue. This "
-      + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
-      + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
+      localize("agent-steps.drive.the_plane_holds_no_run", "the plane holds no run under that id in this namespace, so there is nothing to continue. This member opens no run: a run's identity and its conditions are the plane's, and a member that could open one would be a machine deciding what it was formed under."), 404, { run_id: runId }) };
 
   /* R10, R57 (K1502, K1503, K1755) — THE MEMBER WHOSE ACT THE RUN RECORDS AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT
      SERVES MUST BE THE SAME MEMBER. (T41; ai-runs R52, K2489) The run records the member whose act started it (a
@@ -95,13 +94,9 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
   const recordedPayer = session.principal?.ref ?? null;
   if (account && recordedPayer !== account.member)
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to `
-      + `this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group"
-        ? "the team's API key, serving that member" : account.level === "project"
-        ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under `
-      + "the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no "
-      + "step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run "
-      + "recorded the wrong member.",
+      localize("agent-steps.drive.the_runs_own_record_says", "the run's own record says it is the act of {stringify}, but the Claude account handed to this segment serves {stringify_2}'s act ({v1}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.", { stringify: String(JSON.stringify(recordedPayer)), stringify_2: String(JSON.stringify(account.member)), v1: String(account.level === "group"
+        ? localize("agent-steps.drive.the_team_s_api_key_serving", "the team's API key, serving that member") : account.level === "project"
+        ? localize("agent-steps.drive.the_project_s_account_serving", "the project's account, serving that member") : localize("agent-steps.drive.that_member_s_own_reference", "that member's own reference")) }),
       409, { run_id: runId, recorded: recordedPayer, supplied: account.member }) };
 
   /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
@@ -112,7 +107,7 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
     if (pub.refused) {
       const refused = planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null });
       await settleAtDispatch({ call, runId, session, code: pub.refused.code ?? "PLANE_REFUSED",
-                               why: "the plane refused the read of the skill pack" });
+                               why: localize("agent-steps.drive.the_plane_refused_the_read_of", "the plane refused the read of the skill pack") });
       return { refusal: refused };
     }
     const pack = publishedPack(pub.result);
@@ -120,17 +115,14 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
     if (!pack.ok || recordedSkill !== pack.pack.version) {
       /* R107: the run cannot continue under another pack, and the plane's lease would lapse with its composed work unwritten. */
       const lapse = await settleAtDispatch({ call, runId, session, code: "SKILL_VERSION_MISMATCH",
-        why: pack.ok ? `the run recorded ${recordedSkill} and the plane publishes ${pack.pack.version}`
-          : `the plane published no skill pack this member can use (${pack.why})` });
+        why: pack.ok ? localize("agent-steps.drive.the_run_recorded_recordedskill_and", "the run recorded {recordedSkill} and the plane publishes {version}", { recordedSkill: String(recordedSkill), version: String(pack.pack.version) })
+          : localize("agent-steps.drive.the_plane_published_no_skill", "the plane published no skill pack this member can use ({why})", { why: String(pack.why) }) });
       return { refusal: refusal("SKILL_VERSION_MISMATCH",
-        (pack.ok
-          ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its "
-            + "model would be instructed by words the record does not name."
-          : "the plane published no skill pack this member can instruct a model with, so the pack's version is "
-            + `UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`)
-        + " No turn was taken."
-        + (lapse ? " The run cannot be continued under another pack, so what it composed was written where the plane "
-                   + "accepted it and the run was closed (R107)." : " The run is resumable once the two agree."), 409,
+        localize("agent-steps.drive.v1_no_turn_was_taken", "{v1} No turn was taken.{v2}", { v1: String(pack.ok
+          ? localize("agent-steps.drive.the_run_s_record_says_it", "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its model would be instructed by words the record does not name.")
+          : localize("agent-steps.drive.the_plane_published_no_skill_instruct", "the plane published no skill pack this member can instruct a model with, so the pack's version is UNDETERMINED and cannot be held to the one the run recorded ({why}).", { why: String(pack.why) })), v2: String(lapse
+          ? localize("agent-steps.drive.the_run_cannot_be_continued", " The run cannot be continued under another pack, so what it composed was written where the plane accepted it and the run was closed (R107).")
+          : localize("agent-steps.drive.the_run_is_resumable", " The run is resumable once the two agree.")) }), 409,
         { run_id: runId, recorded: recordedSkill, rendered: pack.ok ? pack.pack.version : null,
           ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }),
           ...(lapse ? { lapse } : {}) }) };
@@ -284,7 +276,7 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
         checkFinal: JUDGED_WITH_CONDITION.has(state.step) ? conditionFault : undefined,
         onTool: async (name, input) => {
           if (name === "load_layer") return loadLayer(model, input);
-          return { content: `this step is judged by judge_${state.step}`, error: true };
+          return { content: localize("agent-steps.drive.this_step_is_judged_by", "this step is judged by judge_{step}", { step: String(state.step) }), error: true };
         },
       });
       model.spent(got, state.mode);
@@ -381,10 +373,7 @@ export async function driveHarness(host, env, { runId, store, credential, judgem
       published = publishableState(after, AI_RUN_STATE_MAX_BYTES, FLOW);
       if (published.restarted) {
         const last = trace[trace.length - 1];
-        last.note = (last.note ? `${last.note}; ` : "")
-          + `the table's state is ${published.restarted.bytes} bytes, over the ${published.restarted.limit} a run's `
-          + `state may hold (ai-runs R45), so this tick publishes the pass restarted at '${published.restarted.at}' `
-          + "and a later segment re-does it rather than resume from a state the record refuses";
+        last.note = localize("agent-steps.drive.v1_the_tables_state_is", "{v1}the table's state is {bytes} bytes, over the {limit} a run's state may hold (ai-runs R45), so this tick publishes the pass restarted at '{at}' and a later segment re-does it rather than resume from a state the record refuses", { v1: String(last.note ? `${last.note}; ` : ""), bytes: String(published.restarted.bytes), limit: String(published.restarted.limit), at: String(published.restarted.at) });
       }
     }
     /* ai-runs R48: the usage of every model call since the last tick, counted for the member whose account carried it. */
@@ -564,10 +553,7 @@ export async function settleAtDispatch({ call, runId, session, code, why }) {
       if (res.status === 200 && res.body?.ok === true && a.ok !== false && a.wrote !== false) written.push(String(c.name ?? ""));
       else notAccepted.push({ name: String(c.name ?? ""), code: a.code ?? a.reason ?? null });
     }
-    const said = `dispatch refused ${code} (${why}); the run cannot be continued, so ${written.length} composed candidate(s) `
-      + `were written${written.length ? ` (${written.map((n) => `'${n}'`).join(", ")})` : ""}`
-      + (notAccepted.length ? `, ${notAccepted.length} not accepted by the plane (${notAccepted.map((n) => n.code ?? "?").join(", ")})` : "")
-      + " and the run was closed";
+    const said = localize("agent-steps.drive.dispatch_refused_code_why_the", "dispatch refused {code} ({why}); the run cannot be continued, so {length} composed candidate(s) were written{v1}{v2} and the run was closed", { code: String(code), why: String(why), length: String(written.length), v1: String(written.length ? ` (${written.map((n) => `'${n}'`).join(", ")})` : ""), v2: String(notAccepted.length ? localize("agent-steps.drive.not_accepted_by_the_plane", ", {length} not accepted by the plane ({codes})", { length: String(notAccepted.length), codes: String(notAccepted.map((n) => n.code ?? "?").join(", ")) }) : "") });
     const { entry } = loggable({ level: "meaning", subject: "dispatch -> refused", state: "LOOKED_INDETERMINATE", governed: false,
                                  condition: null, terminal: false, bound: null, detail: said.slice(0, LOG_DETAIL_MAX) });
     await call("airuntick", null, { run: runId, log: [entry], consume: { runtime: 1 } });

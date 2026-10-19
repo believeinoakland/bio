@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, sha, infoMd, V, NOW, NOW_MS, DAEMON } from "./fixture.mjs";
 import { monitoringOps, DRIVE_SHELLS_LIMIT_DEFAULT, DRIVE_SHELLS_LIMIT_MAX, DRIVE_SHELLS_RETRIEVALS_MAX, MONITORING_READ_MAX }
   from "../../../src/monitoring/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 const DOC = (n) => `https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab${String(n).padStart(2, "0")}/edit`;
@@ -35,7 +36,7 @@ test("R26 driveShells: pages Google-addressed bundles through sight; classifies 
   assert.deepEqual([r.limit, r.truncated, r.cursor, r.swept], [DRIVE_SHELLS_LIMIT_DEFAULT, false, null, 6]);
   assert.deepEqual(r.counts, { drive: 6, shells: r.shells.length, export: r.export.length, undetermined: r.undetermined.length,
                                no_baseline: r.no_baseline.length, unreadable: 1 });
-  assert.deepEqual(r.unreadable.map((u) => [u.bundle, u.reason]), [["INFO-2026-0503-bad", "the register is not parsable JSON"]]);
+  assert.deepEqual(r.unreadable.map((u) => [u.bundle, u.reason]), [["INFO-2026-0503-bad", word("monitoring.register_parsable_json")]]);
   assert.deepEqual(r.not_documents, { folder: 1, file: 1 });
   const all = [...r.shells, ...r.export, ...r.undetermined, ...r.no_baseline];
   assert.deepEqual(all.map((x) => x.bundle).sort(), ["INFO-2026-0500-shell", "INFO-2026-0501-export", "INFO-2026-0502-none"]);
@@ -57,7 +58,7 @@ test("R26 driveShells: pages Google-addressed bundles through sight; classifies 
   /* a register not held inline (a register spilled to the capture store, as older records hold) is unreadable, named */
   w.monitored("INFO-2026-0507-blob", DOC(7), "blob 7");
   w.st.sql.exec(`UPDATE files SET content=NULL, blob_sha=sha256 WHERE bundle_id='INFO-2026-0507-blob' AND path='data/provenance.json'`);
-  assert.ok(w.m.driveShells({ viewer: DAEMON }).unreadable.some((u) => u.bundle === "INFO-2026-0507-blob" && u.reason === "the register is not held inline"));
+  assert.ok(w.m.driveShells({ viewer: DAEMON }).unreadable.some((u) => u.bundle === "INFO-2026-0507-blob" && u.reason === word("monitoring.register_held_inline")));
   /* at most 50 retrievals, and a cut is said */
   for (let i = 0; i < DRIVE_SHELLS_RETRIEVALS_MAX + 2; i++) receipt(w, `https://mirror${i}.example.org/d`, s.cap);
   const cut = w.m.driveShells({ viewer: DAEMON }).shells.concat(w.m.driveShells({ viewer: DAEMON }).undetermined, w.m.driveShells({ viewer: DAEMON }).export)
@@ -83,7 +84,7 @@ test("R32 monitoring({viewer}): every monitored address the viewer may see, with
   assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0510-due", "INFO-2026-0511-meeting", "INFO-2026-0512-later"]);
   assert.equal(by["INFO-2026-0510-due"].state, "due");
   assert.equal(by["INFO-2026-0511-meeting"].state, "unscheduled");
-  assert.equal(by["INFO-2026-0511-meeting"].reason, "cadence is a meeting schedule your team's Civicsmith does not hold");
+  assert.equal(by["INFO-2026-0511-meeting"].reason, word("monitoring.cadence_meeting_schedule"));
   assert.equal(by["INFO-2026-0512-later"].state, "scheduled");
   assert.equal(by["INFO-2026-0512-later"].next_at, iso(NOW_MS - DAY + 7 * DAY));
   assert.deepEqual(r.counts, { due: 1, scheduled: 1, unscheduled: 1, ended: 0 });

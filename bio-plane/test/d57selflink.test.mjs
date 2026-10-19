@@ -133,7 +133,7 @@ console.log(`  (corpus: ${(res.links || []).length} links; tally ${JSON.stringif
 console.log("\n--- the self-link is still LISTED and COUNTED (how a liar passes) ---");
 t("the self-link is in the answer", !!self, true);
 t("resolved against the record, not dropped as offsite", self && self.resolution, "linked");
-t("its target is this very capture", self && self.target_capture, SHA);
+t("its target capture is the document's own digest", self && self.target_capture, SHA);
 t("the tally counts all three held targets, the self-link among them", res.tally && res.tally.linked, 3);
 t("and the verdicts account for every one of them",
   res.verdicts && (res.verdicts.contemporaneous + res.verdicts.superseded + res.verdicts.undetermined), 3);

@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R12 createSet refuses an unknown purpose, no label, and an attribution set concerning no contract; it allocates MSR-<year>-NNNN", () => {
   const s = seeded();
@@ -42,7 +43,7 @@ test("R13 a machine's proposal is held apart, labelled with its method, and incl
   let r = s.m.readSet({ setId: set, viewer: ANN });
   assert.deepEqual(r.inclusions, []);
   assert.deepEqual([r.proposals.length, r.proposals[0].method, r.proposals[0].by], [1, "same fund code and period", MACHINE]);
-  assert.match(r.proposals[0].label, /proposed by the machine/);
+  assert.equal(r.proposals[0].label, word("screen.money.proposed"));
   const inc = s.m.include({ setId: set, factId: f, reason: "checked the fund code", by: ANN });
   assert.equal(inc.adopted_proposal, p.proposal_id);
   r = s.m.readSet({ setId: set, viewer: ANN });

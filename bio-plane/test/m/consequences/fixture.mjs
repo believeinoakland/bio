@@ -24,6 +24,7 @@ import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -349,9 +350,9 @@ export function inquiryMd(id, { state = "open", prior = "null", target, extra = 
     ...(concluded ? ['conclusion: "The harm follows from the act."',
                      'falsifier: "a budget line restoring the fund would falsify this"'] : []),
     ...extra,
-    "---", "", "## Question", "", `Does the cut follow from ${id}?`, "", "## What It Rests On", "",
+    "---", "", "## Question", "", `Does the cut follow from ${id}?`, "", word("conformance.rests"), "",
     "## Conclusion", "", concluded ? "The harm follows from the act." : "", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 function infoMd(id) {

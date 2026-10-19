@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, world, draft, approved, V, MACHINE, TEST, TEXT, sha, secret } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank");
 
@@ -133,7 +134,7 @@ test("R23 each refusal carries its row {check, where, translation} from this mod
                   RFC_QUOTING_MISSING: "C-115.47" };
   for (const [c, n] of Object.entries(moved)) assert.equal(rows[c].check, n, c);
   /* R26's rows, their translations as BOB worded them */
-  assert.equal(rows.TEMPLATE_REF_REFUSED.translation, "Name one template, by its id or as @ and its name. Nothing was drafted.");
+  assert.equal(rows.TEMPLATE_REF_REFUSED.translation, word("refusal.TEMPLATE_REF_REFUSED"));
   assert.equal(rows.TEMPLATE_NAME_AMBIGUOUS.translation, "Two templates you can see go by that name here, so neither was chosen. "
     + "Pick the template by its id. Nothing was drafted.");
   const fresh = Object.entries(rows).filter(([c]) => !(c in moved));

@@ -12,11 +12,12 @@ import {
   refuse, isObj, filled, viewerRefusal, nodeRefusal, dateRefusal, depthOrRefusal, dateText,
   LEAD_SENTENCE, DECLARED_MARK, HUNCH_MARK, NOT_ASSERTED,
 } from './answer.mjs';
+import { word, localize } from '../setup-words/index.mjs';
 
 /** What a path's stated quantity is, when an answer is ordered by one (R3). */
-export const QUANTITY_OF_PATH = 'the quantity its last step states';
+export const QUANTITY_OF_PATH = word('explore.quantity_of_path');
 /** The order every answer states (R3, connection-grammar R14). */
-export const PATH_ORDER = 'fewest steps first, then the earliest start of validity, then the steps\' ids';
+export const PATH_ORDER = word('explore.path_order');
 
 /**
  * The kinds a walk is asked over: each must be registered (UNKNOWN_KIND, naming it); absent means every registered
@@ -25,9 +26,9 @@ export const PATH_ORDER = 'fewest steps first, then the earliest start of validi
  */
 export function resolveKinds(registry, kinds) {
   if (kinds === undefined || kinds === null) return { kinds: registry.owners().flatMap((o) => o.kinds.map((k) => k.kind)) };
-  if (!Array.isArray(kinds) || kinds.some((k) => !filled(k))) return { refusal: refuse('UNKNOWN_KIND', 'kinds is a list of the kinds owners registered') };
+  if (!Array.isArray(kinds) || kinds.some((k) => !filled(k))) return { refusal: refuse('UNKNOWN_KIND', localize('explore.walk.kinds_is_list', 'kinds is a list of the kinds owners registered')) };
   const unknown = kinds.find((k) => registry.kindOf(k) === null);
-  if (unknown !== undefined) return { refusal: refuse('UNKNOWN_KIND', `no owner registered the kind ${String(unknown).slice(0, 60)}`) };
+  if (unknown !== undefined) return { refusal: refuse('UNKNOWN_KIND', word('explore.no.owner_registered_kind', { kind: String(String(unknown).slice(0, 60)) })) };
   return { kinds: [...new Set(kinds)] };
 }
 
@@ -43,9 +44,9 @@ export function checkWalkArgs(registry, a, fromName = 'from') {
   if (k.refusal) return k;
   const d = depthOrRefusal(arg.depth);
   if (d.refusal) return d;
-  if (arg.sortBy !== undefined && arg.sortBy !== null && !filled(arg.sortBy)) return { refusal: refuse('UNKNOWN_QUANTITY', 'sortBy names a quantity a step states') };
+  if (arg.sortBy !== undefined && arg.sortBy !== null && !filled(arg.sortBy)) return { refusal: refuse('UNKNOWN_QUANTITY', localize('explore.walk.sort_by_names', 'sortBy names a quantity a step states')) };
   if (arg.scope !== undefined && arg.scope !== null && !(isObj(arg.scope) && filled(arg.scope.inquiry))) {
-    return { refusal: refuse('BAD_SCOPE', 'a scope is {inquiry}: the working inquiry whose hunch steps may be walked') };
+    return { refusal: refuse('BAD_SCOPE', localize('explore.walk.scope_names_one', 'a scope names one inquiry: the working inquiry whose hunch steps may be walked')) };
   }
   return { kinds: k.kinds, depth: d.depth };
 }
@@ -53,7 +54,7 @@ export function checkWalkArgs(registry, a, fromName = 'from') {
 /** The kind an attached source of a declared step is registered as (`connections` R69; R24). */
 export const STEP_SOURCE = 'step_source';
 /** What a walk stopped at its depth says (R22): the nodes there were not asked about. */
-export const DEPTH_SENTENCE = 'The walk stopped at its depth: what lies beyond the records it reached there was not asked, so it is undetermined, not absent.';
+export const DEPTH_SENTENCE = word('explore.depth_sentence');
 /** How many nodes at the depth an answer names (R22). */
 export const AT_DEPTH_MAX = 500;
 
@@ -177,7 +178,7 @@ export function walk(ctx, w) {
   if (w.to !== undefined && w.to !== null) paths = paths.filter((p) => p.hops[p.hops.length - 1].from === w.to || p.hops[p.hops.length - 1].to === w.to);
   if (w.sortBy) {
     const stated = found.some((hops) => hops.some((h) => isObj(h.quantities) && typeof h.quantities[w.sortBy] === 'number'));
-    if (!stated) return refuse('UNKNOWN_QUANTITY', `no step in the walk states the quantity ${w.sortBy}`);
+    if (!stated) return refuse('UNKNOWN_QUANTITY', localize('explore.walk.no_step_in_the_walk', 'no step in the walk states the quantity {sortBy}', { sortBy: String(w.sortBy) }));
   }
   paths = /** @type {any[]} */ (orderPaths(paths, w.sortBy ? { by: w.sortBy } : {}));
   // Each hop of each path answered carries its two ends' names, read once for the distinct ends (R26).
@@ -214,7 +215,7 @@ export function describePath(registry, hops, by) {
   const p = {
     hops, grade: chainGrade(hops), label: label.label, ...(label.label === 'lead' ? { lead: { hops: label.hops, sentence: LEAD_SENTENCE } } : {}),
     marks, at_date: undet.length ? 'undetermined' : 'in',
-    ...(undet.length ? { undetermined: { hops: undet.map((h) => h.id), why: undet.map((h) => `${h.id}: ${h.undetermined.why}`).join('; ') } } : {}),
+    ...(undet.length ? { undetermined: { hops: undet.map((h) => h.id), why: undet.map((h) => ({ hop: h.id, why: h.undetermined.why })) } } : {}),
   };
   if (by) {
     const last = hops[hops.length - 1];
@@ -229,8 +230,8 @@ function absence(w, complete, unread) {
   const state = complete ? 'LOOKED_ABSENT' : 'LOOKED_INDETERMINATE';
   return {
     level: 'meaning', state, meaning: OBSERVATION_STATES[state],
-    searched: `the record's held connections of ${w.kinds.length} kind${w.kinds.length === 1 ? '' : 's'}, as of ${dateText(w.at)}, to depth ${w.depth} from ${w.from}${w.to ? ` toward ${w.to}` : ''}`,
-    reach: 'Only what the record holds was searched: the documents not captured, and tables held but not read, are outside it.',
+    searched: word('explore.searched', { kinds: String(w.kinds.length), s: String(w.kinds.length === 1 ? '' : 's'), at: String(dateText(w.at)), depth: String(w.depth), from: String(w.from), to: String(w.to ? ` toward ${w.to}` : '') }),
+    reach: word('explore.reach'),
     unread,
   };
 }

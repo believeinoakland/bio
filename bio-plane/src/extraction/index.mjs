@@ -37,6 +37,7 @@ import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsT
          readingFromWire, decodeView, textCountsOf, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
          AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP, TRANSCRIBE_WORDS };
 
@@ -977,8 +978,7 @@ export class Extraction {
                    engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
                    steps: ts.steps, chain, says: describeChain(chain) }
                : { recorded: false,
-                   why: `this reading carries no text provenance, which is not the same as its `
-                      + `text not having been transcribed -- nobody recorded how it was produced` },
+                   why: localize("extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced") },
              reading_history: this.#readingHistoryOf(row.capture_sha),
              ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
              ...(text_units ? { text_units } : {}) };
@@ -1276,7 +1276,7 @@ export class Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again";
+    if (!ev) return localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again");
     const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return "the capture's bytes are not held in the evidence store";
@@ -1357,9 +1357,7 @@ export class Extraction {
     if (ocrAsked) {
       if (ocr !== "1")
         return { status: 400, body: { ok: false, reason: "REEXTRACT_FLAG_MALFORMED", ...reextractRow("REEXTRACT_FLAG_MALFORMED"),
-          op, detail: `ocr=${JSON.stringify(String(ocr).slice(0, 40))} is not a value `
-                    + `this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the `
-                    + `parameter off for the ordinary read.` } };
+          op, detail: localize("extraction.index.ocr_stringify_is_not_a", "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.", { stringify: String(JSON.stringify(String(ocr).slice(0, 40))) }) } };
       if (cls === "ai")
         return { status: 403, body: { ok: false, reason: "REEXTRACT_AGENT_REFUSED", ...reextractRow("REEXTRACT_AGENT_REFUSED"),
           op, detail: `op=pdfstructure is declared a read, so no agent task scope can name it as a write, `
@@ -1369,22 +1367,16 @@ export class Extraction {
       if (session && !held.has("contribute"))
         return { status: 403, body: { ok: false, reason: "REEXTRACT_NOT_CAPABLE", ...reextractRow("REEXTRACT_NOT_CAPABLE"),
           op, needs: "contribute", held: [...held].sort(),
-          detail: `a re-read replaces this capture's reading, its text units and the standing of `
-                + `content rows cited under the old one, which is a write to the record and asks the `
-                + `capability a promotion asks.` } };
+          detail: localize("extraction.index.a_re_read_replaces_this", "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.") } };
       if (!e.OCR_WORKER)
         return { status: 501, body: { ok: false, reason: "REEXTRACT_NO_OCR_MEMBER", ...reextractRow("REEXTRACT_NO_OCR_MEMBER"),
           op, sha256: sha,
-          detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), `
-                + `so there is no tier 3 to reach. Nothing was read, called or written. An instance `
-                + `that installs the member later can re-read this capture then (D-115, D-319).` } };
+          detail: localize("extraction.index.no_ocr_member_is_bound", "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).") } };
       reBasis = this.reextractBasis({ captureSha: sha, viewer });
       if (!reBasis.held)
         return { status: 409, body: { ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
           op, sha256: sha,
-          detail: `this record holds no reading of that capture that you can see, so there is nothing `
-                + `for a re-read to replace. A capture is read when a record carrying it is promoted; `
-                + `a capture in a project you are not part of answers exactly as one never filed.` } };
+          detail: localize("extraction.index.this_record_holds_no_reading", "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.") } };
     }
     /* END DEC-49 REGION is-reextract */
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
@@ -1488,8 +1480,7 @@ export class Extraction {
           staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
           compared: w.compared ?? null,
           after_read: w.afterRead ?? null,
-          candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
-                    + "what your team's Civicsmith can read; this one is re-read now",
+          candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now"),
         };
       }
     }
@@ -1571,28 +1562,23 @@ export class Extraction {
     /* DEC-49 REGION is-transcribe */
     if (cls === "ai")
       return { status: 403, body: { ok: false, reason: "REEXTRACT_AGENT_REFUSED", ...reextractRow("REEXTRACT_AGENT_REFUSED"),
-        op, detail: `op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an `
-                  + `agent credential cannot declare that as one of its writes. A member can ask for it (D-199).` } };
+        op, detail: localize("extraction.index.op_pagetranscribe_writes_this_captures", "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).") } };
     const held = new Set(Array.isArray(caps) ? caps : []);
     if (session && !held.has("contribute"))
       return { status: 403, body: { ok: false, reason: "REEXTRACT_NOT_CAPABLE", ...reextractRow("REEXTRACT_NOT_CAPABLE"),
         op, needs: "contribute", held: [...held].sort(),
-        detail: `a transcription replaces this capture's reading, its text units and the standing of content rows `
-              + `cited under the old one, which is a write to the record and asks the capability a promotion asks.` } };
+        detail: localize("extraction.index.a_transcription_replaces_this_captures", "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.") } };
     let deployable = false;
     try { deployable = !!reg && reg.t.deployable() === true; } catch { deployable = false; }
     if (!deployable)
       return { status: 501, body: { ok: false, reason: "TRANSCRIBE_NOT_DEPLOYED", ...reextractRow("TRANSCRIBE_NOT_DEPLOYED"),
         op, sha256: sha,
-        detail: `the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not `
-              + `switched on. Nothing was read, rendered, sent or written, and no account was looked at.` } };
+        detail: localize("extraction.index.the_ais_part_for_transcribing", "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.") } };
     const basis = this.reextractBasis({ captureSha: sha, viewer });
     if (!basis.held)
       return { status: 409, body: { ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
         op, sha256: sha,
-        detail: `this record holds no reading of that capture that you can see, so there are no pages for the AI `
-              + `to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you `
-              + `are not part of answers exactly as one never filed.` } };
+        detail: localize("extraction.index.this_record_holds_no_reading_2", "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.") } };
     /* `ai-accounts.aiKeptAway` (its R7, as its R22 and R34 amend it), the one site of both codes, relayed as given; it
        fails closed itself, and a transcriber that throws here fails the request, nothing read or sent (no code is
        minted here for it). */
@@ -1750,9 +1736,7 @@ export class Extraction {
              limit: raw.limit, truncated: !!raw.truncated, regraded: 0,
              ...(raw.unavailable ? { undetermined: say("extraction.undetermined.calibration_module_reachable") } : {}),
              why: all.length
-               ? `${all.length} transcription(s) were graded under a measurement a later probe `
-                 + `found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: `
-                 + `this names the work so a member can do it (DEC-4)`
+               ? localize("extraction.index.length_transcription_s_were_graded", "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)", { length: String(all.length) })
                : say("extraction.why.transcription_store_rests") };
   }
 

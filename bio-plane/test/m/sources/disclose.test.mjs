@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET } from "./fixture.mjs";
 import { SOURCES_CHECKS, KINDS, HOWS, AUDIENCES, ATTRIBUTES, NOT_RECORDED, claimSentence } from "../../../src/sources/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const rowOf = (r, code) => { assert.equal(r.check, SOURCES_CHECKS[code].check); assert.equal(r.translation, SOURCES_CHECKS[code].translation); };
@@ -109,20 +110,20 @@ test("R3 a hostile disclosure is stored as the exposer's claim and read as \"nam
   const h = w.disclose(sourceId, { how: "hostile", claimedBy: "an anonymous account", claimedAt: "2026-09-12", knownTo: "public",
                                    evidence: { cite: "https://example.org/post/1" } });
   assert.equal(h.confirmed, false);
-  assert.equal(h.claim, "named by an anonymous account on 2026-09-12; not confirmed by the team");
+  assert.equal(h.claim, word("sources.named_confirmed_group", { claimed_by: "an anonymous account", at: "2026-09-12" }));
   assert.equal(h.claim, claimSentence("an anonymous account", "2026-09-12"));
   const stored = w.rows(`SELECT claimed_by, claimed_at FROM source_entries WHERE entry_id = ?`, h.entry)[0];
   assert.deepEqual(stored, { claimed_by: "an anonymous account", claimed_at: "2026-09-12" }, "stored as {claimed_by, at}");
   /* claimedAt absent: the instant recorded */
   const h2 = w.disclose(sourceId, { how: "hostile", claimedBy: "a forum", revealed: { kind: "attribute", attribute: "employer", value: "Acme" } });
-  assert.equal(h2.claim, `named by a forum on ${new Date(w.clock.now).toISOString().slice(0, 10)}; not confirmed by the team`);
+  assert.equal(h2.claim, claimSentence("a forum", new Date(w.clock.now).toISOString()));
   /* every read answers it unconfirmed, whatever else is recorded after it */
   const conf = w.disclose(sourceId, { confirms: h.entry, how: "self", knownTo: "public", evidence: { cite: "a filing" } });
   assert.equal(conf.ok, true);
   const hist = w.s.sourceOf({ captureSha: row.sha256, viewer: V("bob") }).history;
   const hv = hist.find((e) => e.entry === h.entry);
   assert.equal(hv.confirmed, false, "a confirmation never turns the claim confirmed");
-  assert.equal(hv.claim, "named by an anonymous account on 2026-09-12; not confirmed by the team");
+  assert.equal(hv.claim, claimSentence("an anonymous account", "2026-09-12"));
   for (const e of hist.filter((x) => x.how === "hostile")) assert.equal(e.confirmed, false);
   const rung = w.s.rungOf({ source: sourceId, viewer: V("carol") });
   for (const c of rung.claims) assert.equal(c.confirmed, false);
@@ -152,7 +153,7 @@ test("R4 recorded: false records a detail known to the group without its value: 
     assert.equal(e.value, undefined, viewer);
     assert.equal(e.withheld, undefined, "nothing is withheld: there is nothing to withhold");
     assert.equal(e.note, NOT_RECORDED);
-    assert.equal(e.note, "known to the team, not recorded");
+    assert.equal(e.note, word("sources.known_group_recorded"));
     const rung = w.s.rungOf({ source: sourceId, viewer });
     assert.ok(rung.basis.every((b) => b.value === undefined));
   }

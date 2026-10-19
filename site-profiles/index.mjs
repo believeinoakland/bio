@@ -73,6 +73,7 @@ import aspnetWebforms from "./handlers/aspnet-webforms.mjs";
 import wordpress from "./handlers/wordpress.mjs";
 import clientRendered from "./handlers/client-rendered.mjs";
 import conservative from "./handlers/conservative.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The module's whole interface is reachable from this file: the ladder and the
    registry (recogniser.mjs), the event catalogue (events.mjs), the regions and the
@@ -139,7 +140,7 @@ export function applyBoundary(text, boundary) {
   const outside = String(text).length - inner.length;
   return { text: PLACEHOLDER + inner + PLACEHOLDER,
            found: [{ rule: "outside_the_document", region: REGION.PRESENTATIONAL,
-                     label: "everything around the document itself, such as navigation and footers",
+                     label: localize("site-profiles.index.everything_around_the_document_itself", "everything around the document itself, such as navigation and footers"),
                      count: 1, bytes: outside }],
            bytes: outside };
 }
@@ -210,21 +211,21 @@ export async function compare(before, after, handler, ctx) {
                  applied: a.applied, digests: { before: a, after: b } };
   if (a.identity === b.identity)
     return { ...base, verdict: "identical", evidentiary_change: false,
-             why: "the source served exactly the same document" };
+             why: localize("site-profiles.index.the_source_served_exactly_the_same", "the source served exactly the same document") };
   /* Without a confident handler, the narrowing rules are not trusted and the
      honest answer is that the bytes differ and nobody can yet say what that
      means. Silence here is safer than a wrong "unchanged". */
   if (base.confidence !== CONFIDENCE.CERTAIN && !h.conservative)
     return { ...base, verdict: "undetermined", evidentiary_change: null,
-             why: "the document differs and this kind of document is not recognised well enough to say whether the difference matters" };
+             why: localize("site-profiles.index.the_document_differs_and_this_kind", "the document differs and this kind of document is not recognised well enough to say whether the difference matters") };
   if (a.evidentiary !== b.evidentiary)
     return { ...base, verdict: "changed", evidentiary_change: true,
-             why: "the substance of the document differs" };
+             why: localize("site-profiles.index.the_substance_of_the_document", "the substance of the document differs") };
   if (a.rendition !== b.rendition)
     return { ...base, verdict: "restyled", evidentiary_change: false,
-             why: "the substance is the same; something around it changed, such as navigation or related links" };
+             why: localize("site-profiles.index.the_substance_is_the_same", "the substance is the same; something around it changed, such as navigation or related links") };
   return { ...base, verdict: "unchanged", evidentiary_change: false,
-           why: "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs" };
+           why: localize("site-profiles.index.the_substance_and_the_appearance", "the substance and the appearance are both the same; only machinery this site rebuilds on every visit differs") };
 }
 
 /** Can this capture be shown as a faithful rendition, and if not, what is the
@@ -254,9 +255,9 @@ export function fidelity(manifest, handler, ctx) {
   const critical = missing.filter(critical_);
   if (critical.length)
     return { level: "insufficient", missing, critical,
-             why: "a file the page needs in order to look the way the source published it has not been collected" };
+             why: localize("site-profiles.index.a_file_the_page_needs", "a file the page needs in order to look the way the source published it has not been collected") };
   return { level: "degraded", missing, critical: [],
-           why: "everything the page needs to read correctly is held; some decoration is not" };
+           why: localize("site-profiles.index.everything_the_page_needs_to", "everything the page needs to read correctly is held; some decoration is not") };
 }
 
 /* ---- the STACK axis: one registry of the shared shape ----
@@ -295,7 +296,7 @@ export function identify(ctx) {
   const handler = r.member;
   if (!r.matched)
     return { handler, confidence: CONFIDENCE.NONE, signals: [], considered: r.considered,
-             why: "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported" };
+             why: localize("site-profiles.index.no_handler_recognised_this_document", "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported") };
   const out = { handler, confidence: r.confidence, signals: r.signals, considered: r.considered };
   /* `kind` is the handler's own classification; a handler that defines none has none. */
   if (typeof handler.kind === "function") out.kind = handler.kind(ctx);

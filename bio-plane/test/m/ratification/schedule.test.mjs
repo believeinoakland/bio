@@ -13,6 +13,7 @@ import { caseRatifyOp, publishAtOp, ratificationOp, obscuredCopyKey } from "../.
 import { caseConclusionRowLines, keyFingerprint, CHECKED_PARTS, rowOf } from "../../../src/ratification/index.mjs";
 import { peopleLines, memberTieLines } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -187,7 +188,7 @@ test("R40, R41: a read R41 makes that fails or answers nothing (a hold read answ
   s.w.hold = null;
   const r = s.w.op("publishat", {}, s.body);
   assert.equal(r.reason, "SCHEDULE_UNCHECKABLE");
-  assert.deepEqual(r.unreadable.map((u) => u.what).sort(), ["money fact MNY-2026-0001", "the litigation holds"]);
+  assert.deepEqual(r.unreadable.map((u) => u.what).sort(), ["money fact MNY-2026-0001", word("ratification.ask.litigation_holds")]);
   assert.deepEqual(s.scheduled, []);
 });
 
@@ -306,7 +307,7 @@ test("R42, R45: what cannot be read at the time stops it (UNREADABLE naming what
   s.w.hold = null;
   let out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.deepEqual(out.stopped.map((x) => [x.code, x.cause.code]), [["SCHEDULED_CHECK_REFUSED", "UNREADABLE"]]);
-  assert.deepEqual(out.stopped[0].cause.what, ["the litigation holds"]);
+  assert.deepEqual(out.stopped[0].cause.what, [word("ratification.ask.litigation_holds")]);
   s.w.hold = () => { throw new Error("boom"); };
   out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.equal(out.stopped[0].cause.code, "UNREADABLE");

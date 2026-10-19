@@ -8,23 +8,13 @@ import { fresh, bucket } from "./fixture.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import * as CAPTURE from "../../../src/capture/checks.mjs";
 import { knockEnvelopeTooLarge, knockPayloadTooLarge, knockEmpty, knockerSecretWeak, knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
+import { EXPECT } from "./expect.mjs";
 
-const SEEN = "The team can see how often its doorbell turns people away.";
-/* The requirement's table (R21) for C-118's four rows. */
-const C118 = {
-  NO_SUCH_KNOCK: ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."],
-  KNOCKER_SECRET_WEAK: ["C-118.3", "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. " + SEEN],
-  KNOCK_DISCARDED: ["C-118.4", "This knock was set aside. Move it back to new before bringing it in. Nothing was written."],
-  RESOLVE_NO_REASON: ["C-118.7", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."],
-};
-/* C-85's five rows, each number and translation as `capture` held them at T42's close (R21: kept as capture held them). */
-const C85 = {
-  RATE_IP: ["C-85.1", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly — the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. " + SEEN],
-  RATE_GLOBAL: ["C-85.2", "Your material was not received. This team's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you — the cap exists so that no one sender can fill the inbox — and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. " + SEEN],
-  KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "This team's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged — its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. " + SEEN],
-  KNOCK_PAYLOAD_TOO_LARGE: ["C-85.4", "This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent — a team that has configured evidence storage can keep far more — and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. " + SEEN],
-  KNOCK_EMPTY: ["C-85.5", "This team's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again. " + SEEN],
-};
+/* C-118's four rows and C-85's five, each translation as the product's row reads it (expect.mjs, K3810) */
+const CHECK = { NO_SUCH_KNOCK: "C-118.2", KNOCKER_SECRET_WEAK: "C-118.3", KNOCK_DISCARDED: "C-118.4", RESOLVE_NO_REASON: "C-118.7",
+  RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
+const C118 = Object.fromEntries(["NO_SUCH_KNOCK", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED", "RESOLVE_NO_REASON"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
+const C85 = Object.fromEntries(["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"].map((code) => [code, [CHECK[code], EXPECT[code]]]));
 
 test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
   assert.deepEqual(Object.keys(DOORBELL_CHECKS).sort(), Object.keys(C118).sort(), "the four C-118 rows, no other");
@@ -40,7 +30,7 @@ test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and
   for (const code of Object.keys(C118)) assert.notEqual(DOORBELL_CHECKS[code], CAPTURE.CAPTURE_CHECKS[code], `${code}: this module's own row`);
   for (const code of Object.keys(C85)) assert.notEqual(KNOCK_CHECKS[code], CAPTURE.KNOCK_CHECKS?.[code], `${code}: this module's own row`);
   /* C-118's other rows stay capture's: none of them is this module's */
-  for (const code of ["EVIDENCE_NOT_HELD", "NOT_THE_CAPTURING_ACTOR", "ACCOUNT_NO_TEXT", "MACHINE_CANNOT_SET_ASIDE", "SET_ASIDE_NO_REASON", "UPLOAD_NO_STATEMENT"])
+  for (const code of Object.keys(CAPTURE.CAPTURE_CHECKS).filter((code) => !(code in C118)))
     assert.equal(DOORBELL_CHECKS[code], undefined, `${code} stays capture's`);
   /* every check id once across this module's table */
   const ids = [...Object.values(DOORBELL_CHECKS), ...Object.values(KNOCK_CHECKS)].map((r) => r.check);
@@ -81,8 +71,8 @@ test("R21 R4 R5 R6 R7 R8: each of this module's raisers answers with its row's c
   /* a row changed at the refusal is the row answered (never a copy taken earlier) */
   const saved = KNOCK_CHECKS.KNOCK_EMPTY;
   try {
-    KNOCK_CHECKS.KNOCK_EMPTY = { ...saved, translation: "changed " + SEEN };
-    assert.equal(knockEmpty().translation, "changed " + SEEN);
+    KNOCK_CHECKS.KNOCK_EMPTY = { ...saved, translation: "changed translation" };
+    assert.equal(knockEmpty().translation, "changed translation");
   } finally { KNOCK_CHECKS.KNOCK_EMPTY = saved; }
 });
 

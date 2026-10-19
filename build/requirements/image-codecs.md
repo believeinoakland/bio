@@ -33,8 +33,7 @@ Pure image decoders: an image stream's bytes to samples, pixel-exact against an 
 ## Private
 
 ### Uses
-
-None (`test-support` for tests).
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

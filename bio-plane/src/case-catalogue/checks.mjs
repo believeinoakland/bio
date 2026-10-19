@@ -18,6 +18,7 @@ import { STRENGTH_STATES } from "../strength/arithmetic.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
+import { localize } from '../setup-words/index.mjs';
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from the record's grammars (`record-grammar` R11). */
@@ -188,7 +189,7 @@ export function completenessFields(fm) {
 export function checkPublishedExtension(fm, findings) {
   const e = fm.edition;
   if (!Number.isInteger(e) || e < 1) {
-    findings.push(f('C-2.8', 'error', `a case member requires an integer edition of 1 or more (got '${e}'): an edition is what makes a revision safe — edition 2 does not overwrite edition 1, it joins it (DEC-12)`,
+    findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.a_case_member_requires_an', 'a case member requires an integer edition of 1 or more (got \'{e}\'): an edition is what makes a revision safe — edition 2 does not overwrite edition 1, it joins it (DEC-12)', { e: String(e) }),
       ['publish through op=publish, which stamps the edition from the published record']));
   }
   const c = (typeof fm.completeness === 'object' && fm.completeness) || null;
@@ -222,12 +223,12 @@ export function checkPublishedExtension(fm, findings) {
       findings.push(f('C-2.8', 'error', 'a case member requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
     }
     if (!ISO_TS_RE.test(String(c.at || ''))) {
-      findings.push(f('C-2.8', 'error', `a case member requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.a_case_member_requires_completeness', 'a case member requires completeness.at as an ISO timestamp (got \'{at}\')', { at: String(c.at) })));
     }
     /* DEC-13. The gate is the DECLARATION, never the act: every position below
        passes, and nothing reads which one it is. */
     if (!SUBJECT_POSITIONS.includes(c.subject_position)) {
-      findings.push(f('C-2.8', 'error', `a case member requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`,
+      findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.a_case_member_requires_completeness_2', 'a case member requires completeness.subject_position, one of: {SUBJECT_POSITIONS} (got \'{subject_position}\'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)', { SUBJECT_POSITIONS: String(SUBJECT_POSITIONS.join(', ')), subject_position: String(c.subject_position) }),
         ['declare the team\'s position on putting this case to its subject']));
     }
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '') {
@@ -303,7 +304,7 @@ export function checkPublishedExtension(fm, findings) {
   } else {
     fm.completeness_excluded.forEach((r, i) => {
       if (!r || typeof r !== 'object') {
-        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] is not an object`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.completeness_excluded_i_is_not', 'completeness_excluded[{i}] is not an object', { i: String(i) })));
         return;
       }
       const named = typeof r.target === 'string' && BUNDLE_ID_RE.test(r.target);
@@ -313,11 +314,11 @@ export function checkPublishedExtension(fm, findings) {
          request has no id to point at — so a required target would force the
          member to invent a referent or to say nothing. */
       if (!named && !prose) {
-        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither`,
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.completeness_excluded_i_names_neither', 'completeness_excluded[{i}] names neither a target nor a description: every exclusion row carries a target id OR prose, never neither', { i: String(i) }),
           ['name the excluded record by id', 'or describe what was excluded in prose']));
       }
       if (typeof r.reason !== 'string' || r.reason.trim() === '') {
-        findings.push(f('C-2.8', 'error', `completeness_excluded[${i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.completeness_excluded_i_carries_no', 'completeness_excluded[{i}] carries no reason: WHAT was left out and WHY are two statements and one does not stand in for the other', { i: String(i) })));
       }
     });
   }
@@ -346,7 +347,7 @@ export function checkPublishedExtension(fm, findings) {
   if (!axes || axisCount('capture') !== 1 || axisCount('connection') !== 1
       || axisCount('testimony') > 1
       || axes.some((x) => !x || !GRADE_AXES.includes(x.axis))) {
-    findings.push(f('C-2.8', 'error', `a case member requires published_strength carrying BOTH axes, capture and connection, once each, and nothing but the axes this record measures (${GRADE_AXES.join(', ')}): a case does not have "a strength", it has one per axis, and composing them into one letter is the substitution R2 forbids`,
+    findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.a_case_member_requires_published', 'a case member requires published_strength carrying BOTH axes, capture and connection, once each, and nothing but the axes this record measures ({GRADE_AXES}): a case does not have "a strength", it has one per axis, and composing them into one letter is the substitution R2 forbids', { GRADE_AXES: String(GRADE_AXES.join(', ')) }),
       ['publish through op=publish, which stamps the frozen axis objects into the bytes']));
   } else if (testimonyLeg && axisCount('testimony') !== 1) {
     findings.push(f('C-2.8', 'error', 'a case member whose basis carries a testimony grade requires a published_strength row for the testimony axis: the case rests on a member\'s word, and the frozen bytes must say at what, beside the capture and connection axes and never folded into either',
@@ -355,11 +356,11 @@ export function checkPublishedExtension(fm, findings) {
   } else {
     for (const a of axes) {
       if (!STRENGTH_STATES.includes(a.state)) {
-        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} state '${a.state}' is not one of: ${STRENGTH_STATES.join(', ')}`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_axis_state_state', 'published_strength.{axis} state \'{state}\' is not one of: {STRENGTH_STATES}', { axis: String(a.axis), state: String(a.state), STRENGTH_STATES: String(STRENGTH_STATES.join(', ')) })));
       } else if (a.state === 'graded' && !BASIS_GRADES.includes(a.grade)) {
-        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} is graded but carries no grade`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_axis_is_graded', 'published_strength.{axis} is graded but carries no grade', { axis: String(a.axis) })));
       } else if (a.state !== 'graded' && a.grade != null) {
-        findings.push(f('C-2.8', 'error', `published_strength.${a.axis} is ${a.state} and still carries grade '${a.grade}': ${a.state === 'unrated' ? 'UNRATED is not a low score, it is nothing established on this axis' : 'undetermined is what we do not know, not a grade'}`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_axis_is_state', 'published_strength.{axis} is {state} and still carries grade \'{grade}\': {v1}', { axis: String(a.axis), state: String(a.state), grade: String(a.grade), v1: String(a.state === 'unrated' ? 'UNRATED is not a low score, it is nothing established on this axis' : 'undetermined is what we do not know, not a grade') })));
       }
     }
   }
@@ -383,23 +384,23 @@ export function checkPublishedExtension(fm, findings) {
     for (let i = 0; i < frozenGrounds.length; i++) {
       const g = frozenGrounds[i];
       if (!g || typeof g !== 'object') {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is not an object`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_is', 'published_strength_grounds[{i}] is not an object', { i: String(i) })));
         continue;
       }
       if (!GRADE_AXES.includes(g.axis)) {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}].axis '${g.axis}' is not one of: ${GRADE_AXES.join(', ')} — the branches are composed PER AXIS and both axes are frozen separately (DEC-21)`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_axis', 'published_strength_grounds[{i}].axis \'{axis}\' is not one of: {GRADE_AXES} — the branches are composed PER AXIS and both axes are frozen separately (DEC-21)', { i: String(i), axis: String(g.axis), GRADE_AXES: String(GRADE_AXES.join(', ')) })));
       }
       if (!STRENGTH_STATES.includes(g.state)) {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}].state '${g.state}' is not one of: ${STRENGTH_STATES.join(', ')}`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_state', 'published_strength_grounds[{i}].state \'{state}\' is not one of: {STRENGTH_STATES}', { i: String(i), state: String(g.state), STRENGTH_STATES: String(STRENGTH_STATES.join(', ')) })));
       } else if (g.state === 'graded' && !BASIS_GRADES.includes(g.grade)) {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is graded but carries no grade`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_is_2', 'published_strength_grounds[{i}] is graded but carries no grade', { i: String(i) })));
       } else if (g.state !== 'graded' && g.grade != null) {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds[${i}] is ${g.state} and still carries grade '${g.grade}': a suspended ground states what is unknown, and an unrated one states that nothing on it is established — neither is a grade`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_i_is_3', 'published_strength_grounds[{i}] is {state} and still carries grade \'{grade}\': a suspended ground states what is unknown, and an unrated one states that nothing on it is established — neither is a grade', { i: String(i), state: String(g.state), grade: String(g.grade) })));
       }
     }
     for (const label of new Set(fm.basis.filter((l) => l && typeof l.ground === 'string' && l.ground).map((l) => l.ground))) {
       if (!frozenGrounds.some((g) => g && g.ground === label)) {
-        findings.push(f('C-2.8', 'error', `published_strength_grounds names no row for ground '${label}': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check`));
+        findings.push(f('C-2.8', 'error', localize('case-catalogue.checks.published_strength_grounds_names_no', 'published_strength_grounds names no row for ground \'{label}\': every branch the basis carries is frozen on every axis, because a branch missing from the frozen result is one no reader can check', { label: String(label) })));
       }
     }
   }
@@ -519,7 +520,7 @@ export function checkCaseDocument(fm, ctx = {}) {
 
   /* D-442: an ACCEPTED SET, never a single value — the IC-166 precondition for the bump. */
   if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
-    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}', or one of the earlier formats accepted as written (${CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(', ')}) (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+    findings.push(f(C41.FORMAT, 'error', localize('case-catalogue.checks.a_case_document_declares_format', 'a case document declares format \'{CASE_DOCUMENT_FORMAT}\', or one of the earlier formats accepted as written ({map}) (got \'{format}\'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one', { CASE_DOCUMENT_FORMAT: String(CASE_DOCUMENT_FORMAT), map: String(CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(', ')), format: String(fm?.format) }),
       ['re-publish through op=publish, which authors the case document']));
   }
   /* THE IDENTITY AND THE EDITION, CHECKED AGAINST WHAT THE STORE IS ABOUT TO
@@ -532,12 +533,12 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (typeof fm?.case_id !== 'string' || fm.case_id.trim() === '' || fm.case_id === 'null') {
     findings.push(f(C41.IDENTITY, 'error', 'a case document requires case_id: without it the document names no case, so C-21.1 has nothing to be fresh against and the container has no identity to be an edition OF (DEC-44)'));
   } else if (caseId && fm.case_id !== caseId) {
-    findings.push(f(C41.IDENTITY, 'error', `this case document names case ${fm.case_id} and is being ratified as ${caseId}: the signature covers these bytes, so a case identity taken from the request rather than from the signed document would place a commitment where nobody made one`));
+    findings.push(f(C41.IDENTITY, 'error', localize('case-catalogue.checks.this_case_document_names_case', 'this case document names case {case_id} and is being ratified as {caseId}: the signature covers these bytes, so a case identity taken from the request rather than from the signed document would place a commitment where nobody made one', { case_id: String(fm.case_id), caseId: String(caseId) })));
   }
   if (!Number.isInteger(fm?.case_edition) || fm.case_edition < 1) {
-    findings.push(f(C41.EDITION, 'error', `a case document requires an integer case_edition of 1 or more (got '${fm?.case_edition}'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once`));
+    findings.push(f(C41.EDITION, 'error', localize('case-catalogue.checks.a_case_document_requires_an', 'a case document requires an integer case_edition of 1 or more (got \'{case_edition}\'): an edition is a SEPARATE DOCUMENT and answers forever, so a signature that did not cover the number would stand for every edition of this case at once', { case_edition: String(fm?.case_edition) })));
   } else if (Number.isInteger(edition) && fm.case_edition !== edition) {
-    findings.push(f(C41.EDITION, 'error', `this case document names edition ${fm.case_edition} and is being ratified as edition ${edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a record`));
+    findings.push(f(C41.EDITION, 'error', localize('case-catalogue.checks.this_case_document_names_edition', 'this case document names edition {case_edition} and is being ratified as edition {edition}: the edition is inside the hash the member signed, exactly as DEC-12 already requires of a record', { case_edition: String(fm.case_edition), edition: String(edition) })));
   }
   /* CASE-2 / DEC-72 clause 2 — WHOSE PRODUCTION. Text preserved from the arm
      this replaces, with 'a case member' corrected to 'a case document': the
@@ -585,19 +586,19 @@ export function checkCaseDocument(fm, ctx = {}) {
       const pinned = new Map(rows.map((r) => [String(r.target ?? ''), r.version_sha]));
       for (const m of names) {
         if (!named.has(m)) {
-          findings.push(f(C41.ROLES, 'error', `case_roles designates no role for ${m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)`));
+          findings.push(f(C41.ROLES, 'error', localize('case-catalogue.checks.case_roles_designates_no_role', 'case_roles designates no role for {m}, which case_findings names as a member: the partition covers the roster exactly, because a member the partition is silent about was designated by nobody (DEC-72 clause 4)', { m: String(m) })));
         } else if (!CASE_MEMBER_ROLES.includes(named.get(m))) {
-          findings.push(f(C41.ROLES, 'error', `case_roles designates ${m} '${named.get(m)}', which is not one of: ${CASE_MEMBER_ROLES.join(', ')}`));
+          findings.push(f(C41.ROLES, 'error', localize('case-catalogue.checks.case_roles_designates_m_get', 'case_roles designates {m} \'{get}\', which is not one of: {CASE_MEMBER_ROLES}', { m: String(m), get: String(named.get(m)), CASE_MEMBER_ROLES: String(CASE_MEMBER_ROLES.join(', ')) })));
         }
         const pin = pinned.get(m);
         if (typeof pin !== 'string' || !/^[0-9a-f]{64}$/.test(pin)) {
-          findings.push(f(C41.PINS, 'error', `case_roles names ${m} without a 64-hex version_sha: publication PINS VERSIONS LIKE A COMMIT (DEC-72 clause 3), so a case that names its members and not the VERSIONS of them is a claim about the present rather than a frozen edition. The pin is the member's own bundle_sha, which is the hash that member signs`,
+          findings.push(f(C41.PINS, 'error', localize('case-catalogue.checks.case_roles_names_m_without', 'case_roles names {m} without a 64-hex version_sha: publication PINS VERSIONS LIKE A COMMIT (DEC-72 clause 3), so a case that names its members and not the VERSIONS of them is a claim about the present rather than a frozen edition. The pin is the member\'s own bundle_sha, which is the hash that member signs', { m: String(m) }),
             ['re-publish through op=publish, which pins each member at the version it prepared']));
         }
       }
       for (const [t] of named) {
         if (t && !names.includes(t)) {
-          findings.push(f(C41.ROLES, 'error', `case_roles designates ${t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it`));
+          findings.push(f(C41.ROLES, 'error', localize('case-catalogue.checks.case_roles_designates_t_which', 'case_roles designates {t}, which case_findings does not name as a member of this case: the partition is OVER the roster and cannot reach outside it', { t: String(t) })));
         }
       }
       if (names.length && !names.some((m) => named.get(m) === 'load_bearing')) {
@@ -620,9 +621,9 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (typeof c.author !== 'string' || c.author.trim() === '')
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.author: the completeness assertion is a named member\'s claim about the limits of this case'));
     if (typeof c.at !== 'string' || !ISO_TS_RE.test(c.at))
-      findings.push(f(C41.COMPLETENESS, 'error', `a case document requires completeness.at as an ISO timestamp (got '${c.at}')`));
+      findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_document_requires_completeness', 'a case document requires completeness.at as an ISO timestamp (got \'{at}\')', { at: String(c.at) })));
     if (!SUBJECT_POSITIONS.includes(c.subject_position))
-      findings.push(f(C41.COMPLETENESS, 'error', `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`));
+      findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_document_requires_completeness_2', 'a case document requires completeness.subject_position, one of: {SUBJECT_POSITIONS} (got \'{subject_position}\'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)', { SUBJECT_POSITIONS: String(SUBJECT_POSITIONS.join(', ')), subject_position: String(c.subject_position) })));
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '')
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)'));
   }
@@ -670,16 +671,16 @@ export function checkCaseDocument(fm, ctx = {}) {
       for (const a of acks) {
         if (!a || typeof a !== 'object' || !['participant', 'recipient'].includes(a.kind)
             || typeof a.by !== 'string' || !a.by.trim() || typeof a.at !== 'string')
-          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got ${JSON.stringify(a)}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name`));
+          findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_document_lists_an', 'a case document lists an acknowledgement of its statement that names no acknowledger, kind (participant or recipient) or date (got {stringify}): an acknowledgement is an authored, attributed, dated act, and an unattributed one is the record claiming a second reader it cannot name', { stringify: String(JSON.stringify(a)) })));
         else if (a.kind === 'participant' && writer && a.by === writer)
-          findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (§3 rule 13) — this is the writer, whether or not they are also completeness.author`));
+          findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_document_lists_by', 'a case document lists {by}, the member who WROTE its exclusion statement (completeness.statement_by), as having acknowledged it: an acknowledgement is a SECOND person\'s reading of what the case leaves out (BIO_Publication §3 rule 11), and the writer of the sentence has read it once. Who wrote the statement and who published the case are two acts and two names (§3 rule 13) — this is the writer, whether or not they are also completeness.author', { by: String(a.by) })));
         else if (a.kind === 'participant' && publisher && a.by === publisher)
           findings.push(f(C41.COMPLETENESS, 'error', `a case document lists ${a.by}, completeness.author — the member who PREPARED AND PUBLISHED this case and authored this completeness block at that act — as having acknowledged its statement: an acknowledgement is a SECOND person's reading of what the case leaves out (BIO_Publication §3 rule 11), and the member who authored the block is its first reader by construction`));
       }
       if (writerUndetermined && acks.some((a) => a && typeof a === 'object' && a.kind === 'participant'))
-        findings.push(f(C41.COMPLETENESS, 'error', `a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists ${acks.filter((a) => a && typeof a === 'object' && a.kind === 'participant').length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone — a recipient of a review copy is never the statement's writer`));
+        findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_document_states_that', 'a case document states that who wrote its exclusion statement is UNDETERMINED (completeness.statement_by is null) and lists {length} participant acknowledgement(s) of it: an acknowledgement is a SECOND person\'s reading (BIO_Publication §3 rule 11), and a document that cannot say who the FIRST reader was cannot support the claim that any of these is a second. Publish the edition again from a draft whose statement carries an author, or let the list stand with its recipients alone — a recipient of a review copy is never the statement\'s writer', { length: String(acks.filter((a) => a && typeof a === 'object' && a.kind === 'participant').length) })));
       if (c && c.acknowledged !== undefined && c.acknowledged !== acks.length)
-        findings.push(f(C41.COMPLETENESS, 'error', `a case document's completeness.acknowledged (${c.acknowledged}) disagrees with the ${acks.length} acknowledgement(s) it lists: the count and the list are one claim`));
+        findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_documents_completeness_acknowledged', 'a case document\'s completeness.acknowledged ({acknowledged}) disagrees with the {length} acknowledgement(s) it lists: the count and the list are one claim', { acknowledged: String(c.acknowledged), length: String(acks.length) })));
     }
   }
   /* REC-188 — C-41.13, THE TWO DISCLOSURES A /3 DOCUMENT MUST CARRY. The arm above cannot demand the
@@ -698,25 +699,25 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresDisclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (!bm || typeof bm !== 'object' || Array.isArray(bm) || typeof bm.in_force !== 'boolean') {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_document_requires', 'a {declared} case document requires a bias_manifest map with a boolean in_force (got {stringify}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none', { declared: String(declared), stringify: String(JSON.stringify(bm ?? null)) }),
         ['re-publish through op=publish, which stamps the manifest in force for the case\'s project into the case document']));
     } else if (bm.in_force === true && !(typeof bm.statements_sha === 'string' && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
       findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (record, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ['re-publish through op=publish']));
     } else if (bm.in_force === false && !(typeof bm.stated === 'string' && bm.stated.trim())) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_documents_bias', 'a {declared} case document\'s bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one', { declared: String(declared) }),
         ['re-publish through op=publish']));
     }
     if (bm && typeof bm === 'object' && !Array.isArray(fm?.bias_manifest_bundles)) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_2', 'a {declared} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal — an ABSENT field is silence about which revisions the lens was', { declared: String(declared) }),
         ['re-publish through op=publish']));
     }
     if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : undefined}'): ZERO is a statement — nobody but its author acknowledged it — and is legal; an absent count is silence (BIO_Publication §3 rule 11). An acknowledgement is never required to publish`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_3', 'a {declared} case document requires completeness.acknowledged, the count of second readers of its statement (got \'{v1}\'): ZERO is a statement — nobody but its author acknowledged it — and is legal; an absent count is silence (BIO_Publication §3 rule 11). An acknowledgement is never required to publish', { declared: String(declared), v1: String(c ? c.acknowledged : undefined) }),
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
     }
     if (!Array.isArray(fm?.completeness_acknowledgements)) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_4', 'a {declared} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement\'s author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)', { declared: String(declared) }),
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
     }
     /* REC-212 — (c) `completeness.statement_by`: WHO WROTE THE STATEMENT, told apart from
@@ -731,7 +732,7 @@ export function checkCaseDocument(fm, ctx = {}) {
        so nothing that already crossed is disturbed (rule 1). */
     if (!c || !Object.prototype.hasOwnProperty.call(c, 'statement_by')
         || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
+      findings.push(f(C41.DISCLOSURES, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_5', 'a {declared} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher\'s name reads two acts as one (got {v1}{v2})', { declared: String(declared), v1: String(c ? JSON.stringify(c.statement_by ?? null) : undefined), v2: String(c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : '') }),
         ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
     }
   }
@@ -760,10 +761,10 @@ export function checkCaseDocument(fm, ctx = {}) {
       const list = fm?.bias_manifest_pins_proposed;
       const n = bm.pins_proposed;
       if (!Number.isInteger(n) || n < 0 || !Array.isArray(list)) {
-        findings.push(f(C41.PENDING, 'error', `a ${declared} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the team has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
+        findings.push(f(C41.PENDING, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_6', 'a {declared} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count {stringify}, list {v1}): "no manifest was in force" is true of a scope whose only adoption pins a revision the team has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)', { declared: String(declared), stringify: String(JSON.stringify(n ?? null)), v1: String(Array.isArray(list) ? `of ${list.length}` : 'absent') }),
           ['re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing']));
       } else if (list.length !== n) {
-        findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+        findings.push(f(C41.PENDING, 'error', localize('case-catalogue.checks.a_declared_case_documents_bias_2', 'a {declared} case document\'s bias_manifest.pins_proposed says {n} and its bias_manifest_pins_proposed lists {length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither', { declared: String(declared), n: String(n), length: String(list.length) }),
           ['re-publish through op=publish']));
       } else {
         const bad = list.filter((x) => !(x && typeof x === 'object'
@@ -771,10 +772,10 @@ export function checkCaseDocument(fm, ctx = {}) {
           && typeof x.revision === 'string' && /^[0-9a-f]{64}$/.test(x.revision)
           && (x.scope === 'instance' || x.scope === 'project')));
         if (bad.length > 0)
-          findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which`,
+          findings.push(f(C41.PENDING, 'error', localize('case-catalogue.checks.a_declared_case_documents_bias_3', 'a {declared} case document\'s bias_manifest_pins_proposed has {length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: {stringify}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which', { declared: String(declared), length: String(bad.length), stringify: String(JSON.stringify(bad[0])) }),
             ['re-publish through op=publish']));
         if (!(typeof bm.pins_proposed_stated === 'string' && bm.pins_proposed_stated.trim()))
-          findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
+          findings.push(f(C41.PENDING, 'error', localize('case-catalogue.checks.a_declared_case_documents_bias_4', 'a {declared} case document\'s bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode', { declared: String(declared) }),
             ['re-publish through op=publish']));
       }
     }
@@ -794,7 +795,7 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresV4Disclosures(fm)) {
     const rows = fm?.case_citations;
     if (!Array.isArray(rows)) {
-      findings.push(f(C41.CITATIONS, 'error', `a ${declared} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)`,
+      findings.push(f(C41.CITATIONS, 'error', localize('case-catalogue.checks.a_declared_case_document_requires_7', 'a {declared} case document requires case_citations, the case\'s citation edges each with the version it rests on (got {stringify}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)', { declared: String(declared), stringify: String(JSON.stringify(rows ?? null)) }),
         ['re-publish through op=publish, which signs every cites edge of the project with its version']));
     } else {
       const bad = rows.filter((x) => !(x && typeof x === 'object' && typeof x.target === 'string' && x.target.trim()
@@ -829,10 +830,10 @@ export function checkCaseDocument(fm, ctx = {}) {
       ['publish the searched section computed from the observation log over this case\'s own subjects']));
   } else {
     if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(srch.subject_source)))
-      findings.push(f(C41.COMPLETENESS, 'error', `a case document's searched.subject_source must name a source this record recognises (got '${srch.subject_source}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(', ')}). THE SUBJECT SET IS THE FENCE: a coverage section computed over the observation log's own subjects is 100% searched by construction with every row in it honest, and is a statement about the log rather than about this case`,
+      findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_documents_searched_subject', 'a case document\'s searched.subject_source must name a source this record recognises (got \'{subject_source}\'; known: {keys}). THE SUBJECT SET IS THE FENCE: a coverage section computed over the observation log\'s own subjects is 100% searched by construction with every row in it honest, and is a statement about the log rather than about this case', { subject_source: String(srch.subject_source), keys: String(Object.keys(SEARCHED_SUBJECT_SOURCES).join(', ')) }),
         ['compute the section over the case\'s own subjects — its members\' basis legs and the content rows those legs name']));
     if (!Number.isInteger(srch.subjects) || srch.subjects < 0)
-      findings.push(f(C41.COMPLETENESS, 'error', `a case document's searched block requires an integer subject count (got '${srch.subjects}')`));
+      findings.push(f(C41.COMPLETENESS, 'error', localize('case-catalogue.checks.a_case_documents_searched_block', 'a case document\'s searched block requires an integer subject count (got \'{subjects}\')', { subjects: String(srch.subjects) })));
     if (!Array.isArray(fm?.searched_levels))
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires a searched_levels field beside the searched block: an EMPTY list is a claim (this record could compute no level for this case) and is legal — an ABSENT field is silence about which levels were consulted',
         ['author searched_levels, empty if no level could be computed']));
@@ -865,10 +866,10 @@ export function checkCaseDocument(fm, ctx = {}) {
        bar declared on NEITHER axis, which claims a standard no axis holds. */
     for (const axis of ['capture', 'connection']) {
       if (!Object.prototype.hasOwnProperty.call(rq, axis)) {
-        findings.push(f(C41.BAR, 'error', `required_strength.${axis} is absent — the declared bar is a PAIR per R2 and both keys are always written: an axis nobody set is written null, never omitted, because a reader cannot tell an omitted key from one nobody wrote down`,
-          [`write required_strength.${axis}: null if the project set no bar on the ${axis} axis`]));
+        findings.push(f(C41.BAR, 'error', localize('case-catalogue.checks.required_strength_axis_is_absent', 'required_strength.{axis} is absent — the declared bar is a PAIR per R2 and both keys are always written: an axis nobody set is written null, never omitted, because a reader cannot tell an omitted key from one nobody wrote down', { axis: String(axis) }),
+          [localize('case-catalogue.checks.write_required_strength_axis_null', 'write required_strength.{axis}: null if the project set no bar on the {axis_2} axis', { axis: String(axis), axis_2: String(axis) })]));
       } else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {
-        findings.push(f(C41.BAR, 'error', `required_strength.${axis} '${rq[axis]}' is not one of: ${BASIS_GRADES.join(', ')}, or null for an axis nobody set — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote`));
+        findings.push(f(C41.BAR, 'error', localize('case-catalogue.checks.required_strength_axis_v1_is', 'required_strength.{axis} \'{v1}\' is not one of: {BASIS_GRADES}, or null for an axis nobody set — the declared bar is a PAIR per R2, because a scalar would re-collapse the two axes in the one field a reader is most likely to quote', { axis: String(axis), v1: String(rq[axis]), BASIS_GRADES: String(BASIS_GRADES.join(', ')) })));
       }
     }
     if (rq.capture === null && rq.connection === null) {
@@ -933,7 +934,7 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (typeof body === 'string' && Number.isInteger(fm?.case_edition) && fm.case_edition > 1) {
     const wc = whatChangedOf(fm, body);
     if (!wc || typeof wc.statement !== 'string' || !wc.statement.trim())
-      findings.push(f(C41.WHAT_CHANGED, 'error', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.',
+      findings.push(f(C41.WHAT_CHANGED, 'error', localize('case-catalogue.checks.a_new_edition_of_a', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.'),
         ['write the "What changed in this edition, and why" statement on op=publish']));
   }
   /* DEC-111, R3 (K1119) — C-41.17: a `working_on` the document carries is a notice id by case-grammar's one rule (its
@@ -942,7 +943,7 @@ export function checkCaseDocument(fm, ctx = {}) {
      empty string included, since case-authoring writes no line for a project with no notice (K1144). */
   if (fm && typeof fm === 'object' && Object.prototype.hasOwnProperty.call(fm, WORKING_ON_KEY)
       && !isNoticeReference(fm[WORKING_ON_KEY])) {
-    findings.push(f(C41.WORKING_ON, 'error', `a case document's working_on names the notice this case's project published, and '${String(fm[WORKING_ON_KEY])}' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)`,
+    findings.push(f(C41.WORKING_ON, 'error', localize('case-catalogue.checks.a_case_documents_working_on', 'a case document\'s working_on names the notice this case\'s project published, and \'{String}\' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)', { String: String(String(fm[WORKING_ON_KEY])) }),
       ['publish through op=publish, which writes the project\'s notice id, or leave working_on out']));
   }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
@@ -952,10 +953,10 @@ export function checkCaseDocument(fm, ctx = {}) {
      this comparison — the reasoning is at checkCompletenessFreshness. */
   if (priorCase && c) {
     if (typeof priorCase.statement === 'string' && priorCase.statement === (c.statement ?? null))
-      findings.push(f('C-21.1', 'error', `the completeness statement is byte-identical to edition ${priorCase.edition}'s. Every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition`));
+      findings.push(f('C-21.1', 'error', localize('case-catalogue.checks.the_completeness_statement_is_byte', 'the completeness statement is byte-identical to edition {edition}\'s. Every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition', { edition: String(priorCase.edition) })));
     if (typeof priorCase.bias_acknowledgement === 'string'
         && priorCase.bias_acknowledgement === (fm?.bias_acknowledgement ?? null))
-      findings.push(f('C-21.1', 'error', `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)`));
+      findings.push(f('C-21.1', 'error', localize('case-catalogue.checks.the_bias_acknowledgement_is_byte', 'the bias acknowledgement is byte-identical to edition {edition}\'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition\'s sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)', { edition: String(priorCase.edition) })));
   }
   return findings;
 }

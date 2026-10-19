@@ -5,6 +5,7 @@
    rows, never a judgment on a person (R29): its words are "Noticed", never "conflict". */
 import { isHypothesisId } from "../record-grammar/index.mjs";
 import { compare, span } from "../civil-time/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R22: a hop goes only through these two line kinds, at most two hops. */
 export const HOP_KINDS = Object.freeze(["related_to", "associate_of"]);
@@ -26,7 +27,7 @@ export const SHIPPED_CHECKS = Object.freeze([
       order: { after: true, within_days: 730 },
       hops: 0,
     }),
-    denominator: "persons the record holds with a holds line to a government office or body",
+    denominator: word("people.persons_record_holds"),
   }),
 ]);
 
@@ -66,7 +67,7 @@ export function conditionError(c) {
   for (const end of ["from", "to"]) { const e = selectorError(c[end], end); if (e) return e; }
   const j = c.join;
   if (!(j === "same" || (isObj(j) && Array.isArray(j.lines) && j.lines.length && j.lines.every(filled))))
-    return 'the condition\'s join is "same" (one counterparty) or {lines: [kinds]} (a line between the two counterparties)';
+    return localize("people.checks.join_shape", 'the condition\'s join is "same" (one counterparty) or {lines: [kinds]} (a line between the two counterparties)');
   if (c.order !== undefined && c.order !== null) {
     if (!isObj(c.order) || c.order.after !== true) return "the condition's order is {after: true, within_days?}";
     if (c.order.within_days !== undefined && !(Number.isInteger(c.order.within_days) && c.order.within_days > 0))

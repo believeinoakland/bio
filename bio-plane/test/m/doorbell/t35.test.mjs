@@ -10,6 +10,8 @@ import { fresh, bucket } from "./fixture.mjs";
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
+import { EXPECT } from "./expect.mjs";
 
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -49,7 +51,7 @@ test("R6 R9 DEC-149 P (C-85.3, checks.mjs:96): the envelope refusal's translatio
   const r = await send(knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }));
   assert.equal(r.status, 413);
   assert.equal(r.body.check, "C-85.3");
-  assert.ok(r.body.translation.includes("The size this inbox will read is published beside this message."));
+  assert.equal(r.body.translation, EXPECT.KNOCK_ENVELOPE_TOO_LARGE);
   assert.equal(r.body.translation, KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE.translation);
   assert.doesNotMatch(r.body.translation, OLD);
 });
@@ -59,8 +61,8 @@ test("R7 R9 DEC-149 P (C-85.4, checks.mjs:103; door.mjs:52): the payload refusal
   const r = await send(knock({ contentText: "x".repeat(KNOCK.maxInline + 1) }));
   assert.equal(r.status, 413);
   assert.equal(r.body.check, "C-85.4");
-  assert.ok(r.body.translation.includes("larger than this inbox stores. That is a fact about how this team has set its Civicsmith up"));
-  assert.equal(r.body.detail, "this team's inbox stores knocks inline; large material needs its evidence storage configured");
+  assert.equal(r.body.translation, EXPECT.KNOCK_PAYLOAD_TOO_LARGE);
+  assert.equal(r.body.detail, localize("doorbell.door.inline_storage_needs_evidence", "this team's inbox stores knocks inline; large material needs its evidence storage configured"));
   assert.doesNotMatch(r.body.translation + r.body.detail, OLD);
 });
 
@@ -69,7 +71,7 @@ test("R5 DEC-149 P (door.mjs:25; R5's stated): RATE_GLOBAL's published bound is 
   const now = Date.parse("2026-10-07T12:00:00Z");
   for (let i = 0; i < KNOCK.global; i++) assert.equal((await c.knock({ content: `k${i}`, sourceAddress: `198.51.100.${i}`, now })).ok, true);
   const r = await c.knockAttempt({ sourceAddress: "198.51.100.200", now });
-  assert.deepEqual([r.reason, r.stated], ["RATE_GLOBAL", "at most 10 knocks to this team's inbox in any 10 minutes, estimated by a sliding window"]);
+  assert.deepEqual([r.reason, r.stated], ["RATE_GLOBAL", word("doorbell.stated_global", { global: "10", window_ms: "10" })]);
   assert.equal(KNOCK.statedGlobal, r.stated);
 });
 
@@ -77,7 +79,7 @@ test("R14 DEC-149 M (index.mjs:264): knockerDigestOf with no knocker key says \"
   const { c } = setup();
   const r = await c.knockerDigestOf("a secret long enough to be one");
   assert.deepEqual(r, { knocker_digest: null, pseudonym: null,
-                        basis: "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised" });
+                        basis: localize("doorbell.index.no_secret_recognised", "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised") });
 });
 
 test("R13 DEC-149 P (index.mjs:602): a pull with no evidence storage says \"this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written\"", async () => {
@@ -85,7 +87,7 @@ test("R13 DEC-149 P (index.mjs:602): a pull with no evidence storage says \"this
   const k = await f.c.knock({ content: "inline tip", sourceAddress: "203.0.113.5" });
   const r = await f.c.pullKnock({ knockId: k.knockId, by: "member:m1" });
   assert.equal(r.reason, "EVIDENCE_STORAGE_NOT_CONFIGURED");
-  assert.equal(r.detail, "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written");
+  assert.equal(r.detail, localize("doorbell.index.no_evidence_storage_knock", "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"));
 });
 
 test("R13 DEC-149 M (index.mjs:695): a pulled knock's first hop asserts \"these bytes were received at the doorbell of your group's Civicsmith as knock <id>\"", async () => {
@@ -94,7 +96,8 @@ test("R13 DEC-149 M (index.mjs:695): a pulled knock's first hop asserts \"these 
   const r = await f.c.pullKnock({ knockId: k.knockId, by: "member:m1", at: "2026-10-07T12:00:00Z" });
   assert.equal(r.ok, true);
   const asserts = r.document.provenance_chain[0].asserts;
-  assert.ok(asserts.startsWith(`these bytes were received at the doorbell of your team's Civicsmith as knock ${k.knockId} at `), asserts);
+  const { received } = f.c.inboxGet(k.knockId).item;
+  assert.equal(asserts, localize("doorbell.index.these_bytes_were_received_at", "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address", { knock_id: k.knockId, received, by: "member:m1", at: "2026-10-07T12:00:00Z" }));
   assert.doesNotMatch(asserts, OLD);
 });
 

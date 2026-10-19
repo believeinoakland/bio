@@ -30,6 +30,7 @@ import { ackFrontmatterLines, ackBodyLines } from "../case-inputs/document.mjs";
    here, never copied, so the signed document is byte-identical before and after the split. */
 import { reviewCommentBodyLines } from "../case-account/document.mjs";
 import { barAxisWords } from "../strength/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** Frontmatter-safe: the restricted grammar has no escapes, so a quote, a backslash or a line break in a DERIVED
  *  string (a strength detail, a bar's explanation) is sanitised; an AUTHORED field is refused by name at `op=publish`
@@ -39,21 +40,19 @@ export { fmSafe };
 
 /** R16: the words the document's prose gives each citation `version` (REC-219 / D-579(a)). */
 export const CASE_CITATION_WORDS = Object.freeze({
-  pinned: "cited at capture",
-  only_capture: "no pin; the record held one capture at signing,",
-  undetermined: "version UNDETERMINED — no pin, and the record held several captures, so which one was cited is not known",
-  no_capture: "the record held no capture of it at signing",
+  pinned: word("case-authoring.pinned"),
+  only_capture: word("case-authoring.only_capture"),
+  undetermined: word("case-authoring.undetermined.version_undetermined_pin"),
+  no_capture: word("case-authoring.no_capture"),
   no_bytes: "a question, which has no bytes (DEC-21)",
 });
 
 /** R32 (DEC-85): what the ceremony shows before the act for a highlighted candidate. The document's own words for a
  *  tension, a self-attested capture, a source, a material and another group's work are `case-disclosures`' (its R1–R4,
  *  R7, R13, R14), imported above and never copied (N529, K1333). */
-export const CEREMONY_HIGHLIGHT_SENTENCE = "A finding in this case rests on something in conflict with a record you "
-  + "cannot see. You can still publish. The published case will highlight that this finding rests on a side in "
-  + "conflict with a record not shown, and will not name that record or who holds it.";
+export const CEREMONY_HIGHLIGHT_SENTENCE = word("case-authoring.ceremony_highlight_sentence");
 
-/** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/7`
+/** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/8`
  *  from T31, identical in fields to `/6`; DEC-124, K1365 (1)). Everything it asserts arrived as an argument (R22): the authored
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
@@ -88,13 +87,13 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
         scope: "project", scope_id: project, statements_sha: null, bundles: [], lock_violations: 0,
-        stated: manifest && manifest.in_force === null ? manifest.stated : "no manifest was in force",
+        stated: manifest && manifest.in_force === null ? manifest.stated : word("bias.manifest_force"),
         pins_proposed: (manifest && manifest.pins_proposed) || [] };
   /* REC-219: the adoptions pinning a proposed revision at signing, and the sentence saying what the list is. It says
      nothing about when or whether the revision takes effect (BOB #34). An empty list is a statement, and says so. */
   const pending = Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [];
   const pendingStated = pending.length === 0
-    ? "no adoption in this scope pinned a proposed revision when this case was signed"
+    ? word("case-authoring.document.adoption_scope_pinned")
     : "each row is an adoption in this scope whose pinned revision the team had proposed and not "
       + "accepted when this case was signed; that revision was not in force at signing";
   const frozenOf = (m) => (frozen && frozen.get(m)) || null;
@@ -288,8 +287,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "## Findings In This Case",
     "",
     ...roster.flatMap((m, i) => [
-      `${i + 1}. ${m} — ${roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"}, `
-      + `frozen at version ${pins.get(m) ?? "(unpinned)"}`,
+      word("case-authoring.body.frozen_version", { i: String(i + 1), m: String(m), supporting: String(roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"), unpinned: String(pins.get(m) ?? "(unpinned)") }),
       /* `case-disclosures` R1: its tension sentences, in its own block; its R14: one sentence per open flag disclosed on work it rests on. */
       ...tensions.filter((t) => t.finding === m).map((t) => `   - ${tensionSentence(t)}`),
       ...((accepted && accepted.flags) || []).filter((f) => ((accepted && accepted.rows) || [])
@@ -297,45 +295,36 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
         .map((f) => `   - ${FLAG_SENTENCE}${f.issue} (flag ${f.flag}).`)]),
     "",
     /* DEC-72 clause 4, in prose: a reader is told, in the document that asserts it, which half claims what. */
-    "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
-    "A SUPPORTING finding travels with the case and is not presented as carrying it.",
+    word("case-authoring.body.load_bearing_finding"),
+    word("case-authoring.body.supporting_finding_travels"),
     "",
     "## The Conclusions This Case Records",
     "",
-    "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone "
-    + "(INVESTIGATIVE-SESSION.md §7.1): an inquiry can be shared, and one team concluding it does not "
-    + "move another team's stance. Each member below is named with the relationship whose conclusion "
-    + "this case rests on, and with the claim that relationship adopted, frozen as it stood at "
-    + "publication.",
+    localize("case-authoring.document.a_conclusion_belongs_to_a", "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone (INVESTIGATIVE-SESSION.md §7.1): an inquiry can be shared, and one team concluding it does not move another team's stance. Each member below is named with the relationship whose conclusion this case rests on, and with the claim that relationship adopted, frozen as it stood at publication."),
     "",
     ...roster.map((m) => {
       const c = concOf.get(m) || null;
       const whose = !c ? "NO CONCLUSION WAS RECORDED FOR THIS MEMBER"
         : c.relationship === "project"
-        ? `concluded by ${c.project}${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""} on reading `
-          + `'${c.version ?? "(unnamed)"}'`
+        ? word("case-authoring.body.concluded_reading", { project: String(c.project), by: String(c.by ? ` (${c.by})` : ""), at: String(c.at ? ` on ${c.at}` : ""), unnamed: String(c.version ?? "(unnamed)") })
         : "concluded in the question's own bytes, naming no project — read as the NO-PROJECT "
           + "relationship's conclusion, which is not this project's (§7.1 item 5)";
       const claim = !c || !c.claim ? "" : c.claim.state === "adopted"
-        ? ` The claim adopted: ${c.claim.text}`
-        : ` The claim is UNDETERMINED: ${c.claim.detail
+        ? localize("case-authoring.document.the_claim_adopted_text", " The claim adopted: {text}", { text: String(c.claim.text) })
+        : localize("case-authoring.document.the_claim_is_undetermined_v1", " The claim is UNDETERMINED: {v1}", { v1: String(c.claim.detail
             || "this conclusion names no reading, so which claim was concluded cannot be established "
-             + "from the record. It is stated rather than filled in."}`;
+             + "from the record. It is stated rather than filled in.") });
       const fals = !c ? "" : c.falsifier
-        ? ` What would falsify it: ${c.falsifier}`
+        ? localize("case-authoring.document.what_would_falsify_it_falsifier", " What would falsify it: {falsifier}", { falsifier: String(c.falsifier) })
         : c.falsifier_override
-        ? ` NO FALSIFIER STATED — recorded by ${c.falsifier_override.by} at ${c.falsifier_override.at}.`
-        : " NO FALSIFIER IS RECORDED for this conclusion.";
+        ? localize("case-authoring.document.no_falsifier_stated_recorded_by", " NO FALSIFIER STATED — recorded by {by} at {at}.", { by: String(c.falsifier_override.by), at: String(c.falsifier_override.at) })
+        : localize("case-authoring.document.no_falsifier_is_recorded_for", " NO FALSIFIER IS RECORDED for this conclusion.");
       return `- **${m}** — ${whose}.${claim}${fals}`;
     }),
     "",
     roster.every((m) => (concOf.get(m) || {}).relationship === "project")
-      ? `Every conclusion this case records is ${project}'s own.`
-      : "AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN. That is "
-        + "disclosed rather than smoothed: a conclusion written in a question's own bytes names no "
-        + "project, so the relationship that drew it cannot be established and it is read as the "
-        + "no-project relationship's. A reader weighing this case should know which findings this "
-        + "project concluded for itself and which it took as the record already answered.",
+      ? word("case-authoring.body.conclusion_case_records", { project: String(project) })
+      : word("case-authoring.body.least_member_entered"),
     "",
     /* R63 (D56): the account, the publisher's own, sentence by sentence (case-grammar R23's section). */
     ...accountSection,
@@ -346,7 +335,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...captureBodyLines(captures, sources),
     ...(materials ? carriesBodyLines(method, materials, group) : []),
     ...acceptedBodyLines(accepted),
-    ...(attributions.length ? attributionBodyLines(attributions) : []),
+    ...(attributions.length ? attributionBodyLines(attributions, CASE_DOCUMENT_FORMAT) : []),
     ...calculationBodyLines(calculations),
     ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread, withheld: timelineWithheld }),
     "## What This Excludes",
@@ -356,9 +345,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...((excluded || []).length
       ? (excluded || []).map((r) =>
           `- ${r.target ? r.target + " — " : ""}${r.description || "(named above)"}: ${r.reason}`)
-      : ["Nothing material was excluded from this case."]),
+      : [word("case-authoring.body.material_excluded_case")]),
     "",
-    `Position on putting this case to its subject: ${position}. ${justification}`,
+    word("case-authoring.body.position_putting_case", { position: String(position), justification: String(justification) }),
     "",
     /* R14 (`case-inputs` R3): WHERE the name came from as well as the name, which makes UNDETERMINED readable rather than blank. ABOVE
        the acknowledgement prose, whose head the splice starts from, so a later acknowledgement leaves it alone. */
@@ -370,44 +359,26 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
        and open in substance; the reader outside this project reads the body. */
     "## What Was Searched",
     "",
-    "This section is computed from the observation log over THIS CASE'S OWN SUBJECTS — the documents "
-    + "its findings rest on, reached through each member's basis legs — and never over the log's own "
-    + "contents. That direction is the whole of its value: a coverage section computed over everything "
-    + "the log happens to hold is 100% complete by construction, with every number in it true, while "
-    + "saying nothing whatever about this case.",
+    word("case-authoring.body.section_computed_observation"),
     "",
-    "It is a record of WHAT WAS LOOKED FOR, not a measure of how much exists. No recall figure is "
-    + "offered and none is computable: the denominator — everything that might have been found — is "
-    + "not knowable, and a number that looked like one would be worse than this prose.",
+    word("case-authoring.body.record_looked_measure"),
     "",
     ...searched.levels.map((l) =>
-      `- **${l.level} level** (${l.subject_kind}): ${l.outcome.replace(/_/g, " ").toUpperCase()} — `
-      + `${l.subjects} subject(s), ${l.looked} with a recorded observation, `
-      + `${l.never_looked} established as never looked at, ${l.undetermined} undetermined`
-      + (l.unidentified ? `, ${l.unidentified} referent(s) this case rests on that could not be `
-                        + `resolved to a subject at all` : "")
-      + `. ${l.detail}`),
+      word("case-authoring.body.level_subject_recorded", { level: String(l.level), subject_kind: String(l.subject_kind), outcome: String(l.outcome.replace(/_/g, " ").toUpperCase()), subjects: String(l.subjects), looked: String(l.looked), never_looked: String(l.never_looked), undetermined: String(l.undetermined), unidentified_clause: String(l.unidentified ? `, ${l.unidentified} referent(s) this case rests on that could not be `
+                        + `resolved to a subject at all` : ""), detail: String(l.detail) })),
     "",
     searched.summary.subjects === 0
-      ? "**THIS CASE NAMES NO SUBJECT THIS RECORD COULD COMPUTE COVERAGE OVER.** That is not a "
-        + "statement that nothing was searched, and it is emphatically not a statement that "
-        + "everything was: it means the question could not be asked of this record. A reader should "
-        + "treat this case's completeness claim as resting on its author's prose alone."
-      : "A level reported as UNDETERMINED is not a level reported as empty. It means this record "
-        + "cannot exclude that the looking happened before the log carried that level, or that a "
-        + "purge removed what described it — different facts from nobody having looked, and stated "
-        + "rather than resolved in whichever direction would read better.",
+      ? word("case-authoring.body.case_names_subject")
+      : word("case-authoring.body.level_reported_undetermined"),
     "",
     /* D-442 / rule 12 (b), in prose: per finding, per axis, never composed (R24). */
     "## What Each Finding Reached, As Read For This Case",
     "",
-    "Each finding's strength is its own, on each axis separately, frozen as this case read it at the "
-    + "version pinned above. This case has no strength of its own: two findings that reached different "
-    + "grades have two answers, and no letter here combines them.",
+    word("case-authoring.body.finding_strength_axis"),
     "",
     ...roster.flatMap((m) => {
       const z = frozenOf(m);
-      if (!z) return [`- **${m}** — NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.`];
+      if (!z) return [localize("case-authoring.document.m_no_frozen_strength_was", "- **{m}** — NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.", { m: String(m) })];
       return [`- **${m}** (its edition ${z.edition}):`,
         ...z.axes.map((axis) => {
           const a = z.pair[axis];
@@ -422,48 +393,39 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "## Bias Manifest",
     "",
     ...(lens.in_force
-      ? [`This case was produced under the bias set in force for ${lens.scope_id} when it was published, `
-         + "computed then and frozen here. A lens adopted afterwards does not change this "
-         + "document: the manifest names the revisions this case was made under, not the ones in force now.",
+      ? [word("case-authoring.body.case_produced_under", { scope_id: String(lens.scope_id) }),
          "",
-         ...lens.bundles.map((x) => `- ${x.bundle_id} (${x.scope}) at revision ${x.revision}`),
+         ...lens.bundles.map((x) => localize("case-authoring.document.bundle_id_scope_at_revision", "- {bundle_id} ({scope}) at revision {revision}", { bundle_id: String(x.bundle_id), scope: String(x.scope), revision: String(x.revision) })),
          "",
-         `Hash of the effective statement set: ${lens.statements_sha}.`,
+         word("case-authoring.body.hash_effective_statement", { statements_sha: String(lens.statements_sha) }),
          ...(lens.lock_violations
-           ? ["", `${lens.lock_violations} project override(s) named a LOCKED team-wide statement and were `
-                 + "refused their effect; the team-wide statement stands in the set hashed above."]
+           ? ["", word("case-authoring.body.project_override_named", { lock_violations: String(lens.lock_violations) })]
            : [])]
       : lens.in_force === null
-      ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`]
-      : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
-         + "adopted for the team or this project. That is stated, not left blank — it is a different "
-         + "fact from a lens with nothing in it."]),
+      ? [word("case-authoring.body.manifest_undetermined_claimed", { scope_id: String(lens.scope_id), stated: String(lens.stated) })]
+      : [word("case-authoring.body.manifest_force_case", { scope_id: String(lens.scope_id) })]),
     /* REC-219 / §3 rule 18: the second fact, in prose, when there is something to say. */
     ...(pending.length
       ? ["",
-         `AN ADOPTION PINNED A PROPOSED REVISION when this case was signed: ${pending.length === 1 ? "one adoption" : `${pending.length} adoptions`} `
-         + "in this scope pinned a revision the team had proposed and not accepted. It was not in force at "
-         + "signing, and it is not part of any lens this document names.",
+         word("case-authoring.body.adoption_pinned_proposed", { adoptions: String(pending.length === 1 ? "one adoption" : `${pending.length} adoptions`) }),
          "",
-         ...pending.map((x) => `- ${x.bundle_id} (${x.scope}) pinned revision ${x.revision}, `
-           + `standing at ${x.pinned_state ?? "an unrecorded state"}`)]
+         ...pending.map((x) => word("case-authoring.body.pinned_revision_standing", { bundle_id: String(x.bundle_id), scope: String(x.scope), revision: String(x.revision), state: String(x.pinned_state ?? "an unrecorded state") }))]
       : []),
     "",
     "## Citations",
     "",
     ...(citations.length
-      ? ["What this case cites, and the version of each it cites — pinned where the record holds the capture "
-         + "the citation was made against, and stated where it does not:",
+      ? [word("case-authoring.body.case_cites_version"),
          "",
          ...citations.map((x) => `- ${x.target}: ${CASE_CITATION_WORDS[x.version] ?? x.version}`
            + (x.capture ? ` ${x.capture}` : ""))]
-      : ["This case's project cited nothing when it was published."]),
+      : [word("case-authoring.body.case_project_cited")]),
     "",
     /* R69 (D61): the reviewers' comments the publisher chose to carry, and how many were left out (`case-account` R7). */
     ...reviewCommentBodyLines(reviewComments),
     /* R40 (DEC-103): case-grammar R9's section, which prints the bias acknowledgement first and then the lens; it
        stands where the acknowledgement's own section stood, so the acknowledgement is printed once. */
-    ...lensSectionLines({ acknowledgement: bias,
+    ...lensSectionLines({ acknowledgement: bias, format: CASE_DOCUMENT_FORMAT,
                           statements: lensRead && lensRead.in_force === true ? lensRead.statements : [],
                           inForce: lensRead ? lensRead.in_force : false,
                           stated: lensRead ? lensRead.stated : null }),
@@ -471,25 +433,22 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     /* THE ABSENT BAR IS PRINTED AS ABSENT, IN A SENTENCE (R26): an absent bar is not a bar of zero. */
     bar.declared
-      ? `This case is ${project}'s production and was held to that project's declared standard: `
-        + `${barAxisWords(bar)}. `
-        + `${bar.detail || ""}`.trim()
+      ? word("case-authoring.body.case_production_held", { project: String(project), bar: String(barAxisWords(bar)), bar3: String(`${bar.detail || ""}`.trim()) })
       : `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
         + `An absent bar is not a bar of zero: this case claims no cleared standard, and a reader `
-        + `weighs each finding's own frozen strength on its own. ${bar.detail || ""}`.trim(),
+        + localize("case-authoring.document.weighs_each_findings_own_frozen", "weighs each finding's own frozen strength on its own. {v1}", { v1: String(bar.detail || "") }).trim(),
     "",
     "## Session Log",
     "",
     `### Session ${at} | Case published | ${author}`,
     `Trigger: op=publish, case ${caseId} edition ${edition}`,
-    `Published by: ${project} (this case is that project's production, DEC-72)`,
-    `Findings in this case: ${roster.join(", ")}`,
+    localize("case-authoring.document.published_by_project_this_case", "Published by: {project} (this case is that project's production, DEC-72)", { project: String(project) }),
+    word("case-authoring.body.findings_case", { roster: String(roster.join(", ")) }),
     `Load-bearing: ${roster.filter((m) => roleOf.get(m) === "load_bearing").join(", ")}`,
     `Supporting: ${roster.filter((m) => roleOf.get(m) !== "load_bearing").join(", ") || "none"}`,
     `Excluded: ${(excluded || []).length} item(s).`,
     /* D-442 / rule 12 (b): THE PUBLISH RECEIPT IS THE CASE DOCUMENT'S HISTORY, never the finding's (R23). */
-    ...roster.map((m) => `Pinned: ${m} at ${pins.get(m) ?? "(unpinned)"}`
-      + `${frozenOf(m) ? `, its edition ${frozenOf(m).edition}` : ""}; nothing was written on it.`),
+    ...roster.map((m) => word("case-authoring.body.pinned_written", { member: String(m), pin: String(pins.get(m) ?? "(unpinned)"), edition_clause: String(frozenOf(m) ? `, its edition ${frozenOf(m).edition}` : "") })),
     "",
   ];
   return fm.join("\n") + body.join("\n");
@@ -501,29 +460,25 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
  *  never recomputed here, and its state is its own engine's latest recompute against the values the file stores:
  *  agreement between two engines, never a check of accuracy (workbooks R8). No section when the findings reach none. */
 export const CALCULATION_STATE_WORDS = Object.freeze({
-  agrees: "recomputed at publication, and the result agrees with the one stored",
+  agrees: word("case-grammar.agrees"),
   differs: "recomputed at publication, and the result DIFFERS from the one stored",
-  unbound: "recomputed at publication; at least one input was typed in with no source, and is testimony",
-  not_recomputed: "not recomputed here",
+  unbound: word("case-authoring.unbound.recomputed_publication_least"),
+  not_recomputed: word("workbooks.recomputed"),
 });
 /** R56 (workbooks R8): the same states said of a workbook, which publication reads and never recomputes. */
 export const WORKBOOK_STATE_WORDS = Object.freeze({
-  agrees: "a workbook, read at publication: its engine's latest recompute agrees with the values the file stores",
-  differs: "a workbook, read at publication: its engine's latest recompute DIFFERS from the values the file stores",
-  unbound: "a workbook, read at publication: at least one input cell was typed in with no source, and is testimony",
-  not_recomputed: "a workbook, read at publication and not recomputed by any engine here",
+  agrees: word("case-authoring.agrees.workbook_read_publication"),
+  differs: word("case-authoring.differs.workbook_read_publication"),
+  unbound: word("case-authoring.unbound.workbook_read_publication"),
+  not_recomputed: word("case-authoring.not_recomputed.workbook_read_publication"),
 });
 const isWorkbookRow = (r) => /^[0-9a-f]{64}$/.test(String(r.calc));
 export function calculationBodyLines(rows) {
   if (!rows || !rows.length) return [];
   const books = rows.some(isWorkbookRow);
   return ["## Calculations This Case Rests On", "",
-    "Each calculation below was recomputed when the case was published, never on a later read. A "
-    + "result that differs, or an input typed in with no source, is disclosed here by the team and does not stop "
-    + "publication.", "",
-    ...(books ? ["Each workbook below was read when the case was published and not recomputed then. What is stated of it "
-      + "is its own engine's latest recompute against the values the file stores: agreement between two engines, never "
-      + "a check that the figures are right. Open it in any spreadsheet program.", ""] : []),
+    word("case-authoring.document.calculation_recomputed_case"), "",
+    ...(books ? [word("case-authoring.document.workbook_read_case"), ""] : []),
     ...rows.map((r) => `- ${r.calc}: ${(isWorkbookRow(r) ? WORKBOOK_STATE_WORDS : CALCULATION_STATE_WORDS)[r.recompute]
         ?? r.recompute}${isWorkbookRow(r) && r.method_version ? ` (${r.method_version})` : ""}.`
       + (r.disclosed != null ? ` Disclosed by the team: ${r.disclosed}` : "")),
@@ -536,26 +491,23 @@ export function calculationBodyLines(rows) {
  *  (`cut`: `they_did`, or `we_did:<source>`), so a cut list never reads as whole; and a read that failed (`unread`),
  *  stated rather than read as an empty timeline (R26). */
 export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null, withheld = 0 } = {}) {
-  if (unread) return ["## Timeline", "", `The timeline could not be read when this case was published (${unread}). It is `
-    + "stated as not read, not as empty: this case claims nothing about what happened or what the team did.", ""];
+  if (unread) return ["## Timeline", "", word("case-authoring.document.timeline_read_case", { unread: String(unread) }), ""];
   const cuts = Array.isArray(cut) ? cut : [];
   const kept = Math.max(0, Math.floor(Number(withheld) || 0));
   if ((!rows || !rows.length) && !leftOut && !cuts.length && !kept) return [];
   const lane = (name, title) => {
     const items = (rows || []).filter((r) => r.lane === name);
-    return [title, "", ...(items.length ? items.map((r) => `${r.ord}. ${r.when} — ${r.label ?? r.ref} (${r.ref}; source ${r.source})`)
-      : ["Nothing in this lane."]), ""];
+    return [title, "", ...(items.length ? items.map((r) => localize("case-authoring.document.ord_when_v1_ref_source", "{ord}. {when} — {v1} ({ref}; source {source})", { ord: String(r.ord), when: String(r.when), v1: String(r.label ?? r.ref), ref: String(r.ref), source: String(r.source) }))
+      : [word("case-authoring.document.lane")]), ""];
   };
   return ["## Timeline", "",
-    "Frozen when this case was published. What happened in the world and what the team did are two lists and are never "
-    + "merged into one.", "",
+    word("case-authoring.document.frozen_case_published"), "",
     ...lane("they_did", "### What they did"), ...lane("we_did", "### What we did"),
-    ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : []),
+    ...(leftOut ? [word("case-authoring.document.item_source_record", { left_out: String(leftOut) }), ""] : []),
     /* R57 (T45; v0.2 rules 15, 17): what we did is the case's published record of actions; an act its source did not
        mark for the public is left out and counted, never written. */
-    ...(kept ? [`${kept} of the team's own act(s) were not marked public by the record that holds them and are left out of `
-      + "this published record of what we did.", ""] : []),
-    ...cuts.map((c) => (c === "they_did" ? "The list of what they did stops at its bound: the record holds more than this case lists."
-      : `What we did, from ${c.slice("we_did:".length)}, stops at its bound: that source holds more than this case lists.`)),
+    ...(kept ? [word("case-authoring.document.group_act_marked", { kept: String(kept) }), ""] : []),
+    ...cuts.map((c) => (c === "they_did" ? word("case-authoring.cuts.map.list_did_stops")
+      : word("case-authoring.cuts.map.did_stops_bound", { we_did: String(c.slice("we_did:".length)) }))),
     ...(cuts.length ? [""] : [])];
 }

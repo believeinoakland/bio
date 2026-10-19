@@ -91,6 +91,7 @@ import { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_NO
          PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS, ACCOUNT_ARMS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
@@ -210,7 +211,7 @@ export class CaseDisclosures {
       try { basis = this.inquiry.basisFor(p.id); }
       catch (e) { undetermined.push({ target: p.id, why: String(e && e.message || e).slice(0, 160) }); continue; }
       if (!basis || basis.ok === false) {
-        undetermined.push({ target: p.id, why: basis ? basis.reason ?? "the read failed" : "no answer" });
+        undetermined.push({ target: p.id, why: basis ? basis.reason ?? word("case-disclosures.why.read_failed") : "no answer" });
         continue;
       }
       for (const leg of (Array.isArray(basis.legs) ? basis.legs : []))
@@ -219,13 +220,10 @@ export class CaseDisclosures {
     if (!hunches.length && !undetermined.length) return null;
     /* DEC-49 REGION is-hunch-cleared */
     return disclosureRefusal("UNCLEARED_HUNCH", { hunches, ...(undetermined.length ? { undetermined } : {}),
-      detail: (hunches.length ? `${hunches.length} basis leg(s) of this case's findings rest on a HUNCH (`
+      detail: localize("case-disclosures.index.v1_a_hunch_is_temporary", "{v1}A hunch is temporary declared bias, and it is the one bias that must be cleared before publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.", { v1: String((hunches.length ? `${hunches.length} basis leg(s) of this case's findings rest on a HUNCH (`
             + hunches.map((h) => `${h.target} leg ${h.ord} on ${h.leg_target}`).join("; ") + `). ` : "")
             + (undetermined.length ? `The basis of ${undetermined.map((u) => `${u.target} (${u.why})`).join("; ")} `
-              + `could not be read, so whether it rests on a hunch is not known. ` : "")
-            + `A hunch is temporary declared bias, and it is the one bias that must be cleared before `
-            + `publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade `
-            + `the record earns, or take the hunch out of the basis, and publish again. Nothing was written.` });
+              + `could not be read, so whether it rests on a hunch is not known. ` : "")) }) });
     /* END DEC-49 REGION is-hunch-cleared */
   }
 
@@ -246,11 +244,8 @@ export class CaseDisclosures {
     if (undisclosed.length)
       refusals.push(disclosureRefusal("TENSION_NOT_DISCLOSED", {
         undisclosed: undisclosed.map((e) => this.#namedInRefusal(e)),
-        detail: `${undisclosed.length} unresolved conflict(s) on what this case rests on are not disclosed (`
-              + undisclosed.map((e) => `${e.candidate} on ${e.finding}`
-                + (e.unseen_other_side ? `, ${NOT_SHOWN_WORDS}` : "")).join("; ")
-              + `). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 `
-              + `item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.` }));
+        detail: localize("case-disclosures.index.length_unresolved_conflict_s_on", "{length} unresolved conflict(s) on what this case rests on are not disclosed ({map}). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.", { length: String(undisclosed.length), map: String(undisclosed.map((e) => `${e.candidate} on ${e.finding}`
+                + (e.unseen_other_side ? `, ${NOT_SHOWN_WORDS}` : "")).join("; ")) }) }));
     /* END DEC-49 REGION is-tension-disclosed */
     const standing = new Set(read.entries.map((e) => e.candidate));
     const notStanding = [...listed.byCandidate.values()].filter((d) => !standing.has(d.candidate));
@@ -384,20 +379,14 @@ export class CaseDisclosures {
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
         unacknowledged: unacknowledged.map((f) => ({ capture: f.capture, members: membersOf.get(f.capture), grade: f.grade,
                                                      timestamp_at: f.timestamp_at, co_archive: f.co_archive })),
-        detail: `${unacknowledged.length} load-bearing Grade ${EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp `
-              + `and co-archive (`
-              + unacknowledged.map((f) => `${f.capture} under ${membersOf.get(f.capture).join(", ")}`).join("; ")
-              + `). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as `
-              + `self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. `
-              + `Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_load_bearing_grade_earned", "{length} load-bearing Grade {EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive ({map}). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.", { length: String(unacknowledged.length), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), map: String(unacknowledged.map((f) => `${f.capture} under ${membersOf.get(f.capture).join(", ")}`).join("; ")) }) }));
     /* END DEC-49 REGION is-co-attestation-acknowledged */
     const noReason = [...byCapture.values()].filter((d) => !d.reason);
     /* DEC-49 REGION is-self-attested-reasoned */
     if (noReason.length)
       refusals.push(disclosureRefusal("SELF_ATTESTED_NO_REASON", {
         no_reason: noReason.map((d) => ({ capture: d.capture, ord: d.ord })),
-        detail: `${noReason.map((d) => `selfAttested[${d.ord}]`).join(", ")} gives no reason. Publishing a document as `
-              + `self-attested only is an attributed act with a stated reason (DEC-81 item 3 (b)). Nothing was written.` }));
+        detail: localize("case-disclosures.index.map_gives_no_reason_publishing", "{map} gives no reason. Publishing a document as self-attested only is an attributed act with a stated reason (DEC-81 item 3 (b)). Nothing was written.", { map: String(noReason.map((d) => `selfAttested[${d.ord}]`).join(", ")) }) }));
     /* END DEC-49 REGION is-self-attested-reasoned */
     const notStanding = [...byCapture.values()].filter((d) => !facts.has(d.capture) || facts.get(d.capture).co_attested);
     /* DEC-49 REGION is-self-attestation-standing */
@@ -405,9 +394,8 @@ export class CaseDisclosures {
       refusals.push(disclosureRefusal("SELF_ATTESTATION_NOT_STANDING", {
         not_standing: notStanding.map((d) => ({ capture: d.capture, ord: d.ord,
                                                 why: facts.has(d.capture) ? "co_attested" : "not_in_case" })),
-        detail: `${notStanding.map((d) => d.capture).join(", ")} needs no acknowledgement: `
-              + notStanding.map((d) => (facts.has(d.capture) ? `${d.capture} is co-attested` : `${d.capture} is not a `
-                + `document this case rests on`)).join("; ") + `. Remove it from selfAttested. Nothing was written.` }));
+        detail: localize("case-disclosures.index.map_needs_no_acknowledgement_map", "{map} needs no acknowledgement: {map_2}. Remove it from selfAttested. Nothing was written.", { map: String(notStanding.map((d) => d.capture).join(", ")), map_2: String(notStanding.map((d) => (facts.has(d.capture) ? `${d.capture} is co-attested` : `${d.capture} is not a `
+                + `document this case rests on`)).join("; ")) }) }));
     /* END DEC-49 REGION is-self-attestation-standing */
     return { refusals, byCapture };
   }
@@ -495,71 +483,53 @@ export class CaseDisclosures {
     if (short.length) {
       const named = byMember(short, (m) => ({ ref: m.ref, kind: m.kind, sha: m.sha, missing: m.held.missing }));
       refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: named,
-        detail: `${short.length} document(s) or observation(s) a load-bearing finding of this case rests on are not held `
-              + `whole by your team's Civicsmith (` + named.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
-                + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")
-              + `). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop `
-              + `relying on the material, or make the finding supporting. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_document_s_or_observation", "{length} document(s) or observation(s) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith ({map}). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.", { length: String(short.length), map: String(named.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
+                + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-relied-on-presentable */
     /* DEC-49 REGION is-photo-marks-determined */
     if (unread.length) {
       const named = unread.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members, why: m.photo.why }));
       refusals.push(disclosureRefusal("PHOTO_MARKS_UNDETERMINED", { undetermined: named,
-        detail: `${unread.length} document(s) this case relies on could not be checked for the people and number plates `
-              + `marked in them (` + named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")
-              + `), so what the published case would show of them is not known. Try again. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_document_s_this_case", "{length} document(s) this case relies on could not be checked for the people and number plates marked in them ({map}), so what the published case would show of them is not known. Try again. Nothing was written.", { length: String(unread.length), map: String(named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-photo-marks-determined */
     /* DEC-49 REGION is-photo-checked */
     if (unchecked.length) {
       const named = unchecked.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members }));
       refusals.push(disclosureRefusal("PHOTO_UNCHECKED", { unchecked: named, photo: refsNamed(unchecked),
-        detail: `${unchecked.length} photo(s) this case relies on have not been checked for people and number plates to `
-              + `obscure (` + named.map((m) => `${m.ref} ${m.sha}, relied on by ${m.members.join(", ")}`).join("; ")
-              + `). Mark each, or mark it as having nothing to obscure, before signing. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_photo_s_this_case", "{length} photo(s) this case relies on have not been checked for people and number plates to obscure ({map}). Mark each, or mark it as having nothing to obscure, before signing. Nothing was written.", { length: String(unchecked.length), map: String(named.map((m) => `${m.ref} ${m.sha}, relied on by ${m.members.join(", ")}`).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-photo-checked */
     /* DEC-49 REGION is-photo-coverable */
     if (uncoverable.length) {
       const named = byMember(uncoverable, (m) => ({ ref: m.ref, sha: m.sha, refused: m.photo.refused.code }));
       refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named, photo: refsNamed(uncoverable),
-        detail: `${uncoverable.length} photo(s) a load-bearing finding of this case relies on cannot be covered in their `
-              + `format (` + named.map((x) => `${x.target}: ` + x.materials.map((m) =>
-                `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
-              + `), and a photo travels only as its covered copy, so the case can neither carry them whole nor leave them `
-              + `out. Capture each again as an ordinary photo, or stop relying on it. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_photo_s_a_load", "{length} photo(s) a load-bearing finding of this case relies on cannot be covered in their format ({map}), and a photo travels only as its covered copy, so the case can neither carry them whole nor leave them out. Capture each again as an ordinary photo, or stop relying on it. Nothing was written.", { length: String(uncoverable.length), map: String(named.map((x) => `${x.target}: ` + x.materials.map((m) =>
+                `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-photo-coverable */
     /* DEC-49 REGION is-document-copy-determined */
     if (docUnread.length) {
       const named = docUnread.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members, why: m.document.why }));
       refusals.push(disclosureRefusal("DOCUMENT_COPY_UNDETERMINED", { undetermined: named, document: refsNamed(docUnread),
-        detail: `${docUnread.length} document(s) this case relies on could not be checked for the details a member's file `
-              + `can carry (` + named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")
-              + `), so what the published case would show of them is not known. Try again. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_document_s_this_case_2", "{length} document(s) this case relies on could not be checked for the details a member's file can carry ({map}), so what the published case would show of them is not known. Try again. Nothing was written.", { length: String(docUnread.length), map: String(named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-document-copy-determined */
     /* DEC-49 REGION is-document-copy-made */
     if (docPending.length) {
       const named = byMember(docPending, (m) => ({ ref: m.ref, sha: m.sha }));
       refusals.push(disclosureRefusal("DOCUMENT_COPY_PENDING", { pending: named, document: refsNamed(docPending),
-        detail: `the publication copy of ${docPending.length} document(s) a member supplied, which a load-bearing finding `
-              + `of this case relies on, is still being made (` + named.map((x) => `${x.target}: `
-                + x.materials.map((m) => `${m.ref} ${m.sha}`).join(", ")).join("; ")
-              + `). A member's document travels only as its cleaned copy. Try again in a few minutes. Nothing was `
-              + `written.` }));
+        detail: localize("case-disclosures.index.the_publication_copy_of_length", "the publication copy of {length} document(s) a member supplied, which a load-bearing finding of this case relies on, is still being made ({map}). A member's document travels only as its cleaned copy. Try again in a few minutes. Nothing was written.", { length: String(docPending.length), map: String(named.map((x) => `${x.target}: `
+                + x.materials.map((m) => `${m.ref} ${m.sha}`).join(", ")).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-document-copy-made */
     /* DEC-49 REGION is-document-cleanable */
     if (docRefused.length) {
       const named = byMember(docRefused, (m) => ({ ref: m.ref, sha: m.sha, refused: m.document.refused.code }));
       refusals.push(disclosureRefusal("DOCUMENT_NOT_CLEANABLE", { not_cleanable: named, document: refsNamed(docRefused),
-        detail: `${docRefused.length} document(s) a member supplied, which a load-bearing finding of this case relies on, `
-              + `cannot be cleaned of the details that could show who made them (` + named.map((x) => `${x.target}: `
-                + x.materials.map((m) => `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
-              + `), and a member's document travels only as its cleaned copy. Capture each from where it was published, `
-              + `supply a plainer copy, or stop relying on it. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_document_s_a_member", "{length} document(s) a member supplied, which a load-bearing finding of this case relies on, cannot be cleaned of the details that could show who made them ({map}), and a member's document travels only as its cleaned copy. Capture each from where it was published, supply a plainer copy, or stop relying on it. Nothing was written.", { length: String(docRefused.length), map: String(named.map((x) => `${x.target}: `
+                + x.materials.map((m) => `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")) }) }));
     }
     /* END DEC-49 REGION is-document-cleanable */
     return { refusals, materials, refs: chains.refs, findings: chains.findings };
@@ -684,10 +654,8 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-accepted-work-in-force */
     if (missing.length)
       refusals.push(disclosureRefusal("ACCEPTED_WORK_NOT_IN_FORCE", { not_in_force: missing,
-        detail: `${missing.length} leg(s) of this case's findings rest on another team's finding with no acceptance of `
-              + `that edition in force (` + missing.map((m) => `${m.target}: ${m.leg_of} leg ${m.ord} on ${m.ref}, `
-                + `${m.source.case ?? "an imported case"} edition ${m.source.edition ?? "not stated"}`).join("; ")
-              + `). Accept that edition again (op=importaccept), or take the leg out. Nothing was written.` }));
+        detail: localize("case-disclosures.index.length_leg_s_of_this", "{length} leg(s) of this case's findings rest on another team's finding with no acceptance of that edition in force ({map}). Accept that edition again (op=importaccept), or take the leg out. Nothing was written.", { length: String(missing.length), map: String(missing.map((m) => `${m.target}: ${m.leg_of} leg ${m.ord} on ${m.ref}, `
+                + `${m.source.case ?? "an imported case"} edition ${m.source.edition ?? "not stated"}`).join("; ")) }) }));
     /* END DEC-49 REGION is-accepted-work-in-force */
     return { refusals, rows, editions: [...editions.values()] };
   }
@@ -710,19 +678,14 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-flags-determined */
     if (j.failed.length)
       return { refusals: [disclosureRefusal("FLAGS_UNDETERMINED", { undetermined: j.failed,
-        detail: `the flags on another team's work this case rests on could not be read whole (`
-              + j.failed.map((f) => `edition ${f.edition} of import ${f.import}: ${f.why}`).join("; ")
-              + `), so what this case must disclose is not known. Try again. Nothing was published.` })],
+        detail: localize("case-disclosures.index.the_flags_on_another_teams", "the flags on another team's work this case rests on could not be read whole ({map}), so what this case must disclose is not known. Try again. Nothing was published.", { map: String(j.failed.map((f) => `edition ${f.edition} of import ${f.import}: ${f.why}`).join("; ")) }) })],
         open: [], byFlag: listed.byFlag };
     /* END DEC-49 REGION is-flags-determined */
     /* DEC-49 REGION is-flag-disclosed */
     if (j.undisclosed.length)
       refusals.push(disclosureRefusal("FLAG_NOT_DISCLOSED", {
         undisclosed: j.undisclosed.map((f) => ({ flag: f.flag, ref: f.ref, edition: f.edition, issue: f.issue })),
-        detail: `${j.undisclosed.length} open flag(s) on another team's work this case rests on are not disclosed (`
-              + j.undisclosed.map((f) => `flag ${f.flag} on ${f.ref} edition ${f.edition}`).join("; ")
-              + `). A case is published with its open flags disclosed, never refused because one is open (DEC-96 item `
-              + `4): list each in flagsDisclosed, or clear it first. Nothing was published.` }));
+        detail: localize("case-disclosures.index.length_open_flag_s_on", "{length} open flag(s) on another team's work this case rests on are not disclosed ({map}). A case is published with its open flags disclosed, never refused because one is open (DEC-96 item 4): list each in flagsDisclosed, or clear it first. Nothing was published.", { length: String(j.undisclosed.length), map: String(j.undisclosed.map((f) => `flag ${f.flag} on ${f.ref} edition ${f.edition}`).join("; ")) }) }));
     /* END DEC-49 REGION is-flag-disclosed */
     /* DEC-49 REGION is-flag-disclosure-standing */
     if (j.notStanding.length)
@@ -792,11 +755,11 @@ export class CaseDisclosures {
     for (const part of Array.isArray(parts) ? parts : []) {
       const place = part && typeof part === "object" ? part.place ?? null : null;
       const where = part && part.where != null ? String(part.where) : null;
-      if (!PERSON_PLACES.includes(place)) { unresolved.push({ place, where, ref: null, why: "not a place of a case document" }); continue; }
+      if (!PERSON_PLACES.includes(place)) { unresolved.push({ place, where, ref: null, why: word("case-disclosures.why.place_case_document") }); continue; }
       if (place === "timeline") {
         const ev = typeof part.event === "string" && part.event ? safe(() => this.events.readEvent({ eventId: part.event, viewer })) : null;
         if (!ev || ev.ok === false || !ev.found || !ev.event) {
-          unresolved.push({ place, where, ref: part.event ?? null, why: "the timeline item's event could not be read" });
+          unresolved.push({ place, where, ref: part.event ?? null, why: word("case-disclosures.why.timeline_item_event") });
           continue;
         }
         for (const x of Array.isArray(ev.event.participants) ? ev.event.participants : [])
@@ -805,7 +768,7 @@ export class CaseDisclosures {
       } else if (place === "money") {
         const f = typeof part.fact === "string" && part.fact ? safe(() => this.money.readFact({ factId: part.fact, viewer })) : null;
         if (!f || f.ok === false || !f.found || !f.fact) {
-          unresolved.push({ place, where, ref: part.fact ?? null, why: "the cited money fact could not be read" });
+          unresolved.push({ place, where, ref: part.fact ?? null, why: word("case-disclosures.why.cited_money_fact") });
           continue;
         }
         for (const side of ["from", "to"]) {
@@ -814,13 +777,13 @@ export class CaseDisclosures {
             moneyParties.add(party.entity);
             refs.push({ id: party.entity, place, where, person: false, side });
           } else if (party && !party.fund)
-            unresolved.push({ place, where, ref: part.fact, side, why: "a party the record names by its words only, resolved to no registered entity" });
+            unresolved.push({ place, where, ref: part.fact, side, why: word("case-disclosures.why.party_record_names") });
         }
       } else {
         const named = Array.isArray(part.people) ? part.people : [];
         for (const r of named)
           if (typeof r === "string" && r.trim()) refs.push({ id: r.trim(), place, where, person: true });
-          else unresolved.push({ place, where, ref: r ?? null, why: "a reference to a person that names no entity id" });
+          else unresolved.push({ place, where, ref: r ?? null, why: word("case-disclosures.why.reference_person_names") });
       }
     }
     /* each reference's kind, once; a person's cluster, once */
@@ -850,12 +813,12 @@ export class CaseDisclosures {
       const kind = kindOf(r.id);
       if (kind === undefined) {
         unresolved.push({ place: r.place, where: r.where, ref: r.id, ...(r.side ? { side: r.side } : {}),
-                          why: "the record holds no registered entity under this id" });
+                          why: word("case-disclosures.why.record_holds_registered") });
         continue;
       }
       entities.add(r.id);
       if (kind !== "person") {
-        if (r.person) unresolved.push({ place: r.place, where: r.where, ref: r.id, why: `names an entity of kind ${kind}, not a person` });
+        if (r.person) unresolved.push({ place: r.place, where: r.where, ref: r.id, why: word("case-disclosures.why.names_entity_kind", { kind: String(kind) }) });
         continue;
       }
       const members = clusterOf(r.id);
@@ -903,8 +866,7 @@ export class CaseDisclosures {
       const words = d.words ? d.words.toLowerCase() : "";
       if (words && contacts.some((v) => words.includes(v)))
         return { refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field: `peopleBases[${d.ord}].words`,
-          detail: `peopleBases[${d.ord}].words carries a person's address or phone number as the record holds it, and a case `
-            + `never publishes either (K1493). Say why the person is named without it.` }], rows: [] };
+          detail: localize("case-disclosures.index.peoplebases_ord_words_carries_a", "peopleBases[{ord}].words carries a person's address or phone number as the record holds it, and a case never publishes either (K1493). Say why the person is named without it.", { ord: String(d.ord) }) }], rows: [] };
     }
     const unrecorded = persons.filter((p) => !basisOf.has(p.person));
     const standing = new Map(), notStanding = [];
@@ -921,15 +883,14 @@ export class CaseDisclosures {
       refusals.push(disclosureRefusal("PERSON_BASIS_UNRECORDED", {
         unrecorded: unrecorded.map((p) => ({ person: p.person, places: p.places })),
         detail: `${unrecorded.length} person(s) this case names have no recorded basis (`
-              + unrecorded.map((p) => `${p.person}, named in ${placesStated(p.places) || "the case"}`).join("; ")
+              + unrecorded.map((p) => localize("case-disclosures.index.person_named_in_v1", "{person}, named in {v1}", { person: String(p.person), v1: String(placesStated(p.places) || "the case") })).join("; ")
               + `). Every person a case names is named on a basis the record holds (Design Requirement 6): list each in `
               + `peopleBases with its basis and reference. Nothing was written.` }));
     /* END DEC-49 REGION is-person-basis-recorded */
     /* DEC-49 REGION is-person-basis-standing */
     if (notStanding.length)
       refusals.push(disclosureRefusal("PERSON_BASIS_NOT_STANDING", { not_standing: notStanding,
-        detail: notStanding.map((x) => `peopleBases[${x.ord}] (${x.person}, ${x.basis}): ${x.why}`).join("; ")
-              + `. A basis stands only on what the record holds. Read the list again. Nothing was written.` }));
+        detail: localize("case-disclosures.index.map_a_basis_stands_only", "{map}. A basis stands only on what the record holds. Read the list again. Nothing was written.", { map: String(notStanding.map((x) => `peopleBases[${x.ord}] (${x.person}, ${x.basis}): ${x.why}`).join("; ")) }) }));
     /* END DEC-49 REGION is-person-basis-standing */
     const rows = persons.filter((p) => standing.has(p.person)).map((p) => {
       const d = standing.get(p.person);
@@ -951,26 +912,26 @@ export class CaseDisclosures {
     switch (d.basis) {
       case "act_or_position": {
         const line = liveLine(d.ref.line);
-        if (!line) return `${d.ref.line} is not a line the record holds`;
-        if (line.kind !== "holds" || !members.has(line.from)) return `${d.ref.line} is not a post this person holds`;
+        if (!line) return word("case-disclosures.line_record_holds", { line: String(d.ref.line) });
+        if (line.kind !== "holds" || !members.has(line.from)) return word("case-disclosures.post_person_holds", { line: String(d.ref.line) });
         const ev = safe(() => this.events.readEvent({ eventId: d.ref.event, viewer }));
-        if (!ev || ev.ok === false || !ev.found || !ev.event) return `${d.ref.event} is not an event the record holds`;
+        if (!ev || ev.ok === false || !ev.found || !ev.event) return word("case-disclosures.event_record_holds", { event: String(d.ref.event) });
         const when = ev.event.when;
         if (!when || typeof when !== "object" || typeof when.value !== "string")
-          return `${d.ref.event} is placed at no date the record settles, so the post cannot be judged held then`;
+          return word("case-disclosures.placed_date_record", { event: String(d.ref.event) });
         const at = { value: when.value, precision: when.precision ?? null, zone: when.zone ?? null };
         const s = safe(() => this.lines.structureAt({ entity: line.from, at, kinds: ["holds"], viewer }));
-        if (!s || s.ok === false) return `whether ${d.ref.line} was held on the date of ${d.ref.event} could not be read`;
+        if (!s || s.ok === false) return word("case-disclosures.whether_held_date", { line: String(d.ref.line), event: String(d.ref.event) });
         if ((s.held || []).some((l) => l && l.line_id === line.line_id)) return null;
         const u = (s.undetermined || []).find((x) => x && x.line && x.line.line_id === line.line_id);
-        return u ? `whether ${d.ref.line} was held on the date of ${d.ref.event} is not settled (${u.why})`
-                 : `${d.ref.line} was not held on the date of ${d.ref.event}`;
+        return u ? word("case-disclosures.whether_held_date_settled", { line: String(d.ref.line), event: String(d.ref.event), why: String(u.why) })
+                 : word("case-disclosures.held_date", { line: String(d.ref.line), event: String(d.ref.event) });
       }
       case "tie": {
         const line = liveLine(d.ref);
-        if (!line) return `${d.ref} is not a line the record holds`;
+        if (!line) return word("case-disclosures.line_record_holds", { line: String(d.ref) });
         if (!TIE_LINE_KINDS.includes(line.kind) || !(members.has(line.from) || members.has(line.to)))
-          return `${d.ref} is not a tie of this person's`;
+          return word("case-disclosures.tie_person", { ref: String(d.ref) });
         return null;
       }
       case "interest": {
@@ -979,14 +940,14 @@ export class CaseDisclosures {
           if (!r || r.ok === false) continue;
           if ((r.interests || []).some((l) => l && l.line_id === d.ref) || (r.money || []).some((f) => f && f.fact_id === d.ref)) return null;
         }
-        return `${d.ref} is not an interest the record holds of this person`;
+        return word("case-disclosures.interest_record_holds", { ref: String(d.ref) });
       }
       case "consent": case "prior_publication":
-        return this.#captureSeen(d.ref, viewer) ? null : `capture ${d.ref} is not one the record holds`;
+        return this.#captureSeen(d.ref, viewer) ? null : word("case-disclosures.capture_record_holds", { ref: String(d.ref) });
       case "private_party":
-        return d.words ? null : "a private person is named only with the words saying why";
+        return d.words ? null : word("case-disclosures.private_person_named");
       default:
-        return "not a basis";
+        return word("case-disclosures.basis");
     }
   }
 
@@ -1065,7 +1026,7 @@ export class CaseDisclosures {
       let t = null;
       try { t = this.people.tiesConcerning({ entities: [...ids], member: s, viewer: `member:${s}` }); }
       catch (e) { t = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
-      if (!t || t.ok === false || !Array.isArray(t.ties)) { undetermined.push({ signer: s, why: t ? t.reason ?? "the read failed" : "no answer" }); continue; }
+      if (!t || t.ok === false || !Array.isArray(t.ties)) { undetermined.push({ signer: s, why: t ? t.reason ?? word("case-disclosures.why.read_failed") : "no answer" }); continue; }
       let facts = null;
       for (const tie of t.ties) {
         const level = tie.attribution ?? null;
@@ -1124,8 +1085,8 @@ export class CaseDisclosures {
       catch (e) { r = { undetermined: true, why: String(e && e.message || e).slice(0, 160) }; }
       if (!r || r.ok === false || r.undetermined || r.truncated || !Array.isArray(r.candidates)) {
         failed.push({ finding: p.id, sha: p.bundleSha,
-                      why: !r ? "no answer" : r.truncated ? `more than ${r.bound ?? "its bound of"} candidates on it`
-                         : r.why || "the read failed" });
+                      why: !r ? "no answer" : r.truncated ? word("case-disclosures.why.candidates", { bound: String(r.bound ?? "its bound of") })
+                         : r.why || word("case-disclosures.why.read_failed") });
         continue;
       }
       if (Number(r.undetermined_legs) > 0) unread.push({ finding: p.id, legs: Number(r.undetermined_legs) });
@@ -1306,7 +1267,7 @@ export class CaseDisclosures {
     for (const id of [...new Set(findings.map((f) => f.id))]) {
       const text = this.#liveText(id);
       const fm = text === null ? null : parseFrontmatter(text).data;
-      if (!fm || typeof fm !== "object") { unread.push({ finding: id, why: "its document could not be read" }); continue; }
+      if (!fm || typeof fm !== "object") { unread.push({ finding: id, why: word("case-disclosures.why.document_read") }); continue; }
       const legs = Array.isArray(fm.basis) ? fm.basis : [];
       const project = typeof fm.project === "string" ? fm.project : null;
       const applied = legs.map((leg) => readBiasApplied(leg));

@@ -46,11 +46,12 @@ import { LOCAL_FACTS_CHECKS, refusal } from "./checks.mjs";
 import { GroupRules } from "./rules.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
 import { factPath, parseFactPath, officesToken } from "./paths.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
 export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
-export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE } from "./rules.mjs";
+export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE, RULE_FIELDS, EFFECTIVE_FROM } from "./rules.mjs";
 
 /** R7: a member's three acts on a fact. */
 export const LOCAL_FACT_ACTS = Object.freeze(["confirm", "correct", "dispute"]);
@@ -205,10 +206,10 @@ export class LocalFacts {
   #sourceRefusal(src, viewer) {
     const sha = isObj(src) && typeof src.captureSha === "string" ? src.captureSha.trim().toLowerCase() : "";
     if (!/^[0-9a-f]{64}$/.test(sha) || !isObj(src.extent))
-      return { why: "the source names a capture by its sha256 and the extent of it that states the rule" };
+      return { why: word("local-facts.why.source_names_capture") };
     if (!this.provenance && this.host) { try { this.provenance = provenanceOf(this.host); } catch { this.provenance = null; } }
     if (!this.content && this.host) { try { this.content = contentOf(this.host); } catch { this.content = null; } }
-    const unseen = { why: "no such capture is held where you can see it" };
+    const unseen = { why: word("local-facts.why.capture_held_see") };
     let home = null;
     try { home = this.provenance && typeof this.provenance.homeOf === "function" ? this.provenance.homeOf(sha) : null; } catch { home = null; }
     if (!isObj(home) || typeof home.bundleId !== "string") return unseen;
@@ -221,11 +222,11 @@ export class LocalFacts {
     let bad;
     try {
       const ctx = this.content && typeof this.content.contentContextFor === "function" ? this.content.contentContextFor(sha) : null;
-      if (!ctx) return { why: "the capture's content cannot be read here" };
+      if (!ctx) return { why: word("local-facts.why.capture_content_cannot") };
       bad = checkContentExtent(src.extent, ctx);
-    } catch (e) { return { why: `the extent could not be checked (${String(e && e.message || e).slice(0, 200)})` }; }
+    } catch (e) { return { why: word("local-facts.why.extent_checked", { entry: String(String(e && e.message || e).slice(0, 200)) }) }; }
     if (!bad) return null;
-    return { why: String(bad.detail || bad.translation || bad.reason || "the extent is not in the capture").slice(0, 400),
+    return { why: String(bad.detail || bad.translation || bad.reason || word("local-facts.why.extent_capture")).slice(0, 400),
              code: bad.code || bad.reason || null };
   }
 
@@ -239,6 +240,8 @@ export class LocalFacts {
   ruleConfirm(a = {}) { return this.rules.ruleConfirm(isObj(a) ? a : {}, machineRefusal); }
   /** R12: the group's rules, to a viewer naming a member. */
   groupRules(a = {}) { return this.rules.groupRules(a); }
+  /** R18: the fields an entry of a section carries, and their vocabularies. */
+  ruleFields(a = {}) { return this.rules.ruleFields(a); }
   /** R12: `combine`'s view of the active profiles with each confirmed, unwithdrawn group rule added. */
   governingView() { return this.rules.governingView(); }
   /** R13: any member withdraws a rule with a reason. */
@@ -317,31 +320,31 @@ export class LocalFacts {
     const base = { path, fact: parts, latest: said(latest), acts: acts.length };
     if (!inView) {
       return { ...base, status: "absent", due: false, profile: null, governs: null,
-               why: held ? "the active jurisdiction profiles disagree on this fact, so it is withheld: what depends on it is undetermined"
-                         : "no active jurisdiction profile holds this fact, so what depends on it is undetermined" };
+               why: held ? word("local-facts.why.active_jurisdiction_profiles")
+                         : word("local-facts.why.active_jurisdiction_profile") };
     }
     const correction = [...acts].reverse().find((a) => a.act === "correct") || null;
     const profile = { value: clone(inView.value), status: inView.status, basis: inView.basis };
     const governs = correction
       ? { value: clone(correction.value), origin: "corrected", source: correction.source,
-          says: `corrected locally by ${correction.by}, ${when(correction.at)}` }
+          says: word("action-clocks.corrected_locally", { by: String(correction.by), at: String(when(correction.at)) }) }
       : { value: clone(inView.value), origin: "profile" };
     const horizon = this.#horizon(parts, latest, zone);
     const out = { ...base, profile, governs, ...horizon.dates, ...(horizon.undetermined ? { horizon: horizon.undetermined } : {}) };
-    if (!latest) return { ...out, status: "unconfirmed", due: horizon.due, why: `no member has confirmed it${horizon.dueWhy}` };
-    if (latest.act === "dispute") return { ...out, status: "disputed", due: true, why: `disputed by ${latest.by}, ${when(latest.at)}` };
+    if (!latest) return { ...out, status: "unconfirmed", due: horizon.due, why: word("local-facts.why.member_confirmed", { due_why: String(horizon.dueWhy) }) };
+    if (latest.act === "dispute") return { ...out, status: "disputed", due: true, why: localize("local-facts.index.disputed_by_by_when", "disputed by {by}, {when}", { by: String(latest.by), when: String(when(latest.at)) }) };
     if (latest.act === "correct") return { ...out, status: "corrected", due: false, why: governs.says };
     /* a confirm: it confirms the value that governed when it was made, until its horizon (R3) */
     if (canonicalJson(latest.value) !== canonicalJson(governs.value))
       return { ...out, status: "unconfirmed", due: horizon.due, lapsed: said(latest),
-               why: `the value ${latest.by} confirmed on ${when(latest.at)} has since changed${horizon.dueWhy}` };
+               why: word("local-facts.why.value_confirmed_changed", { by: String(latest.by), at: String(when(latest.at)), due_why: String(horizon.dueWhy) }) };
     if (horizon.undetermined)
       return { ...out, status: "unconfirmed", due: horizon.due, lapsed: said(latest),
-               why: `the confirmation by ${latest.by} at ${latest.at} cannot be shown in force: ${horizon.undetermined.why}` };
+               why: word("local-facts.why.confirmation_cannot_shown", { by: String(latest.by), at: String(latest.at), why: String(horizon.undetermined.why) }) };
     if (horizon.lapsed)
       return { ...out, status: "unconfirmed", due: horizon.due, lapsed: said(latest),
-               why: `the confirmation by ${latest.by} on ${when(latest.at)} lapsed on ${horizon.dates.lapses_on}${horizon.dueWhy}` };
-    return { ...out, status: "confirmed", due: false, why: `confirmed by ${latest.by}, ${when(latest.at)}` };
+               why: word("local-facts.why.confirmation_lapsed", { by: String(latest.by), at: String(when(latest.at)), lapses_on: String(horizon.dates.lapses_on), due_why: String(horizon.dueWhy) }) };
+    return { ...out, status: "confirmed", due: false, why: localize("local-facts.index.confirmed_by_by_when", "confirmed by {by}, {when}", { by: String(latest.by), when: String(when(latest.at)) }) };
   }
 
   /* R3: when a confirmation of this fact lapses, and from when the fact is due, on local days of `zone`. Without a
@@ -351,17 +354,16 @@ export class LocalFacts {
     const confirmedAt = latest && latest.act === "confirm" ? latest.at : null;
     const confirmed = confirmedAt ? dayIn(confirmedAt, zone) : null;
     const undetermined = today === null
-      ? { undetermined: true, why: `the profile ${parts.profile} holds no time zone that can be read, so its local days, `
-          + "and this fact's horizon, are undetermined" }
+      ? { undetermined: true, why: word("local-facts.why.profile_holds_time", { profile: String(parts.profile) }) }
       : null;
     if (parts.fact === "holidays") {
       const y = parts.year, due_from = `${y - 1}-11-01`, lapses_on = `${y + 1}-01-01`;
       if (undetermined)
-        return { due: null, lapsed: false, undetermined, dueWhy: `; whether the year is due (from ${due_from}) is undetermined`,
+        return { due: null, lapsed: false, undetermined, dueWhy: word("local-facts.whether_year_due", { due_from: String(due_from) }),
                  dates: { due_from, ...(confirmedAt ? { lapses_on } : {}) } };
       const due = today >= due_from;
       return { due, lapsed: !!confirmed && today >= lapses_on,
-               dueWhy: due ? `; the year is due from ${due_from}` : `; the year falls due on ${due_from}`,
+               dueWhy: due ? word("local-facts.year_due", { due_from: String(due_from) }) : word("local-facts.year_falls_due", { due_from: String(due_from) }),
                dates: { due_from, ...(confirmed ? { lapses_on } : {}) } };
     }
     if (undetermined) return { due: confirmedAt ? null : true, lapsed: false, undetermined, dueWhy: "", dates: {} };
@@ -451,7 +453,7 @@ export class LocalFacts {
     const rank = (f) => (f.status === "corrected" || f.status === "disputed" ? 0 : 1);
     facts.sort((x, y) => rank(x) - rank(y) || (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
     return { ok: true, facts, count: facts.length,
-             note: "corrections and disputes come first, for a member to report for a profile fix; your team's Civicsmith transmits nothing" };
+             note: word("local-facts.note.corrections_disputes_come") };
   }
 
   /* Every fact of the active profiles, once each, with its status. */
@@ -513,7 +515,7 @@ export class LocalFacts {
    *  why. Answers `{ok, path, via, lines, why}`, `path` null when nothing governs; writes nothing; never throws. */
   governingPath(a = {}) {
     try { return this.#governing(isObj(a) ? a : {}); }
-    catch (e) { return { ok: true, path: null, via: "none", lines: [], why: `undetermined: the walk failed (${String(e && e.message || e).slice(0, 200)})` }; }
+    catch (e) { return { ok: true, path: null, via: "none", lines: [], why: word("local-facts.why.undetermined_walk_failed", { entry: String(String(e && e.message || e).slice(0, 200)) }) }; }
   }
 
   #governing(b) {
@@ -527,15 +529,15 @@ export class LocalFacts {
       const office = isObj(b.office) ? b.office : null;
       const ownPath = office ? factPath({ profile, fact, office }) : null;
       if (ownPath && factIn(p, { profile, fact, office }, profile))
-        return { ok: true, path: ownPath, via: "own", lines: [], why: "the profile holds this office's own time zone" };
+        return { ok: true, path: ownPath, via: "own", lines: [], why: word("local-facts.why.profile_holds_office") };
       const path = factPath({ profile, fact });
-      const whose = office ? "the profile holds no time zone of this office's own, so the profile's governs it"
-        : "the time zone is the profile's, for every office";
+      const whose = office ? word("local-facts.profile_holds_time")
+        : word("local-facts.time_zone_profile");
       return factIn(p, { profile, fact }, profile)
         ? { ok: true, path, via: "profile", lines: [], why: whose }
         : { ok: true, path: null, via: "none", lines: [], why: office
-            ? "the profile holds no time zone of this office's own nor its own, so it is undetermined"
-            : "the profile holds no time zone, so it is undetermined" };
+            ? word("local-facts.why.profile_holds_time_zone")
+            : word("local-facts.why.profile_holds_time_zone_undetermined") };
     }
     if (fact !== "hours" && fact !== "holidays") return noSuchFact(null);
     const at = typeof b.at === "string" ? b.at : null;
@@ -548,7 +550,7 @@ export class LocalFacts {
       }
       if (year === null)
         return { ok: true, path: null, via: "none", lines: [],
-                 why: "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year" };
+                 why: localize("local-facts.index.the_year_is_undetermined", "the year is undetermined: give `year`, or `at` with a profile time zone to read its local year") };
     }
     /* the path of `office`'s own fact in the profile, or null */
     const own = (office) => {
@@ -573,48 +575,47 @@ export class LocalFacts {
         const parts = { profile, fact, year };
         const path = factIn(p, parts, profile) ? factPath(parts) : null;
         return { ok: true, path, via: path ? "fallback" : "none", lines: followed,
-                 why: path ? `${why}; the profile's entry for every office governs (its \`offices\` grouping)`
-                           : `${why}; the profile holds no entry for every office in ${year}, so it is undetermined` };
+                 why: path ? localize("local-facts.index.why_the_profiles_entry_for", "{why}; the profile's entry for every office governs (its `offices` grouping)", { why: String(why) })
+                           : word("local-facts.why.profile_holds_entry", { why: String(why), year: String(year) }) };
       }
-      return { ok: true, path: null, via: "none", lines: followed, why: `${why}; the profile holds no hours that govern this office, so they are undetermined` };
+      return { ok: true, path: null, via: "none", lines: followed, why: word("local-facts.why.profile_holds_hours", { why: String(why) }) };
     };
     const mine = own(b.office);
-    if (mine) return { ok: true, path: mine, via: "own", lines: [], why: "the profile holds this office's own fact" };
+    if (mine) return { ok: true, path: mine, via: "own", lines: [], why: word("local-facts.why.profile_holds_office_fact") };
     const entity = typeof b.entity === "string" && b.entity ? b.entity : null;
-    if (!entity) return fallback("no registry entity was given for the office, so no part_of line was followed");
+    if (!entity) return fallback(word("local-facts.registry_entity_given"));
     if (!this.lines && this.host) { try { this.lines = linesOf(this.host); } catch { this.lines = null; } }
     if (!this.lines || typeof this.lines.structureAt !== "function")
-      return fallback("`lines` is not reachable on this host, so no part_of line was followed");
-    if (!at) return fallback("no date was given, so no part_of line could be judged");
+      return fallback(localize("local-facts.index.lines_is_not_reachable", "`lines` is not reachable on this host, so no part_of line was followed"));
+    if (!at) return fallback(word("local-facts.date_given_part"));
     const followed = [], seen = new Set([entity]);
     let cur = entity;
     for (let hop = 0; hop < BOUNDS.depth_default; hop++) {
       const r = this.lines.structureAt({ entity: cur, at, kinds: ["part_of"], viewer: b.viewer });
       if (!isObj(r) || r.ok === false)
-        return fallback(`lines refused the structure of ${cur} at ${at}${isObj(r) && r.reason ? ` (${r.reason})` : ""}`, followed);
+        return fallback(word("local-facts.lines_refused_structure", { cur: String(cur), at: String(at), row: String(isObj(r) && r.reason ? ` (${r.reason})` : "") }), followed);
       /* lines R10: `held` the lines in at `at`, `undetermined` each `{line, why}`; only lines from `cur` lead upward */
       const up = (list) => (Array.isArray(list) ? list : []).filter((l) => isObj(l) && l.kind === "part_of" && l.from === cur);
       const open = up((Array.isArray(r.undetermined) ? r.undetermined : []).map((u) => (isObj(u) && isObj(u.line) ? { ...u.line, why: u.why } : u)));
       if (open.length)
-        return fallback(`the part_of line ${open.map((l) => l.line_id).join(", ")} from ${cur} is undetermined at ${at}`
-                        + (open[0].why ? ` (${open[0].why})` : ""), followed);
-      if (r.truncated) return fallback(`the structure of ${cur} at ${at} is truncated, so its part_of lines are not all read`, followed);
+        return fallback(word("local-facts.part_line_undetermined", { open: String(open.map((l) => l.line_id).join(", ")), cur: String(cur), at: String(at), open_2: String(open[0].why ? ` (${open[0].why})` : "") }), followed);
+      if (r.truncated) return fallback(word("local-facts.structure_truncated_part", { cur: String(cur), at: String(at) }), followed);
       const held = up(r.held);
-      if (!held.length) return fallback(`${cur} is part of no entity at ${at} that the profile holds a fact for`, followed);
+      if (!held.length) return fallback(word("local-facts.part_entity_profile", { cur: String(cur), at: String(at) }), followed);
       if (held.length > 1)
-        return fallback(`${cur} is part of ${held.length} entities at ${at} (${held.map((l) => l.line_id).join(", ")}), so which governs is undetermined`, followed);
+        return fallback(word("local-facts.part_entities_governs", { cur: String(cur), held: String(held.length), at: String(at), held_2: String(held.map((l) => l.line_id).join(", ")) }), followed);
       const line = held[0];
       followed.push({ line_id: line.line_id, from: line.from, to: line.to });
-      if (typeof line.to !== "string" || seen.has(line.to)) return fallback(`the part_of lines from ${entity} return to an entity already followed`, followed);
+      if (typeof line.to !== "string" || seen.has(line.to)) return fallback(word("local-facts.part_lines_return", { entity: String(entity) }), followed);
       seen.add(line.to);
       cur = line.to;
       const office = this.officeOf ? this.officeOf(cur, profile) : null;
       const path = own(office);
       if (path)
         return { ok: true, path, via: "part_of", lines: followed,
-                 why: `the office's own fact is not held; it is part of ${cur} (${followed.map((l) => l.line_id).join(" → ")}), whose fact the profile holds` };
+                 why: word("local-facts.why.office_fact_held", { cur: String(cur), followed: String(followed.map((l) => l.line_id).join(" → ")) }) };
     }
-    return fallback(`no entity within ${BOUNDS.depth_default} part_of lines of ${entity} has a fact the profile holds`, followed);
+    return fallback(word("local-facts.entity_within_part", { depth_default: String(BOUNDS.depth_default), entity: String(entity) }), followed);
   }
 }
 
@@ -624,9 +625,7 @@ export class LocalFacts {
 function machineRefusal(by) {
   /* DEC-49 REGION is-fact-member */
   if (str(by) && !isMachineIdentity(str(by))) return null;
-  return refusal("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact, or confirming a team's "
-                 + "rule, is a named member's act; an assistant's re-check reaches a member as its run's output. "
-                 + "Nothing was written.");
+  return refusal("MACHINE_CANNOT_CONFIRM", localize("local-facts.index.confirming_correcting_or_disputing_a", "confirming, correcting or disputing a local fact, or confirming a team's rule, is a named member's act; an assistant's re-check reaches a member as its run's output. Nothing was written."));
   /* END DEC-49 REGION is-fact-member */
 }
 
@@ -657,6 +656,8 @@ export function localFactsOps(s, url, body) {
     ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") }),
     /* R15 (T46; N935): R12's read, `section` the query's (absent read as none), `viewer` the URL's */
     grouprules: () => s.groupRules({ section: qp("section") ?? undefined, viewer: qp("viewer") }),
+    /* R18 (T51; DEC-340): the fields a drafted rule is made of, `section` the query's, `viewer` the URL's */
+    rulefields: () => s.ruleFields({ section: qp("section") ?? undefined, viewer: qp("viewer") }),
   };
 }
 

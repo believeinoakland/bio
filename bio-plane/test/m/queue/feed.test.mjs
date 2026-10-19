@@ -8,6 +8,7 @@ import { queueAnswer, QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, QUEUE_CLASS_LABELS } 
 import { QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, MUTE_REFUSAL_DETAIL } from "../../../src/queuestate.mjs";
 import { deriveActs, decorate } from "../../../src/affordances.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R6: limit clamped to 1–500 (default 200); among equals (here every item, none homed) R6's order, OBLIGATION, FINDING, CONDITION then id, in R49's default and cut at the limit; the answer's fields", () => {
   const w = world({ governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5000, refusals: 1, granted: 0, refused_total: 1 }] },
@@ -360,9 +361,9 @@ test("R39: resolved carries the obligations resolved lately on visible subjects,
   assert.ok(b.debts.every((d) => d.resolved_by === null || d.resolved_by === "bob"), "no stand-in name for an absent member");
   // bias's bound and its failure are published, never read as none
   const w2 = world({ bias: { settled: ({ limit }) => ({ debts: [], limit, truncated: false, undetermined: true,
-                                                        stated: "the settled bias debts could not be read, so none is listed" }) } });
+                                                        stated: word("bias.settled_bias_debts") }) } });
   const u = w2.feed(null, "class:admin").resolved.bias_debts;
-  assert.equal(u.read, false); assert.equal(u.stated, "the settled bias debts could not be read, so none is listed");
+  assert.equal(u.read, false); assert.equal(u.stated, word("bias.settled_bias_debts"));
   const w3 = world({ bias: { settled: ({ limit }) => ({ debts: settled.slice(0, 1), limit, truncated: true }) } });
   assert.equal(w3.feed(null, "class:admin").resolved.bias_debts.truncated, true);
 });

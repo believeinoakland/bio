@@ -1,6 +1,6 @@
 # BOB to credentials (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -14,3 +14,21 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 2 (R2), credentials: **T51-176** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/credentials.md` (read whole).
+BOB's notes for this job:
+1. Your words findings are in `build/plan/words-pass/credentials.md` (read whole), in up to three sections: the conversion's left findings, "Plain findings (K3957)" and "Test copies of code sentences (K3962)". Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944). The ids you assign are `credentials.<file stem>.<slug>`, fixed once.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget (`reading-sets.py`). A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. setup-words R13 binds every sentence a member reads, whatever the check counts (under five words, punctuated, or held in a test's regular expression): convert those too (K3964, K3965). A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize` by equality, a regular-expression copy included; `localize` answers its `en` while `rows.mjs` is stale. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; BOB regenerates them at the layer close. A word id needs no test of its own (K874 binds R ids; K3965).
+Tests never copy a sentence people read; every new requirement id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9). Merge `tranche/T51` into your branch, never rebase (K1991).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+ANSWER and CHANGE (K3974; K3964, setup-words R13). Your question is already settled: every sentence a member reads is read by key, whatever the check counts, and your START's words rule says so. Convert them in this job: `LOGIN_REFUSAL_DETAIL` (R4's refusal detail) and every member-read `detail:` string in the DEC-49 regions (`passwordChange`, `signerRegisterOwn` and the rest) by `localize('credentials.index.<slug>', en)`, keeping the DEC-49 region markers; the `t35-misc.test.mjs` fragments that copy them compare with `localize` by equality. A string you judge no member reads goes in a REPORT for the design's `unkeyed` list. Merge `tranche/T51` first (your J2 is merged). Then tests, checks, COMPLETE.

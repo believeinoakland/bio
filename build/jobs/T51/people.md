@@ -1,6 +1,6 @@
 # people (T51)
 
-**Status** · session_016nx6W8cHCnGj3NUy1ARzAe · depth 2 · COMPLETE · handled B2
+**Status** · session_01Qbqab5EFYZCrkmKLgiPXzP · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -39,3 +39,66 @@ Found in other modules while meeting R40 (I passed each reason on exactly as its
 **Found in other modules**: see the REPORT (J2): civil-time, lines and events answer English reasons; screens-investigate reads `String(why)` and offers three `show` values.
 
 Size (session_016nx6W8cHCnGj3NUy1ARzAe): test runs 14, module lines 2238
+
+## J4 · REPORT
+
+R40 needs your amendment; two decisions are yours (P17).
+
+1. Requirement text. R40 says that where connection-grammar's contract judges an undetermined reason as a filled string, `why` stays a string with `why_key` beside it. connection-grammar R6 (its reads.mjs:17-21, as merged) now judges a hop's `undetermined.why` as a `{key, vars}`; a string fails OWNER_NONCONFORMING. I changed the hop to pass civil-time's `{key, vars}` on as it answers, and dropped `why_key` on hops. The hub answer keeps its string `why` (connection-grammar still requires a filled string there) with `why_key` beside it. Requested: amend R40 to say so.
+2. Composed reason. `lines.why.stated_current_through` takes its `{why}` fill as the owner's sentence (civil-time's key read through `word`), as lines R21 does; the test in why.test.mjs:62 says the same. reads.test.mjs:251 expected the nested key object, which `word` cannot draw: its fill is String-written, so a nested key shows as "[object Object]". I changed that expectation to the sentence. Choice for you: keep the sentence (current code), or extend setup-words so a fill can take a key (its owner, not mine).
+
+The rows for `people.index.evidence_names_cited_line`, `people.index.read_names_member` and `people.checks.join_shape` are new ids: rows.mjs regenerates at the layer close (BOB's step).
+
+## J5 · COMPLETE
+
+CR-13 done on job/T51/people (ffb974f5de): words findings and the R40 reason changes.
+
+Applied
+- Words (K3949, K3957, K3962): inline copies at index.mjs:53-54 and :473 now read label.identityclaimkinds rows (not_same_as, unsure, same_as); the cited-line sentence (:505) and the read-needs-member refusal (:1757) are localize ids of this module; the OWNER_HOST_AMBIGUOUS sentence (:1790) reads people.why.people_neighbors_needs; the join-shape sentence (checks.mjs:70) is localize people.checks.join_shape; the test copy (directory.test.mjs:91) is now an assertion message with no sentence.
+- R40 (K3958): connection-grammar R6 judges a hop's undetermined reason as {key, vars}: items pass civil-time's key on as it answers (no sentence, no why_key on hops); the composed lines.why.stated_current_through key takes its {why} fill as the owner's sentence (lines R21); why.test.mjs's R40 hop test and reads.test.mjs's R14 expectation align to this. The hub keeps its string why with why_key.
+
+Deferred: none in the module.
+Found elsewhere: setup-words word() writes a key fill as String, so a nested key renders "[object Object]" (see REPORT to BOB, also sent).
+
+Checks (civicos-process ebcc1a3 + tranche/T51 merged, run from the process repository)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: no finding in people (the repository-wide run lists failures in other modules, none in people).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 15 product files; 0 failures.
+- setup-words build.mjs --check: rows.mjs stale (expected; BOB regenerates at the layer close).
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail (after the merge too).
+
+Rulings for BOB to record in build/rulings.md (P17): (a) hop reasons are {key, vars} per connection-grammar R6; (b) the composed stated-current reason carries the owner's sentence in its {why} fill; (c) the kind words read the label.identityclaimkinds rows.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 5, module lines 2241
+
+## J6 · COMPLETE
+
+COMPLETE again after CHANGE B4 (K3992). Merged tranche/T51 into job/T51/people (4c756b88c4) and pushed. No change to the module was needed: R40 as worded in K3992 matches the code (a hop's undetermined.why is {key, vars} with no why_key; the hub answer keeps its string why and why_key; lines.why.stated_current_through takes the owner's sentence as its {why} fill).
+
+Checks after the merge (process repository, merged tree)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; no words finding in people (the repository-wide run lists other modules' findings only).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 0 failures.
+- setup-words build.mjs --check: rows.mjs stale (expected; BOB regenerates at the layer close; the stale-rows note names no people word).
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail.
+
+Deferred: none. Requirements and tests unchanged since the first COMPLETE.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 7, module lines 2241
+
+## J7 · COMPLETE
+
+COMPLETE again after CHANGE B5 (K3998). Merged tranche/T51 (lines and events, CR-7 now in) into job/T51/people (7fe02ab582) and pushed. Their keyed reasons break nothing here: the module's tests pass unchanged, so no code or test change was needed.
+
+Checks (process repository, merged tree)
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail.
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; no words finding in people (the one FAIL line naming "people" is strength's sentence, not this module).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 0 failures.
+
+Deferred: none.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 8, module lines 2241

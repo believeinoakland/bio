@@ -7,6 +7,7 @@
  * `not_held` with its reason (R7). */
 
 import { evaluateRule } from "../civil-time/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const filled = (v) => typeof v === "string" && v.trim() !== "";
@@ -57,7 +58,7 @@ function standardinforce(args, ctx) {
 
 function profiles(args, ctx) {
   const view = ctx.view();
-  if (!view) return notHeld("meaning", "no jurisdiction profile is active in your team's Civicsmith", null);
+  if (!view) return notHeld("meaning", localize("answers.rules.no_jurisdiction_profile_is_active", "no jurisdiction profile is active in your team's Civicsmith"), null);
   const section = args.section;
   if (!filled(section) || !(section in view)) return notHeld("meaning", `the active profiles hold no ${section || "section"}`, null);
   const held = view[section];
@@ -80,7 +81,7 @@ function profiles(args, ctx) {
 /** R9: time. */
 function deadlinecompute(args, ctx) {
   const view = ctx.view();
-  if (!view) return notHeld("meaning", "no jurisdiction profile is active in your team's Civicsmith", null);
+  if (!view) return notHeld("meaning", localize("answers.rules.no_jurisdiction_profile_is_active", "no jurisdiction profile is active in your team's Civicsmith"), null);
   const rule = (view.deadlines || []).find((d) => plain(d) && d.rule === args.rule);
   if (!rule) return notHeld("meaning", `the active profiles hold no deadline rule ${args.rule}`, null);
   if (!sourced(rule) || !filled(rule.citation)) return notHeld("meaning", "the profile holds this rule without a primary source", null);
@@ -90,7 +91,7 @@ function deadlinecompute(args, ctx) {
     const r = ev ? ev.readEvent({ eventId: anchor, viewer: ctx.viewer }) : null;
     if (!r || r.ok === false || !r.found) return notHeld("meaning", `the start event ${anchor} is not held`, "capturerequest");
     const w = r.event && r.event.when;
-    if (!w || w === "undetermined" || !w.value) return { value: { undetermined: true, why: `the start event has no date the record can read` },
+    if (!w || w === "undetermined" || !w.value) return { value: { undetermined: true, why: word("answers.why.start_event_date") },
       basis: rule.citation, grade: null, status: "undetermined", label: "computed_fact" };
     anchor = { value: w.value, precision: w.precision, zone: w.zone };
   }

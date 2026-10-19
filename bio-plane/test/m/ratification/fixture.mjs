@@ -24,6 +24,7 @@ import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/ss
 import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/index.mjs";
 import { GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* K1321: every case document these fixtures sign is `/6` (publication R58 refuses committing any other), with its
    `method:` block and its `materials:` and `material_attestations:` blocks (empty), written by case-grammar's own
@@ -368,7 +369,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     completeness_acknowledgements: [], completeness_excluded: [],
     searched: { subject_source: "case_basis", subjects: 1 }, searched_levels: [],
     required_strength: { declared: false },
-    bias_manifest: { in_force: false, stated: "no manifest was in force", pins_proposed: 0,
+    bias_manifest: { in_force: false, stated: word("bias.manifest_force"), pins_proposed: 0,
                      pins_proposed_stated: "no adoption pinned a proposed revision" },
     bias_manifest_bundles: [], bias_manifest_pins_proposed: [], case_citations: [],
     case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },

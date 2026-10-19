@@ -8,6 +8,8 @@
  * this module's beside `case-authoring`'s C-136.1 and C-136.2, as C-44 is shared). R17 (T47; DEC-199) is the one change:
  * C-136.5 reads `refusal.BAD_CARRIED_OUTCOME` by key. The changed rows wait for T48's promotion stamp (rule 17). */
 
+import { word, localize } from '../setup-words/index.mjs';
+
 const at = (fn, region) => `src/case-inputs/index.mjs ${fn} > ${region}`;
 
 /* R10, R17 (T46: DEC-194, N913; T47: DEC-198 (7), DEC-199, N992): the words of `words.json`
@@ -16,19 +18,14 @@ const at = (fn, region) => `src/case-inputs/index.mjs ${fn} > ${region}`;
    step's open-request sentences (`signing.openrequest.*`), whose `{placeholders}` are filled from R8's row or R9's field.
    The design stream's words: re-worded there, then re-taken here by key; a row never holds a copy of its sentence. */
 export const CASE_INPUTS_WORDS = Object.freeze({
-  'refusal.MACHINE_CANNOT_CARRY_OUTCOME': 'Only a member carries an outcome into a case\'s next edition, and this came from '
-    + 'the assistant or another automated credential. Sign in to carry it. Nothing was written.',
-  'refusal.CARRY_NOT_A_PARTICIPANT': 'Only someone who has joined the project that makes this case can carry an outcome '
-    + 'into its next edition. Nothing was written.',
+  'refusal.MACHINE_CANNOT_CARRY_OUTCOME': word('refusal.MACHINE_CANNOT_CARRY_OUTCOME'),
+  'refusal.CARRY_NOT_A_PARTICIPANT': word('refusal.CARRY_NOT_A_PARTICIPANT'),
   'refusal.BAD_CARRIED_OUTCOME': 'An outcome carried into a case needs its kind (a success, a correction by the office, or a '
     + 'harm addressed), your statement on one line with no quotation marks or backslash and at most 2,000 characters, what '
     + 'it cites, and the date it happened. {field} is missing or isn\'t in that form. Nothing was written.',
-  'refusal.NO_SUCH_CARRIED_OUTCOME': 'There is no outcome waiting for a case\'s next edition by that name, or none you can '
-    + 'see. Nothing was written.',
-  'refusal.CARRIED_OUTCOME_SETTLED': 'This outcome is no longer waiting: a signed edition already carries it, or it was '
-    + 'withdrawn. A signed edition is corrected only by a later one. Nothing was written.',
-  'refusal.CARRY_NO_REASON': 'Say why you are withdrawing this outcome, in at most 2,000 characters. Your reason is kept '
-    + 'with it. Nothing was written.',
+  'refusal.NO_SUCH_CARRIED_OUTCOME': word('refusal.NO_SUCH_CARRIED_OUTCOME'),
+  'refusal.CARRIED_OUTCOME_SETTLED': word('refusal.CARRIED_OUTCOME_SETTLED'),
+  'refusal.CARRY_NO_REASON': word('refusal.CARRY_NO_REASON'),
   'signing.openrequest.line': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
     + '{window_closes}; the reply answers {answered} of the {claims} claims the request laid out.',
   'signing.openrequest.noreply': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
@@ -41,8 +38,7 @@ export const CASE_INPUTS_WORDS = Object.freeze({
     + 'close; no reply is recorded.',
   'signing.openrequest.nowindow.notlaidout': '{whom} was asked for comment on {asked_at}, with no date given for the window '
     + 'to close; no reply laid out claim by claim is recorded.',
-  'signing.openrequest.unread': 'Your team\'s Civicsmith couldn\'t read whether any request for comment on this case is '
-    + 'still open, so none is listed here.',
+  'signing.openrequest.unread': word('signing.openrequest.unread'),
   'signing.openrequest.noquote': '{whom}\'s reply asks not to be quoted, so the case says what it says without quoting '
     + 'its words.',
 });
@@ -104,51 +100,38 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
   STATEMENT_ACK_NO_SUBJECT: {
     check: 'C-82.2',
     where: at('acknowledgeStatement', 'is-statement-ack-subject'),
-    translation: 'Say which statement you are acknowledging: a draft case, or a case document, by its case '
-      + 'and edition, that has been written but not yet signed.',
+    translation: word('refusal.STATEMENT_ACK_NO_SUBJECT'),
   },
   STATEMENT_ACK_ALREADY_SIGNED: {
     check: 'C-82.3',
     where: at('acknowledgeStatement', 'is-statement-ack-signed'),
-    translation: 'This edition of the case is already signed, and the signature covers its list of who '
-      + 'acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is '
-      + 'corrected only by publishing the next edition.',
+    translation: localize('case-inputs.checks.this_edition_of_the_case', 'This edition of the case is already signed, and the signature covers its list of who acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is corrected only by publishing the next edition.'),
   },
   STATEMENT_ACK_NOT_A_PARTICIPANT: {
     check: 'C-82.4',
     where: at('acknowledgeStatement', 'is-statement-ack-participant'),
-    translation: 'Only someone who has joined the project that makes this case, or someone given a review '
-      + 'copy of it, can acknowledge its statement. Being able to see a project is not the same as having '
-      + 'joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it.',
+    translation: word('refusal.STATEMENT_ACK_NOT_A_PARTICIPANT'),
   },
   STATEMENT_ACK_NO_STATEMENT: {
     check: 'C-82.5',
     where: at('acknowledgeStatement', 'is-statement-ack-statement'),
-    translation: 'This draft does not yet say what its case leaves out, so there is nothing to acknowledge. '
-      + 'Once an editor of the draft writes that statement, you can acknowledge it.',
+    translation: word('refusal.STATEMENT_ACK_NO_STATEMENT'),
   },
   STATEMENT_ACK_BY_ITS_AUTHOR: {
     check: 'C-82.6',
     where: at('acknowledgeStatement', 'is-statement-ack-by-its-author'),
-    translation: 'You wrote this statement or published this case, so you have already read it. An acknowledgement '
-      + 'means a second person has read what the case leaves out, so it has to come from someone else: another '
-      + 'participant in the project, or a reader given a review copy. The case can be published without one, '
-      + 'and will say so.',
+    translation: localize('case-inputs.checks.you_wrote_this_statement_or', 'You wrote this statement or published this case, so you have already read it. An acknowledgement means a second person has read what the case leaves out, so it has to come from someone else: another participant in the project, or a reader given a review copy. The case can be published without one, and will say so.'),
   },
   STATEMENT_ACK_AUTHOR_UNDETERMINED: {
     check: 'C-82.7',
     where: at('acknowledgeStatement', 'is-statement-ack-author-undetermined'),
-    translation: 'The record does not say who wrote this statement, so it cannot tell whether you are its author. '
-      + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
-      + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
-      + 'be published either way.',
+    translation: word('refusal.STATEMENT_ACK_AUTHOR_UNDETERMINED'),
   },
   /* R1 (DEC-88; K1025, K1030): the acknowledger's own words, asked after C-82.6, the last refusal before anything is
      read for the write. New in T22, stamped in `CATALOG_VERSION` 1.53.0 (T23 L2). */
   STATEMENT_ACK_NO_REASON: {
     check: 'C-82.8',
     where: at('acknowledgeStatement', 'is-statement-ack-reasoned'),
-    translation: 'An acknowledgement of a statement is recorded with your own words on it, and none were given, or '
-      + 'they are longer than 2,000 characters. Write them. Nothing was written.',
+    translation: word('refusal.STATEMENT_ACK_NO_REASON'),
   },
 });

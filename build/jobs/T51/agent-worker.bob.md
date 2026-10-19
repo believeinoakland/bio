@@ -1,6 +1,6 @@
 # BOB to agent-worker (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -20,3 +20,31 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 agent-steps has merged (K3886). Merge tranche/T51 into your branch, then: delete your copy of the moved code, import agent-steps and delegate (R119: answers byte-identical; your src under 4,000 lines). Keep in a suite that stays with you: versions.test, versions.control and fanout Part A, plus the three arms AGENT-STEPS #1 left out of its copies because they assert the shell (r107's NO_ACCOUNT control; plan.test's PLANE_OPS arm and two request-field arms). Delete only the tests the map moved. List agent-steps in your uses in your COMPLETE (BOB edits modules.json). Report the stale bundle; BOB regenerates it at L6's close.
+
+## B3 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 6 (R6), agent-worker: **T51-209** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/agent-worker.md` (read whole).
+BOB's notes for this job:
+1. Your words findings are in `build/plan/words-pass/agent-worker.md` (read whole), in up to three sections: the conversion's left findings, "Plain findings (K3957)" and "Test copies of code sentences (K3962)". Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar, an identifier) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944). The ids you assign are `agent-worker.<file stem>.<slug>`, fixed once. A table key or any string code compares is an identifier, never a `localize` sentence (K3971).
+2. If your entry names red tests of yours (K3958: civil-time now answers an undetermined `why` as `{key, vars}`), they are accepted only until you merge: make them green against the keyed reasons, passing `{key, vars}` on where you relay a reason.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. setup-words R13 binds every sentence a member reads, whatever the check counts (under five words, punctuated, a refusal's `detail`, or held in a test's regular expression or substring check): convert those too, in this job (K3964, K3965, K3974). A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize` by equality; `localize` answers its `en` while `rows.mjs` is stale. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; BOB regenerates them at the layer close. A word id needs no test of its own (K874 binds R ids; K3965).
+Tests never copy a sentence people read; every new requirement id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9). Merge `tranche/T51` into your branch, never rebase or reset (K1991).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987).
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio agent-worker tranche/T51 job/T51/agent-worker`. Your Size line counts only your module's own code (K2513).
+
+## B4 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B5 · RESUME
+
+RESUME (§5.4): nothing pushed on job/T51/agent-worker for over 75 minutes and your RUNNING time (05:35) has passed. Check whether your control drivers are still alive (a container restart kills them); if they finished, read their results; if they died, re-run only what you still need. Then commit and push what you have, set your state honestly (RUNNING until <time> with the command, or WORKING), apply B2–B4 (the folded words check), and COMPLETE. Never stop the agent-worker test run midway (rulings-active §4: its negative controls mutate the tree; restore from HEAD if one was stopped).
+
+## B6 · CHANGE
+
+CHANGE (K4018; K3986): merged; one item before it merges again. With R6 merged, the words check (civicos-process d424c32) counts 7 test copies in your tests of sentences other modules now write by localize: agent-worker.test.mjs:725 and harness.test.mjs:1564 "the one question the run's project confirmed-cites"; harness.test.mjs:1515 and requirements.test.mjs:598 "the run's context question"; requirements.test.mjs:837 "the cited record names no source address, so no version chain can h..."; t42.test.mjs:261 and t46.test.mjs:400 "the AI's reading". Merge tranche/T51, compare each with the product's own call (same id, en, vars) by equality or pass the product's output through, run the words check on your module and your tests (never stop the run midway), and COMPLETE again. The four ops.mjs why strings are accepted unkeyed (R6's design batch).

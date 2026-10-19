@@ -96,6 +96,7 @@
 
 import { AI_RUN_CHECKS as OBSERVATION_LOG_AI_RUN_CHECKS } from "../observation-log/checks.mjs";
 import { AI_RUNS_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R11: one map — observation-log's C-22 rows (C-22.1–.4, .6, .9, .10, .17, read from that module since its T18 job holds
    them, no longer from the catalogue) and every row of this module's own table (`./checks.mjs`), the run's C-22 rows and
@@ -165,9 +166,9 @@ export {
    notification stays IS-9's, and nothing in this file or in `ai-runs` (once
    store.mjs) emits a queue item. */
 export const RUN_BOUNDS = {
-  fetches:     "fetches requested of the capture path",
-  subsessions: "evidence sub-sessions spawned",
-  wallclock:   "wall time across resumptions, in milliseconds",
+  fetches:     word("run-rules.fetches_requested_capture"),
+  subsessions: word("run-rules.evidence_sub_sessions"),
+  wallclock:   word("run-rules.wall_time_across"),
   runtime:     "CPU or subrequest ceiling (D-54, D-56) — IS-9(d) builds its producer",
   /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
      *"A machine that may mint citable rows without a bound produces a store of
@@ -197,20 +198,20 @@ export const RUN_BOUNDS = {
      chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
      allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
      in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
-  surfaces:    "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface",
+  surfaces:    localize("run-rules.rules.bound_surfaces", "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface"),
   /* R13 (K660 (2); BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN'S BOUND, on `mints`' and `surfaces`' rule. The number
      of proposals a planning run may make, consumed by `action-plans` (its R31) through `ai-runs.consumeBound` as each
      proposal lands, so it is COUNTED BY THE PLANE (PLANE_COUNTED_BOUNDS below). Its allowance is the one the member
      declares at the open, and nothing here caps it: five is the size of a page of the member's tray (`action-plans`
      R34), not a bound. AFTER `surfaces` for `mints`' tie-break reason: appending it renames no existing ending. */
-  proposals:   "options a planning run proposed for an action plan — the planning run's bound on what it may propose",
+  proposals:   word("run-rules.options_planning_run"),
   /* R26 (T41-21; D2): THE READING BOUND, on `mints`' rule. The number of pages of held documents a run may read; a run in
      mode `extract` or `investigate` reading inside a document declares it at the open, and the plane counts it as each
      page is read (PLANE_COUNTED_BOUNDS below), never the caller. A page of a document under a "no AI" material limit
      (`ai-accounts` R22) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
      `mints`' tie-break reason: appending it renames no existing ending. */
-  pages:       "pages of documents the team holds that the run may read inside — the run's reading bound",
-  lease:      "the run stopped heartbeating and its lease lapsed: it died rather than finished",
+  pages:       word("run-rules.pages_documents_group"),
+  lease:      word("run-rules.run_stopped_heartbeating"),
 };
 
 /* The conditions a run may end on that are NOT a bound being reached. Kept
@@ -256,14 +257,12 @@ export const RUN_BOUNDS = {
    halves being unasserted. (A6b read this file and the harness's header as text
    until N421 converted it to the behaviour, T19.) */
 export const RUN_ENDINGS = {
-  completed:  "the run finished its work",
-  cancelled:  "a member stopped it",
+  completed:  word("run-rules.run_finished_work"),
+  cancelled:  word("run-rules.member_stopped"),
   "nothing-written":
-    "the run composed a candidate and wrote none, so it closed with nothing to show for its work; "
-  + "no member stopped it and no budget ran out",
+    localize("run-rules.rules.ending_nothing_written", "the run composed a candidate and wrote none, so it closed with nothing to show for its work; no member stopped it and no budget ran out"),
   "mode-not-deployed":
-    "the deployment gate refused this launch before it spent anything: the mode it asked for "
-  + "is not deployed yet, so no member stopped this run and no budget ran out",
+    localize("run-rules.rules.ending_mode_not_deployed", "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"),
 };
 
 /* WHAT BECAME OF A RUN — the third of this file's three run vocabularies, and
@@ -407,15 +406,15 @@ export function runStatusFor(bound) {
  * sentence). */
 export const STANDARD_BASIS = {
   recorded:
-    "this run was formed under a bar the launching project declared",
+    word("run-rules.run_formed_bar"),
   "none-recorded":
-    "no bar was recorded when this run was formed, and none is filled in afterwards",
+    localize("run-rules.rules.basis_none_recorded", "no bar was recorded when this run was formed, and none is filled in afterwards"),
   "context-has-no-project":
-    "this run works on a question outside any project, and only a project declares a bar",
+    word("run-rules.run_works_question"),
   "names-no-axis":
-    "something was recorded as the bar for this run and it names neither axis, so there is no bar here",
+    word("run-rules.something_recorded_bar"),
   unreadable:
-    "a bar was recorded for this run and cannot be read back",
+    word("run-rules.bar_recorded_run_cannot"),
 };
 
 /* REC-69 — WHAT A RUN CAN BE IN THE CONTEXT OF, and it is a vocabulary rather
@@ -447,8 +446,8 @@ export const STANDARD_BASIS = {
  * vocabulary): the open now REFUSES any word not a key here, before it looks at any bundle. REC-69's delegation
  * is discharged for new runs; rows stored before it are never rewritten (counted in MEASUREMENTS). */
 export const RUN_CONTEXTS = {
-  inquiry: "a question the team is working on, which any project may draw on",
-  project: "a body of work with its own members, its own bar and its own lens",
+  inquiry: word("run-rules.question_group_working"),
+  project: word("run-rules.body_work_members"),
 };
 
 /* ------------------------------------------------------------------ refusals
@@ -570,19 +569,18 @@ export function checkConsume(entries, opts) {
     if (entries == null) return null;
     if (typeof entries !== "object" || Array.isArray(entries))
       return refusal("AI_RUN_BOUND_UNKNOWN",
-        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} `
-        + `(${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure `
-        + "spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (§14b.6). "
-        + "Nothing was written", { bound: null });
+        localize("run-rules.rules.consume_not_a_map", "`consume` was {what} ({value}): it is a map from a bound's name to the figure spent on it, e.g. {example}, and an array's keys are positions, which name no bound (§14b.6). Nothing was written", {
+          what: Array.isArray(entries) ? "an array" : `a ${typeof entries}`,
+          value: (JSON.stringify(entries) ?? String(entries)).slice(0, 80),
+          example: "{ fetches: 1 }",
+        }), { bound: null });
     entries = Object.entries(entries);
   }
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
     if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
       return refusal("AI_RUN_BOUND_UNKNOWN",
-        `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are `
-        + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ")
-        + ` (§14b.6); a figure for a bound that does not exist counts nothing. Nothing was written`, { bound: b });
+        localize("run-rules.rules.v1_names_no_bound_of", "'{v1}' names no bound of a run. The bounds a caller spends are {filter} (§14b.6); a figure for a bound that does not exist counts nothing. Nothing was written", { v1: String(b === "" ? "(absent)" : b.slice(0, 60)), filter: String(Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ")) }), { bound: b });
     if (PLANE_DECIDED_BOUNDS.includes(b))
       return refusal("AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is decided by the plane — a run's lease lapses on the clock, read by the reaper, and nothing spends it `
@@ -644,10 +642,10 @@ export function checkRunState(state) {
    an ask reads into the model; `wall_ms` the wall time from its start; `reads` the plane reads it makes. In order: the
    order `askBoundReached` reports in, cheapest-to-explain first, as RUN_BOUNDS' tie-break. Frozen, every level. */
 export const ASK_BOUNDS = Object.freeze({
-  turns:   Object.freeze({ default: 12, means: "model turns one ask may take" }),
-  bytes:   Object.freeze({ default: 1048576, means: "bytes of the record's answers one ask may read into the model" }),
-  wall_ms: Object.freeze({ default: 180000, means: "milliseconds from the ask's start to its answer" }),
-  reads:   Object.freeze({ default: 40, means: "reads of the record one ask may make" }),
+  turns:   Object.freeze({ default: 12, means: word("run-rules.model_turns_ask") }),
+  bytes:   Object.freeze({ default: 1048576, means: word("run-rules.bytes_record_answers") }),
+  wall_ms: Object.freeze({ default: 180000, means: word("run-rules.milliseconds_ask_start") }),
+  reads:   Object.freeze({ default: 40, means: word("run-rules.reads_record_ask") }),
 });
 
 const isCount = (v) => typeof v === "number" && Number.isSafeInteger(v);
@@ -732,10 +730,8 @@ export function startAllowed(asked) {
       ? "a draft, of whatever kind, starts only at the act of the member who asked for the help, and the "
         + "standing question's exception is an ask's alone (DEC-153, K1481). Nothing was started"
       : author
-      ? `a standing question starts only an ask, which reads and answers; it cannot start a run in mode `
-        + `${JSON.stringify(m.slice(0, 40))} (K1481). Nothing was started`
-      : "no member's act started this, and it is not the AI half of a standing question a member wrote (K1481). "
-        + "Nothing was started");
+      ? localize("run-rules.rules.a_standing_question_starts_only", "a standing question starts only an ask, which reads and answers; it cannot start a run in mode {stringify} (K1481). Nothing was started", { stringify: String(JSON.stringify(m.slice(0, 40))) })
+      : localize("run-rules.rules.no_members_act_started_this", "no member's act started this, and it is not the AI half of a standing question a member wrote (K1481). Nothing was started"));
 }
 
 /* R23 (T41-21; N820) — WHERE A RUN CAME FROM. `member`: a member's own act opened it (every run before T41, and every
@@ -830,7 +826,7 @@ export const PROJECT_GATE_GROUNDS = {
      DEC-63 names the lever for this half explicitly and it is a different one:
      *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
      scope, which can only narrow what a machine may reach. */
-  NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
+  NO_MEMBER_BEHIND_CALLER: word("refusal.NO_MEMBER_BEHIND_CALLER"),
   /* REC-145 (2026-09-19) — DEC-63 AS AMENDED BY BOB, 2026-09-18: *"A project doesn't own an area of
      enquiry to the exclusion of others."* A run whose context is a QUESTION consults no project for its
      verdict (Membership v2 §7, the DEC-63 ruling bullet, "How it applies at the code", BOB #16). ONE
@@ -842,7 +838,7 @@ export const PROJECT_GATE_GROUNDS = {
      project is still a question, permitted and STATED on this ground. And it is not a silent allow: the
      answer still says WHY the run was allowed, which is what PL-18's vocabulary exists for. */
   INQUIRY: "this run is over a question, and a project does not own a line of inquiry: the verdict consults no project (DEC-63 as amended, 2026-09-18)",
-  PARTICIPANT: "the account has joined the project this run is over",
+  PARTICIPANT: word("refusal.PARTICIPANT"),
 };
 
 /** REC-145 — DOES A RUN OVER THIS CONTEXT KIND CONSULT A PROJECT FOR ITS VERDICT? The ONE answer, read by
@@ -931,7 +927,7 @@ export function projectGate(asked) {
   const all = Array.isArray(projects) ? projects.map(String) : [];
   const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
   const label = `${contextType == null ? "" : String(contextType)} ${contextId == null ? "" : String(contextId)}`.trim()
-                || "the named context";
+                || word("run-rules.named_context");
 
   if (!who)
     return { permitted: true, applied: false, ground: "NO_MEMBER_BEHIND_CALLER",
@@ -960,9 +956,7 @@ export function projectGate(asked) {
      `if (!gate.permitted)` reads it correctly — and there is no second field
      that could disagree with the code about whether this was a refusal. */
   return refusal("AI_RUN_NOT_PROJECT_MEMBER",
-    `starting or continuing a run over ${label} is work inside that project, `
-    + `and this account has not joined it (DEC-63). This is not a capability: holding `
-    + `contribute would not change it, and an owner of that project inviting you would`);
+    localize("run-rules.rules.starting_or_continuing_a_run", "starting or continuing a run over {label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would", { label: String(label) }));
 }
 
 /** REC-153 — IS THE NAMED CONTEXT THE KIND THE CALLER SAID IT IS? Membership Architecture v2 §7, the DEC-63
@@ -1054,9 +1048,7 @@ export function runPrincipalGate(asked) {
      so the tick and the close are unchanged. The act is the caller's own site's literal, never a request field. */
   const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
   return refusal("AI_RUN_NOT_PRINCIPAL",
-    `${doing} is its principal's act — the member who opened it, or a machine credential `
-    + "that member minted — and this account is not that principal (DEC-24: a run's work is attributed to "
-    + "its principal). A run nobody drives ends on its own lease and bounds");
+    localize("run-rules.rules.doing_is_its_principals_act", "{doing} is its principal's act — the member who opened it, or a machine credential that member minted — and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds", { doing: String(doing) }));
 }
 
 /** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and

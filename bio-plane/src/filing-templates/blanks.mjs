@@ -7,27 +7,29 @@
 
 /** R19 (was filings' R3): the blanks a filing fills, a closed set; a template's `{{name}}` outside it is left unfilled
  *  and says so. Each blank's name and the sentence saying what fills it. */
+import { word } from "../setup-words/index.mjs";
+
 export const FILING_BLANKS = Object.freeze({
-  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-  counterparty_body: "the body of that office (an office's arm only)",
+  counterparty_role: word("filing-templates.counterparty_role"),
+  counterparty_body: word("filing-templates.counterparty_body"),
   counterparty_organisation: "the organisation of a reporter, an organisation or another team the action is addressed to",
-  counterparty_description: "the audience the action is addressed to, as the action describes it",
-  act: "what the government did, as the action's determination states it",
-  act_date: "when it did it (a date, or a period from and to)",
-  standards: "the citations of the standards the determination names",
-  findings: "each finding the determination rests on, with its published case edition",
-  governing_laws: "the governing laws a member stated for the action",
-  law: "the law a records request is made under, as the action states it",
-  clock: "the action's clock entries, each with its basis",
-  venue: "where the kind is filed (the profile's venue name)",
-  venue_how: "by what means it is filed (the profile's venue means)",
-  group: "the producing team",
-  date: "the date the draft was prepared",
+  counterparty_description: word("filing-templates.counterparty_description"),
+  act: word("filing-templates.act.government_did_action"),
+  act_date: word("filing-templates.act_date"),
+  standards: word("filing-templates.standards"),
+  findings: word("filing-templates.findings"),
+  governing_laws: word("filing-templates.governing_laws"),
+  law: word("filing-templates.law"),
+  clock: word("filing-templates.clock.action_clock_entries"),
+  venue: word("filing-templates.venue"),
+  venue_how: word("filing-templates.venue_how"),
+  group: word("filing-templates.group"),
+  date: word("filing-templates.date"),
   /* R31 (T47; DEC-209 (3), K3120): four member-filled blanks, filled by `filings` R55's `fills`, never by the record */
-  records: "the records asked for, in the member's words",
-  period: "the period the records cover",
-  form: "the form the records are wanted in",
-  cost_limit: "the most the team will pay for copies before being told",
+  records: word("filing-templates.records"),
+  period: word("filing-templates.period"),
+  form: word("filing-templates.form"),
+  cost_limit: word("filing-templates.cost_limit"),
 });
 /** R19 (was filings' R6): the longest text, in UTF-8 bytes. */
 export const FILING_TEXT_MAX = 65536;

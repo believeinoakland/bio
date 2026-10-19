@@ -87,6 +87,7 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { legEarningOf, legCapped } from "../leg-earning/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -136,7 +137,7 @@ const PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall
    withheld whole. */
 const MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
 /* R6 (DEC-36): the one sentence a swept prose string ends in, the same whatever and however much was withheld. */
-const OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
+const OUT_OF_VIEW_WORDS = word("strength.out_of_view_words");
 /* R33: a leg on an imported finding reference, by `inquiry-grammar`'s one spelling (its R11; K1305). */
 const isImportedRef = (id) => parseImportedFindingRef(id) !== null;
 /* R6: a record id as it appears in a sentence, derived from the catalogue's own patterns by dropping their anchors, so
@@ -149,8 +150,7 @@ const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchor
 /** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
 export const BAR_REASON_MAX = 2000;
 /* R15 (DEC-105, H12): the bar's honest note, in the ruling's words, the product named as DEC-124 names it. */
-const BAR_HONEST_NOTE = "Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set "
-  + "in these words.";
+const BAR_HONEST_NOTE = word("strength.bar_honest_note");
 
 const isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -162,7 +162,7 @@ const typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[
 /* D-450: an axis nobody set is stated in words, never as a grade, a dash or "null". */
 export function barAxisWords(bar) {
   return ["capture", "connection"]
-    .map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`)
+    .map((axis) => bar[axis] == null ? word("strength.map.bar_set_axis", { axis }) : `${axis} ${bar[axis]}`)
     .join(", ");
 }
 
@@ -174,14 +174,16 @@ function barRefusal(code, detail, extra) {
 
 /* R15, R40 (K231): the one site `MACHINE_CANNOT_DECLARE` (C-32.9) is minted, for the group's default and a project's
    own bar alike: a bar is a declaration by people about their own work, so an empty or machine author is refused.
-   `whose` names whose declaration it is. Null to proceed. */
+   `whose` is "team" or "project": whose declaration it is. Null to proceed. */
 function machineCannotDeclare(author, whose) {
   const who = String(author ?? "").trim();
   /* DEC-49 REGION is-machine-strength-bar */
   if (!who || isMachineIdentity(who))
-    return barRefusal("MACHINE_CANNOT_DECLARE",
-      `the required evidentiary strength is the ${whose} declaration about its own work. A `
-      + "machine credential may not make it. Sign in as a member.");
+    return barRefusal("MACHINE_CANNOT_DECLARE", whose === "project"
+      ? localize("strength.index.the_required_evidentiary_strength_project",
+          "the required evidentiary strength is the PROJECT's declaration about its own work. A machine credential may not make it. Sign in as a member.")
+      : localize("strength.index.the_required_evidentiary_strength_team",
+          "the required evidentiary strength is the TEAM's declaration about its own work. A machine credential may not make it. Sign in as a member."));
   /* END DEC-49 REGION is-machine-strength-bar */
   return null;
 }
@@ -192,7 +194,8 @@ function badGrade(capture, connection) {
   /* DEC-49 REGION is-strength-bar-grade */
   for (const [axis, v] of [["capture", capture], ["connection", connection]])
     if (v != null && !BASIS_GRADES.includes(v))
-      return barRefusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
+      return barRefusal("BAD_GRADE", localize("strength.index.axis_must_be_one_of_or_null",
+        "{axis} must be one of {grades}, or null", { axis, grades: BASIS_GRADES.join(", ") }), { axis });
   /* END DEC-49 REGION is-strength-bar-grade */
   return null;
 }
@@ -430,18 +433,14 @@ export class Strength {
     const edition = this.#editionOf(bundleId, leg, authored);
     if (ctx && ctx.refs) ctx.refs.set(leg.target_id, edition);
     if (edition == null)
-      return { stopped: "this leg rests on another team's finding without saying which edition, so what it rests on "
-                      + "is unknown here", unknown: true };
+      return { stopped: word("strength.stopped.leg_rests_group"), unknown: true };
     const f = this.#acceptedFinding(leg.target_id, edition, null);
     if (f && f.absent)
-      return { stopped: "this leg rests on another team's finding, and your team's Civicsmith holds no accepted work to read it "
-                      + "from, so what it rests on is unknown here", unknown: true };
+      return { stopped: word("strength.stopped.leg_rests_group_finding"), unknown: true };
     if (f && f.unreadable)
-      return { stopped: "this leg rests on another team's finding that could not be read just now, so what it rests on "
-                      + "is unknown here", unknown: true };
+      return { stopped: word("strength.stopped.leg_rests_group_finding_read"), unknown: true };
     if (!f || typeof f !== "object")
-      return { stopped: `this leg rests on another team's finding that your team's Civicsmith does not hold at edition ${edition}, `
-                      + "so what it rests on is unknown here", unknown: true };
+      return { stopped: word("strength.stopped.leg_rests_group_finding_group", { edition }), unknown: true };
     return { pair: f.pair && typeof f.pair === "object" ? f.pair : {}, from: leg.target_id,
              another_groups: { group: f.group ?? null, case: f.case ?? null, edition: f.edition ?? edition,
                                finding: f.finding ?? null } };
@@ -469,7 +468,7 @@ export class Strength {
       anonymous: this.#anonymousOf(legs, ctx.levels, captureBounds),
       inherit: (l) => {
         if (Strength.#kindOf(l) === "imported") return this.#importedAnswer(bundleId, l, ctx, depth > 0 || ctx.ownTop);
-        if (depth + 1 > bound) return { stopped: `the walk reached its depth bound of ${bound} here` };
+        if (depth + 1 > bound) return { stopped: word("strength.stopped.walk_reached_depth", { bound }) };
         return { pair: this.#walk(l.target_id, depth + 1, bound, null, ctx), from: l.target_id };
       },
     });
@@ -491,7 +490,7 @@ export class Strength {
   #capped(leg, stated, captureBounds) {
     const earned = captureBounds ? captureBounds.get(leg.target_id) : undefined;
     if (Strength.#kindOf(leg) === "standard" && !earned)
-      return { grade: null, why: `nothing here establishes what the record holds for the text of ${leg.target_id}` };
+      return { grade: null, why: word("strength.why.establishes_record_holds", { target_id: leg.target_id }) };
     return captureBounds ? this.inquiry.legCapped(stated, earned, leg.target_id) : null;
   }
 
@@ -521,25 +520,24 @@ export class Strength {
      read, or no facts at all: unknown, with why. */
   #deriveCalculation(id) {
     const f = this.#calcFacts(id);
-    if (!f) return { stopped: `the grade facts of ${id} cannot be read here, so what this leg rests on is unknown` };
-    if (!f.found) return { stopped: `${id} is not a calculation your team's Civicsmith holds, so what this leg rests on is unknown` };
-    if (!f.accepted) return { stopped: `the result of ${id} is not accepted, so what this leg rests on is unknown` };
+    if (!f) return { stopped: word("strength.stopped.grade_facts_read", { id }) };
+    if (!f.found) return { stopped: word("strength.stopped.calculation_group_civicsmith", { id }) };
+    if (!f.accepted) return { stopped: word("strength.stopped.result_accepted_leg", { id }) };
     const inputs = Array.isArray(f.inputs) ? f.inputs : [];
     const engine = inputs.find((i) => i && i.engine && !i.engine_measured);
     if (engine)
-      return { stopped: `${id} uses a value another program computed (${String(engine.name ?? "an input")}), and that `
-                      + `program's agreement is not measured, so what this leg rests on is unknown` };
+      return { stopped: word("strength.stopped.uses_value_program",
+                             { id, input: String(engine.name ?? localize("strength.index.an_input", "an input")) }) };
     const cap = f.capture || {};
     if (!GRADE_RANK[cap.grade])
-      return { stopped: `the capture strength of ${id} is unknown: ${String(cap.why ?? "no input carries a capture grade")}` };
+      return { stopped: word("strength.stopped.capture_strength_unknown",
+                             { id, grade: String(cap.why ?? word("strength.stopped.input_carries_capture")) }) };
     /* The method named beside the grade (its version, and its note when it has one), never graded. */
     const said = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
     const m = f.method && typeof f.method === "object" ? f.method : {};
     const named = [said(m.version) && `method ${said(m.version)}`, said(m.note)].filter(Boolean).join(": ");
     return { grade: cap.grade,
-             why: `${id} counts at ${cap.grade}, the weakest capture among its inputs, each no stronger than where it came `
-                + `from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade`
-                + `${named ? ` (${named})` : ""} and is not graded.` };
+             why: word("strength.why.counts_weakest_capture", { id, grade: cap.grade, named: named ? ` (${named})` : "" }) };
   }
 
   /* R38 (K1447 (i); leg-earning R9): an occurrence's derivation (the source in force, the trigger date, the due date
@@ -547,26 +545,26 @@ export class Strength {
      leg-earning R8) and the trigger date's attestation (`events`); the state is named beside it, never grading it. */
   #deriveOccurrence(ref) {
     const parts = parseOccurrenceRef(ref);
-    const unknown = (why) => ({ stopped: `${ref}: ${why}, so what this leg rests on is unknown` });
+    const unknown = (why) => ({ stopped: word("strength.stopped.leg_rests_unknown", { ref, why }) });
     const d = this.duties;
-    if (!parts || !d) return unknown("the obligation cannot be read here");
+    if (!parts || !d) return unknown(word("strength.unknown.obligation_read"));
     const duty = (() => { try { return d.readDuty({ dutyId: parts.duty, viewer: RECORD_READER }); } catch { return null; } })();
-    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation your team's Civicsmith holds`);
+    if (!duty || !duty.found) return unknown(word("strength.unknown.obligation_group_civicsmith", { duty: parts.duty }));
     let read = null;
     try { read = d.occurrencesOf({ dutyId: parts.duty, asOf: this.#asOf(), viewer: RECORD_READER }); } catch { read = null; }
     const occ = read && Array.isArray(read.occurrences) ? read.occurrences.find((o) => o && o.key === parts.key) : null;
-    if (!occ) return unknown("no occurrence by that key is derived");
+    if (!occ) return unknown(word("strength.unknown.occurrence_key_derived"));
     const dv = occ.derivation || {};
-    if (!occ.due || occ.due.undetermined) return unknown(`its due date is undetermined${occ.due && occ.due.why ? `: ${occ.due.why}` : ""}`);
+    if (!occ.due || occ.due.undetermined) return unknown(word("strength.unknown.due_date_undetermined", { why: occ.due && occ.due.why ? `: ${occ.due.why}` : "" }));
     const inForce = dv.source_in_force || {};
-    if (inForce.state === "undetermined") return unknown(`whether its source is in force is undetermined: ${inForce.why ?? ""}`.trim());
+    if (inForce.state === "undetermined") return unknown(word("strength.unknown.source_force_undetermined", { why: inForce.why ?? "" }).trim());
     const source = duty.duty && duty.duty.source ? duty.duty.source : {};
-    if (!source.standard) return unknown("its source holds no captured text");
+    if (!source.standard) return unknown(word("strength.unknown.source_holds_captured"));
     const reg = this.inquiry.earned(null, [source.standard]);
     const ceil = reg && reg.earned && reg.earned.capture ? reg.earned.capture[source.standard] : null;
     if (!ceil || !GRADE_RANK[ceil.grade])
-      return unknown(`what the record holds for the text of ${source.standard} is undetermined${ceil && ceil.why ? `: ${ceil.why}` : ""}`);
-    let grade = ceil.grade, setter = `the text of ${source.standard}`;
+      return unknown(word("strength.unknown.record_holds_text", { standard: source.standard, why: ceil && ceil.why ? `: ${ceil.why}` : "" }));
+    let grade = ceil.grade, setter = word("strength.setter.text", { standard: source.standard });
     const trig = occ.trigger || {};
     if (trig.kind === "event") {
       let ev = null;
@@ -574,15 +572,13 @@ export class Strength {
       const e = ev && ev.found ? ev.event : null;
       const gov = e && e.governing != null && Array.isArray(e.attestations)
         ? e.attestations.find((a) => Number(a.attestation_id) === Number(e.governing)) : null;
-      if (!gov || !GRADE_RANK[gov.grade]) return unknown(`the date of ${trig.ref}, which started it, is not attested here`);
-      if (GRADE_RANK[gov.grade] < GRADE_RANK[grade]) { grade = gov.grade; setter = `the record of ${trig.ref}'s date`; }
+      if (!gov || !GRADE_RANK[gov.grade]) return unknown(word("strength.unknown.date_started_attested", { ref: trig.ref }));
+      if (GRADE_RANK[gov.grade] < GRADE_RANK[grade]) { grade = gov.grade; setter = word("strength.setter.record_date", { ref: trig.ref }); }
     } else if (!trig.date || (typeof trig.date === "object" && trig.date.undetermined)) {
-      return unknown("the date that started it is undetermined");
+      return unknown(word("strength.unknown.date_started_undetermined"));
     }
     return { grade,
-             why: `${ref} counts at ${grade}, set by ${setter}: the weaker of the text of the rule in force and the record `
-                + `of the date that started it. It is ${String(occ.state ?? "undetermined").replace(/_/g, " ")} as known `
-                + `today; that is stated beside the grade and never changes it.` };
+             why: word("strength.why.counts_set_weaker", { ref, grade, setter, g: String(occ.state ?? "undetermined").replace(/_/g, " ") }) };
   }
 
   /* The day an occurrence's state is stated as of (duties R9 reads no clock itself). */
@@ -657,7 +653,7 @@ export class Strength {
 
   /* `strengthOf`'s answer beside the refs its walk read (R33), for R6's withholding. */
   #strength(bundleId, levels) {
-    if (!bundleId) return { answer: { ok: false, reason: "NO_ID", detail: "strength requires ?id=" }, refs: new Map() };
+    if (!bundleId) return { answer: { ok: false, reason: "NO_ID", detail: localize("strength.index.strength_requires_id", "strength requires ?id=") }, refs: new Map() };
     const lv = levelsGiven(levels);
     const { pair, legs, refs } = this.#pairOver(bundleId, null, lv);
     return { answer: { ok: true, bundleId, depth_bound: DEPTH_BOUND,
@@ -672,7 +668,7 @@ export class Strength {
    *  its reader would claim different things to different people). Computed on read, never from the cache (R13). */
   inquiryStrength({ id = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID",
-      detail: "the derived pair is asked of one inquiry: pass id=<record id>" };
+      detail: localize("strength.index.the_derived_pair_is_asked", "the derived pair is asked of one inquiry: pass id=<record id>") };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     /* Refused rather than answered UNRATED: a document has no basis and no pair, and "unrated" would state a strength
        about a thing that cannot carry one. Reachable only after visibility, so it discloses nothing. */
@@ -680,8 +676,9 @@ export class Strength {
     const ty = normalizeType(row?.object_type);
     if (ty !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
-        detail: `${id} is a ${ty ?? "record"}, not an inquiry. The derived pair is a property of a `
-              + `question and what it rests on; a document has no basis to derive one from.` };
+        detail: localize("strength.index.is_a_not_an_inquiry_derived_pair",
+          "{id} is a {type}, not an inquiry. The derived pair is a property of a question and what it rests on; a document has no basis to derive one from.",
+          { id, type: ty ?? localize("strength.index.record", "record") }) };
     const { answer: s, refs } = this.#strength(id, null);
     if (!s.ok) return s;
     const keep = this.#redactor(viewer, refs);
@@ -820,8 +817,7 @@ export class Strength {
       /* R33: a leg on another group's finding carries no grade of its own; the walk counts it at what the accepted
          edition publishes (DEC-96 item 1). */
       if (isImportedRef(r.target_id))
-        return inert("this leg rests on another team's finding and carries no grade of its own: it counts at what that "
-                     + "accepted edition publishes on each axis", "ungraded");
+        return inert(word("strength.inert.leg_rests_group"), "ungraded");
       /* R36, R38: a calculation or an occurrence carries no grade of its own; its capture grade is derived from what it
          rests on, and the walk derives it the same way (unknown there when it is unknown here). */
       if (DERIVED_KINDS.includes(Strength.#kindOf(r))) {
@@ -831,7 +827,7 @@ export class Strength {
                                  grade_source: source, grade: d.grade, authored: null, why: d.why }]);
         return { ...base, grade_axis: "capture", grade: null };
       }
-      if (!axis) return inert("this leg states no axis, so there is no population it belongs to", "ungraded");
+      if (!axis) return inert(word("strength.inert.leg_states_axis"), "ungraded");
       if (axis === "connection") {
         /* The registry holds the letter, so the leg is worth that letter and no other. A member's signed testimony
            about the connection is the one authored grade that survives: the recogniser never mints a D, and erasing
@@ -839,21 +835,15 @@ export class Strength {
         const e = earnedConn[r.target_id];
         if (e && e.grade) return carries(e.grade, e.why);
         if (source === "testimony" && authored)
-          return carries(authored,
-            `${r.target_id} carries a member's own signed account of how it connects to this subject, `
-            + `with its own author and date; the record earns nothing further for it and the machine `
-            + `neither mints that letter nor erases it.`);
-        return inert(`the record has earned nothing connecting ${r.target_id} to this question's `
-                     + `subject, so this leg is present and not yet load-bearing`, "ungraded");
+          return carries(authored, word("strength.carries.carries_member_signed", { target_id: r.target_id }));
+        return inert(word("strength.inert.record_earned_connecting", { target_id: r.target_id }), "ungraded");
       }
       if (axis === "testimony") {
         if (normalizeType(r.target_type) === "inquiry")
-          return inert(`the target is an inquiry, not a document, so a testimony grade on this leg has no `
-                       + `referent`, "ungraded");
+          return inert(word("strength.inert.target_inquiry_document"), "ungraded");
         const t = earnedTest[r.target_id];
         if (t && t.grade) return carries(t.grade, t.why);
-        return inert(`${r.target_id} is not a member's own firsthand observation, so the record holds no `
-                     + `testimony grade for it and this leg is present and not yet load-bearing`, "ungraded");
+        return inert(word("strength.inert.member_firsthand_observation", { target_id: r.target_id }), "ungraded");
       }
       /* CAPTURE: the earned entry is a ceiling, not a value, so the member's letter stands and is capped. Two empty
          levels are different facts (REC-88, D-349): no bytes held, and bytes held with no measured fidelity. */
@@ -861,20 +851,17 @@ export class Strength {
       /* R37: a held standard whose text the record does not hold is unknown: named here, and the walk, which bounds the
          authored letter again, finds it undetermined. */
       if (Strength.#kindOf(r) === "standard" && (!c || !c.grade)) {
-        inert(c && c.why ? c.why : `nothing here establishes what the record holds for the text of ${r.target_id}`, "ungraded");
+        inert(c && c.why ? c.why : word("strength.why.establishes_record_holds", { target_id: r.target_id }), "ungraded");
         return { ...base, grade: authored };
       }
       if (c && c.grade == null && c.undetermined_because) return inert(c.why, "ungraded");
       if (!c || !c.grade)
-        return inert(`the record holds no captured bytes for ${r.target_id}, so there is nothing here `
-                     + `to measure how it was captured`, "ungraded");
+        return inert(word("strength.inert.record_holds_captured", { target_id: r.target_id }), "ungraded");
       if (!authored)
-        return inert(`${r.target_id} is captured, but no capture grade was authored for this leg and `
-                     + `the record cannot mint one — what it holds is a ceiling, not a measurement`, "ungraded");
+        return inert(word("strength.inert.captured_capture_grade", { target_id: r.target_id }), "ungraded");
       const capped = GRADE_RANK[authored] > GRADE_RANK[c.grade] ? c.grade : authored;
       return carries(capped, capped === authored ? c.why
-        : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the `
-        + `record cannot support the stronger claim.`);
+        : word("strength.carries.leg_authored_reported", { why: c.why, authored, capped }));
     });
     /* R29, R34: the grades above are already the record's, so the judgement needs no capture bound of its own; the walk
        makes the same judgement over the same legs. */
@@ -902,12 +889,13 @@ export class Strength {
     const inq = String(args.id ?? "").trim();
     if (!inq)
       return refusal("VERSION_STRENGTH_NO_INQUIRY",
-        "this answers for ONE question: pass id=<INQ-…>. A strength belongs to a question's reading "
-        + "of its evidence, and there is no default question.");
+        localize("strength.index.this_answers_for_one_question_strength",
+          "this answers for ONE question: pass id=<INQ-…>. A strength belongs to a question's reading of its evidence, and there is no default question."));
     if (typeOfId(inq) !== "inquiry")
       return refusal("VERSION_STRENGTH_NOT_AN_INQUIRY",
-        `${inq.slice(0, 60)} is not a question, so it holds no readings of evidence and has no `
-        + `strength to report.`, { inquiry: inq });
+        localize("strength.index.is_not_a_question_so_it_holds_no_readings",
+          "{inq} is not a question, so it holds no readings of evidence and has no strength to report.", { inq: inq.slice(0, 60) }),
+        { inquiry: inq });
     /* §6 rule 6's argument, defaulting to accepted. A comma-separated list or an array, so a query string and a body
        say the same thing. */
     const rawStates = args.states == null || args.states === ""
@@ -916,16 +904,16 @@ export class Strength {
     const asked = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
     if (asked && asked.length > VERSION_STRENGTH_STATES_MAX)
       return refusal("VERSION_STRENGTH_TOO_MANY_STATES",
-        `${asked.length} kinds of reading were named and this record has `
-        + `${VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied `
-        + `silently, so nothing is dropped without the caller being told.`,
+        localize("strength.index.kinds_of_reading_were_named_and_this_record_has",
+          "{count} kinds of reading were named and this record has {limit}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.",
+          { count: asked.length, limit: VERSION_STRENGTH_STATES_MAX }),
         { inquiry: inq, limit: VERSION_STRENGTH_STATES_MAX });
     const unknown = asked ? asked.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
       return refusal("VERSION_STRENGTH_UNKNOWN_STATE",
-        `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: `
-        + `${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly `
-        + `counted readings in states nobody recognises is a number no reader could check.`,
+        localize("strength.index.is_not_one_of_the_states_a_reading_can_be_in",
+          "'{state}' is not one of the states a reading can be in: {legal}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.",
+          { state: unknown[0].slice(0, 40), legal: VERSION_MACHINE.legal.join(", ") }),
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal });
     /* Deduped and in the machine's own order, so two callers naming one set get one sentence and one `state_set`. */
     const stateSet = asked
@@ -934,7 +922,8 @@ export class Strength {
     /* R22: an inquiry the viewer may not see is refused exactly as one that does not exist. */
     if (!this.#visible(inq, args.viewer ?? null))
       return refusal("VERSION_STRENGTH_NOT_AN_INQUIRY",
-        "no question by that id is readable here, so there is no reading of it to measure.",
+        localize("strength.index.no_question_by_that_id_is_readable_no_reading",
+          "no question by that id is readable here, so there is no reading of it to measure."),
         { inquiry: inq });
     /* Which reading: named outright, or the one THIS PROJECT stands on (§7: current is a property of the project's
        relationship to the inquiry, so there is no default project). */
@@ -946,28 +935,30 @@ export class Strength {
     if (!name)
       return refusal("VERSION_STRENGTH_NO_VERSION",
         project
-          ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is `
-            + `no default reading. Name one explicitly to measure it.`
-          : "name the reading to measure (version=<name>), or name the project asking (project=<PROJ-…>) "
-            + "so the reading it stands on can be used. There is no default reading here.",
+          ? localize("strength.index.has_not_said_which_reading_it_stands_on",
+              "{project} has not said which reading of {inq} it stands on, and there is no default reading. Name one explicitly to measure it.",
+              { project: project.slice(0, 60), inq })
+          : localize("strength.index.name_the_reading_to_measure_or_name_the_project",
+              "name the reading to measure (version=<name>), or name the project asking (project=<PROJ-…>) so the reading it stands on can be used. There is no default reading here."),
         { inquiry: inq, project: project || null });
     const row = this.#one(
       `SELECT name, state, description, relationship, hidden, derived_from, kind, run, author, at, leg_count
          FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, inq, name);
     if (!row)
       return refusal("VERSION_STRENGTH_NO_SUCH_VERSION",
-        `no reading named '${name.slice(0, 60)}' belongs to ${inq}.`
-        + (current && current.version === name
-            ? ` ${project.slice(0, 60)} points at it, so the pointer has outlived the reading it names.`
-            : ``),
+        [localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.", { name: name.slice(0, 60), inq }),
+         ...(current && current.version === name
+           ? [localize("strength.index.points_at_it_so_the_pointer_has_outlived",
+               "{project} points at it, so the pointer has outlived the reading it names.", { project: project.slice(0, 60) })]
+           : [])].join(" "),
         { inquiry: inq, version: name });
     /* §6 rule 6: a reading outside the state set is not measured, and the refusal names the widening that turns the
        request into an honest what-if, never making the reading current. */
     if (!stateSet.includes(row.state))
       return refusal("VERSION_STRENGTH_STATE_EXCLUDED",
-        `'${name.slice(0, 60)}' is ${row.state} and this answer counts ${stateSet.join(", ")}. `
-        + `Ask again naming ${row.state} among the states to see what it would come to — the answer `
-        + `will say on its face that it is a view you constructed and not what this record stands on.`,
+        localize("strength.index.is_and_this_answer_counts_ask_again",
+          "'{name}' is {state} and this answer counts {states}. Ask again naming {state} among the states to see what it would come to — the answer will say on its face that it is a view you constructed and not what this record stands on.",
+          { name: name.slice(0, 60), state: row.state, states: stateSet.join(", ") }),
         { inquiry: inq, version: name, version_state: row.state, state_set: stateSet });
     /* END DEC-49 REGION is-version-strength */
 
@@ -979,11 +970,8 @@ export class Strength {
                      && stateSet.every((s, i) => s === VERSION_STRENGTH_DEFAULT_STATES[i]));
     /* DEC-40's line, in band, on every answer: the what-if says whose view it is, the default says it is not filtered,
        because absence of the line is the ambiguity the ruling names. */
-    const filter = whatIf
-      ? `WHAT-IF — a view you constructed, not what this record stands on. `
-        + `Computed over the reading '${name}', counting readings that are: ${stateSet.join(", ")}.`
-      : `Computed over the reading '${name}', counting only readings a member has adopted `
-        + `(${stateSet.join(", ")}). This is the record's own answer for this question and is not filtered.`;
+    const filter = word(whatIf ? "strength.text.view_constructed_record" : "strength.text.computed_over_reading",
+                        { name, state_set: stateSet.join(", ") });
     const out = {
       ok: true, inquiry: inq, version: name, version_state: row.state,
       ...(project ? { project, current: current ? current.version : null } : {}),
@@ -1049,21 +1037,23 @@ export class Strength {
     const inq = String(args.id ?? "").trim();
     if (!inq)
       return refusal("PARTITION_INDEPENDENCE_NO_INQUIRY",
-        "this answers for ONE question: pass id=<INQ-…>. A partition is a grouping of one question's "
-        + "reasons, and there is no default question.");
+        localize("strength.index.this_answers_for_one_question_partition",
+          "this answers for ONE question: pass id=<INQ-…>. A partition is a grouping of one question's reasons, and there is no default question."));
     if (typeOfId(inq) !== "inquiry")
       return refusal("PARTITION_INDEPENDENCE_NOT_AN_INQUIRY",
-        `${inq.slice(0, 60)} is not a question, so it has no reasons to group.`, { inquiry: inq });
+        localize("strength.index.is_not_a_question_so_it_has_no_reasons",
+          "{inq} is not a question, so it has no reasons to group.", { inq: inq.slice(0, 60) }), { inquiry: inq });
     if (!this.#visible(inq, args.viewer ?? null))
       return refusal("PARTITION_INDEPENDENCE_NOT_AN_INQUIRY",
-        "no question by that id is readable here, so there are no reasons of it to group.",
+        localize("strength.index.no_question_by_that_id_is_readable_no_reasons",
+          "no question by that id is readable here, so there are no reasons of it to group."),
         { inquiry: inq });
     const wantVersion = String(args.version ?? "").trim();
     const partitionNamed = args.partition != null && args.partition !== "";
     if (wantVersion && partitionNamed)
       return refusal("PARTITION_INDEPENDENCE_TWO_SUBJECTS",
-        "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not "
-        + "both: this answers for one of them, and does not guess which one was meant.",
+        localize("strength.index.name_either_a_written_reading_or_a_proposed_grouping",
+          "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not both: this answers for one of them, and does not guess which one was meant."),
         { inquiry: inq });
     let legs, head;
     if (wantVersion) {
@@ -1071,7 +1061,8 @@ export class Strength {
         `SELECT name, state, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, inq, wantVersion);
       if (!row)
         return refusal("PARTITION_INDEPENDENCE_NO_SUCH_VERSION",
-          `no reading named '${wantVersion.slice(0, 60)}' belongs to ${inq.slice(0, 60)}.`,
+          localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.",
+            { name: wantVersion.slice(0, 60), inq: inq.slice(0, 60) }),
           { inquiry: inq, version: wantVersion.slice(0, 200) });
       /* The same rows the pair over a version reads, with no grade column: nothing here may carry a grade. */
       legs = this.#versionLegs(inq, row.name, false);
@@ -1087,12 +1078,13 @@ export class Strength {
       }
       const unreadable = (why) => refusal("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
       if (!Array.isArray(raw) || !raw.length)
-        return unreadable("pass partition=<JSON>: a non-empty list of groups, each a list of reason "
-          + "positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a "
-          + "written reading's groups instead.");
+        return unreadable(localize("strength.index.pass_partition_a_non_empty_list_of_groups",
+          "pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a written reading's groups instead."));
       if (raw.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${raw.length} groups were proposed and a written reading holds at most ${BASIS_VERSION_LEGS_MAX} reasons.`,
+          localize("strength.index.groups_were_proposed_and_a_written_reading_holds",
+            "{count} groups were proposed and a written reading holds at most {limit} reasons.",
+            { count: raw.length, limit: BASIS_VERSION_LEGS_MAX }),
           { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const parts = [];
       for (let k = 0; k < raw.length; k++) {
@@ -1101,16 +1093,20 @@ export class Strength {
         const ords = named ? g.legs : g;
         const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
         if (!label)
-          return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it `
-            + "filed by its position.");
+          return unreadable(localize("strength.index.group_carries_no_name",
+            "group {n} carries no name; leave the name out altogether to have it filed by its position.", { n: k + 1 }));
         if (label.length > 200)
-          return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
+          return unreadable(localize("strength.index.groups_name_is_longer_than_200_characters",
+            "group {n}'s name is longer than 200 characters.", { n: k + 1 }));
         if (!Array.isArray(ords) || !ords.length)
-          return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
+          return unreadable(localize("strength.index.group_lists_no_reasons",
+            "group {n} lists no reasons; every group holds at least one.", { n: k + 1 }));
         if (!ords.every((o) => Number.isInteger(o) && o >= 0))
-          return unreadable(`group ${k + 1} names something other than a reason's position.`);
+          return unreadable(localize("strength.index.group_names_something_other_than_a_position",
+            "group {n} names something other than a reason's position.", { n: k + 1 }));
         if (parts.some((p) => p.label === label))
-          return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
+          return unreadable(localize("strength.index.two_groups_are_both_named",
+            "two groups are both named '{label}'.", { label: label.slice(0, 60) }));
         parts.push({ label, ords: [...ords] });
       }
       /* The question's own reasons, read one past the bound so a basis larger than a reading may hold is observed. */
@@ -1119,26 +1115,36 @@ export class Strength {
         .map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
       if (legRows.length > BASIS_VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
-          `${inq.slice(0, 60)} rests on more than ${BASIS_VERSION_LEGS_MAX} reasons.`, { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
+          localize("strength.index.rests_on_more_than_reasons", "{inq} rests on more than {limit} reasons.",
+            { inq: inq.slice(0, 60), limit: BASIS_VERSION_LEGS_MAX }), { inquiry: inq, limit: BASIS_VERSION_LEGS_MAX });
       const byOrd = new Map(legRows.map((l) => [l.ord, l]));
       const placed = new Map();
       for (const p of parts)
         for (const o of p.ords) {
           if (!byOrd.has(o))
             return refusal("PARTITION_INDEPENDENCE_UNKNOWN_LEG",
-              `'${p.label.slice(0, 60)}' names reason position ${o}, and ${inq.slice(0, 60)} has `
-              + `${legRows.length} reason(s)${legRows.length ? ` at positions ${legRows.map((l) => l.ord).join(", ")}` : ""}.`,
+              legRows.length
+                ? localize("strength.index.names_reason_position_and_has_reasons_at_positions",
+                    "'{label}' names reason position {ord}, and {inq} has {count} reason(s) at positions {positions}.",
+                    { label: p.label.slice(0, 60), ord: o, inq: inq.slice(0, 60), count: legRows.length,
+                      positions: legRows.map((l) => l.ord).join(", ") })
+                : localize("strength.index.names_reason_position_and_has_reasons",
+                    "'{label}' names reason position {ord}, and {inq} has {count} reason(s).",
+                    { label: p.label.slice(0, 60), ord: o, inq: inq.slice(0, 60), count: legRows.length }),
               { inquiry: inq, ord: o });
           if (placed.has(o))
             return refusal("PARTITION_INDEPENDENCE_LEG_TWICE",
-              `reason position ${o} is in both '${placed.get(o).slice(0, 60)}' and '${p.label.slice(0, 60)}'.`,
+              localize("strength.index.reason_position_is_in_both_and",
+                "reason position {ord} is in both '{first}' and '{second}'.",
+                { ord: o, first: placed.get(o).slice(0, 60), second: p.label.slice(0, 60) }),
               { inquiry: inq, ord: o });
           placed.set(o, p.label);
         }
       const unplaced = legRows.filter((l) => !placed.has(l.ord)).map((l) => l.ord);
       if (unplaced.length)
         return refusal("PARTITION_INDEPENDENCE_NOT_TOTAL",
-          `reason position(s) ${unplaced.slice(0, 20).join(", ")} are in no group.`,
+          localize("strength.index.reason_positions_are_in_no_group",
+            "reason position(s) {positions} are in no group.", { positions: unplaced.slice(0, 20).join(", ") }),
           { inquiry: inq, unplaced: unplaced.slice(0, 20) });
       legs = legRows.map((l) => ({ ...l, ground: placed.get(l.ord) }));
       head = { partition: parts.map((p) => ({ label: p.label, legs: p.ords,
@@ -1197,12 +1203,15 @@ export class Strength {
   testimonyCorroboration({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
     const id = str(inquiry);
     if (!id) return { ok: false, reason: "NO_ID",
-      detail: "this answers for one question: pass inquiry=<record id>." };
+      detail: localize("strength.index.this_answers_for_one_question_pass_inquiry",
+        "this answers for one question: pass inquiry=<record id>.") };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
     if (ty !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
-        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question rests on testimony.` };
+        detail: localize("strength.index.is_a_not_an_inquiry_only_a_question_rests_on_testimony",
+          "{id} is a {type}, not an inquiry. Only a question rests on testimony.",
+          { id, type: ty ?? localize("strength.index.record", "record") }) };
     const name = str(version);
     let legs, captureBounds;
     if (name) {
@@ -1211,7 +1220,8 @@ export class Strength {
         const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
         return { ok: false, reason: "VERSION_STRENGTH_NO_SUCH_VERSION", code: "VERSION_STRENGTH_NO_SUCH_VERSION",
                  check: r.check, translation: r.translation, inquiry: id, version: name.slice(0, 200),
-                 detail: `no reading named '${name.slice(0, 60)}' belongs to ${id}.` };
+                 detail: localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.",
+                                  { name: name.slice(0, 60), inq: id }) };
       }
       legs = this.#versionLegsAsMembers(this.#versionLegs(id, name, true), this.inquiry.subjectEntityOf(id)).legs;
       captureBounds = null;
@@ -1248,12 +1258,15 @@ export class Strength {
    *  that something was, and the pair over what remains is then not the record's. Writes nothing; names no author. */
   gradingFacts({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
     const id = str(inquiry);
-    if (!id) return { ok: false, reason: "NO_ID", detail: "this answers for one question: pass inquiry=<record id>." };
+    if (!id) return { ok: false, reason: "NO_ID", detail: localize("strength.index.this_answers_for_one_question_pass_inquiry",
+      "this answers for one question: pass inquiry=<record id>.") };
     if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
     const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
     if (ty !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
-        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question has grading facts.` };
+        detail: localize("strength.index.is_a_not_an_inquiry_only_a_question_has_grading_facts",
+          "{id} is a {type}, not an inquiry. Only a question has grading facts.",
+          { id, type: ty ?? localize("strength.index.record", "record") }) };
     const name = str(version);
     const lv = levelsGiven(levels);
     let legs, captureBounds, ownTop;
@@ -1262,7 +1275,8 @@ export class Strength {
         const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
         return { ok: false, reason: "VERSION_STRENGTH_NO_SUCH_VERSION", code: "VERSION_STRENGTH_NO_SUCH_VERSION",
                  check: r.check, translation: r.translation, inquiry: id, version: name.slice(0, 200),
-                 detail: `no reading named '${name.slice(0, 60)}' belongs to ${id}.` };
+                 detail: localize("strength.index.no_reading_named_belongs_to", "no reading named '{name}' belongs to {inq}.",
+                                  { name: name.slice(0, 60), inq: id }) };
       }
       legs = this.#versionLegsAsMembers(this.#versionLegs(id, name, true), this.inquiry.subjectEntityOf(id)).legs;
       captureBounds = this.#captureBoundsFor(id, DEPTH_BOUND, legs);
@@ -1356,29 +1370,27 @@ export class Strength {
     if (named)
       return { declared: true, source: "project", project: projectId,
                capture: declared.capture, connection: declared.connection,
-               detail: `required by ${projectId}, the project whose production this case is: `
-                     + `${barAxisWords(declared)}. `
-                     + `The bar is the project's own declaration about its own work, stated in advance, and `
-                     + `is never set by who a reader is.` };
+               detail: localize("strength.index.required_by_the_project_whose_production_this_case_is",
+                 "required by {project}, the project whose production this case is: {bar}. The bar is the project's own declaration about its own work, stated in advance, and is never set by who a reader is.",
+                 { project: projectId, bar: barAxisWords(declared) }) };
     return { declared: false, source: "none", project: projectId, capture: null, connection: null,
-             detail: `${projectId} declares no required evidentiary strength, so nothing in this case was `
-                   + `measured against one. An absent bar is not a bar of zero, and this case makes no `
-                   + `claim to have cleared any standard. A project declares its bar by its own act, written `
-                   + `into the project's document as an authored, dated, on-the-record entry.` };
+             detail: localize("strength.index.declares_no_required_evidentiary_strength",
+               "{project} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.",
+               { project: projectId }) };
   }
 
   /** R15: the group's default bar, the one a new project starts from (DEC-17 as amended). A pair: a scalar would
    *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
    *  reason (DEC-88), and its answer carries DEC-105's honest note. */
   strengthBarSet({ group = null, capture = null, connection = null, reason = undefined, author = null } = {}) {
-    const machine = machineCannotDeclare(author, "TEAM's");
+    const machine = machineCannotDeclare(author, "team");
     if (machine) return machine;
     const who = String(author).trim();
     /* DEC-49 REGION is-admin-strength-bar */
     if (!this.membership.isAdministrator(who))
       return barRefusal("STRENGTH_BAR_NOT_ADMIN",
-        "the default bar is declared for the whole team, so only an active administrator may set it. "
-        + "Nothing was declared.");
+        localize("strength.index.the_default_bar_is_declared_for_the_whole_team",
+          "the default bar is declared for the whole team, so only an active administrator may set it. Nothing was declared."));
     /* END DEC-49 REGION is-admin-strength-bar */
     /* D-436: the default is the store's recorded group, never a literal; with none recorded and none named there is no
        group for the declaration to belong to. */
@@ -1388,26 +1400,29 @@ export class Strength {
       const row = PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED;
       return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
                translation: row.translation, act: "strengthbar",
-               detail: "the default bar is the TEAM's declaration, keyed by its team; this request names no team "
-                     + "and this store records none. Nothing was declared." };
+               detail: localize("strength.index.the_default_bar_is_the_teams_declaration",
+                 "the default bar is the TEAM's declaration, keyed by its team; this request names no team and this store records none. Nothing was declared.") };
     }
     const bad = badGrade(capture, connection);
     if (bad) return bad;
     if (capture == null && connection == null)
       return { ok: false, reason: "NO_BAR",
-               detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
-                     + "one, and an absent bar is stated as absent rather than written as a blank row." };
+               detail: localize("strength.index.declare_at_least_one_axis",
+                 "declare at least one axis. Withdrawing a bar entirely is a different act from setting one, and an absent bar is stated as absent rather than written as a blank row.") };
     /* DEC-49 REGION is-strength-bar-reason */
     /* DEC-88: the administrator's words, judged trimmed and recorded as judged. Asked last, so nothing is written. */
     const why = typeof reason === "string" ? reason.trim() : "";
     if (!why || why.length > BAR_REASON_MAX)
       return barRefusal("BAR_NO_REASON",
         typeof reason !== "string"
-          ? "give the reason the team sets this bar, as text in your own words (reason=…). Nothing was declared."
+          ? localize("strength.index.give_the_reason_the_team_sets_this_bar",
+              "give the reason the team sets this bar, as text in your own words (reason=…). Nothing was declared.")
           : !why
-          ? "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared."
-          : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. `
-            + "Nothing was declared.",
+          ? localize("strength.index.the_reason_given_is_blank_why_the_team",
+              "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared.")
+          : localize("strength.index.the_reason_given_is_characters_team",
+              "the reason given is {length} characters, and a reason is at most {max}. Nothing was declared.",
+              { length: why.length, max: BAR_REASON_MAX }),
         { limit: BAR_REASON_MAX });
     /* END DEC-49 REGION is-strength-bar-reason */
     const at = this.now();
@@ -1417,9 +1432,7 @@ export class Strength {
          author=excluded.author, at=excluded.at, reason=excluded.reason`,
       gid, capture, connection, who, at, why);
     return { ok: true, group: gid, capture, connection, author: who, at, reason: why,
-             note: "this is the DEFAULT a project starts from; a project may declare its own by its own act, written "
-                 + "into the project's document as an authored, dated, on-the-record entry visible in every case it governs. "
-                 + `It gates nothing. ${BAR_HONEST_NOTE}` };
+             note: word("strength.note.default_project_starts", { bar_honest_note: BAR_HONEST_NOTE }) };
   }
 
   /* R16, R40: null when `pid` is a project the viewer may see; else the answer: an absent or unseen project
@@ -1431,8 +1444,9 @@ export class Strength {
     if (!pb) return noSuchProject(pid || null);
     if (normalizeType(pb.object_type) !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project: pid, object_type: pb.object_type,
-               detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a `
-                     + `PROJECT (DEC-72).` };
+               detail: localize("strength.index.is_a_and_a_standard_of_evidence_is_a_property",
+                 "{id} is a {type}, and a standard of evidence is a property of a PROJECT (DEC-72).",
+                 { id: pid, type: pb.object_type }) };
     return null;
   }
 
@@ -1444,7 +1458,7 @@ export class Strength {
    *  It never reads or changes the group's default (R15), and it gates nothing (R21). */
   projectBarSet({ project = null, capture = null, connection = null, reason = undefined, author = null, viewer = null,
                   identity = null } = {}) {
-    const machine = machineCannotDeclare(author, "PROJECT's");
+    const machine = machineCannotDeclare(author, "project");
     if (machine) return machine;
     const who = String(author).trim();
     const pid = String(project ?? "").trim();
@@ -1463,11 +1477,14 @@ export class Strength {
     if (!why || why.length > BAR_REASON_MAX)
       return barRefusal("PROJECT_BAR_NO_REASON",
         typeof reason !== "string"
-          ? "give the reason the project sets this bar, as text in your own words (reason=…). Nothing was changed."
+          ? localize("strength.index.give_the_reason_the_project_sets_this_bar",
+              "give the reason the project sets this bar, as text in your own words (reason=…). Nothing was changed.")
           : !why
-          ? "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed."
-          : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. `
-            + "Nothing was changed.",
+          ? localize("strength.index.the_reason_given_is_blank_why_the_project",
+              "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed.")
+          : localize("strength.index.the_reason_given_is_characters_project",
+              "the reason given is {length} characters, and a reason is at most {max}. Nothing was changed.",
+              { length: why.length, max: BAR_REASON_MAX }),
         { limit: BAR_REASON_MAX });
     /* END DEC-49 REGION is-project-bar-reason */
     const head = this.record.head(pid);
@@ -1479,13 +1496,15 @@ export class Strength {
     const spliced = spliceProjectBar(doc.text, next, at);
     if (spliced === null)
       return { ok: false, reason: "PROJECT_DOCUMENT_UNREADABLE", project: pid,
-               detail: "the project's document has no front-matter block to hold its bar. Nothing was changed." };
+               detail: localize("strength.index.the_projects_document_has_no_front_matter_block",
+                 "the project's document has no front-matter block to hold its bar. Nothing was changed.") };
     const withdrawing = next.capture == null && next.connection == null;
     const after = withdrawing ? "no bar" : barAxisWords(next);
     const text = appendSessionLog(spliced,
       `### Session ${at} | ${withdrawing ? "Withdrew" : "Set"} the project's bar | ${who}\n`
       + `Trigger: op=projectbarset on ${pid}\n`
-      + `Changes: the project's standard of evidence from ${barLogWords(previous)} to ${after}.\n`
+      + `${localize("strength.index.changes_the_projects_standard_of_evidence_from",
+          "Changes: the project's standard of evidence from {before} to {after}.", { before: barLogWords(previous), after })}\n`
       /* One line, so a reason's own line breaks never open a section of the document. */
       + `Reason: ${why.replace(/\s+/g, " ")}\n`);
     const fm = parseFrontmatter(text).data || {};
@@ -1514,11 +1533,8 @@ export class Strength {
   strengthBarOf({ group = null, target = null, project = null, viewer = null } = {}) {
     if (target)
       return { ok: false, reason: "BAR_IS_A_PROJECT_PROPERTY", target,
-               detail: "a standard of evidence is a property of a PROJECT, not of a finding or a claim "
-                     + "(DEC-72). No bar attaches to this finding, and none ever did on its own behalf: "
-                     + "what governed it was whichever project published it, at the moment it published. "
-                     + "Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= "
-                     + "for the default a new project starts from." };
+               detail: localize("strength.index.a_standard_of_evidence_is_a_property_of_a_project",
+                 "a standard of evidence is a property of a PROJECT, not of a finding or a claim (DEC-72). No bar attaches to this finding, and none ever did on its own behalf: what governed it was whichever project published it, at the moment it published. Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= for the default a new project starts from.") };
     if (project) {
       const pid = String(project).trim();
       const unseen = this.#projectUnseen(pid, viewer);
@@ -1528,12 +1544,13 @@ export class Strength {
     const gid = String(group ?? "").trim() || this.producingGroup();
     if (!gid)
       return { ok: true, group: null, bar: null, seeds_new_projects: true,
-               detail: "no team is named and this store records no producing team, so there is no team default to "
-                     + "read. An absent bar gates nothing and is not a bar of zero." };
+               detail: localize("strength.index.no_team_is_named_and_this_store_records_no_producing_team",
+                 "no team is named and this store records no producing team, so there is no team default to read. An absent bar gates nothing and is not a bar of zero.") };
     const g = this.#one(`SELECT group_id, capture, connection, author, at, reason FROM group_strength_bar WHERE group_id=?`,
                         gid);
     return { ok: true, group: gid, bar: g || null, seeds_new_projects: true,
-             detail: g ? null : "no team default is declared. An absent bar gates nothing and is not a bar of zero." };
+             detail: g ? null : localize("strength.index.no_team_default_is_declared",
+               "no team default is declared. An absent bar gates nothing and is not a bar of zero.") };
   }
 }
 
@@ -1618,30 +1635,30 @@ function refusePairComposed(out) {
   for (const k of PAIR_COMPOSED_KEYS)
     if (Object.prototype.hasOwnProperty.call(out, k))
       return refusal("VERSION_STRENGTH_COMPOSED",
-        `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure `
-        + `standing for every axis. Strength is one measurement PER AXIS, each over its own population `
-        + `— ${STRENGTH_AXES.join(", ")} — and there is no value that is all of them.`);
+        localize("strength.index.this_answer_carries_a_top_level",
+          "this answer carries a top-level '{key}', which can only be one figure standing for every axis. Strength is one measurement PER AXIS, each over its own population — {axes} — and there is no value that is all of them.",
+          { key: String(k).slice(0, 40), axes: STRENGTH_AXES.join(", ") }));
   const pair = out.pair;
   if (!pair || typeof pair !== "object")
     return refusal("VERSION_STRENGTH_COMPOSED",
-      "this answer carries no pair at all, so whatever it reports is not the per-axis measurements "
-      + "this record makes.");
+      localize("strength.index.this_answer_carries_no_pair_at_all",
+        "this answer carries no pair at all, so whatever it reports is not the per-axis measurements this record makes."));
   /* Totality, both ways: exactly the axes, no more and no fewer. */
   const keys = Object.keys(pair).sort();
   const want = [...STRENGTH_AXES].sort();
   if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
     return refusal("VERSION_STRENGTH_COMPOSED",
-      `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. `
-      + `One answer per population, and nothing beside them that reads as a summary of all of them.`);
+      localize("strength.index.the_pair_holds_where_it_must_hold_exactly",
+        "the pair holds {held} where it must hold exactly {want}. One answer per population, and nothing beside them that reads as a summary of all of them.",
+        { held: JSON.stringify(keys), want: JSON.stringify(want) }));
   if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
     return refusal("VERSION_STRENGTH_UNFILTERED",
-      "this answer does not state which readings it was computed over. Every answer says so on its "
-      + "face — the record's own as plainly as a view somebody constructed — because absence of the "
-      + "line is exactly what makes the two indistinguishable.");
+      localize("strength.index.this_answer_does_not_state_which_readings",
+        "this answer does not state which readings it was computed over. Every answer says so on its face — the record's own as plainly as a view somebody constructed — because absence of the line is exactly what makes the two indistinguishable."));
   if (!Array.isArray(out.state_set) || !out.state_set.length)
     return refusal("VERSION_STRENGTH_UNFILTERED",
-      "this answer carries no machine-readable state set beside its sentence, so a consumer would "
-      + "have to parse prose to learn what it counted.");
+      localize("strength.index.this_answer_carries_no_machine_readable_state_set",
+        "this answer carries no machine-readable state set beside its sentence, so a consumer would have to parse prose to learn what it counted."));
   /* END DEC-49 REGION is-pair-composed */
   return null;
 }

@@ -42,6 +42,7 @@ import { renderPageToPixels, REFUSALS as RENDER_REFUSALS } from "../../pdf-worke
 import { pngToSamples, samplesToRgba } from "./pngsamples.mjs";
 import { renderPictureToPixels } from "../../pdf-worker/src/picturepixels.mjs";
 import { CAP, MEASURED_BY, MAX_FRAME_BYTES, NAMESPACES, PICTURE_MAX_EDGE, REFUSALS, chooseChunk, frameBytesOf, isPicture } from "./contract.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* The namespace set (R16) and the plane ops this member calls (none) are declared in `contract.mjs`, which imports
    no engine, so the plane's control-plane can pin both against its own gate and op table. */
@@ -106,9 +107,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
     if (rendered.mediaType !== "image/png")
       return { ok: false, reason: "PIXELS_UNREADABLE", detail: REFUSALS.PIXELS_UNREADABLE, page,
                route: rendered.route, mediaType: rendered.mediaType,
-               why: `the ${rendered.route} route hands back ${rendered.mediaType} bytes, and no decoder for that `
-                  + `container is built into this member — workerd has neither a canvas nor createImageBitmap. `
-                  + `This page is not transcribed and is not guessed at.` };
+               why: localize("ocr-worker.member.the_route_route_hands_back", "the {route} route hands back {mediaType} bytes, and no decoder for that container is built into this member — workerd has neither a canvas nor createImageBitmap. This page is not transcribed and is not guessed at.", { route: String(rendered.route), mediaType: String(rendered.mediaType) }) };
 
     /* THE FRAME BOUND, checked before anything is allocated — and only once the container has passed, so a page
        too large is refused by its true reason. */
@@ -117,12 +116,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
       return { ok: false, reason: "FRAME_OVER_MEASURED_BOUND", detail: REFUSALS.FRAME_OVER_MEASURED_BOUND,
                page, width: rendered.width, height: rendered.height, frame_bytes: frame,
                bound_bytes: MAX_FRAME_BYTES,
-               why: `a ${rendered.width}x${rendered.height} page needs a ${frame} B RGBA frame; the `
-                  + `largest frame MEASURED to complete on this runtime is ${MAX_FRAME_BYTES} B and a `
-                  + `75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and `
-                  + `NOT a share of any ceiling — the platform's memory figure is not the isolate's `
-                  + `budget (D-312). Refused rather than attempted: being killed returns no answer and `
-                  + `no reason.` };
+               why: localize("ocr-worker.member.a_width_x_height_page", "a {width}x{height} page needs a {frame} B RGBA frame; the largest frame MEASURED to complete on this runtime is {MAX_FRAME_BYTES} B and a 75,700,000 B frame was KILLED (CPDF-15, reproduced). This is a workload size and NOT a share of any ceiling — the platform's memory figure is not the isolate's budget (D-312). Refused rather than attempted: being killed returns no answer and no reason.", { width: String(rendered.width), height: String(rendered.height), frame: String(frame), MAX_FRAME_BYTES: String(MAX_FRAME_BYTES) }) };
 
     const samples = await pngToSamples(rendered.bytes);
     if (!samples.ok)
@@ -178,11 +172,7 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
     if (!regions.length)
       return { ok: false, reason: "NOTHING_TRANSCRIBED", detail: REFUSALS.NOTHING_TRANSCRIBED, page,
                boxes, blank, unanchored,
-               why: `the engine boxed ${boxes} region(s) and none of them carried both text and a `
-                  + `usable rectangle, so there is nothing this record could anchor. An engine that `
-                  + `answers nothing on a page is a FINDING and not an error: CPDF-15 measured this `
-                  + `engine returning the empty string on noise and at CPDF-11's R3 rung, which is the `
-                  + `self-refusal that makes its clean-run figures worth anything.` };
+               why: localize("ocr-worker.member.the_engine_boxed_boxes_region", "the engine boxed {boxes} region(s) and none of them carried both text and a usable rectangle, so there is nothing this record could anchor. An engine that answers nothing on a page is a FINDING and not an error: CPDF-15 measured this engine returning the empty string on noise and at CPDF-11's R3 rung, which is the self-refusal that makes its clean-run figures worth anything.", { boxes: String(boxes) }) };
 
     return {
       ok: true, page,
@@ -204,23 +194,16 @@ export function makeMember(engine, { render = renderPageToPixels, renderPicture 
     const one = await transcribeOnePage(bytes, take, opts);
     const notes = [];
     if (deferred.length)
-      notes.push(`this member transcribes ONE PAGE PER INVOCATION and ${deferred.length} further `
-        + `page(s) (${deferred.join(", ")}) were NOT transcribed by this call. The bound is MEMORY and `
-        + `it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed `
-        + `(CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed — `
-        + `call again per page. Those pages keep their markers and stay honestly unread.`);
+      notes.push(localize("ocr-worker.member.this_member_transcribes_one_page", "this member transcribes ONE PAGE PER INVOCATION and {length} further page(s) ({deferred}) were NOT transcribed by this call. The bound is MEMORY and it was measured by refusal: a 61.3 MB RGBA frame completes and a 75.7 MB frame is killed (CPDF-15). Whole-document invocation is UNMEASURED, so it is refused rather than assumed — call again per page. Those pages keep their markers and stay honestly unread.", { length: String(deferred.length), deferred: String(deferred.join(", ")) }));
 
     if (!one.ok)
       return { ok: false, reason: one.reason, detail: one.detail, page: take,
                deferred, notes: notes.concat(one.why ? [one.why] : []), refusal: one };
 
     if (one.unanchored)
-      notes.push(`${one.unanchored} region(s) the engine returned carried no usable rectangle and were `
-        + `dropped rather than recorded — text nobody can point at a page to verify is exactly what `
-        + `this path refuses to put in the record.`);
+      notes.push(localize("ocr-worker.member.unanchored_region_s_the_engine", "{unanchored} region(s) the engine returned carried no usable rectangle and were dropped rather than recorded — text nobody can point at a page to verify is exactly what this path refuses to put in the record.", { unanchored: String(one.unanchored) }));
     if (one.unrated)
-      notes.push(`${one.unrated} region(s) came back with no engine-computed confidence and are stated `
-        + `as 'none' rather than given a number this member would have had to invent.`);
+      notes.push(localize("ocr-worker.member.unrated_region_s_came_back", "{unrated} region(s) came back with no engine-computed confidence and are stated as 'none' rather than given a number this member would have had to invent.", { unrated: String(one.unrated) }));
 
     return {
       ok: true,

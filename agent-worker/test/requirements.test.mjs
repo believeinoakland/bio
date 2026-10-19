@@ -42,6 +42,7 @@ import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES } from "../../bio-pla
 import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
 import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { discoverMembers, verifyStatic, verifyFresh } from "../../bio-plane/scripts/fleet-bundle.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -595,7 +596,7 @@ section("R12 · the target is the run's context, never a project id");
 {
   await reset(mf, { target: "INQ-R12" });
   t("R12: an inquiry context's id is the target", (await runOp(mf, { ...base, judgements: J() })).out.target,
-    { id: "INQ-R12", basis: "the run's context question" });
+    { id: "INQ-R12", basis: localize("agent-harness.harness.the_runs_context_question", "the run's context question") });
   await reset(mf, { contextType: "project", target: "PROJ-R12", questions: ["INQ-ONE"] });
   t("R12: a project context's one published question is the target",
     (await runOp(mf, { ...base, judgements: J() })).out.target?.id, "INQ-ONE");
@@ -834,7 +835,7 @@ section("R21 · collect, holdings: each citation resolved to its document by add
   t("R21: a cited record that names no source address is read through no chain, counted as itself, and its reason says so",
     [(await planeState(mf)).log.filter((l) => l.op === "versionchain").length, noSource.out.holdings?.unchained,
      noSource.out.holdings?.unchained_items?.[0]?.reason],
-    [0, 1, "the cited record names no source address, so no version chain can hold it"]);
+    [0, 1, localize("agent-steps.work.the_cited_record_names_no_source", "the cited record names no source address, so no version chain can hold it")]);
   const h = documentHoldings([
     { citation: "b1", bundle: "b1", address: "https://x/cal", chain: { address_norm: "x/cal", total: 3, versions: [{ bundle_id: "b1" }, { bundle_id: "b2" }] } },
     { citation: "b2", bundle: "b2", address: "https://x/cal", chain: { address_norm: "x/cal", total: 3, versions: [{ bundle_id: "b1" }, { bundle_id: "b2" }] } },
@@ -1387,8 +1388,8 @@ section("R37 · it judges no scope; PLANE_OPS is exactly its ops, and it calls n
   await seen(mf);
   t("R37: the ops the member called across this suite's last run are all in PLANE_OPS",
     [...OPS_SEEN].filter((o) => !PLANE_OPS[o]), []);
-  t("R37: none of its ops is one that returns document bytes",
-    Object.keys(PLANE_OPS).filter((o) => ["capture", "acquire", "image", "archivelookup", "publishedmanifest", "bytes", "file"].includes(o)), []);
+  t("R37: none of its ops returns document bytes: no answer this suite received carries a data URL or a long base64 run",
+    ANSWERS.filter((a) => /data:[\w/+.-]+;base64,|[A-Za-z0-9+/]{400,}={0,2}/.test(a.text)).length, 0);
 }
 
 section("R38 · it never writes runtime-ceiling-reached or any ending itself");

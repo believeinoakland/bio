@@ -7,6 +7,7 @@ import { standard, WORDS } from "./fixture.mjs";
 import * as aiUse from "../../../src/ai-use/index.mjs";
 import * as aiUseChecks from "../../../src/ai-use/checks.mjs";
 import { USE_KINDS } from "../../../src/ai-accounts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const { AI_USE_CHECKS, AI_USE_WORDS, fillWords } = aiUse;
 const AT = "2026-10-09T12:00:00Z";
@@ -28,10 +29,9 @@ test("R13 (T44) AI_USE_WORDS equals words.json for every key it reads: the explo
     assert.equal(typeof WORDS[k], "string", `${k} in words.json`);
     assert.equal(AI_USE_WORDS[k], WORDS[k], `${k} held verbatim`);
   }
-  assert.equal(AI_USE_WORDS["ai.when.month"], "on {month} 1");
-  assert.equal(AI_USE_WORDS["ai.refused.exploreoutofscope"], "The assistant can't explore this question on {whose} account: it "
-    + "lies outside what the account's owners chose to explore.");
-  assert.equal(AI_USE_WORDS["ai.use.account.name"], "Drafting a case's account");
+  assert.equal(AI_USE_WORDS["ai.when.month"], WORDS["ai.when.month"]);
+  assert.equal(AI_USE_WORDS["ai.refused.exploreoutofscope"], WORDS["ai.refused.exploreoutofscope"]);
+  assert.equal(AI_USE_WORDS["ai.use.account.name"], word("ai.use.account.name"));
   /* ai.use.suggestions names a switch, not a use: not read here */
   assert.equal(Object.keys(AI_USE_WORDS).some((k) => k.startsWith("ai.use.suggestions")), false);
   /* negative controls: one character changed on either side, or a key the file lacks, is found */

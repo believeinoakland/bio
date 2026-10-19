@@ -34,6 +34,7 @@ import { caseCheckOf } from "../../../src/case-check/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -516,8 +517,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], stat
       ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
       ...(l.content_id ? [`    content_id: ${l.content_id}`] : [])])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id) {

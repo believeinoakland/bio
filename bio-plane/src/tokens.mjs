@@ -12,6 +12,8 @@
  * here in the same change that removes it.
  */
 
+import { word } from "./setup-words/index.mjs";
+
 export const PUBLISHED_TOKEN_HASHES = new Set([
   // dist/SECRETS.txt of the 0.2.0 test deployment
   // ADMIN_TOKEN
@@ -62,9 +64,7 @@ export const CASCADE_PUBLISHED = "INSTANCE_ACCOUNT_REVOKED_BY_PUBLICATION";
 
 // Member-facing (DEC-149: "Your group's Civicsmith", never "the plane", "the instance" or "this group's copy"). It
 // states no limit of Anthropic's plans, so it cites none (K1763); where an account comes from is R13's, K1755's.
-const NO_INSTANCE_ACCOUNT_DETAIL = "Your team's Civicsmith binds no Claude account to its own settings, and none can "
-  + "be set there. The assistant is reached through a member's own Claude account or API key, or through the team's "
-  + "API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.";
+const NO_INSTANCE_ACCOUNT_DETAIL = word("tokens.group_civicsmith_binds");
 
 /**
  * The instance level's STATUS: always not configured, `CASCADE_UNSET`, with a detail saying where an account comes

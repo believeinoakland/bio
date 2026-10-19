@@ -1,5 +1,5 @@
 /* reading-guides — what to look for in one kind of document (requirements: `build/requirements/reading-guides.md`
- * R1–R14; D8, D24, D65; K2405, K2418, K2472; v0.2 rule 11).
+ * R1–R15; D8, D24, D65; K2405, K2418, K2472; v0.2 rule 11).
  *
  * A guide is a short list of items, each a label, what to look for and, if given, where: by hand a checklist, for the
  * assistant what to read for, so the two are one text (D65). Civicsmith's library ships with the release (R1,
@@ -48,6 +48,7 @@ import { READING_GUIDES_WORDS, refusal } from "./checks.mjs";
 import { checkGuide, GUIDE_PURPOSES } from "./check.mjs";
 import { CIVICSMITH_GUIDES, GUIDE_KINDS } from "./library.mjs";
 import { READING_GUIDES_TABLE_CLASSES, migrateReadingGuides } from "./schema.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { READING_GUIDES_CHECKS, READING_GUIDES_WORDS } from "./checks.mjs";
 export { checkGuide, registerConductCheck, conductCheckHolder, LOOK_FOR_OPENERS, CONDUCT_LISTS, ITEMS_MAX, LABEL_MAX,
@@ -77,11 +78,9 @@ export const PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legal
 /** R12: what a proposal's label says, in each of `record-grammar`'s three proposal states (shaped as its
  *  `proposalLabel` answers; `lawProposalState` decides the state). */
 export const GUIDE_PROPOSAL_STATES = Object.freeze({
-  machine_proposed: "a machine credential proposed this reading guide. That is machine work, labeled as machine work: "
-    + "it can propose what to look for and it can never write, review or approve a guide. It is not a guide until a "
-    + "member writes one based on it.",
-  member_proposed: "a member proposed this reading guide. It is not a guide until a member writes one based on it.",
-  unstated: "who proposed this reading guide is not recorded. It is not a guide until a member writes one based on it.",
+  machine_proposed: word("reading-guides.machine_credential_proposed"),
+  member_proposed: word("reading-guides.member_proposed_reading"),
+  unstated: word("reading-guides.proposed_reading_guide"),
 });
 
 /** R12: a proposal's label, `{by, state, machine_work, says}`. */
@@ -198,7 +197,7 @@ export class ReadingGuides {
   guideDraft(args) {
     const { kind, items, purpose: p, based_on: basedOn, by } = argsOf(args);
     const member = this.#member(by);
-    if (!member) return memberRefusal("writing a reading guide");
+    if (!member) return memberRefusal(localize("reading-guides.index.writing_a_reading_guide", "writing a reading guide"));
     const purpose = purposeOf(p);
     const badKind = this.#kindRefused(kind, purpose);
     if (badKind) return badKind;
@@ -208,8 +207,7 @@ export class ReadingGuides {
     /* DEC-49 REGION is-guide-basis */
     if (basis !== null && !(isGuideId(basis) && (this.#civic(basis) || this.#held(basis)
         || this.#one(`SELECT 1 AS x FROM reading_guide_proposals WHERE proposal_id=?`, basis))))
-      return refusal("GUIDE_BASED_ON_UNKNOWN", "the guide or proposal named as this guide's basis is not one you can "
-        + "see. Nothing was written.", { based_on: typeof basis === "string" ? basis.slice(0, 100) : null });
+      return refusal("GUIDE_BASED_ON_UNKNOWN", localize("reading-guides.index.the_guide_or_proposal_named", "the guide or proposal named as this guide's basis is not one you can see. Nothing was written."), { based_on: typeof basis === "string" ? basis.slice(0, 100) : null });
     /* END DEC-49 REGION is-guide-basis */
     const at = this.#instant();
     return this.#record.transact(() => {
@@ -231,13 +229,11 @@ export class ReadingGuides {
     const { kind, items, purpose: p, run, by } = argsOf(args);
     /* DEC-49 REGION is-guide-machine */
     if (!str(by) || !isMachineIdentity(str(by)))
-      return refusal("GUIDE_PROPOSAL_NOT_MACHINE", "a proposed guide is a machine credential's work; a member writes a "
-        + "guide directly. Nothing was written.");
+      return refusal("GUIDE_PROPOSAL_NOT_MACHINE", localize("reading-guides.index.a_proposed_guide_is_a", "a proposed guide is a machine credential's work; a member writes a guide directly. Nothing was written."));
     /* END DEC-49 REGION is-guide-machine */
     /* DEC-49 REGION is-guide-run */
     if (!str(run) || str(run).length > RUN_MAX)
-      return refusal("GUIDE_RUN_MISSING", `a proposed guide names the run that proposed it, in at most ${RUN_MAX} `
-        + "characters. Nothing was written.");
+      return refusal("GUIDE_RUN_MISSING", localize("reading-guides.index.a_proposed_guide_names_the", "a proposed guide names the run that proposed it, in at most {RUN_MAX} characters. Nothing was written.", { RUN_MAX: String(RUN_MAX) }));
     /* END DEC-49 REGION is-guide-run */
     const purpose = purposeOf(p);
     const badKind = this.#kindRefused(kind, purpose);
@@ -279,21 +275,20 @@ export class ReadingGuides {
   guideReview(args) {
     const { guide, verdict, reason, by } = argsOf(args);
     const member = this.#member(by);
-    if (!member) return memberRefusal("reviewing a reading guide");
+    if (!member) return memberRefusal(localize("reading-guides.index.reviewing_a_reading_guide", "reviewing a reading guide"));
     const { row, refused } = this.#actOn(guide);
     if (refused) return refused;
     /* DEC-49 REGION is-guide-reviewable */
     if (row.state !== "usable_by_author" && row.state !== "draft")
-      return refusal("GUIDE_NOT_REVIEWABLE", `${row.guide_id} is already the team's. Nothing was written.`, { guide: row.guide_id });
+      return refusal("GUIDE_NOT_REVIEWABLE", localize("reading-guides.index.guide_id_is_already_the", "{guide_id} is already the team's. Nothing was written.", { guide_id: String(row.guide_id) }), { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-reviewable */
     /* DEC-49 REGION is-guide-reviewer */
     if (row.author === member)
-      return refusal("GUIDE_REVIEW_BY_AUTHOR", `${row.guide_id} was written or adopted by the member reviewing it. `
-        + "Nothing was written.", { guide: row.guide_id });
+      return refusal("GUIDE_REVIEW_BY_AUTHOR", localize("reading-guides.index.guide_id_was_written_or", "{guide_id} was written or adopted by the member reviewing it. Nothing was written.", { guide_id: String(row.guide_id) }), { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-reviewer */
     /* DEC-49 REGION is-guide-verdict */
     if (!GUIDE_VERDICTS.includes(verdict))
-      return refusal("GUIDE_VERDICT_UNKNOWN", "a review's verdict is approve or refuse. Nothing was written.", { guide: row.guide_id });
+      return refusal("GUIDE_VERDICT_UNKNOWN", localize("reading-guides.index.a_reviews_verdict_is_approve", "a review's verdict is approve or refuse. Nothing was written."), { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-verdict */
     const why = str(reason);
     if (verdict === "refuse" || why) {
@@ -320,15 +315,15 @@ export class ReadingGuides {
   guideRetire(args) {
     const { guide, reason, by } = argsOf(args);
     const member = this.#member(by);
-    if (!member) return memberRefusal("retiring a reading guide");
+    if (!member) return memberRefusal(localize("reading-guides.index.retiring_a_reading_guide", "retiring a reading guide"));
     const { row, refused } = this.#actOn(guide);
     if (refused) return refused;
     const approver = row.state === "group" ? row.author !== member : row.author === member;
     /* DEC-49 REGION is-guide-approver */
     if (!approver)
       return refusal("GUIDE_RETIRE_NOT_APPROVER", row.state === "group"
-        ? `${row.guide_id} is the team's, and is retired by a member other than its author. Nothing was written.`
-        : `${row.guide_id} is its author's, and is retired by its author. Nothing was written.`, { guide: row.guide_id });
+        ? localize("reading-guides.index.guide_id_is_the_teams", "{guide_id} is the team's, and is retired by a member other than its author. Nothing was written.", { guide_id: String(row.guide_id) })
+        : localize("reading-guides.index.guide_id_is_its_authors", "{guide_id} is its author's, and is retired by its author. Nothing was written.", { guide_id: String(row.guide_id) }), { guide: row.guide_id });
     /* END DEC-49 REGION is-guide-approver */
     const bad = reasonRefusal(str(reason), true);
     if (bad) return bad;
@@ -348,7 +343,7 @@ export class ReadingGuides {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "PROVIDER_MALFORMED", detail: "a channel names the module that registers it and its function" };
     if (this.#channel)
-      return { ok: false, reason: "PROVIDER_DECLARED", module, detail: `${this.#channel.module} already provides the channel between teams` };
+      return { ok: false, reason: "PROVIDER_DECLARED", module, detail: localize("reading-guides.index.module_already_provides_the_channel", "{module} already provides the channel between teams", { module: String(this.#channel.module) }) };
     this.#channel = { module, fn };
     return { ok: true, module };
   }
@@ -362,7 +357,7 @@ export class ReadingGuides {
 
   #export({ guide, by }, format, act) {
     const member = this.#member(by);
-    if (!member) return memberRefusal("offering a reading guide");
+    if (!member) return memberRefusal(localize("reading-guides.index.offering_a_reading_guide", "offering a reading guide"));
     const { row, refused } = this.#actOn(guide);
     if (refused) return refused;
     const off = offerable(row);
@@ -399,7 +394,7 @@ export class ReadingGuides {
   guideAdopt(args) {
     const { bytes, by } = argsOf(args);
     const member = this.#member(by);
-    if (!member) return memberRefusal("adopting a reading guide");
+    if (!member) return memberRefusal(localize("reading-guides.index.adopting_a_reading_guide", "adopting a reading guide"));
     const offer = typeof bytes === "string" && bytes.length <= 200000 ? safeJson(bytes) : null;
     const whole = isObj(offer) && canonicalJson(offer) === bytes && offer.format === GUIDE_OFFER_FORMAT
       && str(offer.group) !== "" && str(offer.group).length <= 100 && isGuideId(offer.guide)
@@ -407,8 +402,7 @@ export class ReadingGuides {
           || (Object.keys(offer).sort().join() === "format,group,guide,items,kind,purpose" && offer.purpose === "procedure"));
     /* DEC-49 REGION is-guide-offer */
     if (!whole)
-      return refusal("GUIDE_OFFER_UNREADABLE", "what was given is not another team's offer of a reading guide, byte "
-        + "for byte as offered. Nothing was written.");
+      return refusal("GUIDE_OFFER_UNREADABLE", localize("reading-guides.index.what_was_given_is_not", "what was given is not another team's offer of a reading guide, byte for byte as offered. Nothing was written."));
     /* END DEC-49 REGION is-guide-offer */
     const purpose = purposeOf(offer.purpose);
     const badKind = this.#kindRefused(offer.kind, purpose);
@@ -507,8 +501,9 @@ export class ReadingGuides {
 
   /** R13 (K2820): the procedure guides for an action `kind`: the profile's (`jurisdictions` R80, from `combine`'s view)
    *  first, then the group's approved procedure guides in the order approved (the group's when the viewer sees the
-   *  group, R8), each `{guide, origin, items}` (`guide` the guide's id, null for the profile's, which has none; its
-   *  items as R80 holds them, `after` included); no rank, score or preferred route. Each passes R4's procedure check
+   *  group, R8), each `{guide, origin, items, approved_by, approved_at}` for a group's (`guide` its id, `approved_by` the
+   *  reviewing member, `approved_at` the UTC day of the approval; R15) and `{origin: "profile", items, status, basis}`
+   *  for the profile's, which has no id (its items as R80 holds them, `after` included); no rank, score or preferred route. Each passes R4's procedure check
    *  again; one that no longer does is passed over and named in `withheld`. Every answer carries `label`
    *  (`PROCEDURE_GUIDE_LABEL`). Answers `{ok: true, kind, guides, withheld, label}`; served by `op=procedureguides`.
    *  Never throws. */
@@ -524,21 +519,25 @@ export class ReadingGuides {
         const c = checkGuide(items, "procedure");
         const { profile, ...answer } = g;
         if (c.ok) guides.push(answer);
-        else withheld.push({ guide: g.guide, origin: g.origin, profile: profile ?? null, reason: c.reason, item: c.item ?? null });
+        else withheld.push({ guide: g.guide ?? null, origin: g.origin, profile: profile ?? null, reason: c.reason, item: c.item ?? null });
       };
       for (const pg of (Array.isArray(view.procedure_guides) ? view.procedure_guides : [])) {
         if (!isObj(pg) || pg.kind !== kind || !Array.isArray(pg.items)) continue;
         const items = pg.items.map((it) => (isObj(it) ? { ...it, ...(Array.isArray(it.after) ? { after: [...it.after] } : {}) } : it));
         /* R80's `after` (R87 (d)) is the profile's own field, carried as given; the check reads the route's texts */
-        pass({ guide: null, origin: "profile", items, profile: pg.profile ?? null },
+        pass({ origin: "profile", items, status: pg.status ?? null, basis: pg.basis ?? null, profile: pg.profile ?? null },
              items.map((it) => (isObj(it) ? Object.fromEntries(Object.entries(it).filter(([k]) => k !== "after")) : it)));
       }
       if (this.#seesGroup(viewer)) {
-        const rows = this.#rows(`SELECT g.*, a.seq AS approved_seq FROM reading_guides g
+        const rows = this.#rows(`SELECT g.*, a.seq AS approved_seq, h.at AS approved_at FROM reading_guides g
                                    JOIN (SELECT guide_id, MIN(seq) AS seq FROM reading_guide_history WHERE act='approve' GROUP BY guide_id) a
                                      ON a.guide_id = g.guide_id
+                                   JOIN reading_guide_history h ON h.seq = a.seq
                                  WHERE g.kind=? AND g.purpose='procedure' AND g.state='group' ORDER BY a.seq`, kind);
-        for (const r of rows) { const g = viewOf(r); pass({ guide: g.id, origin: g.origin, items: g.items }, g.items); }
+        for (const r of rows) {
+          const g = viewOf(r);
+          pass({ guide: g.id, origin: g.origin, items: g.items, approved_by: g.reviewed_by, approved_at: String(r.approved_at).slice(0, 10) }, g.items);
+        }
       }
       return { ok: true, kind, guides, withheld, label };
     } catch {
@@ -583,41 +582,40 @@ const capOf = (limit) => (Number.isInteger(limit) && limit >= 1 && limit < GUIDE
 /* R2, R3, R6, R7: every act on a guide is an active member's. */
 function memberRefusal(act) {
   /* DEC-49 REGION is-guide-member */
-  return refusal("GUIDE_MEMBER_ACT", `${act} is an active member's act; an assistant may propose a guide for a member `
-    + "to take up. Nothing was written.");
+  return refusal("GUIDE_MEMBER_ACT", localize("reading-guides.index.act_is_an_active_members", "{act} is an active member's act; an assistant may propose a guide for a member to take up. Nothing was written.", { act: String(act) }));
   /* END DEC-49 REGION is-guide-member */
 }
 
 /* R2, R13: a kind outside its purpose's kinds (`kinds`), or a purpose outside `GUIDE_PURPOSES` (`kinds` null). */
 function kindRefusal(kind, purpose, kinds) {
-  const detail = !kinds ? "a guide's purpose is reading or procedure."
+  const detail = !kinds ? localize("reading-guides.index.a_guides_purpose_is_reading", "a guide's purpose is reading or procedure. Nothing was written.")
     : purpose === "procedure"
-      ? (kinds.length ? `a procedure guide is for one of the action kinds of the team's jurisdiction profiles: ${kinds.join(", ")}.`
-                      : "a procedure guide is for an action kind of the team's jurisdiction profiles, and they list none.")
-      : `a reading guide is for one of these kinds of document: ${kinds.join(", ")}.`;
+      ? (kinds.length ? localize("reading-guides.index.a_procedure_guide_is_for_one_of", "a procedure guide is for one of the action kinds of the team's jurisdiction profiles: {kinds}. Nothing was written.", { kinds: String(kinds.join(", ")) })
+                      : localize("reading-guides.index.a_procedure_guide_is_for_an_action", "a procedure guide is for an action kind of the team's jurisdiction profiles, and they list none. Nothing was written."))
+      : localize("reading-guides.index.a_reading_guide_is_for", "a reading guide is for one of these kinds of document: {kinds}. Nothing was written.", { kinds: String(kinds.join(", ")) });
   /* DEC-49 REGION is-guide-kind */
-  return refusal("GUIDE_KIND_UNKNOWN", `${detail} Nothing was written.`,
+  return refusal("GUIDE_KIND_UNKNOWN", detail,
     { kind: typeof kind === "string" ? kind.slice(0, 100) : null, ...(kinds ? {} : { purpose: typeof purpose === "string" ? purpose.slice(0, 100) : null }) });
   /* END DEC-49 REGION is-guide-kind */
 }
 
 function noSuchGuide(id) {
   /* DEC-49 REGION is-guide-held */
-  return refusal("NO_SUCH_GUIDE", "no reading guide you can see answers to that id. Nothing was written.",
+  return refusal("NO_SUCH_GUIDE", localize("reading-guides.index.no_reading_guide_you_can", "no reading guide you can see answers to that id. Nothing was written."),
     { guide: typeof id === "string" ? id.slice(0, 100) : null });
   /* END DEC-49 REGION is-guide-held */
 }
 
 function readOnly(id) {
   /* DEC-49 REGION is-guide-ours */
-  return refusal("GUIDE_READ_ONLY", `${id} comes with every copy of Civicsmith and no team can change it. Nothing was written.`,
+  return refusal("GUIDE_READ_ONLY", localize("reading-guides.index.id_comes_with_every_copy", "{id} comes with every copy of Civicsmith and no team can change it. Nothing was written.", { id: String(id) }),
     { guide: id });
   /* END DEC-49 REGION is-guide-ours */
 }
 
 function retiredRefusal(id) {
   /* DEC-49 REGION is-guide-live */
-  return refusal("GUIDE_RETIRED", `${id} has been retired. Nothing was written.`, { guide: id });
+  return refusal("GUIDE_RETIRED", localize("reading-guides.index.id_has_been_retired", "{id} has been retired. Nothing was written.", { id: String(id) }), { guide: id });
   /* END DEC-49 REGION is-guide-live */
 }
 
@@ -625,7 +623,7 @@ function retiredRefusal(id) {
 function reasonRefusal(why, required) {
   /* DEC-49 REGION is-guide-reason */
   if ((required && !why) || why.length > REASON_MAX)
-    return refusal("GUIDE_REASON_MISSING", `a reason is given in at most ${REASON_MAX} characters. Nothing was written.`);
+    return refusal("GUIDE_REASON_MISSING", localize("reading-guides.index.a_reason_is_given_in", "a reason is given in at most {REASON_MAX} characters. Nothing was written.", { REASON_MAX: String(REASON_MAX) }));
   /* END DEC-49 REGION is-guide-reason */
   return null;
 }
@@ -634,14 +632,14 @@ function reasonRefusal(why, required) {
 function offerable(row) {
   /* DEC-49 REGION is-guide-offerable */
   if (row.state !== "group")
-    return refusal("GUIDE_NOT_OFFERABLE", `${row.guide_id} is not yet the team's. Nothing was sent.`, { guide: row.guide_id });
+    return refusal("GUIDE_NOT_OFFERABLE", localize("reading-guides.index.guide_id_is_not_yet", "{guide_id} is not yet the team's. Nothing was sent.", { guide_id: String(row.guide_id) }), { guide: row.guide_id });
   /* END DEC-49 REGION is-guide-offerable */
   return null;
 }
 
 function slugRefusal() {
   /* DEC-49 REGION is-guide-slug */
-  return refusal("GUIDE_NO_GROUP_SLUG", "no team slug is recorded, so an offer cannot be labeled. Nothing was sent.");
+  return refusal("GUIDE_NO_GROUP_SLUG", localize("reading-guides.index.no_team_slug_is_recorded", "no team slug is recorded, so an offer cannot be labeled. Nothing was sent."));
   /* END DEC-49 REGION is-guide-slug */
 }
 

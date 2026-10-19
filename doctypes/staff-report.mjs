@@ -66,6 +66,7 @@ import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSat
          vocabulary, vocabRegex, vocabPatterns, allMatches, enactmentPatterns, enactmentNumber, codePatterns,
          IN_PROSE } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
    see `memoHeader`. */
@@ -174,7 +175,7 @@ function reportConfirmed(a, b) {
 
 export default {
   key: "staff_report",
-  label: "a staff report to a public body",
+  label: localize("doctypes.staff-report.label", "a staff report to a public body"),
   version: 1,
   /* A narrative document making a case, not a list, so what matters is its SUBSTANCE.
      Declared on the content type (CONSTRUCTS Step 0 #4). */
@@ -197,14 +198,14 @@ export default {
     const signals = [];
 
     const memo = memoHeader(flat);
-    if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
+    if (memo) signals.push(localize("doctypes.staff-report.memo_header", "a memorandum header of {labels} labels in {span} characters at the top", { labels: String(memo.labels), span: String(memo.span) }));
     const secs = reportSections(t, reportSectionPatterns(ctx));
-    if (secs.length) signals.push(`${secs.length} report template section heading(s)`);
+    if (secs.length) signals.push(localize("doctypes.staff-report.template_sections", "{count} report template section heading(s)", { count: String(secs.length) }));
     const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
     const titled = String(t).split(/\r?\n/).some((l) => titles.some((re) => re.test(l.trim())));
-    if (titled) signals.push("names itself as a report on a line of its own");
+    if (titled) signals.push(localize("doctypes.staff-report.titled", "names itself as a report on a line of its own"));
 
     if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     /* LIKELY on the evidence a report in a house style this type has not met can still
@@ -333,29 +334,30 @@ export default {
     if (String(a.recommendation || "") !== String(b.recommendation || ""))
       events.push(event("recommendation_changed", {
         was: a.recommendation || null, now: b.recommendation || null,
-        why: "what this report recommends the body do is not what it recommended before" }));
+        why: localize("doctypes.staff-report.recommendation_changed", "what this report recommends the body do is not what it recommended before") }));
     /* The memorandum header moving is worth showing and is not the same fact. */
     for (const k of ["to", "from", "subject", "date"])
       if (String(a[k] || "") !== String(b[k] || ""))
         events.push(event("item_changed", { key: k, label: k, moved: [{ fact: k, was: a[k], now: b[k] }],
-          why: `this report's ${k} changed` }));
+          why: localize("doctypes.staff-report.field_changed", "this report's {field} changed", { field: k }) }));
 
     const d = diffEntities(a.entities || [], b.entities || []);
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an instrument or code section this report pointed at is no longer cited in it" }));
+        why: localize("doctypes.staff-report.pulled", "an instrument or code section this report pointed at is no longer cited in it") }));
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "this report now points at an instrument or code section it did not cite before" }));
+        why: localize("doctypes.staff-report.added", "this report now points at an instrument or code section it did not cite before") }));
 
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
       confirmed: reportConfirmed(a, b),
       why: events.length
-        ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added`
-          + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "")
-        : "this report says what it said, and points at the same instruments",
+        ? (String(a.recommendation || "") !== String(b.recommendation || "")
+          ? localize("doctypes.staff-report.changes_and_recommendation", "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) })
+          : localize("doctypes.staff-report.changes", "{count} change(s): {gone} citation(s) gone, {added} added", { count: String(events.length), gone: String(d.gone.length), added: String(d.appeared.length) }))
+        : localize("doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments"),
     };
   },
 };

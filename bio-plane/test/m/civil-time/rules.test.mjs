@@ -5,6 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { evaluateRule, due, overdueOn, span } from "../../../src/civil-time/index.mjs";
 import { firstView, testView, ruleOf, day, minute } from "./helpers.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { reasonText } from "../../../src/civil-time/index.mjs";
 
 const LA = "America/Los_Angeles", HFX = "America/Halifax";
 const ev = (view, name, anchor, extra = {}) => evaluateRule({ rule: ruleOf(view, name), anchor, view, ...extra });
@@ -58,7 +60,7 @@ test("R9 the weekend is never assumed: with no weekend fact, a business count or
     const zone = v.time_zone.value;
     const b = evaluateRule({ rule: custom({ units: "days", amount: 3, count: "business" }), anchor: day("2026-10-05", zone), view: v });
     assert.equal(b.undetermined, true);
-    assert.match(b.why, /weekend/);
+    assert.deepEqual(b.why, { key: "civil-time.missing.weekend_counting_absent", vars: {} });
     const roll = evaluateRule({ rule: custom({ units: "days", amount: 3, count: "calendar", roll: true }), anchor: day("2026-10-05", zone), view: v });
     assert.equal(roll.undetermined, true);
     const bh = evaluateRule({ rule: custom({ units: "business_hours", amount: 3 }), anchor: minute("2026-10-05T10:00", zone), view: v });
@@ -217,15 +219,15 @@ test("R16 R25 DEC-149: a disputed or unreadable entry, and a correction counted 
   const st = (status, extra = {}) => () => ({ status, ...extra });
   const dis = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("disputed") });
   assert.equal(dis.code, "FACT_DISPUTED");
-  assert.equal(dis.why, "the closure list 'judicial' for 2026 is disputed in your team's Civicsmith");
-  const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: "the read failed" }) });
+  assert.deepEqual(dis.why, { key: "civil-time.calendar.list_disputed", vars: { list: "judicial", year: "2026", offices: "" } });
+  const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: word("case-disclosures.why.read_failed") }) });
   assert.equal(abs.code, "FACT_ABSENT");
-  assert.equal(abs.why, "the closure list 'judicial' for 2026 cannot be read in your team's Civicsmith: the read failed");
+  assert.deepEqual(abs.why, { key: "civil-time.calendar.list_cannot_read_why", vars: { list: "judicial", year: "2026", offices: "", why: word("case-disclosures.why.read_failed") } });
   const bare = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent") });
-  assert.equal(bare.why, "the closure list 'judicial' for 2026 cannot be read in your team's Civicsmith");
+  assert.deepEqual(bare.why, { key: "civil-time.calendar.list_cannot_read", vars: { list: "judicial", year: "2026", offices: "" } });
   const fixed = [{ date: "2026-10-12", name: "corrected in" }];
   const gov = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
-  assert.ok(gov.trace.calendar.notes.includes("counted on a correction that governs in your team's Civicsmith, now confirmed (corrected locally by a member, 2026-10-02) (2026)"), JSON.stringify(gov.trace.calendar.notes));
+  assert.ok(gov.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status: "confirmed", says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(gov.trace.calendar.notes));
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed, by: "a member", at: "2026-10-02" }) });
   assert.ok(cor.trace.calendar.notes.includes("counted on a calendar corrected in your team's Civicsmith by a member, 2026-10-02 (2026)"), JSON.stringify(cor.trace.calendar.notes));
   const plain = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed }) });
@@ -238,7 +240,7 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   /* the judicial list holds no 2027 */
   const y = ev(v, "records_response", day("2026-12-28", LA));
   assert.equal(y.code, "CALENDAR_UNCOVERED");
-  assert.match(y.why, /2027/);
+  assert.deepEqual(y.why, { key: "civil-time.calendar.uncovered_list", vars: { list: "judicial", year: "2027" } });
   /* withheld as a conflict */
   const c = firstView();
   delete c.weekend;
@@ -261,7 +263,7 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   for (const status of ["confirmed", "unconfirmed"]) {
     const r = ev(v, "records_response", day("2026-09-30", LA), { factOf: st(status, { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
     assert.equal(r.due.value, "2026-10-13", `the confirmed correction governs (${status})`);
-    assert.match(r.trace.calendar.notes.join(" "), new RegExp(`counted on a correction that governs in your team's Civicsmith, now ${status} \\(corrected locally by a member, 2026-10-02\\)`));
+    assert.ok(r.trace.calendar.notes.includes(word("civil-time.counted_correction_governs", { status, says: " (corrected locally by a member, 2026-10-02)", year: "2026" })), JSON.stringify(r.trace.calendar.notes));
     assert.ok(r.trace.calendar.entries.some((e) => e.governs === "correction" && e.status === status));
     assert.match(r.trace.notes.join(" "), new RegExp(`counted on its correction, now ${status}`));
   }
@@ -344,7 +346,8 @@ test("R19 overdueOn: on the at's local day in the due's zone, never the UTC day;
   assert.equal(overdueOn({ due: u, at: "2026-10-10T19:00:00Z", side: "group" }), "overdue");
   const between = overdueOn({ due: u, at: "2026-10-10T19:00:00Z", side: "body" });
   assert.equal(between.undetermined, true);
-  assert.match(between.why, /^possibly overdue: undetermined, because/);
+  assert.equal(between.why.key, "civil-time.rules.possibly_overdue_day");
+  assert.deepEqual(Object.keys(between.why.vars), ["value", "value_2", "day", "zone"]);
   assert.equal(overdueOn({ due: u, at: "2026-10-13T19:00:00Z", side: "body" }), "overdue");
   assert.equal(overdueOn({ due: u, at: "2026-10-09T19:00:00Z", side: "body" }), "not_overdue");
   /* a result of evaluateRule or due is read through its due; undetermined stays undetermined */
@@ -408,4 +411,70 @@ test("R25 traces: the rule and citation, the anchor, each skipped day with why, 
   /* due, span and expandRecurrence carry one too (expandRecurrence: recurrence.test.mjs) */
   assert.ok(due({ basis: "window", date: day("2026-11-03", LA) }).trace.runtime);
   assert.ok(span(day("2026-10-05", LA), day("2026-10-15", LA), { unit: "days" }).trace.runtime);
+});
+
+/* R30: every undetermined answer of the counting services is {key, vars}, whatever the kind of no */
+test("R30 R16 R9 R19 R24 every undetermined why of the rules is {key, vars}: invalid rule forms, withheld and absent facts, uncovered years, offices, anchors, due dates, spans", () => {
+  const v = firstView(), zone = LA;
+  const base = { rule: "x", units: "days", amount: 3, count: "business", starts: "act" };
+  const rule = (extra) => ({ ...base, ...extra });
+  const keyed = (a, key, code) => {
+    assert.equal(a.undetermined, true, JSON.stringify(a));
+    if (code) assert.equal(a.code, code);
+    assert.equal(typeof a.why, "object", JSON.stringify(a));
+    assert.equal(a.why.key, key);
+    for (const x of Object.values(a.why.vars)) assert.equal(typeof x, "string");
+    assert.ok(reasonText(a.why).length > 5, key);
+    return a;
+  };
+  const run = (r, anchor = day("2026-10-05", zone), extra = {}) => evaluateRule({ rule: r, anchor, view: v, ...extra });
+  keyed(run(rule({ units: "weeks" })), "civil-time.rules.invalid_units", "RULE_INVALID");
+  keyed(run(rule({ amount: 0 })), "civil-time.rules.invalid_amount");
+  keyed(run(rule({ direction: "sideways" })), "civil-time.rules.invalid_direction");
+  keyed(run(rule({ count: undefined })), "civil-time.rules.invalid_count_unstated");
+  keyed(run(rule({ count: "lunar" })), "civil-time.rules.invalid_count");
+  keyed(run(rule({ units: "months", count: "calendar" })), "civil-time.rules.invalid_count_with_units");
+  keyed(run(rule({ roll: "yes" })), "civil-time.rules.invalid_roll");
+  keyed(run(rule({ closures: 5 })), "civil-time.rules.invalid_closures");
+  keyed(run(rule({ due_at: "late" })), "civil-time.rules.invalid_due_at");
+  keyed(run(rule({ applies_on: "tue" })), "civil-time.rules.invalid_applies_on");
+  keyed(run(rule({ extension: { days: 0 } })), "civil-time.rules.invalid_extension_days");
+  keyed(run(rule({ extension: { days: 3, count: "lunar" } })), "civil-time.rules.invalid_extension_count");
+  keyed(run(rule({ computation: "nope" })), "civil-time.missing.computation_absent", "FACT_ABSENT");
+  keyed(run(rule({ basis: "UNMEASURED" })), "civil-time.rules.unmeasured", "UNMEASURED");
+  keyed(run(rule({ units: "hours", count: undefined }), day("2026-10-05", zone)), "civil-time.rules.anchor_hours_precision", "ANCHOR_UNDETERMINED");
+  keyed(run(rule(), { value: "2026-10-05/..", precision: "edtf", zone }), "civil-time.rules.anchor_open_end");
+  keyed(run(rule({ applies_on: ["tue"] }), day("2026-10-05", zone)), "civil-time.rules.not_applicable_day", "RULE_NOT_APPLICABLE");
+  keyed(run(rule({ applies_on: ["tue"] }), { value: "2026-10", precision: "edtf", zone }), "civil-time.rules.not_applicable_span");
+  keyed(run(rule({ closures: "nolist" })), "civil-time.missing.closure_list_absent");
+  keyed(run(rule({ closures: "nolist" }), day("2026-10-05", zone), {}), "civil-time.missing.closure_list_absent");
+  /* a caller's own reason is passed on as given; a sentence of the caller's is a fill */
+  const mine = { key: "civil-time.end_stated", vars: {} };
+  assert.deepEqual(run(rule(), { undetermined: true, why: mine }).why, mine);
+  keyed(run(rule(), { undetermined: true, why: "x" }), "civil-time.rules.anchor_undetermined");
+  keyed(run(rule(), { undetermined: true }), "civil-time.rules.anchor_undetermined_unsaid");
+  assert.deepEqual(overdueOn({ due: { undetermined: true, why: mine }, at: "2026-10-16T08:00:00Z", side: "body" }).why, mine);
+  keyed(overdueOn({ due: { undetermined: true, why: "w" }, at: "2026-10-16T08:00:00Z", side: "body" }), "civil-time.rules.due_undetermined");
+  keyed(overdueOn({ due: { undetermined: true }, at: "2026-10-16T08:00:00Z", side: "body" }), "civil-time.rules.due_undetermined_unsaid");
+  keyed(overdueOn({ due: { value: "2026-10-05/..", precision: "edtf", zone }, at: "2026-10-16T08:00:00Z", side: "body" }), "civil-time.rules.due_open_end");
+  const instant = overdueOn({ due: { candidates: [minute("2026-10-09T10:00", zone), minute("2026-10-12T10:00", zone)] }, at: "2026-10-10T20:00:00Z", side: "body" });
+  keyed(instant, "civil-time.rules.possibly_overdue_instant", "POSSIBLY_OVERDUE");
+  keyed(span({ value: "2026-10-05/..", precision: "edtf", zone }, day("2026-10-15", zone), { unit: "days" }), "civil-time.rules.span_open_end", "OPEN_END");
+  keyed(span(day("2026-10-05", zone), day("2026-10-15", zone), { unit: "business days" }), "civil-time.rules.span_needs_view", "FACT_ABSENT");
+  /* withheld facts: each subject, and the weekend under a count */
+  const w = firstView(); delete w.weekend; w.conflicts = [{ at: "weekend", values: [], says: "disagree" }];
+  const wh = evaluateRule({ rule: rule(), anchor: day("2026-10-05", zone), view: w });
+  keyed(wh, "civil-time.missing.weekend_counting_withheld", "FACT_WITHHELD");
+  assert.equal(wh.why.vars.at, "weekend");
+  keyed(span(day("2026-10-05", zone), day("2026-10-15", zone), { unit: "business days", view: w }), "civil-time.missing.weekend_withheld");
+  const comp = firstView(); comp.conflicts = [{ at: "computation", values: [], says: "disagree" }];
+  keyed(evaluateRule({ rule: rule({ computation: "nope" }), anchor: day("2026-10-05", zone), view: comp }), "civil-time.missing.computation_withheld");
+  const lst = firstView(); lst.holidays = lst.holidays.filter((h) => h.list !== "judicial"); lst.conflicts = [{ at: "holidays", values: [], says: "disagree" }];
+  keyed(evaluateRule({ rule: rule({ closures: "judicial" }), anchor: day("2026-10-05", zone), view: lst }), "civil-time.missing.closure_list_withheld");
+  /* a year of the calendar withheld, and uncovered for a named office, with and without a list */
+  const yr = firstView(); yr.conflicts = [{ at: "holidays.2027", values: [], says: "disagree" }];
+  keyed(ev(yr, "records_response", day("2026-12-28", LA)), "civil-time.calendar.list_year_withheld", "FACT_WITHHELD");
+  keyed(evaluateRule({ rule: rule(), anchor: day("2026-12-28", zone), view: v, office: "clerk" }), "civil-time.calendar.uncovered_office_office", "CALENDAR_UNCOVERED");
+  keyed(evaluateRule({ rule: rule({ closures: "judicial" }), anchor: day("2026-12-30", zone), view: v, office: { venue: "court" } }), "civil-time.calendar.uncovered_list_office");
+  keyed(evaluateRule({ rule: rule(), anchor: day("2026-12-28", zone), view: v }), "civil-time.calendar.uncovered_office");
 });

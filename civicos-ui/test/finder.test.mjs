@@ -180,6 +180,7 @@ import vm from "vm";
 import fs from "fs";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* ============================================================
    UI-25's WIRE CONTENT, READ OUT OF THE PLANE RATHER THAN TYPED HERE.
@@ -279,7 +280,7 @@ const SEARCHFIELDS = {
   },
   ftsColumns:["title","body","meta","locator","authority"],
   defaultFacets:["type","state"], idsMax:50000,
-  syntax:["bare words are AND, ranked by relevance", "field:value filters"],
+  syntax:[word("retrieval.syntax.bare_words_ranked"), "field:value filters"],
 };
 
 const PUBLISHED_CITE = { id:"cite", label:"Cite into a case", weight:"report", needs:"contribute",

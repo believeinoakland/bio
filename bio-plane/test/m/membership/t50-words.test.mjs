@@ -11,7 +11,8 @@ import { Membership, WORD_KEYS, MEMBERSHIP_CHECKS, CUSTODIAL_CHECKS, MEMBER_ID_C
          PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS, notAnAdmin, notTheOwner, noSuchMember, listenerRefusal }
   from "../../../src/membership/index.mjs";
 import { word, hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { rowKey, rowWord, keyed, SENTENCE_KEYS } from "../../../src/membership/words.mjs";
+import { SENTENCE_KEYS } from "../../../src/membership/words.mjs";
+import { rowKey, rowWord, keyed } from "../../../src/member-roster/words.mjs";
 
 const TABLES = Object.fromEntries(Object.entries(membership).filter(([name]) => /_CHECKS$/.test(name)));
 /* a key's words as the list gives them, placeholders in place */

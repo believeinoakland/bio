@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
 import { REEVALUATION_ACT_CHECKS, CAUSE_SOURCES } from "../../../src/reevaluation/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-doc", T = "INQ-2026-0001-target", DEP = "INQ-2026-0002-dep", DEP2 = "INQ-2026-0003-dep2";
 const ADMIN = "class:admin";
@@ -399,8 +400,7 @@ test("R3 (converts reevaluation block 9): only a positively recorded `severed` n
   assert.deepEqual(r.obligations.map((o) => [o.bundle_id, o.legs.map((l) => l.status)]),
     [[DEP, ["confirmed"]], [DEP2, ["severed"]], [ODD, ["confirmed"]]], "the severed dependent still receives the obligation");
   assert.deepEqual([facts(of(DEP2)), facts(of(ODD))], [facts(of(DEP)), facts(of(DEP))]);
-  const confirmed = `this leg rests on edition 1 of ${T}, which now stands at edition 2. Edition 1 keeps answering `
-    + "with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).";
+  const confirmed = localize("reevaluation.index.this_leg_rests_on_edition", "this leg rests on edition {cited} of {t}, which now stands at edition {latest}. Edition {cited_2} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).", { cited: "1", t: T, latest: "2", cited_2: "1" });
   assert.equal(of(DEP).causes[0].detail, confirmed);
   assert.equal(of(ODD).causes[0].detail, confirmed, "an unrecognised spelling is not a withdrawal");
   assert.match(of(DEP2).causes[0].detail, /^this leg was WITHDRAWN \(severed\) and named edition 1 of /);

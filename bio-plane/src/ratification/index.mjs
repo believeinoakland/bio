@@ -80,6 +80,7 @@ import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reus
 import { verifySshsig, caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { assembleCaseContainer } from "../publication/worker.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export * from "./checks.mjs";
 export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
@@ -253,8 +254,7 @@ export class Ratification {
                         version: own.version ?? null, detail: null },
                falsifier: own.falsifier ?? "", falsifier_override: own.falsifier_override ?? null,
                by: own.by ?? null, at: own.at ?? null,
-               detail: `${pid} concluded this question on reading '${own.version ?? "(unnamed)"}' and still `
-                     + `stands on it, so this case records that project's own adopted claim (7.1 items 1-2).` };
+               detail: localize("ratification.index.pid_concluded_this_question_on", "{pid} concluded this question on reading '{v1}' and still stands on it, so this case records that project's own adopted claim (7.1 items 1-2).", { pid: String(pid), v1: String(own.version ?? "(unnamed)") }) };
 
     const np = bearing ? this.basisVersions.noProjectConclusionOf(inq) : null;
     if (np)
@@ -296,10 +296,7 @@ export class Ratification {
              inquiry_state: currentState ?? null,
              concluded_elsewhere: others,
              concluded_elsewhere_bounds: { projects_bound: othersBound, projects_truncated: othersTruncated,
-                                           detail: "a bounded number of projects drawing on this question are "
-                                                 + "read, and only those this viewer may see. A conclusion "
-                                                 + "reported here is still true; an ABSENCE over a truncated "
-                                                 + "or gated set is not." } };
+                                           detail: localize("ratification.index.a_bounded_number_of_projects", "a bounded number of projects drawing on this question are read, and only those this viewer may see. A conclusion reported here is still true; an ABSENCE over a truncated or gated set is not.") } };
   }
 
   /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
@@ -662,8 +659,7 @@ export class Ratification {
       return { ok: true, ready: refusals.length === 0, refusals, publish_at: this.#publishAtOffer() };
     } catch {
       return { ok: false, reason: "PREFLIGHT_UNDETERMINED",
-               detail: "part of what signing would be refused for could not be read, so whether this document can be "
-                     + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
+               detail: localize("ratification.index.part_of_what_signing_would", "part of what signing would be refused for could not be read, so whether this document can be signed is undetermined; nothing is claimed either way, and nothing was written. Ask again.") };
     }
   }
 
@@ -755,7 +751,7 @@ export class Ratification {
     try {
       const read = this.#approvals(caseArg ?? caseId, Number(edition), docSha ?? null);
       if (read && read.unreadable)
-        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: `${read.unreadable} could not be read` };
+        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: localize("ratification.index.unreadable_could_not_be_read", "{unreadable} could not be read", { unreadable: String(read.unreadable) }) };
       return read ? { ok: true, rule: { approvers: read.approvers }, approvals: read.approvals, missing: read.missing }
                   : { ok: true, rule: null, approvals: [], missing: [] };
     } catch (e) {
@@ -833,8 +829,7 @@ export class Ratification {
     if (!w) return null;
     return { ok: false, reason: "PUBLISH_AT_ALREADY_SET", caseId: id, edition: ed, at: w.at ?? null,
              publish_at: w.publish_at ?? null, waiting: w,
-             detail: `case ${id} edition ${ed} is signed and waits to be published at its set time. To publish it now, `
-                   + `an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.` };
+             detail: localize("ratification.index.case_id_edition_ed_is", "case {id} edition {ed} is signed and waits to be published at its set time. To publish it now, an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.", { id: String(id), ed: String(ed) }) };
   }
 
   /* R6 for a retry: a complete edition whose container was never assembled (R42's commit without the Worker). */
@@ -858,8 +853,7 @@ export class Ratification {
       return { ok: false, reason: "MALFORMED" };
     if (!sigArmored || !attestorKey || !gateVersion)
       return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
-               detail: `case ${id} edition ${ed} is published at a set time only under a member's signature, and this `
-                     + `request carries none. Nothing was written.` };
+               detail: localize("ratification.index.case_id_edition_ed_is_2", "case {id} edition {ed} is published at a set time only under a member's signature, and this request carries none. Nothing was written.", { id: String(id), ed: String(ed) }) };
     const signer = attestorMember ?? null;
     const args = { case: id, edition: ed, docSha, signature: sigArmored, signer, deliveredBy: deliveredBy ?? null,
                    at: { date: at.date ?? null, time: at.time ?? null }, by: signer };
@@ -896,7 +890,7 @@ export class Ratification {
    *  published_at}`, with R6's assembly, R37's sealed weeks and R39's copy after the commit. Never throws. */
   async publishScheduled(entry, now) {
     try { return await this.#publishScheduled(entry || {}, now); }
-    catch (e) { return { stopped: [unreadableStop(`the check itself failed (${String((e && e.message) || e).slice(0, 160)})`)] }; }
+    catch (e) { return { stopped: [unreadableStop(word("ratification.stopped.check_itself_failed", { e: String(String((e && e.message) || e).slice(0, 160)) }))] }; }
   }
 
   async #publishScheduled(entry, now) {
@@ -908,7 +902,7 @@ export class Ratification {
     const at = typeof now === "number" ? new Date(now).toISOString() : typeof now === "string" && now ? now
       : stampInstant("millisecond");
     if (!id || !Number.isInteger(ed) || !docSha || typeof sig !== "string")
-      return { stopped: [unreadableStop("the waiting edition (its case, edition, document or signature)")] };
+      return { stopped: [unreadableStop(word("ratification.stopped.waiting_edition_case"))] };
     const stopped = [];
     /* the signature, against the signers active now */
     const signers = this.credentials.attestingKeys();
@@ -968,7 +962,7 @@ export class Ratification {
         else for (const d of checkedDiffers(entry.checked, read.checked))
           stopped.push(d.part === "approvals"   /* R50: a changed approval or rule */
             ? scheduledStop(d.code, { cause: { code: "APPROVALS_CHANGED" }, changed: d.changed })
-            : d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(`what signing recorded of ${d.part}`)
+            : d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(word("ratification.unreadable_stop.signing_recorded", { part: String(d.part) }))
             : scheduledStop(d.code, { changed: d.changed }));
       }
       if (stopped.length || !plan.plan) return { ok: false, stopped };
@@ -1026,11 +1020,8 @@ export class Ratification {
     } else
       after.not_done = { materials: (out.evidenceMaterials || []).length, container: toAssemble.length > 0,
         ...(commits.length ? { members: commits.map((c) => c.bundleId) } : {}),
-        detail: "the published bucket is not reachable from here, so the materials held in the evidence store were not "
-              + "copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same "
-              + "signature does both (R39, R6). The edition is published and this answer stands."
-              + (commits.length ? " The members committed with it were not copied either; re-sending each one's "
-                                  + "op=ratify with the same signature copies it (R6)." : "") };
+        detail: localize("ratification.index.the_published_bucket_is_not", "the published bucket is not reachable from here, so the materials held in the evidence store were not copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same signature does both (R39, R6). The edition is published and this answer stands.{v1}", { v1: String(commits.length ? " The members committed with it were not copied either; re-sending each one's "
+                                  + "op=ratify with the same signature copies it (R6)." : "") }) };
     return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
@@ -1097,12 +1088,7 @@ export class Ratification {
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
     if (!sigArmored || !attestorKey || !gateVersion)
       return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
-               detail: `a case's own assertions — its identity, its producing project, its scope, its `
-                     + `roster, its load-bearing partition, its bias acknowledgement and its standard of `
-                     + `evidence — are committed from BYTES A MEMBER SIGNED and from nothing else. This `
-                     + `request carries no signature over case ${id} edition ${ed}, so committing it would `
-                     + `mean this plane asserting a team's case on their behalf. Review the case document `
-                     + `(op=casedocument) and ratify it (op=caseratify).` };
+               detail: localize("ratification.index.a_cases_own_assertions_its", "a case's own assertions — its identity, its producing project, its scope, its roster, its load-bearing partition, its bias acknowledgement and its standard of evidence — are committed from BYTES A MEMBER SIGNED and from nothing else. This request carries no signature over case {id} edition {ed}, so committing it would mean this plane asserting a team's case on their behalf. Review the case document (op=casedocument) and ratify it (op=caseratify).", { id: String(id), ed: String(ed) }) };
     const hold = { seals: null };
     /* R52: the sitting's members (each `publish`'s arguments, verified by the Worker), committed after the case in this
        one transaction; a member's refusal rolls the case back with it, so nothing is written. A retry of the case's own
@@ -1135,8 +1121,7 @@ export class Ratification {
     if (doc.doc_sha !== docSha)
       return { ok: false, reason: "CASE_RATIFY_STALE", caseId: id, edition: ed,
                expected: doc.doc_sha, got: docSha,
-               detail: `the case document has changed since it was reviewed. Read it again and re-sign: a `
-                     + `signature over the previous bytes says nothing about these.` };
+               detail: localize("ratification.index.the_case_document_has_changed", "the case document has changed since it was reviewed. Read it again and re-sign: a signature over the previous bytes says nothing about these.") };
     /* OUT OF THE SIGNED BYTES. Parsed here rather than at the control plane
        for `publish()`'s own reason: the bytes are in this store, and re-reading
        them at the layer that already verified a hash over them is where the
@@ -1192,10 +1177,7 @@ export class Ratification {
                  /* R6: and assembles a complete edition's container if the commit's assembly never ran (R42) */
                  ...this.#completedCase(id, ed) };
       return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-               detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
-                     + `edition is a separate document and answers forever — a second attestation over the `
-                     + `same number would leave a reader unable to say who stood behind what they read. `
-                     + `Publish a new edition instead.` };
+               detail: localize("ratification.index.case_id_edition_ed_is_3", "case {id} edition {ed} is already ratified under a different signature. An edition is a separate document and answers forever — a second attestation over the same number would leave a reader unable to say who stood behind what they read. Publish a new edition instead.", { id: String(id), ed: String(ed) }) };
     }
     /* ===== REC-167 / INVESTIGATIVE-SESSION.md §7.1 items 4 and 9 — THE CONCLUSION A PREPARATION
        RECORDS MUST STILL BE THE ONE ITS PROJECT STANDS ON WHEN IT IS SIGNED ======================
@@ -1240,27 +1222,19 @@ export class Ratification {
       const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
       const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
       if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
-        return { by: null, stated: "this case document says nothing about who wrote its exclusion "
-                                 + "statement: it was authored before the record told the statement's "
-                                 + "writer apart from the case's publisher (BIO_Publication §3 rule 13), "
-                                 + `and ${pub}, who prepared and published it, is not evidence of either.` };
+        return { by: null, stated: localize("ratification.index.this_case_document_says_nothing", "this case document says nothing about who wrote its exclusion statement: it was authored before the record told the statement's writer apart from the case's publisher (BIO_Publication §3 rule 13), and {pub}, who prepared and published it, is not evidence of either.", { pub: String(pub) }) };
       const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
       if (!by)
-        return { by: null, stated: "UNDETERMINED: this case document states that who wrote its exclusion "
-                                 + "statement could not be established, and it is NOT read off "
-                                 + `${pub}, who prepared and published the case (BIO_Publication §3 rule 13).` };
+        return { by: null, stated: localize("ratification.index.undetermined_this_case_document_states", "UNDETERMINED: this case document states that who wrote its exclusion statement could not be established, and it is NOT read off {pub}, who prepared and published the case (BIO_Publication §3 rule 13).", { pub: String(pub) }) };
       return { by, stated: by === pub
-        ? `${by} wrote this case's exclusion statement, and prepared and published the case — two acts, `
-          + `one member.`
-        : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case — two acts, `
-          + `two names (BIO_Publication §3 rule 13).` };
+        ? word("ratification.stated.wrote_case_exclusion", { by: String(by) })
+        : localize("ratification.index.by_wrote_this_cases_exclusion", "{by} wrote this case's exclusion statement; {pub} prepared and published the case — two acts, two names (BIO_Publication §3 rule 13).", { by: String(by), pub: String(pub) }) };
     })();
     const owner = this.#caseOwner(id);
     if (owner && owner.project_id !== project)
       return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
                declared: owner.project_id, signed: project,
-               detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
-                     + `${project}. A case does not change hands between editions (DEC-72).` };
+               detail: localize("ratification.index.case_id_is_project_id", "case {id} is {project_id}'s production and this signed case document names {project}. A case does not change hands between editions (DEC-72).", { id: String(id), project_id: String(owner.project_id), project: String(project) }) };
     /* THE COMMIT, through publication (its R22), in this transaction and from the signed bytes only (R13): the
        case's owner at its first edition, the edition's scope, completeness and bar, the roster with its roles and
        pins in the roster's own order (the authored publish order), and the signature, signer and deliverer on the
@@ -1401,7 +1375,7 @@ export class Ratification {
     const id = m && typeof m.id === "string" ? m.id : null;
     const stop = (r) => { const s = refusedStop(r); return { stop: { ...s, cause: { ...s.cause, member: id } } }; };
     if (!id || typeof m.sha !== "string" || typeof m.signature !== "string")
-      return { stop: unreadableStop(`a held member's signature (${id ?? "unnamed"})`) };
+      return { stop: unreadableStop(word("ratification.stop.held_member_signature", { unnamed: String(id ?? "unnamed") })) };
     const viewer = `member:${signer}`;
     const facts = this.gateFacts(id, viewer);
     if (!facts || !facts.ok) return stop(facts || { reason: "ABSENT" });
@@ -1427,8 +1401,7 @@ export class Ratification {
   /* R37: `openSeals`' answer, or, when it refuses, throws or rejects, the failure stated; never a throw. */
   #openSeals(caseId, edition) {
     const unopened = (reason, detail) => ({ ok: false, opened: false, reason,
-      detail: `the sealed weeks of case ${caseId} edition ${edition} were not opened at this act (${detail}). The edition `
-            + `is committed and this answer stands; the working-on-attest consumer retries the opening.` });
+      detail: localize("ratification.index.the_sealed_weeks_of_case", "the sealed weeks of case {caseId} edition {edition} were not opened at this act ({detail}). The edition is committed and this answer stands; the working-on-attest consumer retries the opening.", { caseId: String(caseId), edition: String(edition), detail: String(detail) }) });
     let p;
     try { p = Promise.resolve(this.networkNotices.openSeals({ case: caseId, edition })); } catch (e) { p = Promise.reject(e); }
     return p.then((r) => (r && typeof r === "object" && r.ok !== false ? r
@@ -1483,7 +1456,7 @@ export class Ratification {
         let refused = null;
         for (const pid of [...byProject.keys()].sort()) {
           const denied = this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
-            subject: `finding ${bundleId}, a member of case ${byProject.get(pid).join(", ")},`,
+            subject: word("ratification.subject.finding_member_case", { bundle_id: String(bundleId), pid: String(byProject.get(pid).join(", ")) }),
             extra: { bundleId } });
           if (!denied) { refused = null; break; }
           refused = refused || denied;
@@ -1542,22 +1515,15 @@ export class Ratification {
           /* DEC-49 REGION is-ratify-outside-a-case */
           if (head && normalizeType(head.type) === "inquiry")
             return refusal("RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE",
-              `${bundleId} at ${String(bundleSha).slice(0, 12)} is not a finding any RATIFIED case pins, and a `
-              + `finding is published only as a member of a ratified case (BIO_Publication_v0_1.md §3 rule 2). `
-              + `Publish it into a case from its project (op=publish), have an owner of that project sign the `
-              + `case document (op=caseratify) FIRST, and then ratify this finding at the version the case `
-              + `pinned. Nothing was published.`);
+              localize("ratification.index.bundleid_at_string_is_not", "{bundleId} at {String} is not a finding any RATIFIED case pins, and a finding is published only as a member of a ratified case (BIO_Publication_v0_1.md §3 rule 2). Publish it into a case from its project (op=publish), have an owner of that project sign the case document (op=caseratify) FIRST, and then ratify this finding at the version the case pinned. Nothing was published.", { bundleId: String(bundleId), String: String(String(bundleSha).slice(0, 12)) }));
           return refusal("RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE",
-            `no finding of a RATIFIED case rests on ${bundleId}, and anything that is not a finding crosses only `
-            + `as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md §3 rule 2). Cite it from `
-            + `a finding, publish that finding's case and have an owner sign the case document (op=caseratify); `
-            + `then an owner of that project may sign this. Nothing was published.`);
+            localize("ratification.index.no_finding_of_a_ratified", "no finding of a RATIFIED case rests on {bundleId}, and anything that is not a finding crosses only as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md §3 rule 2). Cite it from a finding, publish that finding's case and have an owner sign the case document (op=caseratify); then an owner of that project may sign this. Nothing was published.", { bundleId: String(bundleId) }));
           /* END DEC-49 REGION is-ratify-outside-a-case */
         }
         if (!admitted) {
           const pid = [...byProject.keys()].sort()[0];
           return this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
-            subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
+            subject: word("ratification.subject.evidence_rests", { bundle_id: String(bundleId), pid: String(byProject.get(pid).join(", ")) }),
             extra: { bundleId } }); /* D-431 (b) */
         }
       }
@@ -1589,8 +1555,7 @@ export class Ratification {
     const errs = caseMemberFindings(fm).filter((x) => x.severity === "error");
     if (!errs.length) return null;
     return { ok: false, reason: "CASE_MEMBER_REFUSED", ...rowOf("CASE_MEMBER_REFUSED"),
-             detail: "this document's bytes claim to be a published case member (a frozen published_strength block) "
-                   + "and do not carry what a case member must carry. Nothing was written.",
+             detail: localize("ratification.index.this_documents_bytes_claim_to", "this document's bytes claim to be a published case member (a frozen published_strength block) and do not carry what a case member must carry. Nothing was written."),
              findings: errs.map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) })) };
   }
 

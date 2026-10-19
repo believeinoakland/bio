@@ -8,6 +8,7 @@ import { scene, V } from "../conformance/fixture.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { actionsOf, noSuchAction } from "../../../src/actions/index.mjs";
 import { noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function real() {
   const s = scene();
@@ -33,7 +34,7 @@ test("R1 R4 R14 over the real conformance: a live noncompliant determination ope
   assert.equal(x.esc.escalationOpen({ reason: "Worth pursuing.", determination: d.id, author: V("quinn"), viewer: V("quinn") }).reason, "NO_SUCH_DETERMINATION");
   assert.equal(x.esc.escalationRead({ id: o.id, viewer: V("quinn") }).reason, "NO_SUCH_ESCALATION");
   let exit = x.esc.escalationRead({ id: o.id, viewer: V("pat") }).exit;
-  assert.deepEqual([exit.compliance.state, exit.consequences.state, exit.consequences.why], ["not_met", "undetermined", "no consequence recorded"]);
+  assert.deepEqual([exit.compliance.state, exit.consequences.state, exit.consequences.why], ["not_met", "undetermined", word("escalation.consequence_recorded")]);
   /* a later compliant determination of the same act restores compliance; consequences still stops the end */
   x.w.clock.now = "2026-10-05T00:00:00Z";
   const act = x.w.c.determinationRead({ id: d.id, viewer: V("olive") }).act.id;
@@ -197,7 +198,7 @@ test("R29 over the real conformance, actions and consequences (their published s
     + `(reading: ${row.reading}; content ${row.content.join(", ")}). It was in force at the act's date.`);
   assert.equal(r.parts[3].text, `Action ${N} (other) rests on the determination, addressed to Director of Parks, Parks Department; its state is planned.`);
   assert.equal(r.parts[5].text, `The date 2026-10-10 on action ${N} passed without a response: the entry is still pending on 2026-10-11.`);
-  assert.equal(r.parts[6].text, "No consequence of the breach is recorded on the determination.");
+  assert.equal(r.parts[6].text, word("escalation.consequence_breach_recorded"));
   assert.deepEqual([r.label.state, r.label.machine_work], ["machine_proposed", true]);
   assert.equal(x.w.record.head(N).bundleSha, before);
   /* quinn, outside the project, is answered conformance's one answer */

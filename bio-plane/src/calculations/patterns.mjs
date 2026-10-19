@@ -8,6 +8,7 @@
  * failing, and no score is composed. */
 
 import { evaluate, METHOD } from "../calc-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R23 (K1504, M-C8): the highest false-alarm rate at which a pattern's results are shown. */
 export const GATE_MAX_RATE = 0.2;
@@ -16,16 +17,16 @@ export const UNITS_MAX = 2000;
 
 /** R22: the shipped patterns, data-defined, each with its denominator and method. */
 export const PATTERNS = Object.freeze([
-  Object.freeze({ pattern: "flow_out_of_order", version: 1, label: "events out of their declared flow's order",
-    denominator: "the threaded flow instances read", method: "progressions' out-of-order findings (its R38, ordered by events' three-valued sequence); share of instances holding one, by calc-grammar" }),
-  Object.freeze({ pattern: "duty_lateness", version: 1, label: "days late, per duty occurrence met after its due date",
-    denominator: "the duty occurrences recorded met or met late", method: "duties' recorded transitions and occurrences (its R9, R13); days from the due date to the meeting event, by calc-grammar's span over civil-time" }),
-  Object.freeze({ pattern: "posting_lateness", version: 1, label: "hours from a meeting's posting to the meeting, and days from the meeting to a posting after it",
-    denominator: "the meetings with a posting held within them", method: "events' meetings and the publication events within them (its R24, R27); calc-grammar's span in hours and in days" }),
-  Object.freeze({ pattern: "office_lateness", version: 1, label: "share of an office's decided duty occurrences met late",
-    denominator: "the office's duty occurrences recorded met or met late", method: "duties' recorded transitions, grouped by the duty's obligor; calc-grammar's share" }),
-  Object.freeze({ pattern: "proceeding_lateness", version: 1, label: "share of decided duty occurrences met late, per proceeding they arose in, across proceedings",
-    denominator: "the duty occurrences arising in each proceeding recorded met or met late", method: "duties' recorded transitions, grouped by the duty's arising_in proceeding; calc-grammar's share" }),
+  Object.freeze({ pattern: "flow_out_of_order", version: 1, label: word("calculations.label.events_declared_flow"),
+    denominator: word("calculations.threaded_flow_instances"), method: "progressions' out-of-order findings (its R38, ordered by events' three-valued sequence); share of instances holding one, by calc-grammar" }),
+  Object.freeze({ pattern: "duty_lateness", version: 1, label: word("calculations.label.days_late_per"),
+    denominator: word("calculations.duty_occurrences_recorded"), method: "duties' recorded transitions and occurrences (its R9, R13); days from the due date to the meeting event, by calc-grammar's span over civil-time" }),
+  Object.freeze({ pattern: "posting_lateness", version: 1, label: word("calculations.label.hours_meeting_posting"),
+    denominator: word("calculations.meetings_posting_held"), method: "events' meetings and the publication events within them (its R24, R27); calc-grammar's span in hours and in days" }),
+  Object.freeze({ pattern: "office_lateness", version: 1, label: word("calculations.label.share_office_decided"),
+    denominator: word("calculations.office_duty_occurrences"), method: "duties' recorded transitions, grouped by the duty's obligor; calc-grammar's share" }),
+  Object.freeze({ pattern: "proceeding_lateness", version: 1, label: word("calculations.label.share_decided_duty"),
+    denominator: word("calculations.duty_occurrences_arising"), method: "duties' recorded transitions, grouped by the duty's arising_in proceeding; calc-grammar's share" }),
 ]);
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -51,7 +52,7 @@ function shareOf(t, field, value) {
 
 /* The decided occurrences: the latest recorded transition of each (duty, occurrence), met or met late. */
 async function decidedOccurrences(duties, viewer) {
-  if (!duties || typeof duties.transitionsOf !== "function") return { units: null, why: "the duties module is not reachable here" };
+  if (!duties || typeof duties.transitionsOf !== "function") return { units: null, why: word("calculations.why.duties_module_reachable") };
   const got = await duties.transitionsOf({ viewer });
   const latest = new Map();
   for (const t of list(got, "transitions", "items")) {
@@ -79,7 +80,7 @@ async function decidedOccurrences(duties, viewer) {
 const EVALUATORS = {
   async flow_out_of_order(deps) {
     const p = deps.progressions;
-    if (!p || typeof p.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: "the progressions module is not reachable here" }, evaluated: 0 };
+    if (!p || typeof p.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: word("calculations.why.progressions_module_reachable") }, evaluated: 0 };
     const feed = await p.proposalsFeed(Date.parse(deps.now));
     const instances = list(feed, "instances").filter(plain).slice(0, UNITS_MAX);
     const rows = instances.map((x) => {
@@ -88,7 +89,7 @@ const EVALUATORS = {
     });
     const t = { fields: [{ name: "instance", type: "string" }, { name: "late", type: "boolean" }], rows: rows.map((r) => r.row) };
     const share = rows.length ? shareOf(t, null, null) : null;
-    const denominator = { n: rows.length, of: "threaded flow instances with an open finding, as progressions' feed lists them", share_out_of_order: share };
+    const denominator = { n: rows.length, of: word("calculations.threaded_flow_instances_open"), share_out_of_order: share };
     const results = rows.filter((r) => r.ooo.length).map((r) => ({
       subject: r.x.entity_id ?? r.x.entityId ?? null,
       value: { progression: r.x.progression_key ?? r.x.progressionKey, out_of_order: r.ooo.map((f) => ({ stage: f.stage_key ?? null, after: f.after_stage ?? null, placements: f.placements ?? null })) },
@@ -118,17 +119,17 @@ const EVALUATORS = {
     const results = late.map((x, i) => {
       const cell = r && !r.refused ? r.result.rows[i].days_late : null;
       return { subject: x.u.office ?? null,
-        value: { duty: x.u.duty, occurrence: x.u.key, days_late: cell ?? { undetermined: true, why: "the due date or the meeting event's date is not settled" } },
+        value: { duty: x.u.duty, occurrence: x.u.key, days_late: cell ?? { undetermined: true, why: word("calculations.why.due_date_meeting") } },
         derivation: { due: x.due, met: x.met, transition: { state: x.u.state, as_of: x.u.as_of ?? null, at: x.u.at ?? null }, event: x.event },
         rests_on: [x.u.duty, ...(x.event ? [x.event] : [])] };
     });
-    return { results, denominator: { n: d.units.length, of: "duty occurrences recorded met or met late", late: late.length }, evaluated: d.units.length };
+    return { results, denominator: { n: d.units.length, of: word("calculations.duty_occurrences_recorded_met"), late: late.length }, evaluated: d.units.length };
   },
 
   async posting_lateness(deps) {
     const e = deps.events;
     const d = await decidedOccurrences(deps.duties, deps.viewer);
-    if (!e || typeof e.eventsFor !== "function") return { results: [], denominator: { n: null, why: "the events module is not reachable here" }, evaluated: 0 };
+    if (!e || typeof e.eventsFor !== "function") return { results: [], denominator: { n: null, why: word("calculations.why.events_module_reachable") }, evaluated: 0 };
     const bodies = [...new Set((d.units || []).map((u) => u.office).filter(Boolean))];
     const units = [];
     for (const body of bodies) {
@@ -162,10 +163,10 @@ const EVALUATORS = {
       subject: u.body,
       value: { meeting: u.meeting, posting: u.posting, hours_before: hours && !hours.refused ? hours.result.rows[i].hours_before : null,
         days_after: days && !days.refused ? days.result.rows[i].days_after : null,
-        says: "a posting's time is an upper bound (on or before the first instant the record observed it)" },
+        says: word("calculations.says.posting_time_upper") },
       derivation: { meeting_when: u.startDt ?? null, posting_when: u.postedDt ?? null, method: "events R24" },
       rests_on: [u.meeting, u.posting] }));
-    return { results, denominator: { n: new Set(units.map((u) => u.meeting)).size, of: "meetings with a posting held within them" }, evaluated: units.length };
+    return { results, denominator: { n: new Set(units.map((u) => u.meeting)).size, of: word("calculations.meetings_posting_held_within") }, evaluated: units.length };
   },
 
   async office_lateness(deps) { return byGroup(deps, "office"); },
@@ -184,11 +185,11 @@ async function byGroup(deps, field) {
     const mine = units.filter((u) => u[field] === subject);
     const share = shareOf(t, field, subject);
     results.push({ subject, value: { share_met_late: share },
-      denominator: { n: mine.length, of: `duty occurrences of this ${field === "office" ? "office" : "proceeding"} recorded met or met late` },
+      denominator: { n: mine.length, of: word("calculations.duty_occurrences_recorded_met_met", { field: String(field === "office" ? "office" : "proceeding") }) },
       derivation: { occurrences: mine.map((u) => ({ duty: u.duty, occurrence: u.key, state: u.state })) },
       rests_on: [...new Set(mine.map((u) => u.duty))] });
   }
-  return { results, denominator: { n: units.length, of: `duty occurrences with ${field === "office" ? "an obligor office" : "a proceeding they arose in"}, recorded met or met late`, subjects: results.length }, evaluated: units.length };
+  return { results, denominator: { n: units.length, of: word("calculations.duty_occurrences_with_recorded_met", { field: String(field === "office" ? word("calculations.obligor_office") : word("calculations.proceeding_arose")) }), subjects: results.length }, evaluated: units.length };
 }
 
 /** R22: one pattern's run: `{results, denominator, evaluated}`. */

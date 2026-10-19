@@ -19,7 +19,7 @@
  * (`aiCredentialLook`, R18). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { biasOf } from "../bias/index.mjs";
@@ -303,7 +303,7 @@ export class AiRuns {
   registerWaitSource(module, source) {
     const fns = ["tickMs", "holds", "woken", "completions", "markWoken"];
     if (typeof module !== "string" || !module || !source || fns.some((f) => typeof source[f] !== "function"))
-      return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: `a wait source names its module and ${fns.join(", ")}` };
+      return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: localize("ai-runs.index.a_wait_source_names_its", "a wait source names its module and {fns}", { fns: String(fns.join(", ")) }) };
     if (this.#waitSource) return { ok: false, reason: "WAIT_SOURCE_DECLARED", module, declaredBy: this.#waitSource.module };
     this.#waitSource = { module, source };
     return { ok: true, module };
@@ -618,8 +618,8 @@ export class AiRuns {
         condition,
         bound,
         detail: stoppedByBound
-          ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})`
-          : `the run ended: ${RUN_ENDINGS[bound]}`,
+          ? localize("ai-runs.index.the_run_stopped_because_the", "the run stopped because the '{bound}' bound was reached ({v1})", { bound: String(bound), v1: String(RUN_BOUNDS[bound]) })
+          : localize("ai-runs.index.the_run_ended_v1", "the run ended: {v1}", { v1: String(RUN_ENDINGS[bound]) }),
       /* R73: under the step, as its looks are, save a NEVER_LOOKED rollup (a step-run that looked at nothing), which the
          observation log admits only as a run's own terminal entry (C-22.17); it names no referent (C-22.10). */
       }, at, 1, null, rollup.state === "NEVER_LOOKED" ? null : (row.step || null));
@@ -1055,11 +1055,7 @@ export class AiRuns {
       return { run, started: false,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT "
-                   + "PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as "
-                   + "amended 2026-09-18), and the contribute capability "
-                   + "is only the floor beneath that. These are two different facts about an "
-                   + "account and they are refused separately so each names its own remedy" };
+               note: localize("ai-runs.index.starting_an_investigation_over", "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy") };
     /* R89 (T50; N1186; credentials R79): THE PROJECT THE RUN IS OPENED IN, judged here with the gate it belongs to and
        recorded at the open. A run over a project is in that project, whatever `project` carries; a run over a question names
        one explicitly: a project the opening member has joined that draws on the question (`run-rules` R6's refusal,
@@ -1094,9 +1090,7 @@ export class AiRuns {
        two principals are not both named. See REC-64's note above for why one code and not two. */
     if (!principalPlane || !principalClaude)
       return refusal("AI_RUN_CAPABILITY_UNAVAILABLE", {
-               note: "a run names TWO principals — the plane credential acting and the member whose own "
-                   + "Claude account carries it (K1502, K1503). They are different principals and an act "
-                   + "must say both (DEC-27(b), DEC-55.4)" });
+               note: localize("ai-runs.index.a_run_names_two_principals", "a run names TWO principals — the plane credential acting and the member whose own Claude account carries it (K1502, K1503). They are different principals and an act must say both (DEC-27(b), DEC-55.4)") });
     /* END DEC-49 REGION is-airun-open-capability */
     /* SK-1 — THE THIRD CONDITION, AND IT IS REFUSED WHERE THE PRINCIPALS ARE.
        §11 records what a run was FORMED under, and the skill version is one of
@@ -1143,16 +1137,13 @@ export class AiRuns {
     if (runMode === "plan" && !planNamed)
       return planRefusal("AI_RUN_PLAN_REQUIRED", "a planning run names the plan it works on: pass plan=<the plan's id>");
     if (runMode !== "plan" && plan != null)
-      return planRefusal("AI_RUN_PLAN_UNEXPECTED", `a run in mode '${runMode.slice(0, 60)}' names no plan; only a run in `
-        + "mode 'plan' works on one");
+      return planRefusal("AI_RUN_PLAN_UNEXPECTED", localize("ai-runs.index.a_run_in_mode_runmode", "a run in mode '{runMode}' names no plan; only a run in mode 'plan' works on one", { runMode: String(runMode.slice(0, 60)) }));
     if (runMode === "plan" && String(contextType) !== "project")
       return planRefusal("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
     if (runMode === "plan" && (!who || isMachineIdentity(who)))
-      return planRefusal("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing "
-        + "starts one by itself");
+      return planRefusal("AI_RUN_PLAN_NEEDS_MEMBER", localize("ai-runs.index.only_a_member_starts", "only a member starts a planning run, for one plan at a time; nothing starts one by itself"));
     if (runMode === "plan" && search)
-      return planRefusal("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
-        + `no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
+      return planRefusal("AI_RUN_PLAN_NO_SEARCH", localize("ai-runs.index.a_planning_run_works_from", "a planning run works from what the record already holds, so it declares no '{bound}' allowance (it was given {allowed})", { bound: String(search.bound), allowed: String(search.allowed) }), { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
     const runOrigin = origin == null ? "member" : String(origin).trim();
     /* R77 (T45; Actions D21; v0.2 rule 16): THE RE-EXAMINATION RUN, after R46's refusals and before anything else about the
@@ -1175,8 +1166,7 @@ export class AiRuns {
         + "after: pass response=<the recorded response's id>");
     /* asked here, in order, and again just before the insert (below), with no await between that ask and the write */
     const reexamOpen = () => (reexam && this.#reexamRunning(plan, responseId)
-      ? planRefusal("AI_RUN_REEXAM_OPEN", "a re-examination of this plan after this response is already running; "
-        + "its result is the one to read", { plan: String(plan).slice(0, 60), response: responseId.slice(0, 60) })
+      ? planRefusal("AI_RUN_REEXAM_OPEN", localize("ai-runs.index.a_re_examination_of_this", "a re-examination of this plan after this response is already running; its result is the one to read"), { plan: String(plan).slice(0, 60), response: responseId.slice(0, 60) })
       : null);
     const runningAlready = reexamOpen();
     if (runningAlready) return runningAlready;
@@ -1191,11 +1181,9 @@ export class AiRuns {
     const ownStep = place != null || work != null;
     /* DEC-49 REGION is-airun-open-step */
     if (runOrigin === "explore" && (!ownStep || stepId))
-      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the "
-        + "step's place and work, and no step", note: word("consequences.nothing") });
+      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: localize("ai-runs.index.an_exploring_run_works", "an exploring run works as a system step of its own: pass the step's place and work, and no step"), note: word("consequences.nothing") });
     if (stepId && (ownStep || !this.#stepSeen(stepId, viewer)))
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? "a run works one step: an existing one, or a step of its own "
-        + "by its place and work, not both" : `no step '${stepId.slice(0, 60)}' is open to this caller`, step: stepId.slice(0, 60),
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? localize("ai-runs.index.a_run_works_one", "a run works one step: an existing one, or a step of its own by its place and work, not both") : localize("ai-runs.index.no_step_stepid_is_open", "no step '{stepId}' is open to this caller", { stepId: String(stepId.slice(0, 60)) }), step: stepId.slice(0, 60),
         note: word("consequences.nothing") });
     /* END DEC-49 REGION is-airun-open-step */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
@@ -1308,7 +1296,7 @@ export class AiRuns {
     if (overLimit) return { run, started: false, ...AiRuns.#shed(overLimit) };
     /* R73, R74: a system step of its own needs steps, asked before anything is written. */
     if (ownStep && !this.#steps())
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: word("consequences.nothing") });
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: localize("ai-runs.index.the_runs_own_step", "the run's own step cannot be made: steps is not reachable"), note: word("consequences.nothing") });
 
     /* R47 (K660): THE CHECK A LATER MODULE REGISTERED FOR THIS MODE, applied LAST, synchronously, just before the
        write, and its refusal passed on unchanged. A planning run with no check registered is refused (fail closed); so
@@ -1326,8 +1314,8 @@ export class AiRuns {
         return said && typeof said === "object" && typeof said.code === "string"
           ? { run, started: false, ...said }
           : refusal("AI_RUN_MODE_UNCHECKED", {
-              detail: held ? `the check ${held.module} registered for mode '${runMode}' gave no answer`
-                           : `nothing is registered to check a run in mode '${runMode}'`,
+              detail: held ? localize("ai-runs.index.the_check_module_registered_for", "the check {module} registered for mode '{runMode}' gave no answer", { module: String(held.module), runMode: String(runMode) })
+                           : localize("ai-runs.index.nothing_is_registered_to_check", "nothing is registered to check a run in mode '{runMode}'", { runMode: String(runMode) }),
               note: word("consequences.nothing") });
     }
     /* END DEC-49 REGION is-airun-open-check */
@@ -1442,8 +1430,7 @@ export class AiRuns {
     const list = Array.isArray(steps) ? steps.map((x) => (typeof x === "string" ? x.trim() : "")) : [];
     /* DEC-49 REGION is-airun-open-many */
     if (!list.length || list.length > AiRuns.OPEN_MANY_MAX || list.some((x) => !x) || new Set(list).size !== list.length)
-      return { ...this.#refuse("AI_RUN_NO_CONTEXT", `a batch names the steps it runs on, each once, 1 to ${AiRuns.OPEN_MANY_MAX} `
-        + "of them. Nothing was started."), started: false };
+      return { ...this.#refuse("AI_RUN_NO_CONTEXT", localize("ai-runs.index.a_batch_names_the_steps", "a batch names the steps it runs on, each once, 1 to {OPEN_MANY_MAX} of them. Nothing was started.", { OPEN_MANY_MAX: String(AiRuns.OPEN_MANY_MAX) })), started: false };
     /* END DEC-49 REGION is-airun-open-many */
     let payer = owner;
     if (payer == null) {
@@ -1461,8 +1448,7 @@ export class AiRuns {
       let seen = null;
       try { seen = st ? st.step({ step: stepId, viewer }) : null; } catch { seen = null; }
       if (!seen || seen.ok === false || seen.step !== stepId) {
-        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_STEP_UNKNOWN", `no step '${stepId.slice(0, 60)}' is open to you. `
-          + "Nothing was started for it.") });
+        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_STEP_UNKNOWN", localize("ai-runs.index.no_step_stepid_is_open_2", "no step '{stepId}' is open to you. Nothing was started for it.", { stepId: String(stepId.slice(0, 60)) })) });
         continue;
       }
       const place = seen.place || {};
@@ -1470,8 +1456,7 @@ export class AiRuns {
       const context = place.project ? { type: "project", id: place.project, place: { project: place.project } }
         : questions.length ? { type: "inquiry", id: questions[0], place: { questions } } : null;
       if (!context) {
-        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_NO_CONTEXT", "a team's own step has no question or project for "
-          + "a run to sit in. Nothing was started for it.") });
+        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_NO_CONTEXT", localize("ai-runs.index.a_teams_own_step_has", "a team's own step has no question or project for a run to sit in. Nothing was started for it.")) });
         continue;
       }
       let k = 1;
@@ -1479,7 +1464,7 @@ export class AiRuns {
       const run = `RUN-${stepId}-${k}`;
       const opened = await this.open({ run, contextType: context.type, contextId: context.id, label, mode: runMode,
         principalPlane, principalClaude: `member:${member}`, skillVersion, bounds, at, actor, viewer, origin: "member",
-        place: context.place, work: `AI run on ${stepId}: ${String(seen.work ?? "")}`.slice(0, WORK_MAX) });
+        place: context.place, work: localize("ai-runs.index.ai_run_on_stepid_string", "AI run on {stepId}: {String}", { stepId: String(stepId), String: String(String(seen.work ?? "")) }).slice(0, WORK_MAX) });
       if (opened && opened.started === true) runs.push({ step: stepId, run, system_step: opened.step ?? null });
       else { const { run: _r, started: _s, ...refusal } = opened || {}; runs.push({ step: stepId, refusal }); }
     }
@@ -1589,9 +1574,7 @@ export class AiRuns {
       return { run, ticked: false, found: true, status: row.status,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
-                   + "(DEC-63), and the contribute capability is only the floor beneath "
-                   + "that. Nothing was appended and no budget was spent" };
+               note: localize("ai-runs.index.continuing_a_run_over", "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent") };
     if (row.status !== "running")
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
@@ -1627,8 +1610,7 @@ export class AiRuns {
     const calls = usage == null ? [] : Array.isArray(usage) ? usage : null;
     if (!calls)
       return { run, ticked: false, found: true, status: row.status,
-               ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", "`usage` is a list with one entry per conversation that "
-                 + "reached the model since the last tick, each {mode, model, usage, calls}.")),
+               ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.usage_is_a_list", "`usage` is a list with one entry per conversation that reached the model since the last tick, each {mode, model, usage, calls}."))),
                note: word("ai-runs.note.appended_budget_spent") };
     /* R52: the calls are counted to the account the run recorded as paying (`principal_claude`) and the member whose act
        the run is (`principal_claude_ref`); a run that names no member (one opened before T33-50) cannot have its calls
@@ -1672,8 +1654,7 @@ export class AiRuns {
       if (seg) {
         const bad = this.#aiRunAppend(run, {
           level: "meaning", subject: "segment -> end", ...this.#aiRunRestatedState(run), governed: false,
-          detail: `the segment ended (by: ${seg.by ?? "its own segment bound"}; ${seg.done ? "the run's work is done" : "the run's work is not done"}`
-                + `${seg.error ? `; in error ${seg.error}` : ""}). Refusals it met: ${seg.refusals.length ? seg.refusals.join(", ") : "none"}`,
+          detail: localize("ai-runs.index.the_segment_ended_by_v1", "the segment ended (by: {v1}; {v2}{v3}). Refusals it met: {v4}", { v1: String(seg.by ?? "its own segment bound"), v2: String(seg.done ? localize("ai-runs.index.the_runs_work_is_done", "the run's work is done") : localize("ai-runs.index.the_runs_work_is_not_done", "the run's work is not done")), v3: String(seg.error ? `; in error ${seg.error}` : ""), v4: String(seg.refusals.length ? seg.refusals.join(", ") : "none") }),
         }, now, 0, row.principal_claude || null, row.step || null);
         if (bad) refused.push(bad); else appended += 1;
       }
@@ -1765,8 +1746,7 @@ export class AiRuns {
     if (dispatch.state === "WITHHELD") {
       this.#transact(() => this.#aiRunAppend(row.run, {
         level: "meaning", subject: "segment -> end", ...this.#aiRunRestatedState(row.run), governed: false,
-        detail: `the next segment was not dispatched (${dispatch.reason}). The run is still resumable by its own principal; `
-              + `nothing it established is lost`,
+        detail: localize("ai-runs.index.the_next_segment_was_not", "the next segment was not dispatched ({reason}). The run is still resumable by its own principal; nothing it established is lost", { reason: String(dispatch.reason) }),
       }, iso, 0, row.principal_claude || null, row.step || null));
     }
     return { ...out, segment_end: { ...out.segment_end, dispatch } };
@@ -1827,9 +1807,7 @@ export class AiRuns {
         return { run, terminated: false, found: true, ok: false,
                  code: gate.code, check: gate.check,
                  translation: gate.translation, detail: gate.detail,
-                 note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
-                     + "(DEC-63), and the contribute capability is only the floor beneath "
-                     + "that. The run is untouched and is still running" };
+                 note: localize("ai-runs.index.closing_a_run_over", "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running") };
     }
     let ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
     /* R76: at close the run answers its actual cost, to its paying account's owners only */
@@ -2068,10 +2046,7 @@ export class AiRuns {
              PRESENT look it restates, computed in the same read. */
           ...this.#aiRunRestatedState(r.run),
           governed: false,
-          detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
-                + `(${captured} captured, ${refused} refused, ${expired} expired). The run is resumable: its own log `
-                + `carries what each request established, and §14b.7's resumed run reads it and `
-                + `continues rather than restarting. ${decision.says}`,
+          detail: localize("ai-runs.index.the_daemon_answered_length_capture", "the daemon answered {length} capture request(s) this run was waiting on ({captured} captured, {refused} refused, {expired} expired). The run is resumable: its own log carries what each request established, and §14b.7's resumed run reads it and continues rather than restarting. {says}", { length: String(done.length), captured: String(captured), refused: String(refused), expired: String(expired), says: String(decision.says) }),
         }, iso, 0, null, r.step || null);
         if (refusal) return refusal;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
@@ -2195,9 +2170,7 @@ export class AiRuns {
     const projectPaid = typeof (run && run.principal_claude) === "string" && run.principal_claude.startsWith("project:");
     if (resumer && resumer.ready && principal === resumer.stamp && !(payer && (projectPaid || this.#accountServing(payer))))
       return { dispatch: false, withheld: "NO_ACCOUNT",
-               says: "Resumption: NOT dispatched — no Claude account serves the member whose act started this run (none of "
-                   + "their own is connected, and the team's key is not set or not on), and a run continues only on the "
-                   + "account that serves that member's act (K1503, K1755). It waits." };
+               says: localize("ai-runs.index.resumption_not_dispatched_no_claude", "Resumption: NOT dispatched — no Claude account serves the member whose act started this run (none of their own is connected, and the team's key is not set or not on), and a run continues only on the account that serves that member's act (K1503, K1755). It waits.") };
     if (resumer && resumer.ready && principal === resumer.stamp)
       return { dispatch: true, withheld: null,
                says: word("ai-runs.says.resumption_handed_agent", { token_id: resumer.tokenId }) };
@@ -2205,9 +2178,7 @@ export class AiRuns {
     const withheld = member ? "MEMBER_PRINCIPAL_RUN"
       : (resumer && !resumer.ready) ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
     const why = member
-      ? "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential "
-        + "opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). "
-        + "It waits for its own principal"
+      ? localize("ai-runs.index.a_members_credential_opened_it", "a member's credential opened it, and your team's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the team's key would re-attribute its acts). It waits for its own principal")
       : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN"
         ? word("ai-runs.text.principal_opened_organization")
         : word("ai-runs.text.group_civicsmith_resume", { withheld });
@@ -2279,7 +2250,7 @@ export class AiRuns {
       /* R82: a worker that has not accepted within the bound is a call that did not complete (B6's "still running" reading
          is retired: the worker now answers at once, so no answer means no acceptance), and it is logged as such below. */
       outcome = { state: "SILENT", status: null,
-                  reason: elapsed ? "no acceptance within the bound" : word("ai-runs.reason.call_did_complete") };
+                  reason: elapsed ? localize("ai-runs.index.no_acceptance_within_the_bound", "no acceptance within the bound") : word("ai-runs.reason.call_did_complete") };
     } finally { clearTimeout(timer); }
     if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
       /* R83: an accepted dispatch is a heartbeat, the lease counted from it */
@@ -2289,10 +2260,8 @@ export class AiRuns {
       const refusal = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet", subject: d.context_id, ...this.#aiRunRestatedState(d.run), governed: false,
         detail: outcome.state === "LIMIT"
-          ? `Resumption: not continued now — ${outcome.detail} The run was woken and is still `
-            + `resumable by its own principal; nothing it established is lost`
-          : `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
-            + `The run was woken and is still resumable by its own principal; nothing it established is lost`,
+          ? localize("ai-runs.index.resumption_not_continued_now_detail", "Resumption: not continued now — {detail} The run was woken and is still resumable by its own principal; nothing it established is lost", { detail: String(outcome.detail) })
+          : localize("ai-runs.index.resumption_the_dispatch_to_agent", "Resumption: the dispatch to agent-worker did not complete ({state}: {reason}). The run was woken and is still resumable by its own principal; nothing it established is lost", { state: String(outcome.state), reason: String(outcome.reason) }),
       }, iso, 0, null, d.step || null));
       if (refusal) outcome.unwritable = refusal;
     }
@@ -2361,8 +2330,7 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-member-dispatch */
     if (row.mode !== "check" && row.mode !== "plan")
       return { run, found: true, dispatched: false, status: row.status,
-               ...AiRuns.#shed(this.#refuse("MEMBER_RUN_MODE_NOT_ADMITTED", `on a member's own sign-in the assistant runs `
-                 + `checks and plans for that member only; this run is in mode '${String(row.mode).slice(0, 40)}'. Nothing was sent.`)),
+               ...AiRuns.#shed(this.#refuse("MEMBER_RUN_MODE_NOT_ADMITTED", localize("ai-runs.index.on_a_members_own_sign", "on a member's own sign-in the assistant runs checks and plans for that member only; this run is in mode '{String}'. Nothing was sent.", { String: String(String(row.mode).slice(0, 40)) }))),
                mode: row.mode };
     /* END DEC-49 REGION is-airun-member-dispatch */
     const withheld = (w, extra = {}) => ({ run, found: true, dispatched: false, status: row.status, withheld: w, ...extra,
@@ -2723,20 +2691,13 @@ export class AiRuns {
      * visible runs is answered rather than refused. */
     if (!type)
       return refusal("AI_RUNS_NO_CONTEXT_TYPE",
-        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. `
-        + "An inquiry and a project are different objects with different membership, so there is no "
-        + "default here that would not be answering about something you did not ask about.");
+        localize("ai-runs.index.op_airuns_answers_for_one", "op=airuns answers for ONE context and must be told which kind: contextType={kinds}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.", { kinds: String(kinds.join("|")) }));
     if (!kinds.includes(type))
       return refusal("AI_RUNS_UNKNOWN_CONTEXT_TYPE",
-        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. `
-        + `The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. `
-        + "Answered as a refusal rather than as an empty list, because an empty list here would say "
-        + "nothing is running in a place the record does not recognise.");
+        localize("ai-runs.index.no_work_is_attached_to", "no work is attached to anything of the kind {stringify}. The kinds it is attached to: {map}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.", { stringify: String(JSON.stringify(String(contextType).slice(0, 60))), map: String(kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")) }));
     if (!id)
       return refusal("AI_RUNS_NO_CONTEXT_ID",
-        `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over `
-        + "the context's own id, so a blank id would ask about every context at once — a different "
-        + "question, not a wider answer.");
+        localize("ai-runs.index.op_airuns_named_the_kind", "op=airuns named the kind {stringify} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once — a different question, not a wider answer.", { stringify: String(JSON.stringify(type)) }));
     /* END DEC-49 REGION is-airuns-context */
 
     const seen = this.#bundleGate("r.context_id", viewer);
@@ -3277,7 +3238,7 @@ export class AiRuns {
     try {
       return this.#aiUse().useCheck({ owner, member: `member:${member}`, use: "run", at: AiRuns.#aiIso(ms) }) ?? null;
     } catch {
-      return this.#refuse("AI_NO_ACCOUNT", "The use of the account that would serve this run cannot be judged now. Nothing was started.");
+      return this.#refuse("AI_NO_ACCOUNT", localize("ai-runs.index.the_use_of_the_account", "The use of the account that would serve this run cannot be judged now. Nothing was started."));
     }
   }
 
@@ -3292,10 +3253,10 @@ export class AiRuns {
         ? use.countUsage({ owner: row.principal_claude, member: `member:${payer}`, use: "run", mode: e.mode, model: e.model ?? null,
                            /* R88: the conversation's effort beside its model, ai-use R15's to judge; null where none is stated */
                            effort: e.effort ?? null, usage: e.usage, calls: e.calls, at: AiRuns.#aiIso(ms), act: String(row.run) })
-        : this.#refuse("AI_RUN_CONSUME_INVALID", "the entry is not an object {mode, model, usage, calls}.");
+        : this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.the_entry_is_not", "the entry is not an object {mode, model, usage, calls}."));
       if (!said || said.ok !== true)
-        return { ...(said || this.#refuse("AI_RUN_CONSUME_INVALID", "the entry could not be counted.")),
-                 detail: `usage entry ${i + 1}: ${(said && said.detail) || "it could not be counted"}` };
+        return { ...(said || this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.the_entry_could_not_be", "the entry could not be counted."))),
+                 detail: localize("ai-runs.index.usage_entry_v1_v2", "usage entry {v1}: {v2}", { v1: String(i + 1), v2: String((said && said.detail) || localize("ai-runs.index.it_could_not_be_counted", "it could not be counted")) }) };
     }
     return null;
   }
@@ -3325,8 +3286,7 @@ export class AiRuns {
 
   /** R72: a provider's refusal for a spent limit, answered in plain words at the wake's dispatch, never as an error. */
   #providerLimit() {
-    return { provider_limit: true, detail: "The Claude account that serves this run has reached the spending limit set on it, "
-      + "so the assistant cannot continue for now. Nothing was lost." };
+    return { provider_limit: true, detail: localize("ai-runs.index.the_claude_account_that_serves", "The Claude account that serves this run has reached the spending limit set on it, so the assistant cannot continue for now. Nothing was lost.") };
   }
 
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
@@ -3377,9 +3337,8 @@ export class AiRuns {
   #noAccount(member, what) {
     /* DEC-49 REGION is-ai-no-account */
     return this.#refuse("AI_NO_ACCOUNT", member
-      ? `${what} needs a Claude account to serve the member whose act started it, and none serves that member: they have `
-        + `connected none of their own, and the team's key is not set or not on. Nothing was started.`
-      : `${what} names no member whose Claude account carries it. Nothing was started.`);
+      ? localize("ai-runs.index.what_needs_a_claude_account", "{what} needs a Claude account to serve the member whose act started it, and none serves that member: they have connected none of their own, and the team's key is not set or not on. Nothing was started.", { what: String(what) })
+      : localize("ai-runs.index.what_names_no_member_whose", "{what} names no member whose Claude account carries it. Nothing was started.", { what: String(what) }));
     /* END DEC-49 REGION is-ai-no-account */
   }
 
@@ -3430,7 +3389,7 @@ export class AiRuns {
     if (!held || held.mode !== mode) {
       const row = this.#checkRow("AI_RUN_VERIFICATION_UNFIT");
       return { ok: false, code: "AI_RUN_VERIFICATION_UNFIT", check: row.check, translation: row.translation, field: "run",
-               detail: `no run '${String(run).slice(0, 60)}' in mode '${String(mode).slice(0, 40)}' is held here for this member. Nothing was recorded` };
+               detail: localize("ai-runs.index.no_run_string_in_mode", "no run '{String}' in mode '{String_2}' is held here for this member. Nothing was recorded", { String: String(String(run).slice(0, 60)), String_2: String(String(mode).slice(0, 40)) }) };
     }
     const prior = this.#one(`SELECT at FROM ai_mode_verifications WHERE mode = ? AND run = ?`, mode, run);
     const existed = !!prior;
@@ -3488,9 +3447,7 @@ export class AiRuns {
     try { const f = who ? this.#membership().memberFacts(who) : null; active = !!f && f.status === "active"; } catch { active = false; }
     /* DEC-49 REGION is-ai-group-test */
     if (!p || !m || !a || !active)
-      return this.#refuse("AI_GROUP_TEST_INVALID", !active ? "a team's test investigation is added by one of its active members. "
-        + "Nothing was added." : `a team's test investigation names its part, its matter and the answers your members wrote `
-        + `(missing: ${[!p && "part", !m && "matter", !a && "answers"].filter(Boolean).join(", ")}). Nothing was added.`);
+      return this.#refuse("AI_GROUP_TEST_INVALID", !active ? localize("ai-runs.index.a_teams_test_investigation_is", "a team's test investigation is added by one of its active members. Nothing was added.") : localize("ai-runs.index.a_teams_test_investigation_names", "a team's test investigation names its part, its matter and the answers your members wrote (missing: {filter}). Nothing was added.", { filter: String([!p && "part", !m && "matter", !a && "answers"].filter(Boolean).join(", ")) }));
     /* END DEC-49 REGION is-ai-group-test */
     const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
     this.#transact(() => this.sql.exec(
@@ -3550,9 +3507,7 @@ export class AiRuns {
     /* DEC-49 REGION is-surface-run */
     if (!runRow)
       return refusal("SURFACE_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run `
-              + `it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): the run carries the lens in force and `
-              + `the objective the question was surfaced under. Nothing was created.`
+        run ? localize("ai-runs.index.no_run_named_run_is", "no run named '{run}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md §11 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.", { run: String(run.slice(0, 60)) })
             : "an assistant opens a question only inside a run it holds: pass run=<the run this question is "
               + "surfaced under> in the promotion. The run carries the lens in force and the objective it "
               + "pursued (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Nothing was created.");
@@ -3564,19 +3519,14 @@ export class AiRuns {
                note: word("ai-runs.note.assistant_opens_question") };
     if (runRow.status !== "running")
       return refusal("SURFACE_RUN_NOT_RUNNING",
-        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read `
-        + `against the conditions of the run that surfaced it, which stopped being current when it stopped. `
-        + `Nothing was created.`, { status: runRow.status });
+        localize("ai-runs.index.the_run_run_has_ended", "the run '{run}' has ended ({String}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.", { run: String(run.slice(0, 60)), String: String(String(runRow.status).slice(0, 40)) }), { status: runRow.status });
     const bound = this.boundOf(run, "surfaces");
     if (!bound || !(bound.allowed > 0))
       return refusal("SURFACE_NO_BOUND",
-        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be `
-        + `unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`);
+        localize("ai-runs.index.the_run_run_declares_no", "the run '{run}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.", { run: String(run.slice(0, 60)) }));
     if (bound.consumed >= bound.allowed)
       return refusal("SURFACE_BOUND_REACHED",
-        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of `
-        + `${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which `
-        + `bound stopped it.`, { allowed: bound.allowed, consumed: bound.consumed });
+        localize("ai-runs.index.the_run_run_has_reached", "the run '{run}' has reached its 'surfaces' bound ({consumed} of {allowed}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.", { run: String(run.slice(0, 60)), consumed: String(bound.consumed), allowed: String(bound.allowed) }), { allowed: bound.allowed, consumed: bound.consumed });
     /* END DEC-49 REGION is-surface-run */
     return null;
   }

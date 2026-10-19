@@ -10,6 +10,7 @@
 
 import { INQUIRY_CONTRADICTION_CHECKS as ROWS } from "./checks.mjs";
 import { fmSafe } from "./text.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const freeze = (a) => Object.freeze([...a]);
 
@@ -156,15 +157,13 @@ export function contradictionFindings(fm) {
         const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
         /* A resolution written as a single value gives none of the fields its kind needs, and is not in that form. */
         if (!isMap(block))
-          incomplete("resolution", "`resolution` is a block of fields (`kind` and what that kind needs), not a single "
-            + "value.");
+          incomplete("resolution", localize("inquiry.contradiction.resolution_is_a_block_of", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value."));
         else {
           for (const k of Object.keys(block))
             if (!RESOLUTION_FIELDS.includes(k))
               incomplete(k, k === "qualifiers"
-                ? "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar "
-                  + "holds no map inside a map); write it through the resolution's own lines."
-                : `\`${k}\` is not a field of a resolution; its fields are ${RESOLUTION_FIELDS.join(", ")}.`);
+                ? localize("inquiry.contradiction.qualifiers_is_written_as_qualifier", "`qualifiers` is written as `qualifier_a` and `qualifier_b` inside `resolution` (the frontmatter grammar holds no map inside a map); write it through the resolution's own lines.")
+                : localize("inquiry.contradiction.k_is_not_a_field", "`{k}` is not a field of a resolution; its fields are {RESOLUTION_FIELDS}.", { k: String(k), RESOLUTION_FIELDS: String(RESOLUTION_FIELDS.join(", ")) }));
           const coords = block.coordinates;
           const coordsOk = Array.isArray(coords) && coords.length > 0 && coords.every((c) => DISSOLVED_BY.includes(c))
             && new Set(coords).size === coords.length;
@@ -176,27 +175,26 @@ export function contradictionFindings(fm) {
               + `${DISSOLVED_BY.join(", ")}.`);
           const side = block.wrong_side;
           if (family === "CORRECTED" && !present(side))
-            incomplete("wrong_side", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`.");
+            incomplete("wrong_side", localize("inquiry.contradiction.a_corrected_resolution_names_the", "a corrected resolution names the side that is wrong: `wrong_side` is `a` or `b`."));
           else if (present(side) && side !== "a" && side !== "b")
             incomplete("wrong_side", "`wrong_side` is `a` or `b`.");
           const reason = block.reason;
           if (family === "CORRECTED" && blank(reason))
-            incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
+            incomplete("reason", localize("inquiry.contradiction.a_corrected_resolution_says_why", "a corrected resolution says why that side is wrong: a non-empty `reason`."));
           else if (present(reason) && (text(reason) === null || text(reason).trim() === ""))
-            incomplete("reason", "`reason` is a non-empty statement.");
+            incomplete("reason", localize("inquiry.contradiction.reason_is_a_non_empty", "`reason` is a non-empty statement."));
           const canon = block.canon;
           if (kind === "conflict_of_norms" && !present(canon))
             incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from `
               + `${NORM_CANONS.join(", ")}.`);
           else if (present(canon) && !NORM_CANONS.includes(canon))
-            incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
+            incomplete("canon", localize("inquiry.contradiction.canon_is_one_of_norm", "`canon` is one of {NORM_CANONS}.", { NORM_CANONS: String(NORM_CANONS.join(", ")) }));
           for (const [key, name] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
             const v = block[key];
             if (!present(v)) continue;
             const s = text(v);
             if (s === null || s.length > QUALIFIER_MAX)
-              incomplete(`qualifiers.${name}`, `a qualifier on side ${name} is a statement of at most ${QUALIFIER_MAX} `
-                + `characters.`);
+              incomplete(`qualifiers.${name}`, localize("inquiry.contradiction.a_qualifier_on_side_name", "a qualifier on side {name} is a statement of at most {QUALIFIER_MAX} characters.", { name: String(name), QUALIFIER_MAX: String(QUALIFIER_MAX) }));
           }
         }
         /* END DEC-49 REGION is-resolution-complete */
@@ -212,8 +210,7 @@ export function contradictionFindings(fm) {
     /* DEC-49 REGION is-contradiction-arm-judged — C-2.18 (N369): an arm that stopped with an error refuses the document
        rather than passing it, under its own row: the error is in the check and says nothing yet about the link. */
     out.push({ check: ROWS.CONTRADICTION_ARM_FAILED.check, code: "CONTRADICTION_ARM_FAILED",
-               detail: `the contradiction arm stopped with an error before it could judge this document's link, `
-                     + `resolution and explores: ${fmSafe(e && e.message)}`,
+               detail: localize("inquiry.contradiction.the_contradiction_arm_stopped_with", "the contradiction arm stopped with an error before it could judge this document's link, resolution and explores: {fmSafe}", { fmSafe: String(fmSafe(e && e.message)) }),
                translation: ROWS.CONTRADICTION_ARM_FAILED.translation });
     /* END DEC-49 REGION is-contradiction-arm-judged */
   }

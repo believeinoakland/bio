@@ -2,7 +2,8 @@
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
  * (R8), and the named credential-free reads a later module registers (R18); beside a case, `docket`'s withdrawal stamp
- * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31).
+ * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31);
+ * what each published case froze for one question, with its signers and the pin check (R38).
  * It writes nothing (R16): every table it reads is `publication`'s, read under `publication` R40, and it reaches
  * `publication` and `docket` only through the services named below.
  *
@@ -41,11 +42,11 @@ import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
-         LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
+         lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -73,8 +74,7 @@ const signedParts = (doc) => {
 export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
-export const CLEANED_LABEL_AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the "
-  + "team holds the original";
+export const CLEANED_LABEL_AT_MARKER = word("document.cleaned.label");
 const photoKeyOf = (obscured) => (obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
 const labelKeyOf = (obscured) => (obscured.kind === "document" ? LABEL_KEY_CLEANED
   : obscured.kind === "photo" ? photoKeyOf(obscured)
@@ -407,8 +407,7 @@ export class PublicRead {
       /* DEC-49 REGION is-public-read-not-registered
        * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
       return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
-               detail: `no public read named ${JSON.stringify(n)} is registered on this team's Civicsmith, so there `
-                     + "is nothing to serve under that name" };
+               detail: localize("public-read.index.no_public_read_named_stringify", "no public read named {stringify} is registered on this team's Civicsmith, so there is nothing to serve under that name", { stringify: String(JSON.stringify(n)) }) };
       /* END DEC-49 REGION is-public-read-not-registered */
     }
     const args = {};
@@ -810,6 +809,85 @@ export class PublicRead {
     }) };
   }
 
+  /** R38 (T51-75; DEC-330 A37): what each published case froze for one question. `id` is the question's record id, the
+   *  `bundle_id` of the finding published from it. One entry for every published case edition whose roster pins a
+   *  published edition of that finding, in `case_id` then case `edition` order (an edition waiting to be published has
+   *  no row in the published projection and is not listed, R29): the case, its `project`, `signed_at` and `published_at`
+   *  (R29) and `withdrawn` (R20); `finding`, the published finding edition the pin names (the member's own edition, never
+   *  the case's), `version_sha` (what the case pinned) and `pinned` (true when they are the same bytes, false when not,
+   *  null when the case pinned none: never true by default, R13); `strength`, that case's frozen pair read from the
+   *  signed case document where it states one (else the member's own, `strength_from`), `{capture, connection}` and
+   *  `testimony` where the pair carries one, each axis as `publication` R53 gives it, never combined across cases (R11);
+   *  `signed_by` (the case document's signer) and `delivered_by` beside it (R12) and `finding_signed_by`. An edition a
+   *  court order withholds whole, or whose case document one withholds, states `withheld` and no pair or signer (R28).
+   *  A finding in no case answers `cases: []`; no id is `NO_ID`; an id nothing published answers is `publishedCase`'s
+   *  `NOT_PUBLISHED` for an absent case, byte for byte (R14). One set-based read of the pins and one `caseEditionState` per
+   *  case edition; no finding's bytes are fetched. Reads the published projection only (R10, R16), writes nothing and
+   *  never throws on what it reads. */
+  publishedFrozen({ id = null } = {}) {
+    const want = str(id);
+    if (!want) return { ok: false, reason: "NO_ID", detail: "publishedfrozen requires ?id=" };
+    if (!this.#one(`SELECT 1 AS x FROM published_bundles WHERE bundle_id=? LIMIT 1`, want)) return this.#absentCase();
+    const index = this.#withheldIndex();
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.bundle_id=? ORDER BY m.case_id, m.edition`, want);
+    const cases = [];
+    for (const pin of pins) {
+      const ced = Number(pin.edition);
+      const state = this.publication.caseEditionState(pin.case_id, ced);
+      if (!state) continue;
+      const held = (state.findings || []).find((f) => f.bundle_id === want) || null;
+      /* The finding edition the pin names. A pin that names nothing published leaves the member awaiting; the edition the
+         signed case document states for it (`case_roles[].edition`), when that edition is published at other bytes, is
+         the finding whose bytes the pin does not match (`pinned: false`); a pin and a document naming nothing published
+         pin no published edition of this finding, and the case is not listed. */
+      const stated = held ? null : (this.publication.caseDocMemberFrozen(pin.case_id, ced) || new Map()).get(want) || null;
+      const row = held ? null : Number.isInteger(stated && stated.edition)
+        ? this.#one(`SELECT edition, bundle_sha, attestor_key, attestor_member, strength FROM published_bundles
+                      WHERE bundle_id=? AND edition=?`, want, stated.edition) : null;
+      if (!held && !row) continue;
+      const finding = held
+        ? { edition: Number(held.edition), bundle_sha: held.bundle_sha }
+        : { edition: Number(row.edition), bundle_sha: row.bundle_sha };
+      const pair = held ? held.strength : stated.strength;
+      const from = held ? held.frozen_from : "case_document";
+      const attestor = held ? held.attestor : { member: row.attestor_member, key_b64: row.attestor_key };
+      const version = pin.version_sha ?? null;
+      const dates = this.#one(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`,
+                              pin.case_id, ced);
+      const mine = index.editions.get(`${pin.case_id}\u0000${ced}`);
+      const docBy = state.document ? index.bySha.get(state.document.doc_sha) : null;
+      const withheld = (mine && mine.whole) || docBy
+        ? { whole: !!(mine && mine.whole), document: true, orders: mine && mine.whole ? mine.orders : docBy,
+            detail: WITHHELD_SENTENCE } : null;
+      const rows = Array.isArray(pair) ? pair.filter((a) => a && typeof a.axis === "string") : [];
+      const strength = withheld || !rows.length ? null
+        : { capture: rows.find((a) => a.axis === "capture") ?? null, connection: rows.find((a) => a.axis === "connection") ?? null,
+            ...(rows.some((a) => a.axis === "testimony") ? { testimony: rows.find((a) => a.axis === "testimony") } : {}) };
+      const signer = (a) => (a && (a.member != null || a.key_b64 != null) ? { member: a.member ?? null, key_b64: a.key_b64 ?? null } : null);
+      const signedBy = withheld || !state.document ? null : signer(state.document.attestor);
+      const findingBy = signer(attestor);
+      cases.push({
+        case_id: pin.case_id, edition: ced, project: state.project ?? null,
+        signed_at: dates ? dates.signed_at ?? null : null, published_at: dates ? dates.published_at ?? null : null,
+        withdrawn: this.#withdrawnStamp(pin.case_id, ced),
+        finding, version_sha: version, pinned: version === null ? null : version === finding.bundle_sha,
+        strength, strength_from: strength ? from : null,
+        ...(!withheld && !rows.length ? { strength_detail: word("public-read.frozen.strength_detail.none") } : {}),
+        signed_by: signedBy, delivered_by: withheld || !state.document ? null : state.document.delivered_by ?? null,
+        finding_signed_by: findingBy,
+        ...(!withheld && (!signedBy || !findingBy)
+          ? { signer_detail: word("public-read.frozen.signer_detail.unstated") } : {}),
+        withheld });
+    }
+    return { ok: true, id: want, cases,
+             detail: cases.length
+               ? word("public-read.frozen.detail.cases")
+               : word("public-read.frozen.detail.none") };
+  }
+
   /* REC-22: ONE PUBLISHED EDITION, everything the public read path can say about
      it from the store side. Reads published_bundles and published_edges and
      NOTHING else -- it never joins the working corpus, never reports a working
@@ -1049,9 +1127,7 @@ export class PublicRead {
                division: {
                  parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
                  siblings: names.filter((n) => n.kind === "division_sibling").map((n) => n.to).sort(),
-                 detail: "a division's parent and siblings are NAMED and never served: the parent is terminal and "
-                       + "can never be published, a sibling may not be, and a reader who can see one half of a "
-                       + "divided question is entitled to know the other half exists (R4).",
+                 detail: localize("public-read.index.a_divisions_parent_and_siblings", "a division's parent and siblings are NAMED and never served: the parent is terminal and can never be published, a sibling may not be, and a reader who can see one half of a divided question is entitled to know the other half exists (R4)."),
                } };
     });
 
@@ -1137,10 +1213,7 @@ export class PublicRead {
              project_reference: signed ? workingOnOf(signed.fm) : null,
              bar: state.bar ?? null,
              bar_detail: state.bar
-               ? "the standard of evidence this case was held to, read from its publishing project at the "
-               + "moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches "
-               + "to any finding, and nothing composed it across projects. Each member's own derived pair is "
-               + "printed beside it inside findings[], and a member may exceed it."
+               ? localize("public-read.index.the_standard_of_evidence_this", "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it.")
                : word("public-read.bar_recorded_case"),
              bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),
              /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
@@ -1156,9 +1229,9 @@ export class PublicRead {
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited
-                from the item that found it: zero reads in `civicos-ui`, in
-                `newgroup`, in `docprofile`, in `pdf-worker`, in `tools`, and not
-                one assertion in the test battery of the day. The surface renders `ratified_at`,
+                from the item that found it: no screen of the interface reads it
+                (`screens-publish`, which draws this answer, holds no read of it),
+                and no test of the day asserted it. The surface renders `ratified_at`,
                 which is the instant the record can actually stand behind.
                 Removed rather than blanked, on REC-41's precedent: there is no
                 key in the answer for a later refactor to re-expose and a caller
@@ -1245,13 +1318,7 @@ export class PublicRead {
              /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
              group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
-             case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
-                        + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
-                        + "the case carries the scope that brought them together, the completeness "
-                        + "assertion, and the team's acknowledgement of the bias the case was produced "
-                        + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
-                        + "team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
-                        + "composing two findings' strengths into one letter is the substitution R2 forbids.",
+             case_detail: localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."),
              graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
@@ -1508,7 +1575,7 @@ export class PublicRead {
                        statements: l.statements.map((x) => ({ bundle: x.bundle, id: x.id, kind: x.kind,
                          subject: x.subject, text: x.text, justification: x.justification,
                          citations: x.citations, withheld: x.withheld })),
-                       closing: print ? LENS_CLOSING_SENTENCES.filter((c) => print.includes(c)) : [],
+                       closing: print ? lensClosingSentencesOf(doc.fm).filter((c) => print.includes(c)) : [],
                        print } };
     }
     if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null,
@@ -1750,10 +1817,7 @@ export class PublicRead {
     /* DEC-49 REGION is-finding-in-several-cases */
     return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,
              memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
-             detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). `
-                   + `A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact `
-                   + `with its own scope and completeness assertion — so this read cannot choose one for `
-                   + `you. Ask again naming the case you mean.` };
+             detail: localize("public-read.index.bundleid_is_a_published_finding", "{bundleId} is a published finding of {length} cases ({cases}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion — so this read cannot choose one for you. Ask again naming the case you mean.", { bundleId: String(bundleId), length: String(cases.length), cases: String(cases.join(", ")) }) };
     /* END DEC-49 REGION is-finding-in-several-cases */
   }
 
@@ -1874,6 +1938,8 @@ export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);
   return {
     publishededitions: () => r.publishedEditions(q("id")),
+    /* R38: what each published case froze for a question, by the question's id; no credential (R10). */
+    publishedfrozen: () => r.publishedFrozen({ id: q("id") }),
     /* REC-22: the public read path's store side. */
     publishedcase: () => r.publishedCaseWithCorrections({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
                                            sha256: (q("sha256") || "").toLowerCase() || null }),

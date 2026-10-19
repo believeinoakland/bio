@@ -3,8 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
-const NOT_STATED = { stated: false, says: "not stated in this source" };
+const NOT_STATED = { stated: false, says: word("screen.money.notstated") };
 const snapshot = (s) => JSON.stringify(["money_facts", "money_concerns", "money_withdrawals", "money_sets", "money_set_acts", "money_set_proposals"]
   .map((t) => s.rows(`SELECT * FROM ${t} ORDER BY rowid`)));
 
@@ -66,11 +67,11 @@ test("R25 moved undetermined: no event concerned (its period unused), an event n
   const { row } = trail(s, [none, onUndated, both, neither]);
   const m = row(none).moved;
   assert.equal(m.state, "undetermined");
-  assert.match(m.why, /concerns no event/);
+  assert.equal(m.why, word("money.undetermined.fact_concerns_event"));
   assert.equal(JSON.stringify(m).includes("2014-02"), false, "never placed by the fact's period");
   assert.deepEqual(row(none).gaps, ["moved"]);
   assert.deepEqual([row(onUndated).moved.state, row(onUndated).moved.event], ["undetermined", undated]);
-  assert.match(row(onUndated).moved.why, /placed nowhere/);
+  assert.equal(row(onUndated).moved.why, word("money.undetermined.event_placed_nowhere", { event_id: undated }));
   assert.deepEqual([row(both).moved.state, row(both).moved.events.sort()], ["undetermined", [a, b].sort()]);
   assert.deepEqual([row(neither).moved.state, row(neither).moved.events.sort()], ["undetermined", [meeting, award].sort()]);
   // events not wired: undetermined, never a date
@@ -102,7 +103,7 @@ test("R25 compared: a budget figure is answered beside the paid figure sharing i
   const r = row(adopted);
   assert.deepEqual(r.compared.map((c) => c.fact_id), [paid]);
   assert.deepEqual(r.compared[0].reconcile, s.m.reconcile({ a: adopted, b: paid, viewer: ANN }));
-  assert.deepEqual(r.compared[0].reconcile.differs.map((d) => d.dimension), ["phase or stage"]);
+  assert.deepEqual(r.compared[0].reconcile.differs.map((d) => d.dimension), [word("money.push.phase_stage")]);
   assert.equal(r.budget_only, false);
   assert.equal(/"(sum|total|merged|net)"/.test(JSON.stringify(r)), false, "nothing summed or merged");
   assert.deepEqual([row(lone).compared, row(lone).budget_only], [[], true]);

@@ -90,7 +90,7 @@ import { MEANING_ARMS, meaningRowsBranch } from "../../agent-steps/test/plane-me
    ANY level, so B6's `level-empty:<level>` assertion and B4/B5/B8/B9's
    `new-version` fixtures were all green over submissions a deployed plane
    refuses (VF-4, live at 0.57.0, MEASUREMENTS M-8). */
-import { suggestBranch, WIRE_CHECKS } from "../../agent-steps/test/plane-suggest.mjs";
+import { suggestBranch, WIRE_CHECKS, NOT_PRINCIPAL } from "../../agent-steps/test/plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "../../agent-steps/test/plane-capturerequest.mjs";
 import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
@@ -119,6 +119,7 @@ import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 import { planeEntry } from "./plane-world.mjs";
 import { PLANE_OPS_PINNED } from "./owners.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1458,8 +1459,9 @@ console.log("\n--- FT0 · FL-11/FL-12: the mock itself REFUSES by name what the 
   ];
   t("FT0 (FL-11): the suggest mock refuses no target, a project id, a question outside the run's context, "
     + "another principal and no run — each by the PLANE's code",
-    codes, ["SUGGEST_NO_TARGET", "SUGGEST_NOT_AN_INQUIRY", "SUGGEST_OUTSIDE_RUN_CONTEXT",
-            "AI_RUN_NOT_PRINCIPAL", "SUGGEST_NO_RUN"]);
+    codes, [WIRE_CHECKS.SUGGEST_NO_TARGET, WIRE_CHECKS.SUGGEST_NOT_AN_INQUIRY, WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT]
+      .map((row) => Object.keys(WIRE_CHECKS).find((k) => WIRE_CHECKS[k] === row))
+      .concat([NOT_PRINCIPAL.code, Object.keys(WIRE_CHECKS).find((k) => WIRE_CHECKS[k] === WIRE_CHECKS.SUGGEST_NO_RUN)]));
   const outside = await ask("suggest", { ...good, target: "INQ-ELSEWHERE" });
   t("FT0b (FL-11): …and SUGGEST_OUTSIDE_RUN_CONTEXT carries the catalog's C-number and translation, not a lookalike",
     [outside.check, outside.translation, outside.wrote], [WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT.check,
@@ -1511,7 +1513,7 @@ console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its
   })).json();
   const stOut = await mockState(mfOut);
   t("FT1 (FL-11): the run publishes its target as the context question, and says why",
-    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", "the run's context question"]);
+    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", localize("agent-harness.harness.the_runs_context_question", "the run's context question")]);
   t("FT1b (FL-11): dedup read `op=basisversions` under the RUN's target, never under an empty id",
     st.bvIds, ["INQ-FL11"]);
   t("FT1c (FL-11): the table-made level-empty candidate AND the untargeted reading LANDED on the run's question",
@@ -1560,7 +1562,7 @@ const projectRun = async (cfg, candidates) => {
   t("FT2 (D-451): a project run citing ONE question seeds THAT question as its target, and says why — never "
     + "the project id",
     [out.target?.id ?? null, out.target?.basis ?? null],
-    ["INQ-CITED", "the one question the run's project confirmed-cites"]);
+    ["INQ-CITED", localize("agent-harness.harness.the_one_question_the_runs", "the one question the run's project confirmed-cites")]);
   t("FT2b (FL-11): no call this run made named the project as a suggestion's target",
     st.log.filter((l) => l.op === "suggest" && l.body?.target === "PROJ-FL11").length, 0);
   t("FT2c (FL-11): a reading aimed at a question the project confirmed-cites LANDS",

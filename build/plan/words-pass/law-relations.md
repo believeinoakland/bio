@@ -1,0 +1,15 @@
+# law-relations: the words check after the conversion (K3949)
+
+Layer 5. 4 findings of `checks/words.mjs` (civicos-process ebcc1a3) on tranche/T51 after the pass; each line: arm, file:line, the check's excerpt, and the codemod's reason it was not converted (blank: the codemod did not take that kind). Fix every one in your job (K3919): a sentence people read is read through `word(key)` (a words.json row) or `localize(id, en)` (setup-words R14), a test asserts the key or compares with `word`/`localize`, never the text; a hand-list is assembled from each module's own declaration; a signed text changes only as a new version (K1333).
+
+- inline `bio-plane/src/law-relations/index.mjs:300` "enactment event ({event: EVT-…, edge: start or end}). Nothing was w..."
+- inline `bio-plane/src/law-relations/index.mjs:618` "; only the first {} court standards were read"
+- inline `bio-plane/src/law-relations/index.mjs:662` [copy] "a read names the member reading; an absent viewer is neither an adm..."
+- inline `bio-plane/src/law-relations/index.mjs:672` [copy] "undetermined at the date asked"
+
+## Plain findings (K3957)
+
+2 lowercase, unpunctuated strings of 5+ words that the check's `plain` arm (civicos-process 27aa50e) counts. For each, judge: a sentence a member can read is read through `localize('law-relations.<file stem>.<slug>', en, vars)` (or `word(key)` where a row exists), and a test that copies it compares with `localize`/`word`; text no member ever reads (a developer, diagnostic or wire string) is listed in a REPORT to BOB with why, and BOB hands it to the design's `unkeyed` list (K3944). None is left unjudged.
+
+- plain `bio-plane/src/law-relations/index.mjs:339` "excepts, implements, incorporates) are kept apart and never read as one list (D192)"
+- plain `bio-plane/src/law-relations/index.mjs:627` "refused); this answer stands without it"

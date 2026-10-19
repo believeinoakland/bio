@@ -9,6 +9,7 @@ import {
   contentCitedAs, canonicalExtent, describeExtent,
 } from "../../../src/textchain.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape", "doc-para", "sheet-range", "doc-table", "image"];
 const JUNK = [undefined, null, 0, 1, -1, 1.5, NaN, "", " ", "x", true, [], {}, [1, 2], Symbol.for("s"), () => 1,
@@ -20,14 +21,14 @@ test("R92: CONTENT_EXTENT_KINDS is the eight landed kinds, in order, each with i
   assert.equal(Object.getPrototypeOf(CONTENT_EXTENT_KINDS), Object.prototype);
   assert.deepEqual(Object.keys(CONTENT_EXTENT_KINDS), KINDS);
   assert.deepEqual(CONTENT_EXTENT_KINDS, {
-    document: { landed: true, human: "the whole document" },
+    document: { landed: true, human: word("content.why.whole_document") },
     "pdf-page": { landed: true, human: "a page of a PDF" },
-    "sheet-cell": { landed: true, human: "a cell of a spreadsheet" },
-    "slide-shape": { landed: true, human: "a shape on a slide" },
-    "doc-para": { landed: true, human: "a paragraph of a document" },
-    "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
-    "doc-table": { landed: true, human: "a table in a document" },
-    image: { landed: true, human: "an image in a document" },
+    "sheet-cell": { landed: true, human: word("textchain.text.cell_spreadsheet") },
+    "slide-shape": { landed: true, human: word("textchain.text.shape_deck") },
+    "doc-para": { landed: true, human: word("textchain.text.paragraph_document") },
+    "sheet-range": { landed: true, human: word("textchain.text.range_cells_spreadsheet") },
+    "doc-table": { landed: true, human: word("textchain.text.table_document") },
+    image: { landed: true, human: word("textchain.text.image_document") },
   });
   assert.equal(Object.hasOwn(CONTENT_EXTENT_KINDS, "dom"), false);
 });
@@ -179,30 +180,30 @@ test("R98: describeExtent is the authored ref, else the derived form per arm, el
   const cases = [
     [{ kind: "pdf-page", page: 3, ref: "  printed p. 4 " }, "printed p. 4"],
     [{ kind: "pdf-page", page: 3, ref: "   " }, "page 4"],
-    [{ kind: "document" }, "the whole document"],
+    [{ kind: "document" }, word("content.why.whole_document")],
     [{ kind: "pdf-page", page: 0 }, "page 1"],
     [{ kind: "pdf-page", page: 0, rect: [0, 0, 1, 1] }, "page 1, a region of it"],
-    [{ kind: "pdf-page", page: "0" }, "a page of this document"],
+    [{ kind: "pdf-page", page: "0" }, word("textchain.text.page_document")],
     [{ kind: "sheet-cell", sheet: " Sheet1 ", cell: " B14 " }, "Sheet1!B14"],
-    [{ kind: "sheet-cell", sheet: "Sheet1" }, "a cell of this spreadsheet"],
+    [{ kind: "sheet-cell", sheet: "Sheet1" }, word("textchain.text.cell_spreadsheet")],
     [{ kind: "doc-para", para: 11, run: 2 }, "¶12"],
-    [{ kind: "doc-para" }, "a paragraph of this document"],
+    [{ kind: "doc-para" }, word("textchain.text.paragraph_document")],
     [{ kind: "slide-shape", slide: 7, shape: 3 }, "slide 7"],
-    [{ kind: "slide-shape", shape: 3 }, "a shape in this deck"],
+    [{ kind: "slide-shape", shape: 3 }, word("textchain.text.shape_deck")],
     [{ kind: "sheet-range", sheet: "S", range: "c3:$b$2" }, "S!B2:C3"],
-    [{ kind: "sheet-range", sheet: "S", range: "A:C" }, "a range of cells in this spreadsheet"],
+    [{ kind: "sheet-range", sheet: "S", range: "A:C" }, word("textchain.text.range_cells_spreadsheet")],
     [{ kind: "doc-table", table: 0, cell: "$b$2" }, "table 1, B2"],
     [{ kind: "doc-table", table: 2 }, "table 3"],
-    [{ kind: "doc-table" }, "a table in this document"],
+    [{ kind: "doc-table" }, word("textchain.text.table_document")],
     [{ kind: "image", part: " Word/Media/IMAGE123456789.png " }, "image word/media/i"],
     [{ kind: "image", page: 4 }, "an image on page 5"],
-    [{ kind: "image" }, "an image in this document"],
-    [{ kind: "dom" }, "a part of this document the record cannot name"],
-    [{ kind: "constructor" }, "a part of this document the record cannot name"],
-    [{ kind: "__proto__" }, "a part of this document the record cannot name"],
+    [{ kind: "image" }, word("textchain.text.image_document")],
+    [{ kind: "dom" }, word("textchain.text.part_document_record")],
+    [{ kind: "constructor" }, word("textchain.text.part_document_record")],
+    [{ kind: "__proto__" }, word("textchain.text.part_document_record")],
   ];
   for (const [e, want] of cases) assert.equal(describeExtent(e), want, JSON.stringify(e));
-  for (const x of JUNK) assert.equal(describeExtent(x), "a part of this document the record cannot name");
+  for (const x of JUNK) assert.equal(describeExtent(x), word("textchain.text.part_document_record"));
   /* Over every kind, field and malformation: R98's sentence, spelled again here, and always a non-empty string. */
   let n = 0;
   for (const e of extents()) {
@@ -221,25 +222,25 @@ function r98(x) {
   if (typeof e.ref === "string" && e.ref.trim() !== "") return e.ref.trim();
   const sheet = sheetOf(e.sheet);
   switch (e.kind) {
-    case "document": return "the whole document";
-    case "pdf-page": return !Number.isInteger(e.page) ? "a page of this document"
+    case "document": return word("content.why.whole_document");
+    case "pdf-page": return !Number.isInteger(e.page) ? word("textchain.text.page_document")
       : `page ${e.page + 1}${Array.isArray(e.rect) && e.rect.length === 4 ? ", a region of it" : ""}`;
-    case "sheet-cell": return sheet && sheetOf(e.cell) ? `${sheet}!${sheetOf(e.cell)}` : "a cell of this spreadsheet";
-    case "doc-para": return Number.isInteger(e.para) ? `¶${e.para + 1}` : "a paragraph of this document";
-    case "slide-shape": return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+    case "sheet-cell": return sheet && sheetOf(e.cell) ? `${sheet}!${sheetOf(e.cell)}` : word("textchain.text.cell_spreadsheet");
+    case "doc-para": return Number.isInteger(e.para) ? `¶${e.para + 1}` : word("textchain.text.paragraph_document");
+    case "slide-shape": return Number.isInteger(e.slide) ? `slide ${e.slide}` : word("textchain.text.shape_deck");
     case "sheet-range": {
       const range = typeof e.range === "string" ? canonicalRange(e.range) : null;
-      return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+      return sheet && range ? `${sheet}!${range}` : word("textchain.text.range_cells_spreadsheet");
     }
     case "doc-table": {
-      if (!Number.isInteger(e.table)) return "a table in this document";
+      if (!Number.isInteger(e.table)) return word("textchain.text.table_document");
       const cell = sheetOf(e.cell);
       return `table ${e.table + 1}${cell ? `, ${cell.split("$").join("").toUpperCase()}` : ""}`;
     }
     case "image":
       if (sheetOf(e.part)) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
-      return Number.isInteger(e.page) ? `an image on page ${e.page + 1}` : "an image in this document";
+      return Number.isInteger(e.page) ? `an image on page ${e.page + 1}` : word("textchain.text.image_document");
     default: return typeof e.kind === "string" && Object.hasOwn(CONTENT_EXTENT_KINDS, e.kind)
-      ? CONTENT_EXTENT_KINDS[e.kind].human : "a part of this document the record cannot name";
+      ? CONTENT_EXTENT_KINDS[e.kind].human : word("textchain.text.part_document_record");
   }
 }

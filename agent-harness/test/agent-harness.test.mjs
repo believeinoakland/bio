@@ -13,6 +13,7 @@ import * as HARNESS from "../src/harness.mjs";
 import * as SUBSESSION from "../src/subsession.mjs";
 import { DEPLOYED_MODES, RUN_MODES, checkCondition } from "../../bio-plane/src/run-rules/index.mjs";
 import { CONDITION_KINDS } from "../../bio-plane/src/observation-log/vocabulary.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const {
   CONTROL_FLOW, PLAN_FLOW, FIRST_STEP, MODES, LEVELS, BUDGET_BOUNDS, PLAN_BUDGET_BOUNDS, PLAN_MAX_PASSES,
@@ -102,7 +103,7 @@ test("R1: an unknown step closes with `completed` and says so", () => {
   for (const step of ["nowhere", "fan-out", "CLOSE"]) {
     const d = nextStep({ step, pass: 0, maxPasses: 3 });
     assert.deepEqual([d.step, d.bound], ["close", "completed"]);
-    assert.match(d.why, /is not a row in this table/);
+    assert.equal(d.why, localize("agent-harness.harness.at_is_not_a_row", "'{at}' is not a row in this table", { at: step }));
     assert.ok(d.why.includes(step));
   }
 });
@@ -158,19 +159,19 @@ test("R2: a mode that is not deployed closes mode-not-deployed at its first step
 });
 
 test("R2: its why tells a mode the table holds and has not deployed from a word it does not hold, and names the deployed modes", () => {
+  /* the gate's sentence, as the product composes it from the mode's sentence (localize equality, K3810) */
+  const gateWhy = (which) => localize("agent-harness.harness.which_check_is_the_first", "{which}. CHECK is the first deployed mode (§2); deployed now: {deployed}; not yet: {waiting}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.", { which, deployed: "check, plan", waiting: "investigate, extract" });
   for (const mode of ["investigate", "extract"]) {
     const why = gateStep({ mode }).why;
-    assert.match(why, new RegExp(`mode '${mode}' is not deployed yet — it is a row in this table`));
-    assert.ok(why.includes(MODES[mode].does));
-    assert.match(why, /deployed now: check, plan; not yet: investigate, extract\./);
+    const which = localize("agent-harness.harness.mode_key_is_not_deployed", "mode '{key}' is not deployed yet — it is a row in this table ({does}), and enabling it is an EDIT to this file under review, never a request parameter", { key: mode, does: MODES[mode].does });
+    assert.equal(why, gateWhy(which));
   }
   for (const mode of ["sorcery", "Check", ""]) {
     const why = gateStep({ mode }).why;
-    assert.match(why, /it is no mode this table knows at all \(the table holds: check, investigate, extract, plan\)/);
-    assert.match(why, /deployed now: check, plan;/);
-    assert.doesNotMatch(why, /not deployed yet/);
+    const which = localize("agent-harness.harness.mode_v1_is_not_deployed", "mode '{v1}' is not deployed — it is no mode this table knows at all (the table holds: {keys})", { v1: mode || "(none)", keys: "check, investigate, extract, plan" });
+    assert.equal(why, gateWhy(which));
   }
-  assert.match(gateStep({}).why, /mode '\(none\)' is not deployed/);
+  assert.equal(gateStep({}).why, gateWhy(localize("agent-harness.harness.mode_v1_is_not_deployed", "mode '{v1}' is not deployed — it is no mode this table knows at all (the table holds: {keys})", { v1: "(none)", keys: "check, investigate, extract, plan" })));
 });
 
 /* ============================================================ R3: the stop and the pass limit */
@@ -190,7 +191,7 @@ test("R3: above every row after the gate, stopBecause asks fetches, subsessions,
     for (const bound of BUDGET_BOUNDS) {
       const d = nextStep({ step, mode: "check", pass: 0, maxPasses: 3, budget: spent(bound), queue: [{ name: "a" }], resumeAt: "fanout" });
       assert.deepEqual([d.step, d.bound], ["close", bound], `${step}/${bound}`);
-      assert.match(d.why, new RegExp(`the '${bound}' budget is spent`));
+      assert.equal(d.why, localize("agent-harness.harness.the_stopped_budget_is_spent", "the '{stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where", { stopped: bound }));
     }
 });
 
@@ -221,7 +222,7 @@ test("R3: a pass counts when it is done (next-pass): a driven run makes exactly 
     assert.equal(r.bound, "completed");
     assert.equal(r.state.pass, passes);
     assert.equal(r.trace.filter((x) => x.startsWith("next-pass>")).length, passes);
-    assert.match(r.why, new RegExp(`${passes} of ${passes} passes are done`));
+    assert.equal(r.why, localize("agent-harness.harness.pass_of_passlimit_passes_are", "{pass} of {passLimit} passes are done; the loop's termination is the table's and not the model's", { pass: String(passes), passLimit: String(passes) }));
   }
   /* entering next-pass moves the counter; no other move does */
   assert.equal(advance({ step: "dedup", pass: 1 }, { step: "next-pass" }).pass, 2);
@@ -395,8 +396,9 @@ test("R6: it has no fanout: no row and no edge names fanout, collect or next-pas
   /* exactly the reads R6's table makes (that each is a declared read is agent-worker's, its R37 over its own `ops.mjs`) */
   assert.deepEqual([...new Set(ops)].sort(), ["availableactions", "consequencesof", "determination", "plan", "plans",
     "profiles", "publishededitions", "standard"]);
+  /* R6's own words: it calls no airunspawn, capturerequest or suggest */
   for (const op of ops)
-    assert.ok(!["airunspawn", "capturerequest", "suggest", "optionpropose", "airuntick", "airunclose", "fetch"].includes(op), op);
+    assert.ok(!["airunspawn", "capturerequest", "suggest"].includes(op), op);
 });
 
 test("R6: nextPlanStep never leaves a row's declared steps, and a refusal goes to adjust, never back to submit", () => {
@@ -441,7 +443,7 @@ test("R6: one pass (the pass limit is 1), and stopBecause asks proposals then wa
 test("R10: MODES.plan is deployed, check stays deployed, investigate and extract stay as they are", () => {
   assert.deepEqual(Object.entries(MODES).map(([k, m]) => [k, m.deployed]),
     [["check", true], ["investigate", false], ["extract", false], ["plan", true]]);
-  assert.doesNotMatch(MODES.plan.does, /not yet deployed/);
+  assert.equal(MODES.plan.does, localize("agent-harness.harness.mode_plan_does", "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md §4)"));
   /* the gate lets a plan-mode run through, on either table, and the run walks PLAN_FLOW */
   for (const flow of [CONTROL_FLOW, PLAN_FLOW]) {
     const d = (flow === PLAN_FLOW ? nextPlanStep : nextStep)({ mode: "plan", pass: 0 });
@@ -497,7 +499,7 @@ test("R7: each returns only reports: the contract it is briefed with is R5's, an
       keys: Object.keys(REPORT_KEYS), required: ["level", "state"], citation_keys: ["address"],
       states: Object.keys(REPORT_STATES), summary_max: SUMMARY_MAX, conditions: Object.keys(CONDITION_KINDS),
       citations_max: CITATIONS_MAX, address_max: ADDRESS_MAX,
-      rule: "return a REPORT with a citation, never documents. The parent re-reads by address." });
+      rule: localize("agent-harness.subsession.return_a_report_with_a", "return a REPORT with a citation, never documents. The parent re-reads by address.") });
   const returns = [good, { level: "content", state: "LOOKED_ABSENT", observed_at: "log:2", text: "the document" }, "bytes",
                    { level: "internet", state: "NEVER_LOOKED" }];
   const { taken, refused } = takeReports(returns);
@@ -657,7 +659,7 @@ test("R13: an empty-level candidate's description names the target as \"this que
   const state = { reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:4", summary: "none" }], scope: scopeOf(LEVELS) };
   const [made] = HARNESS.emptyLevelCandidates(state, "INQ-2026-0042");
   assert.equal(made.target, "INQ-2026-0042");
-  assert.match(made.description, /this question/);
+  assert.equal(made.description, localize("agent-harness.harness.this_run_searched_the_reported", "this run searched the {reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at {String}.", { reported: "documents", String: "log:4" }));
   assert.equal(made.description.includes("INQ-2026-0042"), false);
 });
 
@@ -696,11 +698,12 @@ test("R15: a pass whose candidates are all dropped as held closes before the nex
   assert.equal(r.bound, "completed");
   assert.equal(r.state.pass, 1);
   assert.deepEqual(r.trace.filter((x) => x.startsWith("next-pass>")), ["next-pass>close"]);
-  assert.match(r.why, /added no new candidate/);
+  const addedNothing = localize("agent-harness.harness.pass_pass_added_no_new", "pass {pass} added no new candidate (each one composed was already held, or none was composed); a further pass would find nothing the record does not hold, so the run closes", { pass: "1" });
+  assert.equal(r.why, addedNothing);
   /* a pass that composed none closes the same way */
   const none = walk({ mode: "check", maxPasses: 3 });
   assert.deepEqual([none.bound, none.state.pass], ["completed", 1]);
-  assert.match(none.why, /added no new candidate/);
+  assert.equal(none.why, addedNothing);
 });
 
 test("R15: control: a pass that submits a new candidate goes on to the next pass, below maxPasses", () => {
@@ -737,7 +740,7 @@ test("R16: composed 1, written 0, at the last pass: the close is not completed a
   assert.equal(d.step, "close");
   assert.notEqual(d.bound, "completed");
   assert.equal(d.bound, "nothing-written");
-  assert.match(d.reason, /^nothing written: 1 candidate\(s\) composed/);
+  assert.equal(d.reason, localize("agent-harness.harness.nothing_written_composed_candidate_s", "nothing written: {composed} candidate(s) composed, {kept} sent to be written, none written{v1}", { composed: "1", kept: "1", v1: "" }));
   assert.ok(d.why.includes(d.reason), "the close's why carries the reason");
   /* the same, driven as the shell drives it: compose one, keep it, the plane refuses it, the adjust drops it */
   let w = { step: "compose", pass: 0, maxPasses: 1, mode: "check", candidates: [{ name: "c" }] };

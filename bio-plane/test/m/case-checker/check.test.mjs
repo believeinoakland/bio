@@ -497,6 +497,28 @@ test("R10: a bio-case-document/7 case file compares its complete edition rendere
   assert.equal(renamed.complete_edition.equal, false);
 });
 
+test("R10 R25 (T51-142): a bio-case-document/8 case file is accepted as a /7 one is, and compares its complete edition rendered in its own format's words; a /7 case file stays as it was", async () => {
+  const eight = { format: "bio-case-document/8" };
+  const r = await check(eight);
+  assert.equal(r.complete_edition.equal, true, r.complete_edition.detail);
+  assert.deepEqual(r.integrity.departures, []);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  const edition8 = caseFile(eight).bytesOf.get(CG.caseFilePath("complete_edition")).toString("utf8");
+  const edition7 = caseFile({ format: "bio-case-document/7" }).bytesOf.get(CG.caseFilePath("complete_edition")).toString("utf8");
+  assert.ok(edition8.includes("Civicsmith") && !edition8.includes("CivicOS"));
+  assert.notEqual(edition8, edition7, "the /8 edition is rendered in the /8 words, not the /7 ones");
+  /* control: the /7 case file's edition carried in the /8 case file is not the edition the rest renders; and the other way round */
+  const swapped = await check({ ...eight, completeEdition: edition7 });
+  assert.equal(swapped.complete_edition.equal, false);
+  assert.ok(swapped.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+  const swapped7 = await check({ format: "bio-case-document/7", completeEdition: edition8 });
+  assert.equal(swapped7.complete_edition.equal, false);
+  /* control: a /7 case file checked beside it is as before */
+  const seven = await check({ format: "bio-case-document/7" });
+  assert.equal(seven.complete_edition.equal, true, seven.complete_edition.detail);
+  assert.deepEqual(results(seven), ALL_RECREATED);
+});
+
 test("R12: no answer composes a case-level strength or a single verdict: pairs are per finding and per axis, and recreation is never stated as endorsement", async () => {
   for (const r of [await check(), await check({ caseSigner: "mallory" })]) {
     const top = Object.keys(r);

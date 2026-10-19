@@ -26,13 +26,13 @@ registerDoctype({
     return { entities: [{ kind: "probe", key: String(ctx.origin), label: "the origin handed in", facts: {} }] };
   },
 });
-const MEMBER_ONLY = "an account-gated register is read only from a member's own capture";
+const MEMBER_ONLY = "member-only-register";
 registerDoctype({
   key: "member_only_register", label: "a member-only register", version: 1, contract: null,
   detect(ctx) {
     if (!/Register of Actions/.test(String((ctx && ctx.text) || ""))) return { match: false, confidence: "none", signals: [] };
-    if (ctx.origin !== "member") return { match: false, confidence: "none", signals: ["a register of actions"], why: MEMBER_ONLY };
-    return { match: true, confidence: "certain", signals: ["a register of actions", "a member's own capture"] };
+    if (ctx.origin !== "member") return { match: false, confidence: "none", signals: ["register-of-actions"], why: MEMBER_ONLY };
+    return { match: true, confidence: "certain", signals: ["register-of-actions", "member-capture"] };
   },
   parse: () => ({ entities: [{ kind: "register", key: "r", label: "a register", facts: {} }] }),
 });

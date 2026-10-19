@@ -4,6 +4,8 @@
  * `NO_SUCH_ENTITY` and `NO_ENTITY` are `entities`' (its R36, R37), `NO_SUCH_STANDARD` is `standards'` (its R17),
  * `NO_SUCH_FACT` `money`'s and `NO_SUCH_EVENT` `events`' (K1569): answered through their one functions, never minted here. No translation names a place (R23). */
 
+import { word, localize } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/duties/index.mjs ${fn} > ${region}`;
 const row = (n, fn, region, translation) => Object.freeze({ check: `C-133.${n}`, where: at(fn, region), translation });
 
@@ -13,12 +15,9 @@ const row = (n, fn, region, translation) => Object.freeze({ check: `C-133.${n}`,
    never holds a copy of its sentence. `refusal.PROMISE_DATE_UNREAD` is not taken in T46: its sentence describes a
    promise held with no due date, while R30 refuses it and writes nothing (R32; K2919). */
 export const DUTIES_WORDS = Object.freeze({
-  "refusal.RESPONSE_KIND_UNKNOWN": "An obligation taken from a reply or a report is either a promise the body made or a "
-    + "response the report requires. This is neither. Nothing was written.",
-  "refusal.RESPONSE_EXTENT_NOT_IN": "The passage quoted isn't part of the reply or report the obligation comes from. "
-    + "Quote a passage of that document. Nothing was written.",
-  "refusal.DUTY_SOURCE_NOT_HELD": "This promise rests on a commitment that is still only proposed as a standard. Adopt "
-    + "that commitment first; the obligation then names it. Nothing was written.",
+  "refusal.RESPONSE_KIND_UNKNOWN": word("refusal.RESPONSE_KIND_UNKNOWN"),
+  "refusal.RESPONSE_EXTENT_NOT_IN": word("refusal.RESPONSE_EXTENT_NOT_IN"),
+  "refusal.DUTY_SOURCE_NOT_HELD": word("refusal.DUTY_SOURCE_NOT_HELD"),
 });
 
 /* T48 (R33; N1044, K3150): an undetermined occurrence's member-facing reason, `duty.reason.<code>` for each code of
@@ -27,12 +26,12 @@ export const DUTIES_WORDS = Object.freeze({
    replaces the interim word here, verbatim, under the same key). No sentence names an ISO date, a zone id, or a ruling
    or requirement number. Words, not rows: a reason is no refusal and has no check. */
 export const DUTIES_REASON_WORDS = Object.freeze({
-  "duty.reason.trigger_undated": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
-  "duty.reason.deadline_not_held": "Your team's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
-  "duty.reason.due_not_computed": "The due date couldn't be worked out from what the record holds.",
-  "duty.reason.due_between_days": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
-  "duty.reason.match_undated": "The event that met the duty has no settled date, so whether it was on time is open.",
-  "duty.reason.order_unsettled": "The dates the record holds aren't precise enough to say whether it was on time.",
+  "duty.reason.trigger_undated": word("duty.reason.trigger_undated"),
+  "duty.reason.deadline_not_held": word("duty.reason.deadline_not_held"),
+  "duty.reason.due_not_computed": word("duty.reason.due_not_computed"),
+  "duty.reason.due_between_days": word("duty.reason.due_between_days"),
+  "duty.reason.match_undated": word("duty.reason.match_undated"),
+  "duty.reason.order_unsettled": word("duty.reason.order_unsettled"),
 });
 
 /** R33: an undetermined occurrence's reason, `{code, says}`, its words read by key; a throw for a code with no words
@@ -45,125 +44,93 @@ export function reasonWords(code) {
 
 export const DUTIES_CHECKS = Object.freeze({
   UNKNOWN_MODALITY: row(1, "fieldRefusal", "is-duty-modality",
-    "A duty is one of three things: an obligation (something owed), a prohibition (something not to be done) or a "
-    + "power (something an office may do). This one is none of them. Nothing was written."),
+    word("refusal.UNKNOWN_MODALITY")),
   NO_OBLIGOR: row(2, "fieldRefusal", "is-duty-obligor",
-    "An obligation names who owes it: a registered office or body, an organisation acting for a public body, or a "
-    + "person a law binds. None was named. Nothing was written."),
+    localize("duties.checks.an_obligation_names_who_owes", "An obligation names who owes it: a registered office or body, an organisation acting for a public body, or a person a law binds. None was named. Nothing was written.")),
   PERSON_OBLIGOR_NEEDS_LAW: row(3, "fieldRefusal", "is-duty-person",
-    "An obligation binds a person only where a law or a court binds them by name or role (a filer, a registrant). "
-    + "Cite the held law or order and say the name or role it binds. Nothing was written."),
+    word("refusal.PERSON_OBLIGOR_NEEDS_LAW")),
   NOT_ACTING_FOR_PUBLIC: row(4, "fieldRefusal", "is-duty-public",
-    "An organisation outside government owes a public obligation only when it acts for a public body under a law, "
-    + "contract, franchise or grant. The record holds no such line from this organisation to a public body. Record "
-    + "that line, with its citation, first. Nothing was written."),
+    localize("duties.checks.an_organisation_outside_government_owes", "An organisation outside government owes a public obligation only when it acts for a public body under a law, contract, franchise or grant. The record holds no such line from this organisation to a public body. Record that line, with its citation, first. Nothing was written.")),
   NO_ENFORCER: row(5, "fieldRefusal", "is-duty-enforcer",
-    "An obligation owed by an organisation outside government names the office that enforces it, which is where a "
-    + "concern about it is addressed. None was named. Nothing was written."),
+    localize("duties.checks.an_obligation_owed_by_an", "An obligation owed by an organisation outside government names the office that enforces it, which is where a concern about it is addressed. None was named. Nothing was written.")),
   UNKNOWN_SOURCE_KIND: row(6, "fieldRefusal", "is-duty-source",
-    "An obligation says where it comes from: a held law or standard, a court's order or a report's recommendation, "
-    + "a measured practice, or what it must precede. This source is none of these. Nothing was written."),
+    word("refusal.UNKNOWN_SOURCE_KIND")),
   NO_PORTION: row(7, "fieldRefusal", "is-duty-portion",
-    "The part of the law named is not a part the record holds for that standard. Name a section the standard "
-    + "holds. Nothing was written."),
+    word("refusal.NO_PORTION")),
   VERSION_NOT_HELD: row(8, "fieldRefusal", "is-duty-version",
-    "The version of the law named is not one the record holds for that instrument. Name a held version. Nothing was "
-    + "written."),
+    word("refusal.VERSION_NOT_HELD")),
   UNKNOWN_TRIGGER: row(9, "fieldRefusal", "is-duty-trigger",
-    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item the team's own "
-    + "work records (such as a request the team sent), or a stated date. This is none of them. Nothing was written."),
+    word("refusal.UNKNOWN_TRIGGER")),
   BAD_RECURRENCE: row(10, "fieldRefusal", "is-duty-recurrence",
-    "The repeating schedule could not be read. It is written as a recurrence rule of the supported kind (weekly, "
-    + "monthly or yearly), with its first date. Nothing was written."),
+    word("refusal.BAD_RECURRENCE")),
   UNKNOWN_BASIS_KIND: row(11, "fieldRefusal", "is-duty-basis",
-    "A due date rests on one of four things: a rule the law sets, the body's own commitment, the event it must "
-    + "precede, or the team's own window. This is none of them. Nothing was written."),
+    word("refusal.UNKNOWN_BASIS_KIND")),
   HOLDS_AMOUNT: row(12, "fieldRefusal", "is-duty-amount",
-    "An obligation never holds an amount of money. A payment it requires cites the money facts the record holds. "
-    + "Remove the amount and cite the facts. Nothing was written."),
+    word("refusal.HOLDS_AMOUNT")),
   /* C-133.13 NO_SUCH_FACT: retired (K1569); answered through money's `noSuchFact`. The id is never reused. */
   UNKNOWN_REPORTED_STATUS: row(14, "fieldRefusal", "is-duty-reported",
-    "A reported status is quoted from a report or response, in the words the jurisdiction's response vocabulary "
-    + "uses. This one is not in that vocabulary, or the active jurisdiction profiles hold none. Nothing was written."),
+    word("refusal.UNKNOWN_REPORTED_STATUS")),
   NO_PERFORMANCE: row(15, "fieldRefusal", "is-duty-performance",
-    "An obligation says, in words, the act it requires. None was given. Nothing was written."),
+    word("refusal.NO_PERFORMANCE")),
   BAD_TIME: row(16, "fieldRefusal", "is-duty-time",
-    "The due date's basis is missing what it is computed from: a rule names the rule, a commitment or window its "
-    + "date, a dependency its lead and why. Nothing was written."),
+    word("refusal.BAD_TIME")),
   ARISING_IN_NOT_HELD: row(17, "fieldRefusal", "is-duty-arising",
-    "An obligation arising in a proceeding or report names a registered proceeding or a captured document the "
-    + "record holds. This one names neither. Nothing was written."),
+    word("refusal.ARISING_IN_NOT_HELD")),
   EXTENT_NOT_HELD: row(18, "fieldRefusal", "is-duty-extent",
-    "A reported status quotes a passage of a captured document the record holds. The passage named is not held. "
-    + "Nothing was written."),
+    word("refusal.EXTENT_NOT_HELD")),
   /* C-133.19, .21 and .24 are this module's own codes (R2, K1679; DEC-49 arm A: one code, one condition): the bare
      `MEMBER_ACT_ONLY`, `NO_REASON` and `NO_SUCH_PROPOSAL` are other families' for other conditions. */
   DUTY_MEMBER_ACT_ONLY: row(19, "memberOnly", "is-duty-member",
-    "Adopting, declaring, revising or withdrawing an obligation, matching an event to it and recording its state "
-    + "are a member's own acts. The machine may only propose. Nothing was written."),
+    word("refusal.DUTY_MEMBER_ACT_ONLY")),
   NO_CLAUSE: row(20, "noClause", "is-duty-clause",
-    "Adopting an obligation names the clause it rests on, in the member's own words. None was given. Nothing was "
-    + "written."),
+    word("refusal.NO_CLAUSE")),
   DUTY_NO_REASON: row(21, "noReason", "is-duty-reason",
-    "This act needs your reason, in your own words. None was given. Nothing was written."),
+    word("refusal.DUTY_NO_REASON")),
   NO_DUTY: row(22, "noDuty", "is-duty-named",
-    "This request is about one obligation, named by its id, and it names none. Nothing was written."),
+    word("refusal.NO_DUTY")),
   NO_SUCH_DUTY: row(23, "noSuchDuty", "is-duty-held",
-    "No obligation you can see answers to that id. Nothing was written."),
+    word("refusal.NO_SUCH_DUTY")),
   DUTY_NO_SUCH_PROPOSAL: row(24, "adopt", "is-duty-proposal",
-    "No proposed obligation answers to that id. Nothing was written."),
+    word("refusal.DUTY_NO_SUCH_PROPOSAL")),
   ALREADY_ADOPTED: row(25, "adopt", "is-duty-proposal",
-    "That proposal was already adopted; the answer names the obligation it became. Nothing was written."),
+    word("refusal.ALREADY_ADOPTED")),
   DUTY_WITHDRAWN: row(26, "revise", "is-duty-live",
-    "That obligation was withdrawn; it is kept and shown withdrawn, and it is not revised. Nothing was written."),
+    word("refusal.DUTY_WITHDRAWN")),
   NO_AS_OF: row(27, "occurrencesOf", "is-duty-as-of",
-    "Whether an occurrence was met is answered as known on a stated day. Name the day (an instant). Nothing was "
-    + "written."),
+    word("refusal.NO_AS_OF")),
   /* C-133.28 NO_SUCH_EVENT: retired (K1569); answered through events' `noSuchEvent`. The id is never reused. */
   NO_SUCH_OCCURRENCE: row(29, "matchEvent", "is-duty-occurrence",
-    "No occurrence of this obligation answers to that key. Nothing was written."),
+    word("refusal.NO_SUCH_OCCURRENCE")),
   UNKNOWN_STATE: row(30, "recordTransition", "is-duty-state",
-    "An occurrence is met, met late, overdue, pending, discharged or undetermined. This state is none of them. "
-    + "Nothing was written."),
+    word("refusal.UNKNOWN_STATE")),
   NO_CAUSE: row(31, "recordTransition", "is-duty-cause",
-    "Recording an occurrence's state says why, in your own words. Nothing was written."),
+    word("refusal.NO_CAUSE")),
   NOT_A_SET_AGAINST: row(32, "setAgainst", "is-duty-scope",
-    "Money is set against a prohibition or a threshold whose terms cite money facts and name the funds or bodies "
-    + "they cover. This obligation is not one. Nothing was computed."),
+    word("refusal.NOT_A_SET_AGAINST")),
   NOT_AN_OFFICE: row(33, "powersOf", "is-duty-office",
-    "Powers are read for an office. The subject named is not a registered office. Nothing was read."),
+    word("refusal.NOT_AN_OFFICE")),
   HOLDS_HYPOTHESIS: row(34, "oneHome", "is-duty-no-hypothesis",
-    "An obligation holds what the record holds, never a working hypothesis: a hypothesis id was found in one of its "
-    + "fields. Remove it. Nothing was written."),
+    word("refusal.HOLDS_HYPOTHESIS")),
   HOLDS_DUE_DATE: row(35, "oneHome", "is-duty-no-due",
-    "An obligation never stores its due date: the date is computed from its rule, trigger and calendar each time it "
-    + "is read. Remove the due date. Nothing was written."),
+    word("refusal.HOLDS_DUE_DATE")),
   APPEND_ONLY: row(36, "oneHome", "is-duty-append-only",
-    "A recorded state of an occurrence, and a version of an obligation, are never changed or removed once written; a "
-    + "later record stands beside them. Nothing was changed."),
+    word("refusal.APPEND_ONLY")),
   REVIEW_DATE_UNREAD: row(37, "proposeReview", "is-duty-review-date",
-    "A policy's review date is read from the policy's own words, and those words must state one whole calendar date. "
-    + "These do not (a placeholder, a month without its day, or more than one date): they are kept as written and never "
-    + "completed. Nothing was written."),
+    word("refusal.REVIEW_DATE_UNREAD")),
   REVIEW_EXTENT_NOT_HELD: row(38, "proposeReview", "is-duty-review-extent",
-    "A policy's review date, and its review cycle, are cited from a passage of that policy's own text the record holds. "
-    + "The passage named is not held, or is not part of that policy's text. Nothing was written."),
+    word("refusal.REVIEW_EXTENT_NOT_HELD")),
   NOT_A_POWER: row(39, "usesOfPower", "is-duty-power",
-    "The uses of a power are read for a power: something an office may do. This obligation is not one. Nothing was "
-    + "read or written."),
+    word("refusal.NOT_A_POWER")),
   /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. T46 (R32): C-133.41, .42 and .44 read their
      translations from `DUTIES_WORDS` by key; C-133.43 keeps its own until its sentence and R30 agree. */
   BAD_CAPTURES: row(40, "dutiesArisingIn", "is-duty-captures",
-    "The obligations arising in documents are read for 1 to 200 captured documents, each named by its fingerprint "
-    + "(sha256). Nothing was read."),
+    word("refusal.BAD_CAPTURES")),
   RESPONSE_KIND_UNKNOWN: row(41, "proposeFromResponse", "is-duty-response-kind",
     DUTIES_WORDS["refusal.RESPONSE_KIND_UNKNOWN"]),
   RESPONSE_EXTENT_NOT_IN: row(42, "proposeFromResponse", "is-duty-response-extent",
     DUTIES_WORDS["refusal.RESPONSE_EXTENT_NOT_IN"]),
   PROMISE_DATE_UNREAD: row(43, "proposeFromResponse", "is-duty-promise-date",
-    "A promise's date is read from the body's own words, and those words must state one whole calendar date. These "
-    + "do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and "
-    + "never completed. Nothing was written."),
+    localize("duties.checks.a_promises_date_is_read", "A promise's date is read from the body's own words, and those words must state one whole calendar date. These do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and never completed. Nothing was written.")),
   DUTY_SOURCE_NOT_HELD: row(44, "adopt", "is-duty-source-held",
     DUTIES_WORDS["refusal.DUTY_SOURCE_NOT_HELD"]),
 });

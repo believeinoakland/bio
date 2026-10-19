@@ -1,0 +1,65 @@
+<title>Proposed process edits</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap">
+<style>
+/* Layout: one reading column; each edit a redline block with its location label. */
+:root{--bg:#f7f8f6;--fg:#1d2420;--muted:#5b6660;--rule:#d5dbd6;--accent:#2f6b4f;--del:#9b2f2f;--delbg:#f6e7e5;--insbg:#e5f1ea;
+--display:"Source Serif 4",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;--del:#e59a92;--delbg:#3a2220;--insbg:#1d3328;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;--del:#e59a92;--delbg:#3a2220;--insbg:#1d3328;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:46rem;margin:0 auto;padding-block:2.5rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:1.75rem}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:600}h2{font-size:1.3rem;font-weight:600;color:var(--accent)}
+p,ul{margin:0}section{display:grid;gap:.9rem}
+.lede{color:var(--muted)}
+code{font-family:var(--mono);font-size:.85em}
+.red{display:grid;gap:.4rem;border-left:3px solid var(--rule);padding-left:1rem}
+.red .lab{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.red .why{font-size:.9rem;color:var(--muted)}
+del{background:var(--delbg);color:var(--del);text-decoration:line-through;padding:0 .15em}
+ins{background:var(--insbg);text-decoration:none;padding:0 .15em}
+</style>
+<main>
+<header style="display:grid;gap:.5rem">
+<h1>Proposed process edits</h1>
+<p class="lede">BOB #213, 18 October 2026. Struck text is removed; highlighted text is added. Part 1 is the mechanical-pass amendment you asked for (K3812) and released from your approval (K3813). Part 2 is the mechanics that carry out the P10/P19 change you approved today (K3915) and the fragility check (K3919). Nothing here is in force until you have seen it; each part is then proven on the small dry-run tranche before product work relies on it.</p>
+</header>
+
+<section>
+<h2>Part 1 · One pass for a mechanical change</h2>
+<div class="red"><span class="lab">P7, a new paragraph at its end</span>
+<p><ins><b>A mechanical change is one pass.</b> When the same change, needing no judgment, must be made across many modules (a word replaced; a sentence moved to the word table and read by its key; a test made to read a sentence from the word table instead of copying it; an import or call re-pointed to a module's own declaration), it is made in one pass by a worker in BOB's session while no job runs, not by one job per module. Before the pass is committed, every module it touched has its tests run in one full run, beside the checks and the regenerated artifacts. A module where the change needs a judgment is done by its own job in the same tranche, never skipped. The pass is recorded in a ruling naming every module it touched.</ins></p>
+<p class="why">Why: this is the method that worked for "team" (K3811). Without it, every such change costs one job per module, which is how wording became fragile.</p></div>
+<div class="red"><span class="lab">P8, its first sentence</span>
+<p>The unit of work is the module job<ins>, except a mechanical pass (P7)</ins>.</p></div>
+<div class="red"><span class="lab">Mechanics, a new §5.10</span>
+<p><ins><b>5.10 A mechanical pass (P7, P8).</b> (1) BOB states the change as a rule a script or a worker applies the same way in every module, and the list of modules, read from the checks' findings, never from a hand-made list. (2) No job is running. (3) One worker (sonnet, medium) applies it on the tranche branch, listing any module where the rule needs a judgment; each of those gets its own job in the same tranche. (4) The whole module test suite (<code>module-tests.mjs</code>), <code>checks/run.mjs</code> and the generated artifacts run once; every red is fixed in the pass before it is committed; no red is accepted and no module is dropped to make the run green. (5) BOB reads the diff's summary and every line the worker marked uncertain, then commits. (6) A ruling names the rule, every module touched, every module handed to its own job (each an entry in the running plan, done in this tranche) and the test result.</ins></p></div>
+</section>
+
+<section>
+<h2>Part 2 · Nothing waits, and fragility is checked</h2>
+<div class="red"><span class="lab">Mechanics §6 step 4 (the job)</span>
+<p>Deal with every flaw or improvement found in the module in the job whenever possible. <del>Defer one to <code>next.md</code> through BOB only when it must.</del><ins>One it cannot finish in this job goes to BOB, who places it in this tranche (P10); it reaches <code>next.md</code> only for one of P19's three reasons.</ins></p></div>
+<div class="red"><span class="lab">Mechanics §7 (what BOB resolves)</span>
+<p>routing flaws and improvements (confirm a reported one, then forward it to a running job of that module, <del>or add it to <code>next.md</code></del><ins>else to the START of its module's job in a layer not yet started, else to the tranche's completion round; to <code>next.md</code> only for one of P19's three reasons, named</ins>);</p></div>
+<div class="red"><span class="lab">Mechanics §5.7, a new first step (the completion round)</span>
+<p><ins>0. <b>The completion round</b> (P10). If the plan's completion round holds entries, run it as a layer (§5.3 to §5.6): one job per module, all at once, a provider merged before its users. Then the tranche's own checks, including the words check, must read zero before step 1.</ins></p></div>
+<div class="red"><span class="lab">Mechanics §5.2 step 1 (opening a tranche)</span>
+<p>Open none while an archived plan reads <code>CLOSING</code> and <code>main</code> is behind it (§5.7)<ins>, nor while <code>checks/run.mjs</code>'s words check reports any finding</ins> (P12<ins>, P7</ins>).</p></div>
+<div class="red"><span class="lab">Mechanics §8, a sixth check</span>
+<p><ins>6. <b>Words:</b> no module's own code holds a sentence people read (it reads each by key from the word table); no test copies such a sentence; every key a module reads exists in the word table; no test hand-lists another module's operations, error codes or words (P7; bio K3366, K3810, K3268). It runs in every job's checks before COMPLETE and at every layer close, so a regression fails at once.</ins></p></div>
+<div class="red"><span class="lab">Mechanics §8, check 4 (format), a new clause</span>
+<p><ins>An entry added to <code>next.md</code> while a tranche runs names one of P19's three reasons (Bob's pending decision, a deployment or measurement outside the tranche, something outside the product not yet existing); any other reason fails (P19).</ins></p></div>
+<div class="red"><span class="lab">The heading of §8</span>
+<p>The <del>five</del><ins>six</ins> checks (P4, P7, P15, P16)</p></div>
+</section>
+
+<section>
+<h2>What happens next</h2>
+<ul>
+<li>I write these edits into the process, then prove them on the dry-run tranche: one pass over two toy modules, one completion-round job, a planted fragile sentence and a planted deferral, each caught by the checks.</li>
+<li>The words check (being built now) runs over the whole tree. Its findings, with the audit of every T51 commitment, are the input to the rebuilt plan, which I bring to you before anything starts.</li>
+</ul>
+</section>
+</main>

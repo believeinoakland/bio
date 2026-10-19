@@ -21,7 +21,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
 import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
-import { PNG_REFUSES } from "../src/pngdecode.mjs";
+import { PNG_REFUSES, MEMORY_FEATURE } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
@@ -654,7 +654,7 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
     t(`R42 the PNG codec's refusal, mapped: ${label} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
   }
   t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE",
-    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_REFUSAL_REASONS["an image past the memory bound"]],
+    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_REFUSAL_REASONS[MEMORY_FEATURE]],
     [Object.keys(PNG_REFUSES).sort(), true, "IMAGE_TOO_LARGE"]);
   const withText = await picture(afterIhdr(chunk("tEXt", Buffer.from("Comment\0a member's note"))), 0, { maxEdge: 64, grey: true });
   t("R42 never the file's own bytes: a PNG's text chunk does not reach the answer",
@@ -697,6 +697,27 @@ console.log("\n--- R39: every refusal is declared, in its own words ---");
   t("R39 every reason is a key of REFUSALS", refusals.filter((r) => !(r.reason in REFUSALS)).map((r) => r.reason), []);
   t("R39 every why is exactly that key's text", refusals.filter((r) => r.why !== REFUSALS[r.reason]).map((r) => r.reason), []);
   t("R39 no refusal carries bytes", refusals.filter((r) => "bytes" in r).length, 0);
+  /* words (setup-words R14, K874): every sentence this module refuses with or notes is read through a word id. */
+  const WORD_IDS = [
+    "pdf-pixels.pagepixels.the_document_is_encrypted_streams",
+    "pdf-pixels.pagepixels.the_page_index_is_outside",
+    "pdf-pixels.pagepixels.the_page_object_could_not",
+    "pdf-pixels.pagepixels.the_page_carries_a_text",
+    "pdf-pixels.pagepixels.the_page_carries_marks_that",
+    "pdf-pixels.pagepixels.the_page_paints_no_image",
+    "pdf-pixels.pagepixels.the_page_composes_several_images",
+    "pdf-pixels.pagepixels.the_image_xobject_s_stream",
+    "pdf-pixels.pagepixels.the_image_s_filter_chain",
+    "pdf-pixels.pagepixels.the_image_s_sample_layout",
+    "pdf-pixels.pagepixels.the_decoded_image_is_short",
+    "pdf-pixels.pagepixels.the_decoder_could_not_read",
+    "pdf-pixels.pagepixels.decoding_the_image_would_need",
+    "pdf-pixels.pagepixels.an_inline_image_reading_inline",
+    "pdf-pixels.pagepixels.the_jbig2globals_stream_could_not",
+    "pdf-pixels.pagepixels.a_jbig2_image_is_1",
+    "pdf-pixels.pagepixels.a_colour_space_other_than",
+  ];
+  t("words R14 every id is a dotted pdf-pixels.pagepixels word id, named once", WORD_IDS.filter((id) => !/^pdf-pixels\.pagepixels\.[a-z0-9_]+$/.test(id)).concat(WORD_IDS.length - new Set(WORD_IDS).size ? ["duplicate"] : []), []);
 }
 
 finish();

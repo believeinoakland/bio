@@ -15,6 +15,7 @@ import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs"
 import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS, firstHopWho } from "../../../src/acquisition/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -155,7 +156,7 @@ test("R15 R16: knocksOf answers the knocks sharing a pseudonym, oldest first, wi
   await c.knock({ content: "anon", sourceAddress: "a", now: W * 10 + 600 });
   const p = (await c.knockerDigestOf(SECRET)).pseudonym;
   const all = c.knocksOf({ pseudonym: p });
-  assert.deepEqual([all.ok, all.continuity, all.count, all.limit, all.truncated, all.next], [true, "the same knocker secret was presented", 7, READ_LIMIT.default, false, null]);
+  assert.deepEqual([all.ok, all.continuity, all.count, all.limit, all.truncated, all.next], [true, word("doorbell.continuity"), 7, READ_LIMIT.default, false, null]);
   assert.deepEqual(all.knocks.map((k) => k.knock_id), ids, "oldest first, and only this pseudonym's");
   assert.ok(!JSON.stringify(all).includes("@example.org"), "no contact");
   assert.ok(all.knocks.every((k) => !("contact" in k)));
@@ -201,7 +202,8 @@ test("R13 capture R69 R16 R3: a pull holds the bytes under their own digest, wri
   assert.equal(doc.provenance_chain.length, 1);
   assert.deepEqual([doc.provenance_chain[0].via, doc.provenance_chain[0].bound], ["doorbell", false]);
   assert.match(doc.provenance_chain[0].who, /^instance inst \(Civicsmith\/9\.9\.9\)$/, "acquisition R16 (DEC-124): the product named Civicsmith");
-  assert.match(doc.provenance_chain[0].asserts, /received at the doorbell of your team's Civicsmith as knock .* not fetched/);
+  const { received } = rows(`SELECT received FROM inbox WHERE knock_id = ?`, k.knockId)[0];
+  assert.equal(doc.provenance_chain[0].asserts, localize("doorbell.index.these_bytes_were_received_at", "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address", { knock_id: k.knockId, received, by: "m1", at: "2026-09-30T10:00:00Z" }));
   assert.deepEqual(doc.attestation_attempts, []);
   assert.ok(doc.profile && doc.profile.format && doc.profile.digests, "capture R17's profile over the bytes");
   /* R16: the contact is nowhere the pull reaches */

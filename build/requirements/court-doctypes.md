@@ -37,6 +37,7 @@ Reads a proceeding's register (its list of entries) as published by three system
 - `docprofile`: the registry seam (`register`), `CONTRACT`, `CONFIDENCE`, `entity`, `diffEntities`, the reader view, `ctx.locate`; through it `site-profiles`' event catalogue (`event`, `isMeaningful`).
 - `id-spaces`: `recognise(view, "proceeding", value)` (R3).
 - `jurisdictions` (through the view): the publishing-system address shapes of the three systems, under this module's keys (R1); the `proceeding` number forms, through `id-spaces`.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

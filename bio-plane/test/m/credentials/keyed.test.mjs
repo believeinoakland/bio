@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { KEYED_SERVICE_CHECKS, KEYED_SERVICES, ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const KEY = "cl-SENTINEL-key-41";
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -17,10 +18,10 @@ test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NO
   const before = w.snapshot();
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", null])
     assert.deepEqual(await w.c.keyedServiceSet({ service: "courtlistener", key: KEY, by }),
-      notAnAdmin(by, "setting the team's key for an outside service"), String(by));
+      notAnAdmin(by, localize("credentials.index.setting_the_teams_key", "setting the team's key for an outside service")), String(by));
   for (const by of ["ann", "class:admin", null])
     assert.deepEqual(w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by }),
-      notAnAdmin(by, "switching the team's key for an outside service"), String(by));
+      notAnAdmin(by, localize("credentials.index.switching_the_teams_key", "switching the team's key for an outside service")), String(by));
   for (const service of [null, "", "lexis", "CourtListener", "security:", "security:a b", "security:x/y", "Security:t1",
                          `security:${"t".repeat(121)}`, "securitytool"]) {
     assert.deepEqual(shape(await w.c.keyedServiceSet({ service, key: KEY, by: "second" })), row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE"));

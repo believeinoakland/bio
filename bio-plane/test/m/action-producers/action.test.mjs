@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { WORD } from "./words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const day = (ms) => iso(ms).slice(0, 10);
@@ -226,7 +227,7 @@ test("R5: one OBLIGATION litigation-hold per legal mark action-holds.holdsDue an
   assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker (read before ida was added)");
   assert.deepEqual(it.options, [{ id: "actionhold", label: WORD("door.actionhold"), weight: "single" },
-    { id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" },
+    { id: "actionholdrelease", label: word("action-producers.label.record_hold_needed"), weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "both its doors (DEC-113): the hold in place and its release, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
   assert.equal(it.basis.source, "action-holds.holdsDue"); assert.equal(it.basis.bound.truncated, false);

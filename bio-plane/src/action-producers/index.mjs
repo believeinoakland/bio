@@ -42,6 +42,7 @@ import { followingOf } from "../following/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { dayWords, say } from "./words.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ACTION_WORDS, WORDS_CANON, KEPT, OWN_WORDS } from "./words.mjs";
 
@@ -277,9 +278,9 @@ export class ActionProducers {
   /** R5: a member's statement that a hold is in place (action-holds R2, `op=actionhold`), or its release, its own act
    *  (action-holds R5, `op=actionholdrelease`, which words.json does not hold: its label stays), DEC-113. */
   static HOLD_STATE = Object.freeze({ id: "actionhold", label: say("door.actionhold"), weight: "single" });
-  static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
-  static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
-  static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
+  static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: word("action-producers.label.record_hold_needed"), weight: "single" });
+  static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: word("action-producers.label.review_template_version"), weight: "single" });
+  static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: word("action-producers.label.confirm_correct_dispute"), weight: "single" });
   static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say("door.watchanswer"), weight: "single" });
   static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say("door.planreviewrecord"), weight: "single" });
   static PLAN_RESUME = Object.freeze({ id: "planresume", label: say("door.planresume"), weight: "single" });
@@ -510,14 +511,8 @@ export class ActionProducers {
    *  words.json but keeps this present text, returned to BOB, so no `detail_key` is answered (R23: it says "no reply is
    *  recorded since", untrue once a reply is recorded while nothing marks the entry met). */
   static #detailOf(e, dated, steps) {
-    return `${e.text ? `"${e.text}"` : "An entry on this action's clock"} was dated ${dated ? e.date : "with no date"}`
-      + `${e.basis ? ` (${e.basis})` : ""}, and nothing marks it met or waived. This asks whether anything came; `
-      + "it says nothing about why, and nothing about whether anyone failed a duty until a member determines that "
-      + "on the record."
-      + (steps.length ? ` The step${steps.length > 1 ? "s" : ""} ${steps.join(", ")} stand${steps.length > 1 ? "" : "s"} `
-          + "for the same date, and are told here, once." : "")
-      + " It is told once, and it leaves when the entry is marked met or waived or the action is resolved or "
-      + "abandoned.";
+    return word("action-producers.dated_nothing_marks", { text: String(e.text ? `"${e.text}"` : "An entry on this action's clock"), dated: String(dated ? e.date : "with no date"), basis: String(e.basis ? ` (${e.basis})` : ""), plural: String(steps.length ? ` The step${steps.length > 1 ? "s" : ""} ${steps.join(", ")} stand${steps.length > 1 ? "" : "s"} `
+          + "for the same date, and are told here, once." : "") });
   }
 
   /** R24 (action-clocks R23): the office or venue a group's own date is owed at, as the record states it: an office as
@@ -585,7 +580,7 @@ export class ActionProducers {
       const key = ActionProducers.#wordsKey(e);
       const today = ActionProducers.#today(now, zone) || (typeof e.local_day === "string" ? e.local_day : null);
       const steps = Array.isArray(e.steps) ? e.steps.filter((s) => typeof s === "string" && s) : [];
-      const what = e.text || "an entry on its clock";
+      const what = e.text || word("action-producers.entry_clock");
       const summary = say(key, { date: dated ? dayWords(e.date, today) : "its date", what });
       /* R24: the group's own date names the office or venue it is owed at, by key; with none held (or no date to name),
          the key's sentence would be untrue, so the present detail stands and no detail_key is answered */
@@ -616,12 +611,7 @@ export class ActionProducers {
                  basis_of: e.basis_of && typeof e.basis_of === "object" ? e.basis_of : null,
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated,
                           zone_undetermined: page.zone_undetermined },
-                 detail: "a passed date is action-clocks' fact (its R3): a stored status, or a pending entry dated before "
-                       + "the action's local day (`local_day`), its basis kind as `basis_of` names it; a pending entry of "
-                       + "an action whose zone is not held is left out and counted (`zone_undetermined`). It goes to the "
-                       + "member who last took the entry up, else the member who created the action, each while an active "
-                       + "member who may see it, else the project's active owners, else the administrators, and is raised "
-                       + "once: nothing here repeats it." },
+                 detail: localize("action-producers.index.a_passed_date_is_action", "a passed date is action-clocks' fact (its R3): a stored status, or a pending entry dated before the action's local day (`local_day`), its basis kind as `basis_of` names it; a pending entry of an action whose zone is not held is left out and counted (`zone_undetermined`). It goes to the member who last took the entry up, else the member who created the action, each while an active member who may see it, else the project's active owners, else the administrators, and is raised once: nothing here repeats it.") },
         age: dated
           ? ActionProducers.#localAge(after || "", zone, now, "zone_undetermined", ActionProducers.ZONE_UNDETERMINED)
           : { state: "undetermined", reason: "no_entry_date",
@@ -666,7 +656,7 @@ export class ActionProducers {
         due: ActionProducers.#dueDay(due, zone),
         subject: { kind: "plan", id: c.plan, project: c.project, scenario: c.scenario ?? null, phase: c.phase ?? null,
                    version: c.version ?? null },
-        summary: `a checkpoint of plan ${c.plan} has come due: scenario ${c.scenario}, phase ${c.phase}`,
+        summary: word("action-producers.summary.checkpoint_plan_come", { plan: String(c.plan), scenario: String(c.scenario), phase: String(c.phase) }),
         detail: "the day this plan's scenario set for judging a phase has come, and no member has judged it. A member "
               + "records whether what it set was met; nothing here judges it, and a checkpoint passed unjudged says "
               + "nothing about the government.",
@@ -674,10 +664,7 @@ export class ActionProducers {
                  phase: c.phase ?? null, version: c.version ?? null, set_by: c.set_by ?? null, due,
                  days_since_due: Number.isFinite(c.days_since_due) ? c.days_since_due : null, recipients_rule: to.rule, zone,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
-                 detail: "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never "
-                       + "stored. It goes to the member who last took it up, else the member who set the scenario's current "
-                       + "version, each while an active member who may see the plan, else the project's active owners, else "
-                       + "the administrators, and leaves when a member judges it or closes the plan." },
+                 detail: localize("action-producers.index.a_checkpoint_come_due_is", "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never stored. It goes to the member who last took it up, else the member who set the scenario's current version, each while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when a member judges it or closes the plan.") },
         age: ActionProducers.#localAge(due, zone, now, "no_checkpoint_day", "the checkpoint carries no day this producer can read"),
         assignee: null,
         assignee_role: null,
@@ -712,17 +699,14 @@ export class ActionProducers {
         case: this.#homesAt(typeof p.project === "string" && p.project ? [p.project] : [], viewer),
         subject: { kind: "escalation", id: p.id, project: p.project ?? null, from: p.from ?? null, to: p.to,
                    stage: p.stage ?? null },
-        summary: `escalation ${p.id} may move to its next stage: ${p.stage || `stage ${p.to}`}`,
+        summary: word("action-producers.summary.escalation_move_next", { id: String(p.id), stage: String(p.stage || `stage ${p.to}`) }),
         detail: "the record now meets the trigger for this escalation's next stage. A member advances it or declines to "
               + "for now, with a reason; nothing moves until a member does.",
         basis: { source: "escalation.escalationsDue", escalation: p.id, project: p.project ?? null, from: p.from ?? null,
                  to: p.to, stage: p.stage ?? null, instant: p.instant ?? null, ids: Array.isArray(p.ids) ? p.ids : [],
                  opened_by: p.opened_by ?? null, recipients_rule: to.rule,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
-                 detail: "a proposed stage is escalation's (its R16): its trigger met by the record, dated by the record's "
-                       + "own instant and never by this read. It goes to the member who last took the escalation up, else "
-                       + "the member who opened it, each while an active member who may see it, else the project's active "
-                       + "owners, else the administrators." },
+                 detail: localize("action-producers.index.a_proposed_stage_is_escalations", "a proposed stage is escalation's (its R16): its trigger met by the record, dated by the record's own instant and never by this read. It goes to the member who last took the escalation up, else the member who opened it, each while an active member who may see it, else the project's active owners, else the administrators.") },
         age: ActionProducers.#instantAge(p.instant, now, "no_trigger_instant",
           "the proposal carries no trigger instant this producer can read"),
         assignee: null,
@@ -760,17 +744,14 @@ export class ActionProducers {
         due: ActionProducers.#dueDay(isCalendarDate(x.date) ? x.date : null, zone),
         subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
                    text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
-        summary: `the reminder you asked for: ${x.text || "a clock entry"} on ${x.action}${x.date ? `, due ${x.date}` : ""}`,
+        summary: word("action-producers.summary.reminder_asked", { text: String(x.text || "a clock entry"), action: String(x.action), date: String(x.date ? `, due ${x.date}` : "") }),
         detail: `you asked to be reminded of this date on ${x.on}. Answer it with another reminder on a later day, or with `
               + "none; nothing reminds you again unless you ask.",
         basis: { source: "action-clocks.remindersDue", action: x.action, entry: x.ord, date: x.date ?? null,
                  basis: x.basis ?? null, text: x.text ?? null, on: x.on ?? null, set_by: x.set_by,
                  project: x.project ?? null, zone, steps: Array.isArray(x.steps) ? x.steps : [],
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-                 detail: "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has "
-                       + "come (its R5): it goes to the member who set it, while she is an active member who may see the "
-                       + "action, and to nobody else, and it leaves when that member answers it (its R6) or the entry or "
-                       + "the action no longer calls for it." },
+                 detail: localize("action-producers.index.a_reminder_is_the_members", "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has come (its R5): it goes to the member who set it, while she is an active member who may see the action, and to nobody else, and it leaves when that member answers it (its R6) or the entry or the action no longer calls for it.") },
         age: ActionProducers.#localAge(isCalendarDate(x.on) ? x.on : null, zone, now, "no_reminder_day",
           "the reminder carries no day this producer can read"),
         assignee: null,
@@ -817,14 +798,12 @@ export class ActionProducers {
           id: `OBLIGATION::litigation-hold::${arrived.action}::${arrived.ord}`,
           case: this.#actionHomes(arrived.action, project, viewer),
           subject: { kind: "action", id: arrived.action, entry: arrived.ord, note: m.note ?? null, project },
-          summary: `a legal threat was recorded on ${arrived.action} and no litigation hold is stated for it`,
+          summary: word("action-producers.summary.legal_threat_recorded", { action: String(arrived.action) }),
           detail: `a received entry of this action (position ${arrived.ord}) was marked as a legal threat${said}. Record `
                 + "that the team is preserving what the matter may reach (a hold in place), or that it need not (a "
                 + "release), with a reason. This is told once; it leaves when a member records either.",
           basis: basisOf({ action: arrived.action, entry: arrived.ord }, {},
-            "a legal pressure mark with no hold stated is action-holds' fact (its R2, R3), read here and never stored. It "
-            + "goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), "
-            + "and leaves when any member states a hold on that mark: in place (its R2) or released (its R5)."),
+            localize("action-producers.index.a_legal_pressure_mark_with", "a legal pressure mark with no hold stated is action-holds' fact (its R2, R3), read here and never stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), and leaves when any member states a hold on that mark: in place (its R2) or released (its R5).")),
           options: [ActionProducers.HOLD_STATE, ActionProducers.HOLD_RELEASE, ...this.#optionsOf([arrived.action])] });
       } else if (typeof arrived.docket_entry === "string" && arrived.docket_entry) {
         if (!project) continue;                          // R14: a docket mark of a project this viewer may not see
@@ -836,13 +815,9 @@ export class ActionProducers {
           /* R23: the summary by key (a protected word); the detail keeps its present text, returned to BOB */
           summary: say("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
           summary_key: "queue.litigation-hold.docket.summary",
-          detail: `an entry on this case's docket was marked as a legal threat${said}. Record that the team is preserving `
-                + "what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is "
-                + "stated on the mark.",
+          detail: localize("action-producers.index.an_entry_on_this_cases", "an entry on this case's docket was marked as a legal threat{said}. Record that the team is preserving what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is stated on the mark.", { said: String(said) }),
           basis: basisOf({ docket_entry: arrived.docket_entry, case: kase }, {},
-            "a legal mark on a docket entry with no hold placed from it is action-holds' fact (its R3, over docket R27), "
-            + "read here and never stored. It goes to every administrator, and to whoever marked it while an active "
-            + "member, once (DEC-69, DEC-70), and leaves when a hold is placed from the mark (action-holds R2)."),
+            localize("action-producers.index.a_legal_mark_on_a", "a legal mark on a docket entry with no hold placed from it is action-holds' fact (its R3, over docket R27), read here and never stored. It goes to every administrator, and to whoever marked it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the mark (action-holds R2).")),
           options: [ActionProducers.HOLD_STATE] });
       } else if (typeof arrived.pressure === "string" && arrived.pressure) {
         if (!project) continue;                          // R14: a record in a project this viewer may not see
@@ -850,14 +825,12 @@ export class ActionProducers {
           id: `OBLIGATION::litigation-hold::pressure::${arrived.pressure}`,
           case: this.#projectHomes(project, viewer),
           subject: { kind: "project", id: project, record: arrived.pressure, note: m.note ?? null },
-          summary: `a legal threat was recorded in ${project} and no litigation hold is stated for it`,
+          summary: word("action-producers.summary.legal_threat_recorded_litigation", { project: String(project) }),
           detail: `pressure that arrived outside any action was recorded here as a legal threat${said}. Record that the `
                 + "team is preserving what the matter may reach: a hold placed from this record. This is told once; it "
                 + "leaves when a hold is stated on the record.",
           basis: basisOf({ pressure: arrived.pressure }, {},
-            "a legal pressure record with no hold placed from it is action-holds' fact (its R3, R12), read here and "
-            + "never stored. It goes to every administrator and to the member who recorded it while an active member, "
-            + "once (DEC-69, DEC-70), and leaves when a hold is placed from the record (action-holds R2)."),
+            localize("action-producers.index.a_legal_pressure_record_with", "a legal pressure record with no hold placed from it is action-holds' fact (its R3, R12), read here and never stored. It goes to every administrator and to the member who recorded it while an active member, once (DEC-69, DEC-70), and leaves when a hold is placed from the record (action-holds R2).")),
           options: [ActionProducers.HOLD_STATE] });
       }
     }
@@ -910,20 +883,15 @@ export class ActionProducers {
         case: this.#actionHomes(x.action, project, viewer),
         subject: { kind: "action", id: x.action, entry: x.ord, sequence: x.seq, released_by: by,
                    reason: x.reason ?? null, restarted },
-        summary: `${by || "a member"} released the litigation hold on ${x.action}`,
-        detail: `the hold on a legal threat recorded on this action (position ${x.ord}) was released`
-              + (x.reason ? `, because "${x.reason}"` : "") + ". "
-              + (restarted.length
+        summary: word("action-producers.summary.released_litigation_hold", { by: String(by || "a member"), action: String(x.action) }),
+        detail: localize("action-producers.index.the_hold_on_a_legal", "the hold on a legal threat recorded on this action (position {ord}) was released{v1}. {v2} This is told once, to the administrators and to whoever placed the hold.", { ord: String(x.ord), v1: String(x.reason ? `, because "${x.reason}"` : ""), v2: String(restarted.length
                 ? `Ordinary deletion restarts for ${restarted.join(", ")}.`
-                : "No project you may name restarts its ordinary deletion.")
-              + " This is told once, to the administrators and to whoever placed the hold.",
+                : "No project you may name restarts its ordinary deletion.") }),
         basis: { source: "action-holds.holdsReleased", action: x.action, entry: x.ord, sequence: x.seq, released_by: by,
                  released_at: x.released_at ?? null, reason: x.reason ?? null, placers, restarted,
                  raised_to: [...new Set([...admins, ...placers])], recipients_rule: "administrators_and_placers",
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-                 detail: "a release that ended a hold in place is action-holds' fact (its R5, R8), read here and never "
-                       + "stored. It is told to every administrator and to each member who placed the hold (DEC-113), "
-                       + "once (DEC-69, DEC-70), and leaves when its recipient disposes of it." },
+                 detail: localize("action-producers.index.a_release_that_ended_a", "a release that ended a hold in place is action-holds' fact (its R5, R8), read here and never stored. It is told to every administrator and to each member who placed the hold (DEC-113), once (DEC-69, DEC-70), and leaves when its recipient disposes of it.") },
         age: ActionProducers.#instantAge(x.released_at, now, "no_release_instant",
           "the release carries no instant this producer can read"),
         assignee: null,
@@ -966,7 +934,7 @@ export class ActionProducers {
         case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: { kind: "template_version", id: x.version, template: x.template ?? null, name: x.name ?? null,
                    template_kind: x.kind ?? null, asked_by: asker, project },
-        summary: `${askerName} asked you to review the template ${x.name ? `"${x.name}"` : x.version} (${x.version})`,
+        summary: word("action-producers.summary.asked_review_template", { asker_name: String(askerName), name: String(x.name ? `"${x.name}"` : x.version), version: String(x.version) }),
         detail: "a draft of this filing template was sent for review and you are one of the members asked. Review its "
               + "present text; this is told once, and it leaves when you have reviewed that text or the version leaves "
               + "review.",
@@ -974,9 +942,7 @@ export class ActionProducers {
                  name: x.name ?? null, template_kind: x.kind ?? null, project, member: x.member, asked_by: asker,
                  asked_at: x.asked_at ?? null, recipients_rule: "asked_member",
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-                 detail: "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a "
-                       + "version in review who has not reviewed its present text. It goes to that member and to nobody "
-                       + "else, and is raised once (DEC-69, DEC-94)." },
+                 detail: localize("action-producers.index.a_review_asked_for_is", "a review asked for is filing-templates' fact (its R7, R20): a member named a reviewer of a version in review who has not reviewed its present text. It goes to that member and to nobody else, and is raised once (DEC-69, DEC-94).") },
         age: ActionProducers.#instantAge(x.asked_at, now, "no_asked_instant", "the request carries no instant this producer can read"),
         assignee: null,
         assignee_role: null,
@@ -1035,8 +1001,7 @@ export class ActionProducers {
         case: this.#actionHomes(first.action, first.project, viewer),
         subject: { kind: "action", id: first.action, project: first.project ?? null, path: f.path, fact: f.fact ?? null,
                    status, why: f.why ?? null },
-        summary: `a local fact a deadline on ${first.action} is counted on is ${status === "disputed" ? "disputed" : "unconfirmed"}`
-               + (f.why ? `: ${f.why}` : ""),
+        summary: word("action-producers.summary.local_fact_deadline", { action: String(first.action), status: String(status === "disputed" ? "disputed" : "unconfirmed"), why: String(f.why ? `: ${f.why}` : "") }),
         detail: "a deadline on this action is counted in business days over a local calendar or office's hours that no "
               + "member here has confirmed as current, or that a member disputed. Confirm it, correct it with its source, "
               + "or dispute it. This is told once for each status the fact takes; it leaves when a member confirms or "
@@ -1048,10 +1013,7 @@ export class ActionProducers {
                  actions: acts.map((a) => a.action), recipients: [...members].sort(),
                  recipients_rule: [...rules].sort().join("+"), zone,
                  bound: { actions_limit: read.actions_limit ?? null, truncated: read.truncated === true },
-                 detail: "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are "
-                       + "action-clocks' (its R11). It goes to the members who created those actions while active members "
-                       + "who may see them, else their projects' active owners, else the administrators, and is raised "
-                       + "once per fact and status." },
+                 detail: localize("action-producers.index.a_fact_due_is_local", "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are action-clocks' (its R11). It goes to the members who created those actions while active members who may see them, else their projects' active owners, else the administrators, and is raised once per fact and status.") },
         age: ActionProducers.#localAge(since, zone, now, "no_due_instant", "the fact carries no day it fell due this producer can read"),
         assignee: null,
         assignee_role: null,
@@ -1229,9 +1191,7 @@ export class ActionProducers {
         basis: { source: "membership.memberFacts + membership.participation + plan-work.takeUpsFor", member: g.member,
                  project: g.project, count: listed.length, recipients_rule: owners.length ? "project_owners" : "administrators",
                  bound: { items_max: ActionProducers.MEMBER_LEFT_ITEMS_MAX, truncated: read.truncated },
-                 detail: "whether a member is still here is membership's (its R68, R74); which items routed to her is the "
-                       + "latest take-up (plan-work R11), else who created or set the item. The list holds only items you "
-                       + "may see, and is told to the project's active owners, else the administrators, once." },
+                 detail: localize("action-producers.index.whether_a_member_is_still", "whether a member is still here is membership's (its R68, R74); which items routed to her is the latest take-up (plan-work R11), else who created or set the item. The list holds only items you may see, and is told to the project's active owners, else the administrators, once.") },
         age: { state: "undetermined", reason: "departure_undetermined",
                detail: "membership answers no instant at which the member left, so how long ago is not derivable" },
         assignee: null,
@@ -1246,11 +1206,11 @@ export class ActionProducers {
   /** R23: the items a departure's finding names, in words: "the clock entry 0 on ACT-1 (2026-08-29)", …, and how many
    *  more the recipient may see beyond the list's bound. */
   static #itemsWords(named, more) {
-    const KIND = { clock: "the clock entry", reminder: "the reminder on entry", checkpoint: "the checkpoint",
-                   escalation_stage: "the proposed stage", hold: "the legal threat" };
+    const KIND = { clock: word("action-producers.clock_entry"), reminder: word("action-producers.reminder_entry"), checkpoint: "the checkpoint",
+                   escalation_stage: word("action-producers.proposed_stage"), hold: word("action-producers.legal_threat") };
     const one = (x) => `${KIND[x.kind] || "the item"} ${x.entry} on ${x.subject}${typeof x.date === "string" && x.date ? ` (${x.date.slice(0, 10)})` : ""}`;
     const words = named.map(one).join("; ");
-    return more > 0 ? `${words}; and ${more} more` : words;
+    return more > 0 ? localize("action-producers.index.words_and_more_more", "{words}; and {more} more", { words: String(words), more: String(more) }) : words;
   }
 
   /** `watch-keep-or-stop` (R10; N855; Actions D6d; v0.2 rule 17; K2781 (2)): one OBLIGATION per entry
@@ -1284,8 +1244,8 @@ export class ActionProducers {
       const w = q.watch && typeof q.watch === "object" ? q.watch : {};
       const offered = Array.isArray(q.offered) ? q.offered : [];
       const relied = q.relied_on === true || offered.length === 0;
-      const why = q.cause === "promises_met" ? "every promise this plan's matters adopted as a duty now reads met"
-        : "the plan has closed";
+      const why = q.cause === "promises_met" ? word("action-producers.promise_plan_matters")
+        : word("action-producers.plan_closed");
       out.push({
         id: `OBLIGATION::watch-keep-or-stop::${q.link}`,
         class: "OBLIGATION",
@@ -1304,10 +1264,7 @@ export class ActionProducers {
                  id: w.id ?? null, ends: w.ends ?? null }, cause: q.cause ?? null, due_at: q.due_at ?? null,
                  relied_on: relied, offered, recipients, recipients_rule: "following",
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-                 detail: "a watch's once-only question is following's (its R24): due when the plan closes or every promise "
-                       + "its matters adopted reads met, to the link's author while an active member who may see the plan, "
-                       + "else the project's active owners, else the administrators (a standing question's to its author "
-                       + "alone). It is raised once and leaves when the link is answered or its watch ends." },
+                 detail: localize("action-producers.index.a_watchs_once_only_question", "a watch's once-only question is following's (its R24): due when the plan closes or every promise its matters adopted reads met, to the link's author while an active member who may see the plan, else the project's active owners, else the administrators (a standing question's to its author alone). It is raised once and leaves when the link is answered or its watch ends.") },
         age: ActionProducers.#instantAge(q.due_at, now, "no_due_instant", "the question carries no instant this producer can read"),
         assignee: null,
         assignee_role: null,
@@ -1320,7 +1277,7 @@ export class ActionProducers {
 
   /** R23: a watch in words for `{what}`: its kind and what it watches ("the follow F-1"), else "this watch". */
   static #watchWords(w) {
-    const KIND = { follow: "the follow", address: "the address", duty: "the duty", question: "the standing question" };
+    const KIND = { follow: "the follow", address: "the address", duty: "the duty", question: word("action-producers.standing_question") };
     if (!w || w.id === undefined || w.id === null || w.id === "") return "this watch";
     return `${KIND[w.kind] || "the watch"} ${w.id}`;
   }
@@ -1355,9 +1312,7 @@ export class ActionProducers {
       const keyed = rhythm && since
         ? { detail: say("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today) }),
             detail_key: "queue.plan-review-due.detail" }
-        : { detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. "
-              + "Open the review to see what changed, and record what the members decided. You are reminded only "
-              + "because the team asked for it." };
+        : { detail: localize("action-producers.index.the_rhythm_a_member_set", "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. Open the review to see what changed, and record what the members decided. You are reminded only because the team asked for it.") };
       out.push({
         id: `OBLIGATION::plan-review-due::${x.plan}::${day}`,
         class: "OBLIGATION",
@@ -1374,9 +1329,7 @@ export class ActionProducers {
                  recurrence: x.recurrence && typeof x.recurrence === "object" ? x.recurrence : null,
                  since: x.since && typeof x.since === "object" ? x.since : null, title,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
-                 detail: "a review come due is plan-work's (its R4): a member-set rhythm reached a day with no review entry "
-                       + "since. It goes to the member who set the rhythm while an active member who may see the plan, "
-                       + "else the project's active owners, else the administrators, and is raised once per day." },
+                 detail: localize("action-producers.index.a_review_come_due_is", "a review come due is plan-work's (its R4): a member-set rhythm reached a day with no review entry since. It goes to the member who set the rhythm while an active member who may see the plan, else the project's active owners, else the administrators, and is raised once per day.") },
         age: ActionProducers.#localAge(dueDay, zone, now, "no_review_day", "the review carries no day this producer can read"),
         assignee: null,
         assignee_role: null,
@@ -1469,10 +1422,7 @@ export class ActionProducers {
                  approved_at: x.approved_at ?? null, approved_day: approved, created_by: memberIdOf(creator), zone,
                  action_state: row ? row.current_state ?? null : null, recipients_rule: to.rule,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
-                 detail: "an approved draft or communication not recorded sent is filings' fact (its R53), read here and "
-                       + "never stored. It goes to the member who approved it, else the member who created the action, "
-                       + "each while an active member who may see it, else the project's active owners. It leaves when "
-                       + "the sending is recorded, or the action is dropped or resolved; nothing here repeats it." },
+                 detail: localize("action-producers.index.an_approved_draft_or_communication", "an approved draft or communication not recorded sent is filings' fact (its R53), read here and never stored. It goes to the member who approved it, else the member who created the action, each while an active member who may see it, else the project's active owners. It leaves when the sending is recorded, or the action is dropped or resolved; nothing here repeats it.") },
         age: ActionProducers.#instantAge(x.approved_at, now, "no_approval_instant",
           "the approval carries no instant this producer can read"),
         assignee: null,
@@ -1522,9 +1472,7 @@ export class ActionProducers {
                  paused_by: x.paused_by ?? null, paused_at: x.paused_at ?? null, reason: x.reason ?? null,
                  pause: x.pause ?? null, zone, recipients_rule: to.rule,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
-                 detail: "a paused plan's day to look again is action-plans' (its R40), told once. It goes to the member "
-                       + "who paused it while an active member who may see the plan, else the project's active owners, "
-                       + "else the administrators, and leaves when the plan is resumed or closed." },
+                 detail: localize("action-producers.index.a_paused_plans_day_to", "a paused plan's day to look again is action-plans' (its R40), told once. It goes to the member who paused it while an active member who may see the plan, else the project's active owners, else the administrators, and leaves when the plan is resumed or closed.") },
         age: ActionProducers.#localAge(x.look_again, zone, now, "no_look_again_day", "the pause carries no day this producer can read"),
         assignee: null,
         assignee_role: null,

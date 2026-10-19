@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { AI_ACCOUNT_CHECKS, AiAccounts, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const KEY = "sk-ant-api03-GROUP-SENTINEL-9b1e";
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -233,7 +234,7 @@ test("R9 R14 (were credentials R37 R55) (T41: groupSwitchSet retired into accoun
   const before = w.snapshot();
   for (const by of ["ann", "dee", "class:admin", null])
     assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by }),
-      notAnAdmin(by, "switching the team key's assistant settings"), String(by));
+      notAnAdmin(by, localize("ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings")), String(by));
   for (const name of [null, "", "Standing", "budget", "standing; DROP TABLE x"])
     assert.deepEqual(shape(w.c.accountUsesSet({ owner: "group", switch: name, on: true, by: "admin" })), refusal("UNKNOWN_SWITCH"), String(name));
   assert.equal(w.snapshot(), before, "no refusal writes");

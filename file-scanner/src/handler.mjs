@@ -10,6 +10,7 @@ import { reputationLists } from './providers/reputation.mjs';
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, CATALOGUE_READ_ON } from './providers/catalogue.mjs';
 import scanner from '../packages-scanner.json' with { type: 'json' };
 import renderer from '../packages-renderer.json' with { type: 'json' };
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 const reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const UNKNOWN = () => reply(404, { ok: false, code: 'UNKNOWN' });
@@ -23,7 +24,7 @@ async function version(deps) {
     providers: { catalogue_read_on: CATALOGUE_READ_ON, offered: PROVIDERS.map((d) => d.provider_id),
       refused: REFUSED_PROVIDERS.map((d) => d.provider_id), held: HELD_PROVIDERS.map((d) => d.provider_id) },
     reputation_lists: await reputationLists(deps.bucket),
-    renderer_version: `libreoffice ${versionOf(renderer, 'libreoffice-core')}; poppler-utils ${versionOf(renderer, 'poppler-utils')}`,
+    renderer_version: localize('file-scanner.handler.libreoffice_versionof_poppler_utils_versionof', 'libreoffice {versionOf}; poppler-utils {versionOf_2}', { versionOf: String(versionOf(renderer, 'libreoffice-core')), versionOf_2: String(versionOf(renderer, 'poppler-utils')) }),
     bounds: BOUNDS });
 }
 

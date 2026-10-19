@@ -12,6 +12,7 @@ import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
          civicsmithUserAgent, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -104,9 +105,9 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   assert.equal(w.prov.receipts[0].via, "archive.org");
   assert.equal(w.prov.receipts[0].retrievalLocator, replay);
   const chain = r.body.document.provenance_chain;
-  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
+  assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, word("capture-sources.name.internet_archive_wayback"));
   assert.equal(chain[1].document_address, addr);
-  assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by your team's Civicsmith`));
+  assert.ok(chain[1].evidence.includes(localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: sha("archived bytes") })));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
   /* attestation R4 (K59, K1224): the instance signs its receipt through the attestation instance handed in */
   assert.deepEqual(w.signed().map((x) => [x.capture_sha, x.retrieval_locator]), [[sha("archived bytes"), replay]], "the receipt is signed");
@@ -411,7 +412,7 @@ test("R12: a continuation resumes the session's outstanding files against the se
   assert.ok(!second.net.seen.some((x) => x.url === "https://s.example/p"), "the primary is not fetched again");
   assert.ok(second.net.seen.length >= 1, "the outstanding files are");
   assert.equal(second.body.continued.primary.sha256, primary, "against the session's own primary");
-  assert.equal(second.body.document, undefined, "a continuation files no new document");
+  assert.equal(second.body.document, undefined, "a continuation writes no document");
   assert.equal(w.prov.receipts.length, receipts, "and writes no receipt");
 });
 
@@ -461,7 +462,7 @@ test("R14 R16 R31: transport, the chain, the capture block, the origin and the f
   assert.equal(hop.asserts, `these bytes were served for https://a.example/dir/report.txt at ${d.retrieved}`);
   assert.deepEqual([hop.bound, hop.via], [false, "direct"]);
   assert.deepEqual([d.capture.method, d.capture.actor_class, d.capture.actor, d.capture.encoding, d.capture.bytes, d.capture.content_type],
-                   ["bio-plane acquire, https fetch, hashed at receipt", "member", "m1", "binary", 9, "text/plain"]);
+                   [localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), "member", "m1", "binary", 9, "text/plain"]);
   assert.equal(d.capture.sha256, sha("body text"));
   assert.deepEqual(d.origin, { kind: "named_request" }, "R31 (K1126): a body's matchedSweep is ignored");
   assert.deepEqual(d.attestation_attempts.length > 0, true);
@@ -557,8 +558,7 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
 test("R18 (N80): every success answer carries the note composed from the enforced ceiling and the letter above it; no refusal carries one; the composer refuses a sentence it cannot make true", async () => {
   const w = world();
   assert.equal(ACQUIRE_GRADE_NOTE, acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE), "composed from the one definitions");
-  assert.equal(ACQUIRE_GRADE_NOTE, `Grade ${EARNED_CAPTURE_CEILING}: bytes as fetched, hashed at receipt. Grade ${UNREACHABLE_CAPTURE_GRADE} needs a `
-    + `chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${EARNED_CAPTURE_CEILING} toward evidentiary weight.`);
+  assert.equal(ACQUIRE_GRADE_NOTE, word("acquisition.text.grade_bytes_fetched", { ceiling: String(EARNED_CAPTURE_CEILING), unreachable: String(UNREACHABLE_CAPTURE_GRADE) }));
   assert.match(acquireGradeNote("C", "B"), /^Grade C: .* Grade B needs .* raises C toward/, "the letters are the arguments, never typed");
   for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined]]) assert.throws(() => acquireGradeNote(c, u), /cannot be composed truthfully/);
   const d = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
@@ -780,7 +780,7 @@ test("R21 R31: the capture-request arm files the drain's own origin as a sweep, 
   const rr = await arm(rw, { "https://a.example/doc": () => page(HTML("<div id=app></div>")) }, { render: true }, { render: false });
   assert.equal(rr.body.document.capture.method, "rendered", "the row's render flag, never the body's");
   const nr = await arm(rw, { "https://a.example/doc": () => page(HTML("<div id=app></div>")) }, { render: false }, { render: true });
-  assert.equal(nr.body.document.capture.method, "bio-plane acquire, https fetch, hashed at receipt");
+  assert.equal(nr.body.document.capture.method, localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"));
 });
 
 test("R22: with the held capture's digest the arm fetches conditionally on the validators its own fetch recorded; a 304 files nothing and writes no receipt; without validators, identical bytes answer held", async () => {

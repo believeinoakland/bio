@@ -3,6 +3,7 @@
  * suites share. Not product code. */
 import { createHash } from "node:crypto";
 import { inflateSync, deflateSync } from "node:zlib";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export const hex = (b) => createHash("sha256").update(b).digest("hex");
 export { deflateSync };
@@ -19,11 +20,11 @@ export function makePdf(bodies, { trailer = "", header = "%PDF-1.7\n%\xe2\xe3\xc
     offsets[i] = len;
     let chunk;
     if (typeof body === "string") {
-      chunk = Buffer.from(`${i + 1} 0 obj\n${body}\nendobj\n`, "latin1");
+      chunk = Buffer.from(localize("test-support.make-pdf.v1_0_obj_body_endobj", "{v1} 0 obj\n{body}\nendobj\n", { v1: String(i + 1), body: String(body) }), "latin1");
     } else {
       const dict = body.dict.replace(/>>\s*$/, ` /Length ${body.data.length} >>`);
       chunk = Buffer.concat([
-        Buffer.from(`${i + 1} 0 obj\n${dict}\nstream\n`, "latin1"),
+        Buffer.from(localize("test-support.make-pdf.v1_0_obj_dict_stream", "{v1} 0 obj\n{dict}\nstream\n", { v1: String(i + 1), dict: String(dict) }), "latin1"),
         Buffer.from(body.data),
         Buffer.from("\nendstream\nendobj\n", "latin1"),
       ]);

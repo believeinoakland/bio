@@ -6,10 +6,14 @@ import { parseDay, dayText, addMonths, weekdayOf, civil } from "./days.mjs";
 import { instantText, wallOf, localDayNumber, startOfDay, wallToInstants, runtimeVersions, parseInstant } from "./zone.mjs";
 import { spanOf, isNo, refuse, zoneRefusal } from "./values.mjs";
 import { calendar, calendarStated, missing } from "./calendar.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { reason } from "./reasons.mjs";
 
 const UNITS = ["days", "hours", "business_hours", "months", "years"];
 const no = (code, why, extra) => ({ undetermined: true, code, why, ...(extra || {}) });
-const ruleInvalid = (field, why) => no("RULE_INVALID", `the rule's ${field} ${why}`, { field });
+const ruleInvalid = (field, why) => no("RULE_INVALID", why, { field });
+/* R30: a caller's own reason is passed on exactly as given when it is a key; a sentence of the caller's is a fill */
+const passOn = (why, said, unsaid) => (why && typeof why === "object" && typeof why.key === "string" ? why : why ? reason(said, { why: String(why) }) : reason(unsaid));
 const dayDt = (n, zone) => ({ value: dayText(n), precision: "day", zone });
 const p2 = (n) => String(n).padStart(2, "0");
 function minuteDt(t, zone) {
@@ -25,25 +29,25 @@ export function readRule(rule) {
   if (!rule || typeof rule !== "object") throw new TypeError("a rule is a deadlines entry (an object)");
   let units = rule.units, amount = rule.amount;
   if (units === undefined && rule.days !== undefined) { units = "days"; amount = rule.days; }
-  if (!UNITS.includes(units)) return ruleInvalid("units", `'${units}' is not one of ${UNITS.join(", ")}`);
-  if (!Number.isInteger(amount) || amount <= 0) return ruleInvalid("amount", "is not a positive whole number");
+  if (!UNITS.includes(units)) return ruleInvalid("units", reason("civil-time.rules.invalid_units", { units: String(units), allowed: UNITS.join(", ") }));
+  if (!Number.isInteger(amount) || amount <= 0) return ruleInvalid("amount", reason("civil-time.rules.invalid_amount"));
   const direction = rule.direction === undefined ? "forward" : rule.direction;
-  if (direction !== "forward" && direction !== "backward") return ruleInvalid("direction", `'${direction}' is neither forward nor backward`);
+  if (direction !== "forward" && direction !== "backward") return ruleInvalid("direction", reason("civil-time.rules.invalid_direction", { direction: String(direction) }));
   let count = rule.count;
   if (units === "days") {
-    if (count === undefined) return ruleInvalid("count", "is not stated (calendar or business)");
-    if (count !== "calendar" && count !== "business") return ruleInvalid("count", `'${count}' is neither calendar nor business`);
-  } else if (count !== undefined) return ruleInvalid("count", `is given with units '${units}'`);
-  if (rule.roll !== undefined && typeof rule.roll !== "boolean") return ruleInvalid("roll", "is not true or false");
-  if (rule.closures !== undefined && typeof rule.closures !== "string") return ruleInvalid("closures", "is not a list's name");
+    if (count === undefined) return ruleInvalid("count", reason("civil-time.rules.invalid_count_unstated"));
+    if (count !== "calendar" && count !== "business") return ruleInvalid("count", reason("civil-time.rules.invalid_count", { count: String(count) }));
+  } else if (count !== undefined) return ruleInvalid("count", reason("civil-time.rules.invalid_count_with_units", { units: String(units) }));
+  if (rule.roll !== undefined && typeof rule.roll !== "boolean") return ruleInvalid("roll", reason("civil-time.rules.invalid_roll"));
+  if (rule.closures !== undefined && typeof rule.closures !== "string") return ruleInvalid("closures", reason("civil-time.rules.invalid_closures"));
   if (rule.due_at !== undefined && rule.due_at !== "close_of_business" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(rule.due_at)))
-    return ruleInvalid("due_at", "is neither close_of_business nor HH:MM");
+    return ruleInvalid("due_at", reason("civil-time.rules.invalid_due_at"));
   if (rule.applies_on !== undefined && (!Array.isArray(rule.applies_on) || !rule.applies_on.every((d) => typeof d === "string" && d.length === 3)))
-    return ruleInvalid("applies_on", "is not a list of day names");
+    return ruleInvalid("applies_on", reason("civil-time.rules.invalid_applies_on"));
   const ext = rule.extension;
   if (ext !== undefined && ext !== null) {
-    if (typeof ext !== "object" || !Number.isInteger(ext.days) || ext.days <= 0) return ruleInvalid("extension", "has no positive whole number of days");
-    if (ext.count !== undefined && ext.count !== "calendar" && ext.count !== "business") return ruleInvalid("extension", `count '${ext.count}' is neither calendar nor business`);
+    if (typeof ext !== "object" || !Number.isInteger(ext.days) || ext.days <= 0) return ruleInvalid("extension", reason("civil-time.rules.invalid_extension_days"));
+    if (ext.count !== undefined && ext.count !== "calendar" && ext.count !== "business") return ruleInvalid("extension", reason("civil-time.rules.invalid_extension_count", { count: String(ext.count) }));
   }
   return { units, amount, direction, count, roll: rule.roll === true, closures: rule.closures ?? null };
 }
@@ -146,8 +150,8 @@ function dueAtTime(rule, n, zone, view, office, trace) {
  *  channel's cutoff and the receipt convention. */
 function anchorDays(anchor, zone, rule, view, cal, trace) {
   const s = spanOf(anchor);
-  if (isNo(s)) return s.refused ? s : no("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${s.why}`);
-  if (s.lo === null || s.hi === null) return no("ANCHOR_UNDETERMINED", `the anchor ${s.dt.value} has an open or unknown end`);
+  if (isNo(s)) return s;
+  if (s.lo === null || s.hi === null) return no("ANCHOR_UNDETERMINED", reason("civil-time.rules.anchor_open_end", { value: String(s.dt.value) }));
   let first, last;
   if (s.dt.precision === "day") first = last = parseDay(s.dt.value);
   else { first = localDayNumber(s.lo, zone); last = localDayNumber(s.hi - 1, zone); }
@@ -177,7 +181,7 @@ function anchorDays(anchor, zone, rule, view, cal, trace) {
       if (out[0] !== first || out[1] !== last)
         trace.receipt = { rule: "next_business_day", citation: v.receipt.citation ?? null, from: dayText(first), to: dayText(out[0]) };
       [first, last] = out;
-    } else if (v && v.receipt && v.receipt.rule !== undefined) return ruleInvalid("venue receipt", `'${v.receipt.rule}' is not a receipt rule this module counts`);
+    } else if (v && v.receipt && v.receipt.rule !== undefined) return ruleInvalid("venue receipt", reason("civil-time.rules.invalid_receipt", { rule: String(v.receipt.rule) }));
   }
   return { first, last, span: s };
 }
@@ -202,7 +206,7 @@ function dueDay(r, a, cal, tolled, trace) {
     return end;
   };
   if (m.candidates) {
-    trace.notes.push(`${dayText(a)} has no such day ${r.units === "years" ? "in the target year's month" : "in the target month"}: both readings are kept (K1504 (4))`);
+    trace.notes.push(localize("civil-time.rules.daytext_has_no_such_day", "{dayText} has no such day {v1}: both readings are kept (K1504 (4))", { dayText: String(dayText(a)), v1: String(r.units === "years" ? "in the target year's month" : "in the target month") }));
     const out = [];
     for (const c0 of m.candidates) {
       const c = tollAfter(c0);
@@ -240,12 +244,12 @@ function countHours(r, t0, zone, cal, tolled, trace) {
 
 /** The status checks of R16 that hold before any count: the rule's basis, a fact a rule needs withheld. */
 function preconditions(rule, view) {
-  if (rule.basis === "UNMEASURED") return no("UNMEASURED", "the rule's basis is UNMEASURED: no measurement or ruling sources it (K1445)");
+  if (rule.basis === "UNMEASURED") return no("UNMEASURED", reason("civil-time.rules.unmeasured"));
   if (rule.computation !== undefined) {
     const list = Array.isArray(view.computation) ? view.computation : [];
     const c = list.find((x) => x && x.key === rule.computation);
-    if (!c) return missing(view, "computation", `the computation '${rule.computation}' the rule names`);
-    if (c.rule !== "exclude_first_include_last") return ruleInvalid("computation", `names '${c.rule}', a computation this module does not count`);
+    if (!c) return missing(view, "computation", "computation", { computation: String(rule.computation) });
+    if (c.rule !== "exclude_first_include_last") return ruleInvalid("computation", reason("civil-time.rules.invalid_computation", { rule: String(c.rule) }));
   }
   return null;
 }
@@ -256,14 +260,13 @@ function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list, zone) {
   const cal = calendar({ view, list, office, factOf });
   const needsCal = r.units === "business_hours" || r.count === "business" || r.roll;
   if (needsCal && !(view.weekend && Array.isArray(view.weekend.days))) {
-    const m = missing(view, "weekend", "the weekend");
-    return { ...m, why: `${m.why}; a business count or a roll needs it (the weekend is never assumed)` };
+    return missing(view, "weekend", "weekend_counting");
   }
   if (r.units === "hours" || r.units === "business_hours") {
     const s = spanOf(anchor);
-    if (isNo(s)) return s.refused ? s : no("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${s.why}`);
+    if (isNo(s)) return s;
     if (s.dt.precision !== "minute" && s.dt.precision !== "second" && typeof anchor !== "string")
-      return no("ANCHOR_UNDETERMINED", `an hours rule counts from the anchor's time, and ${s.dt.value} is held at ${s.dt.precision} precision`);
+      return no("ANCHOR_UNDETERMINED", reason("civil-time.rules.anchor_hours_precision", { value: String(s.dt.value), precision: String(s.dt.precision) }));
     if (s.twice) trace.notes.push(`${s.dt.value} occurs twice in ${s.dt.zone}; counted from both`);
     const ends = s.twice ? [s.lo, s.hi - 60] : [s.lo];
     const out = [];
@@ -280,7 +283,8 @@ function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list, zone) {
   if (rule.applies_on !== undefined) {
     const wd = weekdayOf(a.first);
     if (a.first !== a.last || !rule.applies_on.includes(wd))
-      return no("RULE_NOT_APPLICABLE", `the rule applies only to an event on ${rule.applies_on.join(" or ")}, and the anchor is ${a.first === a.last ? `a ${wd}` : "not a single day"}`);
+      return no("RULE_NOT_APPLICABLE", a.first === a.last ? reason("civil-time.rules.not_applicable_day", { days: rule.applies_on.join(" or "), weekday: wd })
+        : reason("civil-time.rules.not_applicable_span", { days: rule.applies_on.join(" or ") }));
   }
   trace.anchor_day = a.first === a.last ? dayText(a.first) : [dayText(a.first), dayText(a.last)];
   const results = [];
@@ -329,7 +333,7 @@ export function evaluateRule(args) {
   if (!view || typeof view !== "object") throw new TypeError("evaluateRule needs the jurisdiction view");
   if (anchor === undefined || anchor === null) throw new TypeError("evaluateRule needs the anchor");
   if (factOf !== null && typeof factOf !== "function") throw new TypeError("factOf is a function");
-  if (anchor && anchor.undetermined) return no("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${anchor.why || "no why given"}`);
+  if (anchor && anchor.undetermined) return no("ANCHOR_UNDETERMINED", passOn(anchor.why, "civil-time.rules.anchor_undetermined", "civil-time.rules.anchor_undetermined_unsaid"));
   const r = readRule(rule);
   if (r.undetermined) return r;
   const pre = preconditions(rule, view);
@@ -343,7 +347,7 @@ export function evaluateRule(args) {
   const head = { rule: rule.rule ?? null, applies_to: rule.applies_to ?? null, citation: rule.citation ?? null, status: rule.status ?? null,
                  basis: rule.basis ?? null, starts: rule.starts ?? null, units: r.units, amount: r.amount, count: r.count ?? null,
                  direction: r.direction, computation: rule.computation ?? null, anchor, zone,
-                 zone_from: viewZone(view) ? "the view's time_zone" : "the anchor's zone", office,
+                 zone_from: viewZone(view) ? "the view's time_zone" : word("civil-time.anchor_zone"), office,
                  tolled: Array.isArray(tolled) ? tolled : [], runtime: runtimeVersions() };
   const base = evaluateOn(r, rule, anchor, view, office, tolledSet, factOf, r.closures, zone);
   if (base.refused) return base;
@@ -394,7 +398,7 @@ export function due(args) {
     if (date === undefined || date === null) throw new TypeError(`a ${basis} due needs its date`);
     const s = spanOf(date);
     if (isNo(s)) return { ...s, basis_kind: basis, law_set: false };
-    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: "the body's own stated date" } : { says: "the team's own date" }),
+    const trace = { basis_kind: basis, date, ...(basis === "commitment" ? { citation: args.citation ?? null, says: word("civil-time.says.body_stated_date") } : { says: word("civil-time.says.group_date") }),
                     runtime: runtimeVersions() };
     return { due: date, basis_kind: basis, law_set: false, trace };
   }
@@ -423,20 +427,20 @@ export function overdueOn(args) {
   if (d === undefined || d === null || typeof at !== "string" || typeof side !== "string") throw new TypeError("overdueOn needs due, at (an instant) and side");
   if (side !== "group" && side !== "body") return refuse("SIDE_UNKNOWN", `'${side}' is neither group nor body`);
   if (d && typeof d === "object" && "due" in d && !("value" in d)) d = d.due;
-  if (d && (d.undetermined || d.refused)) return no(d.code || "DUE_UNDETERMINED", `the due date is undetermined: ${d.why}`);
+  if (d && (d.undetermined || d.refused)) return no(d.code || "DUE_UNDETERMINED", passOn(d.why, "civil-time.rules.due_undetermined", "civil-time.rules.due_undetermined_unsaid"));
   const t = parseInstant(at);
   if (t === null) return refuse("DATE_INVALID", `'${at}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
   const past = (dt) => {
     const s = spanOf(dt);
     if (isNo(s)) return s;
-    if (s.hi === null) return no("DUE_UNDETERMINED", `the due ${s.dt.value} has an open end`);
+    if (s.hi === null) return no("DUE_UNDETERMINED", reason("civil-time.rules.due_open_end", { value: String(s.dt.value) }));
     if (s.dt.precision === "day" || s.dt.precision === "edtf") {
       const z = s.dt.zone;
       const day = localDayNumber(t, z);
       const last = localDayNumber(s.hi - 1, z);
-      return { over: day > last, words: `${dayText(day)} in ${z}` };
+      return { over: day > last, day: dayText(day), zone: z };
     }
-    return { over: t >= s.hi, words: instantText(t) };
+    return { over: t >= s.hi, instant: instantText(t) };
   };
   if (d.candidates) {
     const [e, l] = d.candidates;
@@ -445,7 +449,8 @@ export function overdueOn(args) {
     if (side === "group") return pe.over ? "overdue" : "not_overdue";
     if (pl.over) return "overdue";
     if (!pe.over) return "not_overdue";
-    return no("POSSIBLY_OVERDUE", `possibly overdue: undetermined, because the due date is uncertain between ${e.value} and ${l.value} and ${pe.words} lies after the first and not after the second (K1444 (i))`);
+    return no("POSSIBLY_OVERDUE", pe.day !== undefined ? reason("civil-time.rules.possibly_overdue_day", { value: String(e.value), value_2: String(l.value), day: pe.day, zone: pe.zone })
+      : reason("civil-time.rules.possibly_overdue_instant", { value: String(e.value), value_2: String(l.value), instant: pe.instant }));
   }
   const p = past(d);
   if (p.refused || p.undetermined) return p;
@@ -471,7 +476,7 @@ export function span(a, b, opts) {
   if (!SPAN_UNITS.includes(unit)) return refuse("UNIT_UNKNOWN", `'${unit}' is not one of ${SPAN_UNITS.join(", ")}`);
   const sa = spanOf(a), sb = spanOf(b);
   for (const s of [sa, sb]) if (isNo(s)) return s;
-  for (const s of [sa, sb]) if (s.lo === null || s.hi === null) return no("OPEN_END", `${s.dt.value} has an open or unknown end`);
+  for (const s of [sa, sb]) if (s.lo === null || s.hi === null) return no("OPEN_END", reason("civil-time.rules.span_open_end", { value: String(s.dt.value) }));
   const trace = { unit, a, b, runtime: runtimeVersions(), skipped: [], notes: [] };
   if (unit === "hours") {
     const pts = (s) => (s.dt.precision === "minute" ? [s.lo, s.twice ? s.hi - 60 : s.lo] : s.dt.precision === "second" ? [s.lo, s.twice ? s.hi - 1 : s.lo] : [s.lo, s.hi]);
@@ -487,8 +492,8 @@ export function span(a, b, opts) {
     const k = unit === "years" ? 12 : 1;
     return { min: Math.trunc(Math.min(...vals) / k), max: Math.trunc(Math.max(...vals) / k), trace };
   }
-  if (!view || typeof view !== "object") return no("FACT_ABSENT", "a span in business days needs the jurisdiction view");
-  if (!(view.weekend && Array.isArray(view.weekend.days))) return missing(view, "weekend", "the weekend");
+  if (!view || typeof view !== "object") return no("FACT_ABSENT", reason("civil-time.rules.span_needs_view"));
+  if (!(view.weekend && Array.isArray(view.weekend.days))) return missing(view, "weekend", "weekend");
   const cal = calendar({ view, list: opts.closures ?? null, office, factOf });
   /* business days after x up to and including y (x excluded, as R9 counts); negative when y is before x */
   const between = (x, y) => {

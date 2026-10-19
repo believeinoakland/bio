@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd } from "./fixture.mjs";
 import { INQUIRY_SURFACE_CHECKS } from "../../../src/inquiry/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q = "INQ-2026-0001-q";
 const ROW = INQUIRY_SURFACE_CHECKS.SURFACED_BY_REWRITTEN;
@@ -14,9 +15,7 @@ const as = (text, value) => (value === null ? text.replace("surfaced_by: human\n
 
 test("R50 the row moved with its number and translation unchanged, its where naming this module's site", () => {
   assert.equal(ROW.check, "C-66.5");
-  assert.equal(ROW.translation, "This revision changes who surfaced the question, a member or an assistant. That is recorded "
-    + "once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the "
-    + "value the current version carries and save the revision again.");
+  assert.equal(ROW.translation, word("refusal.SURFACED_BY_REWRITTEN"));
   assert.match(ROW.where, /^src\/inquiry\/index\.mjs check > is-promote-surfaced-by/);
 });
 

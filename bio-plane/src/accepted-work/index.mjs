@@ -20,6 +20,7 @@ import { listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
 import { ACCEPTED_WORK_CHECKS } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { ACCEPTED_WORK_CHECKS };
 
@@ -28,13 +29,13 @@ export const ACCEPTED_WORK_ABSENT = "accepted_work_absent";
 /** R2: what a read answers when the registered function failed. */
 export const ACCEPTED_WORK_UNREADABLE_WHY = "accepted_work_unreadable";
 
-const ABSENT_DETAIL = "no module holding another team's work is registered here, so none can be read";
+const ABSENT_DETAIL = localize("accepted-work.index.no_module_registered", "no module holding another team's work is registered here, so none can be read");
 /* R8, R9: a registration that holds the three functions but not the optional one read */
 const OPTIONAL_ABSENT_DETAIL = {
-  moves: "the module holding another team's work keeps no publisher moves here, so none can be read",
-  flagHistory: "the module holding another team's work keeps no flag history here, so none can be read",
+  moves: localize("accepted-work.index.no_publisher_moves", "the module holding another team's work keeps no publisher moves here, so none can be read"),
+  flagHistory: localize("accepted-work.index.no_flag_history", "the module holding another team's work keeps no flag history here, so none can be read"),
 };
-const UNREADABLE_DETAIL = "the module holding another team's work could not answer";
+const UNREADABLE_DETAIL = localize("accepted-work.index.could_not_answer", "the module holding another team's work could not answer");
 const DETAIL_MAX = 200;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -167,8 +168,7 @@ class AcceptedWork {
     const findings = this.acceptedLegRefusals({ legs: asked, viewer });
     if (!findings.length) return null;
     return { ok: false, reason: "BASIS_REFUSED", findings,
-             detail: "a leg rests on another team's finding without an acceptance of that edition known to be in force. "
-                   + "Nothing was written." };
+             detail: localize("accepted-work.index.a_leg_rests_on_another", "a leg rests on another team's finding without an acceptance of that edition known to be in force. Nothing was written.") };
   }
 
   /* The (ref, edition) pairs the held version's legs name. A held version that cannot be read holds none, so every
@@ -197,7 +197,7 @@ function legFinding(code, ord, ref, edition) {
   const row = ACCEPTED_WORK_CHECKS[code];
   const at = Number.isInteger(edition) ? ` at edition ${edition}` : "";
   const detail = code === "IMPORTED_NOT_ACCEPTED"
-    ? `basis[${ord}] rests on ${ref}${at}, and no acceptance of that edition is in force for this team`
+    ? localize("accepted-work.index.basis_ord_rests_on_ref", "basis[{ord}] rests on {ref}{at}, and no acceptance of that edition is in force for this team", { ord: String(ord), ref: String(ref), at: String(at) })
     : `basis[${ord}] rests on ${ref}${at}, and whether it is accepted could not be read`;
   return { check: row.check, code, severity: "error", translation: row.translation, detail, ord, ref,
            edition: edition === undefined ? null : edition };

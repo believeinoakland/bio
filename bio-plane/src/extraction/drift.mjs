@@ -3,6 +3,7 @@
    which transcriptions rest on them is this module's, because it holds the text-source rows that bind a chain to a
    calibration. */
 import { drifted, DRIFT } from "../calibration.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** THE ASYMMETRIC DRIFT HANDLER'S ANSWER: which transcriptions rest on a
  *  calibration that has been superseded by a WORSE one?
@@ -49,13 +50,7 @@ export function driftObligations(supersessions, bound) {
          home. */
       reeval: { flag: true, since: s.current.at, source: "calibration" },
       regraded: false,
-      why: `this text was graded under calibration ${s.superseded.calibration_id} of `
-         + `${s.superseded.engine} ${s.superseded.version} (fidelity `
-         + `${s.superseded.cap ?? "undetermined"}, measured ${s.superseded.at}). A probe on `
-         + `${s.current.at} measured that engine at ${s.current.cap ?? "undetermined"}, which is `
-         + `WEAKER — so what this transcription may support is now less than the record says. `
-         + `NOTHING HAS BEEN RE-GRADED: a grade moves by an authored act and never by a machine `
-         + `(DEC-4). This names the work; a member does it`,
+      why: localize("extraction.drift.this_text_was_graded_under", "this text was graded under calibration {calibration_id} of {engine} {version} (fidelity {v1}, measured {at}). A probe on {at_2} measured that engine at {v2}, which is WEAKER — so what this transcription may support is now less than the record says. NOTHING HAS BEEN RE-GRADED: a grade moves by an authored act and never by a machine (DEC-4). This names the work; a member does it", { calibration_id: String(s.superseded.calibration_id), engine: String(s.superseded.engine), version: String(s.superseded.version), v1: String(s.superseded.cap ?? "undetermined"), at: String(s.superseded.at), at_2: String(s.current.at), v2: String(s.current.cap ?? "undetermined") }),
     });
   }
   out.sort((a, b) => String(a.id) < String(b.id) ? -1 : 1);

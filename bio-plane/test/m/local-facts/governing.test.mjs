@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, P, TP, written } from "./fixture.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const AT = "2026-06-01T12:00:00Z";
 const CLERK = { role: "Town Clerk", body: "City of Port Ellery" };
@@ -19,7 +20,7 @@ function reader(edges, offices = {}) {
     structureAt(q) {
       calls.push(q);
       const at = (e) => e.filter(([, f, t]) => f === q.entity || t === q.entity)
-        .map(([line_id, from, to]) => ({ line_id, kind: "part_of", from, to, why: "no end is stated" }));
+        .map(([line_id, from, to]) => ({ line_id, kind: "part_of", from, to, why: word("civil-time.end_stated") }));
       return { ok: true, entity: q.entity, at: q.at, held: at(edges.filter((e) => e[3] === "in")), truncated: false,
                undetermined: at(edges.filter((e) => e[3] === "undetermined")).map(({ why, ...line }) => ({ line, why })) };
     },
@@ -33,12 +34,12 @@ test("R6 governingPath: the office's own fact when the profile holds one, follow
   const r = reader([["LIN-1", "ENT-clerk", "ENT-town", "in"]], { "ENT-town": BOARD });
   const l = lf(r);
   assert.deepEqual(ask(l, { fact: "hours", office: CLERK, entity: "ENT-clerk" }),
-                   { ok: true, path: P.clerkHours, via: "own", lines: [], why: "the profile holds this office's own fact" });
+                   { ok: true, path: P.clerkHours, via: "own", lines: [], why: word("local-facts.why.profile_holds_office_fact") });
   assert.equal(ask(l, { fact: "hours", office: { venue: "records_request" } }).path, P.venueHours);
   assert.equal(ask(l, { fact: "holidays", office: "Town Clerk", year: 2026 }).path, P.y2026clerk);
   assert.equal(ask(l, { fact: "holidays", office: { venue: "commitment_claim" }, year: 2026 }).path, P.y2026court);
   assert.deepEqual(ask(l, { fact: "time_zone" }), { ok: true, path: P.tz, via: "profile", lines: [],
-                                                     why: "the time zone is the profile's, for every office" });
+                                                     why: word("local-facts.time_zone_profile") });
   assert.equal(r.calls.length, 0, "no line read when the office's own fact is held");
 });
 

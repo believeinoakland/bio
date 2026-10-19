@@ -10,6 +10,7 @@ import { CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOW
          tensionSide, tensionTemplate, tensionSentence, tensionsUnreadStated, tensionFrontmatterLines,
          tensionBodyLines } from "../../../src/case-disclosures/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001";
@@ -129,7 +130,7 @@ test("R1: tensionsDisclosed is a list of {candidate, words?}: a malformed one is
 });
 
 test("R1 (C-120.3): a read that fails, throws, answers nothing or is truncated is TENSIONS_UNDETERMINED, naming each finding and why, alone and before any other refusal; each member is read at its pin, as the viewer; tensionsUndetermined is the same refusal for a caller's own failed read", () => {
-  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: "the read failed" }, /the read failed/],
+  for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: word("case-disclosures.why.read_failed") }, /the read failed/],
                                [{ ok: false, reason: "X" }, /the read failed/],
                                [{ ok: true, candidates: [], truncated: true, bound: 200 }, /more than 200/],
                                [{ ok: true }, /the read failed/],
@@ -235,7 +236,7 @@ test("R1, R17 (DEC-85): a tension with a side the owner may not see is named in 
   refused(j.refusals[0], "TENSION_NOT_DISCLOSED");
   assert.deepEqual(j.refusals[0].undisclosed, [{ candidate: id, finding: F, unseen_other_side: true, says: NOT_SHOWN_WORDS }]);
   assert.match(j.refusals[0].detail, new RegExp(`${id} on ${F}, ${NOT_SHOWN_WORDS}`));
-  assert.equal(NOT_SHOWN_WORDS, "in conflict with a record not shown");
+  assert.equal(NOT_SHOWN_WORDS, word("case-disclosures.conflict_record_shown"));
   const ok = w.cd.tensionsJudged(prep, V("alice"), disclose(id, "we rest on the page we hold"));
   assert.deepEqual(ok.refusals, []);
   const [e] = ok.entries;
@@ -249,7 +250,7 @@ test("R1, R17 (DEC-85): a tension with a side the owner may not see is named in 
   for (const k of Object.keys(fm.case_tensions[0])) assert.ok(!/^(a|b)_|^explanation$/.test(k), `no field ${k}`);
   assert.ok(bodyLines.join("\n").includes(`  - ${HIGHLIGHT_SENTENCE}`));
   assert.ok(bodyLines.join("\n").includes(" — HIGHLIGHTED."));
-  assert.equal(HIGHLIGHT_SENTENCE, "This finding rests on a side in conflict with a record not shown here. The record and who holds it are not named.");
+  assert.equal(HIGHLIGHT_SENTENCE, word("case-disclosures.finding_rests_side"));
   for (const said of [JSON.stringify(j.refusals), JSON.stringify(ok.entries), fmLines.join("\n"), bodyLines.join("\n"),
                       tensionSentence(t[0])])
     for (const leak of [CH, sha("the hidden capture"), "hidden minutes", "page 4", H, "Hidden", "member:bo", "say otherwise"])

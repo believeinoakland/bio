@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { DOCKET_UNREADABLE } from "../../../src/docket/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const ofKind = (r, re) => r.items.filter((i) => re.test(i.kind));
@@ -141,7 +142,7 @@ test("R35 (case-import R20): the watch's items go to the member who set the watc
   const un = m[`CONDITION::cited-docket-unreadable::${IMP}`];
   assert.equal(un.class, "CONDITION");
   assert.ok(un.detail.startsWith(DOCKET_UNREADABLE), "its detail opens with DOCKET_UNREADABLE's sentence");
-  assert.equal(DOCKET_UNREADABLE, "Could not read the publisher's docket");
+  assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
   assert.match(un.detail, /not_json/); assert.ok(un.detail.includes(iso(NOW - 3 * DAY)));
   assert.match(un.detail, /never that nothing changed/);
   assert.deepEqual(un.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY });

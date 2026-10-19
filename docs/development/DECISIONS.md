@@ -5254,3 +5254,170 @@ decided: 2026-10-18 · the design session (P17)
 the design: B326 (1) the ordinance and office pages draw "Ties a member declared" with `relationdeclare` (`screen.person.ties.none.ordinance`, `.office`); no facts. (2) The compare draws one verdict per axis, "Captured: …" and "Connected: …" (`screen.question.compare.captured.explain`, `.connected.explain`; `say054` "Captured: {change}, since {source} was cited"). (3) Each leg draws its grade (`screen.published.leg.grade.explain`) and the falsifier override is drawn (`screen.published.falsifier.override`, `.summary`, `.explain`). (4) A document the case does not publish is drawn unnamed, on the page and in the print ("A document, not published with the case"; `screen.published.leg.namedonly.explain`; `screen.published.sources.nonepublished`); the named sample rows deleted. (5) The print state's note and two acts are screen only and say so. (6) `screen.capture.openit.help` "Opens the copy your team already holds."; `screen.capture.leaveit.help` "Stays here. Nothing new is captured, and the copy your team already holds stays as it is.", drawn on "Leave it". B323: the profile refusals `installer.profiles.refused.*`; `installer.need.heading`, `.need.time`; `installer.success.otp`, `.copy`; the short-name step `installer.step.record`, `.done`, `.refused`, and `installer.team.unrecorded.suggest` reworded (the installer records the name it was installed under unless given another); the invitation page's 24 sentences `installer.invite.*`; the two log lines say the installer could not look; the installer's reads gain `weight.irreversible.name` and drop `screen.install.stopped.running`, `installer.fact.unknown.older`. B325: (1) `screen.group-identity.seed.unrecorded` drawn as its own state; (2) the samples hold placeholders, with `.bymember`, `.one` and `.many` forms, `queue.allclear.failed.feed`, and the document page's labels keyed; (3) the heat map on the 12-hour clock; (4) words.json's wording stands and DEC-335's quote now matches it. The consistency reader's folds: `screen.project.notice.your.team.has.two.other` "Other notices your team has open: {open}. Cases it has published: {published}."; `screen.published.rests.on.the.council.minutes.one`; "not published here" for the served leg; the two log lines "could not check" / "could not read"; `queue.answered.snoozed` "until {date}".
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-*.js`, `screens/page.src.html`, `screens/words-reads-mod-5.src.mjs`.
 owed: (BOB, T51 L11) CHANGEs for screens-investigate R41, screens-inquiry R72, screens-publish R37 and R39 where the drawing now matches them; the installer's L11 job reads the new keys; installer R72 to R79 place the short-name step.
+
+### DEC-339 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B329, public-read R38)
+for: design
+question: Words for `publishedfrozen`'s four sentences (what each published case froze for a finding; `question`, A37).
+why it is Bob's: it is not (P17): words beneath R38.
+provisional: the module's draft English.
+alternative: the draft as written; reworded to plain words.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: `public-read.frozen.detail.cases` "Each line is one published edition of a case and the reading of this finding it froze, as that case's signed document states it. One case's reading never stands for another's, and readings are never combined."; `public-read.frozen.detail.none` "This finding is published, but no published case edition rests on it, so no case froze a reading of it."; `public-read.frozen.strength_detail.none` "This case edition froze no strengths for this finding, and none are filled in here."; `public-read.frozen.signer_detail.unstated` "No signed document held here names this signer, so none is shown. Who signed the case and who signed the finding are two separate facts; one never stands in for the other."
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: (BOB, T51 L8) public-read reads the four keys.
+
+### DEC-340 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B330: N1184, N889, N1046, N858, N880, N933, DEC-265's `.dated`; Bob's K3915: nothing found in a tranche waits for the next)
+for: design
+question: What the design supplies in T51 for B330's items, and what it cannot.
+why it is Bob's: it is not (P17): drawings beneath Bob's Actions D8, D9, D10 and D13 (2026-10-11) and the R84, R32, R51 requirements; the template texts themselves stay his review (filing-templates R15).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low to medium (four new screens).
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: N1184: the person page with no connections draws no graph and no Explore (`person.graph.none` reworded); Projects draws its search and filter with accessible names (`screen.projects.search.*`, `.filter.*`); the unchanged name is `screen.group.name.same` (DEC-299); every screen has its `screen.<id>.name` for `page.title`; a public or published page draws no weight mark; an explanation opens where it covers no other control (the drawing's placement rule); the team name wraps, never cut. N880: the signing step draws "Open requests for comment" (one `signing.openrequest.*` line each, shown once, no reason, no gate; state k when they can't be read) and the minutes beside the team's public comment (`signing.minutes.*`). N858: D8 on `action` (the procedure guide with its sources, templates offered only after the act is chosen, an unapproved template "Not offered yet", the profile fact on its trigger), `places`' state for a state with no profile (no generic fallback), and a new screen `grouprules` (a drafted rule waits for a different member's confirmation); D9 a new screen `counsel` (each matter as it stands, "Not determined" never a refusal; claim or defense purpose); D10 new screens `hold` (any member who can see the action or case, with a reason, from a reply, a docket entry, pressure elsewhere or a counsel matter) and `holdnotice` (assembled, sent by the member's own hand, no per-member record). About 170 keys. Nothing to supply: N889 (the keys exist; notice-producers' build), N1046 (the plane op is BOB's; a `{template}` script step would reopen the approved library, DEC-148), N933's prompt and DEC-265's `.dated` (drawn).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-*.js`, `screens/page.src.html`, `screens/registry.src.py`.
+folded after: the consistency read (number-safe counts; "hold" throughout, "litigation hold" only in the hold screen's title; "lawyer" in sentences, "counsel matter" the one named term; "No profile for {state} yet"; a drafted rule "does not take effect until a member other than its drafter confirms it"; the hold notice says the reason is included) and the 390 px walk (at phone width every button, summary row, sort header, breadcrumb, avatar, menu link, standalone link and checkbox row is at least 44 px; inline links in sentences exempt; the connections graph pans inside its frame, accepted like the tables).
+owed: (BOB, T51 L11) the four new screens' jobs and the drawn states; (Bob) the two records-request templates' review under filing-templates R15, and the sample legal facts drawn as data (Sunshine Ordinance route, anti-SLAPP fact) are placeholders, never offered until a profile carries them with sources.
+
+### DEC-341 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_01PCePb8zMxX78iE1gWyzh9A; the development process also runs on his primary account since K1428) (BOB's HANDOFF B335, K3936: four gaps from folding DEC-340)
+for: design
+question: Naming challenged statements before a counsel packet is assembled; a drafted team rule's fields; the minutes' passage on a public-comment reply; an unreadable minutes source at signing.
+why it is Bob's: it is not (P17): drawing detail beneath filings R9, local-facts R10/R18 and actions R108.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) `counsel`'s defense state draws "The statements challenged" before the matters: the statement as the team made it and where it was said, "Add another statement" (`screen.counsel.chal.*`). (2) `grouprules`' draft takes a profile entry's fields: kind (a deadline or a legal fact), what sets it off (the deadline starts of jurisdictions R26 and the legal-fact triggers of R79), what it requires, its citation, an optional link, its source capture, the day it takes effect; each drafted or in-force row shows them (`screen.grouprules.kind.*`, `.trigger.*`, `.cite.*`, `.link.*`, `.eff.*`, `.row.*`). (3) `action`'s state e records a reply to a request for comment with "Where the minutes record your team's comment" (meeting, its date, the document, the passage; `screen.action.minutes.*`), refused for a reply that is not to a public comment. (4) `ceremony`'s state l: `signing.minutes.unread` "The minutes this case relies on can't be read right now, so the comparison with the team's public comment is not shown." 53 keys.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+folded after: the consistency read by UX design #30 (session_0132xHbVxJ5XZzHuwzNvwbRa): the minutes form's heading names the public comment ("Record a reply to your team's public comment"; a request for comment is a different kind of action); its refusal ends "Nothing was written." like every refusal; its helps no longer restate their labels ("The day of the meeting, as the minutes date it.", "Copy the words exactly as the minutes write them.") and a capture is one "your team holds", as on `grouprules`; counsel's "List each statement the other side challenges."; the rule triggers speak of "your team", never "we" ("Your team files a document", "Your team learns of it", "Your team is served", "The office receives your team's request").
+owed: (BOB, T51) local-facts R18 gains the effective date the drawing asks for (discharged: B337, K3938, `effective_from` required on a drafted rule, never applied before that day; `.eff` kept, a future date reads "In effect from <date>"); filings R9's "where it was said" is the design's reading of what the member names.
+
+### DEC-342 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (DEC-260's owed second reading, made pressing by BOB's NOTICE B339: K3944 stops the words check counting a string on `words-reads.json`'s unkeyed list)
+for: design
+question: Whether the unkeyed lists hide text a member reads, and what a member sees for a refusal whose code has no words row.
+why it is Bob's: it is not (P17): member words beneath DEC-260 and K3930.
+provisional: as below.
+alternative: leave the codes to be written first in code and reviewed at the tranche close (K3930). Rejected: refusal rows are the design's, one wording per code (DEC-260), and a member meanwhile sees only "no explanation yet" and the raw code.
+recommendation: as below.
+reversal cost: low: data rows only.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) The unkeyed lists stand: the 5,433 strings are builder text, and the shell never draws a refusal's `detail` (interface-shell `refusalOf`: the screen's handler, then `refusal.<CODE>`, then the answer's translation, then `refusal.uncatalogued` with the code). (2) Of 2,340 refusal codes `bio-plane/src` emits (origin/main, 2026-10-18), 690 had no `refusal.<CODE>` row: 579 are now worded (`screens/words-drawn.src.py`, the DEC-342 block), each read from its source; 111 are not refusals or cannot be triggered by any request, listed with why and where in `screens/refusals-dec342-skipped.json`. (3) Four evidence-grouping refusals keep "group" in its grouping sense (`build_words.mjs` GROUP_SENSE). (4) For BOB: four screens fall back to the builder's `detail` when an answer has no translation (screens-action/start-send.mjs:69, screens-publish/parts.mjs:21, screens-intake/capture.mjs:83, screens-inquiry/assistant.mjs:268); with every code worded they should take `refusal.<CODE>` and, failing it, the shell's `refusal.uncatalogued` path, never `detail`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/refusals-dec342-skipped.json`, `screens/build_words.mjs`.
+owed: (BOB, T51) the four screens stop drawing `detail`; any skipped code BOB finds a member can reach comes back to the design to word.
+
+### DEC-343 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B341, K3955: eight `signals` of `ooxml.mjs`'s `discriminate` for the unkeyed list)
+for: design
+question: Listing the eight diagnostic signals of `discriminate` as unkeyed, and why four already listed still counted.
+why it is Bob's: it is not (P17): the design's list beneath K3944.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: a generator step and four list rows.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) `ooxml.mjs` lines 927, 929, 933 and 965 join 773, 834, 854 and 978 on its unkeyed list (`screens/words-reads-mod-2.json`): diagnostic signals every consumer passes on unread; a member reads only the `why` code. (2) The four already listed still counted because the words check names a module by its `build/modules.json` id (`ooxml`), while DEC-260's lists named 34 single-file modules by file (`ooxml.mjs`); `words-reads.src.mjs` now files each such entry under its owning module (read from origin/main's `build/modules.json`; `docx.mjs`, `pptx.mjs`, `formats-xlsx.mjs` and `csv.mjs` under `office-readers`), merged, with the files it came from. 172 entries become 150; 5,437 strings unkeyed; the words check's inline failures fall from 12,187 to 9,504 (2,683 now read as unkeyed), none of `ooxml`'s left.
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (DEC-343 block), `screens/words-reads-mod-2.json`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-344 · answered
+raised: 2026-10-18 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B343, K3970: R1's batch)
+for: design
+question: R1's strings no member reads, image-cover's four refusals, and two code rows' spelling.
+why it is Bob's: it is not (P17): the design's list and member words beneath K3930 and K3944.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: data rows.
+response: none needed (the design's detail).
+decided: 2026-10-18 · the design session (P17)
+the design: (1) A hand-kept list, `screens/words-reads-handoffs.json`, holds the strings BOB's module jobs judge no member reads, by `build/modules.json` id with each job's reason; `words-reads.src.mjs` merges it into each module's unkeyed list (DEC-344 block). R1's 117: connection-grammar 6 (ownerConformance's findings), doctypes 2, court-doctypes 1, docprofile 1 (wiring answers), jurisdictions 102 (a profile validator's detail, read by the profile's author), roster-reader 2 (recognition vocabulary), file-scanner 1 (a route never sent), pdf-pixels 2 (a codec key); taken whole from the words check on tranche/T51 @ 087c98265b, and that check passes on all eight with the new list. subresources' Content-Security-Policy string already passes (counted as a builder string). (2) image-cover's four refusals already had rows (DEC-260, `words-mod-1.src.py`) in builder wording; they and their four siblings are reworded for a member (what to do: save it as a JPEG or an ordinary PNG, save a smaller copy, copy it again from its source, mark the area again). (3) `odf-reader.odf.content_xml_with_text_list` "relabeled" and `roster-reader.org-chart.labelled_line_s_name_a` "labeled", "organization" written into the table (the table wins, K3930), placeholders kept as code names them.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.src.mjs`, `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`.
+owed: (BOB, T51) image-cover's `COVER_REFUSALS` reads `refusal.<CODE>` for its four English codes.
+
+### DEC-345 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B345, R2's close, K3972: member-roster split from membership)
+for: design
+question: member-roster's entry in `words-reads.json`, and membership's trimmed to its own keys.
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) `screens/words-reads-mod-3.json`: `member-roster` reads its `WORD_KEYS` (46 keys, evaluated from tranche/T51's code), with the 11 unkeyed strings that moved with its code (listener registration, the roster acts' names); `membership` reads its own 15 (its `WORD_KEYS` less member-roster's), with its 4 project refusals' details; `handle.changeable`, `handle.fixed` and `handle.formerly` are read by neither and leave the list. (2) The lists are now generated from tranche/T51's source (`git archive origin/tranche/T51 bio-plane/src newgroup bio-plane/public/newgroup`), the newest tranche, not main; `words-reads-mod-5.json` is regenerated with it (instance-setup reads 99 keys). (3) `words-reads.src.mjs` counts a T49 decision whose string and key have both left its module as moot rather than a problem (decision 94: plane's `screen.front.purpose`, the front page's sentence moved with its screen). The words check gives 0 failures on member-roster and membership.
+reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads-mod-5.json`, `screens/words-reads.src.mjs`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-346 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B346, R3's close)
+for: design
+question: capture's two strings no member reads.
+why it is Bob's: it is not (P17): the design's list.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `screens/words-reads-handoffs.json` (DEC-344) gains capture's `index.mjs`:699, the `HASH_DISAGREEMENT` 500's detail, and :1832, the render allowance's deferral reason, each with CAPTURE #37's reason; the words check on tranche/T51 gives capture 0 failures.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-347 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B349, R5's batch, K3944, K3957)
+for: design
+question: R5's strings no member reads, the rows asked of the design, and the code rows given for review.
+why it is Bob's: it is not (P17): the design's lists and member words beneath K3930.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: data rows.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) retrieval's start-up registration diagnostic (index.mjs 293, 306, 318, 331, 367) joins `screens/words-reads-handoffs.json`; events' OWNER_HOST whys, its ListenerFailure prefix and `where`, and money's 956 already read as builder strings (0 failures), so nothing is added for them; money's three unkeyed entries now keyed by `localize` (R13) leave its list. (2) `label.connectionkinds.event_<kind>` for events' 24 kinds (16 roles, `concerns`, 7 links), each as events' own word (`events.seconder` "seconded" and the rest). (3) Reviewed from code: `retrieval-browse.findin.read_another_shape` reworded for a member (it named a requirement); `observation-log.vocabulary.condition_governor_holding_host` takes the pacing sentence's meaning in member words; `observation-log.index.who_s_lead_is_recorded` takes `observation-log.says.lead_recorded_somewhere`'s sentence (no op name). (4) lines' five rows no longer read (`lines.text.date_read`, `.lines_hold_post`, `.lines_read_holds`, `.line_naming_office`, `lines.undetermined.line_covers_date`) leave the table and lines' reads. (5) lines' 68 and local-facts' 10 code rows written into the table: 70 builder details kept as written (American spelling; four K references removed), 8 a member reads reworded (placeholders kept). The words check on tranche/T51 gives 0 failures on all seven modules.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-347 blocks), `screens/words-mod-1.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads-mod-1.json`, `screens/words-reads-mod-3.json`.
+owed: (BOB) observation-log may read `observation-log.says.lead_recorded_somewhere` and `machinery-producers.summary.pacing_holding_captures` in place of its two duplicates, if its code allows; nothing else.
+
+### DEC-348 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B350, R6's batch, K3944, K3957)
+for: design
+question: R6's strings no member reads; citation's converted entries; capture-requests' stale wording.
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) `screens/words-reads-handoffs.json` gains 88 strings, each with its job's reason, taken whole from the words check on tranche/T51: run-rules 6, answers 2, agent-harness 15, agent-runner 23, strength 16, contradiction 7, basis-versions 15, agent-worker 4 (ops.mjs 26, 27, 50, 53; index.mjs 774, which the HANDOFF does not name, is left counted). reading-guides and skills already read 0. (2) citation's 61 unkeyed entries leave its list (`words-reads-mod-2.json`): its job converted them (K4010), and the check gives citation 0 with none listed. (3) capture-requests' five entries say "your team's" (`words-reads-mod-4.json`, K3472). The words check on T51 gives 0 on eleven of the twelve modules; contradiction's two `+`-joined strings (contradiction.mjs 84, text.mjs 43) are listed but still counted, because the check's stitched arm does not consult the unkeyed list.
+reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads-mod-2.json`, `screens/words-reads-mod-4.json`, `screens/words-reads.json`.
+owed: (BOB, civicos-process) the words check's stitched arm reads the design's unkeyed list as the plain arm does; agent-worker index.mjs 774 to be judged by its job.
+
+### DEC-349 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-344 to DEC-348)
+for: design
+question: Do the 115 words written or reworded by DEC-344 to DEC-348 agree with their neighbors and the house style?
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: keep "cover" for image-cover's refusals; rejected, since the drawn screens and the neighboring photo refusals say "obscure" and "mark", so one idea would have two names.
+recommendation: as below.
+reversal cost: low: word rows.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) image-cover's six member refusals (`refusal.NOT_A_COVERABLE_FORMAT`, `UNSUPPORTED_JPEG_PROCESS`, `PNG_INTERLACED`, `AREA_MALFORMED`, `AREA_OUTSIDE`, `PHOTO_TOO_LARGE`) say "obscure" as the ceremony's Photos step and the marking refusals do, and name the product "your team's Civicsmith" as their siblings do; the ceremony's drawn rule (`screen.ceremony.photos.rules`) and the screens page's note say "obscured" likewise. (2) `odf-reader.odf.content_xml_with_text_list`, a builder's provenance note, loses the two job ids it carried. (3) `observation-log.vocabulary.condition_governor_holding_host` speaks in the team's voice ("Your team's Civicsmith is spacing out its captures from this site on purpose"). The other 107 rows agree; the refusals' ending ("Nothing was recorded.") is left off image-cover's eight, which refuse before anything is written.
+reasoning recorded in: this entry; `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: nothing.

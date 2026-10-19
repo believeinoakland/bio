@@ -5,6 +5,7 @@
    `isMachineMinted` had no reader and went with the catalogue (K750). */
 
 import { isMachineIdentity } from './actors.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /* A value stringified and trimmed; one that cannot be stringified (a throwing `toString`, an object with no prototype)
    is blank, never a throw (R37, R38). */
@@ -44,12 +45,9 @@ function text(v) {
  * VALUE, and a reader handed a row from anywhere must land somewhere honest.
  * ===================================================================== */
 export const LAW_PROPOSAL_STATES = {
-  machine_proposed: 'a machine credential proposed these citations. That is machine work, labelled as machine '
-    + 'work: it can set a list of laws beside the request and it can never state which laws govern it. Nothing '
-    + 'here is this action\'s list of governing laws, and nothing becomes one until a member states it themselves',
-  member_proposed: 'a member proposed these citations to whoever states this action\'s governing laws. It is a '
-    + 'proposal and not the list: only the governing-laws act sets that, and the record holds who made it',
-  unstated: 'the record does not say who proposed these citations',
+  machine_proposed: word('record-grammar.proposal.governing_laws.machine_proposed'),
+  member_proposed: word('record-grammar.proposal.governing_laws.member_proposed'),
+  unstated: word('record-grammar.proposal.governing_laws.unstated'),
 };
 
 /** Read a proposal's `proposed_by` as ONE of the three states above. Blank is
@@ -79,178 +77,117 @@ export function lawProposalState(proposedBy) {
 export const PROPOSAL_STATES = Object.freeze({
   governing_laws: LAW_PROPOSAL_STATES,
   standard: Object.freeze({
-    machine_proposed: 'a machine credential proposed this standard. That is machine work, labelled as machine work: '
-      + 'it can set a standard beside the record for members to consider and it can never enter one. Nothing here '
-      + 'is a standard this record holds, and nothing becomes one until a member records it themselves',
-    member_proposed: 'a member proposed this standard to whoever records the team\'s standards. It is a proposal '
-      + 'and not a standard: only recording a standard enters one, and the record holds who made the proposal',
-    unstated: 'the record does not say who proposed this standard',
+    machine_proposed: word('record-grammar.proposal.standard.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.standard.member_proposed'),
+    unstated: word('record-grammar.proposal.standard.unstated'),
   }),
   comparison: Object.freeze({
-    machine_proposed: 'a machine credential prepared this comparison of a government act against standards. That is '
-      + 'machine work, labelled as machine work: it can set out rows and questions for members and it can never '
-      + 'determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member '
-      + 'records it themselves',
-    member_proposed: 'a member suggested this comparison of a government act against standards. It is a comparison '
-      + 'and not a determination: only a determination records whether the act complied, and the record holds who '
-      + 'made the comparison',
-    unstated: 'the record does not say who prepared this comparison',
+    machine_proposed: word('record-grammar.proposal.comparison.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.comparison.member_proposed'),
+    unstated: word('record-grammar.proposal.comparison.unstated'),
   }),
   filing_draft: Object.freeze({
-    machine_proposed: 'a machine credential prepared this draft. That is machine work, labelled as machine work: it '
-      + 'can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this '
-      + 'draft, and nothing is filed until members decide to file it and send it themselves',
-    member_proposed: 'a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, '
-      + 'and the record holds who prepared it',
-    unstated: 'the record does not say who prepared this draft, and nobody has approved or sent it',
+    machine_proposed: word('record-grammar.proposal.filing_draft.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.filing_draft.member_proposed'),
+    unstated: word('record-grammar.proposal.filing_draft.unstated'),
   }),
   theory: Object.freeze({
-    machine_proposed: 'a machine credential proposed this candidate theory and remedy. That is machine work, '
-      + 'labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it '
-      + 'can never state the team\'s position. Nothing here is the team\'s position',
-    member_proposed: 'a member proposed this candidate theory and remedy. It is a candidate for members and counsel '
-      + 'to weigh and not the team\'s position, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this candidate theory and remedy',
+    machine_proposed: word('record-grammar.proposal.theory.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.theory.member_proposed'),
+    unstated: word('record-grammar.proposal.theory.unstated'),
   }),
   /* N-A1 (T18, K608): an option proposed for an action plan (action-plans R11) is not an option until a member
      adopts it, and a prepared communication (filings R23) is a draft nobody has approved or sent, worded as
      `filing_draft`'s sentences are. */
   plan_option: Object.freeze({
-    machine_proposed: 'a machine credential proposed this option. That is machine work, labelled as machine work: it '
-      + 'can set an option beside the plan for members to weigh and it can never choose one. It is not an option '
-      + 'until a member adopts it',
-    member_proposed: 'a member proposed this option. It is a proposal and not an option: it is not an option until '
-      + 'a member adopts it, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this option, and it is not an option until a member adopts it',
+    machine_proposed: word('record-grammar.proposal.plan_option.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.plan_option.member_proposed'),
+    unstated: word('record-grammar.proposal.plan_option.unstated'),
   }),
   communication: Object.freeze({
-    machine_proposed: 'a machine credential prepared this communication. That is machine work, labelled as machine '
-      + 'work: it can prepare the words of a message and it can never approve or send one. Nobody has approved or '
-      + 'sent it, and nothing is sent until members decide to send it themselves',
-    member_proposed: 'a member prepared this communication. It is a draft and not a message sent: nobody has '
-      + 'approved or sent it, and the record holds who prepared it',
-    unstated: 'the record does not say who prepared this communication, and nobody has approved or sent it',
+    machine_proposed: word('record-grammar.proposal.communication.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.communication.member_proposed'),
+    unstated: word('record-grammar.proposal.communication.unstated'),
   }),
   /* K921 (T21, R42): wording proposed for a filing template (filing-templates R6, R13) is not a template's text until a
      member adopts it into a draft, and a machine can propose it and never draft, review or approve a template. */
   template: Object.freeze({
-    machine_proposed: 'a machine credential proposed this wording for a filing template. That is machine work, labelled '
-      + 'as machine work: it can propose wording and it can never draft, review or approve a template. It is not a '
-      + 'template\'s text until a member adopts it into a draft',
-    member_proposed: 'a member proposed this wording for a filing template. It is a proposal and not a template\'s '
-      + 'text: it is not that until a member adopts it into a draft, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this wording for a filing template, and it is not a template\'s '
-      + 'text until a member adopts it into a draft',
+    machine_proposed: word('record-grammar.proposal.template.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.template.member_proposed'),
+    unstated: word('record-grammar.proposal.template.unstated'),
   }),
   /* DEC-101 (1) (K1019; T23, R43): a draft of a new edition's statement of what changed in it, and why
      (`BIO_Publication_v0_1.md` §5A; case-authoring R39), is not the group's statement until a member adopts or rewrites
      it, and the record keeps that it began as a machine draft. */
   edition_statement: Object.freeze({
-    machine_proposed: 'a machine credential drafted this statement of what changed in this edition, and why. That is '
-      + 'machine work, labelled as machine work: it is a draft, which can help members say what changed and can never '
-      + 'sign a statement. It is not the team\'s statement until a member adopts or rewrites it',
-    member_proposed: 'a member proposed this statement of what changed in this edition, and why. It is a proposal and '
-      + 'not the team\'s statement until a member adopts or rewrites it, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this statement of what changed in this edition, and why, and it is '
-      + 'not the team\'s statement until a member adopts or rewrites it',
+    machine_proposed: word('record-grammar.proposal.edition_statement.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.edition_statement.member_proposed'),
+    unstated: word('record-grammar.proposal.edition_statement.unstated'),
   }),
   /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
      record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
      recorded is the member's own. */
   escalation_reason: Object.freeze({
-    machine_proposed: 'a machine credential assembled this reason for opening an escalation from the determination\'s '
-      + 'record. That is machine work, labelled as machine work: it is a draft, which can set out what the record holds '
-      + 'and can never open an escalation. It is not a member\'s reason until a member sends it, as offered or edited',
-    member_proposed: 'a member assembled this reason for opening an escalation from the determination\'s record. It is '
-      + 'a proposal and not a member\'s reason until a member sends it, as offered or edited, and the record holds who '
-      + 'proposed it',
-    unstated: 'the record does not say who assembled this reason for opening an escalation from the determination\'s '
-      + 'record, and it is not a member\'s reason until a member sends it, as offered or edited',
+    machine_proposed: word('record-grammar.proposal.escalation_reason.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.escalation_reason.member_proposed'),
+    unstated: word('record-grammar.proposal.escalation_reason.unstated'),
   }),
   /* N543 (K1396; T32, R45): steps proposed for a wizard script (wizard-scripts R5) are not a script's steps until its
      author adopts them into a version, and a machine can propose steps and never draft, submit or approve a script
      (wizard-scripts R19), worded as `template`'s sentences are. */
   wizard: Object.freeze({
-    machine_proposed: 'a machine credential proposed these steps for a wizard script. That is machine work, labelled as '
-      + 'machine work: it is a draft, which can propose steps and can never draft, submit or approve a script. They are '
-      + 'not a script\'s steps until its author adopts them into a version',
-    member_proposed: 'a member proposed these steps for a wizard script. It is a proposal and not a script\'s steps until '
-      + 'its author adopts them into a version, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed these steps for a wizard script, and they are not a script\'s steps '
-      + 'until its author adopts them into a version',
+    machine_proposed: word('record-grammar.proposal.wizard.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.wizard.member_proposed'),
+    unstated: word('record-grammar.proposal.wizard.unstated'),
   }),
   /* N568 (K1571; T34, R49): a law relation, a court link or a treatment proposed beside the record (standards R23, R26,
      R27, R30) is not one the record holds until a member records it themselves, and a machine can propose one and never
      record one (K1443). Before this subject, standards' `lawPropose` labelled through `standard`, whose sentences speak
      of a standard and misnamed what was proposed. */
   law_relation: Object.freeze({
-    machine_proposed: 'a machine credential proposed this law relation, court link or treatment. That is machine work, '
-      + 'labelled as machine work: it can propose one and it can never record one. It is not one the record holds until '
-      + 'a member records it themselves',
-    member_proposed: 'a member proposed this law relation, court link or treatment. It is a proposal and not one the '
-      + 'record holds until a member records it themselves, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this law relation, court link or treatment, and it is not one the '
-      + 'record holds until a member records it themselves',
+    machine_proposed: word('record-grammar.proposal.law_relation.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.law_relation.member_proposed'),
+    unstated: word('record-grammar.proposal.law_relation.unstated'),
   }),
   /* N669 (K1793, K1804; T37, R50; DEC-127 (2), (5), DEC-157 (2)–(4)): a translation of an interface word drafted for a
      group's language (skills' draft run; instance-setup's workspace) is a draft, shown to members as "Draft", and not the
      group's wording until a member granted that language adopts it; a machine can draft one and never adopt or confirm
      one (DEC-157 (4)'s second check is a member's or an administrator's). */
   translation: Object.freeze({
-    machine_proposed: 'a machine credential drafted this translation of an interface word. That is machine work, labelled '
-      + 'as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members '
-      + 'as "Draft", and not the team\'s wording until a member granted that language adopts it',
-    member_proposed: 'a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", '
-      + 'and not the team\'s wording until a member granted that language adopts it, and the record holds who proposed it',
-    unstated: 'the record does not say who drafted this translation of an interface word. It is a draft, shown to members '
-      + 'as "Draft", and not the team\'s wording until a member granted that language adopts it',
+    machine_proposed: word('record-grammar.proposal.translation.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.translation.member_proposed'),
+    unstated: word('record-grammar.proposal.translation.unstated'),
   }),
   /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
      `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
      account (kind `account_check`) flags the sentences the evidence they cite does not support, a draft and never a
      finding of the group. Before these subjects case-authoring worded the same three states itself (`#accountLabel`). */
   case_account: Object.freeze({
-    machine_proposed: 'a machine credential drafted this account of a case from its cited evidence. That is machine work, '
-      + 'labelled as machine work: it is a draft, which can set out what the cited evidence holds and can never be the '
-      + 'case\'s account. The case\'s account is the one a member writes in her own words',
-    member_proposed: 'a member drafted this account of a case from its cited evidence. It is a draft and never the case\'s '
-      + 'account, which a member writes in her own words, and the record holds who proposed it',
-    unstated: 'the record does not say who drafted this account of a case from its cited evidence. It is a draft and never '
-      + 'the case\'s account, which a member writes in her own words',
+    machine_proposed: word('record-grammar.proposal.case_account.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.case_account.member_proposed'),
+    unstated: word('record-grammar.proposal.case_account.unstated'),
   }),
   account_check: Object.freeze({
-    machine_proposed: 'a machine credential flagged these sentences of a member\'s account as not supported by the evidence '
-      + 'they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can '
-      + 'never find against one. It is never a finding of the team',
-    member_proposed: 'a member flagged these sentences of a member\'s account as not supported by the evidence they cite. '
-      + 'It is a draft and never a finding of the team, and the record holds who proposed it',
-    unstated: 'the record does not say who flagged these sentences of a member\'s account as not supported by the evidence '
-      + 'they cite. It is a draft and never a finding of the team',
+    machine_proposed: word('record-grammar.proposal.account_check.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.account_check.member_proposed'),
+    unstated: word('record-grammar.proposal.account_check.unstated'),
   }),
   /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
      (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
      member records a layout themselves; a machine can propose one and never record one (action-replies R4). Before this
      subject action-replies labelled its proposals through `lawProposalState` with its own sentences. */
   bearing: Object.freeze({
-    machine_proposed: 'a machine credential proposed this layout of how a reply bears on each claim of an action. That is '
-      + 'machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed '
-      + 'reading and never the team\'s reading until a member records it',
-    member_proposed: 'a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading '
-      + 'and never the team\'s reading until a member records it, and the record holds who proposed it',
-    unstated: 'the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a '
-      + 'proposed reading and never the team\'s reading until a member records it',
+    machine_proposed: word('record-grammar.proposal.bearing.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.bearing.member_proposed'),
+    unstated: word('record-grammar.proposal.bearing.unstated'),
   }),
   /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
      plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.
      `plan-work` labels the assistant's draft through this subject. */
   status_report: Object.freeze({
-    machine_proposed: 'a machine credential drafted this status report on a plan. It is the assistant\'s draft: machine work, '
-      + 'labelled as machine work, which can draft a report and can never keep or publish one. It is kept with the plan and '
-      + 'never published, and the report kept is the member\'s',
-    member_proposed: 'a member drafted this status report on a plan. It is a draft, kept with the plan and never published; '
-      + 'the report kept is the member\'s, and the record holds who proposed it',
-    unstated: 'the record does not say who drafted this status report on a plan. It is a draft, kept with the plan and never '
-      + 'published, and the report kept is the member\'s',
+    machine_proposed: word('record-grammar.proposal.status_report.machine_proposed'),
+    member_proposed: word('record-grammar.proposal.status_report.member_proposed'),
+    unstated: word('record-grammar.proposal.status_report.unstated'),
   }),
 });
 
@@ -333,13 +270,10 @@ export const CONTENT_MINTED_BY_PLANE = 'plane';
  *  published vocabulary's keys should have been anyway, and `machine_marked`
  *  reads beside `machine_stamped` one vocabulary over. */
 export const CONTENT_MINT_STATES = {
-  member_marked: 'a member marked this passage as citable, and the record holds their name and the date',
-  plane_minted: 'this record minted this reference when a member first cited the passage in their own words — '
-    + 'it is the address of what that member pointed at, and not a separate claim about the document',
-  machine_marked: 'a machine credential marked this passage as citable. That is machine work, labelled as machine '
-    + 'work: it can lay the passage beside the question and it can never attest that the text matches the '
-    + 'page, and nothing here is part of a finding until a member cites it themselves',
-  unstated: 'the record does not say who marked this passage as citable',
+  member_marked: word('record-grammar.mint.member_marked'),
+  plane_minted: word('record-grammar.mint.plane_minted'),
+  machine_marked: word('record-grammar.mint.machine_marked'),
+  unstated: word('record-grammar.mint.unstated'),
 };
 
 /** Read a content row's `minted_by` as ONE of the four states above.

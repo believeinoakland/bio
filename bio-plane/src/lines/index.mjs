@@ -24,8 +24,10 @@ import { combine } from "../../../jurisdictions/index.mjs";
 import { LINES_SCHEMA, LINES_TABLES, LINES_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, END_KINDS, OWNER,
          CONNECTION_KINDS, connectionKind, lineKindOf, PARTY_ROLES, OCDS_PARTY_ROLES } from "./vocab.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { reason, asReason, reasonText } from "./reasons.mjs";
 
-export { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, PARTY_ROLES, OCDS_PARTY_ROLES,
+export { reasonText, LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, PARTY_ROLES, OCDS_PARTY_ROLES,
          CONNECTION_KINDS, LINES_SCHEMA, LINES_TABLES };
 
 /* R9: `linesOf`'s bound. */
@@ -82,7 +84,8 @@ export function ownerNeighbours(args) {
   if (host !== undefined && host !== null) l = instances.get(storageOf(host)) ?? null;
   else if (live.size === 1) l = [...live][0];
   if (!l) return { refused: "OWNER_HOST_AMBIGUOUS",
-                   why: host ? "no lines instance is made over that host" : `${live.size} lines instances are made in this isolate and the read names no host` };
+                   why: host ? localize("lines.index.no_lines_instance_is_made", "no lines instance is made over that host")
+                        : localize("lines.index.lines_instances_are_made", "{n} lines instances are made in this isolate and the read names no host", { n: live.size }) };
   return l.neighbours(rest);
 }
 /* R14: registered once, at load, into the registry the plane wires. */
@@ -170,15 +173,15 @@ export class Lines {
   /** R18: the one-home checks every write to `lines` passes inside its transaction: no amount, no total, no
    *  hypothesis id as an end or in the basis. Answers a refusal `{code}` or null. */
   static gateCheck(row) {
-    if (!isObj(row)) return { code: "LINE_ROW_MALFORMED", detail: "a line row is an object" };
+    if (!isObj(row)) return { code: "LINE_ROW_MALFORMED", detail: localize("lines.index.a_line_row_is_an", "a line row is an object") };
     const money = Object.keys(row).find((k) => /amount|currency|total|sum/i.test(k));
-    if (money) return { code: "LINE_HOLDS_NO_AMOUNT", detail: `a line holds no amount (${money}): money given or received is a money fact` };
+    if (money) return { code: "LINE_HOLDS_NO_AMOUNT", detail: localize("lines.index.a_line_holds_no_amount", "a line holds no amount ({money}): money given or received is a money fact", { money: String(money) }) };
     const ids = [row.from_entity, row.to_entity];
     const basis = typeof row.basis_json === "string" ? parse(row.basis_json) : row.basis;
     const walk = (v) => { if (typeof v === "string") ids.push(v); else if (isObj(v)) Object.values(v).forEach(walk); else if (Array.isArray(v)) v.forEach(walk); };
     walk(basis);
     const hyp = ids.find((v) => isHypothesisId(v));
-    if (hyp) return { code: "LINE_NO_HYPOTHESIS", detail: `${hyp} is a hypothesis: it is never an end or a basis of a line (K1467)` };
+    if (hyp) return { code: "LINE_NO_HYPOTHESIS", detail: localize("lines.index.hyp_is_a_hypothesis_it", "{hyp} is a hypothesis: it is never an end or a basis of a line (K1467)", { hyp: String(hyp) }) };
     return null;
   }
 
@@ -252,17 +255,17 @@ export class Lines {
   #bound(b, side, precision, zone) {
     if (b === undefined || b === null) return { b: null };
     if (typeof b === "string") return this.#value(b, side, precision, zone);
-    if (!isObj(b)) return { refusal: refuse("BAD_DATE", `the validity's ${side} is a date-time value, an event bound or null`) };
+    if (!isObj(b)) return { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_is_a", "the validity's {side} is a date-time value, an event bound or null", { side: String(side) })) };
     const hasValue = b.value !== undefined && b.value !== null;
     const hasEvent = b.event !== undefined && b.event !== null;
-    if (hasValue && hasEvent) return { refusal: refuse("BOUND_BOTH", `the validity's ${side} gives both a value and an event; a bound is one or the other` , { side }) };
+    if (hasValue && hasEvent) return { refusal: refuse("BOUND_BOTH", localize("lines.index.the_validitys_side_gives_both", "the validity's {side} gives both a value and an event; a bound is one or the other", { side: String(side) }) , { side }) };
     if (hasValue) return typeof b.value === "string" ? this.#value(b.value, side, precision, zone)
-      : { refusal: refuse("BAD_DATE", `the validity's ${side} value is a string`, { side }) };
+      : { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_value_is", "the validity's {side} value is a string", { side: String(side) }), { side }) };
     if (hasEvent) {
       if (!filled(b.event) || this.#when(b.event) === undefined)
-        return { refusal: refuse("NO_SUCH_EVENT", `the validity's ${side} names an event the record does not hold`, { side, event: b.event ?? null }) };
+        return { refusal: refuse("NO_SUCH_EVENT", localize("lines.index.the_validitys_side_names_an", "the validity's {side} names an event the record does not hold", { side: String(side) }), { side, event: b.event ?? null }) };
       if (!EDGES.includes(b.edge))
-        return { refusal: refuse("BAD_EDGE", `an event bound names the edge start or end of the event's when`, { side }) };
+        return { refusal: refuse("BAD_EDGE", localize("lines.index.an_event_bound_names_the", "an event bound names the edge start or end of the event's when"), { side }) };
       return { b: { event: b.event, edge: b.edge } };
     }
     return { b: null };
@@ -270,7 +273,7 @@ export class Lines {
   #value(v, side, precision, zone) {
     let r;
     try { r = dtBounds({ value: v, precision, zone }); } catch (e) { r = { refused: "DATE_INVALID", why: String(e.message || e) }; }
-    if (r.refused) return { refusal: refuse("BAD_DATE", `the validity's ${side} ${v} is not a ${precision}-precision date-time in ${zone}: ${r.why}`, { side }) };
+    if (r.refused) return { refusal: refuse("BAD_DATE", localize("lines.index.the_validitys_side_v_is", "the validity's {side} {v} is not a {precision}-precision date-time in {zone}: {why}", { side: String(side), v: String(v), precision: String(precision), zone: String(zone), why: String(r.why) }), { side }) };
     return { b: v };
   }
 
@@ -347,16 +350,16 @@ export class Lines {
      the current-through day the viewer may see, and stays `undetermined` after it (never `out`). */
   #judge(line, at, viewer) {
     const cache = this.#cacheOf(line);
-    if (cache.stale) return { state: "undetermined", why: "cache stale" };
+    if (cache.stale) return { state: "undetermined", why: reason("lines.why.cache_stale") };
     const valid = this.#validFor(line, cache);
     const date = typeof at === "string" && /^\d{4}-\d{2}-\d{2}$/.test(at) ? { value: at, precision: "day", zone: valid.zone } : at;
-    const judge = (v) => { try { return validAt({ valid: v, basis: null }, date); } catch (e) { return { undetermined: true, why: String(e.message || e) }; } };
+    const judge = (v) => { try { return validAt({ valid: v, basis: null }, date); } catch (e) { return { undetermined: true, why: asReason(String(e.message || e)) }; } };
     const r = judge(valid);
     if (r === "in" || r === "out") return { state: r };
     const ct = this.#currentThrough(line, viewer);
     if (ct && judge({ ...valid, to: ct.day, precision: "day" }) === "in") return { state: "in", current_through: ct.day };
-    const why = r.why || `the date could not be read: ${r.refused}`;
-    return { state: "undetermined", why: ct ? `${why}; it is stated current through ${ct.day}, and the date is after that` : why };
+    const why = r.why ? asReason(r.why) : reason("lines.why.date_unreadable", { refused: String(r.refused) });
+    return { state: "undetermined", why: ct ? reason("lines.why.stated_current_through", { why, day: String(ct.day) }) : why };
   }
 
   /* ---- current through (R21) ---- */
@@ -380,17 +383,17 @@ export class Lines {
    *  and day. The machine records one only from a system rule (R4). A later one supersedes; the earlier is kept. */
   recordCurrentThrough({ lineId, day, basis, by } = {}) {
     const line = filled(lineId) ? this.#one(`SELECT * FROM lines WHERE line_id = ?`, lineId) : null;
-    if (!line) return refuse("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId ?? null });
-    if (line.withdrawn) return refuse("LINE_WITHDRAWN", "a withdrawn line takes no current-through statement");
-    if (line.kind !== "holds") return refuse("NOT_A_HOLDS_LINE", "only a holds line is stated current through a day");
-    if (parse(line.valid_json).to !== null) return refuse("END_STATED", "this line states its end; a current-through statement is for a line with none");
+    if (!line) return refuse("NO_SUCH_LINE", localize("lines.index.no_line_with_that_id", "no line with that id is held"), { line_id: lineId ?? null });
+    if (line.withdrawn) return refuse("LINE_WITHDRAWN", localize("lines.index.a_withdrawn_line_takes_no", "a withdrawn line takes no current-through statement"));
+    if (line.kind !== "holds") return refuse("NOT_A_HOLDS_LINE", localize("lines.index.only_a_holds_line_is", "only a holds line is stated current through a day"));
+    if (parse(line.valid_json).to !== null) return refuse("END_STATED", localize("lines.index.this_line_states_its_end", "this line states its end; a current-through statement is for a line with none"));
     if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day) || dtBounds({ value: day, precision: "day", zone: "UTC" }).refused)
-      return refuse("BAD_DATE", "a current-through day is a calendar day, YYYY-MM-DD");
+      return refuse("BAD_DATE", localize("lines.index.a_current_through_day_is", "a current-through day is a calendar day, YYYY-MM-DD"));
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     if (isMachineIdentity(by) && b.form !== "rule")
-      return refuse("MACHINE_NEEDS_IDENTIFIERS", "the machine records a current-through statement only from a system rule (K1443)");
-    if (!filled(by)) return refuse("NO_BY", "a statement is recorded by the act's stamped author");
+      return refuse("MACHINE_NEEDS_IDENTIFIERS", localize("lines.index.the_machine_records_a_current", "the machine records a current-through statement only from a system rule (K1443)"));
+    if (!filled(by)) return refuse("NO_BY", localize("lines.index.a_statement_is_recorded_by", "a statement is recorded by the act's stamped author"));
     const at = this.#now();
     return this.#record.transact(() => {
       this.#sql.exec(`INSERT INTO line_current_through (line_id, day, basis_form, basis_json, capture_sha, sight_bundle, by_actor, at)
@@ -399,10 +402,10 @@ export class Lines {
     });
   }
   static #atRefusal(at) {
-    if (at === undefined || at === null || at === "") return refuse("NO_DATE", "a read as of a date names the date (`at`)");
+    if (at === undefined || at === null || at === "") return refuse("NO_DATE", localize("lines.index.a_read_as_of_a", "a read as of a date names the date (`at`)"));
     if (typeof at === "string" && (ISO_TS_RE.test(at) || /^\d{4}-\d{2}-\d{2}$/.test(at))) return null;
     if (isObj(at) && typeof at.value === "string") return null;
-    return refuse("BAD_DATE", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}");
+    return refuse("BAD_DATE", localize("lines.index.at_is_a_day_an", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}"));
   }
 
   /* ---- basis (R1, R4, R5, R19) ---- */
@@ -423,35 +426,35 @@ export class Lines {
 
   /* A basis read into its form, or a refusal. `by` is the viewer the cited capture is checked against. */
   #basis(basis, by) {
-    if (!isObj(basis)) return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    if (!isObj(basis)) return { refusal: noBasis(localize("lines.index.a_line_rests_on_a", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)")) };
     if ("captureSha" in basis || "extent" in basis) {
       const sha = typeof basis.captureSha === "string" ? basis.captureSha.trim().toLowerCase() : "";
-      if (!sha) return { refusal: refuse("NO_SHA", "a passage names its capture by its sha256") };
+      if (!sha) return { refusal: refuse("NO_SHA", localize("lines.index.a_passage_names_its_capture", "a passage names its capture by its sha256")) };
       const home = this.#captureHeld(sha, by);
-      if (!home) return { refusal: refuse("CAPTURE_NOT_HELD", "the record holds no such capture, or it may not be seen") };
-      if (!isObj(basis.extent)) return { refusal: refuse("NO_EXTENT", "a passage names the part of the capture it cites (an extent)") };
+      if (!home) return { refusal: refuse("CAPTURE_NOT_HELD", localize("lines.index.the_record_holds_no_such", "the record holds no such capture, or it may not be seen")) };
+      if (!isObj(basis.extent)) return { refusal: refuse("NO_EXTENT", localize("lines.index.a_passage_names_the_part", "a passage names the part of the capture it cites (an extent)")) };
       let bad = null;
       try {
         canonicalExtent(basis.extent);
         const ctx = this.#content && typeof this.#content.contentContextFor === "function" ? this.#content.contentContextFor(sha) : {};
         bad = checkContentExtent(basis.extent, ctx);
       } catch (e) { bad = { reason: "CONTENT_EXTENT_UNREADABLE", detail: String(e.message || e) }; }
-      if (bad) return { refusal: refuse("EXTENT_NOT_IN_CAPTURE", `the extent is not a part of that capture: ${bad.detail || bad.reason || bad.code}`, { extent_refusal: bad.reason || bad.code || null }) };
+      if (bad) return { refusal: refuse("EXTENT_NOT_IN_CAPTURE", localize("lines.index.the_extent_is_not_a", "the extent is not a part of that capture: {v1}", { v1: String(bad.detail || bad.reason || bad.code) }), { extent_refusal: bad.reason || bad.code || null }) };
       return { form: "passage", basis: { captureSha: sha, extent: basis.extent }, captureSha: sha, sight: home.bundleId,
                assertion: this.#captureGrade(sha) };
     }
     if ("rule" in basis || "source" in basis) {
-      if (!filled(basis.rule)) return { refusal: noBasis("a system rule names the rule it applies") };
+      if (!filled(basis.rule)) return { refusal: noBasis(localize("lines.index.a_system_rule_names_the", "a system rule names the rule it applies")) };
       const ids = isObj(basis.ids) ? { from: basis.ids.from ?? null, to: basis.ids.to ?? null } : null;
       const recordedAt = basis.recorded_at ?? null;
       if (recordedAt !== null && !(typeof recordedAt === "string" && ISO_TS_RE.test(recordedAt)))
-        return { refusal: noBasis("a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
+        return { refusal: noBasis(localize("lines.index.a_register_rows_own_record", "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)")) };
       const system = filled(basis.system) ? basis.system.trim() : null;
       if (typeof basis.source === "string") {
         const sha = basis.source.trim().toLowerCase();
         const home = this.#captureHeld(sha, by);
-        if (!home) return { refusal: refuse("CAPTURE_NOT_HELD", "the system rule's source is a capture the record does not hold, or it may not be seen") };
-        if (system && !recordedAt) return { refusal: noBasis(`a ${system} register row states its own record instant (recorded_at)`) };
+        if (!home) return { refusal: refuse("CAPTURE_NOT_HELD", localize("lines.index.the_system_rules_source_is", "the system rule's source is a capture the record does not hold, or it may not be seen")) };
+        if (system && !recordedAt) return { refusal: noBasis(localize("lines.index.a_system_register_row_states", "a {system} register row states its own record instant (recorded_at)", { system })) };
         return { form: "rule", basis: { rule: basis.rule.trim(), source: sha, ...(ids ? { ids } : {}), ...(system ? { system } : {}),
                                         ...(recordedAt ? { recorded_at: recordedAt } : {}), ...(basis.row !== undefined ? { row: basis.row } : {}) },
                  captureSha: sha, sight: home.bundleId, assertion: this.#captureGrade(sha), recordedAt };
@@ -460,20 +463,20 @@ export class Lines {
         return { form: "rule", basis: { rule: basis.rule.trim(), source: { profile: basis.source.profile, entry: basis.source.entry },
                                         ...(ids ? { ids } : {}) },
                  captureSha: null, sight: null, assertion: PROFILE_ASSERTION_GRADE, recordedAt: null };
-      return { refusal: noBasis("a system rule's source is a held capture or a profile entry {profile, entry}") };
+      return { refusal: noBasis(localize("lines.index.a_system_rules_source_is", "a system rule's source is a held capture or a profile entry {profile, entry}")) };
     }
     if ("statement" in basis) {
-      if (!filled(basis.statement)) return { refusal: refuse("NO_STATEMENT", "a member's testimony states what they know, in their own words") };
+      if (!filled(basis.statement)) return { refusal: refuse("NO_STATEMENT", localize("lines.index.a_members_testimony_states_what", "a member's testimony states what they know, in their own words")) };
       let sight = null;
       if (basis.project !== undefined && basis.project !== null) {
         const p = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ? AND object_type = 'project'`, String(basis.project));
-        if (!p) return { refusal: noBasis("testimony inside a project names a project the record holds") };
+        if (!p) return { refusal: noBasis(localize("lines.index.testimony_inside_a_project_names", "testimony inside a project names a project the record holds")) };
         sight = p.bundle_id;
       }
       return { form: "testimony", basis: { statement: basis.statement.trim().slice(0, STATEMENT_MAX), ...(sight ? { project: sight } : {}) },
                captureSha: null, sight, assertion: TESTIMONY_GRADE };
     }
-    return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    return { refusal: noBasis(localize("lines.index.a_line_rests_on_a", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)")) };
   }
 
   /* ---- recordLine (R1–R5) ---- */
@@ -481,44 +484,44 @@ export class Lines {
   recordLine({ kind, from, to, role, capacity, title, valid, basis, by } = {}) {
     const k = typeof kind === "string" ? kind.trim() : "";
     if (!LINE_KINDS.includes(k))
-      return refuse("UNKNOWN_LINE_KIND", `a line's kind is one of ${LINE_KINDS.join(", ")}; money given or received is a money fact, never a line`,
+      return refuse("UNKNOWN_LINE_KIND", localize("lines.index.a_lines_kind_is_one", "a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line", { LINE_KINDS: String(LINE_KINDS.join(", ")) }),
                     { kinds: [...LINE_KINDS] });
-    if (!filled(from) || !filled(to)) return refuse("NO_ENDS", "a line names both its ends (from and to), each a registered entity");
-    if (from === to) return refuse("SELF_LINE", "a line runs between two different entities");
+    if (!filled(from) || !filled(to)) return refuse("NO_ENDS", localize("lines.index.a_line_names_both_its", "a line names both its ends (from and to), each a registered entity"));
+    if (from === to) return refuse("SELF_LINE", localize("lines.index.a_line_runs_between_two", "a line runs between two different entities"));
     for (const [end, id] of [["from", from], ["to", to]])
       if (!this.#entities.has(id)) return noSuchEntity(id, { end });
     const fk = this.#entityKind(from), tk = this.#entityKind(to);
     const ek = END_KINDS[k];
     if (ek && ((ek.from && !ek.from.includes(fk)) || (ek.to && !ek.to.includes(tk))))
-      return refuse(ek.code, `${k} runs from ${ek.from ? `an entity of kind ${ek.from.join(" or ")}` : "any registered entity"} to one of kind ${ek.to.join(" or ")}`,
+      return refuse(ek.code, localize("lines.index.k_runs_from_v1_to", "{k} runs from {v1} to one of kind {to}", { k: String(k), v1: String(ek.from ? localize("lines.index.an_entity_of_kind", "an entity of kind {kinds}", { kinds: ek.from.join(" or ") }) : localize("lines.index.any_registered_entity", "any registered entity")), to: String(ek.to.join(" or ")) }),
                     { from_kind: fk, to_kind: tk });
     if (k === "holds" && fk !== "person")
-      return refuse("HOLDER_NOT_A_PERSON", "a post is held by a person entity, the same entity across every role it has held (K1452)", { from_kind: fk });
+      return refuse("HOLDER_NOT_A_PERSON", localize("lines.index.a_post_is_held_by", "a post is held by a person entity, the same entity across every role it has held (K1452)"), { from_kind: fk });
     const allowed = ROLES[k];
     if (role !== undefined && role !== null && role !== "" && (!allowed || !allowed.includes(role)))
-      return refuse("BAD_ROLE", allowed ? `${k} takes a role of ${allowed.join(", ")}` : `${k} takes no role`, { roles: allowed ? [...allowed] : [] });
+      return refuse("BAD_ROLE", allowed ? localize("lines.index.k_takes_a_role_of", "{k} takes a role of {allowed}", { k: String(k), allowed: String(allowed.join(", ")) }) : localize("lines.index.k_takes_no_role", "{k} takes no role", { k: String(k) }), { roles: allowed ? [...allowed] : [] });
     if (k === "holds") {
-      if (!filled(capacity)) return refuse("NO_CAPACITY", `a post is held in a capacity: ${CAPACITIES.join(", ")}`);
-      if (!CAPACITIES.includes(capacity)) return refuse("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
+      if (!filled(capacity)) return refuse("NO_CAPACITY", localize("lines.index.a_post_is_held_in", "a post is held in a capacity: {CAPACITIES}", { CAPACITIES: String(CAPACITIES.join(", ")) }));
+      if (!CAPACITIES.includes(capacity)) return refuse("UNKNOWN_CAPACITY", localize("lines.index.a_capacity_is_one_of", "a capacity is one of {CAPACITIES}", { CAPACITIES: String(CAPACITIES.join(", ")) }), { capacities: [...CAPACITIES] });
     } else if (capacity !== undefined && capacity !== null && capacity !== "")
-      return refuse("BAD_CAPACITY", "only a holds line carries a capacity");
+      return refuse("BAD_CAPACITY", localize("lines.index.only_a_holds_line_carries_cap", "only a holds line carries a capacity"));
     /* T34 (N573): a holds line's title as its basis words it, kept exactly as written, never normalised or mapped. */
     if (title !== undefined && title !== null) {
-      if (k !== "holds") return refuse("BAD_TITLE", "only a holds line carries a title");
-      if (!filled(title)) return refuse("BAD_TITLE", "a title is the post's title as the basis words it, a non-blank string");
+      if (k !== "holds") return refuse("BAD_TITLE", localize("lines.index.only_a_holds_line_carries", "only a holds line carries a title"));
+      if (!filled(title)) return refuse("BAD_TITLE", localize("lines.index.a_title_is_the_posts", "a title is the post's title as the basis words it, a non-blank string"));
     }
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     /* R3 */
     const v = isObj(valid) ? valid : {};
     const precision = v.precision === undefined || v.precision === null ? "day" : v.precision;
-    if (!PRECISIONS.includes(precision)) return refuse("BAD_DATE", `a validity's precision is one of ${PRECISIONS.join(", ")}`);
+    if (!PRECISIONS.includes(precision)) return refuse("BAD_DATE", localize("lines.index.a_validitys_precision_is_one", "a validity's precision is one of {PRECISIONS}", { PRECISIONS: String(PRECISIONS.join(", ")) }));
     const zone = filled(v.zone) ? v.zone : this.#zone();
     const vf = this.#bound(v.from, "from", precision, zone ?? "UTC");
     if (vf.refusal) return vf.refusal;
     const vt = this.#bound(v.to, "to", precision, zone ?? "UTC");
     if (vt.refusal) return vt.refusal;
-    if (!zone) return refuse("BAD_DATE", "a validity carries its zone, and no zone is stated and the active profiles give none");
+    if (!zone) return refuse("BAD_DATE", localize("lines.index.a_validity_carries_its_zone", "a validity carries its zone, and no zone is stated and the active profiles give none"));
     const norm = { from: vf.b, to: vt.b, precision, zone };
     const probe = this.#cacheRow("probe", norm);
     if (probe.from_instant !== null && probe.to_instant !== null) {
@@ -527,15 +530,15 @@ export class Lines {
         c = compare(Lines.#dt(probe.from_instant, probe.from_precision, probe.from_zone),
                     Lines.#dt(probe.to_instant, probe.to_precision, probe.to_zone));
       } catch { c = null; }
-      if (c === "after") return refuse("BOUNDS_REVERSED", "the validity's from is after its to");
+      if (c === "after") return refuse("BOUNDS_REVERSED", localize("lines.index.the_validitys_from_is_after", "the validity's from is after its to"));
     }
     /* R4: a machine records a line only from a system rule whose two ends its scheme identifiers name. */
     const machine = isMachineIdentity(by);
     const idFrom = b.form === "rule" && b.basis.ids ? this.#byIdentifier(b.basis.ids.from) : null;
     const idTo = b.form === "rule" && b.basis.ids ? this.#byIdentifier(b.basis.ids.to) : null;
     if (machine && !(b.form === "rule" && idFrom === from && idTo === to))
-      return refuse("MACHINE_NEEDS_IDENTIFIERS", "the machine records a line only from a system rule whose two ends are identified by scheme identifiers; a line from a name match is a member's act (K1443)");
-    if (!filled(by)) return refuse("NO_BY", "a line is recorded by the act's stamped author");
+      return refuse("MACHINE_NEEDS_IDENTIFIERS", localize("lines.index.the_machine_records_a_line", "the machine records a line only from a system rule whose two ends are identified by scheme identifiers; a line from a name match is a member's act (K1443)"));
+    if (!filled(by)) return refuse("NO_BY", localize("lines.index.a_line_is_recorded_by", "a line is recorded by the act's stamped author"));
     /* The ends' grades: A by a scheme identifier; the cited capture's resolution; D for testimony or an end the cited
        capture does not resolve (reading J1 (4)). */
     const endGrade = (id, byId) => {
@@ -566,10 +569,10 @@ export class Lines {
   /* ---- withdrawLine, readLine, linesOf (R8, R9) ---- */
 
   withdrawLine({ lineId, reason, by } = {}) {
-    if (!filled(reason)) return refuse("NO_REASON", "a withdrawal says why, in the member's own words");
+    if (!filled(reason)) return refuse("NO_REASON", localize("lines.index.a_withdrawal_says_why_in", "a withdrawal says why, in the member's own words"));
     const line = filled(lineId) ? this.#one(`SELECT line_id, withdrawn FROM lines WHERE line_id = ?`, lineId) : null;
-    if (!line) return refuse("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId ?? null });
-    if (!filled(by)) return refuse("NO_BY", "a withdrawal is made by the act's stamped author");
+    if (!line) return refuse("NO_SUCH_LINE", localize("lines.index.no_line_with_that_id", "no line with that id is held"), { line_id: lineId ?? null });
+    if (!filled(by)) return refuse("NO_BY", localize("lines.index.a_withdrawal_is_made_by", "a withdrawal is made by the act's stamped author"));
     const held = this.#one(`SELECT * FROM line_withdrawals WHERE line_id = ?`, lineId);
     if (held) return { ok: true, already: true, line_id: lineId, withdrawn: { by: held.by_actor, at: held.at, reason: held.reason } };
     const at = this.#now();
@@ -582,7 +585,7 @@ export class Lines {
 
   /* R5: a register row's bounds are the source's account, labelled with its own record instant. */
   static #recordedLabel(basis, recordedAt) {
-    return basis && filled(basis.system) && recordedAt ? `as recorded by ${basis.system} on ${recordedAt}` : null;
+    return basis && filled(basis.system) && recordedAt ? word("lines.text.recorded", { system: String(basis.system), recorded_at: String(recordedAt) }) : null;
   }
 
   /* A line as every read answers it: its fields, basis and citation, both grade axes, its bounds as given and as
@@ -596,7 +599,7 @@ export class Lines {
     return {
       line_id: line.line_id, kind: line.kind, from: line.from_entity, to: line.to_entity, role: line.role ?? null,
       capacity: line.capacity ?? null, title: line.title ?? null,
-      valid: cache.stale ? { undetermined: true, why: "cache stale" } : this.#validFor(line, cache),
+      valid: cache.stale ? { undetermined: true, why: reason("lines.why.cache_stale") } : this.#validFor(line, cache),
       bounds: { given, cached: cache.held ? { from: cache.held.from_instant ?? null, to: cache.held.to_instant ?? null,
                                               from_precision: cache.held.from_precision ?? null, to_precision: cache.held.to_precision ?? null,
                                               zone: cache.held.zone ?? null } : null,
@@ -609,25 +612,25 @@ export class Lines {
     };
   }
   static #citation(form, basis) {
-    if (form === "passage") return `capture ${basis.captureSha}`;
-    if (form === "rule") return typeof basis.source === "string" ? `${basis.rule}, capture ${basis.source}`
-      : `${basis.rule}, profile ${basis.source.profile}`;
-    return "a member's testimony";
+    if (form === "passage") return localize("lines.index.capture_sha", "capture {sha}", { sha: basis.captureSha });
+    if (form === "rule") return typeof basis.source === "string" ? localize("lines.index.rule_capture_sha", "{rule}, capture {sha}", { rule: basis.rule, sha: basis.source })
+      : localize("lines.index.rule_profile", "{rule}, profile {profile}", { rule: basis.rule, profile: basis.source.profile });
+    return word("events.text.member_testimony");
   }
 
   readLine({ lineId, viewer } = {}) {
-    if (!filled(lineId)) return refuse("NO_LINE", "a line is read by its id (LIN-...)");
+    if (!filled(lineId)) return refuse("NO_LINE", localize("lines.index.a_line_is_read_by", "a line is read by its id (LIN-...)"));
     const line = this.#visible(lineId, viewer);
     if (!line) return { ok: true, found: false, line_id: lineId };
     return { ok: true, found: true, line: this.#view(line, viewer) };
   }
 
   linesOf({ entity, kinds: ks, direction = "both", limit, viewer } = {}) {
-    if (!filled(entity)) return noEntity("lines are read for one registered entity, named by its id");
+    if (!filled(entity)) return noEntity(localize("lines.index.lines_are_read_for_one", "lines are read for one registered entity, named by its id"));
     const kk = Lines.#kindList(ks, LINE_KINDS);
     if (kk.refusal) return kk.refusal;
     const dir = direction ?? "both";
-    if (!["from", "to", "both"].includes(dir)) return refuse("BAD_DIRECTION", "direction is from, to or both");
+    if (!["from", "to", "both"].includes(dir)) return refuse("BAD_DIRECTION", localize("lines.index.direction_is_from_to_or", "direction is from, to or both"));
     const n = Number(limit);
     const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), LINES_LIMIT_MAX) : LINES_LIMIT_DEFAULT;
     const g = this.#gate(viewer);
@@ -644,7 +647,7 @@ export class Lines {
     if (ks === undefined || ks === null || ks === "") return { list: [...within] };
     const list = Array.isArray(ks) ? ks : String(ks).split(",").map((s) => s.trim()).filter(Boolean);
     const bad = list.find((k) => !within.includes(k));
-    if (bad !== undefined) return { refusal: refuse("UNKNOWN_LINE_KIND", `${bad} is not one of ${within.join(", ")}`, { kinds: [...within] }) };
+    if (bad !== undefined) return { refusal: refuse("UNKNOWN_LINE_KIND", localize("lines.index.bad_is_not_one_of", "{bad} is not one of {within}", { bad: String(bad), within: String(within.join(", ")) }), { kinds: [...within] }) };
     return { list };
   }
 
@@ -659,7 +662,7 @@ export class Lines {
   /* ---- structureAt (R10) ---- */
 
   structureAt({ entity, at, kinds: ks, viewer } = {}) {
-    if (!filled(entity)) return noEntity("the structure is read around one registered entity, named by its id");
+    if (!filled(entity)) return noEntity(localize("lines.index.the_structure_is_read_around", "the structure is read around one registered entity, named by its id"));
     const bad = Lines.#atRefusal(at);
     if (bad) return bad;
     const kk = Lines.#kindList(ks, STRUCTURE_KINDS);
@@ -677,10 +680,10 @@ export class Lines {
   /* ---- holderAt (R11, R12): the one home ---- */
 
   holderAt({ office, at, viewer } = {}) {
-    if (!filled(office)) return noEntity("a holder is asked of one office, named by its entity id");
+    if (!filled(office)) return noEntity(localize("lines.index.a_holder_is_asked_of", "a holder is asked of one office, named by its entity id"));
     if (!this.#entities.has(office)) return noSuchEntity(office);
     if (this.#entityKind(office) !== "office")
-      return refuse("NOT_AN_OFFICE", "a holder is asked of an entity of kind office; a line to an organisation is a career, never a holder");
+      return refuse("NOT_AN_OFFICE", localize("lines.index.a_holder_is_asked_of_an", "a holder is asked of an entity of kind office; a line to an organisation is a career, never a holder"));
     const bad = Lines.#atRefusal(at);
     if (bad) return bad;
     const { rows, truncated } = this.#liveAt("l.to_entity = ?", [office], ["holds"], viewer);
@@ -696,10 +699,10 @@ export class Lines {
                assertion: v.assertion, ends: v.ends };
     }
     if (inn.length === 0 && und.length === 0 && !truncated)
-      return { ok: true, office, at, holder: null, undetermined: "no line covers the date", lines: [] };
-    const why = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated ? "more lines than one read holds name this office"
-      : "a line naming this office may cover the date, and the record does not settle it";
-    return { ok: true, office, at, holder: null, undetermined: why,
+      return { ok: true, office, at, holder: null, undetermined: true, why: reason("lines.why.no_line_covers"), lines: [] };
+    const named = [...inn.map((r) => r.line_id), ...und.map((u) => u.line_id)];
+    const why = inn.length <= 1 && truncated ? reason("lines.why.read_truncated") : reason("lines.why.lines_disagree", { lines: named.join(", ") });
+    return { ok: true, office, at, holder: null, undetermined: true, why,
              lines: [...inn.map((r) => ({ line_id: r.line_id, state: "in" })), ...und.map((u) => ({ ...u, state: "undetermined" }))] };
   }
 
@@ -707,15 +710,16 @@ export class Lines {
 
   /* R13, R23 (K231, K3207): a non-proceeding is refused through `entities.notAProceeding`, the one site minting
      `NOT_A_PROCEEDING`; this module mints no such code. */
-  #proceeding(id, what) {
-    if (!filled(id)) return noEntity(`${what} is asked of one proceeding, named by its entity id`);
+  #proceeding(id, noneNamed, notOne) {
+    if (!filled(id)) return noEntity(noneNamed);
     if (!this.#entities.has(id)) return noSuchEntity(id);
-    if (this.#entityKind(id) !== "proceeding") return notAProceeding(`${what} is asked of an entity of kind proceeding`);
+    if (this.#entityKind(id) !== "proceeding") return notAProceeding(notOne);
     return null;
   }
 
   partiesOf({ proceeding, at, viewer } = {}) {
-    const bad = this.#proceeding(proceeding, "the parties");
+    const bad = this.#proceeding(proceeding, localize("lines.index.the_parties_are_asked_of", "the parties are asked of one proceeding, named by its entity id"),
+                              localize("lines.index.the_parties_are_asked_of_kind", "the parties are asked of an entity of kind proceeding"));
     if (bad) return bad;
     if (at !== undefined && at !== null && at !== "") { const b = Lines.#atRefusal(at); if (b) return b; }
     const { rows, truncated } = this.#liveAt("l.to_entity = ?", [proceeding], ["party_to"], viewer);
@@ -731,7 +735,8 @@ export class Lines {
   }
 
   proceedingLinks({ proceeding, viewer } = {}) {
-    const bad = this.#proceeding(proceeding, "a proceeding's links");
+    const bad = this.#proceeding(proceeding, localize("lines.index.a_proceedings_links_are_asked", "a proceeding's links are asked of one proceeding, named by its entity id"),
+                              localize("lines.index.a_proceedings_links_are_asked_kind", "a proceeding's links are asked of an entity of kind proceeding"));
     if (bad) return bad;
     const { rows, truncated } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [proceeding, proceeding], PROCEEDING_LINKS, viewer);
     return { ok: true, proceeding, truncated,
@@ -756,7 +761,7 @@ export class Lines {
   neighbours({ node, kinds: ks, at, page, viewer, scope } = {}) {
     void scope; /* no hunch kind is this owner's: scope changes nothing here (connection-grammar R8) */
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("lines.index.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     if (!filled(node)) return { items: [] };
     const asked = Array.isArray(ks) ? ks : CONNECTION_KINDS.map((k) => k.kind);
     const pairs = asked.map(lineKindOf).filter(Boolean);
@@ -770,7 +775,10 @@ export class Lines {
                                         + (SELECT COUNT(*) FROM lines l WHERE l.to_entity = ? AND ${where}) AS n`,
                                   node, ...kindArgs, ...g.args, node, ...kindArgs, ...g.args).n);
     if (size > BOUNDS.hub)
-      return { items: [], hub: { set_size: size, why: `this entity has more than ${BOUNDS.hub} lines of the kinds asked, so it is named, never expanded` } };
+      {
+      const why = reason("lines.why.entity_lines_kinds", { hub: String(BOUNDS.hub) });
+      return { items: [], hub: { set_size: size, why: reasonText(why), why_key: why } };
+    }
     const after = isObj(page) && filled(page.after) ? page.after : "";
     const per = isObj(page) && Number.isInteger(page.size) && page.size >= 1 ? Math.min(page.size, BOUNDS.fanout) : BOUNDS.fanout;
     const rows = this.#rows(`SELECT * FROM (SELECT l.* FROM lines l WHERE l.from_entity = ? AND ${where}
@@ -781,7 +789,7 @@ export class Lines {
     for (const r of rows) {
       const cache = this.#cacheOf(r);
       const c = this.#connection(r, cache);
-      const judge = (valid) => { try { return validAt({ valid, basis: null }, at); } catch (e) { return { undetermined: true, why: String(e.message || e) }; } };
+      const judge = (valid) => { try { return validAt({ valid, basis: null }, at); } catch (e) { return { undetermined: true, why: asReason(String(e.message || e)) }; } };
       let v = judge(c.valid);
       /* R21: an open-ended holds line stated current through a day reads, at a date within it, with that day as its end */
       const ct = v !== "in" && v !== "out" && !cache.stale ? this.#currentThrough(r, viewer) : null;
@@ -790,7 +798,10 @@ export class Lines {
         if (judge(within) === "in") { c.valid = within; c.current_through = ct.day; v = "in"; }
       }
       if (v === "out") continue;
-      if (v !== "in") c.undetermined = { why: cache.stale ? "cache stale" : v.why || `the date could not be read: ${v.refused}` };
+      if (v !== "in") {
+        /* R24: the item's reason is a `{key, vars}`, exactly as civil-time answers it (connection-grammar R6) */
+        c.undetermined = { why: cache.stale ? reason("lines.why.cache_stale") : v.why ? asReason(v.why) : reason("lines.why.date_unreadable", { refused: String(v.refused) }) };
+      }
       if (items.length === per) { next = { after: items[items.length - 1].id, size: per }; break; }
       items.push(c);
     }

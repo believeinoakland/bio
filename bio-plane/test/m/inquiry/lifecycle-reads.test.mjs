@@ -35,7 +35,7 @@ const fullInquiryMd = (id, { question = QUESTION, state = "open" } = {}) => ["--
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
   "surfaced_by: agent", 'disposition_reason: ""', "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
-  "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+  "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "", word("conformance.falsify"), "",
   "## Session Log", "", "### Session 2026-07-02T00:00:00Z | Formation | agent", "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 

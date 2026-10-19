@@ -8,6 +8,7 @@ import { PLANE_VIEWER, searchedSection, SEARCHED_LEVEL_OUTCOMES, SEARCHED_SUBJEC
   from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const DOC5 = "INFO-2026-0005-e";
@@ -24,7 +25,7 @@ function setup(opts) {
 const docOf = (w, r) => w.row(`SELECT * FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition);
 const bodyOf = (text) => text.slice(text.indexOf("\n---\n", 4) + 5);
 
-test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-case-document/7 from T31 (DEC-124), is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
+test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-case-document/8 from T31 (DEC-124), is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
   const w = setup();
   /* a member's firsthand observation, reached through Q2's testimony leg */
   const obs = w.prov.testify({ words: "I was at the meeting.", observedAt: "2026-09-20", title: "At the meeting",
@@ -43,7 +44,7 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-cas
   const fm = w.fm(row.text);
   assert.deepEqual([fm.format, fm.case_id, fm.case_edition, fm.case_project, fm.case_scope],
     [CASE_DOCUMENT_FORMAT, r.caseId, 1, P, AUTHORED.scope]);
-  assert.equal(fm.format, "bio-case-document/7", "op=publish writes /7, never /6 (DEC-124)");
+  assert.equal(fm.format, "bio-case-document/8", "op=publish writes /8, never /6 (DEC-124)");
   /* its tension section, present with nothing to disclose (R55 (case-disclosures R1); `/5` and publication's reader: tensions.test.mjs) */
   assert.deepEqual([fm.tensions_disclosed, fm.tensions_highlighted, fm.case_tensions, fm.case_tension_sentences],
     [0, 0, [], []]);
@@ -71,7 +72,7 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-cas
     [[DOC2, "the second memo", "it was withheld"], [null, "the side letter", "not in hand"]]);
   assert.equal(fm.bias_acknowledgement, AUTHORED.biasAcknowledgement);
   assert.deepEqual([fm.bias_manifest.in_force, fm.bias_manifest.stated, fm.bias_manifest.pins_proposed],
-    [false, "no manifest was in force", 0]);
+    [false, word("bias.manifest_force"), 0]);
   assert.deepEqual([fm.required_strength.declared, fm.required_strength.capture, fm.required_strength.connection],
     [true, "C", null], "an undeclared axis is null");
   /* attributions: the observation Q2 reaches, its level unchosen */
@@ -118,7 +119,7 @@ test("R14 (D54): the bias manifest is frozen from bias.biasManifest at the proje
   assert.ok(calls.length >= 2 && calls.every((c) => c.viewer === PLANE_VIEWER && c.viewer !== "admin"));
   assert.deepEqual(on.bias_manifest, { in_force: true, scope: "project", scope_id: P, statements_sha: "f".repeat(64),
     bundles: [{ bundle_id: "BIAS-2026-0001-lens", revision: "a".repeat(64), scope: "instance" }], lock_violations: 1,
-    stated: `the effective bias set in force for ${P} at publication, frozen here and never recomputed`,
+    stated: word("case-authoring.stated.effective_bias_set", { proj: String(P) }),
     pins_proposed: [{ bundle_id: "BIAS-2026-0002-new", revision: "b".repeat(64), scope: "project", pinned_state: "proposed" }] });
   const fm = w.fm(docOf(w, on).text);
   assert.deepEqual([fm.bias_manifest.in_force, fm.bias_manifest.statements_sha, fm.bias_manifest.lock_violations,
@@ -201,7 +202,7 @@ test("R16: citations — every non-severed cites edge of the project at the act,
   const P2 = w2.project("Quiet", "alice", []);
   const q = w2.publish(P2, "alice", [Q]);
   assert.deepEqual(q.case_citations, []);
-  assert.ok(bodyOf(docOf(w2, q).text).includes("This case's project cited nothing when it was published."));
+  assert.ok(bodyOf(docOf(w2, q).text).includes(word("case-authoring.body.case_project_cited")));
 });
 
 test("R17: the searched section is computed from the observation log at authoring over the members' legs (subject source case_basis only), states what was looked for at each level with its outcome and why where undetermined, is bounded by SEARCHED_SUBJECT_MAX, and is never recomputed", () => {

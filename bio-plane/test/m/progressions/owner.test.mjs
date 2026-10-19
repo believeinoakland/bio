@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, MEMBER, BOB, ZONE } from "./fixture.mjs";
 import { ownerConformance, owners, kindOf, neighbours as registryNeighbours, checkConnection } from "../../../src/connection-grammar/index.mjs";
 import { PLACED_KIND, PLACED_KINDS, OWNER_REGISTRATION } from "../../../src/progressions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ENT = "ENT-2026-0001", ENT2 = "ENT-2026-0002";
 const B_IN = "INFO-2026-0001-award", B_OUT = "INFO-2026-0002-need", B_UND = "INFO-2026-0003-contract", B_PROJ = "PROJ-2026-0001-file";
@@ -35,9 +36,9 @@ async function placed() {
 
 test("R40: registered once at load as the owner of \"placed on a declared flow\", class evidentiary", () => {
   assert.deepEqual(OWNER_REGISTRATION, { ok: true, owner: "progressions" });
-  assert.deepEqual(PLACED_KINDS.map((k) => ({ ...k })), [{ kind: PLACED_KIND, word: "placed on a declared flow", class: "evidentiary" }]);
-  assert.deepEqual(owners().filter((o) => o.owner === "progressions"), [{ owner: "progressions", kinds: [{ kind: PLACED_KIND, word: "placed on a declared flow", class: "evidentiary" }] }]);
-  assert.deepEqual(kindOf(PLACED_KIND), { owner: "progressions", word: "placed on a declared flow", class: "evidentiary" });
+  assert.deepEqual(PLACED_KINDS.map((k) => ({ ...k })), [{ kind: PLACED_KIND, word: word("progressions.placed_declared_flow"), class: "evidentiary" }]);
+  assert.deepEqual(owners().filter((o) => o.owner === "progressions"), [{ owner: "progressions", kinds: [{ kind: PLACED_KIND, word: word("progressions.placed_declared_flow"), class: "evidentiary" }] }]);
+  assert.deepEqual(kindOf(PLACED_KIND), { owner: "progressions", word: word("progressions.placed_declared_flow"), class: "evidentiary" });
 });
 
 test("R40: neighbours passes connection-grammar's owner-conformance battery over this module's fixture", async () => {
@@ -62,7 +63,7 @@ test("R40: for an entity its placements, for an event or a document the instance
   // a document with no event: from its bundle; no own date: unstated, marked undetermined
   const u = byId.get(ids.und);
   assert.deepEqual([u.from, u.valid.from, u.valid.to], [B_UND, null, null]);
-  assert.ok(u.undetermined && /no start is stated/.test(u.undetermined.why));
+  assert.equal(u.undetermined.why.key, "civil-time.start_stated");
   // the event node: every instance it is placed on; the document's bundle node likewise
   assert.deepEqual(ask(EVT).items.map((x) => x.id).sort(), [ids.in, ids.in2].sort());
   assert.deepEqual(ask(B_OUT, MEMBER, { value: "2026-03-01", precision: "day", zone: ZONE }).items.map((x) => x.id), [ids.out]);

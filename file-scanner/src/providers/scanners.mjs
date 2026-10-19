@@ -5,6 +5,7 @@
  * a field unconfirmed, the field named here is this adapter's assumption, held by its stub test and confirmed at the
  * release's live measurement (R17). */
 import { ToolError, jsonOf, multipart, sleep, clientToken, hostPart, portPart } from './net.mjs';
+import { localize } from '../../../bio-plane/src/setup-words/index.mjs';
 
 const POLL_MS = 2_000;
 const basic = (a, b) => `Basic ${btoa(`${a}:${b}`)}`;
@@ -128,7 +129,7 @@ const icap = {
 
 // Microsoft Defender for Storage (azure_blob, R30): the bytes written to the organization's own blob container under a
 // random name, the blob's scan-result index tag read until present, the blob deleted after.
-const RESULT_TAG = 'Malware Scanning scan result';
+const RESULT_TAG = localize('file-scanner.scanners.malware_scanning_scan_result', 'Malware Scanning scan result');
 export function blobTag(xml) {
   for (const m of String(xml).matchAll(/<Tag>\s*<Key>([^<]*)<\/Key>\s*<Value>([^<]*)<\/Value>\s*<\/Tag>/g)) if (m[1] === RESULT_TAG) return m[2];
   return null;

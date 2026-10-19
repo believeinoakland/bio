@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, caseFm, sha, NOW } from "./fixture.mjs";
 import { extractedTextOf } from "../../../src/case-grammar/index.mjs";
 import { UNHELD_MAX } from "../../../src/case-carriage/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-minutes", CASE = "CASE-2026-0001";
 const UNITS = [{ seq: 0, extent: { kind: "document" }, ref: "¶1", text: "The minutes say so.", truncated: false }];
@@ -257,12 +258,12 @@ test("R1 (DEC-149) each why a member reads names the group's Civicsmith as \"you
                                                     docRow("INFO-2026-0404-gone", sha("never captured")), docRow(DOC, docSha)] }),
                                { caseId: CASE, edition: 1, at: NOW });
   assert.deepEqual(r.unheld.map((u) => u.why), [
-    "your team's Civicsmith holds no text of that observation at its digest",
-    "your team's Civicsmith holds no bytes of that document at its digest",
-    "your team's Civicsmith holds no whole extracted text of that document at its stated digest"]);
+    word("case-carriage.miss.group_civicsmith_holds"),
+    word("case-carriage.miss.group_civicsmith_holds_bytes"),
+    word("case-carriage.miss.group_civicsmith_holds_whole")]);
   w.st.sql.exec(`DROP TABLE published_material_texts`);
   const broken = w.cc.holdMaterials(caseFm({ materials: [docRow(DOC, docSha)] }), { caseId: CASE, edition: 2, at: NOW });
-  assert.equal(broken.unheld[0].why, "your team's Civicsmith could not record it");
+  assert.equal(broken.unheld[0].why, word("case-carriage.why.group_civicsmith_record"));
   assert.doesNotMatch(JSON.stringify([r, broken]), /\b(this|the) (copy|instance|plane)\b/i);
 });
 

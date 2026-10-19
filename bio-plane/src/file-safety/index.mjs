@@ -45,6 +45,7 @@ export { SENTENCE_KEYS } from "./words.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
 import { findingKind } from "./kinds.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const FILE_SAFETY_MODULE = "file-safety";
 /* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. */
@@ -738,7 +739,7 @@ export class FileSafety {
       SCAN_PENDING: "The scan before first opening has not finished within the call. Nothing was served.",
       NOT_SCANNED: "The scan before first opening could not decide. Nothing was served.",
       SCAN_STALE: "The file's last clean scan is older than a week and the scanner cannot run now. Nothing was served.",
-      WARNING_NOT_CONFIRMED: "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",
+      WARNING_NOT_CONFIRMED: localize("file-safety.index.warned_must_be_exactly", "warned must be exactly {own_device: true, no_macros: true}. Nothing was served."),
       SAFE_VIEW_ONLY: "The file is high risk and neither a fresh deeper check nor the warned path opens it. Nothing was served.",
     }[d.refuse];
     return refusal(d.refuse, detail, d.reason ? { not_scanned: d.reason } : {});
@@ -747,7 +748,7 @@ export class FileSafety {
   /* The capture's bytes exactly as `capture`'s R21 get serves them (`x-capture-sha256` equal to the digest). */
   async #serveOriginal(sha, stated) {
     const ev = this.#evidence();
-    if (!ev) return json(refusal("FILE_NOT_HELD", "Your team's Civicsmith holds no evidence store, so no bytes can be served.", { captureSha: sha }), 404);
+    if (!ev) return json(refusal("FILE_NOT_HELD", localize("file-safety.index.your_teams_civicsmith_holds_no", "Your team's Civicsmith holds no evidence store, so no bytes can be served."), { captureSha: sha }), 404);
     const env = { CAPTURES: { get: (k) => ev.get(k), head: (k) => ev.head(k), put: () => null } };
     const res = await captureObjectOp(new Request(`http://x/?sha256=${sha}`), new URL(`http://x/?sha256=${sha}`), env,
       { json, storageAbsent: (op, d) => json({ ok: false, reason: "STORAGE_ABSENT", detail: d }, 503),
@@ -806,13 +807,13 @@ export class FileSafety {
       const route = safeViewRoute(format);
       /* DEC-49 REGION is-safe-view-route */
       if (!route && format !== "text")
-        return refusal("NO_SAFE_VIEW", "A safe view is made of documents, presentations, spreadsheets and plain text only.", { captureSha: sha, format });
+        return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only."), { captureSha: sha, format });
       /* END DEC-49 REGION is-safe-view-route */
       const original = await this.#stateOf(sha, cache);
       if (!route) {
         /* R45: plain text is shown as it stands, cut at SAFE_VIEW_TEXT_MAX characters; it needs no renderer and is never queued */
         const t = textView(look.bytes, !look.whole);
-        if (!t.ok) return refusal("SAFE_VIEW_FAILED", "The text could not be read.", { captureSha: sha, renderer_reason: "NOT_TEXT" });
+        if (!t.ok) return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_text_could_not_be", "The text could not be read."), { captureSha: sha, renderer_reason: "NOT_TEXT" });
         this.#count("safe_views");
         return { ok: true, kind: "text", derived: true, of: sha, text: t.text, truncated: t.truncated, original };
       }
@@ -823,7 +824,7 @@ export class FileSafety {
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
       }
-      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your team's Civicsmith has no safe view installed. Nothing was rendered.", { captureSha: sha });
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no", "Your team's Civicsmith has no safe view installed. Nothing was rendered."), { captureSha: sha });
       const row = this.#ensureQueued(sha);
       /* DEC-49 REGION is-safe-view-made */
       if (row.render_state === "failed")
@@ -877,7 +878,7 @@ export class FileSafety {
   async renderBatch({ limit = 20 } = {}) {
     this.#keep("render", { last: this.now(), unreadable: false });
     /* DEC-49 REGION is-renderer-bound */
-    if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your team's Civicsmith has no safe view installed. Nothing was rendered.");
+    if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_2", "Your team's Civicsmith has no safe view installed. Nothing was rendered."));
     /* END DEC-49 REGION is-renderer-bound */
     const lim = clamp(limit, 20, SCAN_BATCH_MAX);
     const unreadable = (detail, extra) => {
@@ -891,7 +892,7 @@ export class FileSafety {
       queuedCopies = this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim);
       /* END DEC-49 REGION is-render-queue-readable */
     } catch {
-      return unreadable("Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.");
+      return unreadable(localize("file-safety.index.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted."));
     }
     const out = { rendered: 0, failed: 0, none: 0, data: 0 };
     const copies = { made: 0, failed: 0, queued: 0 };
@@ -907,7 +908,7 @@ export class FileSafety {
       return { ok: true, ...out, copies, remaining };
     } catch {
       /* a fault once rendering began: what was done is stated, and the rest wait for the next round (as R36's) */
-      return unreadable("Your team's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",
+      return unreadable(localize("file-safety.index.your_teams_civicsmith_could_not_2", "Your team's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round."),
                         { rendered: out.rendered, copies_made: copies.made });
     }
   }
@@ -929,7 +930,7 @@ export class FileSafety {
   async scanBatch({ limit = SCAN_BATCH_MAX, at = null } = {}) {
     try {
       /* DEC-49 REGION is-scanner-bound */
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your team's Civicsmith has no file scanner installed. No note was written.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_3", "Your team's Civicsmith has no file scanner installed. No note was written."));
       /* END DEC-49 REGION is-scanner-bound */
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
       /* R39: the run is kept first, so a batch the scanner refuses still counts as run (its files retried a poll later) */
@@ -970,7 +971,7 @@ export class FileSafety {
   /** R5: the scanner's state for administrators, so a lag is stated, never silent. */
   async scanStatus({ viewer = undefined } = {}) {
     try {
-      const bar = this.#adminBar(viewer, "reading the scanner's state");
+      const bar = this.#adminBar(viewer, localize("file-safety.index.reading_scanners_state", "reading the scanner's state"));
       if (bar) return bar;
       const now = this.now();
       const v = await this.#scanner("/version", null, { method: "GET" });
@@ -1055,7 +1056,7 @@ export class FileSafety {
   /** R27: the catalogue for administrators: what each offered tool is sent and who keeps it (its digest is what an
    *  administrator confirms seeing, R28), and the services not offered, each with its reason in member words. */
   securityToolCatalogue({ viewer = undefined } = {}) {
-    const bar = this.#adminBar(viewer, "reading the security tools offered");
+    const bar = this.#adminBar(viewer, localize("file-safety.index.reading_security_tools_offered", "reading the security tools offered"));
     if (bar) return bar;
     return { ok: true,
       offered: PROVIDERS.map((d) => ({ provider_id: d.provider_id, vendor: d.vendor, product: d.product, kinds: d.kinds,
@@ -1071,7 +1072,7 @@ export class FileSafety {
 
   /** R27: the group's tools, without credentials. */
   securityTools({ viewer = undefined } = {}) {
-    const bar = this.#adminBar(viewer, "reading the team's security tools");
+    const bar = this.#adminBar(viewer, localize("file-safety.index.reading_teams_security_tools", "reading the team's security tools"));
     if (bar) return bar;
     return { ok: true, tools: this.#rows(`SELECT * FROM fs_tools ORDER BY seq`).map(FileSafety.#toolOut) };
   }
@@ -1102,7 +1103,7 @@ export class FileSafety {
       /* DEC-49 REGION is-descriptor-valid */
       const resolved = resolveDescriptor(base, { host, config: cfg });
       if (!resolved.ok) return refusal(FILE_SAFETY_CHECKS[resolved.code] ? resolved.code : "DESCRIPTOR_MALFORMED",
-        "file-scanner's R19 refuses the tool's description.", { provider_id: id, ...(resolved.field ? { field: resolved.field } : {}) });
+        localize("file-safety.index.file_scanners_r19_refuses_the", "file-scanner's R19 refuses the tool's description."), { provider_id: id, ...(resolved.field ? { field: resolved.field } : {}) });
       /* END DEC-49 REGION is-descriptor-valid */
       /* DEC-49 REGION is-config-named */
       const fields = FileSafety.#configOf(base);
@@ -1166,7 +1167,7 @@ export class FileSafety {
   #tool(toolId) {
     const t = this.#toolRow(toolId);
     /* DEC-49 REGION is-tool-held */
-    if (!t || t.state === "removed") return { refused: refusal("NO_SUCH_TOOL", "No tool of the team's has this id.", { tool_id: toolId ?? null }) };
+    if (!t || t.state === "removed") return { refused: refusal("NO_SUCH_TOOL", localize("file-safety.index.no_tool_of_the_teams", "No tool of the team's has this id."), { tool_id: toolId ?? null }) };
     /* END DEC-49 REGION is-tool-held */
     return { tool: t };
   }
@@ -1178,7 +1179,7 @@ export class FileSafety {
       if (bar) return bar;
       const { tool, refused } = this.#tool(toolId);
       if (refused) return refused;
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your team's Civicsmith has no file scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_4", "Your team's Civicsmith has no file scanner installed, so no tool can be tested."), { tool_id: tool.tool_id });
       const spec = await this.#spec(tool);
       const r = spec ? await this.#scanner("/provider/test", { tool: spec }) : { body: { ok: false, code: "CREDENTIALS_UNAVAILABLE" } };
       const at = iso(this.now());
@@ -1484,7 +1485,7 @@ export class FileSafety {
       /* END DEC-49 REGION is-copy-tool-on */
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row && ["pending", "done", "withheld"].includes(row.state)) return { ok: true, captureSha: h.sha, state: row.state };
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your team's Civicsmith has no file scanner installed, so no tool can be asked.", { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_5", "Your team's Civicsmith has no file scanner installed, so no tool can be asked."), { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch { return refusal("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1579,7 +1580,7 @@ export class FileSafety {
    *  no route. Writes no note and names no file, address or member (R23); never throws. */
   async refreshReputationLists({ at = null } = {}) {
     try {
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your team's Civicsmith has no file scanner installed, so no list was refreshed.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no_6", "Your team's Civicsmith has no file scanner installed, so no list was refreshed."));
       const when = Number.isFinite(msOf(at)) ? msOf(at) : this.now();
       const refreshed = [], failed = [], skipped = [];
       for (const tool of this.#onTools("url_reputation")) {

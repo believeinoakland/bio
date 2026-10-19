@@ -117,6 +117,7 @@ engine_loaded, engine_unavailable?}`.
   (a text layer, vector marks, several images on one page, an undecodable container, and others).
   This module always asks for `decodeDct:true` and forwards a refusal's `reason` verbatim as
   `PAGE_NOT_RENDERABLE`'s own reason; it does not reinterpret or renumber pdf-pixels' refusal set.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

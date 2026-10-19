@@ -97,6 +97,7 @@ import {
 /* The one A1 column reading (a cycle with formats-xlsx.mjs, which imports
    this file's shared builders; both sides use only hoisted functions). */
 import { columnLetters } from "./formats-xlsx.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -723,8 +724,8 @@ async function docxStructure(parts) {
   const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
   if (!walk) {
     notes.push(parts.guard
-      ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
-      : "word/document.xml unreadable: element references unavailable (stated)");
+      ? localize("office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())")
+      : localize("office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)"));
   }
 
   /* Outbound rels -> deferred/refused, through the ONE linkWrapper. The
@@ -1044,7 +1045,7 @@ export function detectByContentType(format, plainType, twins, contentType) {
   const variant = typeof contentType === "string" ? twins.get(contentType) : undefined;
   if (variant) {
     return { format, confidence: "likely", signals: [`content type "${contentType}"`,
-      `the macro-enabled flavour ${variant}, read as ${format} (R33)`] };
+      localize("office-readers.docx.the_macro_enabled_flavour_variant", "the macro-enabled flavour {variant}, read as {format} (R33)", { variant: String(variant), format: String(format) })] };
   }
   return null;
 }

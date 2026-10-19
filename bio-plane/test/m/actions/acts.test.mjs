@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
@@ -178,7 +179,7 @@ test("R23 R24 actionRiskTier: refusals in order; one appended history entry; the
      "RISK_TIER_REASON_REFUSED", "RISK_TIER_REASON_REFUSED", "RISK_TIER_UNCHANGED"]);
   assert.deepEqual([t({ tier: 4 }).check, t({ tier: 1 }).check], ["C-90.2", "C-90.4"]);
   const r = t({ tier: "2" });
-  assert.deepEqual([r.ok, r.risk_tier, r.prior, r.risk_tier_words, r.by], [true, 2, 1, "file with caution", M]);
+  assert.deepEqual([r.ok, r.risk_tier, r.prior, r.risk_tier_words, r.by], [true, 2, 1, word("risk.tier.2"), M]);
   const r2 = t({ tier: 3, reason: "counsel" });
   assert.equal(r2.risk_tier_history.revisions.length, 2);
   assert.deepEqual(r2.risk_tier_history.revisions[0], r.risk_tier_history.revisions[0], "never edits an earlier entry");

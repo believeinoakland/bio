@@ -61,6 +61,36 @@ test("R35: the profiles' own zone is the fallback, and two profiles of different
   assert.deepEqual([bc.ok, bc.grants[0].zone], [true, null]);
 });
 
+test("R35: a member's copy of a draft with no grant answers the governing zone at its top level, whether or not it has a grant", () => {
+  const w = zoneWorld({ zones: { p1: "America/Los_Angeles" }, profileZone: "UTC" });
+  const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+  const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual([c.ok, c.reader, c.zone, c.grants], [true, "member", "America/Los_Angeles", []]);
+  /* the profiles' own zone is the fallback here too */
+  const fb = zoneWorld({ profileZone: "Europe/Paris" });
+  const fd = fb.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+  assert.equal(fb.r.copy({ draft: fd.draftId, viewer: V("ann") }).zone, "Europe/Paris");
+  const before = w.snapshot();
+  w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual(w.snapshot(), before);
+});
+
+test("R35: control: with no zone held the top-level zone is null, not UTC; a draft with a grant answers the same zone as its roster rows; the recipient door has none at its top level", () => {
+  for (const w of [zoneWorld({ profiles: null }), zoneWorld({ zones: {} }), zoneWorld({ profiles: [], profileZone: "UTC" })]) {
+    const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+    const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+    assert.equal("zone" in c, true);
+    assert.equal(c.zone, null);
+  }
+  const w = zoneWorld({ zones: { p1: "America/Chicago" } });
+  const { d } = withGrant(w, END);
+  const m = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.deepEqual([m.zone, ...m.grants.map((g) => g.zone)], ["America/Chicago", "America/Chicago"]);
+  const rc = w.r.copy({ secretSha: SECRET(1), bySecret: true });
+  assert.equal("zone" in rc, false);
+  assert.equal(rc.grant.zone, "America/Chicago");
+});
+
 /* R36 */
 const INQ = ["INQ-1", "INQ-2", "INQ-3"];
 const conclusionDoc = (w, rows) => {

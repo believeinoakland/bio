@@ -36,6 +36,8 @@
  * wire code and the CANNED TRANSLATION are ONE ROW, read from one place rather
  * than copied.
  * ========================================================================= */
+import { word } from '../setup-words/index.mjs';
+
 export const VERSION_CHAIN_CHECKS = {
   /* No address at all. There is no default document and there must not be one:
      the chain's entire subject is "at THIS address", and a chain answered for
@@ -44,9 +46,7 @@ export const VERSION_CHAIN_CHECKS = {
   VERSION_CHAIN_NO_ADDRESS: {
     check: 'C-24.1',
     where: 'src/provenance/index.mjs versionChain, reached from op=versionchain',
-    translation: 'That request did not say which document address to read the versions of. '
-      + 'Versions are versions OF something, so it asks rather than answering '
-      + 'for a document you did not name.',
+    translation: word('refusal.VERSION_CHAIN_NO_ADDRESS'),
   },
   /* An anchor was given and it is not a version at this address. Refused rather
      than matched approximately — that approximation IS D-221 — and refused
@@ -56,9 +56,7 @@ export const VERSION_CHAIN_CHECKS = {
   VERSION_CHAIN_NO_SUCH_VERSION: {
     check: 'C-24.2',
     where: 'src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>',
-    translation: 'The record holds no version of that document with those bytes. '
-      + 'Rather than pick the closest-looking one and call it the version before this, '
-      + 'it says so — naming the wrong predecessor is the defect this read was built to end.',
+    translation: word('refusal.VERSION_CHAIN_NO_SUCH_VERSION'),
   },
   /* The anchor is not the shape a capture identity has. A separate refusal from
      the one above because it is a different fact about the world: "you typed
@@ -68,9 +66,7 @@ export const VERSION_CHAIN_CHECKS = {
   VERSION_CHAIN_BAD_ANCHOR: {
     check: 'C-24.3',
     where: 'src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>',
-    translation: 'That is not the shape a capture identity has, so nothing was looked up. '
-      + 'A capture is named by the sha256 of its bytes; this says the request was malformed '
-      + 'rather than letting it read as a document the record does not hold.',
+    translation: word('refusal.VERSION_CHAIN_BAD_ANCHOR'),
   },
 };
 
@@ -98,45 +94,37 @@ export const PROVENANCE_ACT_CHECKS = {
   PROVENANCE_REGISTER_REFUSED: {
     check: 'C-103.1',
     where: 'src/provenance/index.mjs #registerArms',
-    translation: 'This document\'s account of where it came from breaks rules that the version it revises did not '
-      + 'break, so nothing was written. Each broken rule is listed beside this message. Correct the account and '
-      + 'save the document again.',
+    translation: word('refusal.PROVENANCE_REGISTER_REFUSED'),
   },
   ORIGIN_NOT_A_MEMBER: {
     check: 'C-103.2',
     where: 'src/provenance/index.mjs declareOrigin > is-origin-act',
-    translation: 'Saying which system a document came from is a statement a named member makes and is named '
-      + 'beside, and this came from an automated credential or from nobody. Sign in and make it yourself. '
-      + 'Nothing was recorded.',
+    translation: word('refusal.ORIGIN_NOT_A_MEMBER'),
   },
   NO_BUNDLE: {
     check: 'C-103.3',
     where: 'src/provenance/index.mjs declareOrigin > is-origin-act; src/provenance-routes/index.mjs provenanceChainRebuild',
-    translation: 'This did not say which document it is about, so nothing was done.',
+    translation: word('refusal.NO_BUNDLE'),
   },
   ORIGIN_NOT_A_DOCUMENT: {
     check: 'C-103.4',
     where: 'src/provenance/index.mjs declareOrigin > is-origin-statement',
-    translation: 'Only a captured document came from a system, and this is not one: a question, a project or an '
-      + 'action was written in the record. Nothing was recorded.',
+    translation: word('refusal.ORIGIN_NOT_A_DOCUMENT'),
   },
   ORIGIN_NO_SYSTEM: {
     check: 'C-103.5',
     where: 'src/provenance/index.mjs declareOrigin > is-origin-statement',
-    translation: 'This did not name the system the document came from, or named it at more than 200 characters. '
-      + 'Name it briefly and try again. Nothing was recorded.',
+    translation: word('refusal.ORIGIN_NO_SYSTEM'),
   },
   RECEIPT_MALFORMED: {
     check: 'C-103.6',
     where: 'src/attestation/index.mjs signReceipt',
-    translation: 'A receipt names the captured document\'s fingerprint, the address it was fetched from and when, '
-      + 'and one of those was missing or not in its form, so no receipt was signed.',
+    translation: word('refusal.RECEIPT_MALFORMED'),
   },
   RECEIPT_NO_KEY: {
     check: 'C-103.7',
     where: 'src/attestation/index.mjs signReceipt',
-    translation: 'Your team\'s Civicsmith holds no key to sign its receipts with, so this receipt was not signed, '
-      + 'and nothing claims that it was. Whoever hosts your team\'s Civicsmith can add one.',
+    translation: word('refusal.RECEIPT_NO_KEY'),
   },
 };
 
@@ -193,36 +181,27 @@ export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: 'C-53.1',
     where: 'src/provenance/index.mjs testify > is-testify-act',
-    translation: 'A firsthand observation is a person saying what they saw, in their own name, and it '
-      + 'stands on that person\'s trust. The credential that asked is an automated one, and it has no '
-      + 'eyes to have seen anything with. Sign in and record it yourself.',
+    translation: word('refusal.TESTIMONY_NOT_A_MEMBER'),
   },
   TESTIMONY_AUTHOR_SUPPLIED: {
     check: 'C-53.2',
     where: 'src/provenance/index.mjs testify > is-testify-act',
-    translation: 'That request names who the author is. The record takes the author of an observation '
-      + 'from the account that is signed in, never from the request — a request that names its own '
-      + 'author could sign as somebody else. Send the observation without an author and it is recorded '
-      + 'as yours.',
+    translation: word('refusal.TESTIMONY_AUTHOR_SUPPLIED'),
   },
   TESTIMONY_NO_WORDS: {
     check: 'C-53.3',
     where: 'src/provenance/index.mjs testify > is-testify-words',
-    translation: 'The observation is empty. Write what you saw, in your own words; nothing is filled in '
-      + 'for you.',
+    translation: word('refusal.TESTIMONY_NO_WORDS'),
   },
   TESTIMONY_WORDS_TOO_LONG: {
     check: 'C-53.4',
     where: 'src/provenance/index.mjs testify > is-testify-words',
-    translation: 'The observation is longer than one passage this record stores. Record it as more than '
-      + 'one observation; each is kept exactly as written and each can be cited.',
+    translation: word('refusal.TESTIMONY_WORDS_TOO_LONG'),
   },
   TESTIMONY_OBSERVED_AT_INVALID: {
     check: 'C-53.5',
     where: 'src/provenance/index.mjs testify > is-testify-words',
-    translation: 'An observation needs the date you saw it, as a calendar date (for example 2026-09-10) '
-      + 'or a date and time, and not a date later than now. The record keeps that date apart from the '
-      + 'moment you wrote it down, because they are two different facts.',
+    translation: word('refusal.TESTIMONY_OBSERVED_AT_INVALID'),
   },
   /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
      second member's IDENTICAL words, because the register is keyed by bytes.
@@ -235,32 +214,22 @@ export const TESTIMONY_CHECKS = {
   TESTIMONY_WORDS_REGISTERED: {
     check: 'C-53.6',
     where: 'src/provenance/index.mjs testify > is-testify-bytes',
-    translation: 'The record already holds, under another document, the exact bytes this observation '
-      + 'would be stored as — which can only happen if somebody registered them in advance. Nothing was '
-      + 'recorded. Try again: the next attempt is stored under a new identifier and new bytes.',
+    translation: word('refusal.TESTIMONY_WORDS_REGISTERED'),
   },
   TESTIMONY_ORIGIN_NOT_MEMBER: {
     check: 'C-53.7',
     where: 'src/provenance/index.mjs #testimonyFence > is-testimony-fence',
-    translation: 'This document is a member\'s own observation, and this revision of its record claims it '
-      + 'came from somewhere else — a fetch, a sweep, or a machine. That would let a member\'s word pass '
-      + 'for a captured publication. An observation\'s origin is the member who made it, and that cannot '
-      + 'be revised.',
+    translation: word('refusal.TESTIMONY_ORIGIN_NOT_MEMBER'),
   },
   TESTIMONY_AUTHORED_UNEARNED: {
     check: 'C-53.8',
     where: 'src/provenance/index.mjs #testimonyFence > is-testimony-fence',
-    translation: 'This document claims to be a member\'s own firsthand observation, but it did not come '
-      + 'through the act that records one. Only that act can mark a document as an observation, because '
-      + 'only that act takes the author from the signed-in account. Record the observation through it, '
-      + 'or remove the claim.',
+    translation: word('refusal.TESTIMONY_AUTHORED_UNEARNED'),
   },
   TESTIMONY_AUTHORED_DROPPED: {
     check: 'C-53.9',
     where: 'src/provenance/index.mjs #testimonyFence > is-testimony-fence',
-    translation: 'This document is a member\'s own observation, and this revision no longer says so. '
-      + 'Removing that would let a member\'s word read as a captured document. What the document is '
-      + 'cannot be revised; to withdraw an observation, record a new one.',
+    translation: word('refusal.TESTIMONY_AUTHORED_DROPPED'),
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
@@ -273,10 +242,7 @@ export const TESTIMONY_CHECKS = {
   CAPTURE_HELD_BY_ANOTHER_BUNDLE: {
     check: 'C-53.13',
     where: 'src/provenance/index.mjs #testimonyFence > is-register-home',
-    translation: 'The record already holds this document, under another record. A document has one home '
-      + 'in the record — the first record that registered it — and registering it again here would move '
-      + 'it away from there. Nothing was written. Cite the record that holds it, or, if you found it at a '
-      + 'new address, that sighting is already recorded as a corroboration of the one it holds.',
+    translation: word('refusal.CAPTURE_HELD_BY_ANOTHER_BUNDLE'),
   },
 };
 
@@ -289,9 +255,6 @@ export const REGISTER_ENTRY_CHECKS = {
   REGISTER_BYTES_UNSTATED: {
     check: 'C-53.14',
     where: 'src/provenance/index.mjs #registerEntries > is-register-bytes',
-    translation: 'Each document this save registers must state its size, as a whole number of bytes, and one of '
-      + 'them states none, or a size no document can have. The record keeps each document\'s size so it can later '
-      + 'check that the stored copy is whole. Nothing was written. State the document\'s size in bytes and save '
-      + 'again.',
+    translation: word('refusal.REGISTER_BYTES_UNSTATED'),
   },
 };

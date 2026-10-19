@@ -5,10 +5,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, merge, V, MACHINE } from "./fixture.mjs";
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
-import { basisVersionsOps } from "../../../src/basis-versions/index.mjs";
+import { basisVersionsOps, BASIS_VERSION_CHECKS } from "../../../src/basis-versions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LEDGER = "INFO-2026-2000-ledger", MINUTES = "INFO-2026-2000-minutes", AUDIT = "INFO-2026-2000-audit";
-const Q = "INQ-2026-2000-q", CALC = "CALC-2026-0003";
+const Q = "INQ-2026-2000-q", CALC = "CALC-2026-0003", STANDARD = "STD-2026-0007-meetings-law";
 const KEY = `OCC-${"0123456789abcdef".repeat(2)}`, OCC = `occurrence:DUT-2026-0004/${KEY}`;
 const FIVE = { kind: "acts-for", from: "ENT-2026-0001", to: "ENT-2026-0002", as_of: "2026-10-01", method: "line-walk/1" };
 const DER = derivedId(FIVE);
@@ -140,11 +141,48 @@ test("R55: compareVersions answers reading 1 against reading 2 derived from it (
   assert.equal(basisVersionsOps(w.bv, url, null).versioncompare().of, 5);
 });
 
-test.todo("R3 (N1251, T52): a leg on a standard is judged by inquiry-grammar's standard arm (its R13) once that arm is exported, and a version rests on it: a standard leg is still refused for its kind until then");
-
-test("R3 (control, until N1251): a leg on a standard is refused for its kind today, and nothing lands", () => {
+test("R55 (DEC-337): each compare refusal reads its translation by key — the row and the answer hold the list's word for the code, and the answer holds no other sentence", () => {
   const w = setup();
-  const r = w.inquiry(Q, block(ver("with standard", { legs: [{ target: LEDGER }, { target: "STD-2026-0007-meetings-law" }] })));
-  assert.equal(r.ok, false);
-  assert.ok(r.findings.some((f) => f.code === "VERSION_LEG_NOT_CITABLE"));
+  assert.equal(w.inquiry(Q, block(ver("reading 1", { legs: [{ target: LEDGER }] }))).ok, true);
+  const cases = [
+    [w.bv.compareVersions({ target: "INQ-2026-2000-none", a: "x", b: "y", viewer: V("alice") }), "VERSION_COMPARE_NO_INQUIRY"],
+    [w.bv.compareVersions({ target: Q, a: "reading 1", b: "", viewer: V("alice") }), "VERSION_COMPARE_NO_VERSION"],
+    [w.bv.compareVersions({ target: Q, a: "reading 1", b: "nope", viewer: V("alice") }), "VERSION_COMPARE_NO_SUCH_VERSION"],
+  ];
+  for (const [r, code] of cases) {
+    assert.equal(r.reason, code);
+    assert.equal(r.translation, word(`refusal.${code}`), code);
+    assert.equal(BASIS_VERSION_CHECKS[code].translation, word(`refusal.${code}`), code);
+    assert.equal(r.detail, undefined, "no second sentence beside the list's");
+  }
+});
+
+test("R3 (N1251, K3873): a version rests on a leg on a standard beside a passage and a calculation, projected with its type, and a member's own reading copies all three and concludes", () => {
+  const w = setup();
+  w.doc(STANDARD);   /* a standard is a bundle of the record (standards R1), so the resolve arm finds it */
+  const r = w.inquiry(Q, block(ver("with standard", { legs: [{ target: LEDGER }, { target: STANDARD }, { target: CALC }] })));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  const [v] = read(w).versions;
+  assert.deepEqual(v.legs.map((l) => [l.target_id, l.target_type]),
+    [[LEDGER, "information"], [STANDARD, "standard"], [CALC, "calculation"]]);
+  const own = setup();
+  own.doc(STANDARD);
+  const basis = [{ target: LEDGER, role: "supports" }, { target: STANDARD, role: "supports" }, { target: CALC, role: "supports" }];
+  assert.equal(own.inquiry(Q, block({ basis, refs: [LEDGER] })).ok, true);
+  const c = own.bv.conclude({ target: Q, author: ALICE, viewer: V("alice"), identity: ALICE,
+                              reading: "The ledger, the standard and the model agree.", falsifier: "a later ledger says otherwise" });
+  assert.equal(c.ok, true, JSON.stringify(c).slice(0, 500));
+  assert.deepEqual(read(own).versions[0].legs.map((l) => [l.target_id, l.target_type]),
+    [[LEDGER, "information"], [STANDARD, "standard"], [CALC, "calculation"]]);
+});
+
+test("R3 (control): a version's leg on a lead is still refused by name, and a standard leg stating a grade on a testimony axis is refused by inquiry-grammar's own code; nothing lands", () => {
+  const w = setup();
+  const lead = w.inquiry("INQ-2026-2000-lead", block(ver("lead", { legs: [{ target: "LEAD-2026-0001-x" }] })));
+  assert.equal(lead.ok, false);
+  assert.ok(lead.findings.some((f) => f.code === "LEAD_NOT_EVIDENCE"));
+  const bad = w.inquiry("INQ-2026-2000-std", block(ver("std", { legs: [{ target: STANDARD, grade: "B", grade_axis: "testimony", grade_source: "capture" }] })));
+  assert.equal(bad.ok, false);
+  assert.ok(!bad.findings.some((f) => f.code === "VERSION_LEG_NOT_CITABLE"), "never refused for its kind");
+  assert.equal(w.record.head("INQ-2026-2000-std"), null);
 });

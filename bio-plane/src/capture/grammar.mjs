@@ -11,6 +11,7 @@
  * re-point deletes it. Its shared grammar (`canonicalJson`, `ISO_TS_RE`) is record-grammar's (its R2, R12). Pure: no
  * store, no network, no clock. */
 import { canonicalJson, ISO_TS_RE } from "../record-grammar/index.mjs";
+import { localize } from '../setup-words/index.mjs';
 
 /* The catalogue's finding shape (`f`), so a finding from this arm is the one the built-in arm made. */
 const f = (check, severity, message, repairs) => {
@@ -36,7 +37,7 @@ export async function checkInformationExtension(ctx, findings) {
   const fm = ctx.fm;
   for (const [field, legal] of Object.entries(INFO_ENUMS)) {
     if (!legal.includes(fm[field])) {
-      findings.push(f('C-2.7', 'error', `${field} '${fm[field]}' is not one of: ${legal.join(', ')}`));
+      findings.push(f('C-2.7', 'error', localize('capture.grammar.field_v1_is_not_one', '{field} \'{v1}\' is not one of: {legal}', { field: String(field), v1: String(fm[field]), legal: String(legal.join(', ')) })));
     }
   }
   const src = fm.source;
@@ -47,8 +48,8 @@ export async function checkInformationExtension(ctx, findings) {
   const mon = fm.monitoring;
   if (!mon || typeof mon !== 'object') findings.push(f('C-2.7', 'error', 'monitoring block is missing'));
   else {
-    if (typeof mon.enabled !== 'boolean') findings.push(f('C-2.7', 'error', `monitoring.enabled '${mon.enabled}' is not boolean`));
-    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f('C-2.7', 'error', `monitoring.frequency '${mon.frequency}' is not one of: ${MONITOR_FREQ.join(', ')}`));
+    if (typeof mon.enabled !== 'boolean') findings.push(f('C-2.7', 'error', localize('capture.grammar.monitoring_enabled_enabled_is_not', 'monitoring.enabled \'{enabled}\' is not boolean', { enabled: String(mon.enabled) })));
+    if (!MONITOR_FREQ.includes(mon.frequency)) findings.push(f('C-2.7', 'error', localize('capture.grammar.monitoring_frequency_frequency_is_not', 'monitoring.frequency \'{frequency}\' is not one of: {MONITOR_FREQ}', { frequency: String(mon.frequency), MONITOR_FREQ: String(MONITOR_FREQ.join(', ')) })));
   }
   const ch = fm.content_hash;
   const chOk = typeof ch === 'string' && CONTENT_HASH_RE.test(ch);
@@ -73,7 +74,7 @@ export async function checkInformationExtension(ctx, findings) {
     if (!dsRaw) findings.push(f('C-2.7', 'error', 'verified state requires data/dataset.json'));
     const hasSnap = [...ctx.files.keys()].some(p => p.startsWith('snapshots/'))
       || (ctx.elided && [...ctx.elided].some(p => p.startsWith('snapshots/')));
-    if (!hasSnap) findings.push(f('C-2.7', 'error', 'verified state requires at least one file in snapshots/'));
+    if (!hasSnap) findings.push(f('C-2.7', 'error', localize('capture.grammar.verified_needs_snapshot', 'verified state requires at least one file in snapshots/')));
   }
   // change records, when present
   const chRaw = ctx.files.get('data/changes.json');

@@ -7,6 +7,7 @@
  * where it always has. Pure; none throws. */
 
 import { rowOf } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* REC-123 / C-32.13. The fence alone, FIRST and before the payload is read, so
    it is the FENCE that answers a machine and never a payload complaint behind it (REC-73's lesson). Driven: before
@@ -16,8 +17,7 @@ export function machineCaseRefusal(cls) {
   /* DEC-49 REGION is-machine-ratify-case */
   return { ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE", ...rowOf("MACHINE_CANNOT_RATIFY_CASE"),
     op: "caseratify", tokenClass: cls,
-    detail: "committing a case is a member's signed act. An assistant's credential may assemble the "
-          + "case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)." };
+    detail: localize("ratification.refusals.committing_a_case_is_a", "committing a case is a member's signed act. An assistant's credential may assemble the case document and may never commit it, whoever's signature it carries (DEC-24 rule 4).") };
   /* END DEC-49 REGION is-machine-ratify-case */
 }
 
@@ -28,10 +28,7 @@ export function operatorCaseRefusal(cls) {
   /* DEC-49 REGION is-operator-ratify-case */
   return { ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
     ...rowOf("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), op: "caseratify", tokenClass: cls,
-    detail: `committing a case is a member's own signed act, delivered through that member's own `
-          + `signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer `
-          + `token: the signature says who authorised the case, and the credential that delivers it `
-          + `decides when the record changes, so a bearer token may not carry it in (D-421).` };
+    detail: localize("ratification.refusals.committing_a_case_is_a_2", "committing a case is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's `{cls}`-class bearer token: the signature says who authorised the case, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).", { cls: String(cls) }) };
   /* END DEC-49 REGION is-operator-ratify-case */
 }
 
@@ -44,9 +41,7 @@ export function testimonyCaseRefusal(caseId, edition, legacy) {
   /* DEC-49 REGION is-testimony-publish-case */
   return { ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...rowOf("TESTIMONY_CASE_UNPUBLISHABLE"),
     caseId, edition, observations: legacy.slice(0, 50),
-    detail: `a finding in ${caseId} rests on an observation whose own files name its author (written `
-          + `before §4.1) or cannot be read to show they do not (${legacy.slice(0, 5).join(", ")}); `
-          + `publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)` };
+    detail: localize("ratification.refusals.a_finding_in_caseid_rests", "a finding in {caseId} rests on an observation whose own files name its author (written before §4.1) or cannot be read to show they do not ({legacy}); publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md §4.1)", { caseId: String(caseId), legacy: String(legacy.slice(0, 5).join(", ")) }) };
   /* END DEC-49 REGION is-testimony-publish-case */
 }
 
@@ -71,10 +66,7 @@ export function attributionUnchosenRefusal(caseId, edition, attr) {
   return { ok: false, reason: "ATTRIBUTION_UNCHOSEN", ...rowOf("ATTRIBUTION_UNCHOSEN"),
     caseId, edition,
     unchosen: unchosen.slice(0, 50).map((r) => ({ ...keyOf(r), why: r.why })),
-    detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} or attested capture`
-          + `${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level `
-          + `chosen by its author or attesting member: ${unchosen.slice(0, 5).map(idOf).join(", ")} `
-          + `(MEMBER-KNOWLEDGE-DESIGN.md §4.4). Each chooses with op=attribute; nothing is filled in for them` };
+    detail: localize("ratification.refusals.length_observation_v1_or_attested", "{length} observation{v1} or attested capture{v2} this edition reaches {v3} no level chosen by its author or attesting member: {map} (MEMBER-KNOWLEDGE-DESIGN.md §4.4). Each chooses with op=attribute; nothing is filled in for them", { length: String(unchosen.length), v1: String(unchosen.length === 1 ? "" : "s"), v2: String(unchosen.length === 1 ? "" : "s"), v3: String(unchosen.length === 1 ? "has" : "have"), map: String(unchosen.slice(0, 5).map(idOf).join(", ")) }) };
   /* END DEC-49 REGION is-attribution-unchosen */
 }
 
@@ -109,12 +101,7 @@ export function anonymousTestimonyRefusal(caseId, edition, offenders) {
   /* DEC-49 REGION is-anonymous-testimony */
   return { ok: false, reason: "ANONYMOUS_TESTIMONY_UNCORROBORATED", ...rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"),
     caseId, edition, uncorroborated: offenders.slice(0, 50),
-    detail: `case ${caseId} edition ${edition} rests on testimony, or on material from an unnamed source a member `
-          + `attests, credited only to the team or the project with no independent leg corroborating it: `
-          + `${offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation ?? x.document}`).join(", ")}. It counts `
-          + `as an anonymous tip (DEC-102, DEC-119). Corroborate the claim with an independent leg, ask the author or `
-          + `attesting member to choose cover or name (op=attribute), or drop the finding resting on it from the edition `
-          + `(op=publish). Nothing was signed.` };
+    detail: localize("ratification.refusals.case_caseid_edition_edition_rests", "case {caseId} edition {edition} rests on testimony, or on material from an unnamed source a member attests, credited only to the team or the project with no independent leg corroborating it: {map}. It counts as an anonymous tip (DEC-102, DEC-119). Corroborate the claim with an independent leg, ask the author or attesting member to choose cover or name (op=attribute), or drop the finding resting on it from the edition (op=publish). Nothing was signed.", { caseId: String(caseId), edition: String(edition), map: String(offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation ?? x.document}`).join(", ")) }) };
   /* END DEC-49 REGION is-anonymous-testimony */
 }
 
@@ -126,16 +113,10 @@ export function conclusionMovedRefusal(caseId, edition, project, moved) {
   if (!Array.isArray(moved) || !moved.length) return null;
   /* DEC-49 REGION is-caseratify-conclusion-moved */
   return { ok: false, reason: "CASE_CONCLUSION_MOVED", ...rowOf("CASE_CONCLUSION_MOVED"),
-    detail: `case ${caseId} edition ${edition}'s document records, for ${moved.map((x) => x.target).join(", ")}, a `
-          + `conclusion ${project} no longer stands on: `
-          + moved.map((x) => `${x.target} — ${x.now.state === "concluded"
+    detail: localize("ratification.refusals.case_caseid_edition_edition_s", "case {caseId} edition {edition}'s document records, for {map}, a conclusion {project} no longer stands on: {map_2}. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md §7.1 item 4), so signing this one would publish a conclusion nobody holds. Publish the case again from the project (op=publish) — the new document records what the project stands on now (§7.1 item 9) — and sign that. Nothing was committed.", { caseId: String(caseId), edition: String(edition), map: String(moved.map((x) => x.target).join(", ")), project: String(project), map_2: String(moved.map((x) => `${x.target} — ${x.now.state === "concluded"
               ? `${project} now stands on a DIFFERENT conclusion (reading '${x.now.version ?? "(unnamed)"}', `
                 + `the ${x.now.relationship === "no_project" ? "no-project" : "project's own"} relationship)`
-              : `${project} stands on no conclusion (${x.now.why})`}`).join("; ")
-          + `. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md §7.1 item 4), so `
-          + `signing this one would publish a conclusion nobody holds. Publish the case again from the project `
-          + `(op=publish) — the new document records what the project stands on now (§7.1 item 9) — and sign `
-          + `that. Nothing was committed.`,
+              : `${project} stands on no conclusion (${x.now.why})`}`).join("; ")) }),
     caseId, edition, project, moved };
   /* END DEC-49 REGION is-caseratify-conclusion-moved */
 }
@@ -146,10 +127,8 @@ export function conclusionMovedRefusal(caseId, edition, project, moved) {
    has no catalogue row. */
 export function noAttestingKeyRefusal(signer) {
   return { ok: false, reason: "NO_ATTESTING_KEY", code: "NO_ATTESTING_KEY", signer: signer ?? null,
-    detail: "you hold no registered, active signing key, so a signature you make now would not be accepted "
-          + "by the ceremony. Nothing was written.",
-    remedy: "Register a key of your own from your signed-in session (op=signerregister, credentials R9), or ask "
-          + "an administrator to register one for you; then sign." };
+    detail: localize("ratification.refusals.you_hold_no_registered_active", "you hold no registered, active signing key, so a signature you make now would not be accepted by the ceremony. Nothing was written."),
+    remedy: localize("ratification.refusals.register_a_key_of_your", "Register a key of your own from your signed-in session (op=signerregister, credentials R9), or ask an administrator to register one for you; then sign.") };
 }
 
 /* R49 (T41; D60, N820; K2528, K2533) / C-58.11: the group's approval rule in force (R50's reader) names approvers who
@@ -166,18 +145,13 @@ export function approvalMissingRefusal(caseId, edition, approvalSha, read, notCa
     approvalSha: approvalSha ?? null, approvers: read.approvers ?? null,
     missing: read.unreadable ? null : missing, not_carried: read.unreadable ? null : uncarried,
     detail: read.unreadable
-      ? `the team's approval rule, or the approvals given for case ${caseId} edition ${edition}, could not be read `
-        + `(${read.unreadable}), so whether every required approver has approved this document is undetermined and it `
-        + `is not signed unchecked. Ask again. Nothing was signed.`
-      : `the team requires ${read.approvers.join(", ")} to approve a case before it is signed`
-        + (missing.length ? `, and ${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} not approved case `
+      ? localize("ratification.refusals.the_teams_approval_rule_or", "the team's approval rule, or the approvals given for case {caseId} edition {edition}, could not be read ({unreadable}), so whether every required approver has approved this document is undetermined and it is not signed unchecked. Ask again. Nothing was signed.", { caseId: String(caseId), edition: String(edition), unreadable: String(read.unreadable) })
+      : localize("ratification.refusals.the_team_requires_approvers_to", "the team requires {approvers} to approve a case before it is signed{v1}{v2}. Nothing was signed.", { approvers: String(read.approvers.join(", ")), v1: String(missing.length ? `, and ${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} not approved case `
           + `${caseId} edition ${edition} as this document stands (${String(approvalSha ?? "").slice(0, 12)}); an `
-          + `approval of an earlier version does not carry over` : "")
-        + (uncarried.length ? `${missing.length ? "; and" : ", and"} the approval${uncarried.length === 1 ? "" : "s"} of `
+          + `approval of an earlier version does not carry over` : ""), v2: String(uncarried.length ? `${missing.length ? "; and" : ", and"} the approval${uncarried.length === 1 ? "" : "s"} of `
           + `${uncarried.join(", ")}, given, ${uncarried.length === 1 ? "is" : "are"} not carried in the document's own `
           + `approvals, so the signed file would not prove ${uncarried.length === 1 ? "it" : "them"}: prepare the `
-          + `document again to carry ${uncarried.length === 1 ? "it" : "them"} (its approval digest is unchanged)` : "")
-        + `. Nothing was signed.` };
+          + `document again to carry ${uncarried.length === 1 ? "it" : "them"} (its approval digest is unchanged)` : "") }) };
   /* END DEC-49 REGION is-approval-missing */
 }
 
@@ -199,16 +173,16 @@ const memberOf = (v) => (typeof v === "string" && v.trim() ? v.trim().replace(/^
 export function approvalsRead(reader, { caseId, edition, docSha }) {
   if (!reader) return null;
   let rule, given;
-  try { rule = reader.rule(); } catch (e) { return { unreadable: `the approval rule: ${String((e && e.message) || e).slice(0, 120)}` }; }
+  try { rule = reader.rule(); } catch (e) { return { unreadable: word("ratification.unreadable.approval_rule", { e: String(String((e && e.message) || e).slice(0, 120)) }) }; }
   if (rule === null || rule === undefined) return null;
   const named = Array.isArray(rule) ? rule : rule && typeof rule === "object" && Array.isArray(rule.approvers) ? rule.approvers : null;
-  if (!named || named.some((m) => !memberOf(m))) return { unreadable: "the approval rule" };
+  if (!named || named.some((m) => !memberOf(m))) return { unreadable: word("ratification.unreadable.approval_rule_2") };
   const approvers = [...new Set(named.map(memberOf))].sort();
   if (!approvers.length) return null;
   try { given = reader.approvals({ case: caseId, edition, docSha }); }
-  catch (e) { return { unreadable: `the approvals given: ${String((e && e.message) || e).slice(0, 120)}` }; }
+  catch (e) { return { unreadable: word("ratification.unreadable.approvals_given", { e: String(String((e && e.message) || e).slice(0, 120)) }) }; }
   const list = Array.isArray(given) ? given : given && typeof given === "object" && Array.isArray(given.approvals) ? given.approvals : null;
-  if (!list || list.some((a) => !a || typeof a !== "object" || !memberOf(a.by))) return { unreadable: "the approvals given" };
+  if (!list || list.some((a) => !a || typeof a !== "object" || !memberOf(a.by))) return { unreadable: word("ratification.unreadable.approvals_given_2") };
   const approvals = list.map((a) => ({ by: memberOf(a.by), at: typeof a.at === "string" ? a.at : null }))
     .sort((a, b) => (a.by < b.by ? -1 : a.by > b.by ? 1 : String(a.at) < String(b.at) ? -1 : 1));
   const by = new Set(approvals.map((a) => a.by));

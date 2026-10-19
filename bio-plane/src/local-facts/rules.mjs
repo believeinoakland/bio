@@ -24,6 +24,8 @@ import { canonicalJson } from "../record-grammar/json.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { refusal } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
+import { COUNTS, DIRECTIONS, LEGAL_FACT_TRIGGERS, OWED_BY, STARTS, UNITS } from "../../../jurisdictions/index.mjs";
 
 /** R10: the sections a group's rule may be drafted in (`jurisdictions` R26, R79). */
 export const RULE_SECTIONS = Object.freeze(["deadlines", "legal_facts"]);
@@ -31,6 +33,42 @@ export const RULE_SECTIONS = Object.freeze(["deadlines", "legal_facts"]);
 export const RULE_STATES = Object.freeze(["drafted", "confirmed", "withdrawn"]);
 /** R10, R13: a reason, and R11: a professional's statement, in characters. */
 export const RULE_REASON_MAX = 500, RULE_STATEMENT_MAX = 500;
+/** R18: the day a member-drafted rule takes effect; a rule of a profile carries none. */
+export const EFFECTIVE_FROM = "effective_from";
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const isDay = (v) => {
+  const m = typeof v === "string" ? DATE_RE.exec(v) : null;
+  return !!m && new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toISOString().slice(0, 10) === v;
+};
+/** R18: what an entry of each section is made of, in `jurisdictions`' field order, then the day it takes effect. The
+ *  frozen data of this module (`jurisdictions` stays pure): `kind` is `text`, `number`, `date` or `choice`; a `choices`
+ *  of `null` is filled from the active view's kinds (`applies_to`) when asked. A field of `jurisdictions` that no
+ *  `kind` here can draw (a deadline's `starter`, `extension`, `tolling`, a legal fact's `threshold`) is left out. */
+/* K3997: a member's draft offers the seven starts the design draws; `third_party` needs a `starter` no field draws. */
+const DRAFT_STARTS = Object.freeze(STARTS.filter((x) => x !== "third_party"));
+export const RULE_FIELDS = Object.freeze({
+  deadlines: Object.freeze([
+    Object.freeze({ field: "rule", required: true, kind: "text" }),
+    Object.freeze({ field: "applies_to", required: true, kind: "choice", choices: null }),
+    Object.freeze({ field: "units", required: true, kind: "choice", choices: UNITS }),
+    Object.freeze({ field: "amount", required: true, kind: "number" }),
+    Object.freeze({ field: "count", required: false, kind: "choice", choices: COUNTS }),
+    Object.freeze({ field: "direction", required: false, kind: "choice", choices: DIRECTIONS }),
+    Object.freeze({ field: "starts", required: true, kind: "choice", choices: DRAFT_STARTS }),
+    Object.freeze({ field: "owed_by", required: false, kind: "choice", choices: OWED_BY }),
+    Object.freeze({ field: "due_at", required: false, kind: "text" }),
+    Object.freeze({ field: "citation", required: true, kind: "text" }),
+    Object.freeze({ field: EFFECTIVE_FROM, required: true, kind: "date" }),
+  ]),
+  legal_facts: Object.freeze([
+    Object.freeze({ field: "key", required: true, kind: "text" }),
+    Object.freeze({ field: "trigger", required: true, kind: "choice", choices: LEGAL_FACT_TRIGGERS }),
+    Object.freeze({ field: "statement", required: true, kind: "text" }),
+    Object.freeze({ field: "citation", required: true, kind: "text" }),
+    Object.freeze({ field: "applies_to", required: false, kind: "choice", many: true, choices: null }),
+    Object.freeze({ field: EFFECTIVE_FROM, required: true, kind: "date" }),
+  ]),
+});
 /** R12: the `profile` a group rule is tagged with in `governingView`. */
 export const GROUP_PROFILE = "group";
 
@@ -123,19 +161,21 @@ export class GroupRules {
   #day(view, at) { return this.dayOf(at, isObj(view) && isObj(view.time_zone) ? view.time_zone.value : null) ?? String(at).slice(0, 10); }
 
   /* ===================================================================== *
-   * R12: governingView
+   * R12, R18: governingView
    * ===================================================================== */
 
   /** R12: `combine`'s answer for the active profiles, each confirmed, unwithdrawn group rule added to its section,
    *  tagged `profile: "group"` with a `basis` naming its confirmation's day and its id (no statement, no handle). A rule
    *  whose key the view already holds, from a profile or an earlier group rule, is not added: one value per key
    *  (jurisdictions R15), reported in `conflicts`. With no group rule the answer equals `combine`'s. Writes nothing;
-   *  never throws. */
+   *  never throws. A confirmed rule whose `effective_from` (R18) is after today (the local day in the view's zone) is not
+   *  yet applied; the field is not carried into the view, where a profile's entry has none. */
   governingView() {
     try {
       const c = this.#combined();
       if (!c || !c.ok) return c;
-      const rules = this.#rules().filter((r) => r.state === "confirmed");
+      const today = this.#day(c.view, this.instant());
+      const rules = this.#rules().filter((r) => r.state === "confirmed" && !(isObj(r.entry) && r.entry[EFFECTIVE_FROM] > today));
       if (!rules.length) return c;
       const view = clone(c.view);
       const conflicts = [...(Array.isArray(c.conflicts) ? c.conflicts : [])];
@@ -146,11 +186,13 @@ export class GroupRules {
         if (k === null || held) {
           conflicts.push({ at: `${r.section}[${JSON.stringify(keyWords(r.section, r.entry || {}))}]`,
                            values: [{ profile: held ? held.profile : null, rule: r.rule }],
-                           says: `the team's rule ${r.rule} holds a key the view already holds, so the view's entry stands and the rule is not added` });
+                           says: word("local-facts.says.group_rule_holds", { rule: String(r.rule) }) });
           continue;
         }
         const basis = `${this.#day(c.view, r.confirmation.at)} ${r.rule}`;
-        list.push({ ...clone(r.entry), status: "researched", basis, profile: GROUP_PROFILE,
+        const applied = clone(r.entry);
+        delete applied[EFFECTIVE_FROM];
+        list.push({ ...applied, status: "researched", basis, profile: GROUP_PROFILE,
                     bases: [{ profile: GROUP_PROFILE, basis }] });
       }
       return { ...c, view, conflicts };
@@ -218,14 +260,19 @@ export class GroupRules {
      entry's own path are answered. */
   #entryErrors(section, entry, view, at) {
     if (!isObj(entry)) return [{ path: `${section}[0]`, code: "VALUE_INVALID", detail: "the entry is an object" }];
-    const p = { id: "group-rule", name: "The team's rule", covers: ["the team"], test: !!(isObj(view) && view.test) };
+    const own = { ...entry };
+    const when = own[EFFECTIVE_FROM];
+    delete own[EFFECTIVE_FROM];
+    const dated = isDay(when) ? [] : [{ path: `${section}[0].${EFFECTIVE_FROM}`, code: "VALUE_INVALID",
+      detail: localize("local-facts.rules.effective_from_is_a_day", "effective_from is the day the rule takes effect, as YYYY-MM-DD") }];
+    const p = { id: "group-rule", name: word("local-facts.group_rule"), covers: ["the team"], test: !!(isObj(view) && view.test) };
     if (isObj(view)) for (const s of CONTEXT_SECTIONS) if (view[s] !== undefined && s !== section) p[s] = untagged(view[s]);
-    p[section] = [{ ...clone(entry), status: "researched", basis: this.#day(view, at) }];
+    p[section] = [{ ...clone(own), status: "researched", basis: this.#day(view, at) }];
     let v;
-    try { v = this.validate(p); } catch (e) { return [{ path: `${section}[0]`, code: "VALUE_INVALID", detail: String(e && e.message || e).slice(0, 200) }]; }
-    if (!v || v.ok) return [];
+    try { v = this.validate(p); } catch (e) { return [...dated, { path: `${section}[0]`, code: "VALUE_INVALID", detail: String(e && e.message || e).slice(0, 200) }]; }
+    if (!v || v.ok) return dated;
     const mine = `${section}[0]`;
-    return (v.errors || []).filter((e) => typeof e.path === "string" && (e.path === mine || e.path.startsWith(`${mine}.`) || e.path.startsWith(`${mine}[`)));
+    return dated.concat((v.errors || []).filter((e) => typeof e.path === "string" && (e.path === mine || e.path.startsWith(`${mine}.`) || e.path.startsWith(`${mine}[`))));
   }
 
   /* ===================================================================== *
@@ -235,8 +282,8 @@ export class GroupRules {
   /* R11: the tier of the `action_kinds` kind a rule's `applies_to` names in the active view: 1, 2, 3, or null when
      undetermined (a `claim` rule, a kind the view lacks or gives no tier; a legal fact naming no kind). A legal fact
      naming several kinds reads Tier 1 only when every one is Tier 1. */
-  #tier(r) {
-    const c = this.#combined();
+  #tier(r, view = undefined) {
+    const c = view === undefined ? this.#combined() : view;
     const kinds = c && c.ok && Array.isArray(c.view.action_kinds) ? c.view.action_kinds : [];
     const tierOf = (k) => { const e = kinds.find((x) => isObj(x) && x.kind === k); return e && [1, 2, 3].includes(e.tier) ? e.tier : null; };
     const named = r.section === "deadlines" ? (r.entry.applies_to === "claim" ? [] : [r.entry.applies_to])
@@ -287,14 +334,19 @@ export class GroupRules {
    * ===================================================================== */
 
   /** R12: the group's rules with their state, source, drafter, confirmer, dates and (confirmed with one) the
-   *  statement, to a viewer naming a member; any other viewer is answered none. Writes nothing; never throws. */
+   *  statement, to a viewer naming a member; any other viewer is answered none. R19: each row also says what it is for:
+   *  `applies_to` (the kind id, or a legal fact's list, the entry names; null when it names none), `tier` (R11's read of
+   *  it in the active view: 1, 2, 3 or null) and `source` as `{captureSha, extent}`. Writes nothing; never throws. */
   groupRules(a = {}) {
     try {
       const b = isObj(a) ? a : {};
       if (b.section !== undefined && b.section !== null && !RULE_SECTIONS.includes(b.section)) return sectionRefusal(b.section);
       if (!namesMember(b.viewer)) return { ok: true, rules: [], count: 0 };
+      const view = this.#combined();
       const rules = this.#rules().filter((r) => !b.section || r.section === b.section).map((r) => ({
         rule: r.rule, section: r.section, state: r.state, entry: r.entry, source: r.source, reason: r.reason,
+        applies_to: isObj(r.entry) && r.entry.applies_to !== undefined ? clone(r.entry.applies_to) : null,
+        tier: isObj(r.entry) ? this.#tier(r, view) : null,
         drafter: r.drafter, drafted_at: r.drafted_at,
         confirmer: r.confirmation ? r.confirmation.by : null, confirmed_at: r.confirmation ? r.confirmation.at : null,
         ...(r.confirmation && r.confirmation.statement ? { statement: r.confirmation.statement } : {}),
@@ -302,7 +354,33 @@ export class GroupRules {
       }));
       return { ok: true, rules, count: rules.length };
     } catch (e) {
-      return { ok: true, rules: [], count: 0, why: `undetermined: the rules could not be read (${String(e && e.message || e).slice(0, 200)})` };
+      return { ok: true, rules: [], count: 0, why: word("local-facts.why.undetermined_rules_read", { entry: String(String(e && e.message || e).slice(0, 200)) }) };
+    }
+  }
+
+  /* ===================================================================== *
+   * R18: ruleFields
+   * ===================================================================== */
+
+  /** R18: the fields an entry of `section` carries, each `{field, required, kind, choices?}` in `jurisdictions`' order
+   *  (`effective_from` last), to a viewer naming a member; any other viewer is answered none. `applies_to`'s choices are
+   *  the active view's `action_kinds` ids (a deadline's also `claim`, which `jurisdictions` accepts); the rest are the
+   *  vocabularies `jurisdictions` freezes. An unknown `section` is R17's refusal. Writes nothing; never throws. */
+  ruleFields(a = {}) {
+    try {
+      const b = isObj(a) ? a : {};
+      if (!RULE_SECTIONS.includes(b.section)) return sectionRefusal(b.section);
+      if (!namesMember(b.viewer)) return { ok: true, section: b.section, fields: [], count: 0 };
+      const c = this.#combined();
+      const ids = c && c.ok && Array.isArray(c.view.action_kinds)
+        ? c.view.action_kinds.filter((k) => isObj(k) && typeof k.kind === "string").map((k) => k.kind) : [];
+      const kinds = b.section === "deadlines" ? ["claim", ...ids.filter((k) => k !== "claim")] : ids;
+      const fields = RULE_FIELDS[b.section].map((f) => ({ field: f.field, required: f.required, kind: f.kind,
+        ...(f.many ? { many: true } : {}), ...(f.choices === undefined ? {} : { choices: [...(f.choices === null ? kinds : f.choices)] }) }));
+      return { ok: true, section: b.section, fields, count: fields.length };
+    } catch (e) {
+      return { ok: true, section: typeof (a || {}).section === "string" ? a.section : null, fields: [], count: 0,
+               why: word("local-facts.why.undetermined_rules_read", { entry: String(String(e && e.message || e).slice(0, 200)) }) };
     }
   }
 
@@ -341,14 +419,14 @@ export class GroupRules {
     if (!r) return noSuchRule(b.rule);
     /* DEC-49 REGION is-rule-confirmed */
     if (r.state !== "confirmed")
-      return refusal("RULE_NOT_CONFIRMED", `the rule is ${r.state}; only a confirmed rule the team still applies is offered.`,
+      return refusal("RULE_NOT_CONFIRMED", localize("local-facts.rules.the_rule_is_state_only", "the rule is {state}; only a confirmed rule the team still applies is offered.", { state: String(r.state) }),
                      { rule: r.rule, state: r.state });
     /* END DEC-49 REGION is-rule-confirmed */
     const offer = { section: r.section, entry: r.entry, source: r.source,
                     confirmed: { at: r.confirmation.at, with_statement: !!r.confirmation.statement } };
     const bytes = canonicalJson(offer);
     return { ok: true, rule: r.rule, offer, bytes, digest: sha256HexSync(bytes),
-             note: "carry these bytes to the shared profile's maintainers yourself; your team's Civicsmith transmits nothing" };
+             note: word("local-facts.note.carry_bytes_shared") };
   }
 }
 
@@ -367,7 +445,7 @@ function machineRuleRefusal(by) {
    rules; the one builder of RULE_SECTION_UNKNOWN, so both answer the same refusal. */
 function sectionRefusal(section) {
   /* DEC-49 REGION is-rule-section */
-  return refusal("RULE_SECTION_UNKNOWN", `a team's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
+  return refusal("RULE_SECTION_UNKNOWN", localize("local-facts.rules.a_teams_rule_is_drafted", "a team's rule is drafted in {RULE_SECTIONS}.", { RULE_SECTIONS: String(RULE_SECTIONS.join(" or ")) }),
                  { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
   /* END DEC-49 REGION is-rule-section */
 }
@@ -384,7 +462,7 @@ function reasonRefusal(reason) {
    `action-clocks` answers a bare NO_SUCH_RULE for a profile's deadline). */
 function noSuchRule(id) {
   /* DEC-49 REGION is-rule-named */
-  return refusal("NO_SUCH_GROUP_RULE", "the team holds no rule of its own by that id.",
+  return refusal("NO_SUCH_GROUP_RULE", localize("local-facts.rules.the_team_holds_no_rule", "the team holds no rule of its own by that id."),
                  { rule: typeof id === "string" ? id.slice(0, 40) : null });
   /* END DEC-49 REGION is-rule-named */
 }

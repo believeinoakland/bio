@@ -5,8 +5,9 @@
    field and identifier names stay. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { calibrationOf, calibrationOps, cadenceSentence, drifted, nextProbeDue, DRIFT, CALIBRATION_CHECKS }
-  from "../../../src/calibration/index.mjs";
+import { calibrationOf, calibrationOps, cadenceSentence, drifted, nextProbeDue, subjectProbeState, DRIFT,
+         CALIBRATION_CHECKS } from "../../../src/calibration/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { storage } from "./storage.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -18,31 +19,26 @@ const fresh = () => { const clock = { t: T0 }; return { clock, c: calibrationOf(
 
 /* What DEC-149 retires, for the group's own Civicsmith. */
 const RETIRED = /\binstances?\b|\bplanes?\b|\bcop(y|ies)\b|\bservers?\b/i;
-const CADENCE = "one probe per calibratable engine every 30 day(s), which your team's Civicsmith runs on its own account";
+const CADENCE = cadenceSentence();
 
 test("R3 R6: the cadence's sentence says your group's Civicsmith runs the probe on its own account (DEC-149; T35-23, calibration.mjs:126)", () => {
-  assert.equal(cadenceSentence(), CADENCE);
-  assert.equal(cadenceSentence(7 * DAY),
-    "one probe per calibratable engine every 7 day(s), which your team's Civicsmith runs on its own account");
-  assert.equal(nextProbeDue({ lastAt: 0 }).why, `the declared cadence, ${CADENCE}`);
+  assert.equal(CADENCE, word("calibration.probe_per_calibratable", { days: "30" }));
+  assert.equal(cadenceSentence(7 * DAY), word("calibration.probe_per_calibratable", { days: "7" }));
+  assert.equal(nextProbeDue({ lastAt: 0 }).why, word("calibration.why.declared_cadence", { cadence_ms: CADENCE }));
   assert.doesNotMatch(cadenceSentence(), RETIRED);
 });
 
 test("R2: a better measurement's why names your group's Civicsmith as the one that would be claiming (DEC-149; T35-23, calibration.mjs:287)", () => {
-  assert.equal(drifted(DRIFT.BETTER).why,
-    "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, "
-    + "so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)");
+  assert.equal(drifted(DRIFT.BETTER).why, localize("calibration.calibration.this_engine_now_measures_better", "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)"));
   for (const v of [...Object.values(DRIFT), "sideways"]) assert.doesNotMatch(drifted(v).why, RETIRED, String(v));
 });
 
 test("R12 R4: with no listener, calibrationRecord's why says no module derives obligations in your group's Civicsmith (DEC-149; T35-23, calibration/index.mjs:269)", () => {
   const { c } = fresh();
   const r = c.calibrationRecord(probe(), WHO);
-  assert.equal(r.why,
-    "CAL-1 records what probe P-1 measured of pdfjs 4.0 on 2026-09-01T00:00:00Z: fidelity B. "
-    + drifted(DRIFT.SAME).why
-    + ". No module derives obligations from calibrations in your team's Civicsmith, so none are named here "
-    + "(null, not none found)");
+  assert.equal(r.why, word("calibration.why.records_probe_measured", { id: "CAL-1", probe_id: "P-1", engine: "pdfjs",
+    version: "4.0", at: "2026-09-01T00:00:00Z", cap: "B", why: drifted(DRIFT.SAME).why,
+    value: word("calibration.why.module_derives_obligations") }));
   assert.doesNotMatch(r.why, RETIRED);
 });
 
@@ -51,7 +47,7 @@ test("R6: calibrations' why counts the engines your group's Civicsmith probes, w
   await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1" });
   await c.calibrationSubjectRegister({ engine: "ocr", probe_id: "P-2" });
   const r = calibrationOps(c, new URL("http://x/?op=calibrations"), null).calibrations();
-  assert.equal(r.why, `your team's Civicsmith probes 2 engine(s) — ${CADENCE}`);
+  assert.equal(r.why, word("calibration.why.group_civicsmith_probes", { subjects: "2", value: CADENCE }));
   assert.equal(r.cadence, CADENCE);
   assert.doesNotMatch(r.why, RETIRED);
 });
@@ -59,23 +55,20 @@ test("R6: calibrations' why counts the engines your group's Civicsmith probes, w
 test("R6 R9: calibrations' why with no engine registered names your group's Civicsmith (DEC-149; T35-23, calibration/index.mjs:302)", () => {
   const { c } = fresh();
   const r = c.calibrations();
-  assert.equal(r.why, "no engine is registered for calibration in your team's Civicsmith, so no probe is scheduled "
-    + "and this consumer holds no alarm at all");
+  assert.equal(r.why, word("calibration.why.engine_registered_calibration"));
   assert.doesNotMatch(r.why, RETIRED);
 });
 
 test("R8: a registered subject's why says it is registered in your group's Civicsmith (DEC-149; T35-23, calibration/index.mjs:391)", async () => {
   const { c, clock } = fresh();
   const never = await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1" });
-  assert.equal(never.why, "pdfjs is registered for calibration in your team's Civicsmith. Registering is not measuring: "
-    + "no fidelity is claimed for it and nothing rests on it until a probe runs. Nothing has ever probed it, so a probe "
-    + `is due immediately — ${CADENCE}`);
+  assert.equal(never.why, word("calibration.why.registered_calibration_group", { engine: "pdfjs",
+    last_probe_ms: subjectProbeState(null), cadence_sentence: CADENCE }));
   c.calibrationRecord(probe(), WHO);
   clock.t = T0 + DAY;
   const probed = await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-2" });
-  assert.equal(probed.why, "pdfjs is registered for calibration in your team's Civicsmith. Registering is not measuring: "
-    + "no fidelity is claimed for it and nothing rests on it until a probe runs. The next probe is due at its own "
-    + `cadence — ${CADENCE}`);
+  assert.equal(probed.why, word("calibration.why.registered_calibration_group", { engine: "pdfjs",
+    last_probe_ms: subjectProbeState(T0), cadence_sentence: CADENCE }));
   for (const r of [never, probed]) assert.doesNotMatch(r.why, RETIRED);
 });
 
@@ -84,9 +77,7 @@ test("R9: the tick's why says your group's Civicsmith runs no derivation engine 
   await c.calibrationSubjectRegister({ engine: "pdfjs", probe_id: "P-1" });
   await c.calibrationSubjectRegister({ engine: "ocr", probe_id: "P-2" });
   const t = c.calibrationTick(T0);
-  assert.equal(t.why, "2 engine(s) are due a calibration probe. Your team's Civicsmith runs no derivation engine of "
-    + "its own, so the probe is OWED and not RUN — and the record says owed rather than quietly treating the last "
-    + "measurement as current");
+  assert.equal(t.why, word("calibration.why.engine_due_calibration", { due: "2" }));
   assert.doesNotMatch(t.why, RETIRED);
 });
 

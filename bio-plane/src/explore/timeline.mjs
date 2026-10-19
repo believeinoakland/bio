@@ -4,6 +4,10 @@
    "what they did" (`world`) and "what we did" (`ours`) kept apart exactly as `events` answers them. It reads no project or inquiry; the
    caller resolves the set (R-3 I-6). */
 import { refuse, isObj, isRefusal, viewerRefusal } from './answer.mjs';
+import { word, localize } from '../setup-words/index.mjs';
+
+/** The refusal when the group's Civicsmith holds no events record (R13): read by the timeline and its tests alike. */
+export const NO_EVENTS_RECORD = localize('explore.timeline.no_events_record', 'your team\'s Civicsmith has no events record connected, so no timeline can be read');
 
 const EVENT_ID = /^EVT-/;
 
@@ -26,10 +30,10 @@ export function timelineOver(ctx, arg) {
   const a = isObj(arg) ? arg : {};
   const v = viewerRefusal(a.viewer);
   if (v) return v;
-  if (!Array.isArray(a.set) || a.set.length === 0) return refuse('NO_SET', 'a timeline is over a set of record ids the caller names');
+  if (!Array.isArray(a.set) || a.set.length === 0) return refuse('NO_SET', localize('explore.timeline.set_is_over', 'a timeline is over a set of record ids the caller names'));
   const events = typeof ctx.events === 'function' ? ctx.events() : ctx.events;
   const money = typeof ctx.money === 'function' ? ctx.money() : ctx.money;
-  if (!events || typeof events.timeline !== 'function') return refuse('NOT_AVAILABLE', 'your team\'s Civicsmith has no events record connected, so no timeline can be read');
+  if (!events || typeof events.timeline !== 'function') return refuse('NOT_AVAILABLE', NO_EVENTS_RECORD);
   const t = events.timeline({ set: a.set, from: a.from ?? null, to: a.to ?? null, viewer: a.viewer });
   if (isRefusal(t) || (isObj(t) && t.ok === false)) return t;
   const out = [];
@@ -44,5 +48,5 @@ export function timelineOver(ctx, arg) {
         ...(f.stage ? { stage: f.stage } : {}), source: f.source, citation: f.citation, grade: f.grade })), ...(m.truncated ? { truncated: true } : {}) });
     }
   }
-  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: 'your team\'s Civicsmith has no money record connected, so no payer or payee is shown' }) };
+  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: word('explore.money_note') }) };
 }

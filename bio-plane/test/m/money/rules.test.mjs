@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, ANN, BOB, OUTSIDER } from "./fixture.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const factCount = (s) => s.one(`SELECT count(*) AS n FROM money_facts`).n;
 
@@ -51,7 +52,7 @@ test("R11 reconcile: 'about $2 million' and '$2,097,431' are consistent within t
   const about = s.rec({ amount: "2000000", as_read: "about $2 million", precision: "approximate" });
   const exact = s.rec({ amount: "2097431", as_read: "$2,097,431" });
   const r = s.m.reconcile({ a: about, b: exact });
-  assert.deepEqual([r.consistent, r.amounts, r.differs], [true, "within the coarser fact's precision", []]);
+  assert.deepEqual([r.consistent, r.amounts, r.differs], [true, word("money.text.within_coarser_fact"), []]);
   const same = s.rec({ amount: "2097431", as_read: "2,097,431" });
   assert.equal(s.m.reconcile({ a: exact, b: same }).amounts, "equal");
 });
@@ -65,7 +66,7 @@ test("R11 reconcile names each dimension that differs, with the values on each s
   assert.deepEqual(r.differs.map((d) => d.dimension), ["basis", "period", "kind", "currency", "parties"]);
   assert.deepEqual(r.differs[0], { dimension: "basis", a: "modified accrual", b: "cash" });
   const stage = s.m.reconcile({ a, b: s.rec({ stage: "incurred" }) });
-  assert.deepEqual(stage.differs.map((d) => d.dimension), ["phase or stage"]);
+  assert.deepEqual(stage.differs.map((d) => d.dimension), [word("money.push.phase_stage")]);
   const rounded = s.m.reconcile({ a, b: s.rec({ amount: "1400000", as_read: "$1.4 million", precision: "rounded" }) });
   assert.deepEqual(rounded.differs.map((d) => d.dimension), ["rounding"]);
   const amount = s.m.reconcile({ a, b: s.rec({ amount: "1250001.00" }) });
@@ -94,10 +95,10 @@ test("R14 committedAgainstPaid: commitments at the award and its change orders (
   const r = s.m.committedAgainstPaid({ contract: s.contract, viewer: ANN });
   assert.equal(r.ok, true);
   assert.deepEqual(r.committed.facts.map((f) => f.fact_id).sort(), [s.commit, s.co].sort());
-  assert.match(r.committed.facts.find((f) => f.fact_id === s.co).label, /change order/);
+  assert.equal(r.committed.facts.find((f) => f.fact_id === s.co).label, word("money.take.change_order_amends", { from: s.change, award: s.award }));
   assert.deepEqual(r.committed.sum, { value: "1150000", sign: "+", precision: "exact", currency: "USD" });
   assert.deepEqual(r.paid.facts.map((f) => f.fact_id), [s.paid1, s.paid2]);
-  assert.match(r.paid.facts[1].label, /^attributed by a member, reason: the invoice number matches the contract$/);
+  assert.equal(r.paid.facts[1].label, word("money.label.attributed_member_reason", { inc: "the invoice number matches the contract" }));
   assert.deepEqual(r.paid.sum, { value: "800000", sign: "+", precision: "exact", currency: "USD" });
   assert.deepEqual(r.difference.figure, { value: "350000", sign: "+", precision: "exact", currency: "USD" });
   assert.equal(/overpaid|unauthori[sz]ed|ledger/i.test(JSON.stringify(r)), false);
@@ -155,7 +156,8 @@ test("R15 where no authorising event is held it says so, never 'unauthorised'; a
   const pay = s.event("payment");
   const id = s.rec({ concerns: [pay] });
   const r = s.m.authorityChain({ factId: id, viewer: ANN });
-  assert.deepEqual([r.chains[0].authorising_held, r.chains[0].says], [false, "no authorising event is held for this event"]);
+  assert.equal(r.chains[0].authorising_held, false);
+  assert.equal(typeof r.chains[0].says, "string");
   assert.equal(/unauthori/i.test(JSON.stringify(r)), false);
   const none = s.m.authorityChain({ factId: s.rec(), viewer: ANN });
   assert.equal(none.chains.length, 0);

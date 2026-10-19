@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, WHY } from "./world.mjs";
 import { BIAS_MANIFEST_LIMIT_MAX } from "../../../src/bias/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "BIAS-2026-0001-a", I = "BIAS-2026-0003-inst", J = "BIAS-2026-0000-proj", P = "PROJ-2026-0001-p";
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
@@ -36,7 +37,7 @@ test("R49: in force for a project scope — each statement of the effective set 
     const r = w.sif(s.statement_id);
     assert.deepEqual(r, { ok: true, statement: s.statement_id, scope: PROJ, in_force: true, kind: s.kind, text: s.text,
       bundle_id: s.bundle_id, level: s.scope === "project" ? "project" : "group", locked: s.locked,
-      statements_sha: m.statements_sha, stated: "this statement is in the lens in force for this scope" }, s.statement_id);
+      statements_sha: m.statements_sha, stated: word("bias.statement_lens_force") }, s.statement_id);
   }
   assert.deepEqual([w.sif("p1").kind, w.sif("p1").level, w.sif("s3").kind, w.sif("s3").locked, w.sif("s3").level],
     ["inference", "project", "inference", true, "group"], "the locked group statement a project nullified stands");

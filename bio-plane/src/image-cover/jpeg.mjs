@@ -20,6 +20,7 @@
  * row or column on each side of a covered MCU edge mixes chroma with its neighbour under fancy upsampling. */
 import { readJpegHeader, colourTransformOf, DctRefusal } from "../../../pdf-worker/src/dctdecode.mjs";
 import { CoverRefusal, checkPixels, storedRects, displayedSize, mergeSpans, orientationOf, orientationTiff } from "./geometry.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 const SOF_MARKER = { baseline: 0xc0, "extended-sequential-huffman": 0xc1 };
 
@@ -31,10 +32,10 @@ function fromDct(e) {
     .filter(Boolean).join("; ");
   if (e.code === "NOT_A_JPEG") return new CoverRefusal("NOT_A_COVERABLE_FORMAT", `not a JPEG${note ? `: ${note}` : ""}`);
   if (e.code === "TRUNCATED")
-    return new CoverRefusal("TRUNCATED_IMAGE_DATA", `the JPEG data ends before the image does${note ? `: ${note}` : ""}`);
+    return new CoverRefusal("TRUNCATED_IMAGE_DATA", localize("image-cover.jpeg.the_jpeg_data_ends_before", "the JPEG data ends before the image does{v1}", { v1: String(note ? `: ${note}` : "") }));
   if (e.code === "CORRUPT_DATA")
-    return new CoverRefusal("IMAGE_DATA_CORRUPT", `the JPEG data cannot be read${note ? `: ${note}` : ""}`);
-  return new CoverRefusal("UNSUPPORTED_JPEG_PROCESS", `this JPEG's coding is not covered (${e.code}${note ? `: ${note}` : ""}); only baseline or extended-sequential Huffman, 8-bit, one scan, grey or three components`);
+    return new CoverRefusal("IMAGE_DATA_CORRUPT", localize("image-cover.jpeg.the_jpeg_data_cannot_be", "the JPEG data cannot be read{v1}", { v1: String(note ? `: ${note}` : "") }));
+  return new CoverRefusal("UNSUPPORTED_JPEG_PROCESS", localize("image-cover.jpeg.this_jpegs_coding_is_not", "this JPEG's coding is not covered ({code}{v1}); only baseline or extended-sequential Huffman, 8-bit, one scan, grey or three components", { code: String(e.code), v1: String(note ? `: ${note}` : "") }));
 }
 
 /** The orientation of the first EXIF APP1 before the scan; 1 when there is none. */
@@ -217,7 +218,7 @@ export function coverJpeg(d, areas, maxPixels) {
   const nc = frame.comps.length;
   const refuse = (note) => fromDct(new DctRefusal("UNSUPPORTED_PROCESS", { note }));
   if (nc !== 1 && nc !== 3) throw refuse(`${nc} components`);
-  if (scan.comps.length !== nc) throw refuse(`multi-scan sequential: ${scan.comps.length} of ${nc} components in the first scan`);
+  if (scan.comps.length !== nc) throw refuse(localize("image-cover.jpeg.multi_scan_sequential_length_of", "multi-scan sequential: {length} of {nc} components in the first scan", { length: String(scan.comps.length), nc: String(nc) }));
   const hmax = Math.max(...frame.comps.map((c) => c.h)), vmax = Math.max(...frame.comps.map((c) => c.v));
   for (const c of frame.comps) {
     const hx = hmax / c.h, vx = vmax / c.v;

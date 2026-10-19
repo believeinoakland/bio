@@ -24,7 +24,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
 import { profileOf, profileView, evidenceStorageAbsent } from "./index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
    per-call figures keep one call within the plane's subrequest and CPU limits: every part stored is a write. */
@@ -353,11 +353,11 @@ export class Acquisition {
     const who = typeof by === "string" ? by : null;
     const admin = who && !isMachineIdentity(who) && this.#membership && typeof this.#membership.isAdministrator === "function"
       ? this.#membership.isAdministrator(who.replace(/^member:/, "")) : false;
-    if (!admin) return notAnAdmin(by ?? null, "set whether your team's captures ask a public archive for a copy");
+    if (!admin) return notAnAdmin(by ?? null, localize("acquisition.unpack.set_whether_your_team_s", "set whether your team's captures ask a public archive for a copy"));
     /* DEC-49 REGION is-co-archive-setting */
     if (typeof on !== "boolean")
       return refuse("CO_ARCHIVE_SETTING_INVALID", { on: on === undefined ? null : typeof on,
-        detail: "the setting is true (on) or false (off); nothing was recorded" });
+        detail: localize("acquisition.unpack.the_setting_is_true", "the setting is true (on) or false (off); nothing was recorded") });
     /* END DEC-49 REGION is-co-archive-setting */
     const at = stampSecond();
     const r = this.#record.setSetting(CO_ARCHIVE_SETTING, { on, set_by: who, set_at: at }, who);
@@ -493,22 +493,21 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const mode = modeOf({ by, cls, member }, !!(internal && internal.automatic));
   /* DEC-49 REGION is-unpack-caller */
   if (!mode) return refuse("UNPACK_NOT_PERMITTED", { cls: cls ?? null,
-    detail: "an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture "
-          + "that brought it in; nothing was opened" });
+    detail: localize("acquisition.unpack.an_archive_is_opened", "an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened") });
   /* END DEC-49 REGION is-unpack-caller */
   const inst = instanceOf(st);
   if (!inst) return { ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE", code: "ARCHIVE_RECORD_UNAVAILABLE",
-    detail: "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened" };
+    detail: localize("acquisition.unpack.the_store_handed_in", "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened") };
   const core = st.core || inst.record;
   const rawEv = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
-  if (!rawEv) return evidenceStorageAbsent("unpack", "your team's Civicsmith has no evidence storage configured").body;
+  if (!rawEv) return evidenceStorageAbsent("unpack", word("capture.response.group_civicsmith_evidence")).body;
   const ev = readThrough(rawEv);
 
   /* DEC-49 REGION is-archive-held */
   if (!(await holds(st, inst, sha)))
-    return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: "no acquisition receipt or register row names this archive; nothing was opened" });
+    return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: localize("acquisition.unpack.no_acquisition_receipt_or", "no acquisition receipt or register row names this archive; nothing was opened") });
   const held = await heldParts(inst, st, ev, sha, internal && internal.parts);
-  if (!held.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: `${held.why}; nothing was opened` });
+  if (!held.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: localize("acquisition.unpack.why_nothing_was_opened", "{why}; nothing was opened", { why: String(held.why) }) });
   /* END DEC-49 REGION is-archive-held */
   /* DEC-49 REGION is-not-an-archive
      R38 (K2100): a held capture R17's rule does not profile as `zip` is refused as R41 refuses it, before any listing.
@@ -694,9 +693,8 @@ async function fileDocument(ctx, row, stored, receipt) {
     authority_basis: word("acquisition.authority_basis.file_cut_out", { at }),
     provenance_chain: [{
       who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
-      asserts: `these bytes are entry ${row.index} (${path === null ? "a name that is not valid UTF-8" : path}, the archive's own `
-        + `claim) of the archive ${sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at ${at}`,
-      evidence: `the archive's capture ${sha}; its central directory and the entry's local header agree on this entry`,
+      asserts: localize("acquisition.unpack.these_bytes_are_entry_index", "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}", { index: String(row.index), v1: String(path === null ? "a name that is not valid UTF-8" : path), sha: String(sha), at: String(at) }),
+      evidence: localize("acquisition.unpack.the_archives_capture_sha_its", "the archive's capture {sha}; its central directory and the entry's local header agree on this entry", { sha: String(sha) }),
       bound: false, via: UNPACKED_VIA, archive_sha256: sha,
     }],
     capture: {
@@ -784,9 +782,9 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
   const sha = shaOf(archiveSha);
   if (!sha) return { ok: false, reason: "BAD_SHA", code: "BAD_SHA", detail: "archiveSha names an archive by its SHA-256, 64 hex" };
   if (!inst) return { ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE", code: "ARCHIVE_RECORD_UNAVAILABLE",
-    detail: "no acquisition instance holds this storage's archive records" };
+    detail: localize("acquisition.unpack.no_acquisition_instance_holds", "no acquisition instance holds this storage's archive records") };
   const p = inst.provenance;
-  const notHeld = () => refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: "no archive your team holds and you may see answers to that digest" });
+  const notHeld = () => refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: localize("acquisition.unpack.no_archive_your_team", "no archive your team holds and you may see answers to that digest") });
   let home = null;
   try { home = p && typeof p.homeOf === "function" ? p.homeOf(sha) : null; } catch { home = null; }
   /* DEC-49 REGION is-archive-held

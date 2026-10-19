@@ -73,6 +73,7 @@ A fleet member in the group's own Cloudflare account, reached only through the p
 - `runtime-limits`: `sha256hex` (R2, R24, R25's prefixes).
 - `bundler`: `writeMember`, `verifyFresh` (R10).
 - `test-support`: the fleet member's harness and fixtures.
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

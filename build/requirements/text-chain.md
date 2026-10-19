@@ -345,7 +345,7 @@ new refusal condition in this module mints the next one in the family and is add
 - **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`, and (T41; R104, K2427) `ai_transcription`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai", "ai_transcription"]` from T41), which `query-language` re-exports.
 
 **The content-extent algebra** (copied from the catalogue in T19, K747; the catalogue's copy was deleted at T19's close, K855, so this module's is the only one).
-- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, the phrases unchanged from the catalogue's as this module copied them (K747); `dom` is not a key.
+- **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, each phrase read through `word` from the design's `textchain.text.*` row where one exists ("a cell of this spreadsheet", …; the word table wins, K3930, K3965), else through `localize`; `dom` is not a key.
 - **R93** `CONTENT_EXTENT_A1_RE` matches exactly a cell in A1 notation (an optional `$`, 1–3 letters of either case, an optional `$`, a row 1–9999999 with no leading zero); `CONTENT_EXTENT_RANGE_RE` matches such a cell or two joined by `:`.
 - **R94** `a1ToRowCol(cell)` → `{col, row}`, both 1-based, the column bijective base 26 (A=1, Z=26, AA=27, ZZ=702, AAA=703), `$` dropped and case folded; `null` for anything else.
 - **R95** `rangeCorners(range)` → `{r0, c0, r1, c1}` with each pair ordered (min, max), a single cell being a one-cell range, `null` unless the trimmed input matches `CONTENT_EXTENT_RANGE_RE`; `canonicalRange(range)` → `"<col0><r0>:<col1><r1>"`, upper case, no `$`, always two corners, `null` when `rangeCorners` is.
@@ -371,6 +371,7 @@ new refusal condition in this module mints the next one in the family and is add
   `EARNED_CAPTURE_CEILING` (the strongest letter `captureBound` may answer); `isMachineIdentity`
   (whether an attestation's `.member` names a machine credential). (K634; until T18's text-chain job
   re-points, read through `legacy-checks`' re-exports.)
+- `setup-words`: `word`, `localize` (the words rule: a sentence people read is read by key; K3930, K3943, K3949).
 
 ### Invariants
 

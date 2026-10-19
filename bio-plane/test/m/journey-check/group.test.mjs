@@ -32,12 +32,12 @@ test("R17 control: a row in GROUP_SENSE is allowed; a row saying \"your group's 
   const kept = senseKeys({ rule })[0];
   assert.deepEqual(rowsSayingGroup([{ key: kept, en: "A community group, a block club or a neighborhood team" }], { rule }), []);
   assert.deepEqual(rowsSayingGroup([{ key: "fixture.not.kept", en: tableWord("queue.capture-completed-unattended.who") }], { rule }).map((r) => r.key), ["fixture.not.kept"]);
-  assert.equal(rowsSayingGroup([{ key: "fixture.plural", en: "Teams at work" }], { rule }).length, 1);
+  assert.equal(rowsSayingGroup([{ key: "fixture.plural", en: tableWord("screen.site.nav.groups") }], { rule }).length, 1);
   assert.equal(rowsSayingGroup([{ key: "fixture.upper", en: "YOUR GROUP" }], { rule }).length, 1);
   /* identifiers are not text: a placeholder and a hyphenated name are left alone */
   assert.deepEqual(rowsSayingGroup([{ key: "fixture.ident", en: "Opens {group} at group-identity" }], { rule }), []);
   /* a team said as a team is not found */
-  assert.deepEqual(groupIn("Start a team's Civicsmith", { rule }), []);
+  assert.deepEqual(groupIn(tableWord("screen.site.start"), { rule }), []);
 });
 
 test("R17: the rule is read from the design's build, never copied: a build that keeps another row keeps that row", () => {
@@ -47,7 +47,7 @@ test("R17: the rule is read from the design's build, never copied: a build that 
   writeFileSync(file, other);
   const rule = designRule(file);
   assert.deepEqual(rowsSayingGroup([{ key: "fixture.kept", en: "a group of cases" }], { rule }), []);
-  assert.equal(rowsSayingGroup([{ key: senseKeys()[0], en: "a community group" }], { rule }).length, 1);
+  assert.equal(rowsSayingGroup([{ key: senseKeys()[0], en: tableWord("screen.group-identity.kind.community") }], { rule }).length, 1);
   assert.throws(() => designRule(join(dir, "missing.mjs")));
   writeFileSync(file, "const nothing = 1;\n");
   assert.throws(() => designRule(file), /no `const TEAM_WORD/);

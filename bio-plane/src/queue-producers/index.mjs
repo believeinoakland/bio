@@ -60,7 +60,7 @@ import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { machineryProducersOf, MachineryProducers } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -175,7 +175,7 @@ export class QueueProducers {
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
-  static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: "Take it up under this question", weight: "report" });
+  static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: word("queue-producers.label.take_up_under"), weight: "report" });
   /** K1850: the five sweep kinds, now machinery-producers' (its R4), kept here as an alias for this module's readers. */
   static SWEEP_CONDITION_KINDS = MachineryProducers.SWEEP_CONDITION_KINDS;
   /** How many pages of one provider's cursor-paged read (each at most 500 entries) one read follows. */
@@ -331,17 +331,13 @@ export class QueueProducers {
     if (!sha)
       return { state: "undetermined", reason: "no_capture_sha", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
-               detail: "the request records no capture digest, so there is no document to ask about. "
-                     + "That this producer could not look is a different fact from the document being "
-                     + "part of nothing, and it is reported as the first rather than the second." };
+               detail: localize("queue-producers.index.the_request_records_no_capture", "the request records no capture digest, so there is no document to ask about. That this producer could not look is a different fact from the document being part of nothing, and it is reported as the first rather than the second.") };
     const home = this.#provenance.homeOf(sha);
     const reg = home ? { bundle_id: home.bundleId } : null;
     if (!reg)
       return { state: "undetermined", reason: "unregistered_capture", bundle_id: null, bundle_state: null,
                basis_legs: null, version_legs: null,
-               detail: "no register entry answers to this capture, so the bytes are not attached to a "
-                     + "document this store can name and there is nothing whose place in a case could "
-                     + "be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape)." };
+               detail: localize("queue-producers.index.no_register_entry_answers_to", "no register entry answers to this capture, so the bytes are not attached to a document this store can name and there is nothing whose place in a case could be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape).") };
     const head = this.#record.head(reg.bundle_id);
     const b = head ? { current_state: head.currentState } : null;
     const legs = this.#one(
@@ -356,14 +352,8 @@ export class QueueProducers {
       bundle_state: b ? b.current_state : null,
       basis_legs: legs, version_legs: vlegs,
       detail: none
-        ? "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The "
-        + "document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no "
-        + "leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the "
-        + "case, which is a different sentence from nobody having read it, and this producer counted "
-        + "both basis projections to be able to say which."
-        : "this document IS carried by a reading of some question, so the lead has already been acted "
-        + "on or the document was evidence before the lead was raised. Reported rather than "
-        + "suppressed: the item is still the record of an observation somebody made.",
+        ? localize("queue-producers.index.looked_for_and_not_there", "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the case, which is a different sentence from nobody having read it, and this producer counted both basis projections to be able to say which.")
+        : localize("queue-producers.index.this_document_is_carried_by", "this document IS carried by a reading of some question, so the lead has already been acted on or the document was evidence before the lead was raised. Reported rather than suppressed: the item is still the record of an observation somebody made."),
     };
   }
 
@@ -442,14 +432,8 @@ export class QueueProducers {
                    inquiry: r.lead_inquiry, address: r.address,
                    capture_sha: r.capture_sha ?? null,
                    bundle_id: basisEntry.bundle_id },
-        summary: `evidence bearing on ${leadTitle && leadTitle.title ? leadTitle.title : r.lead_inquiry} `
-               + `was met while another question was being worked, and captured`,
-        detail: `${r.address} was captured at an investigative session's request while it was working `
-              + `${r.target}, because it bears on ${r.lead_inquiry}. ${attribution.statement}. `
-              + "The document is IN THE STORE and is part of NO claim: it was captured, which is an "
-              + "entry to the cache, and it was deliberately not made part of any question's basis. "
-              + "Nothing about any conclusion has moved, and nothing here is evidence until somebody "
-              + "decides it is.",
+        summary: word("queue-producers.summary.evidence_bearing_met", { lead_inquiry: String(leadTitle && leadTitle.title ? leadTitle.title : r.lead_inquiry) }),
+        detail: localize("queue-producers.index.address_was_captured_at_an", "{address} was captured at an investigative session's request while it was working {target}, because it bears on {lead_inquiry}. {statement}. The document is IN THE STORE and is part of NO claim: it was captured, which is an entry to the cache, and it was deliberately not made part of any question's basis. Nothing about any conclusion has moved, and nothing here is evidence until somebody decides it is.", { address: String(r.address), target: String(r.target), lead_inquiry: String(r.lead_inquiry), statement: String(attribution.statement) }),
         basis: {
           source: "capture_requests", request: r.request, run: r.run,
           /* NAMED APART, deliberately. `found_while_working` is inquiry A and
@@ -463,12 +447,7 @@ export class QueueProducers {
           capture_sha: r.capture_sha ?? null, captured_at: r.captured_at,
           attribution,
           basis_entry: basisEntry,
-          detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED "
-                + "(D-213): the act is the daemon's, performed at the session's request, and the "
-                + "session was working one question when it met evidence for another. The absence of "
-                + "a basis entry is MEASURED and reported on `basis_entry` rather than left to be "
-                + "inferred from an empty field — absence at one level is not evidence of absence at "
-                + "the next, and which one is true is the answer, not a footnote (CLAUDE.md).",
+          detail: localize("queue-producers.index.both_principals_are_named_dec", "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED (D-213): the act is the daemon's, performed at the session's request, and the session was working one question when it met evidence for another. The absence of a basis entry is MEASURED and reported on `basis_entry` rather than left to be inferred from an empty field — absence at one level is not evidence of absence at the next, and which one is true is the answer, not a footnote (CLAUDE.md)."),
         },
         age: Number.isFinite(capturedMs)
           ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
@@ -699,15 +678,8 @@ export class QueueProducers {
           case: this.#homesOf([inq]),
           subject: { kind: "project_stance", id: p.id, inquiry: inq,
                      version: p.current.version },
-          summary: `${p.title || p.id} stands on reading '${p.current.version}' of ${qname}, `
-                 + `and ${elsewhere.length === 1 ? "the other project drawing on it does" : "the other projects drawing on it do"} not`,
-          detail: `${qname} is drawn on by ${drawing.length} projects and holds NO stance of its own: `
-                + `what a project stands on is that project's own dated, authored property (§7), so `
-                + `this difference is a legal state and nothing in this record refuses it. `
-                + `${p.id} named '${p.current.version}'${p.current.at ? ` on ${p.current.at}` : ""}`
-                + `${p.current.by ? ` (${p.current.by})` : ""}. `
-                + `Nothing here has moved anybody else's stance and nothing here will: this is a `
-                + `report, and moving another project's pointer is that project's own act.`,
+          summary: word("queue-producers.summary.stands_reading", { id: String(p.title || p.id), version: String(p.current.version), qname: String(qname), do: String(elsewhere.length === 1 ? "the other project drawing on it does" : "the other projects drawing on it do") }),
+          detail: localize("queue-producers.index.qname_is_drawn_on_by", "{qname} is drawn on by {length} projects and holds NO stance of its own: what a project stands on is that project's own dated, authored property (§7), so this difference is a legal state and nothing in this record refuses it. {id} named '{version}'{v1}{v2}. Nothing here has moved anybody else's stance and nothing here will: this is a report, and moving another project's pointer is that project's own act.", { qname: String(qname), length: String(drawing.length), id: String(p.id), version: String(p.current.version), v1: String(p.current.at ? ` on ${p.current.at}` : ""), v2: String(p.current.by ? ` (${p.current.by})` : "") }),
           basis: {
             source: "project frontmatter (current_versions[]) + refs",
             inquiry: inq,
@@ -726,12 +698,7 @@ export class QueueProducers {
               inquiries_truncated: shared.truncated === true,
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
-              detail: "this feed examines a bounded number of shared questions per read and a "
-                    + "bounded number of projects per question. Where either is truncated the "
-                    + "divergence reported is a FLOOR: the projects named do stand where this says, "
-                    + "and the read did not reach every one that might. A divergence over a "
-                    + "truncated set is still true; an ABSENCE of one over a truncated set is not, "
-                    + "which is why the flags are published rather than the counts alone.",
+              detail: localize("queue-producers.index.this_feed_examines_a_bounded", "this feed examines a bounded number of shared questions per read and a bounded number of projects per question. Where either is truncated the divergence reported is a FLOOR: the projects named do stand where this says, and the read did not reach every one that might. A divergence over a truncated set is still true; an ABSENCE of one over a truncated set is not, which is why the flags are published rather than the counts alone."),
             },
             /* THE SHAPE OF THE POINTER, PUBLISHED ON THE ITEM. §7's field is a
                project-authored DATED frontmatter row and NEVER a settings row,
@@ -739,16 +706,9 @@ export class QueueProducers {
                see from the notification itself where the fact came from,
                instead of taking the sentence's word for it. */
             pointer: { kind: "dated_frontmatter_field", field: "current_versions",
-                       held_by: "the project's own bundle.md", settings_row: false,
-                       detail: "DEC-17's reasoning: a settings row would be a way to change the "
-                             + "standard with nothing to read afterwards. Every stance named here "
-                             + "was read out of a project's own promoted bytes, where the act that "
-                             + "wrote it is in the append-only history beside it." },
-            detail: "D-216 measured this model rather than assuming it (2026-08-08): two projects "
-                  + "were driven onto two different readings of one shared question SIMULTANEOUSLY, "
-                  + "the plane refused neither, and after divergence each still saw every version "
-                  + "and every leg of the other's. The sharing is real and the stance is not shared "
-                  + "— which is why this item exists at all.",
+                       held_by: word("queue-producers.held_by"), settings_row: false,
+                       detail: localize("queue-producers.index.dec_17s_reasoning_a_settings", "DEC-17's reasoning: a settings row would be a way to change the standard with nothing to read afterwards. Every stance named here was read out of a project's own promoted bytes, where the act that wrote it is in the append-only history beside it.") },
+            detail: localize("queue-producers.index.d_216_measured_this_model", "D-216 measured this model rather than assuming it (2026-08-08): two projects were driven onto two different readings of one shared question SIMULTANEOUSLY, the plane refused neither, and after divergence each still saw every version and every leg of the other's. The sharing is real and the stance is not shared — which is why this item exists at all."),
           },
           /* THE DATE IS THE PROJECT'S OWN AUTHORED `at`, never this read's
              clock. A pointer whose date cannot be parsed reports UNDETERMINED
@@ -766,12 +726,7 @@ export class QueueProducers {
           options_grain: {
             offered: "document",
             missing: "stance",
-            detail: "the natural acts here are at STANCE grain — move to the reading the others are "
-                  + "on, or record why we are staying — and the first of those is op=versioncurrent "
-                  + "on THIS project and nobody else's. It is deliberately not offered as an option "
-                  + "on an item another project's members can also see: an act one team performs "
-                  + "from a notification another team is reading is the single shared stance §7 "
-                  + "rejected, arriving through a button (D-222's grain problem).",
+            detail: localize("queue-producers.index.the_natural_acts_here_are", "the natural acts here are at STANCE grain — move to the reading the others are on, or record why we are staying — and the first of those is op=versioncurrent on THIS project and nobody else's. It is deliberately not offered as an option on an item another project's members can also see: an act one team performs from a notification another team is reading is the single shared stance §7 rejected, arriving through a button (D-222's grain problem)."),
           },
         });
       }
@@ -921,22 +876,12 @@ export class QueueProducers {
             /* DECLARED, NEVER QUIET. The one home this producer removed and the
                reason, so a reader can tell a filtered set from a short one. */
             excluded: [{ id: src, reason: "authored_here",
-                         detail: "the project this reading was proposed under is not a team it "
-                               + "arrived FROM, so this item is not filed under it. Stated rather "
-                               + "than performed silently: a home set that is quietly shorter is "
-                               + "indistinguishable from nobody caring (DEC-16)." }],
+                         detail: localize("queue-producers.index.the_project_this_reading_was", "the project this reading was proposed under is not a team it arrived FROM, so this item is not filed under it. Stated rather than performed silently: a home set that is quietly shorter is indistinguishable from nobody caring (DEC-16).") }],
           },
           subject: { kind: "basis_version", id: `${inq}::${v.name}`,
                      inquiry: inq, version: v.name },
-          summary: `a new reading of ${qname} — '${v.name}' — was proposed under `
-                 + `${srcRow && srcRow.title ? srcRow.title : src}'s work`,
-          detail: `${qname} is drawn on by ${drawing.length} projects. '${v.name}' was proposed by a `
-                + `run working under ${src}${v.author ? `, authored ${v.author}` : ""}`
-                + `${v.at ? ` on ${v.at}` : ""}, and it is currently ${v.state}`
-                + `${v.hidden === 1 ? " and hidden from that project's display" : ""}. `
-                + `Nothing about what this project stands on has moved: a reading arriving is not a `
-                + `reading being adopted, and the stance is a per-project act somebody here would `
-                + `have to take (§7).`,
+          summary: word("queue-producers.summary.new_reading_proposed", { qname: String(qname), name: String(v.name), src: String(srcRow && srcRow.title ? srcRow.title : src) }),
+          detail: localize("queue-producers.index.qname_is_drawn_on_by_2", "{qname} is drawn on by {length} projects. '{name}' was proposed by a run working under {src}{v1}{v2}, and it is currently {state}{v3}. Nothing about what this project stands on has moved: a reading arriving is not a reading being adopted, and the stance is a per-project act somebody here would have to take (§7).", { qname: String(qname), length: String(drawing.length), name: String(v.name), src: String(src), v1: String(v.author ? `, authored ${v.author}` : ""), v2: String(v.at ? ` on ${v.at}` : ""), state: String(v.state), v3: String(v.hidden === 1 ? " and hidden from that project's display" : "") }),
           basis: {
             source: "inquiry_basis_versions + ai_runs",
             inquiry: inq, version: v.name, description: v.description,
@@ -953,27 +898,13 @@ export class QueueProducers {
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
               versions_bound: vcap, versions_truncated: vtrunc,
-              detail: "this feed examines a bounded number of shared questions per read, a bounded "
-                    + "number of projects per question and a bounded number of run-proposed readings "
-                    + "per question. A truncation here means READINGS THIS READ DID NOT REACH, never "
-                    + "readings that do not exist — the arrival of this one is unaffected by it, and "
-                    + "the flag is published so the silence about any other cannot be read as "
-                    + "evidence there is none.",
+              detail: localize("queue-producers.index.this_feed_examines_a_bounded_2", "this feed examines a bounded number of shared questions per read, a bounded number of projects per question and a bounded number of run-proposed readings per question. A truncation here means READINGS THIS READ DID NOT REACH, never readings that do not exist — the arrival of this one is unaffected by it, and the flag is published so the silence about any other cannot be read as evidence there is none."),
             },
             team_attribution: {
               state: "determined", via: "ai_runs.context",
-              detail: "the source team is the RUN's own context project, a fact stored when the run "
-                    + "was opened. It is never inferred from who authored the version: a member "
-                    + "does not name a team in this record, and a producer that guessed one would "
-                    + "be manufacturing the connection the notification is claiming attention for. "
-                    + "A version with no run, or a run whose context is not a project, mints NO "
-                    + "item — the silence is a declared gap (D-266), not a filtered one.",
+              detail: localize("queue-producers.index.the_source_team_is_the", "the source team is the RUN's own context project, a fact stored when the run was opened. It is never inferred from who authored the version: a member does not name a team in this record, and a producer that guessed one would be manufacturing the connection the notification is claiming attention for. A version with no run, or a run whose context is not a project, mints NO item — the silence is a declared gap (D-266), not a filtered one."),
             },
-            detail: "D-216 measured that one question sits beneath several projects and that each "
-                  + "reads the whole version set (2026-08-08): after two projects diverged, each "
-                  + "still saw every version and every leg of the other's. So this item announces "
-                  + "an arrival, not a disclosure — the reading was already readable here, and what "
-                  + "was missing was anybody being told it had appeared.",
+            detail: localize("queue-producers.index.d_216_measured_that_one", "D-216 measured that one question sits beneath several projects and that each reads the whole version set (2026-08-08): after two projects diverged, each still saw every version and every leg of the other's. So this item announces an arrival, not a disclosure — the reading was already readable here, and what was missing was anybody being told it had appeared."),
           },
           age: Number.isFinite(arrivedMs)
             ? { state: "determined", since: v.at, ms: Math.max(0, now - arrivedMs) }
@@ -1052,11 +983,7 @@ export class QueueProducers {
           },
           subject: { kind: "project_conclusion", id: p.id, inquiry: inq, version: c.version },
           summary: `${p.title || p.id} concluded ${qname} on reading '${c.version}'`,
-          detail: `${qname} is drawn on by ${drawing.length} projects. ${p.id} concluded it on reading `
-                + `'${c.version}'${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""}, adopting that `
-                + `reading's claim. A conclusion belongs to the project that drew it (§7.1): NOTHING `
-                + `about what any other project stands on or has concluded has moved, and nothing here `
-                + `will move it — this is a report, and concluding is each project's own act.`,
+          detail: localize("queue-producers.index.qname_is_drawn_on_by_3", "{qname} is drawn on by {length} projects. {id} concluded it on reading '{version}'{v1}{v2}, adopting that reading's claim. A conclusion belongs to the project that drew it (§7.1): NOTHING about what any other project stands on or has concluded has moved, and nothing here will move it — this is a report, and concluding is each project's own act.", { qname: String(qname), length: String(drawing.length), id: String(p.id), version: String(c.version), v1: String(c.by ? ` (${c.by})` : ""), v2: String(c.at ? ` on ${c.at}` : "") }),
           basis: {
             source: "project frontmatter (conclusions[]) + refs",
             inquiry: inq,
@@ -1082,14 +1009,10 @@ export class QueueProducers {
               inquiries_truncated: shared.truncated === true,
               projects_named: drawing.length, projects_bound: drawing.bound,
               projects_truncated: drawing.truncated === true,
-              detail: "a bounded number of shared questions and of projects per question are read. A "
-                    + "conclusion reported over a truncated set is still true; an ABSENCE over one is "
-                    + "not, which is why the flags are published.",
+              detail: localize("queue-producers.index.a_bounded_number_of_shared", "a bounded number of shared questions and of projects per question are read. A conclusion reported over a truncated set is still true; an ABSENCE over one is not, which is why the flags are published."),
             },
             /* R10 (D-82): the derivation, which this producer's basis alone did not state until the split. */
-            detail: "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one "
-                  + "reader (its R22) for each project drawing on this shared question, and the others' own "
-                  + "conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved.",
+            detail: localize("queue-producers.index.a_conclusion_is_the_concluding", "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one reader (its R22) for each project drawing on this shared question, and the others' own conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved."),
           },
           age: Number.isFinite(atMs)
             ? { state: "determined", since: c.at, ms: Math.max(0, now - atMs) }
@@ -1146,11 +1069,8 @@ export class QueueProducers {
         kind: "export-performed",
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
-        summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
-        detail: `An export of the ${r.scope} left your team's Civicsmith with the root-of-trust credential `
-              + `(Membership v2 §8.1). It is row ${r.seq} of the append-only export log`
-              + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; `
-              + `nobody else is. The log is the record of it and nothing here changes the log.`,
+        summary: word("queue-producers.summary.full_export_taken", { scope: String(r.scope), at: String(r.at), bundles: String(r.bundles), files: String(r.files) }),
+        detail: localize("queue-producers.index.an_export_of_the_scope", "An export of the {scope} left your team's Civicsmith with the root-of-trust credential (Membership v2 §8.1). It is row {seq} of the append-only export log{v1}. Every administrator is told; nobody else is. The log is the record of it and nothing here changes the log.", { scope: String(r.scope), seq: String(r.seq), v1: String(r.note ? `, noted "${r.note}"` : ", with no note") }),
         basis: {
           source: "export_log",
           seq: r.seq, at: r.at, scope: r.scope, bundles: r.bundles, files: r.files, note: r.note ?? null,
@@ -1158,11 +1078,7 @@ export class QueueProducers {
           bounds: { limit: cap, truncated,
                     detail: "the newest exports are read up to this bound. An export past it is still "
                           + "in the log (op=exportlog, with a larger limit) and is not told here." },
-          detail: "an export of the working corpus is recorded in the append-only export log and every "
-                + "administrator is notified (Membership v2 §8.1). This notice is derived from that log "
-                + "row and reaches every administrator named in raised_to and no one else. No act "
-                + "clears it yet: a disposition is scoped to a project and an export has none, and a "
-                + "member's own mute of a finding (D-125) is ruled but not built.",
+          detail: localize("queue-producers.index.an_export_of_the_working", "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 §8.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built."),
         },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: r.at, ms: Math.max(0, now - atMs) }
@@ -1173,7 +1089,7 @@ export class QueueProducers {
         /* The producer's own option (NOTIFICATIONS.md item contract, rule 1): the act that shows the
            administrator the record behind the notice. Not REC-19's object derivation, because an
            export is not a bundle and has no affordances to derive. */
-        options: [{ id: "exportlog", label: "Read the export log", weight: "single" }],
+        options: [{ id: "exportlog", label: word("queue-producers.label.read_export_log"), weight: "single" }],
       };
     });
   }
@@ -1230,16 +1146,12 @@ export class QueueProducers {
         subject: { kind: "notice", id: n.notice, holder: n.holder, target: n.target ?? null, ord: n.ord ?? null,
                    content_id: n.content_id ?? null, capture_sha: n.capture_sha ?? null,
                    newer_capture: n.newer_capture ?? null, newer_bundle: n.newer_bundle ?? null },
-        summary: `a newer version of ${n.target || "a document"} may change the passage ${n.holder} relies on`,
-        detail: `a newer capture of what this reference is pinned to was read as ${n.grade ?? "undetermined"}`
-              + `${n.affects ? ` (${n.affects})` : ""}. Nothing about the reference has moved: it stays on the version `
-              + "it names until the member who holds it adopts the newer one or keeps the earlier one.",
+        summary: word("queue-producers.summary.newer_version_change", { document: String(n.target || "a document"), holder: String(n.holder) }),
+        detail: localize("queue-producers.index.a_newer_capture_of_what", "a newer capture of what this reference is pinned to was read as {v1}{v2}. Nothing about the reference has moved: it stays on the version it names until the member who holds it adopts the newer one or keeps the earlier one.", { v1: String(n.grade ?? "undetermined"), v2: String(n.affects ? ` (${n.affects})` : "") }),
         basis: { source: "reevaluation.notices", notice: n.notice, holder: n.holder, target: n.target ?? null,
                  grade: n.grade ?? null, affects: n.affects ?? null, raised_at: n.raised_at ?? null,
                  bound: { limit: page.limit ?? QueueProducers.QUEUE_NOTICES_MAX, truncated: page.truncated === true },
-                 detail: "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is "
-                       + "pinned to is graded affected or undetermined, never for A or B. It is read here, never "
-                       + "raised, and it closes only by the holder's adoption or keeping (its R15)." },
+                 detail: localize("queue-producers.index.a_notice_is_reevaluations_its", "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is pinned to is graded affected or undetermined, never for A or B. It is read here, never raised, and it closes only by the holder's adoption or keeping (its R15).") },
         age: Number.isFinite(raisedMs)
           ? { state: "determined", since: n.raised_at, ms: Math.max(0, now - raisedMs) }
           : { state: "undetermined", reason: "unparseable_raised_at",
@@ -1300,14 +1212,12 @@ export class QueueProducers {
                      entity: b.entity ?? null },
           summary: b.says ? `${project}'s objective: ${b.says}` : `${project}'s objective has a gap`,
           detail: Array.isArray(b.stages_missing)
-            ? `an instance this project's objective counts is short of the stages ${b.stages_missing.join(", ")}.`
-            : `an instance this project's objective counts reaches ${b.grade_reached ?? "an undetermined grade"} `
-              + `where ${b.grade_required ?? "a grade"} is required.`,
+            ? localize("queue-producers.index.an_instance_this_projects_objective", "an instance this project's objective counts is short of the stages {stages_missing}.", { stages_missing: String(b.stages_missing.join(", ")) })
+            : localize("queue-producers.index.an_instance_this_projects_objective_2", "an instance this project's objective counts reaches {v1} where {v2} is required.", { v1: String(b.grade_reached ?? "an undetermined grade"), v2: String(b.grade_required ?? "a grade") }),
           basis: { source: "intent.gaps", key: gap.key, project, progression: b.progression ?? null,
                    entity: b.entity ?? null, grade: gap.grade ?? null, instances: gap.instances ?? [],
                    gap: b, surfaced_by: gap.surfaced_by ?? "machine",
-                   detail: "a gap is DERIVED (intent R6): the objective's satisfaction test read against the "
-                         + "record, recomputed at every read. It leaves this project's list by a recorded decision." },
+                   detail: localize("queue-producers.index.a_gap_is_derived_intent", "a gap is DERIVED (intent R6): the objective's satisfaction test read against the record, recomputed at every read. It leaves this project's list by a recorded decision.") },
           age: { state: "undetermined", reason: "derived_on_read",
                  detail: "a gap is recomputed at read time and has no creation instant" },
           assignee: null,
@@ -1346,15 +1256,13 @@ export class QueueProducers {
         title,
         summary: title
           ? (removed ? `${title} is gone from its source` : `${title} has changed at its source`)
-          : (removed ? "A document is gone from its source" : "A document has changed at its source"),
-        detail: `Your team's Civicsmith noticed that the address this document was captured from ${removed
-                ? "no longer has it" : "now shows something other than what was captured"}, `
-              + "and flagged it for a second look. What the change means is not decided here.",
+          : (removed ? word("queue.source-removed.one") : word("queue-producers.summary.document_changed_source")),
+        detail: localize("queue-producers.index.your_teams_civicsmith_noticed_that", "Your team's Civicsmith noticed that the address this document was captured from {v1}, and flagged it for a second look. What the change means is not decided here.", { v1: String(removed
+                ? "no longer has it" : "now shows something other than what was captured") }),
         basis: { source: "monitoring.flagged", bundle_id: id, source_status: r.source_status ?? null,
                  since: r.since ?? null,
                  bound: { limit: page.limit ?? null, truncated: page.truncated === true },
-                 detail: "monitoring's tick records what it saw and never decides what a change means (its R8): "
-                       + "this item is that flag, as monitoring reads it (its R48)." },
+                 detail: localize("queue-producers.index.monitorings_tick_records_what_it", "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, as monitoring reads it (its R48).") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "unparseable_since",
@@ -1390,18 +1298,13 @@ export class QueueProducers {
         kind: "bias-debt",
         case: this.#homesOf([row.context_id]),
         subject: { kind: "run", id: row.run, context: { type: row.context_type, id: row.context_id } },
-        summary: "The lens this assistant's run was formed under has changed since it opened; a re-run under "
-               + "the lens now in force is owed. This is disclosed and blocks nothing.",
+        summary: word("queue-producers.summary.lens_assistant_run"),
         detail: null,
         basis: { source: "bias.uncleared", computed_by: "aiRunRead", run: row.run, moved: true,
                  moved_basis: row.moved_basis, lens_then: row.lens_then, lens_now: row.lens_now,
                  observed: row.observed,
-                 stated: `the run's lens was ${row.lens_then ?? "none in force"} `
-                       + `(${row.moved_basis === "at_open" ? "the lens in force when it opened" : "the lens it was handed"}) `
-                       + `and is ${row.lens_now ?? "none in force"} now`,
-                 detail: "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses "
-                       + "publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the "
-                       + "sweep and never recomputed." },
+                 stated: word("queue-producers.stated.run_lens_now", { force: String(row.lens_then ?? "none in force"), handed: String(row.moved_basis === "at_open" ? "the lens in force when it opened" : "the lens it was handed"), force3: String(row.lens_now ?? "none in force") }),
+                 detail: localize("queue-producers.index.bias_debt_is_disclosed_and", "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the sweep and never recomputed.") },
         age: Number.isFinite(raisedMs)
           ? { state: "determined", since: row.raised, ms: Math.max(0, now - raisedMs) }
           : { state: "undetermined", reason: "unparseable_raised",
@@ -1507,27 +1410,23 @@ export class QueueProducers {
                    parties: (Array.isArray(c.between_projects) ? c.between_projects : [])
                      .map((b) => ({ project: b.project, opted_in: b.opted_in ?? null })) },
         summary: kind === "contradiction-duty"
-          ? "two things the record holds conflict, and a member of this project must resolve it"
+          ? word("queue-producers.summary.two_things_record")
           : kind === "contradiction-plurality"
-            ? "two projects' conclusions on one question may not both hold"
-            : "the record noticed two things that may conflict",
+            ? word("queue-producers.summary.two_projects_conclusions")
+            : word("queue-producers.summary.record_noticed_two"),
         detail: kind === "contradiction-duty"
-          ? `the record holds a conflict here (${c.state === "taken_up" ? "taken up as a question"
-              : c.state === "explained_not_shown" ? "explained, not yet shown" : "open"}). It leaves only when it is `
-            + "resolved; it is never muted, dismissed or set aside."
+          ? localize("queue-producers.index.the_record_holds_a_conflict", "the record holds a conflict here ({v1}). It leaves only when it is resolved; it is never muted, dismissed or set aside.", { v1: String(c.state === "taken_up" ? "taken up as a question"
+              : c.state === "explained_not_shown" ? "explained, not yet shown" : "open") })
           : kind === "contradiction-plurality"
-            ? "two projects concluded one question on claims whose text differs. Naming the respect in which they "
-              + "differ clears it; neither project is made to adopt the other's answer."
-            : "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
+            ? localize("queue-producers.index.two_projects_concluded_one_question", "two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer.")
+            : localize("queue-producers.index.a_machine_judged_these_two", "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up."),
         basis: { source: "contradiction.candidatesFor", candidate: c.candidate, key: c.key ?? null, why: c.why ?? null,
                  weight: c.weight, state: c.state, a: c.a ?? null, b: c.b ?? null, machine: c.machine ?? null,
                  resolution: c.resolution ?? null, inquiry: c.inquiry ?? null, reach: c.reach ?? null,
                  projects, between_projects: Array.isArray(c.between_projects) ? c.between_projects : [],
                  bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                           pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES, pages_truncated: cut },
-                 detail: "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and "
-                       + "its key, and its state from the members' acts, both read here and never restated. The "
-                       + "machine's label and reason stay the machine's." },
+                 detail: localize("queue-producers.index.a_candidate_is_contradictions_its", "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's.") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: c.machine.at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "no_candidate_instant",
@@ -1563,10 +1462,8 @@ export class QueueProducers {
           kind: "side-corrected",
           case: this.#homesAt([e.dependent], viewer),
           subject: { kind: "bundle", id: e.dependent, candidate: e.candidate },
-          summary: `something ${name} rests on was marked wrong`,
-          detail: "a member's resolution of a contradiction named a side this rests on wrong"
-                + (e.reason ? ` (${e.reason})` : "") + ". That side still resolves and says it was corrected; nothing "
-                + "resting on it has moved. A recorded re-evaluation closes this.",
+          summary: word("queue-producers.summary.something_rests_marked", { name: String(name) }),
+          detail: localize("queue-producers.index.a_members_resolution_of_a", "a member's resolution of a contradiction named a side this rests on wrong{v1}. That side still resolves and says it was corrected; nothing resting on it has moved. A recorded re-evaluation closes this.", { v1: String(e.reason ? ` (${e.reason})` : "") }),
           basis: { source: "reevaluation.correctedDependents", dependent: e.dependent, candidate: e.candidate,
                    cause: e.kind ?? "corrected", reason: e.reason ?? null, member: e.member ?? null,
                    since: e.since ?? null, inquiry: e.inquiry ?? null, act: e.act ?? null,
@@ -1653,10 +1550,8 @@ export class QueueProducers {
         case: this.#homesAt([project], viewer),
         subject: { kind: "case", id: c.case, edition: c.edition ?? null, project, candidate: t.candidate,
                    bundles: members.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `a finding case ${c.case} published rests on a conflict found since its edition ${c.edition ?? ""}`.trim(),
-        detail: "a contradiction on what this published case's findings rest on, one level deep, was found after its "
-              + "latest edition and is not disclosed there. The signed edition does not change: a later edition "
-              + "discloses or resolves it.",
+        summary: word("queue-producers.summary.finding_case_published", { case: String(c.case), edition: String(c.edition ?? "") }).trim(),
+        detail: localize("queue-producers.index.a_contradiction_on_what_this", "a contradiction on what this published case's findings rest on, one level deep, was found after its latest edition and is not disclosed there. The signed edition does not change: a later edition discloses or resolves it."),
         basis: { source: "case-tensions.caseTensions", case: c.case, edition: c.edition ?? null, project,
                  candidate: t.candidate, state: t.state ?? null, members, depth: t.depth ?? 1,
                  ...(t.unseen_other_side ? { unseen_other_side: true, side: t.side ?? null }
@@ -1664,9 +1559,7 @@ export class QueueProducers {
                  ...(Array.isArray(c.unread) && c.unread.length ? { unread: c.unread } : {}),
                  bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                           pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES, pages_truncated: cut },
-                 detail: "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's "
-                       + "owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is "
-                       + "told to the project's owners and to nobody else, and it composes no strength." },
+                 detail: localize("queue-producers.index.a_tension_after_publication_is", "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength.") },
         age: { state: "undetermined", reason: "derived_on_read",
                detail: "a tension is derived at read time from the edition and the candidates; it has no creation instant" },
         assignee: null,
@@ -1723,17 +1616,14 @@ export class QueueProducers {
         /* R8 (K558): the member's projects that hold R50's notice, each with its opt-in. */
         subject: { kind: "contradiction_notice", id: candidate,
                    parties: parties.map((p) => ({ project: p.project, opted_in: p.opted_in ?? null })) },
-        summary: duty ? "something this project rests on is in conflict with a record you cannot see"
-                      : "this project's conclusion may not hold together with a conclusion you cannot see",
+        summary: duty ? word("queue-producers.summary.something_project_rests")
+                      : word("queue-producers.summary.project_conclusion_hold"),
         detail: n.says ?? null,
         basis: { source: "contradiction.conflictNotices", candidate, weight: n.weight, state: n.state ?? null,
                  side: n.side ?? null, says: n.says ?? null,
                  asked_by_another: parties.some((p) => p.asked_by_another),
                  projects: parties, responses,
-                 detail: "a notice is contradiction's (its R50): it names the side this project rests on and nothing "
-                       + "of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when "
-                       + "every project holding a side has asked, the projects are named to each other and each can "
-                       + "respond, sharing only what its responder chose." },
+                 detail: localize("queue-producers.index.a_notice_is_contradictions_its", "a notice is contradiction's (its R50): it names the side this project rests on and nothing of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when every project holding a side has asked, the projects are named to each other and each can respond, sharing only what its responder chose.") },
         age: { state: "undetermined", reason: "derived_on_read",
                detail: "a notice is derived at read time and carries no instant of its own" },
         assignee: null,
@@ -1749,7 +1639,7 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R14: the act an administrator takes on a self-registered key, credentials R7's revoke (`op=signerset`). */
-  static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: "Revoke this signing key", weight: "single" });
+  static SIGNER_REVOKE = Object.freeze({ id: "signerset", label: word("queue-producers.label.revoke_signing_key"), weight: "single" });
 
   /** `signer-self-registered` (R14; credentials R8, R9; N375): for an administrator member (membership R64), or the
    *  `admin` machine credential as export-performed's reader is, one OBLIGATION per key `credentials.signerList`
@@ -1775,15 +1665,12 @@ export class QueueProducers {
         case: homes,
         subject: { kind: "signer_key", id: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                    registered_by: member ?? null },
-        summary: `${member || "a member"} registered a signing key for themselves${k.comment ? `: ${k.comment}` : ""}`,
-        detail: "a member registered their own browser-held signing key from a signed-in session, and it is active. "
-              + "Every administrator is told; an administrator may revoke it. Nothing here changes the key.",
+        summary: word("queue-producers.summary.registered_signing_key", { member: String(member || "a member"), comment: String(k.comment ? `: ${k.comment}` : "") }),
+        detail: localize("queue-producers.index.a_member_registered_their_own", "a member registered their own browser-held signing key from a signed-in session, and it is active. Every administrator is told; an administrator may revoke it. Nothing here changes the key."),
         basis: { source: "credentials.signerList", key: k.key_b64, member: k.member_id ?? null, comment: k.comment ?? null,
                  registered_by: member ?? null, origin: "self", status: k.status, added: k.added ?? null,
                  attests: k.attests === true, raised_to: raisedTo,
-                 detail: "the key is credentials' own row (its R8), registered by its member (its R9) and read here at "
-                       + "every read: it is told to every administrator and to nobody else, and it leaves when the key is "
-                       + "no longer active, by an administrator's revoke (its R7) or otherwise." },
+                 detail: localize("queue-producers.index.the_key_is_credentials_own", "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.") },
         age: Number.isFinite(addedMs)
           ? { state: "determined", since: k.added, ms: Math.max(0, now - addedMs) }
           : { state: "undetermined", reason: "unparseable_added",
@@ -1802,7 +1689,7 @@ export class QueueProducers {
   /** R23: how many prepared, unsigned case editions one read asks about, and the act that answers the item (publication
    *  R17, `op=attribute`: the observation's author chooses the level, with a reason). */
   static QUEUE_PREPARED_EDITIONS_MAX = 200;
-  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: "Choose how this case credits your observation", weight: "single" });
+  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: word("queue-producers.label.choose_how_case"), weight: "single" });
 
   /** `attribution-unchosen` (R23; DEC-102 item 3): one OBLIGATION per (case edition, observation) where a prepared,
    *  unsigned case edition reaches an observation the member authored and no credit level is in force for it, to that
@@ -1851,18 +1738,13 @@ export class QueueProducers {
           case: this.#homesOf([obs]),
           subject: { kind: "case_edition", id: `${e.case_id}@${e.edition}`, case: e.case_id, edition: Number(e.edition),
                      observation: obs },
-          summary: `case ${e.case_id}, being prepared, uses your observation ${name}: choose how it credits you`,
-          detail: `edition ${e.edition} of this case reaches what you observed, and you have chosen no level for how it `
-                + "shows who said it: the team, the project, your cover or your name. Nothing is published until it is "
-                + "signed, and nobody else is told you are its author. This is told once; it leaves when you choose, "
-                + "or the edition no longer uses it, or it is signed or replaced.",
+          summary: word("queue-producers.summary.case_prepared_uses", { case_id: String(e.case_id), name: String(name) }),
+          detail: localize("queue-producers.index.edition_edition_of_this_case", "edition {edition} of this case reaches what you observed, and you have chosen no level for how it shows who said it: the team, the project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are its author. This is told once; it leaves when you choose, or the edition no longer uses it, or it is signed or replaced.", { edition: String(e.edition) }),
           basis: { source: "publication.caseDocumentFacts + case_documents + register", case: e.case_id,
                    edition: Number(e.edition), observation: obs, prepared_at: e.authored_at ?? null,
                    level: null, why: row.why ?? null, recipients_rule: "author",
                    bound: { editions_limit: cap, truncated },
-                   detail: "the edition is publication's prepared, unsigned case document (its R56), its attribution "
-                         + "facts its own (its R2, R17); the observation's author is the register's (provenance R48). "
-                         + "Only the author chooses the level (DEC-102 item 3), so only the author is told." },
+                   detail: localize("queue-producers.index.the_edition_is_publications_prepared", "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told.") },
           age: Number.isFinite(preparedMs)
             ? { state: "determined", since: e.authored_at, ms: Math.max(0, now - preparedMs) }
             : { state: "undetermined", reason: "no_preparation_instant",
@@ -1884,11 +1766,11 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R30: the acts that answer a core item (docket R4, R7): placing it, and, for a submission, declining it. */
-  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: "Place this on the case's docket", weight: "single" });
-  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: "Decline it for containing redactions, with a reason", weight: "single" });
+  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: word("queue-producers.label.place_case_docket"), weight: "single" });
+  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: word("queue-producers.label.decline_containing_redactions"), weight: "single" });
   /** R30: how each core item is named to the manager (docket R9 (a)–(c)). */
   static DOCKET_CORE_WORDS = Object.freeze({ response: "a response", statement: "a statement",
-                                              edition: "a newer edition", tension: "an undisclosed tension" });
+                                              edition: "a newer edition", tension: word("queue-producers.tension") });
   /** R31: the item kind of each docket cause (reevaluation R30 (a), (b)). */
   static DOCKET_CAUSE_KINDS = Object.freeze({ withdrawal: "edition-withdrawn", contested: "edition-contested" });
   /** R31: the page `reevaluation.docketDependents` is read in (its R30's largest). */
@@ -1932,16 +1814,14 @@ export class QueueProducers {
         case: this.#homesAt([project], viewer),
         subject: { kind: "case", id: x.case, project, item: x.kind, ref: String(x.ref), edition },
         summary: `case ${x.case}'s docket is missing ${what}${edition !== null ? ` on edition ${edition}` : ""}`,
-        detail: (submission
+        detail: localize("queue-producers.index.v1_this_is_a_to", "{v1} This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, receipted or disclosed.", { v1: String(submission
           ? `${what[0].toUpperCase()}${what.slice(1)} filed on this case is not yet listed. List it whole, or decline it `
             + "for containing redactions, with a reason."
           : x.kind === "edition"
             ? `edition ${edition ?? ""} of this case was ratified with no entry on its docket quoting what changed. `
               + "Place that entry."
             : "a conflict found on a load-bearing finding of this case's latest edition is not disclosed on its docket. "
-              + "Place the disclosure.")
-          + " This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, "
-          + "receipted or disclosed.",
+              + "Place the disclosure.") }),
         basis: { source: "docket.coreDue", case: x.case, project, item: x.kind, ref: String(x.ref), edition,
                  since: x.since ?? null, ...(x.what_changed !== undefined ? { what_changed: x.what_changed } : {}),
                  ...(x.state !== undefined ? { state: x.state } : {}), recipients_rule: "case_managers",
@@ -1993,22 +1873,19 @@ export class QueueProducers {
           case: this.#homesAt([e.dependent], viewer),
           subject: { kind: "bundle", id: e.dependent, case: e.case ?? null, entry: e.entry, editions },
           summary: withdrawn
-            ? `something ${name} rests on is in a case edition its authors withdrew`
-            : `a response on the docket of ${cs} contests an edition ${name} is part of`,
-          detail: (withdrawn
+            ? word("queue-producers.summary.something_rests_case", { name: String(name) })
+            : word("queue-producers.summary.response_docket_contests", { cs: String(cs), name: String(name) }),
+          detail: localize("queue-producers.index.v1_whether_this_still_stands", "{v1} Whether this still stands is the members' to decide; a recorded re-evaluation closes this.", { v1: String(withdrawn
             ? `${cs}${editions.length ? ` (${editions.length === 1 ? "edition" : "editions"} ${editions.join(", ")})` : ""} `
               + "was withdrawn on its docket. The edition keeps answering as it was signed, and nothing resting on it moved."
             : `a response filed on the docket of ${cs} contests ${editions.length ? `edition ${editions[0]}` : "an edition"}, `
-              + "of which this is a finding. Nothing moved, and no docket entry is evidence.")
-            + " Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
+              + "of which this is a finding. Nothing moved, and no docket entry is evidence.") }),
           basis: { source: "reevaluation.docketDependents", dependent: e.dependent, entry: e.entry, cause: e.kind,
                    case: e.case ?? null, editions, since: e.since ?? null, legs: Array.isArray(e.legs) ? e.legs : [],
                    cause_detail: e.detail ?? null, ...flags,
                    bound: { limit: QueueProducers.QUEUE_DOCKET_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
                             truncated: cut },
-                   detail: "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding "
-                         + "of a withdrawn case edition, or this finding is a member of an edition a filed response "
-                         + "contests. It is read here, never raised, and nothing was regraded." },
+                   detail: localize("queue-producers.index.the_cause_is_reevaluations_its", "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded.") },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
@@ -2039,9 +1916,9 @@ export class QueueProducers {
   static QUEUE_CITED_PAGE = 200;
   /** R35: the acts a watch's item offers (case-import R4, R17): reading the imported case with its docket entries, and,
    *  for an unreadable docket, setting the watch's address again or ending the watch. */
-  static IMPORT_READ = Object.freeze({ id: "importedcase", label: "Read the imported case and what its publisher's docket said", weight: "single" });
-  static IMPORT_REWATCH = Object.freeze({ id: "importwatch", label: "Set the publisher's address again", weight: "single" });
-  static IMPORT_UNWATCH = Object.freeze({ id: "importunwatch", label: "Stop following this case", weight: "single" });
+  static IMPORT_READ = Object.freeze({ id: "importedcase", label: word("queue-producers.label.read_imported_case"), weight: "single" });
+  static IMPORT_REWATCH = Object.freeze({ id: "importwatch", label: word("queue-producers.label.set_publisher_address"), weight: "single" });
+  static IMPORT_UNWATCH = Object.freeze({ id: "importunwatch", label: word("queue-producers.label.stop_following_case"), weight: "single" });
 
   /** The sentence naming another group's case, as far as the viewer is told it (reevaluation R33 states the group and
    *  case only where the viewer sees the imported reference). */
@@ -2053,14 +1930,13 @@ export class QueueProducers {
    *  and take-back as R34 and R35 state them. */
   static #entryWords(e) {
     const quoted = e.kind === "edition" && typeof e.what_changed === "string" && e.what_changed
-      ? ` What changed, in its publisher's words: "${e.what_changed}".`
+      ? localize("queue-producers.index.what_changed_in_its_publishers", " What changed, in its publisher's words: \"{what_changed}\".", { what_changed: String(e.what_changed) })
       : e.kind === "withdrawal" && typeof e.reason === "string" && e.reason
-        ? ` The reason, in its publisher's words: "${e.reason}".` : "";
+        ? localize("queue-producers.index.the_reason_in_its_publishers", " The reason, in its publisher's words: \"{reason}\".", { reason: String(e.reason) }) : "";
     const key = e.key_listed === false
-      ? " The entry's signing key is not among the keys the imported case file lists." : "";
+      ? localize("queue-producers.index.the_entrys_signing_key_is", " The entry's signing key is not among the keys the imported case file lists.") : "";
     const back = e.taken_back && typeof e.taken_back === "object"
-      ? ` The publisher has since taken this entry back (entry ${e.taken_back.seq ?? "unnumbered"}`
-        + `${e.taken_back.date ? `, dated ${e.taken_back.date}` : ""}).` : "";
+      ? localize("queue-producers.index.the_publisher_has_since_taken", " The publisher has since taken this entry back (entry {v1}{v2}).", { v1: String(e.taken_back.seq ?? "unnumbered"), v2: String(e.taken_back.date ? `, dated ${e.taken_back.date}` : "") }) : "";
     return `${quoted}${key}${back}`;
   }
 
@@ -2108,14 +1984,12 @@ export class QueueProducers {
           summary: withdrawn
             ? `${name} cites ${citedWords} of ${whose}, which its publisher has withdrawn`
             : `${name} cites ${citedWords} of ${whose}, and its publisher has published edition ${edition ?? "a later one"}`,
-          detail: (withdrawn
+          detail: localize("queue-producers.index.v1_the_cited_edition_keeps", "{v1} The cited edition keeps answering as it was signed, and nothing here moved or was regraded. Whether this still stands is the members' to decide; a recorded re-evaluation closes this.", { v1: String((withdrawn
             ? `The publisher's docket for ${whose} withdrew ${edition === "all" ? "every edition" : `edition ${edition ?? ""}`.trim()}`
               + `${e.date ? ` on ${e.date}` : ""}; what this rests on cites ${citedWords}.`
             : `The publisher's docket for ${whose} lists edition ${edition ?? "(unnumbered)"}${e.date ? `, dated ${e.date}` : ""}; `
               + `what this rests on cites ${citedWords}.`)
-            + QueueProducers.#entryWords(e)
-            + " The cited edition keeps answering as it was signed, and nothing here moved or was regraded. Whether this "
-            + "still stands is the members' to decide; a recorded re-evaluation closes this.",
+            + QueueProducers.#entryWords(e)) }),
           basis: { source: "reevaluation.citedCaseDependents", dependent: e.dependent, move: e.move ?? null, import: e.import,
                    group: e.group ?? null, case: e.case ?? null, move_kind: e.kind, edition, seq: Number(e.seq),
                    date: e.date ?? null, since: e.since ?? null,
@@ -2124,9 +1998,7 @@ export class QueueProducers {
                    cited_editions: cited, legs, cause_detail: e.detail ?? null, ...flags,
                    bound: { limit: QueueProducers.QUEUE_CITED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
                             truncated: cut },
-                   detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's "
-                         + "finding at an edition whose publisher has since listed a later edition or withdrawn it on its "
-                         + "docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded." },
+                   detail: localize("queue-producers.index.the_cause_is_reevaluations_its_2", "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded.") },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
@@ -2190,21 +2062,17 @@ export class QueueProducers {
       if (findings.has(id)) continue;
       const edition = e.edition === "all" ? "all" : e.edition === undefined || e.edition === null ? null : Number(e.edition);
       const kindWords = e.kind === "edition" ? `edition ${edition ?? "(unnumbered)"}`
-        : e.kind === "withdrawal" ? `a withdrawal of ${edition === "all" ? "every edition" : `edition ${edition ?? "(unnumbered)"}`}`
-          : `an entry of kind ${e.kind || "(unstated)"}${edition !== null ? ` on edition ${edition}` : ""}`;
+        : e.kind === "withdrawal" ? word("queue-producers.text.withdrawal", { unnumbered: String(edition === "all" ? "every edition" : `edition ${edition ?? "(unnumbered)"}`) })
+          : word("queue-producers.text.entry_kind", { unstated: String(e.kind || "(unstated)"), edition: String(edition !== null ? ` on edition ${edition}` : "") });
       const it = {
         id,
         class: "FINDING",
         kind: "followed-case-entry",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `the publisher's docket for ${whose(e)}, which you follow, lists ${kindWords}`,
-        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by your team's Civicsmith. `
-              + `Its signing key ${e.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.`
-              + QueueProducers.#entryWords({ ...e, key_listed: null })
-              + (e.move ? " Anything here resting on an edition it moves is told to its own members as well."
-                        : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.")
-              + " This is told once.",
+        summary: word("queue-producers.summary.publisher_docket_follow", { e: String(whose(e)), kind_words: String(kindWords) }),
+        detail: localize("queue-producers.index.entry_seq_of_the_docket", "Entry {seq} of the docket, {kindWords}{v1}, was read and verified by your team's Civicsmith. Its signing key {v2} among the keys the imported case file lists.{entryWords}{v3} This is told once.", { seq: String(e.seq), kindWords: String(kindWords), v1: String(e.date ? `, dated ${e.date}` : ""), v2: String(e.key_listed === false ? "is not" : "is"), entryWords: String(QueueProducers.#entryWords({ ...e, key_listed: null })), v3: String(e.move ? " Anything here resting on an edition it moves is told to its own members as well."
+                        : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.") }),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null,
                  seq: e.seq, entry_kind: e.kind ?? null, edition, date: e.date ?? null,
                  key_listed: typeof e.key_listed === "boolean" ? e.key_listed : null, move: e.move === true,
@@ -2212,9 +2080,7 @@ export class QueueProducers {
                  ...(e.kind === "withdrawal" ? { reason: e.reason ?? null } : {}),
                  taken_back: e.taken_back ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
                  recipients_rule: rec.rule, ...complete,
-                 detail: "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and "
-                       + "never stored. It goes to the member who set the watch, else the administrators, and to nobody "
-                       + "else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366)." },
+                 detail: localize("queue-producers.index.a_verified_entry_of_a", "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and never stored. It goes to the member who set the watch, else the administrators, and to nobody else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366).") },
         age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
@@ -2251,15 +2117,13 @@ export class QueueProducers {
         kind: "cited-docket-entry-refused",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed the checks your team's Civicsmith makes`,
+        summary: word("queue-producers.summary.entry_publisher_docket", { e: String(whose(e)) }),
         detail: QueueProducers.#refusedWords(e, seq, [failed]),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
                  failed: [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
                  recipients_rule: rec.rule,
                  ...complete,
-                 detail: "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that "
-                       + "failed a check, recorded and never a move. It goes to the member who set the watch, else the "
-                       + "administrators, and to nobody else." },
+                 detail: localize("queue-producers.index.a_refused_entry_is_case", "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that failed a check, recorded and never a move. It goes to the member who set the watch, else the administrators, and to nobody else.") },
         age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
@@ -2282,9 +2146,8 @@ export class QueueProducers {
         kind: "cited-docket-unreadable",
         case: this.#homesOf([]),
         subject: subjectOf(u),
-        summary: `${DOCKET_UNREADABLE} for ${whose(u)}, which you follow`,
-        detail: `${DOCKET_UNREADABLE}${u.reason ? ` (${u.reason})` : ""}${u.at ? ` at ${u.at}` : ""}. This says the read failed, `
-              + "never that nothing changed. It leaves when a read succeeds or the watch ends.",
+        summary: word("queue-producers.summary.follow", { docket_unreadable: String(DOCKET_UNREADABLE), u: String(whose(u)) }),
+        detail: localize("queue-producers.index.docket_unreadable_v1_v2_this", "{DOCKET_UNREADABLE}{v1}{v2}. This says the read failed, never that nothing changed. It leaves when a read succeeds or the watch ends.", { DOCKET_UNREADABLE: String(DOCKET_UNREADABLE), v1: String(u.reason ? ` (${u.reason})` : ""), v2: String(u.at ? ` at ${u.at}` : "") }),
         basis: { source: "case-import.watchItems", import: u.import, group: u.group ?? null, case: u.case ?? null,
                  docket: u.docket ?? null, reason: u.reason ?? null, at: u.at ?? null, sentence: DOCKET_UNREADABLE,
                  set_by: u.set_by ?? null, recipients_rule: rec.rule, ...complete,
@@ -2319,9 +2182,7 @@ export class QueueProducers {
 
   /** R35: the refused entry's sentence, naming every check its copies failed. */
   static #refusedWords(e, seq, failed) {
-    return `${seq === null ? "An entry with no readable number" : `Entry ${seq}`} of the docket was read and refused: it failed `
-      + `${failed.length === 1 ? "the check" : "the checks"} ${failed.join(", ")}. A refused entry is never taken as a new `
-      + "edition or a withdrawal, and nothing resting on the case moved. This is told once.";
+    return word("queue-producers.text.docket_read_refused", { seq: String(seq === null ? "An entry with no readable number" : `Entry ${seq}`), checks: String(failed.length === 1 ? "the check" : "the checks"), failed: String(failed.join(", ")) });
   }
 
   /* ======================================================================
@@ -2331,8 +2192,8 @@ export class QueueProducers {
 
   /** R32: the item kinds of a break and a return (wizard-scripts R13); R33: the act that answers a submission (its R7). */
   static WIZARD_BREAK_KINDS = Object.freeze({ withdrawn: "wizard-withdrawn", restored: "wizard-restored" });
-  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: "Read this wizard script and approve it", weight: "single" });
-  static WIZARD_READ = Object.freeze({ id: "wizardread", label: "Read this wizard script", weight: "single" });
+  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: word("queue-producers.label.read_wizard_script"), weight: "single" });
+  static WIZARD_READ = Object.freeze({ id: "wizardread", label: word("queue-producers.label.read_wizard_script_2"), weight: "single" });
 
   /** `wizard-withdrawn` and `wizard-restored` (R32; wizard-scripts R13; DEC-121 (5): "its owner is told why"): one FINDING
    *  per entry `wizard-scripts.brokenScripts` answers the viewer, keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`,
@@ -2375,18 +2236,15 @@ export class QueueProducers {
         subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null, project,
                    ...(withdrawn ? { refusal: refusal ? { code: refusal.code ?? null, check: refusal.check ?? null, translation: words } : null } : {}) },
         summary: withdrawn
-          ? `the wizard script ${name} no longer matches the screens and is withdrawn until it is fixed`
-          : `the wizard script ${name} matches the screens again and is offered again`,
+          ? word("queue-producers.summary.wizard_script_longer", { name: String(name) })
+          : word("queue-producers.summary.wizard_script_matches", { name: String(name) }),
         detail: withdrawn
-          ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
-            + "A new version that passes them, approved as before, returns it. This is told once."
-          : "It passed its checks again when your team's Civicsmith started, and members are offered it as before. This is told once.",
+          ? localize("queue-producers.index.it_is_not_offered_to", "It is not offered to members while it fails its checks{v1}. A new version that passes them, approved as before, returns it. This is told once.", { v1: String(words ? `. The first thing it failed: ${words}` : "") })
+          : localize("queue-producers.index.it_passed_its_checks_again", "It passed its checks again when your team's Civicsmith started, and members are offered it as before. This is told once."),
         basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
                  author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a script's break or return is wizard-scripts' record (its R13), made when its checks are run "
-                       + "again at start, read here and never stored. It goes to the script's project owners (for a team "
-                       + "script, the administrators) and its version's author, once (DEC-69, DEC-70)." },
+                 detail: localize("queue-producers.index.a_scripts_break_or_return", "a script's break or return is wizard-scripts' record (its R13), made when its checks are run again at start, read here and never stored. It goes to the script's project owners (for a team script, the administrators) and its version's author, once (DEC-69, DEC-70).") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: x.at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "no_break_instant", detail: "the record carries no instant this producer can read" },
@@ -2427,14 +2285,12 @@ export class QueueProducers {
         subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null,
                    author: x.author ?? null, project },
         summary: `${x.author || "a member"} submitted the wizard script ${name} for your approval`,
-        detail: "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; "
-              + "this is told once, and it leaves when the version is approved or withdrawn, or the script retired.",
+        detail: localize("queue-producers.index.a_version_of_this_wizard", "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; this is told once, and it leaves when the version is approved or withdrawn, or the script retired."),
         basis: { source: "wizard-scripts.submittedFor", script: x.script, version: x.version, name: x.name ?? null,
                  author: x.author ?? null, owner: x.owner, project, submitted_at: x.submitted_at ?? null,
                  recipients_rule: "approver",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is "
-                       + "listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94)." },
+                 detail: localize("queue-producers.index.a_submitted_version_is_wizard", "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94).") },
         age: Number.isFinite(atMs)
           ? { state: "determined", since: x.submitted_at, ms: Math.max(0, now - atMs) }
           : { state: "undetermined", reason: "no_submission_instant", detail: "the submission carries no instant this producer can read" },
@@ -2457,19 +2313,19 @@ export class QueueProducers {
    * ====================================================================== */
 
   /** R37: the acts that answer a waiting edition (publish-schedule R3): moving its time, or cancelling it. */
-  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: "Move the time it publishes", weight: "single" });
-  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: "Cancel publishing it at that time", weight: "single" });
+  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: word("queue-producers.label.move_time_publishes"), weight: "single" });
+  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: word("queue-producers.label.cancel_publishing_time"), weight: "single" });
   /** R37: each state's class and kind (publish-schedule R2, R4); a cancelled edition earns no item. */
   static SCHEDULED_KINDS = Object.freeze({
     waiting: Object.freeze(["CONDITION", "edition-scheduled"]),
     published: Object.freeze(["FINDING", "edition-published-as-scheduled"]),
     stopped: Object.freeze(["FINDING", "scheduled-edition-stopped"]) });
   /** R38: the act that answers an arrival (instance-setup R14, `op=profilesset`): choosing the profile under Places. */
-  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: "Choose this profile under Places", weight: "single" });
+  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: word("queue-producers.label.choose_profile_under"), weight: "single" });
   /** R39: the acts a copy's editors are offered (wizard-scripts R4, R26): seeing what changed (both versions, read), and
    *  bringing it across by their own revision (`adopt: {base}`). */
-  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: "See what changed in the wizard it was copied from", weight: "single" });
-  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: "Bring the change across to your copy", weight: "single" });
+  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: word("queue-producers.label.see_changed_wizard"), weight: "single" });
+  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: word("queue-producers.label.bring_change_copy"), weight: "single" });
 
   /** A person's id, never a machine credential's. */
   static #person(x) {
@@ -2531,34 +2387,28 @@ export class QueueProducers {
       if (seen.has(id)) continue;
       seen.add(id);
       const at = e.at && typeof e.at === "object" ? e.at : {};
-      const when = QueueProducers.#setTime(at) || "a time that cannot be read";
+      const when = QueueProducers.#setTime(at) || word("queue-producers.text.time_read");
       const zone = typeof at.zone === "string" && at.zone ? at.zone : null;
-      const which = `case ${e.case}, edition ${edition}`;
+      const which = localize("queue-producers.index.case_case_edition_edition", "case {case}, edition {edition}", { case: String(e.case), edition: String(edition) });
       const moves = Array.isArray(e.moves) ? e.moves : [];
       const reasons = (Array.isArray(e.reasons) ? e.reasons : []).filter((x) => x && typeof x === "object")
         .map((x) => ({ code: x.code ?? null, translation: typeof x.translation === "string" ? x.translation : null }));
       let summary, detail, age, options;
       if (kind === "edition-scheduled") {
         summary = `Signed · publishes ${when} · ${which}`;
-        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the team's own time. `
-          + "Nothing of it is public until then. At that time every check it passed at signing is run again, and it is "
-          + "published only if nothing has changed. An owner of the case's project may move the time or cancel it"
-          + (moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") + ".";
-        age = QueueProducers.#instantAge(e.signed_at, now, "no_signing_instant", "the edition carries no signing instant this producer can read");
+        detail = word("queue-producers.detail.edition_signed_waits", { date: String(when), time: String(zone ? ` (${zone})` : ""), moved_clause: String(moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") });
+        age = QueueProducers.#instantAge(e.signed_at, now, "no_signing_instant", word("queue-producers.instant_age.edition_carries_signing"));
         options = [QueueProducers.PUBLISH_AT_MOVE, QueueProducers.PUBLISH_AT_CANCEL];
       } else if (kind === "edition-published-as-scheduled") {
-        summary = `${which} was published at its set time, ${when}`;
-        detail = `It was signed to publish on ${when}${zone ? ` (${zone})` : ""} and was published `
-          + `${typeof e.outcome_at === "string" && e.outcome_at ? `at ${e.outcome_at}` : "at an instant that cannot be read"}, `
-          + "after every check it passed at signing ran again and passed. This is told once.";
-        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no publishing instant this producer can read");
+        summary = word("queue-producers.summary.published_set_time", { which: String(which), when: String(when) });
+        detail = word("queue-producers.detail.signed_publish_published", { when: String(when), zone: String(zone ? ` (${zone})` : ""), read: String(typeof e.outcome_at === "string" && e.outcome_at ? `at ${e.outcome_at}` : "at an instant that cannot be read") });
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", word("queue-producers.instant_age.edition_carries_publishing"));
         options = [];
       } else {
-        const said = reasons.map((x) => x.translation || `a reason with no recorded words (${x.code || "no code"})`);
-        summary = `${which} was not published at its set time, ${when}`;
-        detail = `When its time came, the check stopped it: ${said.length ? said.join(" ") : "no reason was recorded."} `
-          + "Nothing was published. Publishing this edition needs a new signing. This is told once.";
-        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no stopping instant this producer can read");
+        const said = reasons.map((x) => x.translation || word("queue-producers.map.reason_recorded_words", { code: String(x.code || "no code") }));
+        summary = word("queue-producers.summary.published_set_time_2", { which: String(which), when: String(when) });
+        detail = word("queue-producers.detail.time_came_check", { recorded: String(said.length ? said.join(" ") : "no reason was recorded.") });
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", word("queue-producers.instant_age.edition_carries_stopping"));
         options = [];
       }
       out.push({
@@ -2575,9 +2425,7 @@ export class QueueProducers {
                  outcome_at: e.outcome_at ?? null, ...(kind === "scheduled-edition-stopped" ? { reasons } : {}),
                  recipients_rule: "setter_and_project_owners",
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and "
-                       + "its outcome, read here as the plane and never stored. It goes to the member who set the time and "
-                       + "to the case's project's owners, and to nobody else (DEC-147)." },
+                 detail: localize("queue-producers.index.a_scheduled_edition_is_publish", "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and its outcome, read here as the plane and never stored. It goes to the member who set the time and to the case's project's owners, and to nobody else (DEC-147).") },
         age,
         assignee: null,
         assignee_role: null,
@@ -2636,17 +2484,12 @@ export class QueueProducers {
         kind: "place-profile-arrived",
         case: this.#homesOf([]),
         subject: { kind: "place_profile", id: profile, name: pname ?? null, covers: coverage, place },
-        summary: `a profile for ${place ? `"${place}"` : "the place your team named"} is now held: ${named}`,
-        detail: `An installed update brought a profile that matches the place your team named${place ? `, "${place}"` : ""}: `
-              + `${named}${coverage.length ? `, which covers ${coverage.join(", ")}` : ""}. An administrator may choose it under `
-              + "Places; the offices your team added stay. This status is told once, and it leaves when the profile is "
-              + "chosen or the place's name is cleared or changed.",
+        summary: word("queue-producers.summary.profile_now_held", { named: String(place ? `"${place}"` : "the place your team named"), named2: String(named) }),
+        detail: localize("queue-producers.index.an_installed_update_brought_a", "An installed update brought a profile that matches the place your team named{v1}: {named}{v2}. An administrator may choose it under Places; the offices your team added stay. This status is told once, and it leaves when the profile is chosen or the place's name is cleared or changed.", { v1: String(place ? `, "${place}"` : ""), named: String(named), v2: String(coverage.length ? `, which covers ${coverage.join(", ")}` : "") }),
         basis: { source: "instance-setup.placeArrivals", profile, profile_name: pname ?? null, covers: coverage, place,
                  found_at: a.found_at ?? null, recipients_rule: "administrators", raised_to: admins,
-                 detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, "
-                       + "first found at a start, read here through the read it registered and never stored. It goes to "
-                       + "every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves." },
-        age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", "the arrival carries no instant this producer can read"),
+                 detail: localize("queue-producers.index.an_arrival_is_instance_setups", "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, first found at a start, read here through the read it registered and never stored. It goes to every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves.") },
+        age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", word("queue-producers.age.arrival_carries_instant")),
         assignee: null,
         assignee_role: null,
         recipients: [...admins],
@@ -2694,20 +2537,15 @@ export class QueueProducers {
                    base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
                    base_version: baseVersion, project },
         summary: `${baseName} has a newer approved version, ${baseVersion}, than your team's copy ${name} was made from`,
-        detail: `Your team's copy ${name} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and `
-              + `version ${baseVersion} of it has since been approved. See what changed between the two; you may bring the `
-              + "change across to your copy by your own revision, and nothing is changed in your copy unless you do. "
-              + "This is told once.",
+        detail: localize("queue-producers.index.your_teams_copy_name_was", "Your team's copy {name} was made from {v1}{baseName}, and version {baseVersion} of it has since been approved. See what changed between the two; you may bring the change across to your copy by your own revision, and nothing is changed in your copy unless you do. This is told once.", { name: String(name), v1: String(x.based_on ? `version ${x.based_on} of ` : ""), baseName: String(baseName), baseVersion: String(baseVersion) }),
         basis: { source: "wizard-scripts.baseUpdates", copy: x.copy, copy_version: x.copy_version ?? null, name: x.name ?? null,
                  project, base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
                  base_version: baseVersion, found_at: x.found_at ?? null,
                  ...(x.steps && typeof x.steps === "object" ? { steps: x.steps } : {}),
                  recipients_rule: "copy_editors", raised_to: recipients,
                  bound: { pages_bound: QueueProducers.QUEUE_PAGES, truncated: page.truncated },
-                 detail: "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and "
-                       + "version and read here, never stored. It goes to each of the copy's wizard editors it names, once "
-                       + "(DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4)." },
-        age: QueueProducers.#instantAge(x.found_at, now, "no_found_instant", "the entry carries no instant this producer can read"),
+                 detail: localize("queue-producers.index.a_newer_approved_version_of", "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and version and read here, never stored. It goes to each of the copy's wizard editors it names, once (DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4).") },
+        age: QueueProducers.#instantAge(x.found_at, now, "no_found_instant", word("queue-producers.age.entry_carries_instant")),
         assignee: null,
         assignee_role: null,
         recipients: [me],
@@ -2756,9 +2594,7 @@ export class QueueProducers {
         basis: { source: "project-roster.projectList", project: p.id, participation: "invited",
                  invited_at: own ? own.created ?? null : null, inviter: null, recipients_rule: "invited_member",
                  bound: { limit: cap, truncated: invited.length > cap, list_truncated: list.truncated === true },
-                 detail: "an invitation is membership's row for the member (project-roster R34, membership R118), read here "
-                       + "at every read and never stored. It goes to the member invited and to nobody else, and leaves "
-                       + "when her state changes: she joins, is removed, or the invitation is withdrawn." },
+                 detail: localize("queue-producers.index.an_invitation_is_memberships_row", "an invitation is membership's row for the member (project-roster R34, membership R118), read here at every read and never stored. It goes to the member invited and to nobody else, and leaves when her state changes: she joins, is removed, or the invitation is withdrawn.") },
         age: QueueProducers.#instantAge(own ? own.created : null, now, "no_invitation_instant",
                                         "the member's row carries no instant this producer can read"),
         assignee: null,
@@ -2807,9 +2643,7 @@ export class QueueProducers {
                    recipients_rule: "project_owners",
                    bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                             requests_limit: r.limit ?? null, requests_truncated: r.truncated === true },
-                   detail: "an open request to join is project-roster's row (its R12, R14), read here at every read and "
-                         + "never stored. It goes to each owner of the project and to nobody else, and leaves for all of "
-                         + "them when one owner answers it or the requester withdraws." },
+                   detail: localize("queue-producers.index.an_open_request_to_join", "an open request to join is project-roster's row (its R12, R14), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when one owner answers it or the requester withdraws.") },
           age: QueueProducers.#instantAge(q.asked, now, "no_request_instant", "the request carries no instant this producer can read"),
           assignee: null,
           assignee_role: null,

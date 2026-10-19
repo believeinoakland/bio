@@ -22,7 +22,7 @@ test("R11: the answer's parts", () => {
   assert.deepEqual(Object.keys(c).sort(), ["authored", "case", "comments", "comments_truncated", "draft", "evaluated",
     "findings", "gates", "grants", "grants_truncated", "kind", "last_change", "list_limit", "marking", "missing",
     "observations", "ok", "project", "published", "reader", "required_strength", "signature", "statement_acknowledgements",
-    "statement_by", "statement_by_stated", "updated_at", "updated_by"].sort());
+    "statement_by", "statement_by_stated", "updated_at", "updated_by", "zone"].sort());
   assert.deepEqual([c.ok, c.kind, c.marking, c.published, c.signature.signed, c.draft, c.project, c.reader],
     [true, "review-copy", REVIEW_MARKING, false, false, d.draftId, "PROJ-2026-0003-b", "member"]);
   assert.match(REVIEW_MARKING, /NOT A PUBLICATION/);

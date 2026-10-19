@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, MACHINE, ADMIN, MEMBER, REASON } from "./fixture.mjs";
 import { strengthOps, STRENGTH_BAR_CHECKS, STRENGTH_AXES, barAxisWords } from "../../../src/strength/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { migrateStrength } from "../../../src/strength/schema.mjs";
 
 const INQ = "INQ-2026-0001-a";
@@ -29,7 +30,7 @@ test("R6: NO_ID; an absent or invisible id is NO_SUCH_BUNDLE, one answer; NOT_AN
   const w = projected();
   const noId = w.s.inquiryStrength({ viewer: MACHINE });
   assert.equal(noId.reason, "NO_ID");
-  assert.match(noId.detail, /pass id=<record id>/);
+  assert.equal(noId.detail, localize("strength.index.the_derived_pair_is_asked", "the derived pair is asked of one inquiry: pass id=<record id>"));
   const absent = w.s.inquiryStrength({ id: "INQ-2026-0099-a", viewer: MACHINE });
   const unseen = w.s.inquiryStrength({ id: INQ, viewer: "someone" });
   assert.deepEqual(absent, { ok: false, reason: "NO_SUCH_BUNDLE", target: "INQ-2026-0099-a" });
@@ -70,7 +71,7 @@ test("R6, R22: a member the viewer may not see is withheld whole, fields and pro
   assert.ok(!("through" in c.weakest));
   assert.equal(machine.connection.weakest.through, PROJ);
   assert.match(c.detail, /^connection C — /);
-  assert.match(c.detail, /Part of what this rests on is out of your view\.$/);
+  assert.ok(c.detail.endsWith(word("strength.out_of_view_words")));
   for (const m of membersOf(c)) for (const f of ID_FIELDS) assert.notEqual(m?.[f], null, `no null ${f}`);
   const alice = w.s.inquiryStrength({ id: INQ, viewer: "member:alice" });
   assert.ok(JSON.stringify(alice.connection).includes(PROJ), "a participant sees the project");
@@ -129,8 +130,10 @@ test("R6: no count of what is withheld can be read from the answer: one unseen l
   /* The axis's weakest (a D on an unseen project) is withheld, its grade standing; the seen ground keeps its own. */
   assert.equal(a.connection.grade, "D");
   assert.ok(!("weakest" in a.connection));
-  assert.match(a.connection.detail, /^connection D — no stronger than the weakest connection it rests on\. /,
-               "the sentence still says what it derived");
+  const derived = localize("strength.arithmetic.no_stronger_than_the_weakest",
+    "{axis} {grade} — no stronger than the weakest {axis} it rests on, which is {leg}{via}.",
+    { axis: "connection", grade: "D", leg: "@", via: "" }).split(", which is")[0];
+  assert.ok(a.connection.detail.startsWith(`${derived}. `), "the sentence still says what it derived");
   const g = Object.fromEntries(a.connection.grounds.map((x) => [x.ground, x]));
   assert.equal(g.seen.weakest.target_id, "INFO-2026-0002-a");
   assert.ok(!("weakest" in g.unseen));
@@ -167,14 +170,16 @@ test("R14: a project's bar: a declared axis carries its letter, an undeclared on
   assert.equal(bar.capture, "B");
   assert.equal(bar.connection, null);
   assert.ok(!("testimony" in bar), "the bar stays a pair");
-  assert.match(bar.detail, /capture B, no bar set on the connection axis/);
-  assert.equal(barAxisWords({ capture: null, connection: "C" }), "no bar set on the capture axis, connection C");
+  assert.ok(bar.detail.includes(`capture B, ${word("strength.map.bar_set_axis", { axis: "connection" })}`));
+  assert.equal(barAxisWords({ capture: null, connection: "C" }), `${word("strength.map.bar_set_axis", { axis: "capture" })}, connection C`);
   w.project("PROJ-2026-0043-def");
   w.file("PROJ-2026-0043-def", "bundle.md", "---\nrequired_strength:\n  capture: Z\n---\n");
   const none = w.s.projectBar("PROJ-2026-0043-def");
   assert.equal(none.declared, false);
   assert.equal(none.capture, null);
-  assert.match(none.detail, /An absent bar is not a bar of zero/);
+  assert.equal(none.detail, localize("strength.index.declares_no_required_evidentiary_strength",
+    "{project} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.",
+    { project: "PROJ-2026-0043-def" }));
 });
 
 test("R15, R24: a machine is refused C-32.9; a member who is not an active administrator C-107.1; an active administrator may", () => {
@@ -212,7 +217,8 @@ test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer
     assert.equal(bad.check, "C-107.2");
     assert.equal(bad.check, STRENGTH_BAR_CHECKS.BAD_GRADE.check);
     assert.equal(bad.translation, STRENGTH_BAR_CHECKS.BAD_GRADE.translation);
-    assert.match(bad.detail, /must be one of A, B, C, D, or null/);
+    assert.equal(bad.detail, localize("strength.index.axis_must_be_one_of_or_null",
+      "{axis} must be one of {grades}, or null", { axis, grades: "A, B, C, D" }));
   }
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM group_strength_bar`)[0].n, 0, "a refused grade writes nothing");
   assert.equal(w.s.strengthBarSet({ author: ADMIN }).reason, "NO_BAR");
@@ -220,8 +226,7 @@ test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer
   assert.equal(r.group, "grp-one");
   assert.equal(r.author, ADMIN);
   assert.equal(r.at, w.clock.now);
-  assert.match(r.note, /DEFAULT a project starts from/);
-  assert.match(r.note, /gates nothing/);
+  assert.equal(r.note, word("strength.note.default_project_starts", { bar_honest_note: HONEST_NOTE }));
   const named = w.s.strengthBarSet({ reason: REASON, group: "grp-two", connection: "C", author: ADMIN });
   assert.equal(named.group, "grp-two");
   assert.deepEqual(w.rows(`SELECT group_id, capture, connection, author FROM group_strength_bar ORDER BY group_id`),
@@ -236,7 +241,7 @@ test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer
 
 /* R15 (DEC-105, H12; DEC-124): the bar's honest note, in the ruling's words with the product named Civicsmith, as a
    reader checks for it. */
-const HONEST_NOTE = "Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
+const HONEST_NOTE = word("strength.bar_honest_note");
 const noteHolds = (answer) => assert.ok(typeof answer.note === "string" && answer.note.includes(HONEST_NOTE),
                                         "the answer's note carries DEC-105's words");
 
@@ -246,8 +251,7 @@ test("R15 (DEC-105): the answer's note carries the bar's honest note in DEC-105'
   const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
   assert.equal(r.ok, true);
   noteHolds(r);
-  assert.match(r.note, /DEFAULT a project starts from/);
-  assert.match(r.note, /It gates nothing\./);
+  assert.equal(r.note, word("strength.note.default_project_starts", { bar_honest_note: HONEST_NOTE }));
   assert.ok(!r.note.includes("CivicOS"), "the product is named as DEC-124 names it");
   for (const stripped of [{ ...r, note: r.note.replace(HONEST_NOTE, "") }, { ...r, note: undefined },
                           { ...r, note: HONEST_NOTE.slice(0, 40) },
@@ -275,9 +279,13 @@ test("R15, C-107.3 (DEC-88): a reason absent, not a string, blank or of 2,001 ch
     assert.equal(r.limit, 2000);
     assert.deepEqual(held(), before, "nothing written: the earlier default and its reason stand");
   }
-  assert.match(w.s.strengthBarSet({ capture: "A", author: ADMIN }).detail, /in your own words/);
-  assert.match(w.s.strengthBarSet({ reason: " ", capture: "A", author: ADMIN }).detail, /blank/);
-  assert.match(w.s.strengthBarSet({ reason: "z".repeat(2001), capture: "A", author: ADMIN }).detail, /2001 characters/);
+  assert.equal(w.s.strengthBarSet({ capture: "A", author: ADMIN }).detail, localize("strength.index.give_the_reason_the_team_sets_this_bar",
+    "give the reason the team sets this bar, as text in your own words (reason=…). Nothing was declared."));
+  assert.equal(w.s.strengthBarSet({ reason: " ", capture: "A", author: ADMIN }).detail, localize("strength.index.the_reason_given_is_blank_why_the_team",
+    "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared."));
+  assert.equal(w.s.strengthBarSet({ reason: "z".repeat(2001), capture: "A", author: ADMIN }).detail,
+    localize("strength.index.the_reason_given_is_characters_team",
+      "the reason given is {length} characters, and a reason is at most {max}. Nothing was declared.", { length: 2001, max: 2000 }));
   /* Order: every earlier refusal is asked first. */
   assert.equal(w.s.strengthBarSet({ author: ADMIN }).reason, "NO_BAR");
   assert.equal(w.s.strengthBarSet({ capture: "E", author: ADMIN }).reason, "BAD_GRADE");
@@ -320,8 +328,7 @@ test("C-107.3, R24: BAR_NO_REASON is this module's row, after C-107.2, its where
   const row = STRENGTH_BAR_CHECKS.BAR_NO_REASON;
   assert.equal(row.check, "C-107.3");
   assert.equal(row.where, "src/strength/index.mjs strengthBarSet > is-strength-bar-reason");
-  assert.match(row.translation, /2,000 characters/);
-  assert.match(row.translation, /Nothing was changed\.$/);
+  assert.equal(row.translation, word("refusal.BAR_NO_REASON"));
   assert.deepEqual(Object.values(STRENGTH_BAR_CHECKS).map((r) => r.check), ["C-32.9", "C-107.1", "C-107.2", "C-107.3", "C-107.4"]);
   assert.ok(Object.isFrozen(STRENGTH_BAR_CHECKS));
 });
@@ -346,7 +353,8 @@ test("R16: target= is refused by name; an unseen project is NO_SUCH_PROJECT; NOT
   const none = w.s.strengthBarOf({ viewer: MACHINE });
   assert.equal(none.bar, null);
   assert.equal(none.seeds_new_projects, true);
-  assert.match(none.detail, /no team default is declared/);
+  assert.equal(none.detail, localize("strength.index.no_team_default_is_declared",
+    "no team default is declared. An absent bar gates nothing and is not a bar of zero."));
   w.s.strengthBarSet({ reason: REASON, capture: "A", author: ADMIN });
   const def = w.s.strengthBarOf({ viewer: MACHINE });
   assert.equal(def.group, "grp-one");

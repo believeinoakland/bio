@@ -14,6 +14,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { SECTIONS, sourceBlockLines, materialsLines, materialAttestationLines } from "../../../src/case-grammar/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -98,7 +99,7 @@ export function publicationStandIn() {
       rec("reauthorSection", [{ caseId, edition, docSha, section }]);
       const e = editions.get(key(caseId, edition));
       const held = { case_id: caseId, edition, doc_sha: e ? e.doc_sha : null };
-      if (!e) return { ok: true, ...held, reauthored: false, why: "no case document is held for this edition" };
+      if (!e) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_held") };
       if (e.signed) return { ok: true, ...held, reauthored: false, why: "this case document is signed" };
       if (docSha && e.doc_sha !== docSha) return { ok: true, ...held, reauthored: false, why: "moved" };
       const all = e.text.split("\n");

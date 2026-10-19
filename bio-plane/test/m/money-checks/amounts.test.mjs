@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, contract, ALICE, ADMIN_BOB, MACHINE, FORBIDDEN, texts } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const byCheck = (r) => Object.fromEntries(r.checks.map((c) => [c.check, c]));
 const share = (w, value = "10%", con = null) =>
@@ -54,7 +55,7 @@ test("R2 R3: change orders above a stated share; none stated answers undetermine
   const k = contract(w, { award: "1000", orders: ["60", "50"] });
   const before = byCheck(w.c.amountChecks({ contract: k.id, viewer: ALICE })).change_orders_past_share;
   assert.equal(before.holds, "undetermined");
-  assert.equal(before.why, "no threshold stated");
+  assert.equal(before.why, word("money-checks.why.threshold_stated"));
   assert.equal(share(w, "10%").ok, true);
   const c = byCheck(w.c.amountChecks({ contract: k.id, viewer: ALICE })).change_orders_past_share;
   assert.equal(c.holds, true);

@@ -13,6 +13,7 @@ import { REPUTATIONS } from './reputation.mjs';
 import { SINKS } from './sinks.mjs';
 import { eicar, macroDocument, zeroCounts } from './probes.mjs';
 import { createHash } from 'node:crypto';
+import { localize } from '../../../bio-plane/src/setup-words/index.mjs';
 
 const ADAPTERS = { scan: SCANNERS, sandbox: SANDBOXES, cdr: CDRS, url_reputation: REPUTATIONS, log_sink: SINKS };
 const STATUS = { NAMESPACE_UNKNOWN: 400, R2_NOT_CONFIGURED: 503, BAD_TARGET: 400, NOT_FOUND: 404, DIGEST_MISMATCH: 409,
@@ -129,7 +130,8 @@ async function prepare(deps, body, kind) {
   return { c, ctx, sha, started, file, intact };
 }
 
-const notHonoured = (id) => reply(502, { ok: false, code: 'PRIVATE_MODE_NOT_HONOURED', provider_id: id });
+export const NOT_HONOURED_CODE = 'PRIVATE_MODE_NOT_HONOURED';
+const notHonoured = (id) => reply(502, { ok: false, code: NOT_HONOURED_CODE, provider_id: id });
 
 /** POST /provider/scan (R5). */
 export async function providerScan(deps, body) {
@@ -307,7 +309,7 @@ export async function providerTest(deps, body) {
             : answer(false, 'the EICAR test file did not answer found');
         }
         const wait = Math.min(s.poll_after_ms || 5_000, 5_000);
-        if (ctx.net.left() <= wait) return answer(false, `the sandbox was still running after ${PROVIDER_TIMEOUT_MS} ms`);
+        if (ctx.net.left() <= wait) return answer(false, localize('file-scanner.routes.the_sandbox_was_still_running', 'the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms', { PROVIDER_TIMEOUT_MS: String(PROVIDER_TIMEOUT_MS) }));
         await sleep(wait);
       }
     }
@@ -315,7 +317,7 @@ export async function providerTest(deps, body) {
       // R32: what a rebuilding tool gives is, in members' words, a safe view.
       const out = await c.adapter.cdr(ctx, inMemory(macroDocument()));
       return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(', ')}`)
-        : answer(false, out.bytes.length ? 'the safe view reported nothing removed' : 'no safe view');
+        : answer(false, out.bytes.length ? localize('file-scanner.routes.the_safe_view_reported_nothing', 'the safe view reported nothing removed') : 'no safe view');
     }
     if (kind === 'url_reputation') {
       // A tool with a local list fetches it first when it holds none, or none fresh (R26).
@@ -326,10 +328,10 @@ export async function providerTest(deps, body) {
         if (!f.ok) throw new ToolError(String(f.error).split(':')[0]);
         return look();
       });
-      return r.listed ? answer(true, 'the test address answered listed') : answer(false, 'the test address did not answer listed');
+      return r.listed ? answer(true, localize('file-scanner.routes.the_test_address_answered', 'the test address answered listed')) : answer(false, localize('file-scanner.routes.the_test_address_did', 'the test address did not answer listed'));
     }
     await c.adapter.forward(ctx, zeroCounts(deps.now()));
-    return answer(true, 'a test record of zero counts was accepted');
+    return answer(true, localize('file-scanner.routes.a_test_record_of', 'a test record of zero counts was accepted'));
   } catch (e) {
     return answer(false, `${reasonOf(e)}${detailOf(e) ? ` ${detailOf(e)}` : ''}`);
   }

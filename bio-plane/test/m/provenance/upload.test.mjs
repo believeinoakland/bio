@@ -10,6 +10,7 @@ import { registerChecks, ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE, DOORBELL_VIA, UPLOA
          RECEIVED_NOT_FETCHED, UPLOAD_ORIGIN, UPLOADED_METHOD } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { migrateProvenance } from "../../../src/provenance/schema.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { DatabaseSync } from "node:sqlite";
 
 const T = "2026-10-09T01:00:00Z";
@@ -49,7 +50,8 @@ test("R63: a capture brought in by a member's upload is graded exactly as R51 gr
   assert.match(g.why, new RegExp(up(s)));
   assert.doesNotMatch(g.why, /doorbell/, "an upload is not said to have come through the doorbell");
   /* DEC-149's rule for outward words: the instance is "your group's Civicsmith", never "this instance" or "the plane". */
-  assert.match(g.why, new RegExp(` is proven by the receipt your team's Civicsmith itself made at ${up(s)}$`));
+  assert.equal(g.why, word("provenance.why.bytes_fetched_address", { how: word("provenance.brought_member_holds"),
+    earned_capture_ceiling: EARNED_CAPTURE_CEILING, first_retrieved: "2026-10-09T04:05:06Z", address: up(s) }));
   assert.doesNotMatch(g.why, /\b(?:this|the) (?:instance|plane)\b|\bplane's\b|\binstance's\b/i);
   assert.equal(w.prov.captureGrade(`sha256:${s.toUpperCase()}`).route, "upload");
   /* A second sighting (bytes already held, R86's `existed`) writes a later receipt: the earliest still proves existence. */
@@ -201,11 +203,11 @@ function uploadDoc({ bytes = "a file she holds", by = "member:ruth", at = "2026-
     file: `snapshots/${s}`, locator: up(s), retrieved: at,
     profile: { digests: { determined: false, evidentiary: null } },
     authority_state: "undetermined",
-    authority_basis: `a file a member holds, brought in by her upload; no authority is asserted; recorded ${at} for resolution through the task list`,
+    authority_basis: word("capture.authority_basis", { at: String(at) }),
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
-      asserts: `these bytes were brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
-      evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+      asserts: `${by} brought these bytes in at ${at}`,
+      evidence: `upload receipt ${s}: digest and instant`,
       bound: false, via: "upload",
     }],
     capture: {
@@ -246,8 +248,8 @@ test("R63, R42: C-18.1 admits capture R86's upload document: no letter on R51's 
   assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: undefined } }), /upload and its capture.grade_basis is 'undefined', not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
   assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: "CAPTURE_ROUTE_UNRECORDED" } }), /not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
   /* The method is `uploaded`. */
-  assert.match(one({ ...doc, capture: { ...doc.capture, method: "doorbell knock, received, hashed at receipt" } }),
-               /capture.method is 'doorbell knock, received, hashed at receipt', not 'uploaded'/);
+  assert.match(one({ ...doc, capture: { ...doc.capture, method: "knock-received-fixture" } }),
+               /capture.method is 'knock-received-fixture', not 'uploaded'/);
   /* Her statement: present, an object, its text and whose words they are not blank, never evidence of truth. */
   const { origin_statement: _s, ...noStatement } = doc;
   assert.match(one(noStatement), /carries no origin_statement/);

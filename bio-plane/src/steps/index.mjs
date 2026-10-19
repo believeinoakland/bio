@@ -42,6 +42,7 @@ import { dec, decStr, addD } from "../calc-grammar/decimal.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { STEPS_SCHEMA, STEPS_TABLES, FOLLOWS_TABLE } from "./schema.mjs";
 import { STEPS_CHECKS } from "./checks.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { STEPS_SCHEMA, STEPS_TABLES, FOLLOWS_TABLE, STEPS_CHECKS };
 
@@ -388,7 +389,7 @@ export class Steps {
     }
     if (w.on_kind === "date") {
       if (!today) return { wait: Number(w.wait_id), on: { date: w.on_date }, met: "undetermined",
-                           why: "no time zone is held for your team's Civicsmith, so the local day is not known" };
+                           why: word("steps.why.time_zone_held") };
       return { wait: Number(w.wait_id), on: { date: w.on_date }, met: w.on_date <= today };
     }
     const src = this.#arrivals.get(w.arrival_kind);
@@ -398,7 +399,7 @@ export class Steps {
     if (r === true) return { wait: Number(w.wait_id), on, met: true };
     if (r === false) return { wait: Number(w.wait_id), on, met: false };
     return { wait: Number(w.wait_id), on, met: "undetermined",
-             why: src ? "the source could not say whether it arrived" : "nothing can read an arrival of this kind" };
+             why: src ? word("steps.why.source_say_whether") : word("steps.why.nothing_read_arrival") };
   }
   #unmet(stepId, viewer, today) {
     return this.#waitRows(stepId).map((w) => this.#waitView(w, viewer, today)).filter((w) => w.met !== true);
@@ -451,7 +452,7 @@ export class Steps {
     const b = parse(row.by_when_json);
     if (!isObj(b)) return null;
     const nearing = today ? (dayNumber(b.date) - dayNumber(today) >= 0 && dayNumber(b.date) - dayNumber(today) <= NEARING_DAYS) : null;
-    return { ...b, nearing, ...(today ? {} : { why: "no time zone is held for your team's Civicsmith, so the local day is not known" }) };
+    return { ...b, nearing, ...(today ? {} : { why: word("steps.why.time_zone_held") }) };
   }
 
   /* R29: whether the registered holder holds the step's date as an action's clock entry: `{module, entry}`, or null
@@ -528,7 +529,7 @@ export class Steps {
       const r = le && typeof le.projectsShownOn === "function" ? le.projectsShownOn({ id: question, viewer }) : null;
       if (isObj(r) && Array.isArray(r.projects)) return { projects: r.projects, truncated: r.truncated === true };
     } catch { /* answered undetermined below */ }
-    return { undetermined: true, why: "the projects drawing on this question could not be read" };
+    return { undetermined: true, why: word("steps.why.projects_drawing_question") };
   }
 
   /** R4: `stepsIn({project, viewer, ...})`: a project's own steps, to a viewer at FULL sight of it. */
@@ -555,12 +556,12 @@ export class Steps {
 
   /* R1: the place read, with its refusal, for the acting viewer: `{kind, questions?, project?}`. */
   #place(place, by, act) {
-    if (!isObj(place)) return { refusal: refuse("STEP_BAD_PLACE", "a step names its place: {questions}, {project} or {group: true}") };
+    if (!isObj(place)) return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.place_names_its_place", "a step names its place: {questions}, {project} or {group: true}", { questions: "{questions}", project: "{project}" })) };
     const kinds = ["questions", "project", "group"].filter((k) => place[k] !== undefined && place[k] !== null && place[k] !== false);
     if (kinds.length !== 1 || Object.keys(place).some((k) => !["questions", "project", "group"].includes(k)))
-      return { refusal: refuse("STEP_BAD_PLACE", "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)") };
+      return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.place_exactly_one_kind", "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)", { questions: "{questions}", project: "{project}" })) };
     if (kinds[0] === "group") {
-      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", "a team step's place is {group: true}") };
+      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.team_place_is_group", "a team step's place is {group: true}")) };
       return { kind: "group" };
     }
     if (kinds[0] === "project") {
@@ -581,7 +582,7 @@ export class Steps {
     if (b === undefined || b === null) return { value: null };
     if (!isObj(b) || !filled(b.date) || !isCalendarDate(b.date) || !BASES.includes(b.basis)
         || (b.source !== undefined && b.source !== null && (!filled(b.source) || chars(b.source) > SOURCE_MAX)))
-      return { refusal: refuse("STEP_BAD_BY_WHEN", `a date is {date: YYYY-MM-DD, basis: ${BASES.join(" | ")}, source?}`) };
+      return { refusal: refuse("STEP_BAD_BY_WHEN", localize("steps.index.by_when_shape", "a date is {date: YYYY-MM-DD, basis: {bases}, source?}", { bases: BASES.join(" | ") })) };
     return { value: { date: b.date, basis: b.basis, ...(filled(b.source) ? { source: b.source.trim() } : {}) } };
   }
 
@@ -699,7 +700,7 @@ export class Steps {
       const o = isObj(outcomes) ? outcomes.outcome : outcomes;
       return OUTCOMES.includes(o) ? { list: [["", o]] } : { refusal: refuse("STEP_BAD_OUTCOME", `an outcome is one of ${OUTCOMES.join(", ")}`) };
     }
-    if (!isObj(outcomes)) return { refusal: refuse("STEP_BAD_OUTCOME", "a step on questions records an outcome per question: {<question>: outcome}") };
+    if (!isObj(outcomes)) return { refusal: refuse("STEP_BAD_OUTCOME", localize("steps.index.outcome_per_question", "a step on questions records an outcome per question: {<question>: outcome}")) };
     const refs = this.#refs(row.step_id).filter((q) => this.#membership.inSight(q, viewer));
     const list = [];
     for (const [q, o] of Object.entries(outcomes)) {
@@ -733,7 +734,7 @@ export class Steps {
       return refuse("STEP_BAD_TEXT", `a reason is 1–${REASON_MAX} characters`);
     if (actor.machine) {
       if (o.list.some(([, v]) => v !== "undetermined") || (learned !== null && learned !== undefined))
-        return refuse("STEP_MACHINE_NO_OUTCOME", "the system records neither an outcome nor a learned line (D33)", { step: row.step_id });
+        return refuse("STEP_MACHINE_NO_OUTCOME", localize("steps.index.machine_no_outcome", "the system records neither an outcome nor a learned line (D33)"), { step: row.step_id });
       if (end === "set_aside" && !filled(reason))
         return refuse("STEP_MACHINE_NO_OUTCOME", "the system sets its step aside only with its reason (a limit reached, a refusal)", { step: row.step_id });
     }
@@ -842,7 +843,7 @@ export class Steps {
       return refuse("NO_SUCH_BUNDLE", "no question by that id is held, or it is not one you may see", { question: filled(question) ? question : null });
     if (row.place_kind === "project")
       return refuse("STEP_NARROWER_THAN_QUESTION", "a project's step is seen only in its project; a question's use would widen it", { step: row.step_id });
-    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", "a team step is the team's, and its place is fixed at creation", { step: row.step_id });
+    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", localize("steps.index.team_place_fixed", "a team step is the team's, and its place is fixed at creation"), { step: row.step_id });
     if (this.#refs(row.step_id).includes(question)) return { ok: true, step: row.step_id, question, already: true };
     const at = this.#at();
     return this.#record.transact(() => {
@@ -991,7 +992,7 @@ export class Steps {
     const viewer = actor.viewer;
     const keys = isObj(on) ? Object.keys(on) : [];
     if (keys.length !== 1 || !["step", "arrival", "date"].includes(keys[0]))
-      return refuse("STEP_BAD_WAIT", "a wait is on one of {step}, {arrival: {kind, id}} or {date}");
+      return refuse("STEP_BAD_WAIT", localize("steps.index.wait_shape", "a wait is on one of {step}, {arrival: {kind, id}} or {date}", { step: "{step}", date: "{date}" }));
     let cols;
     if (keys[0] === "step") {
       const t = this.#held(on.step);
@@ -1084,7 +1085,7 @@ export class Steps {
     const member = this.#memberOf(viewer);
     const today = filled(at) ? this.#today(at) : null;
     if (!member) return { ok: true, due: [] };
-    if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your team's Civicsmith, or no instant was given" };
+    if (!today) return { ok: true, due: [], undetermined: true, why: word("steps.why.time_zone_held_group") };
     const due = [];
     const dated = this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT ?`, member, DUE_READ_MAX + 1);
     const reminders = this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
@@ -1112,7 +1113,7 @@ export class Steps {
     const amt = typeof amount === "string" ? amount.trim() : "";
     if (!COST_KINDS.includes(kind) || !AMOUNT.test(amt) || !dec(amt) || typeof currency !== "string" || !CURRENCY.test(currency)
         || !filled(what) || chars(what) > WHAT_MAX)
-      return refuse("STEP_BAD_COST", `a cost is {kind: ${COST_KINDS.join(" | ")}, amount: an exact decimal string, currency: a three-letter code, what}`);
+      return refuse("STEP_BAD_COST", localize("steps.index.cost_shape", "a cost is {kind: {kinds}, amount: an exact decimal string, currency: a three-letter code, what}", { kinds: COST_KINDS.join(" | ") }));
     const at = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`INSERT INTO step_costs (step_id, kind, amount, currency, what, by_actor, at) VALUES (?,?,?,?,?,?,?)`,
@@ -1424,7 +1425,7 @@ export class Steps {
     c.docFm.basis.forEach((leg, ord) => {
       const target = isObj(leg) && typeof leg.target === "string" ? leg.target.trim() : null;
       if (target && isStepId(target))
-        findings.push({ ...finding("STEP_NOT_A_LEG", `basis[${ord}] rests on ${target}, a step: a step is never evidence (D33)`), ord, target });
+        findings.push({ ...finding("STEP_NOT_A_LEG", localize("steps.index.basis_ord_rests_on_target", "basis[{ord}] rests on {target}, a step: a step is never evidence (D33)", { ord: String(ord), target: String(target) })), ord, target });
     });
     return findings.length ? { ok: false, reason: "BASIS_REFUSED", findings, detail: "a leg rests on a step, which is never evidence. Nothing was written." } : null;
   }

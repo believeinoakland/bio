@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, code, by, V, MACHINE, OFFICE, option, choose } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 import { PLAN_WORK_CHECKS, MATTER_STATES } from "../../../src/plan-work/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const set = (w, extra = {}) => w.pw.matterOutcomeSet({ plan: w.PL, subject: w.S1, text: "The lights work again", ...by("bob"), ...extra });
 
@@ -79,7 +80,7 @@ test("R2: each state from a fixture: ended, fixed, stopped, acting, fix_offered,
   const w = world();
   ESC(w, "open");
   w.cures.set(`${w.D}#STD-2026-0001-a`, { link: "CURE-2026-0001", cure: "CONF-2026-0009-determination", standard: "STD-2026-0001-a",
-    by: V("bob"), at: "2026-10-01T00:00:00Z", reason: null, cure_standing: false, cure_why: "the curing determination has been superseded" });
+    by: V("bob"), at: "2026-10-01T00:00:00Z", reason: null, cure_standing: false, cure_why: word("conformance.curing_determination_superseded") });
   const s = w.started({ subjects: [w.S1] });
   w.drafts.set(s.action, [{ filing: "COM-3", purpose: "document_infraction", approval: null, sending: null },
                           { filing: "COM-4", purpose: "chance_to_fix", approval: { approved_by: V("bob") }, sending: null }]);
@@ -94,7 +95,7 @@ test("R2: the order when two hold: the first of ended, fixed, stopped, acting, f
     ["fixed", (w) => { CURE(w); ESC(w, "stopped_pursuing"); }],
     ["stopped", (w) => { ESC(w, "stopped_pursuing"); const s = w.started({ subjects: [w.S1] }); w.correspond(s.action, "sent"); }],
     ["acting", (w) => { const s = w.started({ subjects: [w.S1] }); w.correspond(s.action, "sent");
-      const t = w.started({ subjects: [w.S1], summary: "Offer the chance to fix it" }); w.correspond(t.action, "sent");
+      const t = w.started({ subjects: [w.S1], summary: word("action-plans.summary.offer_chance_fix") }); w.correspond(t.action, "sent");
       w.drafts.set(t.action, [{ filing: "COM-5", purpose: "chance_to_fix", approval: {}, sending: { ord: 0 } }]); }],
     ["fix_offered", (w) => { const t = w.started({ subjects: [w.S1] }); w.correspond(t.action, "sent");
       w.drafts.set(t.action, [{ filing: "COM-6", purpose: "chance_to_fix", approval: {}, sending: { ord: 0 } },

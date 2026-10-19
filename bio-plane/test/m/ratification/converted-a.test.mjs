@@ -18,6 +18,7 @@ import { world, plane, newKey, signCase, signBundle, cleanCase, cleanInfoMd, fmT
 import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, checkCaseDocument, CASE_MEMBER_ROLES } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", Q2 = "INQ-2026-0002-second", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -200,7 +201,7 @@ test("R8 (d84 §1, §2): the case gate promotion runs with this module's catalog
   const w = world();
   const { FA, FB } = d84Docs();
   assert.deepEqual([FA.format, FA.bias_manifest.in_force, FA.bias_manifest.stated, FA.bias_manifest_bundles],
-    ["bio-case-document/6", false, "no manifest was in force", []]);
+    ["bio-case-document/6", false, word("bias.manifest_force"), []]);
   assert.deepEqual([FB.bias_manifest.in_force, FB.bias_manifest.statements_sha, FB.bias_manifest_bundles.length],
     [true, LENS_SHA, 2]);
   /* K1321: the catalogue still accepts a /5 document as written (case-grammar R1); only publication's commit refuses it */

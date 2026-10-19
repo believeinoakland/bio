@@ -130,7 +130,7 @@ test("R77 (T51; N1235): an archive's row answers actor, retrieved and bytes of t
 
 /* ---- R88 (T51; N1235): held_and_vouched ---- */
 
-const RELEASE = [{ timestamp: "2026-03-05T12:00:00Z", from: "collected", to: "verified", author: "member:m2", blurb: "checked against the source" }];
+const RELEASE = [{ timestamp: "2026-03-05T12:00:00Z", from: "collected", to: "verified", author: "member:m2", blurb: "reviewed at the source" }];
 
 function vouchedWorld() {
   const f = fresh();

@@ -56,7 +56,7 @@ test("R16: months and years by the calendar; a month-end with no such day is pos
   assert.deepEqual(overdueOf(w, at("2026-02-28T12:00:00Z")), []);
   const between = overdueOf(w, at("2026-03-01T12:00:00Z"));
   assert.deepEqual([between[0].overdue, between[0].deadline_earliest, between[0].deadline], ["undetermined", "2026-02-28", "2026-03-01"]);
-  assert.match(between[0].why, /possibly overdue/);
+  assert.equal(between[0].why.key, "civil-time.rules.possibly_overdue_day");
   const after = overdueOf(w, at("2026-03-02T12:00:00Z"));
   assert.deepEqual([after[0].overdue, after[0].deadline, after[0].overdue_by], [true, "2026-03-01", { amount: 0, unit: "months" }]);
   assert.deepEqual(overdueOf(w, at("2026-05-02T12:00:00Z"))[0].overdue_by, { amount: 2, unit: "months" });

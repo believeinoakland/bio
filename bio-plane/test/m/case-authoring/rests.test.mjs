@@ -9,6 +9,7 @@ import { world } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, REPUBLISH_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { DEPTH_BOUND } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -199,7 +200,7 @@ test("R55 (case-disclosures R13, R14), R14: the document's accepted_work: row st
     words: "we checked page 3 ourselves", acknowledged_by: "alice", acknowledged_at: w.clock.now }]);
   assert.equal(text.includes("every passage"), false, "what was checked stays inside the team");
   const body = text.slice(text.indexOf("\n---\n", 4) + 5);
-  assert.ok(body.includes("## Another Team's Work This Case Rests On"));
+  assert.ok(body.includes(word("case-disclosures.group_work_case")));
   const block = body.slice(body.indexOf("## Findings In This Case"), body.indexOf("## The Conclusions"));
   assert.ok(block.includes("open flag, disclosed with this case: page 3 is misread (flag IMPFLAG-1)"));
   /* negative control: a case reaching no other group's work carries neither block */

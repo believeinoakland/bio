@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const ofKind = (r) => r.items.filter((i) => i.kind === "attribution-unchosen");
@@ -28,7 +29,7 @@ function cases() {
     const r = reach[`${c}@${e}`] || {};
     return { ok: true, doc: { ...doc }, attribution: { reached: Object.keys(r), legacy: [], stated: [],
       current: Object.entries(r).map(([observation, level]) => ({ observation, level, shown: level ? "x" : null,
-        chosen_at_edition: level ? e : null, why: level ? null : "its author has chosen no level for this edition or any earlier one" })) } };
+        chosen_at_edition: level ? e : null, why: level ? null : word("case-tensions.why.author_chosen_level") })) } };
   } } });
   for (const m of ["alice", "bob", "carol"]) w.member(m);
   for (const [obs, author] of [["OBS-A", "alice"], ["OBS-A2", "alice"], ["OBS-B", "bob"]]) {
@@ -56,7 +57,7 @@ test("R23: one OBLIGATION per (case edition, observation) a prepared, unsigned e
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "attribution-unchosen"]);
   assert.deepEqual(it.subject, { kind: "case_edition", id: "CASE-1@1", case: "CASE-1", edition: 1, observation: "OBS-A" },
     "its subject the case edition, naming the observation");
-  assert.deepEqual(it.options, [{ id: "attribute", label: "Choose how this case credits your observation", weight: "single" }],
+  assert.deepEqual(it.options, [{ id: "attribute", label: word("queue-producers.label.choose_how_case"), weight: "single" }],
     "offering the choice of level (publication R17, op=attribute)");
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the edition's preparation");
   assert.equal(byId(alice)["OBLIGATION::attribution-unchosen::CASE-3@2::OBS-A"].age.state, "undetermined");

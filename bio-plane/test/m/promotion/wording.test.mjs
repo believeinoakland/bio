@@ -5,12 +5,11 @@
  * (here, the record, which mints a project's id and writes it into the document). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { makePromotion, doc, infoDoc, create, T0 } from "./fixtures.mjs";
 import { runGate, PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS, checkProjectNameUniqueness } from "../../../src/promotion/index.mjs";
 
-const OURS = word("queue.capture-completed-unattended.who");
 /* The words DEC-149 retires for the group's own Civicsmith. "copy" is asked only as the noun for it ("this copy",
    "a copy records"); a promotion's copy of a file in history is another meaning and is not served by these rows. */
 const RETIRED = /\binstance\b|\bplane\b|\bserver\b|\bthis copy\b|\ba copy records\b/i;
@@ -111,7 +110,8 @@ test("R19 (index.mjs NAME_TAKEN, #promote): NAME_TAKEN and NO_TITLE say a projec
   assert.equal(taken.detail, "a project by that name already exists in your team's Civicsmith, compared without regard "
     + "to case or spacing. This holds for deactivated projects too, because their names are still cited.");
   const untitled = p.promote(mk("", { files: [{ path: "bundle.md", text: pd("") }] }));
-  assert.deepEqual([untitled.reason, untitled.detail], ["NO_TITLE", "a project needs a name, and it must be unique across your team's Civicsmith"]);
+  assert.deepEqual([untitled.reason, untitled.detail], ["NO_TITLE",
+    localize("promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith")]);
   for (const x of [taken, untitled]) assert.doesNotMatch(x.detail, RETIRED);
 });
 
@@ -145,7 +145,7 @@ test("R38 (C-77.2): C-77.2's repair for an untitled project says give it a title
   const r = checkProjectNameUniqueness([{ folderName: "PROJ-2026-0001-x", files }]);
   const w = r.findings.find((x) => x.check === "C-77.2");
   assert.ok(w, JSON.stringify(r.findings));
-  assert.deepEqual(w.repairs, [`give the project a title unique across ${OURS}`]);
+  assert.deepEqual(w.repairs, [localize("promotion.names.give_project_title_unique", "give the project a title unique across your team's Civicsmith")]);
 });
 
 test("R9, R13, R39, R40 (DEC-149): no row this module holds calls the group's own Civicsmith the instance, the plane, a server or a copy", () => {

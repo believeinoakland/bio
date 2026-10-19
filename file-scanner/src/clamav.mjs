@@ -8,6 +8,7 @@
  * replaces `current.json`, so a failed run leaves the last good set. */
 import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS } from './limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, targetStream, writeObject, deleteObject, readJson } from './store.mjs';
+import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 export const MIRROR_HOST = 'database.clamav.net';
 export const DATABASES = Object.freeze(['main.cvd', 'daily.cvd', 'bytecode.cvd']);
@@ -136,7 +137,7 @@ export async function runMirror(deps) {
   try {
     for (const db of DATABASES) {
       const prev = previous && previous.files[db];
-      const headers = { 'user-agent': `file-scanner/${deps.version || 'unknown'} (signature mirror; as cvdupdate)` };
+      const headers = { 'user-agent': localize('file-scanner.clamav.file_scanner_v1_signature_mirror', 'file-scanner/{v1} (signature mirror; as cvdupdate)', { v1: String(deps.version || 'unknown') }) };
       if (prev && prev.last_modified) headers['if-modified-since'] = prev.last_modified;
       let r;
       try { r = await deps.fetch(`https://${MIRROR_HOST}/${db}`, { headers }); } catch { throw new Error(`UNREACHABLE:${db}`); }

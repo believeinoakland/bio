@@ -4,6 +4,7 @@
    below is each row as it now reads, `T45_ROWS` the record of T45's drafts. Since T47 (R28; N961) the `where`s of C-117.39 and
    C-117.48–.52 name `src/action-records/index.mjs`, whose acts raise them now. */
 import { readFileSync } from "node:fs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const T45_ROWS = {
   DETERMINATION_NOT_NONCOMPLIANT: {
@@ -149,7 +150,7 @@ export const T45_ROWS = {
   MACHINE_CANNOT_SET_COPIED: {
     check: "C-117.58",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-copied",
-    translation: "Which other offices are copied on an action is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in to state them yourself.",
+    translation: word("refusal.MACHINE_CANNOT_SET_COPIED"),
   },
 };
 

@@ -7,42 +7,33 @@
 
 /* The act-shape rows that are citing's own, split out of `ACT_SHAPE_CHECKS` with their numbers unchanged (the family is
    one object, split by the first job to move; retrieval's C-33.20 and C-33.32 went the same way). */
+import { word, localize } from '../setup-words/index.mjs';
+
 export const CITE_CHECKS = {
   BAD_NOTE: {
     check: 'C-33.15',
     where: 'src/citation/index.mjs cite > is-cite-note',
-    translation: 'A note here is at most two hundred characters and cannot contain a quotation '
-      + 'mark, a backslash or a line break. Those characters would silently reshape the document '
-      + 'rather than appear in it, so the note is declined instead of mangled.',
+    translation: word('refusal.BAD_NOTE'),
   },
   NO_ROLE: {
     check: 'C-33.16',
     where: 'src/citation/index.mjs cite > is-cite-role',
-    translation: 'A leg of a question\'s basis has to say what the material DOES for the answer, '
-      + 'and this one does not say. It is never assumed: material that cuts against the case is '
-      + 'first-class here, and guessing would put a claim about your reasoning in the record that '
-      + 'you did not make.',
+    translation: word('refusal.NO_ROLE'),
   },
   BAD_ROLE: {
     check: 'C-33.17',
     where: 'src/citation/index.mjs cite > is-cite-role',
-    translation: 'That is not one of the parts a piece of basis can play. The set is closed and is '
-      + 'published beside the act itself, so the choices can be read rather than remembered.',
+    translation: word('refusal.BAD_ROLE'),
   },
   ROLE_NOT_APPLICABLE: {
     check: 'C-33.18',
     where: 'src/citation/index.mjs cite > is-cite-role',
-    translation: 'What material does for an answer is a property of a question\'s basis, and the '
-      + 'thing citing here is a case. A case\'s citation carries no such part, so this one would '
-      + 'be dropped rather than recorded — and a field stated in one place and honoured nowhere is '
-      + 'how a record and the pages built from it drift apart.',
+    translation: localize('citation.checks.what_material_does_for_an', 'What material does for an answer is a property of a question\'s basis, and the thing citing here is a case. A case\'s citation carries no such part, so this one would be dropped rather than recorded — and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart.'),
   },
   SEVERED_EDGE: {
     check: 'C-33.19',
     where: 'src/citation/index.mjs cite > is-cite-severed',
-    translation: 'Somebody already recorded a decision to cut this dependency, which is different '
-      + 'from there never having been one. Citing it again would neither reverse that decision nor '
-      + 'step around it, so putting the link back is a separate act that records its own reason.',
+    translation: word('refusal.SEVERED_EDGE'),
   },
   /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT CITABLE". The translation NAMES THE DOOR,
      the REC-117 rule: cite what superseded it, or re-collect the source. Minted at two sites, `cite`'s region and
@@ -50,26 +41,19 @@ export const CITE_CHECKS = {
   RETIRED_NOT_CITABLE: {
     check: 'C-33.39',
     where: 'src/citation/index.mjs cite > is-cite-retired',
-    translation: 'The team has retired this material, recording that it is superseded or no longer '
-      + 'stands, so a citation made now would read to everyone after you as live support nobody will '
-      + 'look at again. Cite whatever superseded it, or collect the source again as a new item and '
-      + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
-      + 'be cited.',
+    translation: word('refusal.RETIRED_NOT_CITABLE'),
   },
   /* T35 (T35-42; N698, DEC-164 (5)): the optional question a member names when citing what a find turned up, the
      question they looked for it for. Minted in `cite`'s region is-cite-question. */
   NO_SUCH_QUESTION: {
     check: 'C-33.52',
     where: 'src/citation/index.mjs cite > is-cite-question',
-    translation: 'There is no question by that name that you can see, so this citation cannot be kept '
-      + 'with it. A question the team has not asked and one you have not been shown are answered '
-      + 'alike. Cite without naming a question, or name one you can open.',
+    translation: word('refusal.NO_SUCH_QUESTION'),
   },
   NOT_AN_INQUIRY: {
     check: 'C-33.53',
     where: 'src/citation/index.mjs cite > is-cite-question',
-    translation: 'What you named as the question you were looking for this for is not a question: it is '
-      + 'another kind of item in the record. Name the question itself, or cite without naming one.',
+    translation: localize('citation.checks.what_you_named_as_the', 'What you named as the question you were looking for this for is not a question: it is another kind of item in the record. Name the question itself, or cite without naming one.'),
   },
 };
 
@@ -82,59 +66,38 @@ export const CITE_EXTENT_CHECKS = {
   UNKNOWN_EXTENT_FIELD: {
     check: 'C-45.7',
     where: 'src/citation/index.mjs cite > is-cite-extent',
-    translation: 'Part of what was sent with this citation names a field this act does not '
-      + 'carry, so the record cannot tell what part of the document you meant. It is refused '
-      + 'rather than ignored: a field that is accepted and quietly dropped leaves you with a '
-      + 'citation that looks like the one you made and is not. The fields this act does take '
-      + 'are listed beside the refusal.',
+    translation: word('refusal.UNKNOWN_EXTENT_FIELD'),
   },
   EXTENT_NOT_APPLICABLE: {
     check: 'C-45.8',
     where: 'src/citation/index.mjs cite > is-cite-extent',
-    translation: 'Which part of a document a citation rests on is something a QUESTION\'s basis '
-      + 'records, and the thing citing here is a case. A case\'s citation names the document and '
-      + 'has nowhere to put a page or a passage, so this one would be dropped rather than '
-      + 'recorded — and a field stated in one place and honoured nowhere is how a record and the '
-      + 'pages built from it drift apart.',
+    translation: localize('citation.checks.which_part_of_a_document', 'Which part of a document a citation rests on is something a QUESTION\'s basis records, and the thing citing here is a case. A case\'s citation names the document and has nowhere to put a page or a passage, so this one would be dropped rather than recorded — and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart.'),
   },
   EXTENT_ON_MANY: {
     check: 'C-45.9',
     where: 'src/citation/index.mjs cite > is-cite-extent',
-    translation: 'A part of a document is a part of ONE document, and this citation would write '
-      + 'a leg for several. Writing the same page or passage onto each of them would put claims '
-      + 'in the record you never made — you named one part once. Cite the one document you mean '
-      + 'this part of, and cite the rest separately.',
+    translation: word('refusal.EXTENT_ON_MANY'),
   },
   BAD_EXTENT_VALUE: {
     check: 'C-45.10',
     where: 'src/citation/index.mjs cite > is-cite-extent',
-    translation: 'One of the values describing which part of the document you mean cannot be '
-      + 'written into the record as it stands — it is empty, too long, or contains a quotation '
-      + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
-      + 'reshape the document rather than appear in it. It is declined instead of mangled.',
+    translation: word('refusal.BAD_EXTENT_VALUE'),
   },
   /* T35 (T35-42; N698, DEC-164 (4), (5)) — citing a passage "Find in this" turned up (`found`, retrieval R73's match):
      the three refusals asked before anything else, minted in `cite`'s region is-cite-found. */
   CITE_ONE_SOURCE: {
     check: 'C-45.14',
     where: 'src/citation/index.mjs cite > is-cite-found',
-    translation: 'A citation names what it rests on once: either a set of items you picked, or one passage '
-      + 'a search found, with the part of the document that passage is. This one names both or '
-      + 'neither, so the record could not tell which you meant, and nothing was written.',
+    translation: word('refusal.CITE_ONE_SOURCE'),
   },
   FOUND_MALFORMED: {
     check: 'C-45.15',
     where: 'src/citation/index.mjs cite > is-cite-found',
-    translation: 'The passage sent with this citation does not say which document it is in, which version '
-      + 'of that document it was found in, or which part of it it is, so there is nothing the record '
-      + 'can point at. A document you cannot see is answered the same way. Search again and cite the '
-      + 'passage as the search shows it.',
+    translation: word('refusal.FOUND_MALFORMED'),
   },
   FOUND_CAPTURE_MOVED: {
     check: 'C-45.16',
     where: 'src/citation/index.mjs cite > is-cite-found',
-    translation: 'This passage was found in a different version of the document from the one a citation of '
-      + 'it is pinned to, so the part it names could point at different words. Nothing was written. '
-      + 'Search the version the record cites, or cite the document by picking it.',
+    translation: word('refusal.FOUND_CAPTURE_MOVED'),
   },
 };

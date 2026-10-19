@@ -39,6 +39,7 @@
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The legislative record's file number, alone on its line. Its SHAPE is the
    jurisdiction's (Legistar's two-digit-year–dash–serial in the measured instance)
@@ -135,13 +136,13 @@ export default {
        them item after item. */
     const filePats = agendaFileLines(ctx);
     const files = t.split(/\r?\n/).filter((l) => agendaFileKey(filePats, l) != null);
-    if (files.length) signals.push(`${files.length} legislation file number line(s)`);
+    if (files.length) signals.push(localize("doctypes.meeting-agenda.file_lines", "{count} legislation file number line(s)", { count: String(files.length) }));
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
     const named = selfNaming(t, AGENDA_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
-    if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
-    else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
+    if (furniture) signals.push(localize("doctypes.meeting-agenda.self_naming_furniture", "names itself as an agenda on {count} lines, which is page furniture", { count: String(named) }));
+    else if (named) signals.push(localize("doctypes.meeting-agenda.self_naming_once", "names itself as an agenda once ({count}), which a reference also does", { count: String(named) }));
     /* Front matter: a roll call, or a line the jurisdiction's own furniture names
        (its clerk's office, in the measured instance). */
     const isFurn = agendaFurniture(ctx);
@@ -213,8 +214,8 @@ export default {
       if (date && body) break;
     }
     const body_why = body ? null
-      : bodyEnds.length ? "no line at the head of this agenda names a body in the words the active jurisdiction profiles give"
-      : "no active jurisdiction profile says how a body is named, so which body meets is not read";
+      : bodyEnds.length ? localize("doctypes.meeting-agenda.no_body_line", "no line at the head of this agenda names a body in the words the active jurisdiction profiles give")
+      : localize("doctypes.meeting-agenda.no_body_profile", "no active jurisdiction profile says how a body is named, so which body meets is not read");
     const filePats = agendaFileLines(ctx);
     const isFurniture = agendaFurniture(ctx);
 
@@ -273,7 +274,7 @@ export default {
        as an agenda does not let that single verdict stand for the whole document. */
     return { entities, body, body_why, date,
              references_why: filePats.length ? null
-               : "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read",
+               : localize("doctypes.meeting-agenda.no_file_shape", "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no item was read"),
              also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
              at: ctx.at || null };
   },
@@ -283,8 +284,7 @@ export default {
     /* A read that found nothing is a failed reader, never an emptied agenda. */
     if (!a.entities.length || !b.entities.length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "the items on this agenda could not be read this time, so nothing is "
-                  + "claimed about them either way" };
+               why: localize("doctypes.meeting-agenda.unread", "the items on this agenda could not be read this time, so nothing is claimed about them either way") };
 
     const d = diffEntities(a.entities, b.entities);
     const events = [];
@@ -294,16 +294,16 @@ export default {
        lesson does not transfer: an agenda is one meeting's list, not a range). */
     for (const e of d.gone)
       events.push(event("item_pulled", { key: e.key, label: e.label,
-        why: "an item of legislation this agenda listed is no longer on it" }));
+        why: localize("doctypes.meeting-agenda.pulled", "an item of legislation this agenda listed is no longer on it") }));
     for (const alt of d.altered)
       events.push(event("item_changed", { key: alt.entity.key, label: alt.entity.label,
         moved: alt.moved,
-        why: "what this agenda says about an item changed" }));
+        why: localize("doctypes.meeting-agenda.altered", "what this agenda says about an item changed") }));
     /* Items arriving is what a supplemental agenda IS (the measured document is
        one); routine, and recorded. */
     for (const e of d.appeared)
       events.push(event("item_added", { key: e.key, label: e.label,
-        why: "an item of legislation was added to this agenda" }));
+        why: localize("doctypes.meeting-agenda.added", "an item of legislation was added to this agenda") }));
 
     bySeverity(events);
     const intact = a.entities.filter((e) =>
@@ -313,8 +313,8 @@ export default {
       /* What was verified unchanged, or null when nothing was (R16). */
       confirmed: intact ? { entries: b.entities.length, intact } : null,
       why: events.length
-        ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered`
-        : `all ${b.entities.length} items on this agenda are unchanged`,
+        ? localize("doctypes.meeting-agenda.changes", "{intact} of {total} items unchanged; {pulled} pulled, {added} added, {altered} altered", { intact: String(intact), total: String(a.entities.length), pulled: String(d.gone.length), added: String(d.appeared.length), altered: String(d.altered.length) })
+        : localize("doctypes.meeting-agenda.unchanged", "all {count} items on this agenda are unchanged", { count: String(b.entities.length) }),
     };
   },
 };

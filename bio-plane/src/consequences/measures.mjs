@@ -6,6 +6,7 @@
  * here throws or reads the record. */
 
 import { parseFigure, add, subtract, multiply, divide, RATIO_DEFAULT } from "../calc-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** R2: the operations a computation may name. */
 export const OPS = Object.freeze(["sum", "difference", "count", "product", "ratio"]);
@@ -69,7 +70,7 @@ export function order(a, b) {
 /** R2: read one figure as printed in a passage, through calc-grammar's figure reader (its R1–R3). `{ok: true, figure}`
  *  or `{ok: false, why}`. */
 export function readFigure(text) {
-  if (typeof text !== "string" || !fold(text)) return { ok: false, why: "no figure was stated as read" };
+  if (typeof text !== "string" || !fold(text)) return { ok: false, why: word("consequences.why.figure_stated_read") };
   const f = parseFigure(text);
   if (f.refused) return { ok: false, why: f.why };
   return { ok: true, figure: f };
@@ -91,12 +92,11 @@ export function passageHolds(text, figure) {
 export function compute(op, figures) {
   const n = figures.length;
   const need = { difference: 2, ratio: 2 }[op];
-  if (!OPS.includes(op)) return { ok: false, code: "op_unknown", why: `"${String(op)}" is not one of ${OPS.join(", ")}` };
+  if (!OPS.includes(op)) return { ok: false, code: "op_unknown", why: word("consequences.why.text", { op: String(String(op)), ops: String(OPS.join(", ")) }) };
   if (n === 0 || (need && n < need))
-    return { ok: false, code: "operand_missing", why: `a ${op} needs ${need ? `exactly ${need}` : "at least one"} `
-                                                    + `operand${need ? "s" : ""}, and ${n} ${n === 1 ? "was" : "were"} given` };
+    return { ok: false, code: "operand_missing", why: word("consequences.why.needs_operand_given", { op: String(op), one: String(need ? `exactly ${need}` : "at least one"), s: String(need ? "s" : ""), n: String(n), were: String(n === 1 ? "was" : "were") }) };
   if (need && n > need)
-    return { ok: false, code: "operands_extra", why: `a ${op} takes exactly ${need} operands, and ${n} were given` };
+    return { ok: false, code: "operands_extra", why: word("consequences.why.takes_exactly_operands", { op: String(op), need: String(need), n: String(n) }) };
   if (op === "count") return { ok: true, figure: { value: String(n), sign: "+", precision: "exact" } };
   let r;
   if (op === "sum") r = figures.slice(1).reduce((acc, f) => (acc.refused ? acc : add(acc, f)), figures[0]);
@@ -104,7 +104,7 @@ export function compute(op, figures) {
   else if (op === "difference") r = subtract(figures[0], figures[1]);
   else r = divide(figures[0], figures[1], RATIO_ROUNDING);
   if (r.refused) return { ok: false, refused: r.refused, why: r.why };
-  if (r.undetermined) return { ok: false, code: "not_computable", why: `calc-grammar answers it undetermined: ${r.why}` };
+  if (r.undetermined) return { ok: false, code: "not_computable", why: word("consequences.why.calc_grammar_answers", { why: String(r.why) }) };
   return { ok: true, figure: r };
 }
 

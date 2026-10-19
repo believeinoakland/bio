@@ -18,13 +18,14 @@
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
 import { SIGNIN_HOLD_MS, WAITING_HEADER, TRACE_HEADER } from './waits.mjs';
+import { says } from './says.mjs';
 
 const UNKNOWN = JSON.stringify({ ok: false, code: 'UNKNOWN' });
 const DISABLED = JSON.stringify({ ok: false, code: 'LOCAL_RUNNER_DISABLED' });
 // R25: the one key of the class's own storage, the hold's deadline (ms since the epoch).
 const HOLD_KEY = 'signin_hold_until';
 const LIBRARY_DETAIL_MAX = 120;
-const STARTED_WORDS = 'Your team\'s Civicsmith could not start its Claude connection just now. Wait a minute, then try again.';
+const STARTED_WORDS = says('RUNNER_NOT_STARTED');
 
 const log = (line) => console.log(JSON.stringify(line));
 // The first 12 hex characters of the Durable Object id (R30).

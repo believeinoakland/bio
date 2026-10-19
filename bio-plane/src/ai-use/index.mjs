@@ -27,6 +27,7 @@ import { AI_RUNS_CHECKS } from "../run-rules/index.mjs";
 import { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
 import { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, UNJUDGED_WORD, WHOSE_WORD, PERIOD_WORD, WHEN_WORD, MONTH_WORD,
   LIMIT_FIELD_WORD, useInlineWord, useNameWord, fillWords } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 export { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
 export { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, UNJUDGED_WORD, WHOSE_WORD, PERIOD_WORD, WHEN_WORD, MONTH_WORD,
   LIMIT_FIELD_WORD, useInlineWord, useNameWord, fillWords } from "./checks.mjs";
@@ -195,13 +196,12 @@ export class AiUse {
     if (!lim) {
       const translation = fillWords(AI_USE_WORDS[UNJUDGED_WORD], { whose: AI_USE_WORDS[WHOSE_WORD[whose || "group"]] });
       /* DEC-49 REGION is-ai-limit-reached */
-      return { ...this.#refuse("AI_LIMIT_REACHED", `${why} Nothing was started.`), translation, word: UNJUDGED_WORD,
+      return { ...this.#refuse("AI_LIMIT_REACHED", localize("ai-use.index.why_nothing_was_started", "{why} Nothing was started.", { why: String(why) })), translation, word: UNJUDGED_WORD,
         unjudged: true, whose, use: use ?? null };
     }
     const scope = lim.scope;
     const word = LIMIT_WORD_BY_SCOPE[scope] || "ai.refused.limit";
-    return { ...this.#refuse("AI_LIMIT_REACHED", `${p.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is `
-      + `reached for the period from ${start}. Nothing was started.`), translation: AiUse.#limitSentence(word, whose, lim, start),
+    return { ...this.#refuse("AI_LIMIT_REACHED", localize("ai-use.index.owner_s_period_limit_scope", "{owner}'s {period} limit ({scope}, in {unit}) is reached for the period from {start}. Nothing was started.", { owner: String(p.owner), period: String(lim.period), scope: String(scope), unit: String(lim.unit), start: String(start) })), translation: AiUse.#limitSentence(word, whose, lim, start),
       word, whose, scope, unit: lim.unit, period: lim.period, period_start: start, use: use ?? null };
     /* END DEC-49 REGION is-ai-limit-reached */
   }
@@ -210,7 +210,7 @@ export class AiUse {
   #invalid(field, detail) {
     const translation = fillWords(AI_USE_WORDS["ai.refused.limitinvalid"], { field: AI_USE_WORDS[LIMIT_FIELD_WORD[field]] });
     /* DEC-49 REGION is-ai-limit-invalid */
-    return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field, word: "ai.refused.limitinvalid", translation });
+    return this.#refuse("AI_LIMIT_INVALID", localize("ai-use.index.detail_nothing_was_changed", "{detail} Nothing was changed.", { detail: String(detail) }), { field, word: "ai.refused.limitinvalid", translation });
     /* END DEC-49 REGION is-ai-limit-invalid */
   }
 
@@ -218,8 +218,7 @@ export class AiUse {
   #exploreOff(p) {
     const whose = whoseOf(p);
     /* DEC-49 REGION is-explore-not-enabled */
-    return { ...this.#refuse("EXPLORE_NOT_ENABLED", `exploring is set to no on ${p.owner}'s account, so it pays for no `
-      + "exploring. Nothing was started."), translation: fillWords(AI_USE_WORDS["ai.refused.explorenotenabled"],
+    return { ...this.#refuse("EXPLORE_NOT_ENABLED", localize("ai-use.index.exploring_is_set_to_no", "exploring is set to no on {owner}'s account, so it pays for no exploring. Nothing was started.", { owner: String(p.owner) })), translation: fillWords(AI_USE_WORDS["ai.refused.explorenotenabled"],
       { whose: AI_USE_WORDS[WHOSE_WORD[whose]] }), word: "ai.refused.explorenotenabled", whose, owner: p.owner };
     /* END DEC-49 REGION is-explore-not-enabled */
   }
@@ -229,7 +228,7 @@ export class AiUse {
   #outOfScope(p) {
     const whose = whoseOf(p);
     /* DEC-49 REGION is-explore-out-of-scope */
-    return this.#refuse("EXPLORE_OUT_OF_SCOPE", `the question is not one ${p.owner}'s account explores. Nothing was started.`,
+    return this.#refuse("EXPLORE_OUT_OF_SCOPE", localize("ai-use.index.the_question_is_not_one", "the question is not one {owner}'s account explores. Nothing was started.", { owner: String(p.owner) }),
       { owner: p.owner, whose, word: "ai.refused.exploreoutofscope",
         translation: fillWords(AI_USE_WORDS["ai.refused.exploreoutofscope"], { whose: AI_USE_WORDS[WHOSE_WORD[whose]] }) });
     /* END DEC-49 REGION is-explore-out-of-scope */
@@ -239,7 +238,7 @@ export class AiUse {
    *  (R13; T44, DEC-191 (1)). */
   #askFault(field, detail) {
     /* DEC-49 REGION is-explore-ask-invalid */
-    return this.#refuse("EXPLORE_ASK_INVALID", `${detail} Nothing was recorded.`,
+    return this.#refuse("EXPLORE_ASK_INVALID", localize("ai-use.index.detail_nothing_was_recorded", "{detail} Nothing was recorded.", { detail: String(detail) }),
       { field, word: "ai.refused.exploreaskinvalid", translation: AI_USE_WORDS["ai.refused.exploreaskinvalid"] });
     /* END DEC-49 REGION is-explore-ask-invalid */
   }
@@ -281,12 +280,12 @@ export class AiUse {
    *  malformed consumption (C-22.13), naming what. `calls` absent is malformed; `estimated_cost_usd` absent reads as
    *  not stated (agent-model R13 not yet met; K2480). */
   #entryRefusal(e) {
-    const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", `${detail} Nothing was counted.`);
+    const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.detail_nothing_was_counted", "{detail} Nothing was counted.", { detail: String(detail) }));
     if (!e || typeof e !== "object" || Array.isArray(e)) return bad("the use is not an object {mode, usage, calls}.");
     if (typeof e.mode !== "string" || !e.mode.trim() || e.mode.length > 40) return bad("the use names no mode.");
     if (e.model != null && (typeof e.model !== "string" || e.model.length > 120)) return bad("its model is not a model's name.");
     if (e.effort != null && !(typeof e.effort === "string" && EFFORT_WORD.test(e.effort)))
-      return bad("its effort is not a lowercase word of at most 16 letters, or null where none was stated.");
+      return bad(localize("ai-use.index.its_effort_is_not_a", "its effort is not a lowercase word of at most 16 letters, or null where none was stated."));
     const u = e.usage;
     if (!u || typeof u !== "object" || Array.isArray(u)) return bad("its usage is not an object of the call's figures.");
     for (const f of [...USAGE_TOKEN_FIGURES, ...USAGE_COST_FIGURES]) {
@@ -326,8 +325,8 @@ export class AiUse {
                calls = undefined, at = null, act = null } = {}) {
     try {
       const p = owner === NOT_RECORDED ? { kind: "none", owner: NOT_RECORDED } : parseOwner(owner);
-      const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", `${detail} Nothing was counted.`);
-      if (!p) return bad("the use names no paying account: 'group', 'project:<id>' or 'member:<id>'.");
+      const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.detail_nothing_was_counted_2", "{detail} Nothing was counted.", { detail: String(detail) }));
+      if (!p) return bad(localize("ai-use.index.the_use_names_no_paying", "the use names no paying account: 'group', 'project:<id>' or 'member:<id>'."));
       const id = memberIdOf(member);
       if (!id) return bad("the use names no member whose act it was.");
       if (!USE_KINDS.includes(use)) return bad(`the use '${String(use).slice(0, 40)}' is not a kind of use (${USE_KINDS.join(", ")}).`);
@@ -377,7 +376,7 @@ export class AiUse {
       if (p.kind !== "none") this.#noteReached(p, ms);
       return { ok: true, counted: 1, owner: p.owner, member: id, use, day, calls: callCount, act: act || null };
     } catch (err) {
-      return this.#refuse("AI_RUN_CONSUME_INVALID", `the use could not be counted (${String(err && err.message || err).slice(0, 200)}). Nothing was counted.`);
+      return this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.the_use_could_not_be", "the use could not be counted ({String}). Nothing was counted.", { String: String(String(err && err.message || err).slice(0, 200)) }));
     }
   }
 
@@ -388,15 +387,14 @@ export class AiUse {
   countAskUsage({ member = null, mode = null, model = null, effort = null, usage = null, calls = null, at = null, owner = null,
                   act = null } = {}) {
     if (!ASK_USAGE_MODES.includes(typeof mode === "string" ? mode.trim() : mode))
-      return this.#refuse("AI_RUN_CONSUME_INVALID", `the mode '${String(mode).slice(0, 40)}' is not one an ask's use is `
-        + "counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks. Nothing was counted.");
+      return this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.the_mode_string_is_not", "the mode '{String}' is not one an ask's use is counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks. Nothing was counted.", { String: String(String(mode).slice(0, 40)) }));
     const m = mode.trim();
     let out = null;
     try {
       this.#transact(() => { out = this.countUsage({ owner: owner ?? NOT_RECORDED, member, use: m, mode: m, model, effort, usage,
         calls, at, act }); return out; });
     } catch { /* a refusal rolled back; `out` carries it */ }
-    return out ?? this.#refuse("AI_RUN_CONSUME_INVALID", "the use could not be counted. Nothing was counted.");
+    return out ?? this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.the_use_could_not_be_2", "the use could not be counted. Nothing was counted."));
   }
 
   /* ===== The sums ===== */
@@ -414,7 +412,7 @@ export class AiUse {
     if (through) { where.push("day <= ?"); args.push(through); }
     if (use) { where.push("use = ?"); args.push(use); }
     if (member) { where.push("member = ?"); args.push(member); }
-    if (!use && excluded && excluded.size) { where.push(`use NOT IN (${[...excluded].map(() => "?").join(",")})`); args.push(...excluded); }
+    if (!use && excluded && excluded.size) { where.push(localize("ai-use.index.use_not_in_map", "use NOT IN ({map})", { map: String([...excluded].map(() => "?").join(",")) })); args.push(...excluded); }
     const r = this.#one(`SELECT COALESCE(SUM(input_tokens + output_tokens + cache_read_input_tokens + cache_creation_input_tokens), 0) t,
                                 COALESCE(SUM(calls), 0) c, COALESCE(SUM(cost_micro_usd), 0) m FROM ai_usage WHERE ${where.join(" AND ")}`, ...args);
     if (unit === "tokens") return Number(r.t);
@@ -483,10 +481,10 @@ export class AiUse {
       const id = memberIdOf(by);
       /* the member's account is theirs alone: anyone else, an administrator or a machine included */
       return id !== null && id === p.id ? null
-        : this.#refuse("NOT_YOUR_CEILING", `a member's limits and use of the assistant are that member's alone to ${act}. Nothing was changed.`);
+        : this.#refuse("NOT_YOUR_CEILING", localize("ai-use.index.a_members_limits_and_use", "a member's limits and use of the assistant are that member's alone to {act}. Nothing was changed.", { act: String(act) }));
     }
     if (p.kind === "group")
-      return this.#owns(p, by) && !isMachineIdentity(String(by)) ? null : notAnAdmin(by ?? null, `${act} the team account's limits and use`);
+      return this.#owns(p, by) && !isMachineIdentity(String(by)) ? null : notAnAdmin(by ?? null, localize("ai-use.index.act_the_team_accounts_limits", "{act} the team account's limits and use", { act: String(act) }));
     return this.#accountsBar(p, by, act);
   }
 
@@ -563,36 +561,35 @@ export class AiUse {
                by = null, at = null } = {}) {
     try {
       const p = parseOwner(owner);
-      if (!p) return this.#invalid("owner", "a limit's owner is 'group', 'project:<id>' or 'member:<id>'.");
+      if (!p) return this.#invalid("owner", localize("ai-use.index.a_limit_s_owner_is", "a limit's owner is 'group', 'project:<id>' or 'member:<id>'."));
       const bar = this.#ownerBar(p, by, "set");
       if (bar) return bar;
       const scopes = ["overall", ...USE_KINDS, ...(p.kind === "member" ? [] : ["per_member"])];
       if (!scopes.includes(scope))
-        return this.#invalid("scope", `a limit's scope is one of ${scopes.join(", ")}${p.kind === "member" ? " (per_member only for a team's or a project's account)" : ""}.`);
-      if (!LIMIT_UNITS.includes(unit)) return this.#invalid("unit", "a limit's unit is usd, tokens or calls.");
-      if (!LIMIT_PERIODS.includes(period)) return this.#invalid("period", "a limit's period is day or month.");
+        return this.#invalid("scope", localize("ai-use.index.a_limits_scope_is_one", "a limit's scope is one of {scopes}{v1}.", { scopes: String(scopes.join(", ")), v1: String(p.kind === "member" ? " (per_member only for a team's or a project's account)" : "") }));
+      if (!LIMIT_UNITS.includes(unit)) return this.#invalid("unit", localize("ai-use.index.a_limits_unit_is_usd", "a limit's unit is usd, tokens or calls."));
+      if (!LIMIT_PERIODS.includes(period)) return this.#invalid("period", localize("ai-use.index.a_limits_period_is_day", "a limit's period is day or month."));
       let stored = null;
-      if (amount === undefined) return this.#invalid("amount", "a limit's amount is a positive number, or null to remove it.");
+      if (amount === undefined) return this.#invalid("amount", localize("ai-use.index.a_limits_amount_is_a", "a limit's amount is a positive number, or null to remove it."));
       if (amount !== null) {
         const okNum = typeof amount === "number" && Number.isFinite(amount) && amount > 0;
         if (unit === "usd") {
           const cents = okNum ? Math.round(amount * 100) : NaN;
           if (!okNum || cents < 1 || Math.abs(cents - amount * 100) > 1e-6)
-            return this.#invalid("amount", "a limit in usd is a positive amount to the cent, or null to remove it.");
+            return this.#invalid("amount", localize("ai-use.index.a_limit_in_usd_is", "a limit in usd is a positive amount to the cent, or null to remove it."));
           stored = cents;
         } else {
           if (!okNum || !Number.isSafeInteger(amount))
-            return this.#invalid("amount", `a limit in ${unit} is a whole number of one or more, or null to remove it.`);
+            return this.#invalid("amount", localize("ai-use.index.a_limit_in_unit_is", "a limit in {unit} is a whole number of one or more, or null to remove it.", { unit: String(unit) }));
           stored = amount;
         }
       }
       const useScope = USE_KINDS.includes(scope);
       if (inclusive !== undefined && inclusive !== null && (!useScope || typeof inclusive !== "boolean"))
-        return this.#invalid("inclusive", useScope ? "inclusive is true or false." : "inclusive is set only for a limit on one kind of use.");
+        return this.#invalid("inclusive", useScope ? localize("ai-use.index.inclusive_is_true_or_false", "inclusive is true or false.") : localize("ai-use.index.inclusive_is_set_only_for", "inclusive is set only for a limit on one kind of use."));
       /* DEC-49 REGION is-limit-unit-unavailable */
       if (unit === "usd" && stored !== null && this.#isSignin(p, by))
-        return { ...this.#refuse("LIMIT_UNIT_UNAVAILABLE", "this account is a sign-in, which reports no cost; set the limit "
-          + "in tokens or calls. Nothing was changed."), word: "ai.refused.unitunavailable" };
+        return { ...this.#refuse("LIMIT_UNIT_UNAVAILABLE", localize("ai-use.index.this_account_is_a_sign", "this account is a sign-in, which reports no cost; set the limit in tokens or calls. Nothing was changed.")), word: "ai.refused.unitunavailable" };
       /* END DEC-49 REGION is-limit-unit-unavailable */
       const ms = AiUse.#ms(at);
       const now = AiUse.#iso(ms);
@@ -605,7 +602,7 @@ export class AiUse {
       return { ok: true, owner: p.owner, scope, unit, period, amount: stored === null ? null : unit === "usd" ? stored / 100 : stored,
                inclusive: stored === null ? null : incl, change, set_at: now };
     } catch (err) {
-      return this.#invalid("owner", `the limit could not be set (${String(err && err.message || err).slice(0, 200)}).`);
+      return this.#invalid("owner", localize("ai-use.index.the_limit_could_not_be", "the limit could not be set ({String}).", { String: String(String(err && err.message || err).slice(0, 200)) }));
     }
   }
 
@@ -619,13 +616,13 @@ export class AiUse {
   useCheck({ owner = null, member = null, use = null, at = null } = {}) {
     const p = parseOwner(owner);
     const failClosed = (why) => this.#limitReached(p, null, use, null, why);
-    if (!p) return failClosed("the use names no paying account, so its limits cannot be judged.");
-    if (!USE_KINDS.includes(use)) return failClosed(`'${String(use).slice(0, 40)}' is not a kind of use, so its limits cannot be judged.`);
+    if (!p) return failClosed(localize("ai-use.fail_closed.use_names_paying", "the use names no paying account, so its limits cannot be judged."));
+    if (!USE_KINDS.includes(use)) return failClosed(localize("ai-use.fail_closed.kind_use_limits", "'{use}' is not a kind of use, so its limits cannot be judged.", { use: String(String(use).slice(0, 40)) }));
     try {
       if (use === "explore" && this.#exploreOf(p) === "no") return this.#exploreOff(p);
       const hit = this.#reachedFor(p, use, memberIdOf(member), AiUse.#ms(at));
       return hit ? this.#limitReached(p, hit.lim, use, hit.start) : null;
-    } catch { return failClosed("the use counted so far could not be read."); }
+    } catch { return failClosed(localize("ai-use.fail_closed.use_counted_far", "the use counted so far could not be read.")); }
   }
 
   /* ===== READS (R4, R5) ===== */
@@ -647,7 +644,7 @@ export class AiUse {
    *  month in the group's zone by default. Writes nothing. */
   aiUsage({ owner = null, viewer = null, month = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "use is read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.use_is_read_for", "use is read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, viewer, "read");
     if (bar) return bar;
     const { day, zone } = this.#dayOf(at);
@@ -663,7 +660,7 @@ export class AiUse {
    *  Nobody sees another member's spending. Writes nothing. */
   aiUsageMine({ viewer = null, day = null, month = null, at = null } = {}) {
     const id = memberIdOf(viewer);
-    if (!id) return this.#refuse("NOT_YOUR_CEILING", "a member's use of the assistant is read only by that member. Nothing was read.");
+    if (!id) return this.#refuse("NOT_YOUR_CEILING", localize("ai-use.index.a_members_use_of_the", "a member's use of the assistant is read only by that member. Nothing was read."));
     const today = this.#dayOf(at);
     const m = typeof month === "string" && /^\d{4}-\d{2}$/.test(month.trim()) ? month.trim() : null;
     const d = m ? null : typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day.trim()) ? day.trim() : today.day;
@@ -806,7 +803,7 @@ export class AiUse {
    *  for that local day (R2's refusals for anyone else). */
   exploreApprove({ owner = null, day = null, by = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "exploring is approved for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.exploring_is_approved_for", "exploring is approved for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, by, "approve exploring on");
     if (bar) return bar;
     if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))
@@ -833,7 +830,7 @@ export class AiUse {
   #estimate(p, use, mode, count) {
     const acts = this.#rows(`SELECT calls, tokens, cost_micro_usd, cost_unstated FROM ai_use_acts WHERE owner=? AND use=? AND mode=?
                              ORDER BY last_at DESC, act DESC LIMIT ?`, p.owner, use, mode, ESTIMATE_SAMPLE.of);
-    if (acts.length < ESTIMATE_SAMPLE.min) return "not known yet";
+    if (acts.length < ESTIMATE_SAMPLE.min) return localize("question-explorer.known", "not known yet");
     const range = (f) => { const v = acts.map(f); return { low: Math.min(...v) * count, high: Math.max(...v) * count }; };
     if (acts.every((a) => Number(a.cost_unstated) === 0)) {
       const r = range((a) => Number(a.cost_micro_usd));
@@ -848,13 +845,13 @@ export class AiUse {
    *  only to the account's owners (R2's refusals otherwise). Writes nothing. */
   estimate({ owner = null, use = null, mode = null, count = 1, viewer = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "an estimate is for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.an_estimate_is_for", "an estimate is for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, viewer, "read");
     if (bar) return bar;
-    if (!USE_KINDS.includes(use)) return this.#invalid("use", `an estimate names a kind of use (${USE_KINDS.join(", ")}).`);
+    if (!USE_KINDS.includes(use)) return this.#invalid("use", localize("ai-use.index.an_estimate_names_a_kind", "an estimate names a kind of use ({USE_KINDS}).", { USE_KINDS: String(USE_KINDS.join(", ")) }));
     const m = typeof mode === "string" && mode.trim() ? mode.trim() : use;
     const n = count === undefined || count === null ? 1 : count;
-    if (!Number.isSafeInteger(n) || n < 1) return this.#invalid("count", "an estimate's count is a whole number of one or more.");
+    if (!Number.isSafeInteger(n) || n < 1) return this.#invalid("count", localize("ai-use.index.an_estimates_count_is_a", "an estimate's count is a whole number of one or more."));
     return { ok: true, owner: p.owner, use, mode: m, count: n, estimate: this.#estimate(p, use, m, n) };
   }
 
@@ -885,7 +882,7 @@ export class AiUse {
    *  anyone else is refused as R15 refuses them. Writes nothing. */
   aiLimits({ owner = null, viewer = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "limits are read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.limits_are_read_for", "limits are read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#accountsBar(p, viewer, "reading an account's limits");
     if (bar) return bar;
     try {
@@ -930,7 +927,7 @@ export class AiUse {
    *  `unreadable: true`, never zeros. Writes nothing; never throws. */
   accountUseOverTime({ owner = null, viewer = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "use over time is read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.use_over_time_is_read_for", "use over time is read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#accountsBar(p, viewer, "reading an account's use");
     if (bar) return bar;
     try {

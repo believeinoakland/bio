@@ -7,13 +7,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { membershipBeside } from "../../../src/extraction/filemembership.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const OLD_NAMES = /\bthe plane\b|\binstance\b/i;
 const ITEM = "https://agendas.example.org/item/1", FILE = "https://agendas.example.org/file/1";
-const SAYS = "an agenda item's membership in a file, derived from where the file is printed; the publisher linked "
-           + "neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link";
-const basisOf = (agenda) => `the file ${FILE} is printed under the agenda item ${ITEM} in the agenda ${agenda.slice(0, 12)}: `
-                          + "containment, an inference from position, never the publisher's own link";
+const SAYS = localize("connections.index.membership_read_says", "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link");
+const basisOf = (agenda) => localize("connections.why.file_printed_agenda", "the file {file_address} is printed under the agenda item {item_address} in the agenda {agenda_capture}: {derived}, an inference from position, never the publisher's own link", { file_address: FILE, item_address: ITEM, agenda_capture: agenda.slice(0, 12), derived: "containment" });
 
 /* An agenda whose one item has one file printed under it (asserted.test's shape), both documents held. */
 const VIEW = { systems: [{ origin: "sys", hosts: ["agendas.example.org"], links: { item: { re: "^/item/" }, file: { re: "^/file/" } } }] };

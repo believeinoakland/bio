@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { CASE_TENSIONS_MAX } from "../../../src/case-tensions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002";
 const CASE = "CASE-2026-0001";
@@ -112,7 +113,7 @@ test("R4 a member whose read fails, is cut or throws is stated, never dropped, a
   /* a roster member with no pinned version is stated, never read */
   const { w: wp } = published();
   wp.pub.get(CASE, 1).roster[0].version_sha = null;
-  assert.deepEqual(wp.ct.caseTensions({}).cases[0].unread[0], { member: F, undetermined: true, why: "no version was pinned" });
+  assert.deepEqual(wp.ct.caseTensions({}).cases[0].unread[0], { member: F, undetermined: true, why: word("case-tensions.why.version_pinned") });
   /* the provider failing: undetermined, never a throw */
   const { w: worse } = published();
   worse.pub.fail.add("members");

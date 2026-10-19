@@ -131,7 +131,7 @@ test("R52 a documenting version and a chance-to-fix notice are assembled in the 
   assert.equal(w.parts.find((p) => p.part === "a time").text, word("filings.time_set", { date: "2026-05-01", basis: "our own window" }));
   /* the fixture's own action: an uncertain point and a recorded time */
   const real = f.communicationPrepare({ action: x.action(), purpose: "document_infraction", audience: "violating_party", preparer: V("bo"), viewer: V("bo"), language: "en" });
-  assert.equal(real.parts.find((p) => p.part === "a time for review and response").text.startsWith(word("filings.invite_review_response", { date: "2026-04-01", basis: "P.E.B.L. § 4" })), true);
+  assert.equal(real.parts.find((p) => p.part === word("filings.time_review_response")).text.startsWith(word("filings.invite_review_response", { date: "2026-04-01", basis: "P.E.B.L. § 4" })), true);
 });
 
 test("R52 a defence packet's gaps are told by key: no challenged statement, no pressure, a docket or pressure read that cannot be read or is not answered, a truncated pressure list; no consequences read", async () => {

@@ -1,6 +1,6 @@
 # doctypes (T51)
 
-**Status** · session_01JKKYXh9GYPEvo5f4RVmsfZ · depth 2 · COMPLETE · handled B1
+**Status** · session_01PbhX4XrTyKrafF9MPnkqXP · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -50,3 +50,83 @@ Also observed in a full `checks/run.mjs` run on the tranche's job branch (not do
 **M-T51-1:** module raw source lines = 3493 (`wc -l doctypes/*.mjs`, the module's own code; excludes `doctypes/test/` and its fixtures).
 
 Size (session_01JKKYXh9GYPEvo5f4RVmsfZ): test runs 1, module lines 3493
+
+## J3 · REPORT
+
+Plain (unformatted) member-facing sentences remain in doctypes and the words check does not flag them, so they are not among the 50 findings of build/plan/words-pass/doctypes.md. Examples: meeting-calendar.mjs:52 ("no active jurisdiction profile states how long minutes usually take"), meeting-calendar.mjs:223, policy.mjs:371, regulation.mjs:349. R13 says a module "holds no sentence otherwise". I have not converted them, since the check does not ask for it. BOB to say whether they are in scope before the layer closes; if they are, I can convert them in this job or in a re-run of layer 1.
+
+## J4 · COMPLETE
+
+**Entries applied**
+- B2 (START, the re-run of layer 1, T51-168, words pass) read and acted on. Cursor moved to B2. Notes 1 to 3 done: the findings are fixed by the words rule; ids are `doctypes.<file stem>.<slug>`; setup-words added to the import allowance of R21's test.
+- T51-168: the 50 findings `checks/words.mjs` listed for doctypes are fixed. Each templated or stitched member-facing sentence in meeting-agenda, meeting-calendar, meeting-minutes, policy-header, policy, regulation, sections, staff-directory and staff-report reads through `localize("doctypes.<file>.<slug>", en, vars)`: 52 call sites, one id each, the wording unchanged. The words check on doctypes reads inline 0, testcopy 0, missingkey 0.
+- Test changes: the R21 import list (doctypes/test/doctypes.test.mjs) now allows `bio-plane/src/setup-words`. The Administrative Instruction series label in test/policies.mjs moved to test/fixtures/policy-series.json, since it equalled a words.json `en`. regulation-sections.test.mjs:269 names its assertion "source URL" in place of a sentence the word list holds.
+- Commit b90444a9bf on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** none found in this job. The full `checks/run.mjs` run shows reds in other modules only (coverage 33 failures across the tree; words findings in court-doctypes, budget-doctypes, wizard-scripts and others). The plain-sentence question for BOB is in a REPORT posted before this COMPLETE.
+
+**Tests and checks** (run from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0, skipped 0.
+- `checks/words.mjs /home/user/bio doctypes`: 0 failures (inline 0, testcopy 0, missingkey 0).
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 73 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 14 files changed by doctypes; 0 failures.
+- `checks/run.mjs /home/user/bio`: no finding names doctypes. Its reds are in other modules (coverage 33 failures of 6048 ids; words findings in other modules).
+
+**M-T51-1:** module raw source lines = 3507 (`wc -l doctypes/*.mjs`, the module's own code; excludes doctypes/test/).
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 1, module lines 3507
+
+## J5 · REPORT
+
+Two strings in doctypes/index.mjs stay plain. They are the `why` of registerDoctypes' return value (index.mjs:48, "the types are already registered here", and :58, "every type was already held by this registry"). The composition root reads them at wiring time, and no member sees them. The R2 test matches /already/ on them. Please put them on the design's unkeyed list (K3944), or say if they should be keyed instead.
+
+## J6 · COMPLETE
+
+**Entries applied**
+- B3 (CHANGE, K3957, K3959) read and acted on. Merged tranche/T51 (fast-forward to 3bc25c6685) and pulled civicos-process (27aa50e) first.
+- The 79 plain findings in build/plan/words-pass/doctypes.md are judged. Every sentence a member reads now goes through localize('doctypes.<file stem>.<slug>', en, vars): labels, reasons, signals, and the whole sentence of each two-line concatenation (commit 247c693374 on job/T51/doctypes). Test assertions match the same text, so no test changed.
+- Two strings remain plain and are REPORTed to BOB (index.mjs:48 and :58), as wiring text.
+
+**Deferred:** none.
+
+**Other modules:** none.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed above (index.mjs:48, :58); inline 0 other, testcopy 0, missingkey 0.
+- `checks/format.mjs /home/user/bio`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 74 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 10 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/).
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 2, module lines 3498
+
+## J7 · COMPLETE
+
+**Entries applied**
+- B4 (CHANGE, K3962, K3965) read and acted on. Merged tranche/T51 and pulled civicos-process (ea6cd83) first.
+- The one test copy in section "Test copies of code sentences (K3962)", doctypes/test/doctypes.test.mjs (the "this meeting has taken place..." assertion), now compares with localize("doctypes.meeting-calendar.taken_place", en).
+- Regex copies of localize ens, converted as B4 asks: each now compares with localize(id, en[, vars]) by equality. These were doctypes.test.mjs (form_why and the references/body whys), policy.test.mjs (the detect why, header_why, sections_why), regulation-sections.test.mjs (form_why, the code-forms and neither-form sections_why, the added-section why, sections_none_read). Each test imports localize from bio-plane/src/setup-words/index.mjs. Fragments under 25 characters, and assertions on rendered values, stay as regex; none copies a localize en.
+- Commit 56bdcc8415 on job/T51/doctypes.
+
+**Deferred:** none.
+
+**Other modules:** `node bio-plane/src/setup-words/build.mjs --check` (read-only) fails on a jurisdictions key, not doctypes: jurisdictions.index.amount_is_amount_and_units holds a formatted argument ({name, …}), which word and localize do not render yet (R18). For jurisdictions to fix; I have not touched it.
+
+**Tests and checks** (from civicos-process)
+- `node --test doctypes/test/`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 2 findings, both REPORTed (index.mjs:48, :58); testcopy 0, inline 0 other.
+- `checks/format.mjs`: 174 modules, 173 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 77 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 3 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/). No product code changed in this round.
+
+Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 3, module lines 3498

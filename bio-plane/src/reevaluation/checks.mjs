@@ -7,6 +7,7 @@
  * member acts R15 and R16 add are this module's own family, C-110 (C-110.29, R15's required why on an adoption, DEC-88). */
 
 import { ISO_TS_RE } from "../record-grammar/ids.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/reevaluation/index.mjs ${fn} > ${region}`;
 
@@ -91,16 +92,13 @@ export const VERSION_NOTICE_SUBJECT_CHECKS = Object.freeze({
   VERSION_NOTICE_NO_SUBJECT: {
     check: "C-80.1",
     where: at("versionNotice", "is-version-notice-subject"),
-    translation: "That request did not say which citation to check. Ask about one question (target=) "
-      + "to check every passage its evidence rests on, or about one passage (content=) — one of the "
-      + "two, not both and not neither.",
+    translation: word("refusal.VERSION_NOTICE_NO_SUBJECT"),
   },
   /* The question named is not one this caller may read, or is not a question. */
   VERSION_NOTICE_NO_INQUIRY: {
     check: "C-80.2",
     where: at("versionNotice", "is-version-notice-subject"),
-    translation: "There is no question by that id that you can read here. A question you may not see "
-      + "answers exactly as one that does not exist, so nothing about it was checked.",
+    translation: word("refusal.VERSION_NOTICE_NO_INQUIRY"),
   },
 });
 
@@ -116,67 +114,54 @@ export const REEVALUATION_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_ADOPT_VERSION: {
     check: "C-110.1",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "Only a named member can move a reference to a newer version of a document. The assistant and "
-      + "the record's own machine credentials may say a newer version exists; they never choose which one a finding "
-      + "rests on.",
+    translation: word("refusal.MACHINE_CANNOT_ADOPT_VERSION"),
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "Only a named member can record that a reference stays on the earlier version. That is a "
-      + "judgement about the evidence, and a machine credential holds no judgement the record would stand behind.",
+    translation: localize("reevaluation.checks.only_a_named_member_can", "Only a named member can record that a reference stays on the earlier version. That is a judgement about the evidence, and a machine credential holds no judgement the record would stand behind."),
   },
   VERSION_NOTICE_NOT_FOUND: {
     check: "C-110.3",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "There is no notice by that id that you can read here. A notice about a question you may not see "
-      + "answers exactly as one that does not exist.",
+    translation: word("refusal.VERSION_NOTICE_NOT_FOUND"),
   },
   VERSION_NOTICE_CLOSED: {
     check: "C-110.4",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "That notice has already been answered: the reference was either moved to the newer version or "
-      + "kept on the earlier one, and the answer stands as recorded. A yet newer version raises a notice of its own.",
+    translation: word("refusal.VERSION_NOTICE_CLOSED"),
   },
   VERSION_CHOICE_WHY_MALFORMED: {
     check: "C-110.5",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "The reason is too long, or holds a quotation mark, a backslash or a line break, which the record "
-      + "cannot store. Shorten it or leave those characters out.",
+    translation: word("refusal.VERSION_CHOICE_WHY_MALFORMED"),
   },
   MACHINE_CANNOT_RECORD_REEVALUATION: {
     check: "C-110.6",
     where: at("recordReevaluation", "is-reevaluation-record"),
-    translation: "Only a named member can record that a finding was looked at again. A re-evaluation is a judgement "
-      + "about whether the finding still stands, and a machine credential holds no judgement the record would stand "
-      + "behind.",
+    translation: localize("reevaluation.checks.only_a_named_member_can_2", "Only a named member can record that a finding was looked at again. A re-evaluation is a judgement about whether the finding still stands, and a machine credential holds no judgement the record would stand behind."),
   },
   REEVALUATION_NO_SUCH_CAUSE: {
     check: "C-110.7",
     where: at("recordReevaluation", "is-reevaluation-record"),
-    translation: "Nothing that finding rests on has moved in the way named, or the finding is not one you can read "
-      + "here, so there is no second look owed to record. Ask for the finding's re-evaluations to see what is owed.",
+    translation: word("refusal.REEVALUATION_NO_SUCH_CAUSE"),
   },
   REEVALUATION_NOTE_MALFORMED: {
     check: "C-110.8",
     where: at("recordReevaluation", "is-reevaluation-record"),
-    translation: "A recorded re-evaluation says what was looked at and what was decided. The note is missing, too "
-      + "long, or holds a quotation mark, a backslash or a line break, which the record cannot store.",
+    translation: word("refusal.REEVALUATION_NOTE_MALFORMED"),
   },
   VERSION_ADOPT_UNWRITABLE: {
     check: "C-110.9",
     where: at("adoptVersion", "is-version-adoptable"),
-    translation: "The reference could not be moved: the question's document no longer holds the leg this notice was "
-      + "about, or the newer version could not be written into it. Nothing was written, and the notice stays open.",
+    translation: word("refusal.VERSION_ADOPT_UNWRITABLE"),
   },
   /* DEC-88 (K1025): adopting is the act that moves what a finding rests on, so it carries the member's own words on
      why. C-110.10–.28 were intent's before K238 and are not reused. */
   VERSION_ADOPT_NO_REASON: {
     check: "C-110.29",
     where: at("#choiceSubject", "is-version-choice"),
-    translation: "Moving a reference to a newer version of a document needs your reason: say, in your own words and "
-      + "in at most 2,000 characters, why the finding should rest on the newer version. Nothing was written, and "
-      + "the notice stays open.",
+    translation: word("refusal.VERSION_ADOPT_NO_REASON"),
   },
 });
 

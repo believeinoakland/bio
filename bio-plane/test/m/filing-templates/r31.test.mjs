@@ -8,8 +8,8 @@ import { seeded, V, TEST } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 
 const A = V("alice");
-const R31 = { records: "the records asked for, in the member's words", period: "the period the records cover",
-              form: "the form the records are wanted in", cost_limit: word("filing-templates.cost_limit") };
+const R31 = { records: word("filing-templates.records"), period: word("filing-templates.period"),
+              form: word("filing-templates.form"), cost_limit: word("filing-templates.cost_limit") };
 
 test("R31 FILING_BLANKS gains records, period, form and cost_limit, each with its sentence, after the fifteen moved, which are unchanged; still frozen", () => {
   const entries = Object.entries(ft.FILING_BLANKS);

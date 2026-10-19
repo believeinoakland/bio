@@ -8,6 +8,7 @@ import { webcrypto } from "node:crypto";
 import { world, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, AI_WORDS, KEPT_AWAY_UNREADABLE, AI_ACCOUNTS_TABLES,
          AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const SECRET = "sk-ant-api03-SENTINEL-reference-9f8e7d6c5b4a";
 const ask = (member, extra = {}) => ({ kind: "ask", member: `member:${member}`, ...extra });
@@ -169,20 +170,22 @@ test("R25: servingAccountOf answers which account serves a member and its two sw
 
 test("R25: notYourAccount, noAccount and accountMemberNotActive each answer their own row, C-29.14, C-29.20 and C-29.15, with the caller's detail", () => {
   const w = world();
-  const a = w.a.notYourAccount("an ask's grant is minted only under the member's own live session. Nothing was minted.");
+  const grant = localize("credentials.index.an_asks_grant_is", "an ask's grant is minted only under the member's own live session. Nothing was minted.");
+  const a = w.a.notYourAccount(grant);
   assert.deepEqual(a, { ok: false, reason: "NOT_YOUR_ACCOUNT", code: "NOT_YOUR_ACCOUNT", check: "C-29.14",
     translation: AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.translation,
-    detail: "an ask's grant is minted only under the member's own live session. Nothing was minted." });
+    detail: grant });
   const n = w.a.noAccount("ann");
   assert.equal(n.code, "NO_ACCOUNT");
   assert.equal(n.check, "C-29.20");
   assert.equal(n.member, "ann");
   assert.match(n.detail, /no Claude account serves this member/);
   assert.match(w.a.noAccount("ann", "own").detail, /no Claude account reference of their own/);
-  const x = w.a.accountMemberNotActive("a standing question runs only for an active member. Nothing was minted.", { member: "ann" });
+  const standing = localize("credentials.index.a_standing_question_runs", "a standing question runs only for an active member. Nothing was minted.");
+  const x = w.a.accountMemberNotActive(standing, { member: "ann" });
   assert.deepEqual(x, { ok: false, reason: "ACCOUNT_MEMBER_NOT_ACTIVE", code: "ACCOUNT_MEMBER_NOT_ACTIVE", check: "C-29.15",
     translation: AI_ACCOUNT_CHECKS.ACCOUNT_MEMBER_NOT_ACTIVE.translation,
-    detail: "a standing question runs only for an active member. Nothing was minted.", member: "ann" });
+    detail: standing, member: "ann" });
 });
 
 /* ===== R26: onAccountCleared ===== */
@@ -370,8 +373,8 @@ test("R28: migrate keeps a running store's rows: the tables, names and columns u
 test("R30 (T50; K3472, DEC-259): every member-facing string of its rows calls the installation \"your team's Civicsmith\" as words.json says it, never copy, instance, plane or server, and never \"group\"", () => {
   for (const [code, r] of Object.entries(AI_ACCOUNT_CHECKS)) {
     assert.doesNotMatch(r.translation, /\b(copy|instance|plane|server|group)\b/i, code);
-    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll("your team's Civicsmith", "")
-      .replaceAll("Your team's Civicsmith", ""), /Civicsmith/, code);
+    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll(word("queue.capture-completed-unattended.who"), "")
+      .replaceAll(word("queue.update.section"), ""), /Civicsmith/, code);
   }
   for (const [k, v] of Object.entries(AI_WORDS)) assert.doesNotMatch(v, /\b(copy|instance|plane|server|group)\b/i, k);
   assert.match(AI_ACCOUNT_CHECKS.ACCOUNT_SEAL_UNAVAILABLE.translation, /^Your team's Civicsmith /);
@@ -520,8 +523,8 @@ test("R34: KEPT_AWAY_UNREADABLE is exported frozen, the refusal R7 states with i
   assert.ok(Object.isFrozen(KEPT_AWAY_UNREADABLE.keep_away));
   assert.deepEqual(KEPT_AWAY_UNREADABLE, { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31",
     translation: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
-    detail: "whether the team keeps its material away from every assistant could not be read, so no account was read or "
-      + "used. Nothing was sent.", keep_away: { reason: null, set_by: null, set_at: null } });
+    detail: localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."),
+    keep_away: { reason: null, set_by: null, set_at: null } });
 });
 
 test("R34: a stored value that does not parse, a store that throws on every read, and an argument that throws inside the read each answer a refusal with its row, never a throw", async () => {

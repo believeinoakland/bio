@@ -21,12 +21,13 @@
  *   ocds                         OCDS 1.1 release package
  *   fdp                          Frictionless Fiscal Data Package v1 (`datapackage.json`, the rows inline) */
 import { viewerPredicate } from "../membership/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const FORMATS = Object.freeze(["ftm-event", "ocel2", "popolo", "ftm-people", "ftm", "ocds", "fdp"]);
 export const STANDARDS = Object.freeze({
   "ftm-event": "FollowTheMoney 3.x (Event)", ocel2: "OCEL 2.0 JSON", popolo: "Popolo JSON",
-  "ftm-people": "FollowTheMoney 3.x (Person and its relations)", ftm: "FollowTheMoney 3.x (Payment)",
-  ocds: "OCDS 1.1 release package", fdp: "Fiscal Data Package v1",
+  "ftm-people": word("corpus-export.ftm_people"), ftm: "FollowTheMoney 3.x (Payment)",
+  ocds: "OCDS 1.1 release package", fdp: word("corpus-export.fdp"),
 });
 /** The most records of one source one rendering reads; past it the rendering says `truncated`. */
 export const RENDER_MAX = 5000;
@@ -146,7 +147,7 @@ export class RenderSource {
 const entityCitation = (e) => ({ registry: "entities", declared_at: e.at });
 function eventCitation(e) {
   return (e.attestations || []).map((a) => (a.capture_sha ? held({ capture_sha: a.capture_sha, extent: parse(a.extent) ?? a.extent ?? null })
-                                                         : { testimony: "a member's testimony" }));
+                                                         : { testimony: word("events.text.member_testimony") }));
 }
 const lineCitation = (l) => held({ citation: l.citation, capture_sha: l.basis && (l.basis.captureSha || l.basis.capture_sha),
                                    extent: l.basis && l.basis.extent });

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, E, BOB, CAROL, MACHINE, evt, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, Duties, NEVER_SAID, LEVEL_SEARCHED } from "../../../src/duties/index.mjs";
 import { OBSERVATION_LEVELS } from "../../../src/observation-log/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, `${code}: ${JSON.stringify(r).slice(0, 300)}`);
@@ -108,7 +109,7 @@ test("R10 an uncertain due date: a body is overdue only after the latest candida
   const o = at("2026-03-01T16:00:00Z");
   assert.deepEqual(o.due.date.candidates.map((c) => c.value), ["2026-02-28", "2026-03-01"]);
   assert.equal(o.state, "undetermined");
-  assert.match(o.why, /^possibly overdue: undetermined, because/);
+  assert.equal(o.why.key, "civil-time.rules.possibly_overdue_day");
   assert.equal(at("2026-02-28T16:00:00Z").state, "pending");
   assert.equal(at("2026-03-02T16:00:00Z").state, "overdue");
 });
@@ -199,7 +200,7 @@ test("R12 registerOccurrenceEvidence: once per module; measured evidence read as
   const r = byRef(occ(w, id));
   assert.equal(r[X.req2].state, "met");
   assert.deepEqual(r[X.req2].evidence[0], { kind: "measured", source: "calculations", evidence: "CALC-2026-0001", when: day("2026-02-20"),
-                                                 says: "measured evidence, cited as such" });
+                                                 says: localize("duties.says.measured_evidence_cited", "measured evidence, cited as such") });
   assert.ok(r[X.req1].evidence.some((e) => e.source === "workbooks" && /no workbook/.test(e.error)));
   assert.equal(r[X.req1].state, "overdue", "a source that throws is not a match");
   assert.ok(seen.length >= 3);
@@ -219,5 +220,5 @@ test("R16 registerTriggerSource: once per module; its items trigger occurrences;
   const ob = occ(w, b.duty_id);
   assert.deepEqual(ob.occurrences, []);
   assert.deepEqual(ob.source_errors, [{ source: "filings", error: "filings unreadable" }]);
-  assert.deepEqual(occ(w, c.duty_id).source_errors, [{ source: "escalation", error: "no module has registered this trigger source" }]);
+  assert.deepEqual(occ(w, c.duty_id).source_errors, [{ source: "escalation", error: localize("duties.index.trigger_source_unregistered", "no module has registered this trigger source") }]);
 });

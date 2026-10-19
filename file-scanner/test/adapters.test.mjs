@@ -10,6 +10,7 @@ import { LOG_COUNT_KINDS, PROVIDER_TIMEOUT_MS, SANDBOX_TIMEOUT_MS, REPUTATION_LI
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
 import { memoryBucket, putCapture, putDerived, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
 import { vendorNet, vendorSockets, specs, infected, has, WEB_RISK_TEST } from './vendors.mjs';
+import { NOT_HONOURED_CODE } from '../src/providers/routes.mjs';
 
 const SCAN = ['scanii', 'metadefender-cloud', 'metadefender-core', 'icap', 'defender-storage', 'sophos-intelix'];
 const SANDBOX = ['joe-sandbox', 'vmray', 'falcon-sandbox', 'wildfire', 'sophos-intelix'];
@@ -151,7 +152,7 @@ test('R22 private mode per call: confirmed, refused before anything is sent, con
     // contradict: the vendor's answer states another mode
     const cx = world({ mode: 'contradict' });
     const rc = await cx.call(route[id], { store: 'bio', target: target(cx), tool: cx.specs[id] });
-    assert.deepEqual([rc.status, await rc.json()], [502, { ok: false, code: 'PRIVATE_MODE_NOT_HONOURED', provider_id: id }]);
+    assert.deepEqual([rc.status, await rc.json()], [502, { ok: false, code: NOT_HONOURED_CODE, provider_id: id }]);
   }
 });
 

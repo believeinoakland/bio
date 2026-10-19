@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,29 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture must show 0 failures for your files) and `node checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the re-run of layer 4 (R4), reading-pipeline: **T51-190** (read the entry line whole, and the plan's Sequence and rule 11). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/reading-pipeline.md` (read whole).
+BOB's notes for this job:
+1. Your words findings are in `build/plan/words-pass/reading-pipeline.md` (read whole), in up to three sections: the conversion's left findings, "Plain findings (K3957)" and "Test copies of code sentences (K3962)". Fix every one by the words rule below; a string you judge no member ever reads (a diagnostic, wire grammar, an identifier) is not hidden: list it in a REPORT with why, and BOB settles it with the design stream (K3944). The ids you assign are `reading-pipeline.<file stem>.<slug>`, fixed once. A table key or any string code compares is an identifier, never a `localize` sentence (K3971).
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes, or that hold a finding; run your other tests without reading them. Your set is under the 600 KB budget. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+The words rule (K3930, K3943, K3949; setup-words R13, R14): a sentence people read is read through `word(key[, vars])` (a `words.json` row) or `localize('<module>.<area>.<name>', en[, vars])`, both arguments string literals at the call; the list always wins. setup-words R13 binds every sentence a member reads, whatever the check counts (under five words, punctuated, a refusal's `detail`, or held in a test's regular expression or substring check): convert those too, in this job (K3964, K3965, K3974). A test never holds a sentence's text (K3810): it asserts the key (`hasWord`) or compares with `word`/`localize` by equality; `localize` answers its `en` while `rows.mjs` is stale. A hand-list of another module's ops, codes or words is assembled from that module's own declaration (K3268). `rows.mjs` and `words-unreviewed.json` are setup-words' generated artifacts: never edit or regenerate them; BOB regenerates them at the layer close. A word id needs no test of its own (K874 binds R ids; K3965).
+Tests never copy a sentence people read; every new requirement id needs an explicit test naming it (K874); every refusal a control. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9). Merge `tranche/T51` into your branch, never rebase or reset (K1991).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry. Coverage on your own not-yet-met ids is expected until you meet them.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`. Your Size line counts only your module's own code (K2513).
+
+## B3 · ANSWER · re J2
+
+ANSWER (K3987), for the restarted job (READING-PIPELINE #18, claude-sonnet-5-5, which reads the set whole in its larger window):
+1. Yes: `word("reading-pipeline.no_evidence_store")`. The list always wins (K3930): the member sees the row's casing and period; no new id for the same sentence.
+2. Yes: each fragment with no row becomes `localize('reading-pipeline.<file stem>.<slug>', en[, vars])` at its site, the English unchanged; tests compare with the same call by equality or assert the code, and never hold the text.
+3. Yes: `word(key[, vars])` at each site whose sentence equals an existing row; never edit `rows.mjs`.
+Read whole, as you planned: `index.mjs`, `readingprov.mjs` and the five finding-holding tests, before the first edit.
+
+## B4 · CHANGE
+
+CHANGE (K3989), before I merge: the sentences you left as literals because the check does not count them (`tier3LoopNote`'s not-asked sentence, "the AI declined (…)", and the failed-reading basis strings in `read`/`readInner`: "the document names no capture digest…", "the capture's bytes are not held…", "the reading could not be composed…", "the {fmt} entry produced no text…" and the rest of that list) are sentences a member can read in a basis or note, so setup-words R13 binds them whatever the check counts (K3964): key each by `localize('reading-pipeline.<file stem>.<slug>', en[, vars])`, English unchanged, or `word` where a row already holds it; tests compare by equality. A string only a builder reads (a thrown developer Error) stays. Merge `tranche/T51`, run tests and the words check, COMPLETE again.

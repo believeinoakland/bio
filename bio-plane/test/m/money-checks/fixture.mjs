@@ -17,6 +17,7 @@ import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Money } from "../../../src/money/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { moneyChecksOf } from "../../../src/money-checks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -215,7 +216,7 @@ export const SHARE_RECIPE = Object.freeze({
 export const shareDetector = (over = {}) => ({
   label: "payee share", population: { per: "payee", kinds: ["expenditure"] }, condition: SHARE_RECIPE,
   parameters: [{ name: "share", value: "0.5", citation: "member's own word: half of the paid amounts" }],
-  denominator: "every fact of the population", derivation: "payee sum over population sum against the share", by: ALICE, ...over,
+  denominator: word("money-checks.fact_population"), derivation: "payee sum over population sum against the share", by: ALICE, ...over,
 });
 
 /** R14: the words no text this module answers may say. */

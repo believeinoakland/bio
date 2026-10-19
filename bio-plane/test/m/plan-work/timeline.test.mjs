@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, code, by, V, MACHINE, ms, choose, option } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed } from "../../../src/action-plans/index.mjs";
 import { PLAN_WORK_CHECKS } from "../../../src/plan-work/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DATES = [{ date: "2026-11-01", basis: "the records statute, ten days" }, { date: "2026-12-15", basis: "the order of 2026" }];
 
@@ -132,7 +133,7 @@ test("R4: planReviewOpen answers what changed since the last review entry: respo
   assert.deepEqual(r.responses.map((x) => [x.action, x.at]), [[s.action, "2026-10-05"]]);
   assert.deepEqual(r.dates_passed.map((x) => [x.kind, x.at]), [["clock", "2026-10-04"]]);
   /* the response itself set off a re-examination (its mark), and the mark written by hand: both since the review */
-  assert.deepEqual(r.marks.map((x) => [x.kind, x.why]), [["option_changed", `a response was recorded on ${s.action}, the action this option started`], ["option_changed", "x"]]);
+  assert.deepEqual(r.marks.map((x) => [x.kind, x.why]), [["option_changed", word("plan-work.why.response_recorded_action", { action: String(s.action) })], ["option_changed", "x"]]);
   /* after a new review entry nothing has changed */
   w.clock.now = "2026-10-06T00:00:00Z";
   w.pw.planReviewRecord({ plan: w.PL, decided: "Read the reply.", ...by("bob") });

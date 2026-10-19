@@ -24,6 +24,7 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { factPath } from "../local-facts/paths.mjs";
 import { rowOf } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R4: the page of `scheduledEditions`, its default and its ceiling. */
 export const SCHEDULED_EDITIONS_MAX = 500;
@@ -85,7 +86,7 @@ function resolveAt(p, at) {
   let b = null;
   try { b = bounds({ value: `${date}T${time}`, precision: "minute", zone }); } catch { b = null; }
   if (!b || !b.earliest)
-    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: `the team's time zone (${zone}) cannot be read` };
+    return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: localize("publish-schedule.schedule.the_teams_time_zone_zone", "the team's time zone ({zone}) cannot be read", { zone: String(zone) }) };
   if (!(ms(b.earliest) > ms(clock(p))))
     return { ok: false, reason: "PUBLISH_AT_PAST", at: { date, time, zone }, publish_at: b.earliest,
              detail: "that time is not after now; publishing now is the ceremony's own commit" };
@@ -148,10 +149,10 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
   const doc = one(p, `SELECT doc_sha, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
   if (!doc || (!doc.sig_armored && doc.doc_sha !== str(docSha)))
     return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed,
-             detail: `no unsigned case document of ${id} edition ${ed} is held at that sha` };
+             detail: localize("publish-schedule.schedule.no_unsigned_case_document_of", "no unsigned case document of {id} edition {ed} is held at that sha", { id: String(id), ed: String(ed) }) };
   if (doc.sig_armored)
     return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-             detail: `case ${id} edition ${ed} is already signed and published, and a signed edition answers forever` };
+             detail: localize("publish-schedule.schedule.case_id_edition_ed_is", "case {id} edition {ed} is already signed and published, and a signed edition answers forever", { id: String(id), ed: String(ed) }) };
   const held = waitingRow(p, id, ed);
   if (held) {
     if (held.doc_sha === str(docSha) && held.sig_armored === str(signature) && held.at_date === when.at.date
@@ -159,7 +160,7 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
       return { ok: true, existed: true, case: id, edition: ed, state: "waiting", at: entryOf(p, held).at,
                publish_at: held.publish_at };
     return { ok: false, reason: "PUBLISH_AT_ALREADY_SET", caseId: id, edition: ed, waiting: entryOf(p, held),
-             detail: `case ${id} edition ${ed} already waits to be published; move or cancel that time` };
+             detail: localize("publish-schedule.schedule.case_id_edition_ed_already", "case {id} edition {ed} already waits to be published; move or cancel that time", { id: String(id), ed: String(ed) }) };
   }
   const now = clock(p);
   p.sql.exec(
@@ -248,7 +249,7 @@ function ownersRow(p, caseId, edition, by) {
                    caseId, Number(edition));
   if (!last) return notWaiting;
   if (last.state !== "waiting")
-    return { ...notWaiting, state: last.state, detail: `that edition no longer waits: it is ${last.state}` };
+    return { ...notWaiting, state: last.state, detail: localize("publish-schedule.schedule.that_edition_no_longer_waits", "that edition no longer waits: it is {state}", { state: String(last.state) }) };
   if (ms(last.publish_at) <= ms(clock(p)))
     return { ...notWaiting, state: "waiting", detail: "that edition's time has come, so it is being published or stopped" };
   const project = projectOf(p, caseId, edition);
@@ -297,7 +298,7 @@ export function scheduledEditions(p, { case: caseArg = null, caseId = null, stat
   const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || SCHEDULED_EDITIONS_MAX, SCHEDULED_EDITIONS_MAX));
   const id = str(caseArg ?? caseId), st = str(state);
   if (st && !SCHEDULE_STATES.includes(st))
-    return { ok: false, reason: "MALFORMED", detail: `a state is one of ${SCHEDULE_STATES.join(", ")}` };
+    return { ok: false, reason: "MALFORMED", detail: localize("publish-schedule.schedule.a_state_is_one_of", "a state is one of {SCHEDULE_STATES}", { SCHEDULE_STATES: String(SCHEDULE_STATES.join(", ")) }) };
   const [aAt, aSeq] = typeof after === "string" && after.includes("#")
     ? [after.slice(0, after.lastIndexOf("#")), Number(after.slice(after.lastIndexOf("#") + 1)) || 0] : ["", 0];
   const where = [`(publish_at > ? OR (publish_at = ? AND seq > ?))`], args = [aAt, aAt, aSeq];

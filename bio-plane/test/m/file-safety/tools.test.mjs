@@ -270,8 +270,8 @@ test("R32 (K1949): a tool's use is on_request (the default) or routine; on_reque
     if (!r.ok) assert.equal(r.code, "USE_NOT_ALLOWED");
   }
   assert.equal(onOwnServers("the organization"), true);
-  assert.equal(onOwnServers("the organization's own MetaDefender Core server"), true);
-  assert.equal(onOwnServers("Microsoft (the organization's own Azure storage account)"), true);
+  assert.equal(onOwnServers("the organization's own Acme appliance"), true);
+  assert.equal(onOwnServers("Microsoft (the organization's own Azure bucket)"), true);
   assert.equal(onOwnServers("OPSWAT, Inc. (Cloud), or the organization's own Core server"), false);
   assert.equal(onOwnServers("Uva Software, LLC"), false);
   /* the default is on_request, which no scan batch uses and no capture queues a copy for */
@@ -429,8 +429,8 @@ test("R41: `refreshReputationLists({at})`, reached by no route, asks file-scanne
 });
 
 test("R44 (T47; N971; setup-page R30): `onOwnServers(recipient)`, exported, answers true exactly when the recipient is a string that, trimmed, begins with the words \"the organization\" (any case), or names one service with \"the organization's own …\" in parentheses at its end; false for a vendor's service, two places, or a value that is not a string; pure, self-contained (its source alone, carried elsewhere, answers the same) and never throws; R28 and R32 decide routine use by it alone", async () => {
-  const yes = ["the organization", "  The Organization  ", "THE ORGANIZATION's own rack", "the organization's own MetaDefender Core server",
-               "Microsoft (the organization's own Azure storage account)", "Acme ICAP (The Organization's own appliance)"];
+  const yes = ["the organization", "  The Organization  ", "THE ORGANIZATION's own rack", "the organization's own Acme appliance",
+               "Microsoft (the organization's own Azure bucket)", "Acme ICAP (The Organization's own appliance)"];
   const no = ["Uva Software, LLC", "OPSWAT, Inc. (Cloud), or the organization's own Core server", "Microsoft (Azure, run by Microsoft)",
               "Microsoft (the organization's own storage) and Google (the organization's own bucket)", "Microsoft (the organization's own storage) in the cloud",
               "the organizational partner's cloud", "a vendor for the organization", "", "   ", "not stated"];

@@ -12,6 +12,7 @@ import {
 } from "../../../src/content/index.mjs";
 import * as textChain from "../../../src/textchain.mjs";
 import { TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
+import { CONTENT_OP_NAMES } from "../../../src/content/ops.mjs";
 
 const DOC = "INFO-2026-0001-a", OTHER = "INFO-2026-0002-b";
 const H = "a".repeat(64);
@@ -140,7 +141,7 @@ test("R49: content registers its check and its mint on provenance's testimony sl
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]);
   const again = w.prov.onTestimony("content", { check: () => null });
-  assert.deepEqual([again.ok, again.code], [false, "LISTENER_DECLARED"], "registered once, at start");
+  assert.deepEqual([again.ok, again.code], [false, "LISTENER_DECLARED"]);
   const slot = w.prov.testimonySlot();
   const asked = [];
   const ctx = w.content.contentContextFor;
@@ -193,8 +194,7 @@ const urlOf = (q) => new URL(`https://plane.invalid/?${new URLSearchParams(q)}`)
 test("R50: contentOps publishes eight route arms, each a function of no arguments answering what its service answers", () => {
   const w = world();
   const ops = contentOps(w.content, urlOf({}), null);
-  assert.deepEqual(Object.keys(ops).sort(),
-    ["attesttext", "content", "contentcrop", "contentmint", "textattest", "transcribe", "transcription", "transcriptionattest"]);
+  assert.deepEqual(Object.keys(ops).sort(), [...CONTENT_OP_NAMES].sort());
   for (const [k, f] of Object.entries(ops)) assert.equal(f.length, 0, k);
 });
 

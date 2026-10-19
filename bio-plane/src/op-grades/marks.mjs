@@ -21,12 +21,14 @@
 
 /* the commit the kit and the registry are read at: the design's last merge into `tranche/T50` (`7be06eb4cb`, K3750, R46),
    which moved both files on from `fa3c8b7e8e` (PR #39, K3366; K3321 (B) before it) */
+import { localize } from "../setup-words/index.mjs";
+
 export const MARKS_KIT_COMMIT = "7be06eb4cb";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
   default: `kit default at ${MARKS_KIT_COMMIT}: an op WEIGHT does not name is Reasoned`,
-  dec300: `DEC-300 (5), over the kit at ${MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it`,
+  dec300: localize("op-grades.marks.dec_300_5_over_the", "DEC-300 (5), over the kit at {MARKS_KIT_COMMIT}: the act weighs Reversible, so no mark is drawn for it", { MARKS_KIT_COMMIT: String(MARKS_KIT_COMMIT) }),
 };
 
 /* [op, weight name, source key], in the op's name order */

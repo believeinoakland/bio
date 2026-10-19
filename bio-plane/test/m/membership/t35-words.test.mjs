@@ -9,7 +9,7 @@ import { world, V } from "./fixture.mjs";
 import * as membership from "../../../src/membership/index.mjs";
 import { Membership, listenerRefusal, notAnAdmin, noSuchProject, notAParticipant, noSuchMember, notTheOwner,
          MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS } from "../../../src/membership/index.mjs";
-import { word, WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { word, localize, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 
 /* A key's words as a row carries them: the list's English, placeholders left in place for the screen. */
 const raw = (key) => WORD_ROWS.find((r) => r[0] === key)[1];
@@ -56,13 +56,11 @@ test("R112 R151 the sweep's row C-96.11: no holders reads refusal.NO_HOLDERS by 
 });
 
 test("R112 the sweep's row index.mjs:139: the detail of NOT_AN_ADMIN names the act and says who is asking is read from the signed-in session, at every act that refuses it", async () => {
-  const sentence = (act) => `${act} is an administrator's act (Membership Architecture v2 §4.9), and your team's `
-    + "Civicsmith takes who is asking from the signed-in session rather than from the caller. This caller is not one of "
-    + "the active administrators. Nothing was changed.";
+  const sentence = (act) => localize("membership.index.what_is_an_administrators_act", "{what} is an administrator's act (Membership Architecture v2 §4.9), and your team's Civicsmith takes who is asking from the signed-in session rather than from the caller. This caller is not one of the active administrators. Nothing was changed.", { what: act });
   assert.equal(notAnAdmin("ann", "doing the thing").detail, sentence("doing the thing"));
   const w = await world().group("ann");
   assert.equal(w.m.hostingAccessSet({ holders: "x", by: "ann" }).detail,
-    sentence("recording who holds hosting access (4.8)"));
+    sentence(localize("member-roster.index.recording_who_holds_hosting_access", "recording who holds hosting access (4.8)")));
   const caps = w.m.memberCaps({ memberId: "ann", capabilities: [], by: "ann" });
   assert.equal(caps.detail, sentence("setting a member's capabilities"));
 });

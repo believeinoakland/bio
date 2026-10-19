@@ -1,0 +1,58 @@
+<title>Is a 15,000-row word table right?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap">
+<style>
+/* Layout: one reading column; findings as a sourced list, options as bordered blocks. */
+:root{--bg:#f7f8f6;--fg:#1d2420;--muted:#5b6660;--rule:#d5dbd6;--accent:#2f6b4f;--display:"Source Serif 4",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--fg:#e4e9e5;--muted:#9aa59f;--rule:#2d3631;--accent:#7cc39e;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:46rem;margin:0 auto;padding-block:2.5rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:1.75rem}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:600}h2{font-size:1.3rem;font-weight:600;color:var(--accent)}
+p,ul,ol{margin:0}section{display:grid;gap:.8rem}li+li{margin-top:.45rem}
+.lede{color:var(--muted)} .src{font-size:.85rem;color:var(--muted)}
+a{color:var(--accent)} code{font-family:var(--mono);font-size:.85em}
+.opt{border:1px solid var(--rule);border-radius:6px;padding:1rem;display:grid;gap:.4rem}
+.opt b{font-family:var(--display);font-size:1.05rem}
+</style>
+<main>
+<header style="display:grid;gap:.5rem">
+<h1>Is a 15,000-row word table right?</h1>
+<p class="lede">BOB #213, 18 October 2026. Your question: is one hand-keyed word table of some 15,000 entries the best way to fix the fragility and meet the translation requirement? This page sets out what the established practice says, with sources, and where the evidence is thin. It ends with a decision for you.</p>
+</header>
+
+<section>
+<h2>What established practice says</h2>
+<ol>
+<li><b>Text people read is kept out of the program logic, in message catalogs, one per language. That part we already do.</b> GNU gettext extracts translatable strings into a <code>.po</code> catalog. FormatJS extracts into <code>lang/en.json</code>. Mozilla's Fluent keeps messages in <code>.ftl</code> files. GitLab syncs its catalog, <code>gitlab.pot</code>, to Crowdin for translators. <span class="src">(<a href="https://man7.org/linux/man-pages/man1/xgettext.1.html">xgettext</a>, <a href="https://formatjs.github.io/docs/getting-started/message-extraction">FormatJS</a>, <a href="https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html">Fluent</a>, <a href="https://docs.gitlab.com/development/i18n/translation/">GitLab</a>)</span></li>
+<li><b>The common workflow is not a table that people key by hand.</b> In the mainstream tools, developers write the English message once, where it is used in the code, wrapped in a marker function. A tool then extracts every marked message into the catalog automatically. FormatJS: "We recommend against explicit IDs since it can cause collision", and its tooling generates an ID from each message's content. Lingui generates IDs by default, so "you don't need to come up with a name for each single phrase", and "searching for a user-facing string will lead to the place in code where it's used." Translators work only in the catalogs. <span class="src">(<a href="https://formatjs.github.io/docs/getting-started/message-extraction">FormatJS</a>, <a href="https://lingui.dev/guides/explicit-vs-generated-ids">Lingui</a>)</span></li>
+<li><b>Fragility comes from tests and stitched-together text, not from where the English sits.</b>
+<ul>
+<li>One testing guide describes the classic failure: suites that "assert on literal copy, so every wording change breaks fifty tests". The standard fix is to assert the message's key or structure, and to test with a "pseudo-locale" (machine-garbled text) that proves every string goes through the translation layer. <span class="src">(<a href="https://intlayer.org/blog/i18n-testing-strategies.md">Intlayer</a>, <a href="https://lingoport.com/blog/what-is-pseudo-localization/">Lingoport</a>)</span></li>
+<li>Never build a sentence from pieces. Use whole sentences with named placeholders, and handle plurals with ICU message syntax, because word order and plural forms differ by language (Arabic has six plural forms, Russian three). <span class="src">(<a href="https://mozilla-l10n.github.io/documentation/localization/dev_best_practices.html">Mozilla</a>, <a href="https://wiki.gnome.org/TranslationProject/DevGuidelines/Never%20split%20sentences">GNOME</a>, <a href="https://www.locize.com/docs/integration/i18n-formats/pluralization">Locize</a>)</span></li>
+</ul></li>
+<li><b>An English-only wording fix need not touch anything else.</b> Mozilla: if a change is "relevant only for English", there is "generally no need to update the string ID"; a new ID is needed only when the meaning changes. With stable IDs, "if the message changes, the ID remains the same" (Lingui). <span class="src">(<a href="https://mozilla-l10n.github.io/documentation/localization/dev_best_practices.html">Mozilla</a>, <a href="https://lingui.dev/guides/explicit-vs-generated-ids">Lingui</a>)</span></li>
+<li><b>Text only developers see is not translated.</b> Google's error model keeps the developer message in English and localizes only what users see, through stable codes. <span class="src">(<a href="https://developers.google.com/maps/documentation/routes/reference/rest/v2/Status">Google</a>)</span></li>
+<li><b>Is 15,000 entries a lot?</b> I could not find a published total for a large product's catalog, so I won't state one. The nearest figure: Mozilla's translation platform took in 13,002 new strings in 2025 alone, across its projects. Catalogs of this order are ordinary. Their size is not the problem; maintaining them by hand is. <span class="src">(<a href="https://blog.mozilla.org/l10n/2026/01/07/mozilla-localization-in-2025/">Mozilla l10n 2025</a>)</span></li>
+</ol>
+</section>
+
+<section>
+<h2>What that means for Civicsmith</h2>
+<ul>
+<li><b>Two of our rules match best practice:</b> tests never copy a sentence, and nothing is stitched together. Most of the 1,463 tests that copy a sentence, and the 176 that copy another module's lists, are the real fragility. Both are fixed whatever else we choose.</li>
+<li><b>Hand-keyed sentences are not the common practice.</b> Our rule today, that no module may hold any English and that every sentence needs a hand-named key the design stream writes first, is what turns about 7,100 sentences into 7,100 round trips with the design stream. The mainstream tools avoid exactly that.</li>
+<li><b>The word table also duplicates the code.</b> 2,124 sentences sit both in a module and in the table. That is the worst case, because the two copies drift apart.</li>
+</ul>
+</section>
+
+<section>
+<h2>Your decision: how the words are kept</h2>
+<div class="opt"><b>A. Keep today's rule and key all of it by hand</b><p>The design stream writes about 7,100 new rows and two passes switch the code. It works and matches our current doctrine, but it is the slowest, and every new sentence keeps needing a round trip.</p></div>
+<div class="opt"><b>B. Extract from the code (recommended)</b><p>Each sentence stays written once, where it is used, wrapped in one marker function with a stable ID. A build step extracts every marked sentence into the word table automatically, as gettext, FormatJS and Lingui do. The design stream still owns the wording: its English entry in the table overrides the code's, so a wording change is a table edit with no job. Translators work in one table per language.</p>
+<p>The check then fails on three things: a sentence people read that isn't wrapped, a test that copies a sentence, and a hand-copied list. A pseudo-locale test proves nothing escapes the marker. The conversion is mechanical, a script wrapping literals in one pass, and needs no 7,100 design round trips. Developer-only messages stay plain English, as Google does.</p></div>
+<div class="opt"><b>C. A mix</b><p>Keep hand keys for the screens the design stream draws, and extract everything else. It is quicker than A, but it leaves two rules for developers to tell apart.</p></div>
+<p>I recommend <b>B</b>. It is the established practice, it removes the bottleneck behind the fragility, and it keeps the design stream's control of every word through the English table. Either way, the test and list fixes, the check and the pseudo-locale test happen in T51.</p>
+</section>
+</main>

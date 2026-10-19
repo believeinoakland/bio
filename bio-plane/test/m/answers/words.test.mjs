@@ -6,9 +6,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const BANNED = /\b(?:copy|copies|instance|instances|plane|planes|server|servers)\b/i;
-const OURS = "your team's Civicsmith";
+const OURS = word("queue.capture-completed-unattended.who");
 /* Every member-facing string of an answer, deep: translations, details, reasons and conditions. */
 function said(v, out = []) {
   if (Array.isArray(v)) for (const x of v) said(x, out);
@@ -23,24 +24,23 @@ function said(v, out = []) {
 test("R29 every row's translation names the group's Civicsmith as \"your group's Civicsmith\" or not at all, never copy, instance, plane or server; C-135.6 and C-135.8 as the sweep words them", () => {
   for (const [code, row] of Object.entries(ANSWERS_CHECKS)) assert.doesNotMatch(row.translation, BANNED, code);
   assert.equal(ANSWERS_CHECKS.RULE_SERVICE_UNKNOWN.check, "C-135.6");
-  assert.equal(ANSWERS_CHECKS.RULE_SERVICE_UNKNOWN.translation, `No rule service of that name is held in ${OURS}. Nothing was read.`);
+  assert.equal(ANSWERS_CHECKS.RULE_SERVICE_UNKNOWN.translation, word("refusal.RULE_SERVICE_UNKNOWN"));
   assert.equal(ANSWERS_CHECKS.RULE_SERVICES_OFF.check, "C-135.8");
-  assert.equal(ANSWERS_CHECKS.RULE_SERVICES_OFF.translation,
-    `The record's rule services are switched off in ${OURS} until the assistant's measured bar is met. Nothing was read.`);
+  assert.equal(ANSWERS_CHECKS.RULE_SERVICES_OFF.translation, word("refusal.RULE_SERVICES_OFF"));
 });
 
 test("R29 the refusals' details and the not-held reasons it answers: the rule services switched off (index.mjs:202), no profile active for profiles (rules.mjs:60) and for deadlinecompute (rules.mjs:83)", async () => {
   const off = answersWorld({ rules: false });
   const r = await off.a.ruleAnswer({ service: "profiles", args: { section: "deadlines" }, viewer: V("bob") });
   assert.equal(r.code, "RULE_SERVICES_OFF");
-  assert.equal(r.detail, `the rule services are switched off in ${OURS}`);
+  assert.equal(r.detail, localize("answers.index.the_rule_services_are_switched", "the rule services are switched off in your team's Civicsmith"));
   const unknown = await answersWorld().a.ruleAnswer({ service: "nosuch", viewer: V("bob") });
   for (const s of said(unknown)) assert.doesNotMatch(s, BANNED, s);
   /* no profile active: jurisdictions' combine answers no view */
   const none = answersWorld({ deps: { combine: () => ({ ok: false, reason: "NO_PROFILES" }) } });
   for (const [service, args] of [["profiles", { section: "deadlines", key: "x" }], ["deadlinecompute", { rule: "x", start: "2026-01-05" }]]) {
     const got = await none.a.ruleAnswer({ service, args, viewer: V("bob") });
-    assert.equal(got.not_held.reason, `no jurisdiction profile is active in ${OURS}`, service);
+    assert.equal(got.not_held.reason, localize("answers.rules.no_jurisdiction_profile_is_active", "no jurisdiction profile is active in your team's Civicsmith"), service);
   }
   /* the standing questions' refusals, and the held-back conditions of a run */
   const w = answersWorld();

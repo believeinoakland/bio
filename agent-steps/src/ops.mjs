@@ -1,0 +1,26 @@
+/* agent-steps — the plane ops a run may call, each with whether it writes. This module's own declaration (K3268): the plan
+   suite reads its op lists from here, so a plane op a run calls must be named here. */
+export const PLAN_OPS = Object.freeze({
+  whoami: { mutating: false },
+  airun: { mutating: false },
+  airunlog: { mutating: false },
+  plan: { mutating: false },
+  plans: { mutating: false },
+  determination: { mutating: false },
+  standard: { mutating: false },
+  consequencesof: { mutating: false },
+  availableactions: { mutating: false },
+  publishededitions: { mutating: false },
+  profiles: { mutating: false },
+  action: { mutating: false },
+  reading: { mutating: false },
+  procedureguides: { mutating: false },
+  agentpack: { mutating: false },
+  airuntick: { mutating: true },
+  airunclose: { mutating: true },
+  optionpropose: { mutating: true },
+  suggest: { mutating: true },
+  capturerequest: { mutating: true },
+  airunspawn: { mutating: false },
+  optionadd: { mutating: true },
+});

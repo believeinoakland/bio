@@ -41,6 +41,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { SOURCES_CHECKS, noSuchSource, badDisclosure, noEvidence, noSightList, consentNotStanding,
          SECRET_NOT_RECOGNISED_ANSWER, machineCannotMark, notYourCapture, noSuchCapture, noService } from "./checks.mjs";
 import { SOURCES_TABLE_CLASSES, migrateSources } from "./schema.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER } from "./checks.mjs";
 export { SOURCES_SCHEMA, SOURCES_TABLES, SOURCES_TABLE_CLASSES } from "./schema.mjs";
@@ -62,15 +63,13 @@ export const VALUE_MAX = 400, CLAIMED_BY_MAX = 200, EVIDENCE_MAX = 2000;
 export const SERVICE_MAX = 200, TERMS_MAX = 2000;
 
 /** R7: the sentences a consent and a withdrawal answer with (DEC-78 item 5(d)). */
-export const CONSENT_STATEMENT = "This consent is permanent for anything published under it: what is published under "
-  + "it stays published, even if the consent is later withdrawn.";
-export const WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the "
-  + "consent stays published.";
+export const CONSENT_STATEMENT = word("sources.consent_permanent_anything");
+export const WITHDRAWAL_STATEMENT = word("sources.withdrawal_binds_later");
 /** R4: what an entry recorded without its value reads as (DEC-78 item 5(c)). */
-export const NOT_RECORDED = "known to the team, not recorded";
+export const NOT_RECORDED = word("sources.known_group_recorded");
 /** R3: the sentence a hostile disclosure reads as (DEC-78 item 5(b)). */
 export const claimSentence = (claimedBy, at) =>
-  `named by ${claimedBy} on ${String(at).slice(0, 10)}; not confirmed by the team`;
+  word("sources.named_confirmed_group", { claimed_by: String(claimedBy), at: String(String(at).slice(0, 10)) });
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -343,7 +342,7 @@ export class Sources {
     }));
     return { ok: true, source, rung: r.rung, ladder: RUNGS,
              ...(r.rung === "same_knocker" && r.pseudonym
-               ? { knocker: { pseudonym: r.pseudonym, how: "the same knocker secret was presented" } } : {}),
+               ? { knocker: { pseudonym: r.pseudonym, how: word("doorbell.continuity") } } : {}),
              basis: views.basis, claims: views.claims };
   }
 
@@ -802,6 +801,9 @@ export function sourcesOf(ctx, deps = {}) {
 /* The Durable Object routes this module answers (the control plane routes and stamps them, layer 11). `url` carries
    the stamps (`by`, `viewer`, and for `knockerconsent` the connecting `source` and `now`), read after the body is
    spread so a caller's own copy never wins (D-136). */
+export const SOURCES_OP_NAMES = Object.freeze(["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose",
+  "sourcekeyed", "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+
 export function sourcesOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = isObj(body) ? body : {};

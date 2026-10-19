@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { ORIGIN_LIMIT } from "../../../src/strength/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-a", C = "INFO-2026-0003-a";
 const DAY = "2026-03-01";
@@ -102,7 +103,7 @@ test("R12: undated documents whose issuers have lines: the tie is undetermined, 
   w.event("EVT-2026-0002", { kind: "issuance", when: null, captures: ["sb"], participants: [["ENT-O2", "actor"]] });
   assert.deepEqual(ind(w, A, B).shared, []);
   w.line("LIN-2026-0001", "part_of", "ENT-O1", "ENT-B", [DAY]);
-  assert.deepEqual(through(ind(w, A, B)), ["undetermined:issuer:ENT-O1|ENT-O2 (no date settles the lines between them)"]);
+  assert.deepEqual(through(ind(w, A, B)), [`undetermined:issuer:ENT-O1|ENT-O2 (${localize("strength.origins.no_date_settles_the_lines_between_them", "no date settles the lines between them")})`]);
 });
 
 test("R12: an acts_for line between the issuers on the documents' dates ties them, named with the line; undetermined there it is named undetermined", () => {

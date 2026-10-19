@@ -30,6 +30,7 @@ import {
   derivationObservation, derivationStatement, observationCoverage, enteredAfterFirstRow,
   WATERMARK_AFTER, WATERMARK_WITHIN_BAND, WATERMARK_BAND_CAUSE, LEAD_LOOK_OUTCOMES, LEAD_VOCABULARY,
 } from "./vocabulary.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export * from "./vocabulary.mjs";
 export { AI_RUN_CHECKS, LEAD_CHECKS, LEAD_ID_RE, OBSERVATION_CHECKS, OBSERVATION_CHECK_KEYS } from "./checks.mjs";
@@ -65,6 +66,11 @@ export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx"
  * container the notice names is one this record cannot address a passage of, and reads LOOKED_INDETERMINATE naming it. */
 export const INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(new Set(["document"]));
 
+/* R30's detail for a member's authored observation: the look the testimony path records (exported so a test holds the
+   sentence by reference, never by copy). */
+export const AUTHORED_EXTRACTION_DETAIL = localize("observation-log.index.first_extraction_authored",
+  "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them");
+
 /* op=leadread's bound: `op=frontier`'s 200/2000 pair, and for its reason: the population is looks at ONE subject. */
 export const LEAD_READ_LIMIT_DEFAULT = 200;
 export const LEAD_READ_LIMIT_MAX = 2000;
@@ -73,13 +79,8 @@ export const LEAD_LIST_LIMIT_DEFAULT = 200;
 export const LEAD_LIST_LIMIT_MAX = 2000;
 /* A share's reason (DEC-88, R16): at most this many characters, counted as Unicode code points, refused over it. */
 export const LEAD_SHARE_REASON_MAX = 2000;
-export const LEAD_LIST_EMPTY =
-  "there is no lead here you may read. A lead is readable by its author and by the joined participants "
-  + "of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
-export const LEAD_LIST_NOTE =
-  "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it "
-  + "(NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are "
-  + "listed. A lead is never evidence";
+export const LEAD_LIST_EMPTY = word("observation-log.lead_list_empty");
+export const LEAD_LIST_NOTE = word("observation-log.lead_list_note");
 
 /* R13: the authority kinds whose bundles a later module's resolver answers (N39, K71; `step` T41-11, `steps` R18). */
 export const RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run", "step"]);
@@ -308,8 +309,7 @@ export class ObservationLog {
       authority: bundleId == null ? null : String(bundleId),
       level: "content", subjectKind: "capture", subject: captureSha, state: "PRESENT", condition: null,
       resultKind: "content", resultRef: minted ?? null,
-      detail: "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole "
-            + "document is text and no extraction step stands between them",
+      detail: AUTHORED_EXTRACTION_DETAIL,
     });
     if (refused) {
       const err = new Error(`observation-log: the authored observation's extraction row was refused ${refused.check} `
@@ -354,9 +354,8 @@ export class ObservationLog {
     const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
     this.observeIndexed(e.bundleId, e.captureSha, e.indexed, { author: e.author, hadText: e.reading.read_from_text === true,
       unitArm: armed, armReason: armed ? null : container
-        ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is `
-          + "a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)"
-        : "this record does not hold which container this capture is, so it has no unit arm to name" });
+        ? localize("observation-log.index.a_container_has_no_arm", "a {container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)", { container: String(container) })
+        : word("observation-log.arm_reason.record_hold_container") });
     const ex = this.observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
     this.observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
     return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
@@ -375,19 +374,16 @@ export class ObservationLog {
   onIndexNotice(e) {
     const x = e && typeof e === "object" ? e : {};
     if (typeof x.captureSha !== "string" || !x.captureSha)
-      return { observed: { written: 0, state: null, why: "the index notice named no capture, so there is no subject to record a look at" } };
+      return { observed: { written: 0, state: null, why: word("observation-log.why.index_notice_named") } };
     const container = typeof x.container === "string" && x.container ? x.container : null;
     const armed = INDEX_NOTICE_UNIT_CONTAINERS.has(container);
     const ix = x.indexed && typeof x.indexed === "object" ? x.indexed : null;
     const refused = this.observeIndexed(x.bundleId, x.captureSha, ix, {
       author: x.author ?? null, hadText: !!ix && Number(ix.offered) > 0, unitArm: armed,
       armReason: armed ? null : container
-        ? `an authored observation indexed at a ${container} extent has no indexing unit arm: its one unit is the `
-          + "whole document (extraction R61)"
-        : "the index notice did not say which container the authored observation was indexed as, so it has no unit "
-          + "arm to name",
-      noTextDetail: "the authored observation holds no character, so there is nothing to index. No reader ran over it "
-                  + "(an authored observation is its own text), so there is no extraction to say more" });
+        ? localize("observation-log.index.an_authored_observation_indexed_at", "an authored observation indexed at a {container} extent has no indexing unit arm: its one unit is the whole document (extraction R61)", { container: String(container) })
+        : word("observation-log.arm_reason.index_notice_did"),
+      noTextDetail: word("observation-log.no_text_detail") });
     if (refused) {
       const err = new Error(`observation-log: the index observation of ${x.captureSha} was refused ${refused.check} `
                           + `(${refused.code}): ${refused.detail}`);
@@ -447,42 +443,29 @@ export class ObservationLog {
     if (!hadText) {
       state = "LOOKED_ABSENT";
       /* The caller that knows why there is no text says so (the index notice, R7); the reading's says where to look. */
-      detail = noTextDetail || ("no text was extracted from this capture, so there is nothing to index. "
-             + "WHY there is no text is on this capture's extraction observation, not on this one");
+      detail = noTextDetail || (word("observation-log.text.text_extracted_capture"));
     } else if (!unitArm) {
       state = "LOOKED_INDETERMINATE";
-      bound = armReason || "this container has no indexing unit arm";
-      detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
-             + "That is not an absence of text and must not be read as one";
+      bound = armReason || word("observation-log.text.container_indexing_unit");
+      detail = word("observation-log.detail.text_extracted_record", { bound: String(bound) });
     } else if (r.over_bound > 0) {
       state = "partial";
       const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
-      bound = (byUnits
-                ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's "
-                + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
-                + "ROWS, not only bytes, and this capture offered more pieces than a promote "
-                + "may spend its CPU window on"
-                : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)")
-            + " or the acquire answer's own budget, whichever bit first -- the last is "
-            + "the smaller in bytes and is what the promote path's inline-file limit forces";
-      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
-             + `${r.over_bound} unit(s) past the bound are NOT indexed`;
+      bound = localize("observation-log.index.v1_or_the_acquire_answers", "{v1} or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces", { v1: String(byUnits
+                ? localize("observation-log.index.per_capture_unit_bound", "the per-capture UNIT bound, {units} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on", { units: String(CAPTURE_TEXT_CAPTURE_UNIT_BOUND) })
+                : localize("observation-log.index.per_capture_text_bound", "the per-capture text bound, {bytes} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)", { bytes: String(CAPTURE_TEXT_CAPTURE_BOUND) })) });
+      detail = word("observation-log.detail.unit_indexed_reading", { written: String(r.written), offered: String(r.offered), bytes: String(r.bytes), over_bound: String(r.over_bound) });
     } else if (r.written > 0) {
       state = "PRESENT";
-      detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
+      detail = localize("observation-log.index.written_unit_s_indexed_bytes", "{written} unit(s) indexed, {bytes} B", { written: String(r.written), bytes: String(r.bytes) });
     } else {
       state = "LOOKED_ABSENT";
-      detail = "this container has an indexing unit arm and produced no unit carrying text "
-             + "(M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record "
-             + "holds no addressable passage of it";
+      detail = localize("observation-log.index.unit_arm_no_unit_text", "this container has an indexing unit arm and produced no unit carrying text (M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record holds no addressable passage of it");
     }
     if (r.truncated > 0)
-      detail += `; ${r.truncated} unit(s) stored to the per-unit cap and flagged truncated`;
+      detail += word("observation-log.detail.unit_stored_per", { truncated: String(r.truncated) });
     if (r.unaddressable > 0)
-      detail += `; ${r.unaddressable} unit(s) offered an address this record could not index `
-             +  "separately (an unnamed or duplicate extent) and are NOT indexed";
+      detail += word("observation-log.detail.unit_offered_address", { unaddressable: String(r.unaddressable) });
     return this.observe({
       actorClass, actor, authorityKind: "derive", authority: bundleId == null ? null : String(bundleId),
       level: "content", subjectKind: "capture", subject: captureSha, state, bound,
@@ -683,8 +666,7 @@ export class ObservationLog {
   registerAuthority(kind, resolve) {
     if (!RESOLVED_AUTHORITY_KINDS.includes(kind))
       return { ok: false, reason: "AUTHORITY_NOT_RESOLVABLE", code: "AUTHORITY_NOT_RESOLVABLE", kind: kind ?? null,
-               detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; the records every `
-                     + `other authority kind names are fixed by the observation log` };
+               detail: localize("observation-log.index.a_resolver_is_registered_for", "a resolver is registered for one of {RESOLVED_AUTHORITY_KINDS}; the records every other authority kind names are fixed by the observation log", { RESOLVED_AUTHORITY_KINDS: String(RESOLVED_AUTHORITY_KINDS.join(", ")) }) };
     const holder = AUTHORITY_HOLDERS[kind];
     const refused = listenerRefusal(this.resolvers.has(kind) ? { module: holder } : null, holder, resolve, { kind });
     if (refused) return refused;
@@ -814,8 +796,8 @@ export class ObservationLog {
     /* DEC-49 REGION is-lead-source */
     if (!row)
       return ObservationLog.leadRefusal("LEAD_NOT_FOUND",
-        lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record`
-            : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
+        lid ? localize("observation-log.index.no_lead_is_addressed_by", "no lead is addressed by {lid} in this record", { lid: String(lid.slice(0, 60)) })
+            : localize("observation-log.index.pass_lead_hint", "pass lead=<LEAD-…>: the id op=lead returned"), { lead: lid || null });
     /* END DEC-49 REGION is-lead-source */
     return { ok: true, row };
   }
@@ -830,17 +812,14 @@ export class ObservationLog {
     /* DEC-49 REGION is-lead-act */
     if (!who || isMachineIdentity(who))
       return refusal("LEAD_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has `
-              + `reason to believe, in their own name`
-            : `this call carries nobody. The plane stamps the author from the credential that asked`);
+        who ? localize("observation-log.index.who_is_a_machine_credential", "'{who}' is a machine credential. A lead is what a PERSON was told or has reason to believe, in their own name", { who: String(who.slice(0, 60)) })
+            : localize("observation-log.index.lead_call_carries_nobody", "this call carries nobody. The plane stamps the author from the credential that asked"));
     if (!typed.trim())
       return refusal("LEAD_NO_WORDS",
-        `the lead is empty. Its words are what the member was told or suspects, as they write it`);
+        localize("observation-log.index.lead_empty", "the lead is empty. Its words are what the member was told or suspects, as they write it"));
     if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || (where && bytes(where) > CAPTURE_TEXT_UNIT_CAP))
       return refusal("LEAD_TOO_LONG",
-        `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the `
-        + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
-        + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
+        localize("observation-log.index.bytes_b_of_words_v1", "{bytes} B of words{v1}, over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut", { bytes: String(bytes(typed)), v1: String(where ? localize("observation-log.index.and_b_of_locator", " and {bytes} B of locator", { bytes: String(bytes(where)) }) : ""), CAPTURE_TEXT_UNIT_CAP: String(CAPTURE_TEXT_UNIT_CAP) }), { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-lead-act */
     const at = stampInstant("second", this.now());
     /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix no bundle grammar admits. */
@@ -850,9 +829,7 @@ export class ObservationLog {
                   leadId, who, typed, where, at);
     return { ok: true, lead_id: leadId, author: who, words: typed, locator: where, at,
              evidence: false, looks: 0, state: "NEVER_LOOKED",
-             says: `${who}'s lead is recorded. It is somewhere to look and never evidence: no leg can `
-                 + `rest on it. Following it is recorded with op=leadlook, and a look that finds `
-                 + `nothing is itself a finding with this lead behind it` };
+             says: localize("observation-log.index.who_s_lead_is_recorded", "{who}'s lead is recorded. It is somewhere to look and never evidence: no leg can rest on it. Following it is recorded with op=leadlook, and a look that finds nothing is itself a finding with this lead behind it", { who: String(who) }) };
   }
 
   /** R16 — op=leadshare: THE AUTHOR SHARES ONE LEAD TO ONE PROJECT, authored, dated, never rewritten, and with the
@@ -871,14 +848,13 @@ export class ObservationLog {
     /* DEC-49 REGION is-lead-share */
     if (who !== L.author)
       return refusal("LEAD_SHARE_NOT_AUTHOR",
-        `${L.lead_id} was written by another member; only its author shares it. A machine credential `
-        + `is never the author (the author is a member id, stamped when the lead was written)`,
+        localize("observation-log.index.lead_id_was_written_by", "{lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)", { lead_id: String(L.lead_id) }),
         { lead: L.lead_id });
     /* ONE ANSWER for a project that does not exist, one the author cannot see, and one they have not joined. */
     if (!joined)
       return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
-        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
-            : `pass project=<PROJ-…>: the project to share this lead to`,
+        pid ? localize("observation-log.index.you_are_not_a_joined", "you are not a joined participant of a project addressed by {pid}", { pid: String(pid.slice(0, 60)) })
+            : localize("observation-log.index.pass_project_hint", "pass project=<PROJ-…>: the project to share this lead to"),
         { lead: L.lead_id, project: pid || null });
     /* DEC-88 (C-54.12): the sharer's words on why this lead is disclosed to that project. Asked of every share, a
        repeat included: the act is the same act, and its words are refused or accepted the same way. */
@@ -888,11 +864,10 @@ export class ObservationLog {
       return refusal("LEAD_SHARE_NO_REASON",
         why == null
           ? (reason === undefined || reason === null
-              ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}`
-              : `the reason must be your words, as text; a ${typeof reason} was sent`)
-          : !why.trim() ? `the reason is blank. Say why this lead is disclosed to ${pid.slice(0, 60)}`
-          : `the reason is ${chars} characters, over the ${LEAD_SHARE_REASON_MAX} a share's reason is kept to. `
-            + `Refused rather than cut`,
+              ? localize("observation-log.index.pass_reason_hint", "pass reason=<your words>: why this lead is disclosed to {pid}", { pid: String(pid.slice(0, 60)) })
+              : localize("observation-log.index.the_reason_must_be_your", "the reason must be your words, as text; a {v1} was sent", { v1: String(typeof reason) }))
+          : !why.trim() ? localize("observation-log.index.the_reason_is_blank_say", "the reason is blank. Say why this lead is disclosed to {pid}", { pid: String(pid.slice(0, 60)) })
+          : localize("observation-log.index.the_reason_is_chars_characters", "the reason is {chars} characters, over the {LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut", { chars: String(chars), LEAD_SHARE_REASON_MAX: String(LEAD_SHARE_REASON_MAX) }),
         { lead: L.lead_id, project: pid, limit: LEAD_SHARE_REASON_MAX });
     /* END DEC-49 REGION is-lead-share */
     /* Recorded once (R16): a repeat, in the same second or later, answers `already` with the first sharer, instant
@@ -906,8 +881,7 @@ export class ObservationLog {
       || this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
     return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at, reason: r.reason ?? null,
              already: !!prior, evidence: false,
-             says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
-                 + `looks against it. It is still never evidence` };
+             says: word("observation-log.says.shared_joined_participants", { lead_id: String(L.lead_id), pid: String(pid) }) };
   }
 
   /** R17, R18: does a look's referent name something this viewer can read? One read per kind (provenance's register read
@@ -931,48 +905,43 @@ export class ObservationLog {
     /* DEC-49 REGION is-lead-look */
     if (!who || isMachineIdentity(who))
       return refusal("LEAD_LOOK_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its `
-              + `own run (authority_kind run), never under a member's lead`
-            : `this call carries nobody. The plane stamps who looked from the credential that asked`);
+        who ? localize("observation-log.index.who_is_a_machine_credential_2", "'{who}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead", { who: String(who.slice(0, 60)) })
+            : localize("observation-log.index.look_call_carries_nobody", "this call carries nobody. The plane stamps who looked from the credential that asked"));
     const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     if (!LEAD_LOOK_OUTCOMES.includes(st))
       return refusal("LEAD_LOOK_STATE",
         st === "NEVER_LOOKED"
-          ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all `
-            + `(OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of ${LEAD_LOOK_OUTCOMES.join(", ")}`
-          : `'${st.slice(0, 40) || "(absent)"}' is not one of ${LEAD_LOOK_OUTCOMES.join(", ")}`,
+          ? localize("observation-log.index.never_looked_is_never_stored", "NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of {LEAD_LOOK_OUTCOMES}", { LEAD_LOOK_OUTCOMES: String(LEAD_LOOK_OUTCOMES.join(", ")) })
+          : localize("observation-log.index.v1_is_not_one_of", "'{v1}' is not one of {LEAD_LOOK_OUTCOMES}", { v1: String(st.slice(0, 40) || "(absent)"), LEAD_LOOK_OUTCOMES: String(LEAD_LOOK_OUTCOMES.join(", ")) }),
         { lead: L.lead_id });
     if ((rk || rr) && !(rk && rr))
       return refusal("LEAD_LOOK_REFERENT",
-        `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without `
-        + `the other names nothing`, { lead: L.lead_id });
+        localize("observation-log.index.referent_kind_and_id", "a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing"), { lead: L.lead_id });
     if (rk && st !== "PRESENT" && st !== "partial")
       return refusal("LEAD_LOOK_REFERENT",
-        `a look recorded as ${st} found nothing, so it cannot point at something it found`, { lead: L.lead_id });
+        localize("observation-log.index.a_look_recorded_as_st", "a look recorded as {st} found nothing, so it cannot point at something it found", { st: String(st) }), { lead: L.lead_id });
     if (rk && rk !== "capture" && rk !== "content")
       return refusal("LEAD_LOOK_REFERENT",
-        `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation `
-        + `referent is a rollup's (REC-100), and a member's look is never a rollup`, { lead: L.lead_id });
+        localize("observation-log.index.rk_is_not_something_a", "'{rk}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup", { rk: String(rk.slice(0, 40)) }), { lead: L.lead_id });
     if (rk && !this.referentVisible(rk, rr, viewer))
       return refusal("LEAD_LOOK_REFERENT",
-        `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the `
-        + `look found first, then record the look against it`, { lead: L.lead_id });
+        localize("observation-log.index.no_rk_rr_is_held", "no {rk} {rr} is held in this record where you can read it. Capture what the look found first, then record the look against it", { rk: String(rk), rr: String(rr.slice(0, 64)) }), { lead: L.lead_id });
     /* DEC-88 (C-54.11): the looker's words on where they looked and what they found. A look with none is refused,
        never kept with a null detail. */
     if (note == null)
       return refusal("LEAD_LOOK_NO_DETAIL",
         detail === undefined || detail === null
-          ? `pass detail=<your words>: where you looked and what you found`
-          : typeof detail !== "string" ? `the detail must be your words, as text; a ${typeof detail} was sent`
-          : `the detail is blank. Say where you looked and what you found`,
+          ? localize("observation-log.index.pass_detail_hint", "pass detail=<your words>: where you looked and what you found")
+          : typeof detail !== "string" ? localize("observation-log.index.the_detail_must_be_your", "the detail must be your words, as text; a {v1} was sent", { v1: String(typeof detail) })
+          : localize("observation-log.index.look_detail_blank", "the detail is blank. Say where you looked and what you found"),
         { lead: L.lead_id });
     /* END DEC-49 REGION is-lead-look */
     /* C-54.4 (`is-lead-act`): the same rule — refused, never cut — applied to the look's own words. */
     if (new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
       return refusal("LEAD_TOO_LONG",
-        `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
+        localize("observation-log.index.the_looks_detail_is_over", "the look's detail is over the {CAPTURE_TEXT_UNIT_CAP} B one passage is stored to", { CAPTURE_TEXT_UNIT_CAP: String(CAPTURE_TEXT_UNIT_CAP) }),
         { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP });
     const bad = this.observe({
       actorClass: "member", actor: who, authorityKind: "lead", authority: L.lead_id,
@@ -987,10 +956,8 @@ export class ObservationLog {
              level: "internet", state: st, looked_by: who, result_kind: rk, result_ref: rr,
              evidence: false,
              says: st === "LOOKED_ABSENT"
-               ? `recorded: ${who} followed this lead and it is not there. That absence has a name and `
-                 + `a lead behind it, which is what makes it a finding rather than silence`
-               : `recorded: ${who} followed this lead (${st}). The lead is still not evidence; `
-                 + `${rk ? `the ${rk} the look found is what a leg can cite` : "nothing it found is citable through it"}` };
+               ? word("observation-log.says.recorded_followed_lead", { who: String(who) })
+               : word("observation-log.says.recorded_followed_lead_lead", { who: String(who), st: String(st), rk: String(rk ? localize("observation-log.index.the_look_found_citable", "the {rk} the look found is what a leg can cite", { rk: String(rk) }) : localize("observation-log.index.nothing_found_citable", "nothing it found is citable through it")) }) };
   }
 
   /** R18, R21 — op=leadread: the lead and its looks, bounded, the bound published, with the vocabulary (D-682). */
@@ -1035,10 +1002,8 @@ export class ObservationLog {
       state: latest || "NEVER_LOOKED",
       vocabulary: LEAD_VOCABULARY,
       says: !looks.length
-        ? `nobody has followed this lead yet. That is established rather than inferred: the lead and `
-          + `any look at it are cleared only together, by a whole-store purge`
-        : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the `
-          + `latest found ${latest}. The lead itself is never evidence`,
+        ? word("observation-log.says.nobody_followed_lead")
+        : word("observation-log.says.look_recorded_against", { looks: String(looks.length), cap: String(rows.length > cap ? "+" : ""), latest: String(latest) }),
     };
   }
 

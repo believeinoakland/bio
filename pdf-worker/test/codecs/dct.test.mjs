@@ -18,6 +18,7 @@
  * saying why; `pdf-pixels` maps each code to its reasons (shown beside each code
  * below for reference, not tested here). */
 import "../../../bio-plane/test/sandbox.mjs";
+import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -98,7 +99,7 @@ test("R1 readJpegHeader and colourTransformOf: libjpeg's colour-transform rule, 
   assert.deepEqual(colourTransformOf(adobe), { ycc: false, why: "Adobe APP14 transform=0" });
   const comps = (ids) => ({ frame: { comps: ids.map((id) => ({ id })) }, jfif: false, adobe: null });
   assert.deepEqual(colourTransformOf(comps([82, 71, 66])), { ycc: false, why: "component ids R,G,B" });
-  assert.deepEqual(colourTransformOf(comps([1, 2, 3])), { ycc: true, why: "libjpeg's default for three components" });
+  assert.deepEqual(colourTransformOf(comps([1, 2, 3])), { ycc: true, why: localize("image-codecs.dctdecode.libjpeg_s_default_for_three", "libjpeg's default for three components") });
   assert.equal(colourTransformOf({ ...comps([82, 71, 66]), jfif: true }).ycc, true, "JFIF wins over the ids");
   assert.equal(colourTransformOf({ ...comps([1, 2, 3]), adobe: { transform: 1 } }).ycc, true);
   /* The rule is what decoding follows: the Adobe file decodes untransformed, and matches libjpeg. */

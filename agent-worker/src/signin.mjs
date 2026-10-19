@@ -28,6 +28,7 @@
  * member in DEC-149's words (R64). */
 
 import { remoteOf } from "./remote.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /** The steps, and the `agent-runner` route each is sent to (its R17, R18, R19, R20). */
 export const SIGNIN_ROUTES = Object.freeze({
@@ -93,18 +94,12 @@ const textHead = (text, code) => scrub(text, code).slice(0, TEXT_HEAD_MAX);
 
 /* R84: the member's words for this member's own refusals (DEC-149: "your group's Civicsmith", never the place). */
 const WORDS = {
-  RUNNER_NOT_CONFIGURED: "Your team's Civicsmith cannot connect a Claude account yet: the part that runs a member's own "
-    + "Claude sign-in is not installed. Nothing was sent. An administrator can install it.",
-  BAD_BODY: "Your team's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your "
-    + "settings.",
-  BAD_MEMBER: "Your team's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your team's "
-    + "Civicsmith again, then try again.",
-  BAD_STEP: "Your team's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your "
-    + "settings.",
-  BAD_CODE: "The code from Anthropic's page was missing, so nothing was sent. Paste the whole code Anthropic's page shows "
-    + "you, including any part after a # sign, and try again.",
-  RUNNER_SILENT: "Your team's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to "
-    + "this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference.",
+  RUNNER_NOT_CONFIGURED: localize("agent-worker.signin.your_teams_civicsmith_cannot_connect", "Your team's Civicsmith cannot connect a Claude account yet: the part that runs a member's own Claude sign-in is not installed. Nothing was sent. An administrator can install it."),
+  BAD_BODY: localize("agent-worker.signin.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your settings."),
+  BAD_MEMBER: localize("agent-worker.signin.your_teams_civicsmith_could_not_2", "Your team's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your team's Civicsmith again, then try again."),
+  BAD_STEP: localize("agent-worker.signin.your_teams_civicsmith_did_not", "Your team's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your settings."),
+  BAD_CODE: localize("agent-worker.signin.the_code_from_anthropics_page", "The code from Anthropic's page was missing, so nothing was sent. Paste the whole code Anthropic's page shows you, including any part after a # sign, and try again."),
+  RUNNER_SILENT: localize("agent-worker.signin.your_teams_civicsmith_could_not_3", "Your team's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference."),
 };
 
 /** `POST /signin`. `deps` are the shell's own pieces (index.mjs): the refusal and answer helpers. */

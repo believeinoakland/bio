@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { seeded, V, MACHINE, R, usesProvider, standardsProvider, sha } from "./fixture.mjs";
 import { USES_HEADER, APPLICATION_KINDS, APPLICATION_RECIPES, NONE_HELD, FILE_ENGINE, calculationsOps, foldReason }
   from "../../../src/calculations/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
 const PERIOD = { from: "2025-01-01", to: "2026-12-31" };
@@ -44,7 +45,7 @@ test("R9 an input a third-party engine computed (a table from a workbook range h
   const ga = w.c.gradeFactsOf({ calcId: a.calc_id, viewer: V("carol") });
   const [ia] = ga.inputs;
   assert.equal(ia.engine, FILE_ENGINE);
-  assert.equal(FILE_ENGINE, "the file's spreadsheet program", "no engine is recorded by the reader, so the file's program is named");
+  assert.equal(FILE_ENGINE, word("calculations.file_spreadsheet_program"), "no engine is recorded by the reader, so the file's program is named");
   assert.equal(ia.engine_measured, false);
   assert.equal(ia.grade, null, "undetermined while the engine's agreement is not measured");
   assert.equal(ia.derivation_step, "third-party engine");
@@ -184,7 +185,7 @@ test("R33 applicationRecipes lists the recipes of application as data; outcome_r
   const rep = (await app(w, "reasons_repeated", f.sha)).results.application;
   assert.equal(num(rep.distinct_reasons), "2");
   assert.deepEqual([rep.share_repeated.numerator, rep.share_repeated.denominator].map(num), ["2", "3"]);
-  assert.deepEqual(rep.reasons.rows[0], { reason_fold: "granted in the interest of the public", count: "2" }, "each reason listed with its count");
+  assert.deepEqual(rep.reasons.rows[0], { reason_fold: "granted in the interest of the public", count: "2" });
   assert.doesNotMatch(JSON.stringify(rep), /boilerplate/i, "never named so by the machine");
   /* waiver_share */
   const ws = (await app(w, "waiver_share", f.sha)).results.application.groups[0].shares.waiver;
@@ -249,7 +250,7 @@ test("R35 target_met: per period of the target, the measured value beside the th
   assert.equal(bp[0].comparison.label, "computed fact");
   const bench = await run(target("at_least", "90", "percent", "benchmark"), { definition_differs: "ours counts withdrawn applications" });
   const kp = bench.results.application.periods;
-  assert.deepEqual(kp.map((p) => p.compared), ["below", "at or above"]);
+  assert.deepEqual(kp.map((p) => p.compared), ["below", word("calculations.above")]);
   assert.ok(kp.every((p) => p.met === undefined), "a benchmark is never met or not met");
   assert.equal(kp[0].label, "Benchmark · not binding on Permit Office");
   assert.doesNotMatch(JSON.stringify(bench), /not met|nonconforming|violated/);

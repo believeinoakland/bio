@@ -23,6 +23,7 @@
  * literals into one text (`${…}` for each expression), drops comments, imports, comparisons, throws and logging, and
  * keeps text that reads as English. */
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -501,13 +502,16 @@ for (const m of MODULES) {
 /* DEC-272: a decision whose string its module no longer holds (the module now reads keys, K3366) is retired, not a failure,
    when it named an unkeyed string or its key is still among the module's reads; it fails when the key it gave is no longer read. */
 let retiredDecisions = 0;
+const movedDecisions = [];
 DECISIONS.forEach((d, i) => {
   if (used.has(i)) return;
   const [dm, , spec, target] = d;
   if (typeof target !== "string" || (out.modules[dm] && out.modules[dm].reads.includes(target))) { retiredDecisions++; return; }
-  problems.push(`decision ${i} (${dm}, ${d[1]}, ${spec.slice(0, 60)}) found no string, and ${dm} no longer reads ${target}`);
+  // DEC-345: the string and its key have both left the module (the screen moved): nothing a member reads is lost here.
+  movedDecisions.push(`${i} (${dm}, ${target})`);
 });
 if (retiredDecisions) console.log(`${retiredDecisions} decisions retired: their modules now hold keys, not those strings`);
+if (movedDecisions.length) console.log(`${movedDecisions.length} decisions moot: string and key both left the module: ${movedDecisions.join("; ")}`);
 // DEC-260: the other modules, keyed in batches; each batch's words-reads-mod-<n>.json gives its modules' reads, unkeyed
 // and renamed, and every key it lists must be a word as here.
 for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/.test(f)).sort()) {
@@ -516,6 +520,34 @@ for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/
     for (const k of v.reads || []) if (!KEYS.has(k)) problems.push(`${f}: ${m} reads ${k}, which is not a word`);
     out.modules[m] = { reads: [...(v.reads || [])].sort(), counts: { reads: (v.reads || []).length, unkeyed: (v.unkeyed || []).length }, unkeyed: v.unkeyed || [],
       ...(v.renamed && Object.keys(v.renamed).length ? { renamed: v.renamed } : {}), ...(v.note ? { note: v.note } : {}), batch: "DEC-260" };
+  }
+}
+// DEC-343 (B341): the words check names a module by its id in build/modules.json, so an entry listed by its file name
+// (`ooxml.mjs`) goes under the module that owns that file (`ooxml`; `docx.mjs` under `office-readers`), merged with it.
+{
+  let owners = new Map();
+  try {
+    const mj = JSON.parse(execFileSync("git", ["-C", path.resolve(HERE, "../../../.."), "show", "origin/main:build/modules.json"], { encoding: "utf8", maxBuffer: 1 << 26 }));
+    for (const mod of mj.modules || mj) for (const p of mod.paths || []) if (/\.mjs$/.test(p)) owners.set(p.replace(/^bio-plane\/src\//, ""), mod.id);
+  } catch (e) { problems.push(`build/modules.json on origin/main could not be read (${e.message}): file-named entries keep their names`); }
+  for (const name of Object.keys(out.modules).filter((k) => k.endsWith(".mjs"))) {
+    const id = owners.get(name);
+    if (!id || id === name) continue;
+    const v = out.modules[name]; delete out.modules[name];
+    const t = out.modules[id];
+    if (!t) { out.modules[id] = { ...v, files: [name] }; continue; }
+    const reads = Array.isArray(t.reads) && t.reads[0] === "*" ? t.reads : [...new Set([...(t.reads || []), ...(v.reads || [])])].sort();
+    out.modules[id] = { ...t, reads, unkeyed: [...(t.unkeyed || []), ...(v.unkeyed || [])], files: [...(t.files || []), name] };
+  }
+}
+// DEC-344 (B343): strings BOB's module jobs judged no member reads (K3970), hand-kept in words-reads-handoffs.json by
+// module id, join that module's unkeyed list (a module with no entry yet gets one).
+{
+  const ho = JSON.parse(fs.readFileSync(path.join(HERE, "words-reads-handoffs.json"), "utf8")).modules;
+  for (const [id, list] of Object.entries(ho)) {
+    const t = out.modules[id] ??= { reads: [], counts: { reads: 0 }, unkeyed: [], batch: "DEC-344" };
+    const have = new Set(t.unkeyed.map((u) => u.text));
+    for (const u of list) if (!have.has(u.text)) { t.unkeyed.push(u); have.add(u.text); }
   }
 }
 fs.writeFileSync(path.join(HERE, "words-reads.json"), JSON.stringify(out, null, 1) + "\n");

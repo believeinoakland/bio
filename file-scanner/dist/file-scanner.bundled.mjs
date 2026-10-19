@@ -1695,7 +1695,7 @@ function targetStream(bucket, store, t) {
     settle = r;
   });
   let i = 0, reader = null, part = null;
-  const fail = (controller, reason) => {
+  const fail2 = (controller, reason) => {
     settle({ ok: false, reason });
     controller.error(new Error(reason));
   };
@@ -1705,18 +1705,18 @@ function targetStream(bucket, store, t) {
         for (; ; ) {
           if (!reader) {
             if (i >= keys.length) {
-              if (whole.digest("hex") !== t.capture_sha) return fail(controller, "DIGEST_MISMATCH");
+              if (whole.digest("hex") !== t.capture_sha) return fail2(controller, "DIGEST_MISMATCH");
               settle({ ok: true });
               return controller.close();
             }
             const obj = await bucket.get(keys[i][0]);
-            if (!obj) return fail(controller, "NOT_FOUND");
+            if (!obj) return fail2(controller, "NOT_FOUND");
             reader = obj.body.getReader();
             part = keys[i][1] ? createHash("sha256") : null;
           }
           const { done, value } = await reader.read();
           if (done) {
-            if (part && part.digest("hex") !== keys[i][1]) return fail(controller, "DIGEST_MISMATCH");
+            if (part && part.digest("hex") !== keys[i][1]) return fail2(controller, "DIGEST_MISMATCH");
             reader = null;
             i++;
             continue;
@@ -1728,7 +1728,7 @@ function targetStream(bucket, store, t) {
           return;
         }
       } catch (e) {
-        return fail(controller, "NOT_FOUND");
+        return fail2(controller, "NOT_FOUND");
       }
     },
     cancel() {
@@ -1767,6 +1767,128 @@ async function readJson(bucket, key) {
   } catch {
     return null;
   }
+}
+
+// ../bio-plane/src/setup-words/rows.mjs
+var WORD_ROWS = Object.freeze([
+  ["tokens.group_civicsmith_binds", "Your team's Civicsmith binds no Claude account to its own settings, and none can be set there. The assistant is reached through a member's own Claude account or API key, or through the team's API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.", null, null, false, "design"],
+  ["file-scanner.catalogue.azure_storage_account_name", "Azure storage account name", null, null, false, "code"],
+  ["file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in", null, null, false, "code"],
+  ["file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours", null, null, false, "code"],
+  ["file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)", null, null, false, "code"],
+  ["file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read", null, null, false, "code"],
+  ["file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)", null, null, false, "code"],
+  ["file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host", null, null, false, "code"],
+  ["file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result", null, null, false, "code"],
+  ["file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment", null, null, false, "code"],
+  ["file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated", null, null, false, "code"],
+  ["file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it", null, null, false, "code"],
+  ["file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to", null, null, false, "code"],
+  ["file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID", null, null, false, "code"],
+  ["file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match", null, null, false, "code"],
+  ["file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed", null, null, false, "code"],
+  ["file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence", null, null, false, "code"],
+  ["file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)", null, null, false, "code"],
+  ["file-scanner.catalogue.intelix_the_region_chosen", "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it", null, null, false, "code"],
+  ["file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription", null, null, false, "code"],
+  ["file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)", null, null, false, "code"],
+  ["file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)", null, null, false, "code"],
+  ["file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)", null, null, false, "code"],
+  ["file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc.", null, null, false, "code"],
+  ["file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc.", null, null, false, "code"],
+  ["file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)", null, null, false, "code"],
+  ["file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)", null, null, false, "code"],
+  ["file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients", null, null, false, "code"],
+  ["file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector", null, null, false, "code"],
+  ["file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)", null, null, false, "code"],
+  ["file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule", null, null, false, "code"],
+  ["file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)", null, null, false, "code"],
+  ["file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them", null, null, false, "code"],
+  ["file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares", null, null, false, "code"],
+  ["file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account", null, null, false, "code"],
+  ["file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)", null, null, false, "code"],
+  ["file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely", null, null, false, "code"],
+  ["file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds", null, null, false, "code"],
+  ["file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", null, null, false, "code"],
+  ["file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", null, null, false, "code"],
+  ["file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", null, null, false, "code"],
+  ["file-scanner.render.the_renderer_could_not", "the renderer could not be reached", null, null, false, "code"],
+  ["file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted", null, null, false, "code"],
+  ["file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed", null, null, false, "code"],
+  ["file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_answered", "the test address answered listed", null, null, false, "code"],
+  ["file-scanner.routes.the_test_address_did", "the test address did not answer listed", null, null, false, "code"],
+  ["file-scanner.scanners.malware_scanning_scan_result", "Malware Scanning scan result", null, null, false, "code"]
+]);
+
+// ../bio-plane/src/setup-words/index.mjs
+var table;
+var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
+var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
+var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
+var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
+function fill(key, text, vars) {
+  return text.replace(PLACEHOLDER, (_, name) => {
+    const v = vars?.[name];
+    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
+    return String(v);
+  });
+}
+function word(key, vars = {}) {
+  const row = typeof key === "string" ? rowsByKey().get(key) : void 0;
+  if (!row) throw fail("UNKNOWN_WORD", `no word ${typeof key === "string" ? key : String(key)}`);
+  return fill(key, row[1], vars);
+}
+function localize(id, en, vars = {}) {
+  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
+  const row = rowsByKey().get(id);
+  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
+  return fill(id, row ? row[1] : en, vars);
 }
 
 // src/clamav.mjs
@@ -1901,7 +2023,7 @@ async function runMirror(deps) {
   try {
     for (const db of DATABASES) {
       const prev = previous && previous.files[db];
-      const headers = { "user-agent": `file-scanner/${deps.version || "unknown"} (signature mirror; as cvdupdate)` };
+      const headers = { "user-agent": localize("file-scanner.clamav.file_scanner_v1_signature_mirror", "file-scanner/{v1} (signature mirror; as cvdupdate)", { v1: String(deps.version || "unknown") }) };
       if (prev && prev.last_modified) headers["if-modified-since"] = prev.last_modified;
       let r;
       try {
@@ -2015,11 +2137,11 @@ async function render(deps, body) {
     o = { ok: true };
   }
   if (!o.ok) return refuse(STATUS[o.reason] || 409, o.reason in STATUS ? o.reason : "DIGEST_MISMATCH");
-  if (!r) return refuse(503, "RENDER_FAILED", { message: "the renderer could not be reached" });
+  if (!r) return refuse(503, "RENDER_FAILED", { message: localize("file-scanner.render.the_renderer_could_not", "the renderer could not be reached") });
   if (r.status !== 200) {
     const e = await r.json().catch(() => ({}));
     const code = KNOWN.has(e.code) ? e.code : "RENDER_FAILED";
-    const message = code === "RENDER_FAILED" ? String(e.message || `the renderer answered ${r.status}`).slice(0, 300) : void 0;
+    const message = code === "RENDER_FAILED" ? String(e.message || localize("file-scanner.render.the_renderer_answered_status", "the renderer answered {status}", { status: String(r.status) })).slice(0, 300) : void 0;
     return refuse(code === "TIME_LIMIT" ? 504 : code === "RENDER_FAILED" ? 500 : 422, code, message ? { message } : {});
   }
   const headers = new Headers();
@@ -2283,7 +2405,7 @@ var descriptor = (d) => Object.freeze({
   credentials: [],
   read_on: READ_ON,
   ...d,
-  config: Object.freeze((d.config || []).map((f) => Object.freeze(f === REGION ? { ...f, label: `Region: one of ${Object.keys(d.hosts).join(", ")}` } : { ...f }))),
+  config: Object.freeze((d.config || []).map((f) => Object.freeze(f === REGION ? { ...f, label: localize("file-scanner.catalogue.region_one_of_keys", "Region: one of {keys}", { keys: String(Object.keys(d.hosts).join(", ")) }) } : { ...f }))),
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling })
 });
 var field = (name, label, required, structured) => ({ name, label, required, ...structured ? { structured } : {} });
@@ -2291,11 +2413,11 @@ var HOST = (label) => field("host", label, true);
 var REGION = Object.freeze({ name: "region", label: null, required: true });
 var TEMPLATE_CONFIG = (host) => [
   HOST(host),
-  field("engine_family", "The engines the tool runs, as its maker names them", true, "list"),
-  field("handling", "The tool's statement of what it receives, keeps and shares", true, "handling"),
-  field("source_urls", "Where that statement is published", false, "list")
+  field("engine_family", localize("file-scanner.catalogue.the_engines_the_tool_runs", "The engines the tool runs, as its maker names them"), true, "list"),
+  field("handling", localize("file-scanner.catalogue.the_tools_statement_of_what", "The tool's statement of what it receives, keeps and shares"), true, "handling"),
+  field("source_urls", localize("file-scanner.catalogue.where_that_statement_is_published", "Where that statement is published"), false, "list")
 ];
-var AZURE_TENANT = field("tenant_id", "Microsoft Entra tenant ID", true);
+var AZURE_TENANT = field("tenant_id", localize("file-scanner.catalogue.microsoft_entra_tenant_id", "Microsoft Entra tenant ID"), true);
 var METADEFENDER_ENGINES = [
   "ahnlab",
   "antiy",
@@ -2329,7 +2451,7 @@ var METADEFENDER_ENGINES = [
 ];
 var MD_PRIVATE = Object.freeze({
   params: Object.freeze({ samplesharing: "0", privateprocessing: "1" }),
-  description: "private mode: samplesharing 0 and private processing on every call (paid licence only)"
+  description: localize("file-scanner.catalogue.private_mode_samplesharing_0", "private mode: samplesharing 0 and private processing on every call (paid licence only)")
 });
 var MD_CHECK = "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on";
 var MD_URLS = [
@@ -2354,12 +2476,12 @@ var INTELIX = {
     sends: ["file_bytes"],
     recipient: "Sophos Ltd",
     sub_processors: [],
-    region: "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)",
-    file_retention: "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)",
-    result_retention: "metadata up to 6 months for research",
+    region: localize("file-scanner.catalogue.intelix_the_region_chosen", "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)"),
+    file_retention: localize("file-scanner.catalogue.intelix_clean_files_up_to", "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)"),
+    result_retention: localize("file-scanner.catalogue.intelix_metadata_up_to_6", "metadata up to 6 months for research"),
     sample_sharing: "vendor_internal_research"
   },
-  licence_note: "the organization's own Intelix account (free monthly allowance, then pay as you go)",
+  licence_note: localize("file-scanner.catalogue.intelix_the_organizations_own", "the organization's own Intelix account (free monthly allowance, then pay as you go)"),
   source_urls: ["https://www.sophos.com/en-us/legal/product-privacy-information/sophoslabs-intelix"]
 };
 var PROVIDERS = Object.freeze([
@@ -2390,11 +2512,11 @@ var PROVIDERS = Object.freeze([
       recipient: "Uva Software, LLC",
       sub_processors: ["Amazon Web Services"],
       region: "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it",
-      file_retention: "deleted on completion of analysis",
-      result_retention: "up to 400 days in the processing region",
+      file_retention: localize("file-scanner.catalogue.scanii_deleted_on_completion", "deleted on completion of analysis"),
+      result_retention: localize("file-scanner.catalogue.scanii_up_to_400_days", "up to 400 days in the processing region"),
       sample_sharing: "none"
     },
-    licence_note: "the team's own key; terms allow use within its own products made available to its clients",
+    licence_note: localize("file-scanner.catalogue.scanii_the_teams_own_key", "the team's own key; terms allow use within its own products made available to its clients"),
     source_urls: [
       "https://docs.scanii.com/article/142-privacy-policy",
       "https://docs.scanii.com/article/143-terms-of-service",
@@ -2404,7 +2526,7 @@ var PROVIDERS = Object.freeze([
   descriptor({
     provider_id: "metadefender-cloud",
     vendor: "OPSWAT, Inc.",
-    product: "MetaDefender Cloud (private mode)",
+    product: localize("file-scanner.catalogue.metadefender_cloud_private_mode", "MetaDefender Cloud (private mode)"),
     kinds: ["scan"],
     transport: "https",
     reach: "public",
@@ -2421,8 +2543,8 @@ var PROVIDERS = Object.freeze([
       recipient: "OPSWAT, Inc.",
       sub_processors: "not stated",
       region: "not stated",
-      file_retention: "private mode: not stored or shared; permanently removed from storage",
-      result_retention: "scan results remain in the MetaDefender Cloud database, limited to the submitter",
+      file_retention: localize("file-scanner.catalogue.metadefender_cloud_file_not", "private mode: not stored or shared; permanently removed from storage"),
+      result_retention: localize("file-scanner.catalogue.metadefender_cloud_scan_results", "scan results remain in the MetaDefender Cloud database, limited to the submitter"),
       sample_sharing: "none"
     },
     licence_note: `the organization's own paid licence; "solely for Your internal use" (OPSWAT's written yes needed for product use)`,
@@ -2441,13 +2563,13 @@ var PROVIDERS = Object.freeze([
     engine_family: METADEFENDER_ENGINES,
     credentials: ["api_key"],
     test_probe: { kind: "eicar" },
-    config: [HOST("MetaDefender Core server address (host, or host:port)")],
+    config: [HOST(localize("file-scanner.catalogue.metadefender_core_server_address_host", "MetaDefender Core server address (host, or host:port)"))],
     handling: {
       sends: ["file_bytes"],
-      recipient: "the organization's own MetaDefender Core server",
+      recipient: localize("file-scanner.catalogue.metadefender_core_the_organizations_own", "the organization's own MetaDefender Core server"),
       region: "the organization's own servers",
-      file_retention: "as the organization configures its server",
-      result_retention: "as the organization configures its server",
+      file_retention: localize("file-scanner.catalogue.metadefender_core_as_the_organization", "as the organization configures its server"),
+      result_retention: localize("file-scanner.catalogue.metadefender_core_as_the_organization_2", "as the organization configures its server"),
       sample_sharing: "none"
     },
     licence_note: "the organization's own licence",
@@ -2467,7 +2589,7 @@ var PROVIDERS = Object.freeze([
     config: [
       ...TEMPLATE_CONFIG("ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)"),
       field("service", "ICAP service name (default avscan)", false),
-      field("tls", "Connect over TLS: yes or no (default no)", false)
+      field("tls", localize("file-scanner.catalogue.connect_over_tls_yes_or", "Connect over TLS: yes or no (default no)"), false)
     ],
     handling: {
       sends: ["file_bytes"],
@@ -2477,13 +2599,13 @@ var PROVIDERS = Object.freeze([
       result_retention: ADMIN,
       sample_sharing: "none"
     },
-    licence_note: "the organization's own server and licence",
+    licence_note: localize("file-scanner.catalogue.icap_the_organizations_own_server", "the organization's own server and licence"),
     source_urls: []
   }),
   descriptor({
     provider_id: "defender-storage",
     vendor: "Microsoft Corporation",
-    product: "Microsoft Defender for Storage",
+    product: localize("file-scanner.catalogue.microsoft_defender_for_storage", "Microsoft Defender for Storage"),
     kinds: ["scan"],
     transport: "azure_blob",
     reach: "public",
@@ -2494,18 +2616,18 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     config: [
       AZURE_TENANT,
-      field("storage_account", "Azure storage account name", true),
-      field("container", "Blob container the files are scanned in", true)
+      field("storage_account", localize("file-scanner.catalogue.azure_storage_account_name", "Azure storage account name"), true),
+      field("container", localize("file-scanner.catalogue.blob_container_the_files_are", "Blob container the files are scanned in"), true)
     ],
     handling: {
       sends: ["file_bytes"],
-      recipient: "Microsoft (the organization's own Azure storage account)",
-      region: "the storage account's region; content read within it",
-      file_retention: "the service does not retain the scanned content; this adapter deletes the blob after the result",
-      result_retention: "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them",
+      recipient: localize("file-scanner.catalogue.microsoft_the_organizations_own_azure", "Microsoft (the organization's own Azure storage account)"),
+      region: localize("file-scanner.catalogue.defender_storage_the_storage_accounts", "the storage account's region; content read within it"),
+      file_retention: localize("file-scanner.catalogue.defender_storage_the_service_does", "the service does not retain the scanned content; this adapter deletes the blob after the result"),
+      result_retention: localize("file-scanner.catalogue.defender_storage_the_blobs_index", "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own Azure subscription, billed per GB scanned",
+    licence_note: localize("file-scanner.catalogue.defender_storage_the_organizations_own", "the organization's own Azure subscription, billed per GB scanned"),
     source_urls: ["https://learn.microsoft.com/en-us/azure/defender-for-cloud/on-upload-malware-scanning"]
   }),
   descriptor({
@@ -2519,7 +2641,7 @@ var PROVIDERS = Object.freeze([
   descriptor({
     provider_id: "opswat-deep-cdr",
     vendor: "OPSWAT, Inc.",
-    product: "Deep CDR (MetaDefender Cloud or Core)",
+    product: localize("file-scanner.catalogue.deep_cdr_metadefender_cloud_or", "Deep CDR (MetaDefender Cloud or Core)"),
     kinds: ["cdr"],
     transport: "https",
     reach: "public",
@@ -2528,7 +2650,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["opswat-deep-cdr"],
     credentials: ["api_key"],
     // Cloud's address is catalogued; Core's is the organization's own server, so its host is asked only for Core.
-    config: [REGION, field("host", "MetaDefender Core server address (host, or host:port; Core only)", false)],
+    config: [REGION, field("host", localize("file-scanner.catalogue.metadefender_core_server_address_host_2", "MetaDefender Core server address (host, or host:port; Core only)"), false)],
     test_probe: { kind: "macro_document" },
     mode_required: MD_PRIVATE,
     mode_check: MD_CHECK,
@@ -2536,9 +2658,9 @@ var PROVIDERS = Object.freeze([
       sends: ["file_bytes"],
       recipient: "OPSWAT, Inc. (Cloud), or the organization's own Core server",
       sub_processors: "not stated",
-      region: "not stated (Cloud); the organization's own servers (Core)",
-      file_retention: "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours",
-      result_retention: "Cloud: scan results remain, limited to the submitter",
+      region: localize("file-scanner.catalogue.deep_cdr_not_stated_cloud", "not stated (Cloud); the organization's own servers (Core)"),
+      file_retention: localize("file-scanner.catalogue.cloud_not_stored_in_private", "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours"),
+      result_retention: localize("file-scanner.catalogue.cloud_scan_results_remain_limited", "Cloud: scan results remain, limited to the submitter"),
       sample_sharing: "none"
     },
     licence_note: "the organization's own licence",
@@ -2560,23 +2682,23 @@ var PROVIDERS = Object.freeze([
     engine_family: ["glasswall"],
     credentials: ["api_token"],
     test_probe: { kind: "macro_document" },
-    config: [HOST("Glasswall Halo API address (host, or host:port)")],
+    config: [HOST(localize("file-scanner.catalogue.glasswall_halo_api_address_host", "Glasswall Halo API address (host, or host:port)"))],
     handling: {
       sends: ["file_bytes"],
-      recipient: "the Glasswall Halo deployment the organization runs or subscribes to",
+      recipient: localize("file-scanner.catalogue.glasswall_the_halo_deployment", "the Glasswall Halo deployment the organization runs or subscribes to"),
       region: "where that deployment runs",
-      file_retention: "removed according to the deployment's file retention policy",
-      result_retention: "the analysis report, as the deployment keeps it",
+      file_retention: localize("file-scanner.catalogue.glasswall_removed_according_to", "removed according to the deployment's file retention policy"),
+      result_retention: localize("file-scanner.catalogue.glasswall_the_analysis_report", "the analysis report, as the deployment keeps it"),
       sample_sharing: "none"
     },
-    licence_note: "an entitlement to a number of files or a volume a day",
+    licence_note: localize("file-scanner.catalogue.glasswall_an_entitlement_to", "an entitlement to a number of files or a volume a day"),
     source_urls: ["https://docs.glasswall.com/rest-api/about-glasswall-apis", "https://docs.glasswall.com/halo/2.18.1/glasswall-halo-faqs"]
   }),
   // ── sandbox
   descriptor({
     provider_id: "joe-sandbox",
     vendor: "Joe Security LLC",
-    product: "Joe Sandbox Cloud (Light and above)",
+    product: localize("file-scanner.catalogue.joe_sandbox_cloud_light_and", "Joe Sandbox Cloud (Light and above)"),
     kinds: ["sandbox"],
     transport: "https",
     reach: "public",
@@ -2587,18 +2709,18 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "eicar" },
     mode_required: Object.freeze({
       params: Object.freeze({ "accept-tac": "1" }),
-      description: "an edition of Light or above, whose analyses and results are private"
+      description: localize("file-scanner.catalogue.joe_sandbox_an_edition_of", "an edition of Light or above, whose analyses and results are private")
     }),
     mode_check: "POST /api/v2/account/info before each send: the account is not of the Basic edition",
     handling: {
       sends: ["file_bytes"],
       recipient: "Joe Security LLC",
       region: "not stated",
-      file_retention: "kept until the customer deletes it; then securely deleted in near real time",
-      result_retention: "kept until the customer deletes it",
+      file_retention: localize("file-scanner.catalogue.joe_sandbox_kept_until_the", "kept until the customer deletes it; then securely deleted in near real time"),
+      result_retention: localize("file-scanner.catalogue.joe_sandbox_kept_until_the_2", "kept until the customer deletes it"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own Light, Pro or Enterprise subscription",
+    licence_note: localize("file-scanner.catalogue.joe_sandbox_the_organizations_own", "the organization's own Light, Pro or Enterprise subscription"),
     source_urls: ["https://joesecurity.org/joe-sandbox-cloud", "https://www.joesandbox.com/pdpp"]
   }),
   descriptor({
@@ -2618,7 +2740,7 @@ var PROVIDERS = Object.freeze([
       sends: ["file_bytes"],
       recipient: "VMRay GmbH",
       region: "US or Germany, as the account is hosted",
-      file_retention: "not stated beyond the account",
+      file_retention: localize("file-scanner.catalogue.vmray_not_stated_beyond", "not stated beyond the account"),
       result_retention: "kept in the account",
       sample_sharing: "none"
     },
@@ -2628,7 +2750,7 @@ var PROVIDERS = Object.freeze([
   descriptor({
     provider_id: "falcon-sandbox",
     vendor: "CrowdStrike, Inc.",
-    product: "Falcon Sandbox (Falcon Intelligence)",
+    product: localize("file-scanner.catalogue.falcon_sandbox_falcon_intelligence", "Falcon Sandbox (Falcon Intelligence)"),
     kinds: ["sandbox"],
     transport: "https",
     reach: "public",
@@ -2643,23 +2765,23 @@ var PROVIDERS = Object.freeze([
     ],
     mode_required: Object.freeze({
       params: Object.freeze({ is_confidential: "true" }),
-      description: "community access off: every upload confidential"
+      description: localize("file-scanner.catalogue.falcon_sandbox_community_access_off", "community access off: every upload confidential")
     }),
     mode_check: "GET /falconx/entities/settings/v1 before each send: community access is off for the API client",
     handling: {
       sends: ["file_bytes"],
       recipient: "CrowdStrike, Inc.",
       region: "the Falcon cloud chosen",
-      file_retention: "stored in the Falcon platform; period not stated",
-      result_retention: "kept in the Falcon platform",
+      file_retention: localize("file-scanner.catalogue.falcon_sandbox_stored_in_the", "stored in the Falcon platform; period not stated"),
+      result_retention: localize("file-scanner.catalogue.falcon_sandbox_kept_in_the", "kept in the Falcon platform"),
       sample_sharing: "none"
     },
-    licence_note: "with the organization's Falcon subscription",
+    licence_note: localize("file-scanner.catalogue.falcon_sandbox_with_the_organizations", "with the organization's Falcon subscription"),
     source_urls: ["https://developer.crowdstrike.com/api-reference/collections/falconx-sandbox/"]
   }),
   descriptor({
     provider_id: "wildfire",
-    vendor: "Palo Alto Networks, Inc.",
+    vendor: localize("file-scanner.catalogue.palo_alto_networks_inc", "Palo Alto Networks, Inc."),
     product: "WildFire (standalone API)",
     kinds: ["sandbox"],
     transport: "https",
@@ -2680,10 +2802,10 @@ var PROVIDERS = Object.freeze([
     config: [REGION],
     handling: {
       sends: ["file_bytes"],
-      recipient: "Palo Alto Networks, Inc.",
-      region: "the regional cloud chosen; some metadata shared across regional clouds",
+      recipient: localize("file-scanner.catalogue.palo_alto_networks_inc_2", "Palo Alto Networks, Inc."),
+      region: localize("file-scanner.catalogue.wildfire_the_regional_cloud", "the regional cloud chosen; some metadata shared across regional clouds"),
       file_retention: "benign 14 days; malicious 10 years",
-      result_retention: "signatures and reports kept indefinitely",
+      result_retention: localize("file-scanner.catalogue.wildfire_signatures_and_reports", "signatures and reports kept indefinitely"),
       sample_sharing: "vendor_internal_research"
     },
     licence_note: "the organization's own WildFire API subscription (150 submissions a day base)",
@@ -2707,19 +2829,19 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "test_address", address: "https://malware.testcategory.com/" },
     handling: {
       sends: ["url"],
-      recipient: "Cloudflare, Inc. (the team's own account)",
+      recipient: localize("file-scanner.catalogue.cloudflare_inc_the_teams_own", "Cloudflare, Inc. (the team's own account)"),
       region: "Cloudflare's network",
       file_retention: "no file is sent",
       result_retention: "not stated",
       sample_sharing: "none"
     },
-    licence_note: "the team's own Cloudflare account, a token with Intel Read",
+    licence_note: localize("file-scanner.catalogue.cloudflare_intel_the_teams_own", "the team's own Cloudflare account, a token with Intel Read"),
     source_urls: ["https://developers.cloudflare.com/api/resources/intel/subresources/urls/methods/get"]
   }),
   descriptor({
     provider_id: "google-web-risk",
     vendor: "Google LLC",
-    product: "Web Risk (Update API)",
+    product: localize("file-scanner.catalogue.web_risk_update_api", "Web Risk (Update API)"),
     kinds: ["url_reputation"],
     transport: "https",
     reach: "public",
@@ -2731,18 +2853,18 @@ var PROVIDERS = Object.freeze([
       sends: ["hash_prefix"],
       recipient: "Google LLC",
       region: "not stated",
-      file_retention: "no file is sent; the server sees only a hash prefix on a local match",
+      file_retention: localize("file-scanner.catalogue.google_web_risk_no_file", "no file is sent; the server sees only a hash prefix on a local match"),
       result_retention: "not stated",
       sample_sharing: "none"
     },
-    licence_note: "the organization's own Google Cloud project; results must not be redistributed",
+    licence_note: localize("file-scanner.catalogue.google_web_risk_the_organizations_own", "the organization's own Google Cloud project; results must not be redistributed"),
     source_urls: ["https://docs.cloud.google.com/web-risk/docs/overview", "https://cloud.google.com/web-risk/pricing"]
   }),
   // ── log_sink
   descriptor({
     provider_id: "splunk-hec",
     vendor: "Splunk LLC",
-    product: "Splunk HTTP Event Collector",
+    product: localize("file-scanner.catalogue.splunk_http_event_collector", "Splunk HTTP Event Collector"),
     kinds: ["log_sink"],
     transport: "https",
     reach: "public",
@@ -2751,13 +2873,13 @@ var PROVIDERS = Object.freeze([
     engine_family: ["splunk-hec"],
     credentials: ["hec_token"],
     test_probe: { kind: "zero_counts" },
-    config: [HOST("Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)")],
+    config: [HOST(localize("file-scanner.catalogue.splunk_http_event_collector_address", "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)"))],
     handling: {
       sends: ["counts"],
       recipient: "the organization's own Splunk",
       region: "where it runs",
       file_retention: "no file is sent",
-      result_retention: "as the organization keeps its logs",
+      result_retention: localize("file-scanner.catalogue.splunk_hec_as_the_organization", "as the organization keeps its logs"),
       sample_sharing: "none"
     },
     licence_note: "the organization's own Splunk",
@@ -2766,7 +2888,7 @@ var PROVIDERS = Object.freeze([
   descriptor({
     provider_id: "sentinel",
     vendor: "Microsoft Corporation",
-    product: "Microsoft Sentinel (Logs Ingestion API)",
+    product: localize("file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api", "Microsoft Sentinel (Logs Ingestion API)"),
     kinds: ["log_sink"],
     transport: "https",
     reach: "public",
@@ -2776,25 +2898,25 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "zero_counts" },
     config: [
       AZURE_TENANT,
-      field("endpoint", "Data collection endpoint host", true),
-      field("dcr_id", "Data collection rule immutable ID", true),
-      field("stream", "Stream name in the rule", true)
+      field("endpoint", localize("file-scanner.catalogue.data_collection_endpoint_host", "Data collection endpoint host"), true),
+      field("dcr_id", localize("file-scanner.catalogue.data_collection_rule_immutable_id", "Data collection rule immutable ID"), true),
+      field("stream", localize("file-scanner.catalogue.stream_name_in_the_rule", "Stream name in the rule"), true)
     ],
     handling: {
       sends: ["counts"],
-      recipient: "Microsoft (the organization's own workspace)",
+      recipient: localize("file-scanner.catalogue.microsoft_the_organizations_own_workspace", "Microsoft (the organization's own workspace)"),
       region: "the workspace's region",
       file_retention: "no file is sent",
-      result_retention: "as the workspace keeps its logs",
+      result_retention: localize("file-scanner.catalogue.sentinel_as_the_workspace", "as the workspace keeps its logs"),
       sample_sharing: "none"
     },
-    licence_note: "the organization's own Azure workspace",
+    licence_note: localize("file-scanner.catalogue.sentinel_the_organizations_own", "the organization's own Azure workspace"),
     source_urls: ["https://learn.microsoft.com/en-us/azure/azure-monitor/logs/logs-ingestion-api-overview"]
   }),
   descriptor({
     provider_id: "google-secops",
     vendor: "Google LLC",
-    product: "Google Security Operations (ImportLogs)",
+    product: localize("file-scanner.catalogue.google_security_operations_importlogs", "Google Security Operations (ImportLogs)"),
     kinds: ["log_sink"],
     transport: "https",
     reach: "public",
@@ -2808,17 +2930,17 @@ var PROVIDERS = Object.freeze([
     test_probe: { kind: "zero_counts" },
     config: [
       REGION,
-      field("project", "Google Cloud project ID", true),
+      field("project", localize("file-scanner.catalogue.google_cloud_project_id", "Google Cloud project ID"), true),
       field("location", "Instance location", true),
       field("instance", "Instance (customer) ID", true),
-      field("log_type", "Log type the counts are imported as", true)
+      field("log_type", localize("file-scanner.catalogue.log_type_the_counts_are", "Log type the counts are imported as"), true)
     ],
     handling: {
       sends: ["counts"],
-      recipient: "Google LLC (the organization's own instance)",
+      recipient: localize("file-scanner.catalogue.google_llc_the_organizations_own", "Google LLC (the organization's own instance)"),
       region: "the instance's region",
       file_retention: "no file is sent",
-      result_retention: "as the instance keeps its logs",
+      result_retention: localize("file-scanner.catalogue.google_secops_as_the_instance", "as the instance keeps its logs"),
       sample_sharing: "none"
     },
     licence_note: "the organization's own instance",
@@ -2837,15 +2959,15 @@ var PROVIDERS = Object.freeze([
     credentials: ["api_key"],
     test_probe: { kind: "zero_counts" },
     config: [
-      HOST("Elasticsearch address (host, or host:port)"),
-      field("index", "Index the counts are written to (default civicsmith-security-counts)", false)
+      HOST(localize("file-scanner.catalogue.elasticsearch_address_host_or_host", "Elasticsearch address (host, or host:port)")),
+      field("index", localize("file-scanner.catalogue.index_the_counts_are_written", "Index the counts are written to (default civicsmith-security-counts)"), false)
     ],
     handling: {
       sends: ["counts"],
-      recipient: "the organization's own Elastic deployment",
+      recipient: localize("file-scanner.catalogue.elastic_the_organizations_own", "the organization's own Elastic deployment"),
       region: "where it runs",
       file_retention: "no file is sent",
-      result_retention: "as the organization keeps its logs",
+      result_retention: localize("file-scanner.catalogue.elastic_as_the_organization", "as the organization keeps its logs"),
       sample_sharing: "none"
     },
     licence_note: "the organization's own deployment",
@@ -2862,7 +2984,7 @@ var PROVIDERS = Object.freeze([
     template: true,
     engine_family: ["syslog"],
     test_probe: { kind: "zero_counts" },
-    config: TEMPLATE_CONFIG("Syslog collector address (host, or host:port; port 6514 unless named)"),
+    config: TEMPLATE_CONFIG(localize("file-scanner.catalogue.syslog_collector_address_host_or", "Syslog collector address (host, or host:port; port 6514 unless named)")),
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -2886,7 +3008,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["webhook"],
     credentials: ["token"],
     test_probe: { kind: "zero_counts" },
-    config: [...TEMPLATE_CONFIG("Endpoint address (host, or host:port)"), field("path", "Path on the endpoint (default /)", false)],
+    config: [...TEMPLATE_CONFIG(localize("file-scanner.catalogue.endpoint_address_host_or_host", "Endpoint address (host, or host:port)")), field("path", localize("file-scanner.catalogue.path_on_the_endpoint_default", "Path on the endpoint (default /)"), false)],
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -3090,7 +3212,7 @@ var icap = {
     }
   }
 };
-var RESULT_TAG = "Malware Scanning scan result";
+var RESULT_TAG = localize("file-scanner.scanners.malware_scanning_scan_result", "Malware Scanning scan result");
 function blobTag(xml2) {
   for (const m of String(xml2).matchAll(/<Tag>\s*<Key>([^<]*)<\/Key>\s*<Value>([^<]*)<\/Value>\s*<\/Tag>/g)) if (m[1] === RESULT_TAG) return m[2];
   return null;
@@ -3403,6 +3525,7 @@ var sha256hex = async (v) => {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
+var NO_INSTANCE_ACCOUNT_DETAIL = word("tokens.group_civicsmith_binds");
 
 // src/providers/reputation.mjs
 var names = (l) => Array.isArray(l) ? l.map((x) => String(x && typeof x === "object" ? x.name : x)).filter(Boolean) : [];
@@ -3645,9 +3768,10 @@ var secops = {
     ));
   }
 };
+var ELASTIC_DEFAULT_INDEX = "civicsmith-security-counts";
 var elastic = {
   async forward(ctx, record) {
-    const index = String(ctx.config.index || "civicsmith-security-counts");
+    const index = String(ctx.config.index || ELASTIC_DEFAULT_INDEX);
     const body = `${JSON.stringify({ index: { _index: index } })}
 ${JSON.stringify(record)}
 `;
@@ -3849,7 +3973,8 @@ async function prepare(deps, body, kind) {
   const intact = async () => (await Promise.all(outcomes)).every((o) => o.ok || o.reason === "CANCELLED");
   return { c, ctx, sha, started, file, intact };
 }
-var notHonoured = (id) => reply2(502, { ok: false, code: "PRIVATE_MODE_NOT_HONOURED", provider_id: id });
+var NOT_HONOURED_CODE = "PRIVATE_MODE_NOT_HONOURED";
+var notHonoured = (id) => reply2(502, { ok: false, code: NOT_HONOURED_CODE, provider_id: id });
 async function providerScan(deps, body) {
   const p = await prepare(deps, body, "scan");
   if (p.refusal) return p.refusal;
@@ -4038,13 +4163,13 @@ async function providerTest(deps, body) {
           return r.engines.some((e) => e.result === "found") ? answer(true, "the EICAR test file answered found") : answer(false, "the EICAR test file did not answer found");
         }
         const wait = Math.min(s.poll_after_ms || 5e3, 5e3);
-        if (ctx.net.left() <= wait) return answer(false, `the sandbox was still running after ${PROVIDER_TIMEOUT_MS} ms`);
+        if (ctx.net.left() <= wait) return answer(false, localize("file-scanner.routes.the_sandbox_was_still_running", "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms", { PROVIDER_TIMEOUT_MS: String(PROVIDER_TIMEOUT_MS) }));
         await sleep(wait);
       }
     }
     if (kind === "cdr") {
       const out = await c.adapter.cdr(ctx, inMemory(macroDocument()));
-      return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(", ")}`) : answer(false, out.bytes.length ? "the safe view reported nothing removed" : "no safe view");
+      return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(", ")}`) : answer(false, out.bytes.length ? localize("file-scanner.routes.the_safe_view_reported_nothing", "the safe view reported nothing removed") : "no safe view");
     }
     if (kind === "url_reputation") {
       const look = () => c.adapter.reputation(ctx, c.d.test_probe.address);
@@ -4054,10 +4179,10 @@ async function providerTest(deps, body) {
         if (!f.ok) throw new ToolError(String(f.error).split(":")[0]);
         return look();
       });
-      return r.listed ? answer(true, "the test address answered listed") : answer(false, "the test address did not answer listed");
+      return r.listed ? answer(true, localize("file-scanner.routes.the_test_address_answered", "the test address answered listed")) : answer(false, localize("file-scanner.routes.the_test_address_did", "the test address did not answer listed"));
     }
     await c.adapter.forward(ctx, zeroCounts(deps.now()));
-    return answer(true, "a test record of zero counts was accepted");
+    return answer(true, localize("file-scanner.routes.a_test_record_of", "a test record of zero counts was accepted"));
   } catch (e) {
     return answer(false, `${reasonOf(e)}${detailOf(e) ? ` ${detailOf(e)}` : ""}`);
   }
@@ -4160,7 +4285,7 @@ async function version(deps) {
       held: HELD_PROVIDERS.map((d) => d.provider_id)
     },
     reputation_lists: await reputationLists(deps.bucket),
-    renderer_version: `libreoffice ${versionOf(packages_renderer_default, "libreoffice-core")}; poppler-utils ${versionOf(packages_renderer_default, "poppler-utils")}`,
+    renderer_version: localize("file-scanner.handler.libreoffice_versionof_poppler_utils_versionof", "libreoffice {versionOf}; poppler-utils {versionOf_2}", { versionOf: String(versionOf(packages_renderer_default, "libreoffice-core")), versionOf_2: String(versionOf(packages_renderer_default, "poppler-utils")) }),
     bounds: BOUNDS
   });
 }

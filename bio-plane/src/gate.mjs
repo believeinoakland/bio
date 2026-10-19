@@ -34,6 +34,7 @@
 
 import { checkBundle } from "./record-grammar/index.mjs";
 import { recordChecks } from "./promotion/record-checks.mjs";
+import { localize } from "./setup-words/index.mjs";
 
 /* 1.21.0 (D-470, 2026-09-24): THE VERSION CATCHES UP WITH THE CATALOG, AND IS
    PINNED TO IT FROM HERE ON. The sentence below is the whole point of this
@@ -1288,8 +1289,7 @@ const te = new TextEncoder();
 function caseCatalogueFailed(e) {
   return { gateVersion: GATE_VERSION, ok: false,
            findings: [{ check: "CASE_CATALOGUE_FAILED",
-                        detail: `the case-document catalogue could not judge this document, so it is not passed: `
-                              + String(e && e.message ? e.message : e).slice(0, 200) }],
+                        detail: localize("promotion.gate.the_case_document_catalogue_could", "the case-document catalogue could not judge this document, so it is not passed: {String}", { String: String(String(e && e.message ? e.message : e).slice(0, 200)) }) }],
            warnings: 0 };
 }
 
@@ -1387,23 +1387,19 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
       const label = (ps) => ps.map((p) => p.file || p.sha256).join(", ");
       if (why)
         errors.push({ check: "PLANE_PART_UNVERIFIED",
-                      detail: `registered capture is held in parts, and ${why}, so no part could be verified`,
+                      detail: localize("promotion.gate.registered_capture_is_held_in", "registered capture is held in parts, and {why}, so no part could be verified", { why: String(why) }),
                       where: { path: r.path, sha256: r.capture_sha } });
       else if (missing.length)
         errors.push({ check: "PLANE_PART_MISSING",
-                      detail: `registered capture is held in parts, and ${missing.length} of the ${named.length} `
-                            + `parts the record names are not in the working bucket: ${label(missing)}`,
+                      detail: localize("promotion.gate.registered_capture_is_held_in_2", "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}", { length: String(missing.length), length_2: String(named.length), label: String(label(missing)) }),
                       where: { path: r.path, sha256: r.capture_sha, missing_parts: missing } });
       else if (disagree.length || unverified.length || (typeof r.bytes === "number" && sum !== r.bytes))
         errors.push({ check: "PLANE_PART_UNVERIFIED",
                       detail: disagree.length
-                        ? `registered capture is held in parts, and the stored size or digest of `
-                          + `${disagree.length} disagrees with the record: ${label(disagree)}`
+                        ? localize("promotion.gate.registered_capture_is_held_in_3", "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}", { length: String(disagree.length), label: String(label(disagree)) })
                         : unverified.length
-                        ? `registered capture is held in parts, all present, but the digest of `
-                          + `${unverified.length} could not be verified: ${label(unverified)}`
-                        : `registered capture is held in parts, and the parts the record names sum to ${sum} `
-                          + `bytes where the register says ${r.bytes}`,
+                        ? localize("promotion.gate.registered_capture_is_held_in_4", "registered capture is held in parts, all present, but the digest of {length} could not be verified: {label}", { length: String(unverified.length), label: String(label(unverified)) })
+                        : localize("promotion.gate.registered_capture_is_held_in_5", "registered capture is held in parts, and the parts the record names sum to {sum} bytes where the register says {bytes}", { sum: String(sum), bytes: String(r.bytes) }),
                       where: { path: r.path, sha256: r.capture_sha,
                                ...(disagree.length ? { disagreeing_parts: disagree } : {}),
                                ...(unverified.length ? { unverified_parts: unverified } : {}) } });
@@ -1414,17 +1410,13 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
-                    detail: `registered capture is held only in parts: the acquisition receipt of your team's Civicsmith `
-                          + `names the whole hash, and the working bucket stores the document as its parts, each under `
-                          + `its own hash, but the record's data/provenance.json names no parts for it. `
-                          + `Publication copies the parts the record names, so name them there, or register `
-                          + `the parts rather than the whole`,
+                    detail: localize("promotion.gate.registered_capture_is_held_only", "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (!probe.present)
-      errors.push({ check: "PLANE_MISSING_BYTES", detail: `registered capture is absent from the working bucket`,
+      errors.push({ check: "PLANE_MISSING_BYTES", detail: localize("promotion.gate.capture_absent_from_bucket", "registered capture is absent from the working bucket"),
                     where: { path: r.path, sha256: r.capture_sha } });
     else if (typeof r.bytes === "number" && probe.bytes !== r.bytes)
-      errors.push({ check: "PLANE_SIZE", detail: `capture bytes differ from the register`,
+      errors.push({ check: "PLANE_SIZE", detail: localize("promotion.gate.capture_bytes_differ", "capture bytes differ from the register"),
                     where: { path: r.path, want: r.bytes, got: probe.bytes } });
   }
 

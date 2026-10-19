@@ -19,6 +19,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
+import { localize } from "../../../bio-plane/src/setup-words/index.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/jbig2-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
@@ -61,10 +62,15 @@ test("R3 what it decodes: generic and refinement regions, symbol dictionaries an
   const decoded = new Set();
   for (const v of V.filter((x) => x.expect === "ok")) for (const d of decode(v).detail.decoded) decoded.add(d);
   const has = (re) => [...decoded].some((d) => re.test(d));
+  /* The two localized details are compared with the same localize call the
+   * decoder makes (image-codecs R3, K3962): a prefix, the TPGDON/TPGRON tail aside. */
+  const arithPrefix = (template) => localize("image-codecs.jbig2decode.generic_region_arithmetic_template_template",
+    "generic region, arithmetic, template {template}{v1}", { template: String(template), v1: "" });
+  const refinePrefix = (template) => localize("image-codecs.jbig2decode.generic_refinement_region_template_template",
+    "generic refinement region, template {template}{v1}", { template: String(template), v1: "" });
+  const hasPrefix = (p) => [...decoded].some((d) => d.startsWith(p));
   for (const [what, re] of [
-    ["generic region, arithmetic (all four templates)", /^generic region, arithmetic, template [0-3]/],
     ["generic region, MMR", /^generic region, MMR$/],
-    ["generic refinement region", /^generic refinement region/],
     ["symbol dictionary, arithmetic", /^symbol dictionary, arithmetic/],
     ["symbol dictionary, Huffman", /^symbol dictionary, Huffman/],
     ["symbol dictionary, refinement/aggregate", /refinement\/aggregate/],
@@ -74,7 +80,8 @@ test("R3 what it decodes: generic and refinement regions, symbol dictionaries an
     ["pattern dictionary", /^pattern dictionary/],
     ["halftone region", /^halftone region/],
   ]) assert.ok(has(re), what);
-  for (const t of [0, 1, 2, 3]) assert.ok(has(new RegExp(`^generic region, arithmetic, template ${t}`)), `template ${t}`);
+  for (const t of [0, 1, 2, 3]) assert.ok(hasPrefix(arithPrefix(t)), `arithmetic template ${t}`);
+  for (const t of [0, 1]) assert.ok(hasPrefix(refinePrefix(t)), `refinement template ${t}`);
 });
 
 test("R3 the production scanner's pages, with their JBIG2Globals, decode to jbig2dec's pictures", () => {

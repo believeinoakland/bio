@@ -73,6 +73,7 @@
  *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
+import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* The smallest number of distinct addresses at one domain that makes contact points the
    BODY of a document rather than a signature block. A staff report names one contact;
@@ -141,8 +142,8 @@ export default {
        through it; nothing else can make a directory. */
     if (atDomain < DIRECTORY_FLOOR || atDomain / all.length < ONE_ORGANISATION)
       return { match: false, confidence: CONFIDENCE.NONE };
-    const signals = [`${atDomain} distinct contact address(es) at one organisation's domain (${domain}), `
-                   + `${Math.round((atDomain / all.length) * 100)}% of the ${all.length} in the document`];
+    const signals = [localize("doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document",
+                              { count: String(atDomain), domain: String(domain), percent: String(Math.round((atDomain / all.length) * 100)), total: String(all.length) })];
     /* (3) NOT DATED. A schedule names its contacts; its rows are events. */
     const dates = (flatten(raw).match(SD_DATE) || []).length;
     if (dates >= Math.max(3, atDomain / 2)) return { match: false, confidence: CONFIDENCE.NONE };
@@ -150,7 +151,7 @@ export default {
     if (phones) signals.push(`${phones} distinct phone number(s)`);
     const title = sdTitleLine(raw);
     if (title) {
-      signals.push(`it names itself in its title line ("${title.slice(0, 80)}")`);
+      signals.push(localize("doctypes.staff-directory.title_line", "it names itself in its title line (\"{title}\")", { title: title.slice(0, 80) }));
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
     return { match: true, confidence: CONFIDENCE.LIKELY, signals };
@@ -187,7 +188,7 @@ export default {
       domain,
       entries: atDomain,
       title,
-      title_why: title ? null : "no line among the first five names this document as a directory, staff list, roster or contacts",
+      title_why: title ? null : localize("doctypes.staff-directory.no_title", "no line among the first five names this document as a directory, staff list, roster or contacts"),
       also_satisfies: alsoSatisfies(ctx, "staff_directory"),
       at: ctx.at || null,
     };
@@ -202,22 +203,22 @@ export default {
        emptied of everyone the other side listed. */
     if (!(a.entities || []).length || !(b.entities || []).length)
       return { meaningful: null, significance: null, events: [], confirmed: null,
-               why: "no entry could be read from this directory this time, so nothing is claimed about it either way" };
+               why: localize("doctypes.staff-directory.unread", "no entry could be read from this directory this time, so nothing is claimed about it either way") };
     const d = diffEntities(a.entities || [], b.entities || []);
     const events = [];
     for (const e of d.gone)
-      events.push(event("item_pulled", { key: e.key, label: e.label, why: "this address is no longer listed in the directory" }));
+      events.push(event("item_pulled", { key: e.key, label: e.label, why: localize("doctypes.staff-directory.pulled", "this address is no longer listed in the directory") }));
     for (const e of d.appeared)
-      events.push(event("item_added", { key: e.key, label: e.label, why: "the directory now lists an address it did not" }));
+      events.push(event("item_added", { key: e.key, label: e.label, why: localize("doctypes.staff-directory.added", "the directory now lists an address it did not") }));
     for (const x of d.altered)
       events.push(event("item_changed", { key: x.entity.key, label: x.entity.label, moved: x.moved,
-        why: "this entry's line in the directory now says something else" }));
+        why: localize("doctypes.staff-directory.altered", "this entry's line in the directory now says something else") }));
     bySeverity(events);
     return {
       meaningful: isMeaningful(events), significance: worstSignificance(events), events,
       confirmed: sdConfirmed(a, b),
-      why: events.length ? `${events.length} change(s) to the directory's entries`
-                         : "the directory lists the same addresses, each saying what it said",
+      why: events.length ? localize("doctypes.staff-directory.changes", "{count} change(s) to the directory's entries", { count: String(events.length) })
+                         : localize("doctypes.staff-directory.unchanged", "the directory lists the same addresses, each saying what it said"),
     };
   },
 };

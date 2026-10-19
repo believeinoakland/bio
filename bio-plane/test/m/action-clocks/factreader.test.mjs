@@ -7,6 +7,7 @@ import { world, V, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a";
@@ -90,7 +91,7 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   for (const h of [{ ...CLERK26, list: "not a list!" }, null, undefined, 7, "x", {}, { profile: "Not A Profile", year: 2026 }, { ...CLERK26, year: "soon" },
                    { ...CLERK26, offices: [] }, { get profile() { throw new Error("x"); } }]) {
     const r = read(h);
-    assert.deepEqual([r.status, r.why, r.path], ["absent", "the holiday entry names no local fact", null], String(h));
+    assert.deepEqual([r.status, r.why, r.path], ["absent", word("action-clocks.why.holiday_entry_names"), null], String(h));
   }
   /* a fact the active profiles do not hold: local-facts' own answer (refused or absent), absent with why. */
   const gone = read({ ...CLERK26, year: 2031 });
@@ -105,14 +106,14 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   assert.deepEqual(refused, { path: pathOf(CLERK26), status: "absent", why: "local facts refused the read: NO_SUCH_FACT" });
   for (const ans of [null, undefined, 3, "x"])
     assert.deepEqual(clocks.factReader({ factStatus: () => ans }, M)(CLERK26),
-      { path: pathOf(CLERK26), status: "absent", why: "local facts did not answer" }, String(ans));
+      { path: pathOf(CLERK26), status: "absent", why: word("action-clocks.why.local_facts_answer") }, String(ans));
   /* an answer local-facts cannot give: a status outside its vocabulary, none, or a shape that throws when read. */
   for (const status of ["maybe", undefined, 4]) {
     const r = clocks.factReader({ factStatus: () => ({ ok: true, status }) }, M)(CLERK26);
     assert.deepEqual([r.status, r.path], ["absent", pathOf(CLERK26)]); assert.match(r.why, /no status it gives/);
   }
   const trap = clocks.factReader({ factStatus: () => ({ ok: true, status: "confirmed", get governs() { throw new Error("x"); } }) }, M)(CLERK26);
-  assert.deepEqual([trap.status, trap.why], ["absent", "local facts answered in a shape the count cannot read"]);
+  assert.deepEqual([trap.status, trap.why], ["absent", word("action-clocks.why.local_facts_answered_shape")]);
   /* each such answer makes a business count undetermined, with why, and nothing is thrown. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({ factStatus: () => { throw new Error("storage gone"); } }, M) });
   assert.equal(n.date, null); assert.match(n.why, /cannot be read in your team's Civicsmith: local facts' read failed: storage gone/);
@@ -128,7 +129,7 @@ test("R12 factReader answers null when localFacts has no factStatus, and the cou
     assert.equal(clocks.factReader(lf, M), null, String(lf));
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({}, M) });
   assert.deepEqual([n.date, n.calendar.status, n.calendar.says], ["2026-08-19", "not_read",
-    ["whether your team has confirmed the calendar was not read"]]);
+    [word("action-clocks.says.whether_group_confirmed")]]);
   assert.ok(!/this instance|this copy|the plane/.test(JSON.stringify(n.calendar)), "DEC-149");
   /* an instance whose local-facts has no factStatus: the count's own path states not_read too, and counts. */
   const w = world({ override: { "test-port-ellery": officeCalendarProfile() } });

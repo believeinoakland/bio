@@ -8,6 +8,7 @@ import { world, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_DAYS, SECURITY_NOTE, SECURITY_THRESHOLD, Credentials }
   from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const H = 3600e3, D = 24 * H;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -160,11 +161,14 @@ test("R45 the period: from before to, at most 90 days, inside the counts kept; a
   const w = await world().group();
   await at(NOW, async () => {
     const bad = [
-      [null, NOW, "from is not an instant"], ["yesterday", NOW, "from is not an instant"], [NOW - H, undefined, "to is not an instant"],
-      [NOW, NOW, "from is not before to"], [NOW, NOW - H, "from is not before to"],
-      [NOW - 90 * D - H, NOW, "the period is longer than 90 days"],
-      [NOW - 90 * D - 2 * H, NOW - 80 * D, "from is before the counts kept, which go back 90 days"],
-      [NOW - H, NOW + 2 * H, "to is after the present hour"]];
+      [null, NOW, localize("credentials.index.from_is_not_an", "from is not an instant")],
+      ["yesterday", NOW, localize("credentials.index.from_is_not_an", "from is not an instant")],
+      [NOW - H, undefined, localize("credentials.index.to_is_not_an", "to is not an instant")],
+      [NOW, NOW, localize("credentials.index.from_is_not_before", "from is not before to")],
+      [NOW, NOW - H, localize("credentials.index.from_is_not_before", "from is not before to")],
+      [NOW - 90 * D - H, NOW, localize("credentials.index.the_period_is_longer", "the period is longer than {days} days", { days: 90 })],
+      [NOW - 90 * D - 2 * H, NOW - 80 * D, localize("credentials.index.from_is_before_the", "from is before the counts kept, which go back {days} days", { days: 90 })],
+      [NOW - H, NOW + 2 * H, localize("credentials.index.to_is_after_the", "to is after the present hour")]];
     for (const [from, to, what] of bad) {
       const r = w.c.securityMap({ from: typeof from === "number" ? iso(from) : from, to: typeof to === "number" ? iso(to) : to, by: "admin" });
       assert.deepEqual([shape(r), r.what], [refusal("SECURITY_PERIOD_INVALID"), what], what);
@@ -183,7 +187,7 @@ test("R45 the answer's shape; the step (an hour to 48 hours, six hours to 14 day
     const m = map(w, NOW - 6 * H, NOW);
     assert.deepEqual(Object.keys(m).sort(), ["buckets", "countries", "from", "level", "levelAt", "note", "ok", "step", "to", "totals", "unplaced"]);
     assert.deepEqual([m.from, m.to, m.note], [iso(NOW - 6 * H), iso(NOW), SECURITY_NOTE]);
-    assert.equal(SECURITY_NOTE, "A country is not proof of who is behind an attempt.");
+    assert.equal(SECURITY_NOTE, word("credentials.country_proof_behind"));
     assert.deepEqual(m.buckets.map((b) => b.start), [6, 5, 4, 3, 2, 1, 0].map((k) => iso((HOUR - k) * H)), "whole hours from the one `from` falls in");
     for (const b of m.buckets) {
       assert.deepEqual(Object.keys(b).sort(), ["counts", "start", "usual"]);

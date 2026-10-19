@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, network, text } from "./fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL,
          civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
@@ -21,7 +21,7 @@ const credentials = ({ on = true, key = KEY, answer = null } = {}) => {
   const calls = [];
   return { calls, async keyedServiceFor({ service }) { calls.push(service);
     if (answer) return answer;
-    return on ? { ok: true, service, key } : { ...OFF, detail: "the team's key for this service is off or not held; the caller goes on without it." }; } };
+    return on ? { ok: true, service, key } : { ...OFF, detail: localize("acquisition.keyed.the_team_s_key_for", "the team's key for this service is off or not held; the caller goes on without it") }; } };
 };
 const withCreds = (w, c) => { w.store.credentials = c; return w; };
 
@@ -87,7 +87,7 @@ test("R36 R28: only a public https address on the service's own host is fetched,
     ["another host", { request: { url: "https://evil.example/api/rest/v4/citation-lookup/", method: "POST" } }, "BAD_KEYED_REQUEST"],
     ["a look-alike host", { request: { url: "https://www.courtlistener.com.evil.example/x", method: "GET" } }, "BAD_KEYED_REQUEST"],
     ["plain http", { request: { url: "http://www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
-    ["credentials in the address", { request: { url: "https://u:p@www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
+    ["a userinfo in the address", { request: { url: "https://u:p@www.courtlistener.com/api/", method: "GET" } }, "BAD_KEYED_REQUEST"],
     ["a DELETE", { request: { url: LOOKUP, method: "DELETE" } }, "BAD_KEYED_REQUEST"],
     ["a form of non-strings", { request: { url: LOOKUP, method: "POST", form: { text: 7 } } }, "BAD_KEYED_REQUEST"],
     ["no request", { request: null }, "BAD_KEYED_REQUEST"],

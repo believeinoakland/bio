@@ -141,15 +141,14 @@ test("R40 a hub answer of the identity kinds, at connection-grammar's string con
   assert.equal(walked.hub.why, n.hub.why);
 });
 
-test("R40 a claim whose validity does not settle the date is a hop marked undetermined, its why the sentence connection-grammar's contract judges (the owner's, as it answers) and why_key the key or null; the registry accepts it", () => {
+test("R40 a claim whose validity does not settle the date is a hop marked undetermined, its why the owner's {key, vars} as civil-time answers it, which connection-grammar's contract judges (R6); the registry accepts it", () => {
   const w = world();
   const [a, b] = [w.person("Kay Roe"), w.person("Kay Roe")];
   assert.equal(w.p.claimIdentity({ a, b, kind: "same_as", basis: "testimony", note: "said so", by: ANN }).ok, true);
   const n = w.registry.neighbours({ owner: "people", node: a, at: "2024-01-01", viewer: ANN });
   assert.equal(n.refused, undefined, JSON.stringify(n).slice(0, 200));
   const u = n.items[0].undetermined;
-  assert.equal(typeof u.why, "string");
-  /* no start nor end is stated: civil-time answers, and its reason is passed on as it answers it (English today: a REPORT) */
-  assert.equal(u.why, validAt({ valid: { from: null, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: "2024-01-01", precision: "day", zone: "UTC" }).why);
-  assert.equal(u.why_key, null, "the owner's reason is no key of this module's");
+  /* no start nor end is stated: civil-time answers its reason as a key, and it is passed on as it answers it (R40) */
+  assert.deepEqual(u.why, validAt({ valid: { from: null, to: null, precision: "day", zone: "UTC" }, basis: null }, { value: "2024-01-01", precision: "day", zone: "UTC" }).why);
+  assert.deepEqual(Object.keys(u), ["why"], "no sentence and no key beside it: the hop's reason is the one key");
 });

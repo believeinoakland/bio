@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, E, BOB, CAROL, MACHINE, SHA, mny, ent, fictionalView } from "./fixture.mjs";
 import { DUTIES_CHECKS, MODALITIES, LIST_MAX } from "../../../src/duties/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, `${code}: ${JSON.stringify(r).slice(0, 300)}`);
@@ -92,7 +93,7 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
 
 test("R2 a proposed duty is stored apart and labelled, never tracked until a member adopts it in one act naming the clause", () => {
   const w = world();
-  const p = w.duties.propose({ ...w.fields(), by: MACHINE, why: "computed from the profile rule" });
+  const p = w.duties.propose({ ...w.fields(), by: MACHINE, why: "a stated reason" });
   assert.equal(p.ok, true);
   assert.deepEqual(p.label, { by: MACHINE, machine_work: true, state: "machine_proposed" });
   assert.equal(p.tracked, false);
@@ -115,7 +116,7 @@ test("R2 a proposed duty is stored apart and labelled, never tracked until a mem
   assert.equal(again.duty_id, "DUT-2026-0001");
   const read = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
   assert.deepEqual(read.proposal, { proposal_id: p.proposal_id, by: MACHINE, machine_work: true, state: "machine_proposed",
-                                     why: "computed from the profile rule", at: "2026-03-02T12:00:00Z" });
+                                     why: "a stated reason", at: "2026-03-02T12:00:00Z" });
   assert.deepEqual(read.adoption, { by: BOB, at: "2026-03-02T12:00:00Z", clause: "s7922(a)" });
   /* a member's proposal is labelled the member's */
   assert.deepEqual(w.duties.propose({ ...w.fields(), by: CAROL }).label, { by: CAROL, machine_work: false, state: "member_proposed" });
@@ -147,7 +148,7 @@ test("R4 a duty arising in a proceeding or report names it, and carries reported
   const response = w.passage("response");                 /* the body's response: its quoted passage */
   row(w.declare({ arising_in: ent(55) }), "ARISING_IN_NOT_HELD");
   row(w.declare({ arising_in: E.clerk }), "ARISING_IN_NOT_HELD", "an entity that is not a proceeding");
-  row(w.declare({ arising_in: SHA("a capture never held") }), "ARISING_IN_NOT_HELD", "a capture the record does not hold");
+  row(w.declare({ arising_in: SHA("a capture never held") }), "ARISING_IN_NOT_HELD", "arising_in not held");
   row(w.declare({ arising_in: E.case, reported_status: [{ status: "implemented", extent: SHA("no such passage") }] }), "EXTENT_NOT_HELD");
   const a = w.declare({ arising_in: E.case, reported_status: [{ status: "will_not_implement", extent: response.contentId }] });
   assert.equal(a.ok, true);
@@ -255,8 +256,8 @@ test("R8 in_force is derived on each read, never stored: a standard's or court's
   const u = f(open.duty_id, "2026-06-01");
   assert.equal(u.state, "undetermined");
   assert.match(u.why, /does not state when it ceased to be in force/, "an undetermined answer carries its reason");
-  assert.equal(f(prac.duty_id, "2026-06-01").state, "held as practice");
-  assert.equal(f(dep.duty_id, "2026-06-01").state, "held as a dependency");
+  assert.equal(f(prac.duty_id, "2026-06-01").state, word("duties.state.held_practice"));
+  assert.equal(f(dep.duty_id, "2026-06-01").state, word("duties.state.held_dependency"));
   /* never stored: no column holds it, and no version holds it in its fields */
   assert.ok(!w.sqlRows(`PRAGMA table_info(duties)`).some((c) => /in_?force/.test(c.name)));
   assert.ok(w.sqlRows(`SELECT fields_json FROM duty_versions`).every((r) => !/in_force|not_in_force/.test(r.fields_json)));

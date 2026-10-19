@@ -17,6 +17,7 @@ import { THEME_CHECKS } from "./checks.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../extraction/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R42, R44: the read's bound (`op=leadread`'s pair). */
 export const THEME_READ_LIMIT_DEFAULT = 200;
@@ -58,7 +59,7 @@ export class Themes {
    *  administer. */
   #name(stamp, administer) {
     const p = this.person("by", stamp, administer);
-    return p.by_handle || p.by || "a member whose handle is not recorded";
+    return p.by_handle || p.by || word("connections.member_handle_recorded");
   }
 
   /* WHICH THEME: one answer for a theme that does not exist and for a viewer the gate does not recognise. */
@@ -71,8 +72,8 @@ export class Themes {
     /* DEC-49 REGION is-theme-source */
     if (!row)
       return refusal("THEME_NOT_FOUND",
-        tid ? `no theme is recorded under ${tid.slice(0, 60)}`
-            : `pass theme=<THEME-…>: the id op=themedeclare returned`, { theme: tid || null });
+        tid ? localize("connections.themes.no_theme_recorded", "no theme is recorded under {theme}", { theme: String(tid.slice(0, 60)) })
+            : localize("connections.themes.pass_theme_id", "pass theme=<THEME-…>: the id op=themedeclare returned"), { theme: tid || null });
     /* END DEC-49 REGION is-theme-source */
     return { ok: true, row };
   }
@@ -95,13 +96,11 @@ export class Themes {
     /* DEC-49 REGION is-theme-target */
     if (!sees)
       return refusal("THEME_TARGET_NOT_FOUND",
-        t ? `nothing you can see answers to ${t.slice(0, 80)}: name a document by its record id or a passage by `
-            + `its content id`
-          : `pass target=<a document's record id, or a passage's content id>`, { target: t || null });
+        t ? localize("connections.themes.nothing_answers_to", "nothing you can see answers to {target}: name a document by its record id or a passage by its content id", { target: String(t.slice(0, 80)) })
+          : localize("connections.themes.pass_target", "pass target=<a document's record id, or a passage's content id>"), { target: t || null });
     if (words && bytes(words) > CAPTURE_TEXT_UNIT_CAP)
       return refusal("THEME_REASON_TOO_LONG",
-        `${bytes(words)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused `
-        + `rather than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
+        localize("connections.themes.note_over_passage_cap", "{bytes} B of note, over the {cap} B one passage is stored to. Refused rather than cut", { bytes: String(bytes(words)), cap: String(CAPTURE_TEXT_UNIT_CAP) }), { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-theme-target */
     return { ok: true, target: t, kind, bundleId, note: words };
   }
@@ -115,20 +114,17 @@ export class Themes {
     /* DEC-49 REGION is-theme-declare */
     if (!who || isMachineIdentity(who))
       return refusal("THEME_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A theme is a PERSON's declared lens, in their `
-              + `own name (§8.4 fence 1); a machine may propose a placement, never declare a theme`
-            : `this call carries nobody. The plane stamps the declarer from the credential that asked`);
+        who ? localize("connections.themes.declare_machine_credential", "'{who}' is a machine credential. A theme is a PERSON's declared lens, in their own name (§8.4 fence 1); a machine may propose a placement, never declare a theme", { who: String(who.slice(0, 60)) })
+            : localize("connections.themes.declare_nobody", "this call carries nobody. The plane stamps the declarer from the credential that asked"));
     if (!criterion.trim())
       return refusal("THEME_NO_TEST",
-        `a theme carries its TEST — the sentence a document or a passage passes or fails, so any member `
-        + `can check a placement against it (§8.4 fence 2). None was given, so nothing was declared`);
+        localize("connections.themes.no_test", "a theme carries its TEST — the sentence a document or a passage passes or fails, so any member can check a placement against it (§8.4 fence 2). None was given, so nothing was declared"));
     if (!idea.trim())
       return refusal("THEME_NO_NAME",
-        `a theme names its idea in a few words beside its test. None was given, so nothing was declared`);
+        localize("connections.themes.no_name", "a theme names its idea in a few words beside its test. None was given, so nothing was declared"));
     if (bytes(idea) > CAPTURE_TEXT_UNIT_CAP || bytes(criterion) > CAPTURE_TEXT_UNIT_CAP)
       return refusal("THEME_TOO_LONG",
-        `${bytes(idea)} B of name and ${bytes(criterion)} B of test, over the ${CAPTURE_TEXT_UNIT_CAP} B `
-        + `one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
+        localize("connections.themes.name_and_test_over_cap", "{name_bytes} B of name and {test_bytes} B of test, over the {cap} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut", { name_bytes: String(bytes(idea)), test_bytes: String(bytes(criterion)), cap: String(CAPTURE_TEXT_UNIT_CAP) }),
         { limit: CAPTURE_TEXT_UNIT_CAP });
     /* END DEC-49 REGION is-theme-declare */
     const at = stampInstant("second");
@@ -138,9 +134,7 @@ export class Themes {
                   themeId, who, idea, criterion, at);
     return { ok: true, theme_id: themeId, name: idea, test: criterion, at,
              ...this.person("declared_by", who, administer), evidence: false,
-             says: `${this.#name(who, administer)}'s theme is declared, with its test. It is a lens for finding and `
-                 + `gathering material, visibly theirs, and never the basis of a claim: no leg can rest on it `
-                 + `or on membership in it` };
+             says: word("connections.says.theme_declared_test", { who: String(this.#name(who, administer)) }) };
   }
 
   /** R40 (`op=themeplace`): a member places a document or a passage, or confirms a hunch standing there. */
@@ -150,10 +144,8 @@ export class Themes {
     /* DEC-49 REGION is-theme-place */
     if (!who || isMachineIdentity(who))
       return refusal("THEME_PLACEMENT_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. Placing is a member's judgement that the `
-              + `document passes the theme's test (§8.4 fence 3); a machine may only propose it, with `
-              + `op=themepropose, and the proposal stays a hunch until a member confirms it`
-            : `this call carries nobody. The plane stamps the placer from the credential that asked`);
+        who ? localize("connections.themes.place_machine_credential", "'{who}' is a machine credential. Placing is a member's judgement that the document passes the theme's test (§8.4 fence 3); a machine may only propose it, with op=themepropose, and the proposal stays a hunch until a member confirms it", { who: String(who.slice(0, 60)) })
+            : localize("connections.themes.place_nobody", "this call carries nobody. The plane stamps the placer from the credential that asked"));
     /* END DEC-49 REGION is-theme-place */
     const src = this.#themeFor(theme, viewer);
     if (!src.ok) return src;
@@ -176,10 +168,8 @@ export class Themes {
              confirmed_hunch: !!before && before.state === "hunch",
              already: !!before && before.state === "member", evidence: false,
              says: before && before.state === "member"
-               ? `${tgt.target} was already a member of this theme; nothing changed`
-               : `${tgt.target} is a member of the theme "${T.name.slice(0, 80)}" on ${this.#name(who, administer)}'s judgement that it `
-                 + `passes the test${before ? ", confirming a proposal" : ""}. Membership connects it to the `
-                 + `theme's other members through this lens only, and is never a basis leg` };
+               ? word("connections.says.already_member_theme", { target: String(tgt.target) })
+               : localize("connections.themes.target_is_a_member_of", "{target} is a member of the theme \"{name}\" on {name_2}'s judgement that it passes the test{v1}. Membership connects it to the theme's other members through this lens only, and is never a basis leg", { target: String(tgt.target), name: String(T.name.slice(0, 80)), name_2: String(this.#name(who, administer)), v1: String(before ? ", confirming a proposal" : "") }) };
   }
 
   /** R41 (`op=themepropose`): any credential proposes a placement, stored as a HUNCH; never demotes a member. */
@@ -189,8 +179,7 @@ export class Themes {
     /* DEC-49 REGION is-theme-propose */
     if (!who)
       return refusal("THEME_NO_PROPOSER",
-        `this call carries nobody. The plane stamps the proposer from the credential that asked, and a `
-        + `hunch nobody can be named for is one the record could say nothing about`);
+        localize("connections.themes.propose_nobody", "this call carries nobody. The plane stamps the proposer from the credential that asked, and a hunch nobody can be named for is one the record could say nothing about"));
     /* END DEC-49 REGION is-theme-propose */
     const src = this.#themeFor(theme, viewer);
     if (!src.ok) return src;
@@ -206,10 +195,8 @@ export class Themes {
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`, T.theme_id, tgt.target);
     return { ok: true, theme_id: T.theme_id, ...this.view(row, administer), already: !!before, evidence: false,
              says: row.state === "member"
-               ? `${tgt.target} is already a member of this theme, placed by ${this.#name(row.placed_by, administer)}; the proposal `
-                 + `changed nothing`
-               : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch — not `
-                 + `membership — until a member checks it against the test and places it` };
+               ? word("connections.says.already_member_theme_placed", { target: String(tgt.target), placed_by: String(this.#name(row.placed_by, administer)) })
+               : word("connections.says.proposed_theme_hunch", { target: String(tgt.target), name: String(T.name.slice(0, 80)) }) };
   }
 
   /** R43 (`op=themewithdraw`, K102): the placer (or an administrator) withdraws a membership; any member rejects a
@@ -221,8 +208,8 @@ export class Themes {
     /* DEC-49 REGION is-theme-withdraw */
     if (!who || isMachineIdentity(who))
       return refusal("THEME_WITHDRAW_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential; taking a placement back is a member's judgement`
-            : `this call carries nobody. The plane stamps the member from the credential that asked`);
+        who ? localize("connections.themes.withdraw_machine_credential", "'{who}' is a machine credential; taking a placement back is a member's judgement", { who: String(who.slice(0, 60)) })
+            : localize("connections.themes.withdraw_nobody", "this call carries nobody. The plane stamps the member from the credential that asked"));
     /* END DEC-49 REGION is-theme-withdraw */
     const src = this.#themeFor(theme, viewer);
     if (!src.ok) return src;
@@ -235,14 +222,13 @@ export class Themes {
     /* DEC-49 REGION is-theme-withdraw-standing */
     if (!why)
       return refusal("THEME_WITHDRAW_NO_REASON",
-        `a placement taken back, or a proposal turned down, keeps its reason; none was given, so nothing changed`);
+        localize("connections.themes.reason_none_given", "a placement taken back, or a proposal turned down, keeps its reason; none was given, so nothing changed"));
     if (!row)
       return refusal("THEME_WITHDRAW_NOTHING_STANDING",
-        `nothing stands in this theme at ${tgt.target.slice(0, 80)}, so there is nothing to withdraw`, { target: tgt.target });
+        localize("connections.themes.nothing_standing", "nothing stands in this theme at {target}, so there is nothing to withdraw", { target: String(tgt.target.slice(0, 80)) }), { target: tgt.target });
     if (row.state === "member" && row.placed_by !== who && !admin)
       return refusal("THEME_WITHDRAW_NOT_THE_PLACER",
-        `${tgt.target.slice(0, 80)} was placed in this theme by ${this.#name(row.placed_by, administer)}; a membership is `
-        + `withdrawn by its placer or by an administrator`, { target: tgt.target });
+        localize("connections.themes.not_the_placer", "{target} was placed in this theme by {placer}; a membership is withdrawn by its placer or by an administrator", { target: String(tgt.target.slice(0, 80)), placer: String(this.#name(row.placed_by, administer)) }), { target: tgt.target });
     /* END DEC-49 REGION is-theme-withdraw-standing */
     const state = row.state === "member" ? "withdrawn" : "rejected";
     const at = stampInstant("second");
@@ -259,9 +245,7 @@ export class Themes {
     const ended = this.#one(`SELECT * FROM theme_placement_acts WHERE theme_id = ? AND target = ? ORDER BY act_id DESC LIMIT 1`,
                             row.theme_id, row.target);
     return { ok: true, theme_id: T.theme_id, ...this.endedView(ended, administer), evidence: false,
-             says: `${tgt.target} is ${state === "withdrawn" ? "no longer a member of" : "no longer proposed for"} the theme `
-                 + `"${T.name.slice(0, 80)}": ${this.#name(who, administer)} ${state} it, saying why. What was judged `
-                 + `before is kept beside it` };
+             says: word("connections.says.theme_saying_judged", { target: String(tgt.target), state: String(state === "withdrawn" ? word("connections.says.longer_member") : word("connections.says.longer_proposed")), name: String(T.name.slice(0, 80)), who: String(this.#name(who, administer)), state_2: String(state) }) };
   }
 
   /** R44: one standing placement as this reader is shown it. `membership` is true for `member` alone. */
@@ -322,9 +306,7 @@ export class Themes {
       hunches_truncated: hunches.length > cap,
       withdrawn: ended.slice(0, cap).map((r) => this.endedView(r, administer)),
       withdrawn_truncated: ended.length > cap,
-      says: `a member's declared lens, and never the basis of a claim. `
-          + `${n(members)} member(s) you can see, placed by a member against the test; `
-          + `${n(hunches)} hunch(es) PROPOSED and not yet confirmed, which are not membership`,
+      says: word("connections.says.member_declared_lens", { members: String(n(members)), hunches: String(n(hunches)) }),
     };
   }
 }

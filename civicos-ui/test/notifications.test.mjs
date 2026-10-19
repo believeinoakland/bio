@@ -134,6 +134,7 @@ import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
    fixture reads the act from there; the set-aside stays queue's mint. Import added: `queue-producers` (an earlier
    module; legacy-tests' `uses` is `*earlier`). */
 import { QueueProducers } from "../../bio-plane/src/queue-producers/index.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -302,7 +303,7 @@ function BIAS(named){
     summary: BIAS_SUMMARY,
     detail: null,
     basis: { source:"bias_debts", computed_by:"aiRunRead", run:RUN_ID, moved:true,
-             moved_basis:"at_open", lens_then:"none in force", lens_now:"7f21c0",
+             moved_basis:"at_open", lens_then:word("queue-producers.stated.force"), lens_now:"7f21c0",
              observed:"2026-09-23T09:00:00Z",
              stated:"the run's lens was none in force (the lens in force when it opened) and is 7f21c0 now",
              detail: BIAS_BASIS_DETAIL },

@@ -3,6 +3,7 @@
  * the door and the corpus check are one function in one module. The notes below are the catalogue's, kept. */
 
 import { parseFrontmatter, normalizeType } from "../record-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* The catalogue's finding shape, `{check, severity, message, repairable?, repairs?}`. */
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairable: true, repairs } : {}) });
@@ -81,7 +82,7 @@ export function checkProjectNameUniqueness(corpus) {
     if (!key) {
       findings.push(f('C-77.2', 'warning',
         `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
-        ['give the project a title unique across your team\'s Civicsmith']));
+        [localize("promotion.names.give_project_title_unique", "give the project a title unique across your team's Civicsmith")]));
       continue;
     }
     keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });

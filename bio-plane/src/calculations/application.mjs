@@ -10,6 +10,7 @@
 
 import { evaluate, METHOD } from "../calc-grammar/index.mjs";
 import { normAlias } from "../extraction/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** R32: the columns of a frozen uses table, in order, with their Table Schema types. */
 export const USES_FIELDS = Object.freeze([
@@ -52,24 +53,24 @@ export const APPLICATION_RECIPES = Object.freeze([
   { recipe: "outcome_rate_by", inputs: { uses: "a frozen uses table (R32)" },
     terms: { by: "the column to group by: decider, subject, subject_kind, subject_sector, reason_stated, relationships, kind, provision_standard, or when (with period)",
       period: "for by: when, year or month", outcomes: "optional: the outcomes named; any other is counted apart" },
-    says: "the share of each outcome in each group, with the group's size" },
+    says: localize("calculations.application.the_share_of_each", "the share of each outcome in each group, with the group's size") },
   { recipe: "reasons_missing", inputs: { uses: "a frozen uses table (R32)" }, terms: { by: "optional: a column to group by" },
-    says: "the share of acts with no reason stated" },
+    says: word("calculations.says.share_acts_reason") },
   { recipe: "reasons_repeated", inputs: { uses: "a frozen uses table (R32)" }, terms: {},
-    says: "the number of distinct stated reasons and the share of acts whose folded reason is given word for word in another act, each reason listed with its count" },
+    says: word("calculations.says.number_distinct_stated") },
   { recipe: "waiver_share", inputs: { uses: "a frozen uses table (R32)" }, terms: { by: "optional: a column to group by, such as provision_standard" },
-    says: "waivers as a share of all uses" },
+    says: word("calculations.says.waivers_share_uses") },
   { recipe: "consistency", inputs: { uses: "a frozen uses table (R32)" }, terms: { keys: "the like-case keys: one or more columns" },
-    says: "for each group of two or more like cases, the share whose outcome is the group's most frequent; groups of one counted apart" },
+    says: word("calculations.says.group_two_like") },
   { recipe: "before_after", inputs: { uses: "a frozen uses table (R32)" },
     terms: { change: "{standard}: a held standard's version, its period's from; or {date}", outcomes: "optional: the outcomes named" },
-    says: "the outcome shares before and after the change; an act whose when falls across it counted apart" },
+    says: word("calculations.says.outcome_shares_change") },
   { recipe: "target_met", inputs: { measure: "a calculation or cited figure (one period, the calculation's), or a table with from, to and value columns (one row per period)" },
-    terms: { target: "the held standard carrying the target (standards R42)", body: "the body measured (an entity id)", definition_differs: "optional: the member's words when the measure's definition differs from the target's" },
-    says: "per period, the measured value beside the threshold, with whether a target that binds the body was met; against a benchmark, the comparison alone, labelled" },
+    terms: { target: "the held standard carrying the target (standards R42)", body: word("calculations.body_measured_entity"), definition_differs: "optional: the member's words when the measure's definition differs from the target's" },
+    says: word("calculations.says.per_period_measured") },
   { recipe: "policy_against_practice", inputs: { practice: "a table, or a calculation answering a table, of the acts measured" },
     terms: { provision: "{standard, portion?}", departure: "the conditions (calc-grammar's select) a departing act meets, as the member defines departure" },
-    says: "the measured rate of departing acts with its denominator, beside the provision's words; the practice is never the rule" },
+    says: word("calculations.says.measured_rate_departing") },
 ].map((r) => Object.freeze(r)));
 export const APPLICATION_KINDS = Object.freeze(APPLICATION_RECIPES.map((r) => r.recipe));
 
@@ -128,7 +129,7 @@ function periodsOf(rows, unit) {
 function usesFault(t, need = USES_HEADER) {
   const names = plain(t) && Array.isArray(t.fields) ? t.fields.map((f) => f.name) : [];
   const missing = need.filter((n) => !names.includes(n));
-  return missing.length ? no("NOT_A_USES_TABLE", `a recipe of application runs over a frozen uses table (R32), its columns ${USES_HEADER.join(", ")}; this input lacks ${missing.join(", ")}. Nothing was written.`, { missing }) : null;
+  return missing.length ? no("NOT_A_USES_TABLE", localize("calculations.application.a_recipe_of_application_runs", "a recipe of application runs over a frozen uses table (R32), its columns {USES_HEADER}; this input lacks {missing}. Nothing was written.", { USES_HEADER: String(USES_HEADER.join(", ")), missing: String(missing.join(", ")) }), { missing }) : null;
 }
 
 /* Per group (or once, over the whole), the share of rows meeting each of `measures` ({key, where}) among the group's
@@ -181,7 +182,7 @@ function namedBase(named, steps, apart) {
   steps.push({ op: "select", from: "uses", where: [{ field: "outcome", test: "in", value: named }], as: "named" },
     { op: "count", from: "uses", as: "all_rows" }, { op: "count", from: "named", as: "named_rows" },
     { op: "difference", a: "all_rows", b: "named_rows", as: "other_outcome" });
-  apart.push({ step: "other_outcome", why: `acts whose outcome is not one named (${named.join(", ")}), counted apart` });
+  apart.push({ step: "other_outcome", why: word("calculations.why.acts_outcome_named", { named: String(named.join(", ")) }) });
   return "named";
 }
 
@@ -204,7 +205,7 @@ export function composeApplication(kind, terms, bound, ctx = {}) {
     const base = namedBase(o.named, steps, apart);
     const plan = groupedShares(base, g.groups, o.outcomes.map((x) => ({ key: x, where: [{ field: "outcome", test: "eq", value: x }] })), steps);
     steps.push({ op: "count", from: base, as: "rows_counted" });
-    if (g.by === "when") apart.push({ why: "an act whose when is undetermined, or falls across a period's bounds, is in no period's group: counted apart by the select steps" });
+    if (g.by === "when") apart.push({ why: word("calculations.why.act_undetermined_falls") });
     return { ok: true, recipe: recipeOf(inputs, steps, "rows_counted"), plan: { groups: plan, by: g.by, apart, denominator: "rows_counted" } };
   }
   if (kind === "reasons_missing" || kind === "waiver_share") {
@@ -257,7 +258,7 @@ export function composeApplication(kind, terms, bound, ctx = {}) {
     steps.push({ op: "group", from: "uses", by: keys, measure: { op: "count" }, as: "cases" },
       { op: "select", from: "cases", where: [{ field: "count", test: "eq", value: 1 }], as: "singles" },
       { op: "count", from: "singles", as: "groups_of_one" }, { op: "count", from: "uses", as: "rows_counted" });
-    apart.push({ step: "groups_of_one", why: "groups of one act have no like case: counted apart" });
+    apart.push({ step: "groups_of_one", why: word("calculations.why.groups_act_like") });
     return { ok: true, recipe: recipeOf(inputs, steps, "rows_counted"), plan: { consistency: plan, keys, apart, denominator: "rows_counted" } };
   }
   if (kind === "before_after") {
@@ -277,7 +278,7 @@ export function composeApplication(kind, terms, bound, ctx = {}) {
         shares[side][x] = `${side}_share_${j}`;
       }
     });
-    apart.push({ step: "across_change", why: "acts whose when falls in a band across the change, or is undetermined, counted apart" });
+    apart.push({ step: "across_change", why: word("calculations.why.acts_falls_band") });
     return { ok: true, recipe: recipeOf(inputs, steps, "rows_counted"),
       plan: { before_after: { shares, before: "n_before", after: "n_after" }, change: ch, apart, denominator: "rows_counted" } };
   }
@@ -330,7 +331,7 @@ export function composeApplication(kind, terms, bound, ctx = {}) {
 function benchmarkWords(relation, unit) {
   if (relation !== "lower" && relation !== "equal" && relation !== "higher") return null;
   if (TIME_UNITS.test(String(unit || "").trim())) return relation === "lower" ? "faster than" : relation === "higher" ? "slower than" : "equal to";
-  return relation === "lower" ? "below" : "at or above";
+  return relation === "lower" ? "below" : word("calculations.above");
 }
 
 /* Whether a binding target was met, from calc-grammar's relation and the target's comparator. */
@@ -347,7 +348,7 @@ export function answerApplication(kind, plan, at, ctx = {}) {
   const population = ctx.population || null;
   const out = { recipe: kind, population, derivation: "the recipe stored with this calculation, evaluated by calc-grammar (bio-calc/1)",
     counted_apart: plan.apart.map((a) => ({ ...a, ...(a.step ? { rows: at(a.step) } : {}) })) };
-  if (plan.denominator) out.denominator = { rows: at(plan.denominator), says: "the rows counted" };
+  if (plan.denominator) out.denominator = { rows: at(plan.denominator), says: word("calculations.says.rows_counted") };
   if (plan.groups) {
     out.by = plan.by ?? null;
     out.groups = plan.groups.map((g) => ({ group: g.group, rows: at(g.rows),
@@ -358,12 +359,12 @@ export function answerApplication(kind, plan, at, ctx = {}) {
     out.distinct_reasons = at("distinct_reasons");
     out.share_repeated = at("share_repeated");
     out.reasons = at("listed");
-    out.says = "reasons given word for word in more than one act, shown as a measured quantity with each reason's count";
+    out.says = word("calculations.says.reasons_given_word");
   }
   if (plan.consistency) {
     out.keys = plan.keys;
     out.groups = plan.consistency.map((g) => ({ group: g.group, rows: at(g.rows), most_frequent: g.most_frequent,
-      ...(g.tied ? { tied: g.tied, says: "two or more outcomes are each the most frequent; the share is the same for each" } : {}), share: at(g.share) }));
+      ...(g.tied ? { tied: g.tied, says: word("calculations.says.two_outcomes_frequent") } : {}), share: at(g.share) }));
     out.groups_of_one = at("groups_of_one");
   }
   if (plan.before_after) {
@@ -376,18 +377,18 @@ export function answerApplication(kind, plan, at, ctx = {}) {
     const tg = plan.target;
     out.target = { standard: tg.standard, metric: tg.metric ?? null, threshold: tg.threshold, period: tg.period ?? null,
       definition: tg.definition ?? null };
-    if (ctx.definitionDiffers) out.definition_differs = { says: ctx.definitionDiffers, by: "the member: the module never judges two definitions equal" };
+    if (ctx.definitionDiffers) out.definition_differs = { says: ctx.definitionDiffers, by: word("calculations.member_module_judges") };
     out.periods = plan.periods.map((p) => {
       const cmp = at(p.comparison);
       const relation = plain(cmp) ? cmp.relation : null;
-      const b = typeof ctx.binds === "function" ? ctx.binds(p.to) : { state: "undetermined", why: "the standards module is not reachable here" };
+      const b = typeof ctx.binds === "function" ? ctx.binds(p.to) : { state: "undetermined", why: word("calculations.why.standards_module_reachable") };
       const row = { from: p.from, to: p.to, measured: at(p.value), threshold: tg.threshold, comparison: cmp, bindingness: b,
         ...(p.standing ? { target_standing: p.standing } : {}) };
       if (b.state === "binds") row.met = metOf(relation, tg.threshold.comparator);
       else {
         row.compared = benchmarkWords(relation, tg.threshold.unit) ?? "undetermined";
-        if (b.state === "benchmark") row.label = `Benchmark · not binding on ${ctx.bodyLabel || b.body || "the body measured"}`;
-        else row.why = b.why || "whether the target binds the body is undetermined";
+        if (b.state === "benchmark") row.label = word("standard.binding.benchmark", { body: String(ctx.bodyLabel || b.body || word("calculations.body_measured")) });
+        else row.why = b.why || word("calculations.whether_target_binds");
       }
       return row;
     });
@@ -395,7 +396,7 @@ export function answerApplication(kind, plan, at, ctx = {}) {
   if (plan.provision) {
     out.provision = plan.provision;
     out.practice = { divergence: at("divergence"), rows: at("rows_counted"),
-      says: "the measured practice beside the provision: the practice is never the rule and is never stored as a standard" };
+      says: word("calculations.says.measured_practice_beside") };
   }
   return out;
 }

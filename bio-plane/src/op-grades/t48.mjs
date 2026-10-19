@@ -17,6 +17,8 @@
  * and `groupdescriptiondraft` and `securitymap` are given `RUNG_ABSENT` rows below, so `interface-shell` R11 draws none of
  * the three as a reasoned act. R42's `MARKS` is in ./marks.mjs. */
 
+import { localize } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 
 /* ---- the rungs (`affordances` R19's backing beside each) ---- */
@@ -81,8 +83,7 @@ export const T48_NON_ACTS = {
   updatenotice: R("the verified release notice Settings › Updates draws, to administrators only (instance-setup R89)"),
   /* R41 */
   aiuseovertime: R("one assistant account's use over time, by day and by period, to that account's owners (ai-use R14)"),
-  exploregraph: R("what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on "
-    + "Explore connections, a person's Connections and the money trail (explore R21)"),
+  exploregraph: R(localize("op-grades.t48.what_the_record_joins_a", "what the record joins a centre to, two rings out: the nodes and steps the connection graph draws on Explore connections, a person's Connections and the money trail (explore R21)")),
   standardproposals: R("the proposals made for one project's standards, open, adopted or all, each labeled as who "
     + "proposed it and whether it is machine work (standards R57)"),
   filingread: R("one prepared draft or communication as it was stored, its text, blanks, fills and offers, beside its "

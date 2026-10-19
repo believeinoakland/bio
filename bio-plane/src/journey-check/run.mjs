@@ -13,6 +13,7 @@ import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, swee
 import { walkAdministrator, walkMemberJourney, walkUnassisted, journey29Live } from "./investigation.mjs";
 import { sweepScreens } from "./screens.mjs";
 import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs, JOURNEY_29, stepName } from "./design.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -135,7 +136,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
   } finally {
     if (world) for (const u of world.unansweredAll()) walk.fail(FAIL.ADDRESS, `unanswered: ${u}`);
     if (b) await b.close().catch(() => {});
-    if (world) await world.close().catch((e) => walk.fail(FAIL.STEP, `the world did not close: ${e.message}`));
+    if (world) await world.close().catch((e) => walk.fail(FAIL.STEP, localize("journey-check.run.the_world_did_not_close", "the world did not close: {message}", { message: String(e.message) })));
   }
   return { walk, report: walk.report(), ok: walk.failures.length === 0 };
 }
@@ -147,8 +148,7 @@ export async function askCode(role, address) {
   if (!process.stdin.isTTY) return null;
   const { createInterface } = await import("node:readline");
   const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true });
-  process.stderr.write(`\nAs the ${role}: open ${address.replace(/\?.*$/, "")} (the link the connect screen shows), sign in to Claude, `
-    + "approve, then type the code Anthropic's page shows (it is not echoed) and press Enter:\n");
+  process.stderr.write(localize("journey-check.run.as_the_role_open_replace", "\nAs the {role}: open {replace} (the link the connect screen shows), sign in to Claude, approve, then type the code Anthropic's page shows (it is not echoed) and press Enter:\n", { role: String(role), replace: String(address.replace(/\?.*$/, "")) }));
   rl._writeToOutput = () => {};
   const code = await new Promise((done) => rl.question("", done));
   rl.close();
@@ -228,9 +228,9 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
           });
           /* R5: the plane says who signed in; a credential that is not the role it is given for stops that role */
           const who = walk.whoami;
-          if (!who) { walk.fail(FAIL.ROLE, `as ${role}: whoami answered no member session after sign-in`); return; }
+          if (!who) { walk.fail(FAIL.ROLE, localize("journey-check.run.as_role_whoami_answered_no", "as {role}: whoami answered no member session after sign-in", { role: String(role) })); return; }
           if (!!who.administer !== administer) {
-            walk.fail(FAIL.ROLE, `the ${role}'s credential signs in a session whoami answers with administer: ${!!who.administer}`);
+            walk.fail(FAIL.ROLE, localize("journey-check.run.the_role_s_credential_signs", "the {role}'s credential signs in a session whoami answers with administer: {v1}", { role: String(role), v1: String(!!who.administer) }));
             return;
           }
           await sweep(walk, page, base, { screens: working, journey: `as ${role}`, each: async (p, s, drawn) => {
@@ -241,7 +241,7 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
               for (const l of await pageLimits(p, { width, slugs })) walk.fail(l.kind, `${s.id} at ${width}px: ${l.detail}`);
               const live = await p.screenshot();
               const design = await mock.draw(s.id, width);
-              if (!design) walk.fail(FAIL.DESIGN, `${s.id}: the design mock at ${mock.commit} draws no such screen`);
+              if (!design) walk.fail(FAIL.DESIGN, localize("journey-check.run.id_the_design_mock_at", "{id}: the design mock at {commit} draws no such screen", { id: String(s.id), commit: String(mock.commit) }));
               else walk.pairs.push(relative(out, await pair(b, live, design, join(out, "pairs", `${role}-${s.id}-${width}.png`),
                 { title: `${s.id}, ${width}px, as ${role}` })));
             }
@@ -260,14 +260,14 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
          not work, are reported as not walked, never failed */
       walk.journey = "R18 design journey 29";
       for (const [k, st] of (await mock.allSteps(JOURNEY_29)).entries())
-        if (st.only === "ai" && !journey29Live(walk, st)) walk.notes.push(`${stepName(JOURNEY_29, k, st)}: not walked, the assistant does not work (K3717)`);
+        if (st.only === "ai" && !journey29Live(walk, st)) walk.notes.push(localize("journey-check.run.stepname_not_walked_the_assistant", "{stepName}: not walked, the assistant does not work (K3717)", { stepName: String(stepName(JOURNEY_29, k, st)) }));
       /* R5: the acts only an administrator is drawn */
       walk.journey = "roles";
       if (acts.administrator.size && acts.member.size) {
         let only = 0;
         for (const [id, mine] of acts.member) {
           const theirs = acts.administrator.get(id) || [];
-          for (const op of mine) if (!theirs.includes(op)) walk.fail(FAIL.ROLE, `${id}: the member is drawn ${op}, the administrator is not`);
+          for (const op of mine) if (!theirs.includes(op)) walk.fail(FAIL.ROLE, localize("journey-check.run.id_the_member_is_drawn", "{id}: the member is drawn {op}, the administrator is not", { id: String(id), op: String(op) }));
         }
         for (const [id, theirs] of acts.administrator) only += theirs.filter((op) => !(acts.member.get(id) || []).includes(op)).length;
         if (!only) walk.fail(FAIL.ROLE, "no screen draws the administrator an act it does not draw the member: the administrator's walk did not administer");

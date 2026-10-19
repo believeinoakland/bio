@@ -78,6 +78,7 @@ import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PRE
          isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export * from "./checks.mjs";
 export { MONITORING_SCHEMA, MONITORING_TABLES, monitoringOwns } from "./schema.mjs";
@@ -166,10 +167,10 @@ export const CONTRACT_FREQUENCY = Object.freeze({ membership: "daily", substance
 /** R52 (K1019): the canned reasons for setting an address's own frequency, each key with its sentence (BOB's wording),
  *  and `custom`, the member's own words in `reasonText`. */
 export const ADDRESS_FREQUENCY_REASONS = Object.freeze({
-  source_changes_rarely: "The source changes rarely.",
-  source_changes_often: "The source changes often.",
-  legal_deadline_approaching: "A legal deadline that depends on this source is approaching.",
-  source_unreliable: "The source is unreliable, so it is checked more often.",
+  source_changes_rarely: localize("monitoring.source_changes_rarely", "The source changes rarely."),
+  source_changes_often: localize("monitoring.source_changes_often", "The source changes often."),
+  legal_deadline_approaching: localize("monitoring.legal_deadline_depends", "A legal deadline that depends on this source is approaching."),
+  source_unreliable: localize("monitoring.source_unreliable_checked", "The source is unreliable, so it is checked more often."),
 });
 /** R52: the reason that carries the member's own words. */
 export const CUSTOM_REASON = "custom";
@@ -234,16 +235,16 @@ export function cadenceFor(authored, reading) {
     return { frequency: authored, source: "authored", contract, content_type: contentType };
   if (authored != null && authored !== "")
     return { frequency: null, source: "undetermined", contract, content_type: contentType,
-             why: `the document states the frequency '${String(authored)}', which is not one the catalog knows (${FREQ.join(", ")})` };
+             why: localize("monitoring.why.document_states_frequency", "the document states the frequency '{authored}', which is not one the catalog knows ({freq})", { authored: String(String(authored)), freq: String(FREQ.join(", ")) }) };
   if (!reading || !contract)
     return { frequency: null, source: "undetermined", contract: null, content_type: null,
-             why: "the document states no frequency and the fetched document's content type could not be determined" };
+             why: localize("monitoring.why.document_states_frequency_fetched", "the document states no frequency and the fetched document's content type could not be determined") };
   const f = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : undefined;
   if (f === undefined || (f !== null && !FREQ.includes(f)))
     return { frequency: null, source: "undetermined", contract, content_type: contentType,
-             why: `the contract '${contract}' is given no frequency the catalog knows` };
+             why: localize("monitoring.why.contract_given_frequency", "the contract '{contract}' is given no frequency the catalog knows", { contract: String(contract) }) };
   return { frequency: f, source: "contract", contract, content_type: contentType,
-           ...(f === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}) };
+           ...(f === null ? { why: localize("monitoring.why.unmonitorable_document_check", "an unmonitorable document has no check clock: its bytes carry no substance to watch") } : {}) };
 }
 
 /** D-525 (R26): the Drive shell sweep's page bounds. A baseline sha's retrieval rows are one per (address, via) it was
@@ -418,7 +419,7 @@ export function markOverdue(text, ords) {
 function withSessionEntry(text, checked, line) {
   const entry = "### Session " + checked + "\n\n" + line + "\n";
   const at = text.indexOf("## Session Log");
-  if (at < 0) return text + "\n## Session Log\n\n" + entry;
+  if (at < 0) return localize("monitoring.index.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", { text: String(text), entry: String(entry) });
   const nxt = text.indexOf("\n## ", at + 1);
   const cut = nxt === -1 ? text.length : nxt + 1;
   return text.slice(0, cut) + entry + "\n" + text.slice(cut);
@@ -619,37 +620,37 @@ export class Monitoring {
      is a named `basis`, never a substitute. `content` is the fetched document's type and
      contract (for the cadence), determined whether or not a comparison could be made. */
   async #assess({ baseline, bytes, ctx, beforeAt, afterAt, view }) {
-    if (!bytes || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
+    if (!bytes || !ctx) return { assessment: null, content: null, basis: localize("monitoring.why.source_served_document", "the source served no document to assess") };
     const asText = profilesAsText(ctx.content_type, bytes.length, false);
     if (!asText) return { assessment: null, content: null,
-      basis: "the fetched document is not read as text, and assess reads text documents only" };
+      basis: localize("monitoring.why.fetched_document_read", "the fetched document is not read as text, and assess reads text documents only") };
     const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
     const v = view ? { view } : {};
     const id = identify({ ...ctx, text, ...v });
     const dt = doctypeFor({ ...ctx, text, handler: id.handler, kind: id.kind, ...v });
     const content = { type: id.handler.shell ? null : dt.type.key, confidence: dt.confidence,
                       contract: id.handler.shell ? CONTRACT.UNMONITORABLE : dt.type.contract };
-    if (!baseline) return { assessment: null, content, basis: "no captured baseline to compare against" };
+    if (!baseline) return { assessment: null, content, basis: localize("monitoring.why.captured_baseline_compare", "no captured baseline to compare against") };
     const store = typeof this.record.evidenceStore === "function" ? this.record.evidenceStore() : null;
     if (!store)
       return { assessment: null, content, basis: "R2 is not configured on this instance, so the baseline's bytes are not reachable" };
     let before;
     try {
       const o = await store.get(baseline);
-      if (!o) return { assessment: null, content, basis: "the baseline's bytes are not held under its capture key" };
+      if (!o) return { assessment: null, content, basis: localize("monitoring.why.baseline_bytes_held", "the baseline's bytes are not held under its capture key") };
       before = new Uint8Array(await o.arrayBuffer());
     } catch (e) {
-      return { assessment: null, content, basis: "the baseline's bytes could not be read: " + String(e && e.message || e).slice(0, 90) };
+      return { assessment: null, content, basis: localize("monitoring.why.baseline_bytes_read", "the baseline's bytes could not be read: {baseline}", { baseline: String(String(e && e.message || e).slice(0, 90)) }) };
     }
     if (createSha256().update(before).hex() !== baseline)
-      return { assessment: null, content, basis: "the bytes held under the baseline's capture key do not hash to it, so they are not compared" };
+      return { assessment: null, content, basis: localize("monitoring.why.bytes_held_baseline", "the bytes held under the baseline's capture key do not hash to it, so they are not compared") };
     let r;
     try {
       r = await assess(before, bytes, { ...ctx, ...v, sha256: sha256Hex, before_at: beforeAt || null, after_at: afterAt, now: afterAt });
     } catch (e) {
-      return { assessment: null, content, basis: "assess could not run: " + String(e && e.message || e).slice(0, 90) };
+      return { assessment: null, content, basis: localize("monitoring.why.assess_run", "assess could not run: {baseline}", { baseline: String(String(e && e.message || e).slice(0, 90)) }) };
     }
-    return { content, basis: `assessed against the baseline's own bytes (${baseline.slice(0, 12)}…)`,
+    return { content, basis: localize("monitoring.why.assessed_against_baseline", "assessed against the baseline's own bytes ({baseline}…)", { baseline: String(baseline.slice(0, 12)) }),
       assessment: { verdict: r.verdict, meaningful: r.meaningful ?? null, significance: r.significance ?? null,
         stopped_at: r.stopped_at, trail: r.trail, events: r.events || [],
         content_type: r.content_type || null, confirmation: r.confirmation || null,
@@ -734,24 +735,20 @@ export class Monitoring {
         ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"), op, bundleId,
         drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
         locator: driveTick.address,
-        detail: driveTick.why + " Watching it is the same question one step on: a tick would compare "
-              + "Google's listing page, whose bytes are rebuilt on every render, and report a change "
-              + "nobody made." }, 422);
+        detail: localize("monitoring.index.why_watching_it_is_the", "{why} Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made.", { why: String(driveTick.why) }) }, 422);
     if (driveTick && driveTick.shape === "file")
       return answer({ ok: false, reason: "DRIVE_KIND_UNDETERMINED",
         ...driveRow("DRIVE_KIND_UNDETERMINED"), op, bundleId,
         drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false,
                  ...(driveTick.fileId ? { file_id: driveTick.fileId } : {}) },
         locator: driveTick.address,
-        detail: driveTick.why + " No export address can be composed, so there is nothing this tick "
-              + "could compare but the application page." }, 422);
+        detail: localize("monitoring.index.why_no_export_address_can", "{why} No export address can be composed, so there is nothing this tick could compare but the application page.", { why: String(driveTick.why) }) }, 422);
     if (driveTick && driveTick.shape === "unknown")
       return answer({ ok: false, reason: "DRIVE_SHAPE_UNRECOGNISED",
         ...driveRow("DRIVE_SHAPE_UNRECOGNISED"), op, bundleId,
         drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
         locator: driveTick.address,
-        detail: driveTick.why + " A shape your team's Civicsmith cannot read is a shape it cannot promise to "
-              + "be watching." }, 422);
+        detail: localize("monitoring.index.why_a_shape_your_teams", "{why} A shape your team's Civicsmith cannot read is a shape it cannot promise to be watching.", { why: String(driveTick.why) }) }, 422);
     /* The address the tick FETCHES, which is the export for a harvestable Drive
        document and the locator itself for everything else. The document address
        stays `locator` throughout — the baseline, the observation log's subject
@@ -855,7 +852,7 @@ export class Monitoring {
          address this instance composed, and a note naming the document address
          for a status the export returned would misattribute it. */
       const answered = driveTick && driveTick.harvestable
-        ? `the OpenDocument export address ${driveTick.exportAddress} answered ${res.status}`
+        ? localize("monitoring.opendocument_export_address", "the OpenDocument export address {export_address} answered {status}", { export_address: String(driveTick.exportAddress), status: String(res.status) })
         : `the source answered ${res.status}`;
       /* DEC-49 REGION is-drive-tick-export
        *
@@ -883,12 +880,12 @@ export class Monitoring {
           await outcome("source_refused");
           try { await res.body?.cancel?.(); } catch { /* the source may already be gone */ }
           const observation = monitorLook({ outcome: "unreachable",
-            reason: `the Drive export address answered \`${declaredType}\`, which is the application shell` });
+            reason: localize("monitoring.index.the_drive_export_address_answered", "the Drive export address answered `{declaredType}`, which is the application shell", { declaredType: String(declaredType) }) });
           this.#recordRun(addressNorm, false, checked);
           return answer({ ok: false, reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
             ...driveRow("DRIVE_TICK_EXPORT_IS_THE_SHELL"), op, bundleId, status: res.status,
             locator: driveTick.address, export_address: driveTick.exportAddress,
-            declared_content_type: declaredType, refused_on: "the declared content type",
+            declared_content_type: declaredType, refused_on: localize("monitoring.declared_content_type", "the declared content type"),
             drive: { host: driveTick.host, shape: driveTick.shape, kind: driveTick.kind,
                      file_id: driveTick.fileId, export_format: driveTick.format },
             observation,
@@ -920,7 +917,7 @@ export class Monitoring {
           if (sniffed.format === "html") {
             await outcome("source_refused");
             const observation = monitorLook({ outcome: "unreachable",
-              reason: `the Drive export address served HTML under \`${servedType || "no content type"}\`` });
+              reason: localize("monitoring.index.the_drive_export_address_served", "the Drive export address served HTML under `{v1}`", { v1: String(servedType || "no content type") }) });
             this.#recordRun(addressNorm, false, checked);
             return answer({ ok: false, reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
               ...driveRow("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"), op, bundleId, status: res.status,
@@ -950,17 +947,16 @@ export class Monitoring {
              which is exactly what a shell cannot say. A difference is a D-472 `modified`
              about the frame only, and says so. */
           if (!baseline)
-            note = "the capture is rendered and its register row names no shell digest (pair.shell.sha256), "
-                 + "so nothing was compared; " + RENDER_TICK_UNDETERMINED;
+            note = localize("monitoring.index.the_capture_is_rendered_and", "the capture is rendered and its register row names no shell digest (pair.shell.sha256), so nothing was compared; {RENDER_TICK_UNDETERMINED}", { RENDER_TICK_UNDETERMINED: String(RENDER_TICK_UNDETERMINED) });
           else {
             compared = "shell";
             comparedBasis = "the served shell was compared with the pair's shell digest (pair.shell.sha256), "
                           + "never with the rendered primary's; this tick cannot render";
             if (seen === baseline) { frame = "unchanged"; note = "frame unchanged; " + RENDER_TICK_UNDETERMINED; }
             else { frame = "changed"; status = "modified";
-                   note = "modified (frame): the source no longer serves the captured shell; " + RENDER_TICK_UNDETERMINED; }
+                   note = localize("monitoring.note.modified_frame_source", "modified (frame): the source no longer serves the captured shell; {value}", { value: String(RENDER_TICK_UNDETERMINED) }); }
           }
-        } else if (!baseline) note = "no captured baseline to compare against; recorded the check only";
+        } else if (!baseline) note = localize("monitoring.note.captured_baseline_compare", "no captured baseline to compare against; recorded the check only");
         else {
           /* D-60 — MONITORING ASKS "HAS THE SUBSTANCE CHANGED?" (DOCUMENT-PROFILES.md,
              "Three digests, not one"), and on an ASP.NET page the raw bytes answer
@@ -974,7 +970,7 @@ export class Monitoring {
              and why. */
           const bd = baselineProfile && baselineProfile.digests;
           if (!bd || bd.determined !== true || typeof bd.evidentiary !== "string" || !bd.evidentiary)
-            comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
+            comparedBasis = localize("monitoring.captured_baseline_recorded", "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared");
           else {
             const ct = res.headers.get("content-type");
             const asText = profilesAsText(ct, bytes.length, false);
@@ -990,33 +986,33 @@ export class Monitoring {
                over the SAME member; a text-arm baseline has no `over`. */
             const bdOver = bd.over || null, freshOver = fresh.over || null;
             if (bdOver !== freshOver)
-              comparedBasis = `the baseline's evidentiary digest was taken over ${bdOver || "the normalised text"} but the fetched bytes' over ${freshOver || "the normalised text"}, so the raw bytes were compared`;
+              comparedBasis = localize("monitoring.baseline_evidentiary_digest", "the baseline's evidentiary digest was taken over {bd_over} but the fetched bytes' over {fresh_over}, so the raw bytes were compared", { bd_over: String(bdOver || "the normalised text"), fresh_over: String(freshOver || "the normalised text") });
             else if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
-              comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
+              comparedBasis = localize("monitoring.index.the_fetched_bytes_identify_as", "the fetched bytes identify as {key} v{version} but the baseline was normalised under {handler} v{handler_version}, so the raw bytes were compared", { key: String(stackId.handler.key), version: String(stackId.handler.version), handler: String(baselineProfile.handler), handler_version: String(baselineProfile.handler_version) });
             else if (!fresh.determined)
-              comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
+              comparedBasis = localize("monitoring.fetched_bytes_substance", "the fetched bytes' substance digest is undetermined ({basis}), so the raw bytes were compared", { basis: String(fresh.basis) });
             else {
               compared = "evidentiary";
               comparedBasis = freshOver
-                ? `the evidentiary digests were compared, both taken over the package's ${freshOver} (${fresh.basis})`
-                : `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
-              if (fresh.evidentiary !== bd.evidentiary) { status = "modified"; note = "the substance of the source differs from the capture"; }
-              else if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
+                ? localize("monitoring.evidentiary_digests_compared", "the evidentiary digests were compared, both taken over the package's {fresh_over} ({basis})", { fresh_over: String(freshOver), basis: String(fresh.basis) })
+                : localize("monitoring.index.the_evidentiary_digests_were_compared", "the evidentiary digests were compared, both normalised under {key} v{version} (certain)", { key: String(stackId.handler.key), version: String(stackId.handler.version) });
+              if (fresh.evidentiary !== bd.evidentiary) { status = "modified"; note = localize("monitoring.note.substance_source_differs", "the substance of the source differs from the capture"); }
+              else if (seen === baseline) { status = "unchanged"; note = localize("monitoring.note.source_serves_captured", "the source still serves the captured bytes"); }
               else { status = "unchanged";
                      note = fresh.rendition != null && fresh.rendition === bd.rendition
-                       ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture"
-                       : "the substance is unchanged; machinery or furniture around it differs from the capture"; }
+                       ? localize("monitoring.substance_unchanged_machinery", "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture")
+                       : localize("monitoring.substance_unchanged_machinery_furniture", "the substance is unchanged; machinery or furniture around it differs from the capture"); }
             }
           }
           if (compared !== "evidentiary") {
             compared = "raw";
-            if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
-            else { status = "modified"; note = "the source no longer serves the captured bytes"; }
+            if (seen === baseline) { status = "unchanged"; note = localize("monitoring.note.source_serves_captured", "the source still serves the captured bytes"); }
+            else { status = "modified"; note = localize("monitoring.note.source_longer_serves", "the source no longer serves the captured bytes"); }
           }
         }
       }
     } catch (e) {
-      note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
+      note = localize("monitoring.note.source_reached", "the source could not be reached: {value}", { value: String(String(e && e.message || e).slice(0, 90)) });
       unreachable = note;
       /* R25: a fetch that failed is the source failing (a governed refusal returned above). A throw after the outcome
          was recorded is not a second outcome; a Drive export whose bytes could not be read is a failed fetch. */
@@ -1048,7 +1044,7 @@ export class Monitoring {
       && (status === "modified" || status === "unchanged");
     if (unmonitorable) {
       status = null;
-      note = "the source serves a shell whose bytes carry no substance (unmonitorable), so no change is graded";
+      note = localize("monitoring.note.source_serves_shell", "the source serves a shell whose bytes carry no substance (unmonitorable), so no change is graded");
     }
 
     /* D-455 — A `changed` TICK CAPTURES THE BYTES IT FETCHED (R9; BOB #32, 2026-09-23 23:08Z;
@@ -1082,7 +1078,7 @@ export class Monitoring {
           if (!monCap.existed) await store.put(seen, fetchedBytes);
           monCap.held = true;
         } catch (e) {
-          monCap.why = "the served bytes could not be written to R2: " + String(e && e.message || e).slice(0, 90);
+          monCap.why = localize("monitoring.index.the_served_bytes_could_not", "the served bytes could not be written to R2: {String}", { String: String(String(e && e.message || e).slice(0, 90)) });
         }
       }
     }
@@ -1201,8 +1197,7 @@ export class Monitoring {
          for is D-179's (C-53.13): those bytes are already another bundle's capture, and one capture
          has one home. */
       if (first && first.ok === false) {
-        monCap.why = `the promotion filing them was refused (${first.reason || first.code || "no reason given"}`
-          + `${first.detail ? `: ${String(first.detail).slice(0, 160)}` : ""})`;
+        monCap.why = localize("monitoring.why.promotion_filing_refused", "the promotion filing them was refused ({reason}{detail})", { reason: String(first.reason || first.code || "no reason given"), detail: String(first.detail ? `: ${String(first.detail).slice(0, 160)}` : "") });
         promoted = await promoteWith(false);
       } else if (first?.ok) monCap.registered = true;
       observation = monitorLook(monCap.registered
@@ -1213,7 +1208,7 @@ export class Monitoring {
          look name, so a promotion that landed without filing the capture cannot read as filed. */
       if (monCap.registered && !(observation && observation.captured === monCap.sha256)) {
         monCap.registered = false;
-        monCap.why = (observation && observation.uncaptured) || "the observation log did not name the capture";
+        monCap.why = (observation && observation.uncaptured) || localize("monitoring.observation_log_name", "the observation log did not name the capture");
       }
     }
 
@@ -1260,7 +1255,7 @@ export class Monitoring {
       /* R70: the watched projects this change tick was reported to; null on a tick whose look recorded no change. */
       arrivals,
       ...(promoted?.ok ? { revision: promoted.bundleSha } : { reason: promoted?.reason, detail: promoted?.detail }),
-      note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
+      note2: localize("monitoring.index.a_tick_records_that_the", "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement."),
     }, promoted?.ok ? 200 : 409);
   }
 
@@ -1274,7 +1269,7 @@ export class Monitoring {
                httpStatus = null, reason = null, scope = null, actorClass = "plane", actor = null,
                locator = null, content = undefined, contentBasis = null,
                captured = null, uncaptured = null } = {}) {
-    if (!bundleId || !address) return { ok: false, written: false, why: "a monitor look needs a record and an address" };
+    if (!bundleId || !address) return { ok: false, written: false, why: localize("monitoring.why.monitor_look_needs", "a monitor look needs a record and an address") };
     /* REC-191: the type this look read the address as, kept BEFORE the observation's own
        early returns, because a look with no baseline to compare still read what the
        document is. `content` absent means the caller read nothing (a governed look). */
@@ -1288,9 +1283,9 @@ export class Monitoring {
     if (outcome === "changed" && captured && typeof captured === "object") {
       const s = typeof captured.sha256 === "string" ? captured.sha256 : "";
       const home = /^[0-9a-f]{64}$/.test(s) ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, s) : null;
-      if (s !== seen) uncapturedWhy = "the capture offered is not the sha this tick saw";
+      if (s !== seen) uncapturedWhy = localize("monitoring.capture_offered_sha", "the capture offered is not the sha this tick saw");
       else if (!home || home.bundle_id !== String(bundleId))
-        uncapturedWhy = "the served bytes are not registered under this record";
+        uncapturedWhy = localize("monitoring.served_bytes_registered", "the served bytes are not registered under this record");
       else {
         capturedSha = s;
         /* The version at the address, filed through the ONE writer of `captured_locators`
@@ -1307,8 +1302,8 @@ export class Monitoring {
                                         captured: capturedSha, uncaptured: uncapturedWhy });
     if (!row) return { ok: true, written: false,
                        why: outcome === "unchanged" || outcome === "changed"
-                         ? "no captured baseline, so the look has no capture to refer to and is not recorded"
-                         : `no observation is recorded for the outcome '${String(outcome)}'` };
+                         ? localize("monitoring.why.captured_baseline_look", "no captured baseline, so the look has no capture to refer to and is not recorded")
+                         : localize("monitoring.why.observation_recorded_outcome", "no observation is recorded for the outcome '{outcome}'", { outcome: String(String(outcome)) }) };
     const cls = actorClass === "member" || actorClass === "machine" ? actorClass : "plane";
     const now = stampInstant("second", this.now());
     const bad = this.observationLog.observe({
@@ -1339,8 +1334,8 @@ export class Monitoring {
     const known = c && typeof c.contract === "string"
       && Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, c.contract);
     const why = known ? null
-      : c && c.contract != null ? `the tick read the contract '${String(c.contract).slice(0, 40)}', which this plane gives no frequency`
-      : String(basis || "the tick could not determine the document's content type").slice(0, 240);
+      : c && c.contract != null ? localize("monitoring.tick_read_contract", "the tick read the contract '{contract}', which this plane gives no frequency", { contract: String(String(c.contract).slice(0, 40)) })
+      : String(basis || localize("monitoring.tick_determine_document", "the tick could not determine the document's content type")).slice(0, 240);
     this.sql.exec(
       `INSERT INTO monitor_address_type (address_norm, address, content_type, confidence, contract, basis, read_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1386,14 +1381,14 @@ export class Monitoring {
       const w = inv.watchedProjects();
       list = w && w.ok !== false && Array.isArray(w.projects) ? w.projects : null;
     } catch { list = null; }
-    if (!list) return { ...out, unread: "the watched projects could not be read" };
+    if (!list) return { ...out, unread: localize("monitoring.watched_projects_read", "the watched projects could not be read") };
     if (!list.length) return out;
     let mine;
     try {
       mine = new Set([...this.#rows(`SELECT capture_sha FROM captured_locators WHERE address_norm = ?`, String(address)),
                       ...this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ?`, String(bundleId))]
         .map((r) => r.capture_sha));
-    } catch { return { ...out, unread: "the captures of this source could not be read" }; }
+    } catch { return { ...out, unread: localize("monitoring.captures_source_read", "the captures of this source could not be read") }; }
     for (const p of list) {
       const project = p && typeof p.project === "string" && p.project ? p.project : null;
       if (!project) continue;
@@ -1544,8 +1539,7 @@ export class Monitoring {
       if (a.size === 1) { home.set(b.bundle_id, [...a.keys()][0]); continue; }
       const own = [...a].filter(([, raw]) => raw === b.source_locator).map(([norm]) => norm);
       if (own.length === 1) home.set(b.bundle_id, own[0]);
-      else lone.push({ b, basis: `captured at ${a.size} addresses, none of them singly its source.locator, `
-                                + "so it is scheduled as itself rather than assigned to one" });
+      else lone.push({ b, basis: localize("monitoring.why.captured_addresses_none", "captured at {size} addresses, none of them singly its source.locator, so it is scheduled as itself rather than assigned to one", { size: String(a.size) }) });
     }
     const last = (list) => {
       let m = null;
@@ -1562,12 +1556,11 @@ export class Monitoring {
     const cadence = (authored, type, checked) => {
       const hasAuthored = authored != null && authored !== "";
       if (!hasAuthored && !type && !checked) return { monitor_frequency: null, frequency_source: "unread",
-        why: "no frequency authored, and no tick has read what the document is: this check reads it" };
+        why: localize("monitoring.why.frequency_authored_tick", "no frequency authored, and no tick has read what the document is: this check reads it") };
       if (!hasAuthored && !type) return { monitor_frequency: null, frequency_source: "undetermined",
-        why: `no frequency authored, and no check has read a document at this address (last checked ${checked})` };
+        why: localize("monitoring.why.frequency_authored_check", "no frequency authored, and no check has read a document at this address (last checked {checked})", { checked: String(checked) }) };
       if (!hasAuthored && type.contract == null) return { monitor_frequency: null, frequency_source: "undetermined",
-        why: `no frequency authored, and the content type read at this address on ${type.read_at} `
-           + `is undetermined (${type.basis || "no basis recorded"})` };
+        why: localize("monitoring.why.frequency_authored_content", "no frequency authored, and the content type read at this address on {read_at} is undetermined ({basis})", { read_at: String(type.read_at), basis: String(type.basis || "no basis recorded") }) };
       const c = cadenceFor(authored, type ? { contract: type.contract, content_type: type.content_type } : null);
       return { monitor_frequency: c.frequency, frequency_source: c.source,
                ...(hasAuthored ? { authored } : {}),
@@ -1584,7 +1577,7 @@ export class Monitoring {
         return { monitor_frequency: current.frequency, frequency_source: "address",
                  ...(c.authored != null ? { authored: c.authored } : {}), address_frequency: current,
                  ...(current.frequency === "none"
-                   ? { why: "the address's own frequency, set by a member, is none: it is not checked on a clock" } : {}),
+                   ? { why: localize("monitoring.why.address_frequency_set", "the address's own frequency, set by a member, is none: it is not checked on a clock") } : {}),
                  ...hist };
       if (c.frequency_source === "contract" && type && VOLATILITY_LADDER.includes(c.monitor_frequency)) {
         const run = Number.isInteger(Number(type.unchanged_run)) ? Number(type.unchanged_run) : 0;
@@ -1592,9 +1585,7 @@ export class Monitoring {
         return { ...c, monitor_frequency: l.frequency,
                  volatility: { unchanged_checks: run, since: type.run_since ?? null, step: l.step,
                                contract_default: c.monitor_frequency, frequency: l.frequency,
-                               basis: `${run} check${run === 1 ? "" : "s"} in a row found the substance unchanged; every `
-                                    + `${VOLATILITY_RUN} move the contract's ${c.monitor_frequency} one step toward monthly, `
-                                    + "and any change or failed look returns it" }, ...hist };
+                               basis: localize("monitoring.why.check_row_found", "{run} check{plural} in a row found the substance unchanged; every {volatility_run} move the contract's {monitor_frequency} one step toward monthly, and any change or failed look returns it", { run: String(run), plural: String(run === 1 ? "" : "s"), volatility_run: String(VOLATILITY_RUN), monitor_frequency: String(c.monitor_frequency) }) }, ...hist };
       }
       return { ...c, ...hist };
     };
@@ -1606,7 +1597,7 @@ export class Monitoring {
       const at = !basis && b.source_locator ? normalizeAddress(b.source_locator) : null;
       const c = (b.monitor_frequency == null || b.monitor_frequency === "") && !b.source_locator
         ? { monitor_frequency: null, frequency_source: "undetermined",
-            why: "no frequency authored, and no source.locator to read a content type from" }
+            why: localize("monitoring.why.frequency_authored_source", "no frequency authored, and no source.locator to read a content type from") }
         : cadence(b.monitor_frequency, type, last([b]));
       rows.push({ bundle_id: b.bundle_id, monitor_last_checked: b.monitor_last_checked,
                   address: null, versions: [b.bundle_id],
@@ -1700,13 +1691,13 @@ export class Monitoring {
         unscheduled.push({ bundle: r.bundle_id, frequency: word,
           last_checked: r.monitor_last_checked ?? null,
           reason: r.monitor_frequency === "per_meeting"
-            ? "cadence is a meeting schedule your team's Civicsmith does not hold"
+            ? localize("monitoring.cadence_meeting_schedule", "cadence is a meeting schedule your team's Civicsmith does not hold")
             : r.why ? r.why
             : word === "none" || word == null
-              ? "no frequency declared"
+              ? localize("monitoring.frequency_declared", "no frequency declared")
               : MONITOR_FREQ.includes(word)
-                ? "the cadence table gives this frequency no interval"
-                : "not a frequency the catalog knows", ...about(r), ...undeterminedEnd });
+                ? localize("monitoring.cadence_table_gives", "the cadence table gives this frequency no interval")
+                : localize("monitoring.frequency_catalog_knows", "not a frequency the catalog knows"), ...about(r), ...undeterminedEnd });
         continue;
       }
       /* A monitored document that has NEVER been checked is due now: the record
@@ -1918,9 +1909,8 @@ export class Monitoring {
     /* DEC-49 REGION is-frequency-reason */
     if (!(custom || (typeof reason === "string" && Object.prototype.hasOwnProperty.call(ADDRESS_FREQUENCY_REASONS, reason)))
         || (custom && (!words || words.length > FREQUENCY_REASON_MAX)))
-      return frequencyRefusal("FREQUENCY_NO_REASON", `the reason must be one of ${Object.keys(ADDRESS_FREQUENCY_REASONS)
-        .join(", ")}, or ${CUSTOM_REASON} with the member's own words of 1 to ${FREQUENCY_REASON_MAX} characters. `
-        + "Nothing was written.");
+      return frequencyRefusal("FREQUENCY_NO_REASON", localize("monitoring.index.the_reason_must_be_one", "the reason must be one of {keys}, or {CUSTOM_REASON} with the member's own words of 1 to {FREQUENCY_REASON_MAX} characters. Nothing was written.", { keys: String(Object.keys(ADDRESS_FREQUENCY_REASONS)
+        .join(", ")), CUSTOM_REASON: String(CUSTOM_REASON), FREQUENCY_REASON_MAX: String(FREQUENCY_REASON_MAX) }));
     /* END DEC-49 REGION is-frequency-reason */
     const at = stampInstant("second", this.now());
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm).n;
@@ -1929,7 +1919,7 @@ export class Monitoring {
     const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm).map(settingView);
     return { ok: true, address: norm, setting: history[history.length - 1], history,
              says: frequency === null
-               ? "recorded: the address returns to the frequency its documents set; every earlier setting stays readable"
+               ? localize("monitoring.says.recorded_address_returns", "recorded: the address returns to the frequency its documents set; every earlier setting stays readable")
                : "recorded: this frequency governs the address over its documents' own until a later setting replaces it; "
                  + "every earlier setting stays readable" };
   }
@@ -1977,9 +1967,9 @@ export class Monitoring {
     const history = this.#rows(`SELECT * FROM monitor_address_end WHERE address_norm = ? ORDER BY seq`, norm).map(endView);
     return { ok: true, address: norm, setting: history[history.length - 1], history,
              says: until === null
-               ? "recorded: the address has no end date and is watched by its frequency; every earlier setting stays readable"
-               : until === today ? "recorded: the address is no longer watched from today; every earlier setting stays readable"
-               : `recorded: the address is no longer watched from ${until}; every earlier setting stays readable` };
+               ? localize("monitoring.says.recorded_address_end", "recorded: the address has no end date and is watched by its frequency; every earlier setting stays readable")
+               : until === today ? localize("monitoring.says.recorded_address_longer", "recorded: the address is no longer watched from today; every earlier setting stays readable")
+               : localize("monitoring.says.recorded_address_longer_watched", "recorded: the address is no longer watched from {until}; every earlier setting stays readable", { until: String(until) }) };
   }
 
   /** R72: the ids of the projects whose monitored documents ask to be monitored at `address` (R15's grouping, its
@@ -2012,8 +2002,7 @@ export class Monitoring {
     const who = typeof author === "string" ? author.trim() : "";
     /* DEC-49 REGION is-monitor-set-member */
     if (!who || isMachineIdentity(who))
-      return frequencyRefusal("MACHINE_CANNOT_SET_MONITORING", "whether a document is watched is asked by a named member; "
-        + "a machine may propose it (R33) and never sets it. Nothing was written.");
+      return frequencyRefusal("MACHINE_CANNOT_SET_MONITORING", localize("monitoring.index.whether_a_document_is_watched", "whether a document is watched is asked by a named member; a machine may propose it (R33) and never sets it. Nothing was written."));
     /* END DEC-49 REGION is-monitor-set-member */
     if (typeof bundleId !== "string" || !bundleId)
       return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument: "bundleId",
@@ -2029,8 +2018,7 @@ export class Monitoring {
       return frequencyRefusal("MONITOR_SET_REFUSED", "'enabled' must be true or false. Nothing was written.",
                               { field: "enabled" });
     if (freq !== null && !(typeof freq === "string" && MONITOR_FREQ.includes(freq)))
-      return frequencyRefusal("MONITOR_SET_REFUSED", `'frequency', when given, must be one of ${MONITOR_FREQ.join(", ")}. `
-        + "Nothing was written.", { field: "frequency" });
+      return frequencyRefusal("MONITOR_SET_REFUSED", localize("monitoring.index.frequency_when_given_must_be", "'frequency', when given, must be one of {MONITOR_FREQ}. Nothing was written.", { MONITOR_FREQ: String(MONITOR_FREQ.join(", ")) }), { field: "frequency" });
     /* END DEC-49 REGION is-monitor-set-shape */
     const live = img["bundle.md"];
     const fm = parseFrontmatter(live).data || {};
@@ -2045,9 +2033,7 @@ export class Monitoring {
     const at = stampInstant("second", this.now());
     const spliced = withMonitoring(live, enabled, freq, at);
     const member = who.startsWith("member:") ? who.slice("member:".length) : who;
-    const text = spliced === null ? null : withSessionEntry(spliced, at, `Monitoring set by ${member}: `
-      + (enabled ? "this document is watched" : "this document is no longer watched")
-      + (freq !== null ? `, ${freq}` : "") + " (a member's act; nothing was fetched).");
+    const text = spliced === null ? null : withSessionEntry(spliced, at, localize("monitoring.index.monitoring_set_by_member_v1", "Monitoring set by {member}: {v1}{v2} (a member's act; nothing was fetched).", { member: String(member), v1: String(enabled ? "this document is watched" : "this document is no longer watched"), v2: String(freq !== null ? `, ${freq}` : "") }));
     /* The written document must say what was asked; a front matter that could not carry it is promotion's to refuse,
        so the unreadable document is sent and its refusal answered (promotion R17). */
     const sent = text ?? live;
@@ -2382,13 +2368,13 @@ export class Monitoring {
       const left = q.tick_budget === undefined ? budget : Math.min(budget, q.tick_budget - (spentBy.get(q.bundle) || 0));
       if (left <= 0) {
         gathered.skipped.push({ bundle: q.bundle, request: q.id,
-          reason: `its bundle's daemon tick_budget (${q.tick_budget}) is spent in this tick` });
+          reason: localize("monitoring.bundle_daemon_tick", "its bundle's daemon tick_budget ({tick_budget}) is spent in this tick", { tick_budget: String(q.tick_budget) }) });
         continue;
       }
       const subject = `${q.bundle}#${q.id}`;
       if (!this.#claimFire("monitor-cadence", subject, epoch)) {
         claimSkipped++;
-        gathered.skipped.push({ bundle: q.bundle, request: q.id, reason: "claimed by a tick that did not finish" });
+        gathered.skipped.push({ bundle: q.bundle, request: q.id, reason: localize("monitoring.claimed_tick_finish", "claimed by a tick that did not finish") });
         continue;
       }
       const r = await this.#gather(q, left, nowMs);
@@ -2448,12 +2434,12 @@ export class Monitoring {
         const q = { bundle: f.bundle_id, id: r.id, locators, cadence: r.cadence ?? null, last_attempt: at,
                     target: r.target && typeof r.target.text === "string" ? r.target.text : null,
                     ...(tickBudget !== null ? { tick_budget: tickBudget } : {}) };
-        if (off) { disabled.push({ ...q, reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" }); continue; }
-        if (r.cadence === "none") { unscheduled.push({ ...q, reason: "its cadence is none: the daemon does not run it" }); continue; }
+        if (off) { disabled.push({ ...q, reason: localize("monitoring.bundle_daemon_block", "its bundle's daemon block says enabled: false, so the daemon runs none of its requests") }); continue; }
+        if (r.cadence === "none") { unscheduled.push({ ...q, reason: localize("monitoring.cadence_none_daemon", "its cadence is none: the daemon does not run it") }); continue; }
         if (at === null) { due.push({ ...q, due_at: 0 }); continue; }
         const iv = r.cadence == null ? null : monitorIntervalMs(r.cadence);
         if (iv === null) {
-          if (r.cadence != null) unscheduled.push({ ...q, reason: `the cadence '${String(r.cadence)}' gives no interval` });
+          if (r.cadence != null) unscheduled.push({ ...q, reason: localize("monitoring.cadence_gives_interval", "the cadence '{cadence}' gives no interval", { cadence: String(String(r.cadence)) }) });
           continue;   /* no cadence: run once, and it has run */
         }
         const dueAt = Date.parse(at) + iv;
@@ -2552,7 +2538,7 @@ export class Monitoring {
       const project = home && typeof home.project === "string" && home.project ? home.project : null;
       return this.record.transact(() => {
         const id = `${this.record.allocId("INFO", at.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
-        const title = (say ? say.title : `Gathered for ${q.id}: ${q.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = (say ? say.title : localize("monitoring.gathered", "Gathered for {id}: {target}", { id: String(q.id), target: String(q.target || filed.locator) })).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at;
         const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2",
           `title: ${JSON.stringify(title)}`, `current_state: ${GATHERING_LANDS_AT}`, "prior_state: null",
@@ -2565,16 +2551,14 @@ export class Monitoring {
           "source:", `  locator: ${JSON.stringify(filed.locator)}`, `  retrieved: ${retrieved}`,
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
-          (say ? say.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} `
-            + `of ${q.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          localize("monitoring.index.v1_its_bytes_are_file", "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.", { v1: String(say ? say.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} `
+            + `of ${q.bundle}.`), file: String(doc.file) }), "",
           "## Provenance Notes", "",
-          say ? say.notes : `Gathered for the named request ${q.id}, carried by ${q.bundle}'s data/gathering.json, which `
-          + `authorised the fetch; locator ${q.locators.indexOf(filed.locator) + 1} of ${q.locators.length} in the request's `
-          + `order. Collected ${at}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`, "",
+          say ? say.notes : localize("monitoring.index.gathered_for_the_named_request", "Gathered for the named request {id}, carried by {bundle}'s data/gathering.json, which authorised the fetch; locator {v1} of {length} in the request's order. Collected {at}. Filed at {GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.", { id: String(q.id), bundle: String(q.bundle), v1: String(q.locators.indexOf(filed.locator) + 1), length: String(q.locators.length), at: String(at), GATHERING_LANDS_AT: String(GATHERING_LANDS_AT) }), "",
           "## Session Log", "",
           `### Session ${at} | Collected | ${GATHERING_AUTHOR}`,
           `Trigger: ${say ? say.trigger : `named request ${q.id} (${q.bundle})`}`,
-          "Changes: created from the daemon's capture for the named request.", "",
+          localize("monitoring.changes_created_daemon", "Changes: created from the daemon's capture for the named request."), "",
           "## Review Notes", ""].join("\n");
         const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
           && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
@@ -2685,8 +2669,8 @@ export class Monitoring {
                      export_address: drive.exportAddress, kind: drive.kind };
       let reg = null;
       if (f && typeof f.content === "string") { try { reg = JSON.parse(f.content); } catch { reg = null; } }
-      else if (f) { unreadable.push({ ...base, reason: "the register is not held inline" }); continue; }
-      if (f && !reg) { unreadable.push({ ...base, reason: "the register is not parsable JSON" }); continue; }
+      else if (f) { unreadable.push({ ...base, reason: localize("monitoring.register_held_inline", "the register is not held inline") }); continue; }
+      if (f && !reg) { unreadable.push({ ...base, reason: localize("monitoring.register_parsable_json", "the register is not parsable JSON") }); continue; }
       const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
       const row = driveBaselineRow(docs, drive, r.locator);
       const sha = row && row.capture && typeof row.capture.sha256 === "string" ? row.capture.sha256 : null;
@@ -2698,7 +2682,7 @@ export class Monitoring {
         ...(retrievals.length === DRIVE_SHELLS_RETRIEVALS_MAX ? { retrievals_truncated: true } : {}) };
       if (c.verdict === "shell")
         entry.reacquire = { op: "acquire", locator: r.locator, fetches: drive.exportAddress,
-          files: "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten",
+          files: localize("monitoring.new_capture_export", "a NEW capture of the export, under the document address, beside the shell's; nothing is overwritten"),
           then: "append the answer's `document` to data/provenance.json — op=monitor prefers the row naming the export address" };
       ({ shell: shells, export: exported, undetermined, no_baseline: noBaseline })[c.verdict].push(entry);
     }
@@ -2763,7 +2747,7 @@ export class Monitoring {
     if (why === null) {
       if (fenced === null || fenced === undefined) return null;
       if (typeof fenced === "object" && fenced.ok === false) return fenced;
-      why = "answered neither null nor a refusal";
+      why = localize("monitoring.why.answered_null_refusal", "answered neither null nor a refusal");
     }
     const finding = { check: "C-18.5", detail: `gathering.json could not be fenced: the sweep fence ${share.module} registered `
                                                + `${why}, so the file is refused, never admitted` };
@@ -2956,8 +2940,7 @@ export class Monitoring {
       return { ok: true, at: nowIso, eligible, limit, truncated: read.length > limit, paused };
     } catch (e) {
       return { ok: false, reason: null, at: stampInstant("second", nowMs), eligible: [], limit, truncated: false, paused,
-               detail: "the addresses the archive tick would find eligible could not be read: "
-                     + String(e && e.message || e).slice(0, 160) };
+               detail: localize("monitoring.index.the_addresses_the_archive_tick", "the addresses the archive tick would find eligible could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -2996,7 +2979,7 @@ export class Monitoring {
       return { ok: true, items, limit: cap, truncated: more };
     } catch (e) {
       return { ok: false, reason: null, items: [], limit: cap, truncated: false,
-               detail: "the flagged monitored documents could not be read: " + String(e && e.message || e).slice(0, 160) };
+               detail: localize("monitoring.index.the_flagged_monitored_documents_could", "the flagged monitored documents could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -3108,10 +3091,8 @@ export class Monitoring {
       key: `monitoring::${project}::${b.bundle}`, source: "monitoring", kind: "monitor-source", grade: null,
       basis: { project, bundle: b.bundle, locator: b.locator, captures: b.captures, rests_on: [...b.rests],
                ...(b.findings.size ? { findings: [...b.findings] } : {}),
-               says: `${b.rests.has("objective") && b.rests.has("finding") ? "an objective and a published finding"
-                        : b.rests.has("finding") ? "a published finding" : "an objective"} of this project `
-                   + "rests on this document, and it is not monitored: a member may set monitoring.enabled on it; "
-                   + "the daemon never enables it" },
+               says: localize("monitoring.says.project_rests_document", "{has} of this project rests on this document, and it is not monitored: a member may set monitoring.enabled on it; the daemon never enables it", { has: String(b.rests.has("objective") && b.rests.has("finding") ? "an objective and a published finding"
+                        : b.rests.has("finding") ? "a published finding" : "an objective") }) },
       instances: [{ bundle: b.bundle, documents: [b.bundle] }], surfaced_by: "machine" }));
   }
 

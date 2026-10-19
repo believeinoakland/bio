@@ -161,7 +161,7 @@ import { handleTranscribe } from "./transcribe.mjs";
 /* R109, R110 — the one road to a runner (`env.REMOTE`), and whether it may be taken yet. */
 import { remoteOf, remoteVersion, remoteReady } from "./remote.mjs";
 /* Plan rule 6 — a member-facing sentence is read by key, never written here. */
-import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 /* R32, R33, R71 (K1502, K1755, K2373) — WHICH ACCOUNT SERVES THE ACT: the one that arrived, judged at its own level
  * (`project`, `member` or `group`), in its own file and pure. The account arrives PER CALL beside the `ai` credential and is retained exactly
@@ -310,30 +310,25 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
   }
   let parsed = null;
   try { parsed = await res.json(); } catch { parsed = null; }
-  if (parsed == null) return { reached: false, detail: `the plane answered ${res.status} with a body this member could not read as JSON` };
+  if (parsed == null) return { reached: false, detail: localize("agent-worker.index.the_plane_answered_status_with", "the plane answered {status} with a body this member could not read as JSON", { status: String(res.status) }) };
   return { reached: true, status: res.status, body: parsed };
 }
 
 const modelSilent = (silent, runId) => refusal("MODEL_SILENT",
-  "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is "
-  + "resumable; nothing the table did before this step is lost.", 502,
+  localize("agent-worker.index.the_model_api_could_not", "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is resumable; nothing the table did before this step is lost."), 502,
   { run_id: runId, detail_from_model: silent?.detail ?? null });
 
 const modelRefused = (refused, runId) => refusal("MODEL_REFUSED",
-  "the model API refused the call, or the model declined, so no judgement was made at this step and the segment "
-  + "stopped. The API's own error type and status are beside this, unchanged.", 502,
+  localize("agent-worker.index.the_model_api_refused_the", "the model API refused the call, or the model declined, so no judgement was made at this step and the segment stopped. The API's own error type and status are beside this, unchanged."), 502,
   { run_id: runId, model_status: refused?.status ?? null, model_error: refused?.type ?? null,
     model_message: refused?.message ?? null });
 
 const planeSilent = (asked) => refusal("PLANE_SILENT",
-  "the plane could not be reached, so this member knows nothing about the record and says so. A failure "
-  + "to answer is not an answer, and reporting one as the other would make this member's own fault read "
-  + "as a fact about the record.", 502, { detail_from_binding: asked.detail });
+  localize("agent-worker.index.the_plane_could_not_be", "the plane could not be reached, so this member knows nothing about the record and says so. A failure to answer is not an answer, and reporting one as the other would make this member's own fault read as a fact about the record."), 502, { detail_from_binding: asked.detail });
 
 const planeRefused = (runId, store, asked) =>
   json({ ok: false, reason: "PLANE_REFUSED", worker: "agent-worker", run_id: runId, store,
-         detail: "the plane refused this member's call under the credential it was handed. Its refusal is "
-               + "passed through exactly as the plane worded it.",
+         detail: localize("agent-worker.index.the_plane_refused_this_members", "the plane refused this member's call under the credential it was handed. Its refusal is passed through exactly as the plane worded it."),
          plane_status: asked.status, plane: asked.body }, 403);
 
 /* R119, agent-steps R43 — WHAT THE STEPS REACH OF THIS SHELL, and nothing else: the one call to the plane, the shell's
@@ -362,8 +357,7 @@ const PROJECT_ID_MAX = 200;
 async function accountOf(body) {
   if (body.claude_accounts !== undefined)
     return { refusal: refusal("BAD_ACCOUNT",
-      "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call "
-      + "carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
+      localize("agent-worker.index.claude_accounts_is_the_retired", "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call carries the one account that serves the member's act, as account."), 400, { field: "claude_accounts" }) };
   const a = body.account;
   if (a === undefined || a === null)
     return { refusal: refusal("NO_ACCOUNT", word("refusal.NO_ACCOUNT"), 409, { capability: "unavailable" }) };
@@ -376,11 +370,7 @@ async function accountOf(body) {
       || (a.kind === "signin" && ((a.secret !== undefined && a.secret !== null && typeof a.secret !== "string")
         || (a.suggestions !== undefined && typeof a.suggestions !== "boolean"))))
     return { refusal: refusal("BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
-      + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the team's account an API key only), `
-      + "and member the member whose act it serves; a project's account names its project, and no other does; a "
-      + "signin account is the member's own, its secret the token held for that member, and its suggestions switch, "
-      + "when sent, is true or false. What arrived is not one, and this member judges only what it is handed.",
+      localize("agent-worker.index.account_is_the_account_that", "account is the account that serves the member's act: {shape}, kind one of {kinds}, level one of {levels} (the team's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own, its secret the token held for that member, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.", { shape: "{kind, level, secret, member}", kinds: ACCOUNT_KINDS.join(", "), levels: CASCADE_ORDER.join(", ") }),
       400, { field: "account" }) };
   /* R82 (T47; K3060 D10): a sign-in serves an act only on the token `credentials` holds for the member; with none held
      (every connection made before T47 among them) the member connects again, and nothing was done. */
@@ -396,13 +386,11 @@ async function accountOf(body) {
 async function handleRun(req, env) {
   if (typeof env.PLANE?.fetch !== "function")
     return refusal("PLANE_NOT_CONFIGURED",
-      "this member reaches the record only through the plane service binding, and the binding is absent. "
-      + "It holds no store binding and no credential of its own, so with no plane there is nothing it can "
-      + "do and nothing it could pretend to have done.", 503);
+      localize("agent-worker.index.this_member_reaches_the_record", "this member reaches the record only through the plane service binding, and the binding is absent. It holds no store binding and no credential of its own, so with no plane there is nothing it can do and nothing it could pretend to have done."), 503);
 
   const body = await req.json().catch(() => null);
   if (body == null)
-    return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
+    return refusal("BAD_BODY", localize("agent-worker.index.the_request_body_could_not", "the request body could not be read as JSON."), 400);
 
   const checked = await checkRun(body, env);
   if (checked.refusal) return checked.refusal;
@@ -416,9 +404,7 @@ async function handleRun(req, env) {
   const asked = await askPlane(env, "whoami", credential, store);
   if (!asked.reached)
     return refusal("PLANE_SILENT",
-      "the plane could not be reached, so this member knows nothing about the credential it was handed "
-      + "and says so. A failure to answer is not an answer, and reporting one as the other would make "
-      + "this member's own fault read as a fact about the record.", 502, { detail_from_binding: asked.detail });
+      localize("agent-worker.index.the_plane_could_not_be_2", "the plane could not be reached, so this member knows nothing about the credential it was handed and says so. A failure to answer is not an answer, and reporting one as the other would make this member's own fault read as a fact about the record."), 502, { detail_from_binding: asked.detail });
 
   /* A plane REFUSAL is passed through UNCHANGED — its code, its check number and
      its canned translation are the plane's, and re-wording them here is the
@@ -426,8 +412,7 @@ async function handleRun(req, env) {
   if (asked.status !== 200 || asked.body?.ok !== true)
     return json({ ok: false, reason: "PLANE_REFUSED", worker: "agent-worker",
                   run_id: runId, store,
-                  detail: "the plane refused this member's call under the credential it was handed. Its "
-                        + "refusal is passed through exactly as the plane worded it.",
+                  detail: localize("agent-worker.index.the_plane_refused_this_members_2", "the plane refused this member's call under the credential it was handed. Its refusal is passed through exactly as the plane worded it."),
                   plane_status: asked.status, plane: asked.body }, 403);
 
   /* R110: past R1–R8's checks and before any segment, write or model call (the run stays as it was). A segment whose
@@ -446,8 +431,7 @@ async function handleRun(req, env) {
       before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
     } catch (e) {
       /* Before any step: no segment started, so nothing is written for it (R10, R57). */
-      return refusal("SEGMENT_THREW", "the segment could not be started for an error of this member's own; the run "
-        + "stays as it was and is resumable.", 500,
+      return refusal("SEGMENT_THREW", localize("agent-worker.index.the_segment_could_not_be", "the segment could not be started for an error of this member's own; the run stays as it was and is resumable."), 500,
         { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) });
     }
     if (!before.ready) return before.response;
@@ -462,8 +446,7 @@ async function handleRun(req, env) {
         body: JSON.stringify({ body, whoami: asked.body }) });
     } catch (e) {
       return refusal("SEGMENT_NOT_ACCEPTED",
-        "the segment driver could not be reached, so no segment was started and the run stays as it was; it is "
-        + "resumable.", 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
+        localize("agent-worker.index.the_segment_driver_could_not", "the segment driver could not be reached, so no segment was started and the run stays as it was; it is resumable."), 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
     }
     if (res.status === 202) return json({ accepted: true, run_id: runId }, 202);
     return res;
@@ -483,14 +466,11 @@ async function checkRun(body, env) {
      hop (D-112), and the run log is the plane's own object. */
   if (!runId || runId.length > 200)
     return { refusal: refusal("BAD_RUN_ID",
-      "a run is identified by the plane and this member mints no identity of its own; the caller must say "
-      + "which run this segment belongs to.", 400) };
+      localize("agent-worker.index.a_run_is_identified_by", "a run is identified by the plane and this member mints no identity of its own; the caller must say which run this segment belongs to."), 400) };
 
   if (typeof body.store !== "string")
     return { refusal: refusal("BAD_STORE",
-      "a run happens inside one namespace and this member guesses none: the caller must say which. "
-      + "A default namespace here would let a run touch the real record while its caller believed it "
-      + "was working in a scratch one.", 400) };
+      localize("agent-worker.index.a_run_happens_inside_one", "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one."), 400) };
   /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
      refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
   if (!NAMESPACES.includes(store))
@@ -500,14 +480,10 @@ async function checkRun(body, env) {
   /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
   if (!credential)
     return { refusal: refusal("NO_CREDENTIAL",
-      "this member holds no credential of its own and cannot act except under one it is handed. There is "
-      + "no fallback identity here by design: a worker that could act unattended would be acting as "
-      + "nobody, and nothing it did could be attributed.", 401) };
+      localize("agent-worker.index.this_member_holds_no_credential", "this member holds no credential of its own and cannot act except under one it is handed. There is no fallback identity here by design: a worker that could act unattended would be acting as nobody, and nothing it did could be attributed."), 401) };
   if (!AI_TOKEN_SHAPE.test(credential))
     return { refusal: refusal("BAD_CREDENTIAL_SHAPE",
-      "the credential handed to this member is not shaped like one this plane issues. Whether a "
-      + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
-      + "is never made here.", 400) };
+      localize("agent-worker.index.the_credential_handed_to_this", "the credential handed to this member is not shaped like one this plane issues. Whether a well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and is never made here."), 400) };
 
   /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
   const acct = await accountOf(body);
@@ -518,15 +494,13 @@ async function checkRun(body, env) {
   const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
   const requested = body.turns == null ? bound : Number(body.turns);
   if (!Number.isFinite(requested) || requested < 1)
-    return { refusal: refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400) };
+    return { refusal: refusal("BAD_TURNS", localize("agent-worker.index.turns_must_be_a_positive", "turns must be a positive number of model turns for this segment."), 400) };
   /* REFUSED rather than silently clamped. A caller that asked for 400 turns and
      got 120 without being told believes it saw a whole run; the same reasoning
      that makes the plane's read bounds refuse rather than truncate. */
   if (requested > bound)
     return { refusal: refusal("SEGMENT_OVER_BOUND",
-      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
-      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
-      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
+      localize("agent-worker.index.a_segment_is_bounded_at", "a segment is bounded at {bound} model turns and {requested} were asked for. The bound is not a policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a longer segment would meet. Split the run across segments — resuming is what segments are for.", { bound: String(bound), requested: String(requested) }),
       400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE }) };
 
   return { runId, store, credential, account, cascade, bound, requested };
@@ -546,8 +520,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null, b
   } catch (e) {
     /* An error is a segment's end whenever it came, the run having been handed to this segment. */
     answer = { response: refusal("SEGMENT_THREW",
-      "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and "
-      + "wrote stays, and the plane is told the segment ended.", 500,
+      localize("agent-worker.index.the_segment_stopped_on_an", "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and wrote stays, and the plane is told the segment ended."), 500,
       { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) }),
       end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" } };
   }
@@ -614,13 +587,9 @@ async function segmentAnswer(env, checked, body, whoami, traced, deadline, prefl
     turns_run: meter.turns,
     judgement_source: modelMode ? "model" : "body",
     judgement_note: modelMode
-      ? `the control-flow table ran and the judgements inside its steps were made by model turns run through `
-        + `agent-model (${meter.turns}), under the Claude account that serves the member's act `
-        + `(${cascade.level === "group" ? "the team's API key" : cascade.level === "project" ? "the project's"
-          : "the member's own"}) and the skill pack the run names; `
-        + "the sub-sessions ran one per level and returned REPORTS"
-      : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken "
-        + "(turns_run: 0). Stated rather than presented as a model run.",
+      ? localize("agent-worker.index.the_control_flow_table_ran", "the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model ({turns}), under the Claude account that serves the member's act ({v1}) and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS", { turns: String(meter.turns), v1: String(cascade.level === "group" ? "the team's API key" : cascade.level === "project" ? "the project's"
+          : "the member's own") })
+      : localize("agent-worker.index.the_control_flow_table_ran_2", "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run."),
     /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, a project's, R71, or the
        group's API key, K1755), the member whose act it serves and, for a project's, the project (an id). A call with
        none never reaches here (R6 refused it by name before any step). */
@@ -740,10 +709,10 @@ export class SegmentDriver {
   async fetch(req) {
     if (this.pending || this.running)
       return refusal("SEGMENT_RUNNING",
-        "a segment of this run is still running, so no second one was started; the plane is told when it ends.", 409);
+        localize("agent-worker.index.a_segment_of_this_run", "a segment of this run is still running, so no second one was started; the plane is told when it ends."), 409);
     const got = await req.json().catch(() => null);
     if (!got || typeof got.body !== "object" || got.body === null)
-      return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
+      return refusal("BAD_BODY", localize("agent-worker.index.the_request_body_could_not_2", "the request body could not be read as JSON."), 400);
     const checked = await checkRun(got.body, this.env);
     if (checked.refusal) return checked.refusal;
     this.pending = { checked, body: got.body, whoami: got.whoami ?? null, traced: doorTrace(req) };
@@ -776,7 +745,7 @@ export class CheckRecord {
   constructor(state) { this.state = state; }
 
   async fetch(req) {
-    if (new URL(req.url).pathname !== "/check") return refusal("UNKNOWN", "GET or POST /check only.", 404);
+    if (new URL(req.url).pathname !== "/check") return refusal("UNKNOWN", localize("agent-worker.index.get_or_post_check_only", "GET or POST /check only."), 404);
     if (req.method === "GET") {
       const held = await this.state.storage.get("check");
       return json({ ok: true, checked: !!held, version: held?.version ?? null });
@@ -784,11 +753,11 @@ export class CheckRecord {
     if (req.method === "POST") {
       const got = await req.json().catch(() => null);
       if (!(got && typeof got.version === "string" && got.version && got.version.length <= 200))
-        return refusal("BAD_BODY", "a check is recorded with the version it passed at: a non-empty string.", 400);
+        return refusal("BAD_BODY", localize("agent-worker.index.a_check_is_recorded_with", "a check is recorded with the version it passed at: a non-empty string."), 400);
       await this.state.storage.put("check", { version: got.version, at: Date.now() });
       return json({ ok: true });
     }
-    return refusal("UNKNOWN", "GET or POST /check only.", 404);
+    return refusal("UNKNOWN", localize("agent-worker.index.get_or_post_check_only_2", "GET or POST /check only."), 404);
   }
 }
 
@@ -814,7 +783,7 @@ export default {
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "signin") return handleSignin(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "transcribe") return handleTranscribe(req, env, ASK_DEPS);
-    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.",
+    return refusal("UNKNOWN", localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only."),
       404);
   },
 };

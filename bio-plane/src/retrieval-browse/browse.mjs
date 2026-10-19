@@ -9,6 +9,7 @@
  * entities are team-wide (`entities` R51) but are not listed to a viewer the gate does not recognise either. A hidden
  * bundle is neither listed nor counted (R15), and a flagged one the viewer cannot see is not shown through its flag. */
 import { viewerPredicate } from "../membership/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /* R10: the kinds a browse is narrowed to, the bundle types behind the four that are bundles, and the entity kinds behind
    `entity` (a person; an organisation is an institution, a body or a movement). */
@@ -55,21 +56,21 @@ export class Browser {
    *  the marks could not be read. */
   read({ kinds = null, only = null, since = null, after = null, limit = null, viewer = null } = {}) {
     if (typeof viewer !== "string" || !viewer)
-      return refuse("VIEWER_MISSING", "a browse answers only to a stamped viewer, and this request carries none");
+      return refuse("VIEWER_MISSING", localize("retrieval-browse.browse.viewer_missing", "a browse answers only to a stamped viewer, and this request carries none"));
     const asked = Array.isArray(kinds) ? kinds : typeof kinds === "string" && kinds ? kinds.split(",") : [];
     const named = [...new Set(asked.map((k) => String(k).trim()).filter(Boolean))];
     const unknown = named.filter((k) => k !== "all" && !BROWSE_KINDS.includes(k));
     if (unknown.length)
-      return refuse("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${BROWSE_KINDS.join(", ")}`,
+      return refuse("KIND_UNKNOWN", localize("retrieval-browse.browse.no_kind_called_map_the", "no kind called {map}; the kinds are {BROWSE_KINDS}", { map: String(unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")), BROWSE_KINDS: String(BROWSE_KINDS.join(", ")) }),
         { kinds: BROWSE_KINDS });
     const wanted = !named.length || named.includes("all") ? [...BROWSE_KINDS] : BROWSE_KINDS.filter((k) => named.includes(k));
     const mode = only == null || only === "" ? null : String(only).trim();
     if (mode !== null && !BROWSE_ONLY.includes(mode))
-      return refuse("ONLY_UNKNOWN", `no filter called ${JSON.stringify(mode.slice(0, 40))}; the filters are ${BROWSE_ONLY.join(", ")}`, { only: BROWSE_ONLY });
+      return refuse("ONLY_UNKNOWN", localize("retrieval-browse.browse.no_filter_called_stringify_the", "no filter called {stringify}; the filters are {BROWSE_ONLY}", { stringify: String(JSON.stringify(mode.slice(0, 40))), BROWSE_ONLY: String(BROWSE_ONLY.join(", ")) }), { only: BROWSE_ONLY });
     const hasSince = since !== null && since !== undefined && since !== "";
-    if (mode === "new_since" && !hasSince) return refuse("NO_SINCE", "new_since counts from an instant, and none was given");
+    if (mode === "new_since" && !hasSince) return refuse("NO_SINCE", localize("retrieval-browse.browse.new_since_needs_since", "new_since counts from an instant, and none was given"));
     if (hasSince && (typeof since !== "string" || !Number.isFinite(Date.parse(since))))
-      return refuse("BAD_SINCE", "since is an instant, as 2026-10-01T00:00:00Z");
+      return refuse("BAD_SINCE", localize("retrieval-browse.browse.since_is_an_instant", "since is an instant, as 2026-10-01T00:00:00Z"));
     const sinceMs = hasSince ? Date.parse(since) : null;
     const n = Number(limit);
     const cap = limit == null || limit === "" || !Number.isFinite(n) ? BROWSE_LIMIT_DEFAULT : Math.max(1, Math.min(BROWSE_LIMIT_MAX, Math.floor(n)));
@@ -92,14 +93,14 @@ export class Browser {
     const reg = this.r.browseMarks();
     const undetermined = [];
     let marks = { watched: new Set(), flagged: new Map() };
-    if (!reg) undetermined.push("no module has registered the watches and flags, so watched and flagged are not read");
+    if (!reg) undetermined.push(localize("retrieval-browse.browse.marks_not_registered", "no module has registered the watches and flags, so watched and flagged are not read"));
     else if (page.length) {
       const got = this.#call(reg, { viewer, ids: page.map((r) => r.id) });
       const v = got.ok ? got.value : null;
       if (v && Array.isArray(v.watched) && Array.isArray(v.flagged)) {
         marks = { watched: new Set(v.watched.filter((x) => typeof x === "string")),
                   flagged: new Map(v.flagged.filter((f) => f && typeof f === "object" && typeof f.id === "string").map((f) => [f.id, flagOf(f)])) };
-      } else undetermined.push(got.why || "the registered read of watches and flags answered another shape than its contract's");
+      } else undetermined.push(got.why || localize("retrieval-browse.browse.marks_another_shape", "the registered read of watches and flags answered another shape than its contract's"));
     }
     const shown = page.map((r) => ({
       kind: r.kind, id: r.id, title: r.title, state: r.state, last_changed: r.last_changed,
@@ -117,10 +118,10 @@ export class Browser {
    *  entities matched, which are not bundles and are not in `ids`. */
   scopeMembers({ scope = null, viewer = null, limit = null } = {}) {
     if (typeof viewer !== "string" || !viewer)
-      return refuse("VIEWER_MISSING", "a scope is read only for a stamped viewer, and this request carries none");
+      return refuse("VIEWER_MISSING", localize("retrieval-browse.browse.scope_viewer_missing", "a scope is read only for a stamped viewer, and this request carries none"));
     const def = BROWSE_SCOPES.find((s) => s.key === scope);
     if (!def)
-      return refuse("SCOPE_KEY_UNKNOWN", `no scope called ${JSON.stringify(String(scope).slice(0, 40))}; the scopes are ${BROWSE_SCOPES.map((s) => s.key).join(", ")}`,
+      return refuse("SCOPE_KEY_UNKNOWN", localize("retrieval-browse.browse.no_scope_called_stringify_the", "no scope called {stringify}; the scopes are {map}", { stringify: String(JSON.stringify(String(scope).slice(0, 40))), map: String(BROWSE_SCOPES.map((s) => s.key).join(", ")) }),
         { scopes: BROWSE_SCOPES.map((s) => s.key) });
     const n = Number(limit);
     const cap = limit == null || limit === "" || !Number.isFinite(n) ? BROWSE_MARKS_MAX : Math.max(1, Math.min(BROWSE_MARKS_MAX, Math.floor(n)));
@@ -145,10 +146,10 @@ export class Browser {
     let rows;
     if (!recognised) rows = [];
     else if (mode === "watched" || mode === "flagged") {
-      if (!reg) return { empty: "no module has registered the watches and flags, so which items are watched or flagged is not read" };
+      if (!reg) return { empty: localize("retrieval-browse.browse.marks_not_registered_list", "no module has registered the watches and flags, so which items are watched or flagged is not read") };
       const got = this.#call(reg, { viewer, only: mode, limit: BROWSE_MARKS_MAX });
       const list = got.ok && got.value && Array.isArray(got.value.items) && typeof got.value.truncated === "boolean" ? got.value : null;
-      if (!list) return { empty: got.why || "the registered read of watches and flags answered another shape than its contract's" };
+      if (!list) return { empty: got.why || localize("retrieval-browse.browse.marks_another_shape", "the registered read of watches and flags answered another shape than its contract's") };
       const ids = [];
       for (const entry of list.items.slice(0, BROWSE_MARKS_MAX)) {
         const id = idOf(entry);
@@ -171,13 +172,13 @@ export class Browser {
   /* R11: one call of the registered read; a throw, a promise (its rejection caught) or a non-object is no answer. */
   #call(reg, arg) {
     let a;
-    try { a = reg.fn(arg); } catch (e) { return { ok: false, why: `the registered read of watches and flags threw: ${String((e && e.message) || e).slice(0, 200)}` }; }
+    try { a = reg.fn(arg); } catch (e) { return { ok: false, why: localize("retrieval-browse.browse.the_registered_read_of_watches", "the registered read of watches and flags threw: {String}", { String: String(String((e && e.message) || e).slice(0, 200)) }) }; }
     if (a && typeof a.then === "function") {
       Promise.resolve(a).catch(() => {});
-      return { ok: false, why: "the registered read of watches and flags answered a promise: it is called in process, synchronously" };
+      return { ok: false, why: localize("retrieval-browse.browse.marks_promise", "the registered read of watches and flags answered a promise: it is called in process, synchronously") };
     }
     return a && typeof a === "object" && !Array.isArray(a) ? { ok: true, value: a }
-      : { ok: false, why: "the registered read of watches and flags answered another shape than its contract's" };
+      : { ok: false, why: localize("retrieval-browse.browse.marks_another_shape", "the registered read of watches and flags answered another shape than its contract's") };
   }
 
   /* Every bundle of the kinds asked that the gate passes, and every entity of them, as `{kind, id, title, state, last_changed}`. */

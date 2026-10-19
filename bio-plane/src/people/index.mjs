@@ -27,7 +27,7 @@ import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { PEOPLE_SCHEMA, PEOPLE_TABLES, CLUSTER_TABLE, ADDITIVE_COLUMNS } from "./schema.mjs";
 import { SHIPPED_CHECKS, CHECK_MACHINE, conditionError, hypothesisNamed, evaluatePerson } from "./checks.mjs";
 
@@ -50,8 +50,8 @@ export const EXPUNGE_GROUNDS = Object.freeze(["unlawful", "confidential", "court
 /* R26 (K1486): the members' words for the identity kinds. */
 export const IDENTITY_KIND_WORDS = Object.freeze([
   { kind: "same_as", word: "same person?", class: "evidentiary" },
-  { kind: "not_same_as", word: "claimed not the same person", class: "evidentiary" },
-  { kind: "unsure", word: "unsure whether the same person", class: "evidentiary" },
+  { kind: "not_same_as", word: word("label.identityclaimkinds.not_same_as"), class: "evidentiary" },
+  { kind: "unsure", word: word("label.identityclaimkinds.unsure"), class: "evidentiary" },
 ]);
 /* R29 (K1471, K1473, K1486): words no outward text of this module uses. */
 export const FORBIDDEN_WORDS = Object.freeze(["knows", "conflict", "suspicious", "most connected"]);
@@ -83,8 +83,8 @@ const SHOW_KINDS = Object.freeze({
 export const GATE_RATE_MAX = 0.2;
 /* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
    exactly, and the member-facing sentence that begins with it. */
-export const HINT_MARK = "Hint · machine work";
-export const HINT_DETAIL = `${HINT_MARK}. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.`;
+export const HINT_MARK = word("mark.hint.label");
+export const HINT_DETAIL = word("people.check_noticed_hint", { hint_mark: String(HINT_MARK) });
 /* R2 (K1488): the people line kinds a name match is corroborated by. */
 const STATEMENT_ROLES = Object.freeze(["decider", "signatory", "implementer", "author"]);
 const TEXT_MAX = 2000;
@@ -99,12 +99,15 @@ const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...
    never English. A reason an owner answers (civil-time, lines, events, duties) is passed on as that owner answers it. */
 const why = (key, vars = {}) => ({ key, vars });
 const answered = (w) => filled(w) || (isObj(w) && filled(w.key));
-/* R40 (K3865): the sentence a reason reads as, through `word`, for the two sites connection-grammar's contract judges as a
-   string and for a composed key's `{why}` fill; an owner's sentence is itself, and a key `word` cannot read is null. */
+/* R40 (K3865): the sentence a reason reads as, through `word`, for a composed key's `{why}` fill (lines R21 takes its
+   owner's reason as text); an owner's sentence is itself, and a key `word` cannot read is null. */
 const sentenceOf = (w) => {
   if (filled(w)) return w;
   try { return isObj(w) && filled(w.key) ? word(w.key, w.vars ?? {}) : null; } catch { return null; }
 };
+/* R40 (connection-grammar R6): a hop's undetermined reason is a `{key, vars}`; an owner's reason that is no key is the
+   owner's failure to say why, answered with `key` instead. */
+const keyedReason = (w, key) => (isObj(w) && filled(w.key) ? w : why(key));
 /* N617: every act is recorded under the control plane's stamp; a row never carries a null `by`. */
 const noBy = (what) => refuse("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 const json = (v) => { try { return JSON.parse(v); } catch { return null; } };
@@ -359,18 +362,18 @@ export class People {
   static #validity(valid) {
     if (!isObj(valid)) return { refused: "valid", why: "a validity is {from, to, precision, zone}" };
     const precision = valid.precision || "day";
-    if (!["day", "minute", "second", "edtf"].includes(precision)) return { refused: "precision", why: `${precision} is not a precision` };
+    if (!["day", "minute", "second", "edtf"].includes(precision)) return { refused: "precision", why: word("people.why.precision", { precision: String(precision) }) };
     const zone = filled(valid.zone) ? valid.zone : "UTC";
     for (const side of ["from", "to"]) {
       const b = valid[side];
       if (b === null || b === undefined) continue;
       if (isObj(b)) {
-        if (b.value !== undefined && b.event !== undefined) return { refused: side, why: "a bound gives both a value and an event" };
+        if (b.value !== undefined && b.event !== undefined) return { refused: side, why: word("people.why.bound_gives_value") };
         if (filled(b.event) && ["start", "end"].includes(b.edge)) continue;
-        if (b.value === undefined) return { refused: side, why: "an event bound names its event and its edge" };
+        if (b.value === undefined) return { refused: side, why: word("people.why.event_bound_names") };
       }
       const value = isObj(b) ? b.value : b;
-      if (typeof value !== "string") return { refused: side, why: "a bound is a date value, an event bound or null" };
+      if (typeof value !== "string") return { refused: side, why: word("people.why.bound_date_value") };
       let r;
       try { r = bounds({ value, precision: isObj(b) && b.precision ? b.precision : precision, zone: isObj(b) && b.zone ? b.zone : zone }); }
       catch (e) { r = { refused: "DATE_INVALID", why: String((e && e.message) || e) }; }
@@ -470,51 +473,51 @@ export class People {
 
   /* R2 (K1488): Civicsmith's sentence, "claimed the same person, grade B, because ...", never "is the same person". */
   static #why(kind, grade, because) {
-    const said = kind === "same_as" ? "claimed the same person" : kind === "not_same_as" ? "claimed not the same person"
-      : "claimed unsure whether the same person";
-    return `${said}, grade ${grade}, because ${because}`;
+    const said = kind === "same_as" ? word("label.identityclaimkinds.same_as") : kind === "not_same_as" ? word("label.identityclaimkinds.not_same_as")
+      : word("people.claimed_unsure_whether");
+    return localize("people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", { said: String(said), grade: String(grade), because: String(because) });
   }
 
   /* R2: the grade's condition, met (`because`) or failed (`failed`, naming the condition). */
   #earn(basis, a, b, ev) {
-    if (basis === "testimony") return { because: "a member testified to it in their own words" };
+    if (basis === "testimony") return { because: word("people.member_testified_words") };
     const shared = this.#sharingName(a).get(b);
     if (basis === "name") {
-      if (!shared) return { failed: "the two records share a name" };
-      return { because: `both records carry the name '${shared}'` };
+      if (!shared) return { failed: word("people.two_records_share") };
+      return { because: word("people.records_carry_name", { shared: String(shared) }) };
     }
     const dA = ev.a && ev.a.date, dB = ev.b && ev.b.date;
-    if (!isCalendarDate(dA)) return { failed: "the evidence states the date of a's cited record" };
-    if (!isCalendarDate(dB)) return { failed: "the evidence states the date of b's cited record" };
+    if (!isCalendarDate(dA)) return { failed: word("people.evidence_states_date") };
+    if (!isCalendarDate(dB)) return { failed: word("people.evidence_states_date_cited") };
     if (basis === "identifier") {
       const want = isObj(ev.identifier) && filled(ev.identifier.scheme) && filled(ev.identifier.id) ? ev.identifier : null;
-      if (!want) return { failed: "the evidence names the scheme identifier both records hold" };
+      if (!want) return { failed: word("people.evidence_names_scheme") };
       const norm = String(want.id).trim().toLowerCase();
       for (const [id, end, day] of [[a, "a", dA], [b, "b", dB]]) {
         const held = this.#identifiers(id).find((x) => x.scheme === want.scheme && x.normal === norm);
-        if (!held) return { failed: `${end} holds the scheme identifier ${want.scheme} ${want.id}` };
+        if (!held) return { failed: word("people.holds_scheme_identifier", { end: String(end), scheme: String(want.scheme), id: String(want.id) }) };
         if (held.valid && People.#judge(held.valid, day) !== "in")
-          return { failed: `the identifier ${want.scheme} ${want.id} is valid on ${end} at its record's date ${day}` };
+          return { failed: word("people.identifier_valid_record", { scheme: String(want.scheme), id: String(want.id), end: String(end), day: String(day) }) };
       }
-      return { because: `both records hold the identifier ${want.scheme} ${want.id}, valid at ${dA} and ${dB}` };
+      return { because: word("people.records_hold_identifier", { scheme: String(want.scheme), id: String(want.id), d_a: String(dA), d_b: String(dB) }) };
     }
     /* corroborated_name: a shared name and the same cited line (the same post, licence, filer or credential) held by
        each, valid at its record's date (civil-time.validAt). */
-    if (!shared) return { failed: "the two records share a name" };
+    if (!shared) return { failed: word("people.two_records_share") };
     const ls = isObj(ev.lines) ? ev.lines : null;
-    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: "the evidence names the cited line held by each record (lines: {a, b})" };
+    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: localize("people.index.evidence_names_cited_line", "the evidence names the cited line held by each record (lines: {a, b})") };
     const read = (id) => { try { const r = this.#lines.readLine({ lineId: id, viewer: MACHINE_VIEWER }); return r && r.found ? r.line ?? r : null; } catch { return null; } };
     const la = read(ls.a), lb = read(ls.b);
-    if (!la || la.withdrawn) return { failed: `the line ${ls.a} is held and not withdrawn` };
-    if (!lb || lb.withdrawn) return { failed: `the line ${ls.b} is held and not withdrawn` };
+    if (!la || la.withdrawn) return { failed: word("people.line_held_withdrawn", { first: String(ls.a) }) };
+    if (!lb || lb.withdrawn) return { failed: word("people.line_held_withdrawn", { first: String(ls.b) }) };
     const otherOf = (l, p) => (lineFrom(l) === p ? lineTo(l) : lineTo(l) === p ? lineFrom(l) : undefined);
     const oa = otherOf(la, a), ob = otherOf(lb, b);
-    if (oa === undefined) return { failed: `the line ${ls.a} has a at one end` };
-    if (ob === undefined) return { failed: `the line ${ls.b} has b at one end` };
-    if (la.kind !== lb.kind || oa !== ob) return { failed: "the two lines are the same fact: one kind, to the same entity" };
-    if (People.#judge(la.valid, dA, People.#through(la)) !== "in") return { failed: `the line ${ls.a} is valid at a's record date ${dA}` };
-    if (People.#judge(lb.valid, dB, People.#through(lb)) !== "in") return { failed: `the line ${ls.b} is valid at b's record date ${dB}` };
-    return { because: `both records carry the name '${shared}' and each holds a ${la.kind} line to ${oa} at its record's date (${dA}, ${dB})` };
+    if (oa === undefined) return { failed: word("people.line_end", { first: String(ls.a) }) };
+    if (ob === undefined) return { failed: word("people.the_line_has_b_at", { second: String(ls.b) }) };
+    if (la.kind !== lb.kind || oa !== ob) return { failed: word("people.two_lines_fact") };
+    if (People.#judge(la.valid, dA, People.#through(la)) !== "in") return { failed: word("people.line_valid_record", { first: String(ls.a), d_a: String(dA) }) };
+    if (People.#judge(lb.valid, dB, People.#through(lb)) !== "in") return { failed: word("people.line_valid_record_date", { second: String(ls.b), d_b: String(dB) }) };
+    return { because: word("people.records_carry_name_holds", { shared: String(shared), kind: String(la.kind), oa: String(oa), d_a: String(dA), d_b: String(dB) }) };
   }
 
   /** R4: a claim withdrawn, never edited or deleted; it links nothing after. No entities row moves (R28). */
@@ -1053,15 +1056,15 @@ export class People {
      name none or the issuer holds none, never a guess. */
   #issuerIdentifier(issuer, schemes) {
     const e = filled(issuer) ? this.#entity(issuer) : null;
-    if (!e) return { issuer_identifier: null, issuer_identifier_why: "the issuer is not a registered entity" };
+    if (!e) return { issuer_identifier: null, issuer_identifier_why: word("people.issuer_registered_entity") };
     const named = (Array.isArray(schemes) ? schemes : [])
       .filter((s) => isObj(s) && filled(s.scheme) && Array.isArray(s.entity_kinds) && s.entity_kinds.includes(e.kind)).map((s) => s.scheme);
     if (!named.length)
-      return { issuer_identifier: null, issuer_identifier_why: `the active jurisdiction profiles name no identifier scheme for an issuer of kind ${e.kind}` };
+      return { issuer_identifier: null, issuer_identifier_why: word("people.active_jurisdiction_profiles", { kind: String(e.kind) }) };
     const held = this.#identifiers(issuer).filter((x) => named.includes(x.scheme))
       .sort((x, y) => (named.indexOf(x.scheme) - named.indexOf(y.scheme)) || x.normal.localeCompare(y.normal));
     if (!held.length)
-      return { issuer_identifier: null, issuer_identifier_why: `the issuer holds no identifier under ${named.join(", ")}, the scheme${named.length > 1 ? "s" : ""} the active profiles name for its kind` };
+      return { issuer_identifier: null, issuer_identifier_why: word("people.issuer_holds_identifier", { named: String(named.join(", ")), plural: String(named.length > 1 ? "s" : "") }) };
     const one = ({ scheme, id, valid }) => ({ scheme, id, valid });
     return { issuer_identifier: one(held[0]), ...(held.length > 1 ? { issuer_identifiers: held.map(one) } : {}) };
   }
@@ -1356,9 +1359,9 @@ export class People {
       }
     }
     const rosters = this.#roster.length ? this.#roster.map(({ module, fn }) => {
-      try { return { source: module, level: `held as a table, read by ${module}`, answer: fn({ organisation, at, viewer }) }; }
-      catch (e) { return { source: module, failed: true, level: `held as a table, read by ${module}`, error: String((e && e.message) || e).slice(0, 200) }; }
-    }) : [{ source: null, level: "held as a table, not read" }];
+      try { return { source: module, level: word("people.held_table_read", { module: String(module) }), answer: fn({ organisation, at, viewer }) }; }
+      catch (e) { return { source: module, failed: true, level: word("people.held_table_read", { module: String(module) }), error: String((e && e.message) || e).slice(0, 200) }; }
+    }) : [{ source: null, level: word("people.held_as_a_table_not") }];
     const h = bounded(held, READ_LIST_MAX, truncated), u = bounded(undetermined);
     return { ok: true, organisation, at, units, staff: h.items, undetermined: u.items, rosters,
              truncated: { staff: h.truncated, undetermined: u.truncated }, limit: READ_LIST_MAX };
@@ -1702,7 +1705,7 @@ export class People {
       && (!filled(project) || this.#onIn(c.check_id, project)));
     const out = checks.map((c) => {
       const head = { check: c.check_id, version: Number(c.version), name: c.name, machine: !!Number(c.machine), denominator: c.denominator };
-      if (!this.#gateOpen(c)) return { ...head, gated: true, reason: `this check's false-alarm rate is not yet measured at or below ${GATE_RATE_MAX * 100}% on a gold set, so its results are not shown` };
+      if (!this.#gateOpen(c)) return { ...head, gated: true, reason: word("people.check_false_alarm", { gate_rate_max: String(GATE_RATE_MAX * 100) }) };
       const results = [];
       let truncated = false;
       for (const r of this.#rows(`SELECT * FROM interest_check_results WHERE check_id=? AND version=? ORDER BY result_id`, c.check_id, Number(c.version))) {
@@ -1754,7 +1757,7 @@ export class People {
    *  and grade the claim's. */
   neighbours({ node, kinds = null, at, page = null, viewer, scope = null, host: _host = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("people.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     const want = Array.isArray(kinds) ? kinds.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
     if (!filled(node) || this.#denied(viewer) || !want.length) return { items: [] };
     const rows = this.#rows(`SELECT * FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL ORDER BY claim_id`, node, node)
@@ -1768,11 +1771,10 @@ export class People {
       const cited = ["a", "b"].filter((e) => isObj(ev[e]) && filled(ev[e].captureSha))
         .map((e) => ({ source: ev[e].captureSha, extent: ev[e].extent ?? null, end: e }));
       const evidence = cited.length ? cited : [{ source: `testimony:${c.by_actor ?? "a member"}`, statement: c.note }];
-      /* R40 (K3865): connection-grammar judges this reason as a string, the sentence `word` reads; `why_key` stands beside it */
+      /* R40 (N1226; connection-grammar R6): an undetermined hop's reason is its `{key, vars}`, passed on as civil-time answers it */
       items.push({ id: c.claim_id, from: c.a, to: c.b, kind: c.kind, owner: MODULE, valid, evidence,
                    grade: { assertion: c.grade, ends: [c.grade, c.grade] }, derived: null, why: c.why,
-                   ...(j === "in" ? {} : { undetermined: { why: sentenceOf(j.why) ?? word("people.why.owner_settle_validity"),
-                                                            why_key: isObj(j.why) ? j.why : null } }) });
+                   ...(j === "in" ? {} : { undetermined: { why: keyedReason(j.why, "people.why.owner_settle_validity") } }) });
     }
     if (items.length > BOUNDS.hub)
       return { items: [], hub: { set_size: items.length, why: word("people.why.person_end_identity", { hub: BOUNDS.hub }),
@@ -1787,7 +1789,7 @@ export class People {
 defaultRegistry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k })), neighbours: (args) => {
   const p = People.forHost(args && args.host);
   if (!p) return { refused: "OWNER_HOST_AMBIGUOUS",
-                   why: "people's neighbours needs the host it reads (args.host) when this isolate holds no single people instance" };
+                   why: word("people.why.people_neighbors_needs") };
   return p.neighbours(args);
 } });
 

@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
 import { DRIVE_TICK_CHECKS, MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const OLD_NAMES = /\b(this|the|our|its|your)\s+(?:(?:civicsmith|group's)\s+)?(instance|copy|plane)\b/i;
 const IS_THE_SHELL = "The check of that Google Drive document did not run: the export address answered with a web page "
@@ -67,7 +68,7 @@ test("R16 R32 DEC-149: an address checked per meeting is unscheduled with the re
   const w = world();
   const id = "INFO-2026-0904-meeting";
   w.monitored(id, "https://records.example.org/meetings", "m1", { freq: "per_meeting" });
-  const want = "cadence is a meeting schedule your team's Civicsmith does not hold";
+  const want = word("monitoring.cadence_meeting_schedule");
   assert.equal(w.m.schedule(NOW_MS).unscheduled.find((r) => r.bundle === id).reason, want);
   const item = w.m.monitoring({ viewer: DAEMON, now: NOW_MS }).items.find((r) => r.bundle === id);
   assert.deepEqual([item.state, item.reason], ["unscheduled", want]);
