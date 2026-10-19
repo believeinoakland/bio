@@ -83,7 +83,7 @@ test("R14 (T40) an unmarked photo's copy carrying a label is listed by the unmar
   assert.deepEqual(listing(marked, PHOTO).slice(4, 6), [esc(`${CG.OBSCURED_WORDS.copy}${COPY}`), esc(OBSCURED_LABEL)]);
   /* marked, with no label: the copy line alone */
   const bare = editionWith({ photo: true }, PHOTO_ROW, { ...PHOTO_ROW, obscured: { copy: COPY, label: null, marked: true } });
-  assert.deepEqual(listing(bare, PHOTO).slice(4, 6), [esc(`${CG.OBSCURED_WORDS.copy}${COPY}`), esc("A finding this case relies on rests on it.")]);
+  assert.deepEqual(listing(bare, PHOTO).slice(4, 6), [esc(`${CG.OBSCURED_WORDS.copy}${COPY}`), esc(CG.SENTENCES.reliesOn)]);
   /* the same case file gives the same bytes */
   assert.equal(editionWith({ plainPhoto: true }, PLAIN_PHOTO_ROW, UNMARKED), html);
 });

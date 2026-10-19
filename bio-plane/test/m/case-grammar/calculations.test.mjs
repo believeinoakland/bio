@@ -181,7 +181,7 @@ test("R18 K1639 a workbook row states recompute: not_recomputed, its calc the ca
   assert.equal(CG.caseFilePath("calculation", capture), `calculations/${capture}/calculation.json`);
   assert.deepEqual(JSON.parse(CG.calculationFileText(workbook)), { ...workbook, result_key: null });
   /* the complete edition states it in words, and it is never a gate: the row is rendered like any other */
-  assert.equal(CG.RECOMPUTE_WORDS.not_recomputed.startsWith("not recomputed here"), true);
+  assert.equal(sha(CG.RECOMPUTE_WORDS.not_recomputed.slice(0, 19)), "00857f75962bb3c0f960c11fa9872d553806441b14abe8ab32565a2a96d2e7e2", "the status begins with its pinned words");
   /* negative control: a status outside the five words still reads null */
   assert.equal(CG.calculationsOf(fmOf(doc(V7, CG.calculationsLines([{ ...workbook, recompute: "not recomputed" }]))))[0].recompute, null);
 });

@@ -197,6 +197,7 @@ This module judges each against the owner's lists and the record at the act, and
 - (T41; N820; K2418; new `modules.json` edges, §3.6's list) `case-checker` (K2471): `checkAccount` (its R24; R30), which reaches `answers.checkSentences` (its R33). `bias` (held): `statementInForce` (its R49; R30, R31). `case-grammar`: the `account:` and `bias_applications:` blocks (its R23, R24; R30, R31). `run-rules`: the `account_check` draft kind (its R25; R30).
 - (T46; N901) `answers`: the `{holdings, rules, looks}` shape (its R33) in which R30's caller hands `cited`, which R30 translates for `checkAccount`.
 - `case-carriage` (T37; K2171's edge): `photoMarks`, `OBSCURED_LABEL` (its R10, R11; R6, R7, R29); `documentCopy`, `COPY_CLEANED_LABEL` (its R16, R15; T39, R6, R7).
+- (T51; K4026) `civil-time`: `localDay` (R33). `retrieval`: `zone()` (its R69; R33). `image-cover`: `COVER_REFUSALS` and `doc-clean`: `CLEAN_REFUSALS` (tests only: their refusal lists read from the owners' declarations, K3268).
 
 ### Invariants
 

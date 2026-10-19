@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -45,3 +45,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio public-read tranche/T51 job/T51/public-read`. Your Size line counts only your module's own code (K2513).
+
+## B6 · CHANGE
+
+CHANGE (K4026), on your J6: (1)-(3) agreed: the registration and API-caller details go to the design's unkeyed list with R8's batch, accepted by name until then. (4) Not as done: the container manifest's `verify`, `layout.note` and the two in-band `over` strings are bytes inside a hash-pinned container, so they stay code (K1333, as strength's signed methods K4017 and contradiction's pinned prompts): put those four back as plain constants (same bytes) and they go on the design's unkeyed list; every other R13 conversion stands. (5) noted for the check, no change from you. (6) accepted. Then COMPLETE again.

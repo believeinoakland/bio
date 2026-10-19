@@ -25,6 +25,7 @@ import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 import { wordsOfFormat } from "./words.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -41,6 +42,7 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          lensClosingSentencesOf, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
 export { WORDS, caseWordsOf } from "./words.mjs";
+export { SENTENCES } from "./sentences.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
 export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_OBSCURED_KIND_FIELD,
          MATERIAL_OBSCURED_KINDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
@@ -108,8 +110,7 @@ export function attributionBodyLines(given, format) {
     "",
     ...rows.map((r) => ({ ...r, observation: r.observation == null && r.capture != null ? r.capture : r.observation }))
       .map((r) => !r.level
-      ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
-        + "chooses one, or the finding resting on it leaves the case."
+      ? SENTENCES.noLevel(r.observation, r.why)
       : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
         + "producing group, so none is printed)" : `: ${r.shown}`} — level \`${r.level}\`, chosen at edition `
         + `${r.chosen_at_edition}.`),
@@ -151,7 +152,7 @@ export const SECTIONS = Object.freeze({
     const ours = (i) => runs.every(([a, b]) => a < 0 || i < a || i >= b);
     const f0 = lines.findIndex((l, i) => l.startsWith("  statement_sha: ") && ours(i));
     const f1 = lines.indexOf("completeness_excluded:");
-    const b0 = lines.findIndex((l, i) => l.startsWith("**Who else read this statement.**") && ours(i));
+    const b0 = lines.findIndex((l, i) => l.startsWith(SENTENCES.whoElse) && ours(i));
     const b1 = lines.indexOf("## What Was Searched");
     return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
   }),

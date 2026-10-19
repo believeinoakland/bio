@@ -1,6 +1,25 @@
 # case-grammar (T51)
 
-**Status** · session_013LcngzaheG8aWTghSuVsPg · depth 2 · COMPLETE · handled B1
+**Status** · session_01MkGZXQstbPYfaeA14Kf7cM · depth 2 · COMPLETE · handled B3
+
+## Completion (T51-227, R8)
+
+**Entries applied.** T51-227, all 265+ findings by B3's ruling (K4024):
+- (b) `casefile.mjs`: every reason of `caseFileManifestCheck` (and `shown`'s fallback) is `localize('case-grammar.casefile.<slug>', en, vars)`, en identical to the old text (45 ids, listed below). Placeholders `{key, fingerprint}`, `{index, sha256, bytes}`, `{path, sha256, bytes, part, kind}` are not names, so `localize` leaves them.
+- (a) The case document's rendered and signed sentences stay code, unkeyed (see REPORT): `account.mjs`, `blocks.mjs`, `complete.mjs`, `edition.mjs`, `index.mjs`, `outcomes.mjs`, `standing.mjs`, `tensions.mjs`, `words.mjs`. The sentences the tests named were hoisted, byte-identical, into the new `sentences.mjs` (`SENTENCES`, exported from `index.mjs`) and the renderers read them from there; a render change is still a new format.
+- (c) Tests: no test copies a sentence now (words check: testcopy 0). Tests compare with `SENTENCES`, the module's own exports (`COMPLETE_EDITION_HEADINGS`, `ACCOUNT_HEADING`, `WORDS.team`) or the SHA-256 of an exported pinned sentence (R27 blocks, citations, tension words, outcomes heading, lens closing, withheld reason). The `/7` golden is untouched.
+
+**New ids the checker program must carry (B3 (b)).** `case-grammar.casefile.` + `not-a-manifest, unknown-field, format, group, case, edition, sha256, keys, key-shape, key-unknown-field, key-line, fingerprint, key-twice, parts, part-shape, part-unknown-field, part-index, part-sha256, part-bytes, files, file-shape, file-unknown-field, file-kind, kind-format, path, path-kind, path-twice, file-sha256, input-sha, archive-sha, file-bytes, file-part, file-order, single-kind, optional-single-kind, chain-without-document, obscured-unnamed, original-carried, obscured-copy-missing, case-document-sha, part-empty, part-sha256-differs, part-bytes-differs, unreadable, unreadable-value`. `casefile.mjs` now imports `../setup-words/index.mjs`; case-grammar's code reaches the program through `case-checker` (which imports `case-grammar/index.mjs` and so `casefile.mjs`) via `bundler`.
+
+**Deferred.** None.
+
+**Found / for BOB.** (1) `build/modules.json`: case-grammar's `uses` lacks `setup-words` (architecture: 1 failure, `casefile.mjs`); and its requirements' Uses. (2) `program.mjs` and the plane bundle are stale (generated). (3) `setup-words` `rows.mjs` is stale until regenerated. (4) Requirements Provides could name `SENTENCES` (BOB's wording edit).
+
+**REPORT for the design's `unkeyed` list** (all "signed case-document text, pinned per format (K1333)"; the words check still lists them): `account.mjs` 48, 121; `blocks.mjs` 39–44, 78, 88, 94; `complete.mjs` 61 sites (section headings 90–92, 101–107, lane/recompute/strength/grade words 108–130, grade meanings, obscured words 150–154, the page notices, chain, materials, searched, calculations, account, outcomes, review-comment, approval, signing sentences, up to 542; plus `SENTENCES` values); `edition.mjs` 137–141, 183–188; `index.mjs` 104–112, 154, 175; `outcomes.mjs` 73; `standing.mjs` 41–57; `tensions.mjs` 28–44, 70; `words.mjs` 39–102 (the frozen `WORDS.group` and `WORDS.team`, R33). None is the exact text of a `words.json` row that I could find.
+
+**Tests and checks.** `node --test bio-plane/test/m/case-grammar/`: 164 pass, 0 fail. `checks/run.mjs`: format 0; architecture 1 failure (the `uses` above); coverage 25 failures, other modules (case-grammar names all ids); words: case-grammar testcopy 0, 134 inline/plain, all pinned. `setup-words/build.mjs --check`: stale-rows note only. `checks/ownership.mjs`: 0 failures.
+
+Size (session_01MkGZXQstbPYfaeA14Kf7cM): test runs 7, module lines 2975
 
 ## Completion (T51-136, R33)
 
@@ -25,3 +44,17 @@ Size (session_013LcngzaheG8aWTghSuVsPg): test runs 14, module lines 2936
 ## J1 · COMPLETE
 
 R33 met: format /8 (team words), /7 and earlier byte-identical (new pinned /7 golden). Module 164/164, format/architecture/coverage/ownership 0 failures. Other modules need follow-up (publication re-exports, public-read R3 closing via lensClosingSentencesOf, case-catalogue, case-authoring tests/format; case-checker program.mjs and plane bundle stale): details in my record.
+
+## J2 · QUESTION
+
+T51-227, the module's whole findings set (265 on `main`'s check, 272 now with the chained-literal rule). Nearly all of it is pinned text, so I need one ruling before I touch it.
+
+What the findings are: (a) `complete.mjs`, `edition.mjs`, `standing.mjs`, `tensions.mjs`, `blocks.mjs`, `account.mjs`, `outcomes.mjs`, `index.mjs`, `words.mjs` (about 190): the sentences the case document renders and signs, frozen per format (R33: `/8` team words, `/7` and earlier byte-identical, a pinned golden). (b) `casefile.mjs` (about 45): the case-file manifest checker's reasons, which the standalone checker bundles and prints offline. (c) about 70 test copies of (a)/(b).
+
+My best reading, same as B3 on strength: (a) is signed, versioned text (K1333, B1's exception to K3366 for byte-pinned text). A `localize` id would let a row edit change a signed edition without a new format, and the offline checker has no table. So I leave (a) as code, unkeyed, and list it in a REPORT for the design's `unkeyed` list. For (b) the same applies if the checker prints them offline in the bundled program; I read them as checker output pinned by `program.mjs`'s SHA-256, so also unkeyed. Tests: I replace each test's sentence literal with the module's own exports (`WORDS.team`/`WORDS.group`, section constants) or the pinned golden's SHA, so no test copies a sentence and the byte-pinning stays. Nothing in the module is converted to `localize`.
+
+Alternative: key (b) with `localize` (en identical) if you want the checker's reasons in the table. Tell me if so. I carry on with the tests on my best reading.
+
+## J3 · COMPLETE
+
+T51-227 done on B3's ruling; details in my record (Completion T51-227, R8). casefile.mjs reasons: 45 localize ids case-grammar.casefile.* (list in the record; the program must carry them; case-grammar reaches it via case-checker -> casefile.mjs). Pinned case-document sentences stay code, REPORT in the record for the unkeyed list. Tests copy no sentence (words: testcopy 0); module 164/164. Needs BOB: modules.json case-grammar uses lacks setup-words (architecture 1 failure); program.mjs, plane bundle and rows.mjs stale.

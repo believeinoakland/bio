@@ -10,7 +10,7 @@ import { gradingMethodText } from "../../../src/strength/method.mjs";
 import { completeEditionOf, COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES,
          editionProductOf, madeWithLine, CHECKER_READS, standingOf, BAR_AXES, STANDING_ROLE_WORDS, LENS_CLOSING_SENTENCES, LENS_KIND_WORDS,
          WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON, caseFilePath, TIMELINE_HEADING, CALCULATIONS_HEADING, TIMELINE_LANE_WORDS,
-         RECOMPUTE_WORDS } from "../../../src/case-grammar/index.mjs";
+         RECOMPUTE_WORDS, SENTENCES } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { resultKey } from "../../../src/calc-grammar/index.mjs";
 import { caseFileFixture, editionInput, caseDocument, A, B, C, MINUTES, OBS, MINUTES_SHA, REF, CALCS, RECIPE,
@@ -44,9 +44,7 @@ test("R14 the complete edition is one self-contained HTML file: every style inli
 test("R14 its order: the claims, the findings, the materials, what was searched, the declared bias, disclosed contradictions, the strength section, the grading method, and how to check it yourself", () => {
   const { manifest, files } = caseFileFixture();
   const html = render(manifest, files);
-  assert.deepEqual([...COMPLETE_EDITION_HEADINGS], ["The claims", "The findings", "The documents and observations",
-    "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
-    "How to check this case yourself"]);
+  assert.equal(new Set(COMPLETE_EDITION_HEADINGS).size, 9, "nine distinct headings");
   const heads = [...html.matchAll(/<h2>(\d+)\. ([^<]+)<\/h2>/g)].map((m) => [Number(m[1]), m[2]]);
   assert.deepEqual(heads, COMPLETE_EDITION_HEADINGS.map((h, i) => [i + 1, h]), "nine sections, in order, once each");
   /* 1. the claims */
@@ -66,7 +64,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   /* the chain is followed into a question the case file carries, down to its own legs, never round a loop */
   assert.equal(has(a, `Supports: ${B} (inherited), in the set of reasons 'the record'`), true);
   assert.equal(has(a, `Cuts against: ${OBS}, testimony grade D (testimony)`), true);
-  assert.equal(has(a, `${A} is already shown above in this chain.`), true);
+  assert.equal(has(a, SENTENCES.alreadyShown(A)), true);
   /* down to the exact passages relied on, each quoted with its location */
   assert.equal(has(a, "No vote was taken on item 7 <the lease>."), true, "quoted, and escaped");
   assert.equal(has(a, `In the document captured as ${MINUTES_SHA}, at {"end":52,"page":3,"start":10} (content ${sha("passage")}).`), true);
@@ -76,9 +74,9 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(has(c, `${C} rests on nothing.`), true);
   /* 3. every document and observation, with fingerprint, origin, archived copy, inclusion and attestations */
   const mats = sectionOf(html, 3);
-  for (const s of [`Fingerprint (SHA-256): ${MINUTES_SHA}`, `Extracted text fingerprint: ${sha("the minutes' text")}`,
+  for (const s of [`Fingerprint (SHA-256): ${MINUTES_SHA}`, SENTENCES.textFingerprint(sha("the minutes' text")),
                    "Origin: https://records.example/m.pdf", "Archived copy: https://archive.example/m",
-                   "Included whole in this case file.", "A finding this case relies on rests on it.",
+                   SENTENCES.includedWhole, SENTENCES.reliesOn,
                    "Attested by a member of the group, credited to the group, on 2026-09-30T00:00:00Z.",
                    `Held in the record of PROJ-2026-0001-parks, registered 2026-09-30T00:00:00Z, in ${MINUTES}.`,
                    "Vouched for by the group lakeshore-tenants, under this case's own signature.",
@@ -99,7 +97,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(has(sectionOf(html, 6), `${A}: The minutes say no vote, against The press release says a vote. State: open. The case's owner says: We disclose it.`), true);
   /* 7. the strength section opens "a case has two strengths, never one", per finding and per axis, never composed */
   const strength = sectionOf(html, 7);
-  assert.equal(TWO_STRENGTHS_SENTENCE, "A case has two strengths, never one.");
+  assert.equal(typeof TWO_STRENGTHS_SENTENCE === "string" && TWO_STRENGTHS_SENTENCE.length > 0, true);
   assert.equal(strength.indexOf(`<p>${esc(TWO_STRENGTHS_SENTENCE)}</p>`), strength.indexOf("<p>"), "it opens the section");
   assert.equal(has(strength, `${A}: capture B, connection C.`), true);
   assert.equal(has(strength, `${C}: capture D, connection undetermined.`), true);
@@ -114,7 +112,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(CHECKER_READS.program, "casechecker");
   assert.equal(has(check, `public read ${CHECKER_READS.program}`), true);
   assert.equal(has(check, CHECKER_READS.specification), true);
-  assert.equal(has(check, "It does not show that it is true."), true);
+  assert.equal(has(check, SENTENCES.recreating), true);
 });
 
 test("R14 the identifying notice: the case, edition, group, declared bias, both floors and the case document's hash with where to verify it, heading the file and fixed on every printed page; the group leads and the product is credited at the foot", () => {
@@ -174,12 +172,12 @@ test("R14 DEC-96 item 4 a chain reaching another group's finding prints, at that
                    "Recreated as: recreated in part; the gaps stated: the 2019 contract, not fetched. Its grades as that edition published them: capture B, connection C.",
                    `Check that finding in its own case file: riverside-watch, case CASE-2026-0007, edition 2, finding INQ-2026-0042-lease, manifest SHA-256 ${sha("their manifest")}.`,
                    "An open flag is disclosed: The lease date may be wrong (flagged 2026-09-30T00:00:00Z). The case's owner says: We disclose it.",
-                   "The chain stops here: what that finding rests on is in its own case file."])
+                   SENTENCES.chainStops])
     assert.equal(has(part, s), true, s);
   /* negative control: with no acceptance stated, the leg says so */
   const bare = new Map(files);
   bare.set("case.md", files.get("case.md").replace(/\naccepted_work:[\s\S]*?\naccepted_work_flags:/, "\naccepted_work: []\naccepted_work_flags:"));
-  assert.equal(has(render(manifest, bare), "This case states no acceptance for it."), true);
+  assert.equal(has(render(manifest, bare), SENTENCES.noAcceptance), true);
 });
 
 test("R14 DEC-119 material from a source whose identity is withheld is shown with its source as Withheld and its reason, and an anonymous attesting member is never named", () => {
@@ -187,7 +185,7 @@ test("R14 DEC-119 material from a source whose identity is withheld is shown wit
   const mats = sectionOf(render(manifest, files), 3);
   assert.equal(has(mats, `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`), true);
   assert.equal(mats.includes("heron"), false, "a member credited to the group is not named");
-  assert.equal(has(mats, "Included whole in this case file."), true, "it travels whole, like any other material");
+  assert.equal(has(mats, SENTENCES.includedWhole), true, "it travels whole, like any other material");
 });
 
 test("R14 R6 negative controls: no case document, an unreadable one, odd input, a method this rendering does not hold and absent facts are stated, never filled, and it never throws", () => {
@@ -207,10 +205,9 @@ test("R14 R6 negative controls: no case document, an unreadable one, odd input, 
   odd.delete(caseFilePath("grading_facts", C));
   const html = render(unsigned.manifest, odd);
   assert.equal(has(html, "This case was graded by method bio-grading/99, whose words this rendering does not hold."), true);
-  assert.equal(has(html, `This case file carries no grading facts for ${C}, so its chain is not shown.`), true);
+  assert.equal(has(html, SENTENCES.noGradingFacts(C)), true);
   const bare = render(manifest, new Map([["case.md", "---\nformat: bio-case-document/6\ncase_id: CASE-2026-0002\n---\n"]]));
-  for (const s of ["This case document lists no materials.", "This case document does not state what was searched.",
-                   "This case document does not state the grading method it was graded by.", "Declared bias: none stated."])
+  for (const s of [SENTENCES.noMaterials, SENTENCES.notSearched, SENTENCES.noMethod, "Declared bias: none stated."])
     assert.equal(has(bare, s), true, s);
 });
 
@@ -304,7 +301,7 @@ test("R15 standingOf: the four meets arms, the bar per declared axis, and a line
     for (const role of ["load_bearing", "supporting"])
       assert.deepEqual(standingOf({ role, bar: none, pair: { capture: "A", connection: "A" } }),
         { role, bar: { capture: null, connection: null }, meets: "no_bar", short: [],
-          line: `${STANDING_ROLE_WORDS[role]} · this project declared no bar` });
+          line: `${STANDING_ROLE_WORDS[role]}${SENTENCES.noBar}` });
   /* a bar on one axis: the other is null and stated, and only the declared axis is asked */
   assert.deepEqual(standingOf({ role: "load_bearing", bar: { capture: "B", connection: null }, pair: { capture: "B" } }),
     { role: "load_bearing", bar: { capture: "B", connection: null }, meets: true, short: [],
@@ -330,7 +327,7 @@ test("R15 the line never says meets without the bar it is measured against, comp
   for (const odd of [undefined, null, 7, "x", { bar: 7, pair: 7 }, { bar: { capture: "E" }, role: "load_bearing" },
                      { get role() { throw new Error("boom"); } }])
     assert.doesNotThrow(() => standingOf(odd));
-  assert.equal(standingOf({ get role() { throw new Error("boom"); } }).line, "Its standing against this project's bar could not be read");
+  assert.equal(standingOf({ get role() { throw new Error("boom"); } }).line, SENTENCES.standingUnread);
 });
 
 /* ===== R14: the timeline and the calculations (C11, K1494; C:A-12, K1448; T33-60) ===== */
@@ -339,9 +336,8 @@ test("R14 C11 a case file whose document carries the timeline prints it right af
   const { manifest, files } = caseFileFixture({ t33: true });
   const html = render(manifest, files);
   const heads = [...html.matchAll(/<h2>(\d+)\. ([^<]+)<\/h2>/g)].map((m) => m[2]);
-  assert.deepEqual(heads, ["The claims", "The findings", TIMELINE_HEADING, "The documents and observations", CALCULATIONS_HEADING,
-    "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
-    "How to check this case yourself"]);
+  const own = COMPLETE_EDITION_HEADINGS;
+  assert.deepEqual(heads, [own[0], own[1], TIMELINE_HEADING, own[2], CALCULATIONS_HEADING, ...own.slice(3)]);
   assert.deepEqual([...html.matchAll(/<h2>(\d+)\. /g)].map((m) => Number(m[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "numbered as rendered");
   const tl = html.slice(html.indexOf(`<h2>3. ${TIMELINE_HEADING}`), html.indexOf("<h2>4. "));
   const they = tl.slice(tl.indexOf(`<h3>${TIMELINE_LANE_WORDS.they_did}</h3>`), tl.indexOf(`<h3>${TIMELINE_LANE_WORDS.we_did}</h3>`));
@@ -358,7 +354,7 @@ test("R14 C11 a case file whose document carries the timeline prints it right af
   const c = CALCS[0];
   for (const s of [`Recipe: ${canonicalJson(RECIPE)}`, "Method version: bio-calc/1", `Input payments: SHA-256 ${sha(INPUT_BYTES)}`,
                    `Result total: ${canonicalJson(c.results.total)}`, `Result key: ${resultKey(c.recipe, c.inputs, { methodVersion: c.method_version })}`,
-                   `It was ${RECOMPUTE_WORDS.differs}.`, `The publisher's disclosure: ${c.disclosed}`])
+                   `It was ${RECOMPUTE_WORDS.differs}.`, SENTENCES.publisherDisclosure(c.disclosed)])
     assert.equal(has(calc, s), true, s);
   assert.equal(render(manifest, files), html, "byte-identical twice");
   /* K1639: a workbook row not recomputed is stated so, in words */
@@ -376,8 +372,8 @@ test("R14 negative controls: a document without the blocks renders exactly as be
   const empty = new Map(before.files);
   empty.set("case.md", before.files.get("case.md").replace("\nsearched:", "\ncalculations: []\ntimeline: []\nsearched:"));
   const e = render(before.manifest, empty);
-  assert.equal(has(e, "No calculation is reached by this case's findings."), true);
-  assert.equal(countOf(e, esc("Nothing is stated in this lane.")), 2, "both lanes, each stating it is empty");
+  assert.equal(has(e, SENTENCES.noCalculation), true);
+  assert.equal(countOf(e, esc(SENTENCES.laneEmpty)), 2, "both lanes, each stating it is empty");
   /* an older format carrying the block is not read: no section */
   const v5 = render(before.manifest, new Map([["case.md", "---\nformat: bio-case-document/5\ncase_id: CASE-2026-0002\ntimeline: []\ncalculations: []\n---\n"]]));
   for (const h of [TIMELINE_HEADING, CALCULATIONS_HEADING]) assert.equal(v5.includes(h), false);

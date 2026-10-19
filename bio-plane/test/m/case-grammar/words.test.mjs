@@ -138,7 +138,7 @@ test("R33 R14 a /8 case file renders the /7 render with team for group in the re
   assert.equal(projHtml.includes(esc("Attested by a member of the team, credited to the project, on 2026-09-30T00:00:00Z.")), true);
   /* the title and the notice for a manifest naming no group */
   const none = CG.completeEditionOf({ ...input, group: undefined });
-  assert.equal(none.includes("A team · Case") && none.includes("a team not named"), true);
+  assert.equal(none.includes("A team · Case") && none.includes(CG.WORDS.team.noticeGroup), true);
 });
 
 test("R33 R14 controls: a /7 document's rendering is unchanged after /8 is the format in force (product name, light-only declaration, closing sentences); a /8 body's closing sentences are found too", () => {
@@ -167,7 +167,7 @@ test("R33 R2 the attribution body is spelled in the words of the version it is g
   const rows = [{ observation: "INFO-2026-0099-o", level: "group", shown: "test-collective", chosen_at_edition: 1 },
                 { observation: "INFO-2026-0098-o", level: "project", shown: "Parks", chosen_at_edition: 1 },
                 { observation: "INFO-2026-0097-o", level: "cover", shown: "heron", chosen_at_edition: 2 },
-                { observation: "INFO-2026-0096-o", level: null, why: "its author has chosen no level" }];
+                { observation: "INFO-2026-0096-o", level: null, why: "WHY" }];
   const old = CG.attributionBodyLines(rows, V7).join("\n");
   const now = CG.attributionBodyLines(rows, V8).join("\n");
   assert.match(old, /recorded by a member of this group\./);
@@ -253,7 +253,7 @@ test("R33 R14 a document with no readable format renders the team words; an unre
   const bare = CG.completeEditionOf({ ...editionInput(manifest, files), group: undefined,
     files: editionInput(manifest, files).files.map((f) => (f.path === "case.md" ? { ...f, content: "---\ncase_id: CASE-2026-0002\n---\n" } : f)) });
   assert.equal(bare.includes("A team · Case CASE-2026-0002"), true);
-  assert.equal(bare.includes("a team not named"), true);
+  assert.equal(bare.includes(CG.WORDS.team.noticeGroup), true);
   assert.deepEqual(wordsIn(bare), []);
   assert.equal(bare.includes(esc(CG.WORDS.team.verify("casechecker"))), true);
   /* the case file with no case document at all says nothing of the case, and names no group */
