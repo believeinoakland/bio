@@ -86,3 +86,18 @@ export function setText(date, hhmm, today) {
   const time = clockOfStored(hhmm);
   return isCalendarDate(date) && time ? say("time.at", { date: dayText(date, today), time }) : "";
 }
+
+/** A code another module states, read through its word `queue.fill.<kind>.<code>` (DEC-359): grade letters lower-cased; empty when
+ *  the list holds no word for the code, so a code with no key is never written into a sentence. */
+export function fillWord(kind, code) {
+  if (typeof code !== "string" || code === "") return "";
+  const key = `queue.fill.${kind}.${kind === "grade" ? code.toLowerCase() : code}`;
+  return /^[A-Za-z0-9_-]+$/.test(code) && hasWord(key) ? say(key) : "";
+}
+
+/** A docket read's recorded reason: `queue.fill.reason.<code>`, and `queue.fill.reason.http` with `{status}` for `http_<n>`. */
+export function reasonWord(reason) {
+  const http = typeof reason === "string" ? /^http_(\d{3})$/.exec(reason) : null;
+  if (http) return say("queue.fill.reason.http", { status: http[1] });
+  return fillWord("reason", reason);
+}

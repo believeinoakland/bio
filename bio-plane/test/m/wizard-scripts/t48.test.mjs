@@ -95,13 +95,13 @@ test("R37 (T48; N847; DEC-227 (4); K3190) the elsewhere route's pointer is the r
 });
 
 test("R38 (T48; DEC-226, DEC-227, DEC-218; K2241, K3190, K3192 D1; amends R13, R35; R41) the registry is re-taken at PR #34's merge (4664e8efd4): 67 screens and 329 acts, five owed, and again at the design commit named at T50's START (7be06eb4cb), named as the source: 71 screens and 413 acts, sixteen owed; registeredScreens() lists elsewhere with no act and updates; dash-home is gone; owed acts updatestart, updatelater and updateskip are registered as those ops once declared, updatelater on queue too; controls: not while the op table lacks them, wizardsAt(\"elsewhere\") answers []", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "20c8001300", path: "docs/development/ux-substrate/screens/registry.json",
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "2a64c5ae77", path: "docs/development/ux-substrate/screens/registry.json",
                                                 sha256: createHash("sha256").update(src("registry.json"), "utf8").digest("hex") });
   assert.equal(REG_T48.screens.length, 67);
   assert.equal(REG_T48.screens.reduce((n, s) => n + s.acts.length, 0), 329);
   assert.equal(REG_T48.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").length, 5, "five owed at PR #34: passwordresetlink and the update acts");
   assert.equal(wz.SCREEN_REGISTRY.length, 77, "R44: 77 at 8c5e692e19");
-  assert.equal(REG_FILE.screens.reduce((n, s) => n + s.acts.length, 0), 441);
+  assert.equal(REG_FILE.screens.reduce((n, s) => n + s.acts.length, 0), 442);
   assert.equal(REG_FILE.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").length, 23, "twenty-three owed at 8c5e692e19 (R44)");
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id));
   assert.equal(REG_T48.screens.length - REG_T47.screens.length, 1, "PR #34 has one screen more than PR #33's head");
@@ -136,7 +136,7 @@ test("R38 (T48; DEC-226, DEC-227, DEC-218; K2241, K3190, K3192 D1; amends R13, R
 
 test("R38 (T48; DEC-226 (5), DEC-220, DEC-221; K2241, K3192 D1) the library is re-taken at PR #34's merge: Update your group's Civicsmith (since renamed Update your team's Civicsmith and re-taken, R42) is carried at version 1, required false, approved by BOB under K2241 and authored by the Civicsmith library, its step on owed:updatestart carrying updatestart and passing R12 once that op is declared (withheld until then, K1883); Set up and claim gains version 4 (step 3 with no act) and Start and send version 3 (DEC-221's spelling), each approved by BOB, the earlier updated; every other script keeps its version", () => {
   const BOB = { by: "BOB", at: "2026-10-14", ruling: "K2241" };
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-3), { commit: "4664e8efd4", path: "docs/development/ux-substrate/screens/library.json",
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES.at(-4), { commit: "4664e8efd4", path: "docs/development/ux-substrate/screens/library.json",
                                                                    sha256: createHash("sha256").update(src("library-4664e8efd4.json"), "utf8").digest("hex") });
   assert.equal(wz.CIVICSMITH_LIBRARY.length, 23);
   const file = LIB_T48.scripts.find((s) => s.name === "Update your group's Civicsmith");
@@ -144,7 +144,7 @@ test("R38 (T48; DEC-226 (5), DEC-220, DEC-221; K2241, K3192 D1) the library is r
   /* version 1, as R38 carried it from 4664e8efd4 and kept whole since (R42's re-take made version 2 of it) */
   const u1 = { version: 1, ...u.earlier[0] };
   assert.deepEqual([u.id, u.start, u.origin, u.scope, u.required, u.version, u.author, u.approved, u.source],
-                   [file.id, "updates", "civicsmith", "group", false, 2, "civicsmith", { by: "BOB", at: "2026-10-17", ruling: "K2241" }, "20c8001300"]);
+                   [file.id, "updates", "civicsmith", "group", false, 2, "civicsmith", { by: "BOB", at: "2026-10-17", ruling: "K2241" }, "2a64c5ae77"]);
   assert.deepEqual([u1.version, u1.author, u1.approved, u1.source], [1, "civicsmith", BOB, "4664e8efd4"]);
   assert.deepEqual(u1.steps.map((t) => [t.screen, t.act]), file.versions[0].steps.map((t) => [t.screen, OWED.test(t.act ?? "") ? OWED.exec(t.act)[1] : t.act]));
   assert.ok(file.versions[0].steps.some((t) => /^owed:updatestart/.test(t.act ?? "")), "the file marks the step owed");

@@ -332,6 +332,7 @@ const ACT_HELP = {
   actionlaws: 'Chooses the records law the request goes under. It decides the deadline.',
   actionmove: 'Moves the action to its next stage, with what happened.',
   actioncorrespond: 'Records a reply or letter received, with its date, so deadlines and the timeline follow.',
+  actionholdrelease: 'Ends the hold, with your reason. What it covered may be purged again on the team\'s usual schedule, and this cannot be undone. Any member who can see the action or the case can release it.',
   actionpressure: 'Marks a reply as pressure (a threat, a demand to stop), kept on the record.',
   actionhold: 'Records a litigation hold with your reason. While it lasts, what it covers is not purged, a scheduled publication of it does not go out, and the doorbell clears nothing. Any member who can see the action or the case may place one.',
   holdnoticeprepare: 'Assembles a plain notice from the record: the place the hold is for, your reason, the date and the kinds of material to keep. Nothing is sent.',
