@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, NOW, sha } from "./fixture.mjs";
 import { caseDocumentBlocks, sourceStatement, unnamedSourceStatement, BLOCKS_PREDATE_SENTENCE } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 const F = "INQ-2026-0001";
 const CAP = sha("the knocked bytes");
 const CAP2 = sha("more knocked bytes");
@@ -66,7 +67,7 @@ test("R3 publishedCase carries a /5 document's captures and sources blocks as si
   assert.deepEqual(c.sources, rows);
   assert.deepEqual(c.captures, caseDocumentBlocks(c.document.text).captures);
   assert.equal(c.captures[0].acknowledgement.reason, "the knocker's bytes, no public copy");
-  assert.match(c.blocks_detail, /as it could be published when the case was signed/);
+  assert.equal(c.blocks_detail, word("public-read.capture_member_rests"));
   assert.deepEqual(w.read("publishedcase", { id: "CASE-2026-0001" }).sources, rows, "its op is the same read");
   /* a /4 case */
   w.inquiry("INQ-2026-0002");

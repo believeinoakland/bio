@@ -8,6 +8,7 @@ import { world, SIG, NOW } from "./fixture.mjs";
 import { rowOf, CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS } from "../../../src/public-read/checks.mjs";
 import { DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 import { PublicRead, publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes";
 const PUBLISHED = ["published_bundles", "published_shas", "published_cases", "published_case_members", "cases",
@@ -126,7 +127,7 @@ test("R3 a serve edge with no published edition behind it is reported in `unreso
   w.st.sql.exec(`DELETE FROM published_bundles WHERE bundle_id=?`, DOC);
   const f = w.pr.publishedCase({ id: "CASE-2026-0001" }).findings[0];
   assert.deepEqual([f.serves, f.unresolved], [[], [{ to: DOC, kind: "cites" }]]);
-  assert.match(w.pr.publishedCase({ id: "CASE-2026-0001" }).graph_detail, /unresolved\[\] is an edge/);
+  assert.equal(w.pr.publishedCase({ id: "CASE-2026-0001" }).graph_detail, localize("public-read.index.each_finding_serves", "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty."));
 });
 
 test("R4 publishedManifest serves the whole projection; where ratified documents pinning one sha freeze different pairs the row says CASES_DISAGREE", () => {

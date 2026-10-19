@@ -6,7 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseDoc, inquiryMd, V, NOW } from "./fixture.mjs";
 import { whatChangedBlockLines, whatChangedSectionLines, lensBlockLines, lensSectionLines, lensClosingSentencesOf,
-         LENS_HEAD } from "../../../src/case-grammar/index.mjs";
+         LENS_HEAD, LENS_NONE_SENTENCE } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { LENS_FINGERPRINT_SENTENCE, LENS_NONE_IN_FORCE_SENTENCE, LENS_NO_DOCUMENT_SENTENCE,
          LENS_FINGERPRINT_UNDETERMINED_SENTENCE }
   from "../../../src/public-read/index.mjs";
@@ -143,7 +144,7 @@ test("R3 DEC-103 a document without the lens blocks answers `lens: null`, says i
   const w = published(2, (ed) => ({ ...both(ed), lens: null }));
   const c = read(w, 2);
   assert.deepEqual([c.lens, c.lens_fingerprint, c.lens_detail], [null, FP, LENS_FINGERPRINT_SENTENCE]);
-  assert.match(LENS_FINGERPRINT_SENTENCE, /carries only the lens's fingerprint/);
+  assert.equal(LENS_FINGERPRINT_SENTENCE, word("public-read.edition_carries_lens"));
   /* a manifest that states none was in force has no fingerprint to give, and says so */
   const none = read(published(1, () => ({ manifest: { in_force: false, sha: null } })), 1);
   assert.deepEqual([none.lens, none.lens_fingerprint, none.lens_detail], [null, null, LENS_NONE_IN_FORCE_SENTENCE]);
@@ -157,7 +158,7 @@ test("R3 DEC-103 a document without the lens blocks answers `lens: null`, says i
   /* a document with no manifest in force but the blocks written says so in the signed section, whole */
   const empty = read(published(1, () => ({ lens: { statements: [], inForce: false }, manifest: { in_force: false } })), 1);
   assert.deepEqual(empty.lens.statements, []);
-  assert.match(empty.lens.print, /No manifest was in force/);
+  assert.ok(empty.lens.print.includes(LENS_NONE_SENTENCE));
   assert.deepEqual(empty.lens.closing, [...FIVE_CLOSING]);
   /* a ratified bundle in no case states no lens and no statement */
   w.signFinding(DOC);

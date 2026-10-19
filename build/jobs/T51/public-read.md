@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_018PacXfPZi6itmHMiic6QeW · depth 2 · COMPLETE · handled B4
+**Status** · session_01FPRrUF9Cu3BMKX1o1aFaK6 · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -51,3 +51,43 @@ CHANGE B4 processed (B3 was done in J4). Merged `tranche/T51`. R38's four senten
 Tests: `node --test test/m/public-read/`: 227 pass, 0 fail. format, architecture, coverage (39 of 39), ownership: 0 failures.
 
 Size (session_018PacXfPZi6itmHMiic6QeW): test runs 12, module lines 3769
+
+## J6 · REPORT
+
+**REPORT (T51-233 words, public-read)** — for your decision, not applied.
+
+1. **Two words-check findings left inline (plain arm), by reason.** `index.mjs` `registerGroupIdentity` answers `PROVIDER_MALFORMED` / `PROVIDER_DECLARED` with a detail sentence ("the team's identity source is registered with its door, identity(); nothing was registered" and "... is already registered; the first stands ..."). These are wiring refusals from instance-setup at start, read by no member. Please settle with the design stream (unkeyed list, K3944).
+2. **Other registration refusals, same reason, left inline** (not flagged by the check): `registerEvidenceBlock` (index ~242–246), `registerPublicReads` (index ~378–386). Same ruling would cover them.
+3. **Wire grammar, left inline:** the `requiredArgument` shape/detail strings in `door.mjs` (42, 67, 110), `index.mjs` `publishededitions`/`publishedfrozen` NO_ID details (~736, ~810), and `worker.mjs` `publishedcase` requires-argument (~604–607). API-caller text, not a member's sentence.
+4. **Signed-adjacent text routed through `localize`.** The container manifest's `verify`, `layout.note` and the two in-band `over` strings are now `localize(...)`. Their bytes are unchanged (no row exists), so existing containers verify as before. Decision for you (K1333): if the design adds rows for these keys, new containers' manifest bytes change. Either these keys never get rows, or a row is a new container version.
+5. **Words check blind spot.** `checks/words.mjs` does not flag some stitched sentences that members read (e.g. `index.mjs` `evidencePackage` detail, `graph_detail` before this job, `NOT_PUBLISHED` detail). I converted the ones I found in this module as well (R13). Widening the check to those shapes would catch the rest of the family.
+6. **Test-side regex copies kept on purpose:** structural checks (hashes, ids, formats), fixture text the test invents, negative controls for old wording, and fragments under the threshold. Two sentences are built inline with no word or constant (`criteria` "Standard · binds …" in `publication`; "is already registered by" in `public-read`), so they cannot be converted from this module.
+
+## J7 · COMPLETE
+
+**COMPLETE (T51-233 words, public-read).** Entries applied:
+- Words-check findings: all 14 inline and 11 test copies fixed; the 2 `plain` findings (index `registerGroupIdentity`, see REPORT 1) are left inline for your ruling.
+- Also converted, per R13 (member-facing sentences the check does not flag): `index` evidence-package, altitudes, graph, tensions/blocks, loose-record and NOT_PUBLISHED details; `worker` CASE_DOCUMENT_UNSERVABLE, `verify`, `layout.note`, the two in-band `over` strings, the case-file part request; `casefile` notAssembled details and causes; `container` part-missing.
+- Test copies and regex copies converted across the module's test files; the rest kept as listed in REPORT 6.
+- Wording is unchanged: every converted en was verified against the HEAD source (byte-identical comparison).
+
+Deferred: none. Found in other modules: none new.
+
+Tests and checks:
+- `node --test test/m/public-read/`: 227 pass, 0 fail.
+- format: 176 modules, 0 failures. architecture public-read: 0 failures. coverage public-read: 39 of 39 ids named, 0 failures. ownership public-read: 20 files, 0 failures.
+- words public-read: inline 2, plain 2 (the registration findings in REPORT 1), testcopy 0, missingkey 0, marker 0, unkeyed 8.
+- setup-words build --check: stale-rows note only (expected), no refusal naming public-read.
+
+Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 4, module lines 3663
+
+## J8 · COMPLETE
+
+**COMPLETE again (after CHANGE B6, K4026).** Applied:
+- (4) The container manifest's `verify`, `layout.note` and the two in-band `over` texts are plain constants again (`LAYOUT_NOTE`, `VERIFY_TEXT`, `VERIFY_MEMBER_PAIR`, `OVER_CONTAINER`, `OVER_CASE_FILE` in `publication/worker.mjs`), same bytes, pushed. They are on the design's unkeyed list with R8's batch.
+- (1)-(3): the registration and API-caller details stay inline and go to the unkeyed list with R8's batch, accepted by name until then.
+- Every other R13 conversion stands.
+
+Tests and checks: `node --test test/m/public-read/`: 227 pass, 0 fail. format: 0 failures. architecture public-read: 0 failures. words public-read: inline 5 (the 4 manifest constants and 1 registration detail, all accepted by name in B6), plain 2 (the registration details), testcopy 0.
+
+Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 5, module lines 3663

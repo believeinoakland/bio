@@ -5,7 +5,7 @@
    `case_detail` (R3), and the Worker's `publishedbytes` and `publishedcase` sentences (R5). The container manifest's
    `verify` sentence (R6) is asserted beside its deliverer arm (`convert-deliverer.test.mjs`). Negative control: the
    pattern that finds the old voice finds it in the sentences as they were. */
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket } from "./fixture.mjs";
@@ -72,7 +72,7 @@ test("R17 R3 R5 R18 (T34-87, DEC-149) every refusal carrying a re-worded row ans
   const nr = w.read("publicread", { name: "nosuchread" });
   assert.deepEqual([nr.reason, nr.translation], ["PUBLIC_READ_NOT_REGISTERED", ROWS.PUBLIC_READ_NOT_REGISTERED]);
   /* the unregistered read's own detail */
-  assert.equal(nr.detail, `no public read named "nosuchread" is registered on ${VOICE}, so there is nothing to serve under that name`);
+  assert.equal(nr.detail, localize("public-read.index.no_public_read_named_stringify", "no public read named {stringify} is registered on this team's Civicsmith, so there is nothing to serve under that name", { stringify: String(JSON.stringify("nosuchread")) }));
   const never = await (await call(w, env, "publishedbytes", { sha256: "e".repeat(64) })).json();
   assert.deepEqual([never.reason, never.translation], ["NO_PUBLISHED_PART", ROWS.NO_PUBLISHED_PART]);
   /* publishedbytes with no published store bound */
@@ -80,12 +80,9 @@ test("R17 R3 R5 R18 (T34-87, DEC-149) every refusal carrying a re-worded row ans
   assert.equal(noStore.status, 503);
   const ns = await noStore.json();
   assert.deepEqual([ns.reason, ns.translation], ["NO_PUBLISHED_STORE", ROWS.NO_PUBLISHED_STORE]);
-  assert.equal(ns.detail, `${VOICE} has no published object store configured, so its published bytes are not servable. `
-    + `The hash is genuine and ${VOICE} cannot hand over the bytes.`);
+  assert.equal(ns.detail, localize("public-read.worker.this_teams_civicsmith_has_no", "this team's Civicsmith has no published object store configured, so its published bytes are not servable. The hash is genuine and this team's Civicsmith cannot hand over the bytes."));
   /* a store bound and no object at the hash */
-  assert.equal(publishedObjectMissing().detail,
-               `that hash is published, and ${VOICE} holds no bytes for it in its published store, so they cannot be `
-               + "handed over. The hash is genuine.");
+  assert.equal(publishedObjectMissing().detail, localize("public-read.worker.that_hash_is_published_and", "that hash is published, and this team's Civicsmith holds no bytes for it in its published store, so they cannot be handed over. The hash is genuine."));
   env.PUBLISHED.m.delete(`bio/published/${pin}`);
   const om = await (await call(w, env, "publishedbytes", { sha256: pin })).json();
   assert.deepEqual([om.reason, om.translation, om.detail],
@@ -96,26 +93,19 @@ test("R17 R3 R5 R18 (T34-87, DEC-149) every refusal carrying a re-worded row ans
 test("R3 R4 R5 (T34-87, DEC-149) publishedManifest's detail, publishedCase's case_detail, an unavailable finding body and publishedcase's verification say \"this group's Civicsmith\"", async () => {
   const { w, env, pin } = published();
   /* the published manifest's detail */
-  assert.equal(w.read("publishedmanifest", {}).detail,
-               "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
-               + `continued existence of ${VOICE}. Nothing unpublished appears, by construction: this reads the published `
-               + "projection and never the working corpus.");
+  assert.equal(w.read("publishedmanifest", {}).detail, localize("public-read.index.every_hash_here_is_verifiable", "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or continued existence of this team's Civicsmith. Nothing unpublished appears, by construction: this reads the published projection and never the working corpus."));
   /* the published case's case_detail */
   const c = w.read("publishedcase", { id: CASE });
   assert.equal(c.ok, true);
-  assert.match(c.case_detail, /the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached \(DEC-20, DEC-46\)/);
+  assert.equal(c.case_detail, localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."));
   /* the Worker's verification sentence */
   const served = await (await call(w, env, "publishedcase", { id: CASE })).json();
-  assert.equal(served.verification.detail,
-               "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by "
-               + "its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents "
-               + `a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of ${VOICE}.`);
+  assert.equal(served.verification.detail, localize("public-read.worker.tamper_evident_not_tamper_proof", "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith."));
   /* a finding's body stated unavailable */
   env.PUBLISHED.m.delete(`bio/published/${pin}`);
   const body = (await (await call(w, env, "publishedcase", { id: CASE })).json()).findings[0].body;
   assert.equal(body.state, "unavailable");
-  assert.equal(body.detail, `${VOICE} cannot hand over the bytes of that edition, so its conclusion is not rendered here. `
-    + "It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes.");
+  assert.equal(body.detail, localize("public-read.worker.this_teams_civicsmith_cannot_hand", "this team's Civicsmith cannot hand over the bytes of that edition, so its conclusion is not rendered here. It is NOT read from the working record instead: the frozen strength and the rendered body must come from the same bytes."));
   assert.equal(body.translation, ROWS.OBJECT_MISSING);
   for (const r of [w.read("publishedmanifest", {}).detail, c.case_detail, served.verification.detail, body.detail])
     assert.doesNotMatch(r, OLD_VOICE);
