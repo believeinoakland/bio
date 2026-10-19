@@ -20,3 +20,16 @@
 ## J1 · COMPLETE
 
 T51-182 done: the 13 plain findings and the 10 conversion findings are fixed (commit e8ac15435f on job/T51/doorbell). words check 0 failures (was 27); format, architecture, coverage and ownership 0 failures; doorbell tests 73 of 73 pass. Open for BOB: knocker.test.mjs:205 holds a regex fragment of a product sentence (not counted by the check, left as is); expect.mjs uses one localize id not used by the product (doorbell.checks.group_can_see). Record: build/jobs/T51/doorbell.md, Completion section.
+
+## CHANGE (K3982) · re-completion
+
+Merged `tranche/T51`. Both open points closed:
+1. `knocker.test.mjs`: the regular-expression copy of the `these bytes` sentence is now an equality with the product's own `localize("doorbell.index.these_bytes_were_received_at", en, vars)`, the vars read from the inbox row and the pull's inputs.
+2. `expect.mjs`: the minted `doorbell.checks.group_can_see` constant is deleted. The tests that held it now read `EXPECT[code]` (the product's own key per row) by equality; the shared sentence is no longer asserted on its own.
+Also `rows.test.mjs` uses a plain token ("changed translation") in place of the deleted constant.
+
+**Checks:** `node checks/words.mjs /home/user/bio doorbell`: 0 failures. `node --test bio-plane/test/m/doorbell/`: 73 of 73 pass. format, architecture, coverage (25 of 25) and ownership (8 files, 0 failures) all 0 failures. `setup-words/build.mjs --check`: the stale-rows note only, no refusal naming doorbell.
+
+**Not mine (seen in the repository-wide run, reported to BOB under P9):** `provenance/register-checks.test.mjs:186,196` copies the doorbell's sentences; `control-plane/doorbell.test.mjs:296,514` and `screens-entry/front.test.mjs:55` hand-list ops and keys.
+
+**Size (session_01C6MLP8YoCGd3BrWthJxfJ5): test runs 4, module lines 1144**

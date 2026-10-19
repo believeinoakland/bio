@@ -10,7 +10,7 @@ import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { EXPECT, SEEN } from "./expect.mjs";
+import { EXPECT } from "./expect.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -224,16 +224,17 @@ test("R9: a C-85 translation is the row's sentence, names no figure, says the gr
   for (const code of ["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"]) {
     assert.equal(typeof row(code).translation, "string");
     assert.ok(!/\d/.test(row(code).translation), `${code}'s translation names no figure`);
-    assert.ok(row(code).translation.includes(SEEN), `${code} says the group can see how often it turns people away`);
+    assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   }
-  assert.ok(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation.includes(SEEN), "C-118.3 too");
+  assert.equal(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation, EXPECT.KNOCKER_SECRET_WEAK, "C-118.3 too");
   for (const code of ["RATE_IP", "RATE_GLOBAL"])
     assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   assert.ok(!/saturated/.test(row("RATE_GLOBAL").translation), "the saturation sentence is replaced");
   /* the knocker receives these words through the op */
   const w = setup();
   for (let i = 0; i < 5; i++) await w.send(knock({ contentText: `s${i}` }));
-  assert.ok((await w.send(knock({ contentText: "s5" }))).body.translation.includes(SEEN));
+  const refused = (await w.send(knock({ contentText: "s5" }))).body;
+  assert.equal(refused.translation, EXPECT[refused.reason]);
   const { c } = setup();
   const saved = KNOCK_CHECKS.RATE_IP;
   try {

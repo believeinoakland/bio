@@ -13,6 +13,3 @@ export const EXPECT = {
   KNOCK_PAYLOAD_TOO_LARGE: localize("doorbell.checks.this_teams_inbox_read_your", "This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent — a team that has configured evidence storage can keep far more — and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. The team can see how often its doorbell turns people away."),
   KNOCK_EMPTY: word("refusal.KNOCK_EMPTY"),
 };
-
-// The sentence every refused knocker is told, the same in each of the doorbell's refusals that say it (R9).
-export const SEEN = localize("doorbell.checks.group_can_see", "The team can see how often its doorbell turns people away.");

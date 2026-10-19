@@ -8,7 +8,7 @@ import { fresh, bucket } from "./fixture.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import * as CAPTURE from "../../../src/capture/checks.mjs";
 import { knockEnvelopeTooLarge, knockPayloadTooLarge, knockEmpty, knockerSecretWeak, knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
-import { EXPECT, SEEN } from "./expect.mjs";
+import { EXPECT } from "./expect.mjs";
 
 /* C-118's four rows and C-85's five, each translation as the product's row reads it (expect.mjs, K3810) */
 const CHECK = { NO_SUCH_KNOCK: "C-118.2", KNOCKER_SECRET_WEAK: "C-118.3", KNOCK_DISCARDED: "C-118.4", RESOLVE_NO_REASON: "C-118.7",
@@ -71,8 +71,8 @@ test("R21 R4 R5 R6 R7 R8: each of this module's raisers answers with its row's c
   /* a row changed at the refusal is the row answered (never a copy taken earlier) */
   const saved = KNOCK_CHECKS.KNOCK_EMPTY;
   try {
-    KNOCK_CHECKS.KNOCK_EMPTY = { ...saved, translation: "changed " + SEEN };
-    assert.equal(knockEmpty().translation, "changed " + SEEN);
+    KNOCK_CHECKS.KNOCK_EMPTY = { ...saved, translation: "changed translation" };
+    assert.equal(knockEmpty().translation, "changed translation");
   } finally { KNOCK_CHECKS.KNOCK_EMPTY = saved; }
 });
 
