@@ -1141,8 +1141,7 @@ export class AiRuns {
     if (runMode === "plan" && String(contextType) !== "project")
       return planRefusal("AI_RUN_PLAN_NEEDS_PROJECT", "a planning run is over the project the plan belongs to: contextType=project");
     if (runMode === "plan" && (!who || isMachineIdentity(who)))
-      return planRefusal("AI_RUN_PLAN_NEEDS_MEMBER", "only a member starts a planning run, for one plan at a time; nothing "
-        + "starts one by itself");
+      return planRefusal("AI_RUN_PLAN_NEEDS_MEMBER", localize("ai-runs.index.only_a_member_starts", "only a member starts a planning run, for one plan at a time; nothing starts one by itself"));
     if (runMode === "plan" && search)
       return planRefusal("AI_RUN_PLAN_NO_SEARCH", localize("ai-runs.index.a_planning_run_works_from", "a planning run works from what the record already holds, so it declares no '{bound}' allowance (it was given {allowed})", { bound: String(search.bound), allowed: String(search.allowed) }), { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
