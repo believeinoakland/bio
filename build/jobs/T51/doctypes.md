@@ -1,6 +1,6 @@
 # doctypes (T51)
 
-**Status** · session_01PbhX4XrTyKrafF9MPnkqXP · depth 2 · COMPLETE · handled B4
+**Status** · session_01KR42421Ri9anbvRDhf8oEd · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -130,3 +130,33 @@ Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 2, module lines 3498
 **M-T51-1:** module raw source lines = 3498 (`wc -l doctypes/*.mjs`; excludes doctypes/test/). No product code changed in this round.
 
 Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 3, module lines 3498
+
+## J8 · COMPLETE
+
+**Entries applied**
+- B5 (START, round RW) read and acted on. Cursor moved to B5. Merged `tranche/T51` (939aacda0f) into the job branch; no rebase.
+- The words check's two findings in this module, both `why:` reasons joined by `+` and so read as plain sentences, are now read by key:
+  - `doctypes/regulation.mjs` (was :374): `localize("doctypes.regulation.unread_either", …)`, the sentence unchanged.
+  - `doctypes/staff-report.mjs` (was :327): `localize("doctypes.staff-report.unread_either", …)`, the sentence unchanged.
+  - Stale rows: `setup-words` `rows.mjs` does not yet hold the two new ids; `localize` answers its `en` until BOB regenerates it at the layer close, as B5 says.
+- Own-module flaw found while running the suite (P8): test `R3 R8 the minutes-due date is the profile's practice counted by civil-time` failed on the base too (1 of 45). `doctypes/meeting-calendar.mjs` (:67) wrote civil-time's refusal reason object into the sentence as `[object Object]`. Fixed by importing `reasonText` from `bio-plane/src/civil-time/index.mjs` (already imported from that path for `evaluateRule`, and already in this module's uses) and passing `reasonText(r.why)`. No change to civil-time. The test now passes unchanged.
+
+**Deferred:** none.
+
+**Other modules (not changed):**
+- `node checks/run.mjs /home/user/bio` (whole repository) reports failures outside doctypes: `testcopy` in `wizard-scripts` (`bio-plane/test/m/wizard-scripts/t47.test.mjs`, `t48.test.mjs`, `writing-help.test.mjs`), and its summary counts 1628 words failures across modules. None is in `doctypes`; none was touched by this job.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for `doctypes.regulation.unread_either` is expected (BOB regenerates `rows.mjs` at the layer close).
+
+**Tests and checks** (from civicos-process, main @ e8ac153)
+- `node --test doctypes/test/*.test.mjs`: tests 45, pass 45, fail 0.
+- `checks/words.mjs /home/user/bio doctypes`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 0).
+- `checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures.
+- `checks/architecture.mjs /home/user/bio doctypes`: 35 product files, 77 relative imports; 0 failures.
+- `checks/coverage.mjs /home/user/bio doctypes`: 36 of 36 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`: 4 files changed by doctypes; 0 failures.
+
+**M-T51-1:** module raw source lines = 3496 (`wc -l doctypes/*.mjs`; excludes `doctypes/test/`).
+
+Commit `31e0334725` (the three module files), merge `7c950f73fc`, pushed to `job/T51/doctypes`.
+
+Size (session_01KR42421Ri9anbvRDhf8oEd): test runs 8, module lines 3496
