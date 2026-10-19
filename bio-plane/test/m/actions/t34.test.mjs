@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
@@ -93,12 +94,11 @@ test("R10 R45 R8 (DEC-149, T34-87) the member-facing details name 'your group's 
   assert.equal(kind.reason, "ACTION_KIND_UNKNOWN");
   assert.match(kind.detail, /^action_kind 'grand_jury' is not a kind your team's Civicsmith offers: one of records_request, /);
   const contact = actions.contactNotAMember();
-  assert.equal(contact.detail, "contact names a member of your team by member id, and this one names none. Nothing was written.");
+  assert.equal(contact.detail, localize("actions.index.contact_names_a_member_of", "contact names a member of your team by member id, and this one names none. Nothing was written."));
   assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: other", "contact: nobody-here"])).detail, contact.detail);
   const x = world({ conformance: {} });
   const det = x.promote(C, actionMd(C, [...CP, "action_kind: other", "breach: true"]));
   assert.deepEqual([det.reason, det.cause], ["ACTION_NO_DETERMINATION", "CONFORMANCE_UNAVAILABLE"]);
-  assert.equal(det.detail, "an action recorded for a breach rests on a conformance determination, and no determination can be "
-    + "read on your team's Civicsmith yet, so none could be found. Nothing was written.");
+  assert.equal(det.detail, localize("actions.index.an_action_recorded_for_a_2", "an action recorded for a breach rests on a conformance determination, and no determination can be read on your team's Civicsmith yet, so none could be found. Nothing was written."));
   for (const r of [kind, contact, det]) assert.doesNotMatch(r.detail, /this instance|this copy|this plane|the plane/i);
 });

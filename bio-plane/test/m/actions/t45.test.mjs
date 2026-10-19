@@ -555,16 +555,15 @@ test("R36 (T47) this module's tables are action_basis, correspondence, action_qu
 test("R8 R74 R77 R78 R79 R82 R85 R86 (T45) each code this module mints has its row in action-grammar's C-117 (R9), and each row naming this module names a region its source holds", async () => {
   const { readFileSync } = await import("node:fs");
   const src = readFileSync(new URL("../../../src/actions/index.mjs", import.meta.url), "utf8");
-  /* the codes whose act moved to action-holds (its R1, R2, R5–R7; K2781 (1)): their rows are re-pointed by action-grammar,
-     reported at this job's COMPLETE, so they are not this module's to hold. Those that moved to action-records at T47
-     (receipt, scope, promise) are named by action-grammar R28 under its file, so they leave this filter by their `where`. */
-  const MOVED = new Set(["PRESSURE_MARKED", "PRESSURE_NO_ENTRY", "MACHINE_CANNOT_SET_HOLD", "HOLD_REFUSED", "HOLD_NO_LEGAL_MARK",
-    "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED",
-    /* `NOT_A_PROCEEDING` is `entities`' one site since T48 (R104; its R53); action-grammar's C-117.28 row is reported */
-    "NOT_A_PROCEEDING",
-    /* `NO_SUCH_ACTION` is minted by `action-records.noSuchAction` since T50 (R107; its R18): its region moved with it, and
-       action-grammar's C-117.2 row is re-pointed there (its R29), reported at this job's COMPLETE */
-    "NO_SUCH_ACTION"]);
+  /* a row naming this file whose code this source no longer mints: its act moved (to action-holds, T45, K2781 (1); entities,
+     T48, R104; action-records, T50, R107), and action-grammar re-points the row, reported at this job's COMPLETE. Read from the
+     source of the modules it went to, so every row this module still mints is held to its region. */
+  const { readdirSync } = await import("node:fs");
+  const elsewhere = ["action-holds", "entities", "action-records"].map((dir) => {
+    const at = new URL(`../../../src/${dir}/`, import.meta.url);
+    return readdirSync(at).filter((f) => f.endsWith(".mjs")).map((f) => readFileSync(new URL(f, at), "utf8")).join("\n");
+  }).join("\n");
+  const MOVED = { has: (code) => !src.includes(`"${code}"`) && elsewhere.includes(`"${code}"`) };
   /* K3128 (T48): the rows are read through the census (`test/system/row-census.mjs`, promotion R50), as every module's are,
      not through a table this test names; the regions are then looked up in the file each row's `where` names. */
   const { censusRows } = await import("../../system/row-census.mjs");

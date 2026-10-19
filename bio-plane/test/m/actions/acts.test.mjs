@@ -1,13 +1,15 @@
 /* actions' acts at its interface: move, correspond, laws, proposals, tier, quotes (R13–R19, R22–R24, R27, R28, R34). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP, mintedIn } from "./fixture.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
 const reasons = (list) => list.map((r) => r.reason);
+/* the codes `action-records` mints (its R7, R16), named through the rows action-grammar holds for them */
+const RECORDS = mintedIn("action-records");
 
 test("R13 R14 actionMove: refusals in order, then one state_history entry and a promotion; the clock is untouched", () => {
   const w = world();
@@ -48,10 +50,10 @@ test("R15 R16 R34 actionCorrespond: refusals in order; one entry appended with t
     c({ party: "p\\q" }), c({ stage: "request", exemptions: 'a"b' }), c({ stage: "Request!" }),
     c({ direction: "received", account: "", artifactSha: s, quoteAmount: "1", quoteCurrency: 'U"SD', quoteAnswers: "0" }),
     c({ target: "ACTN-2026-0404-no" }), c({ target: "INFO-2026-0001-d" }), c({ account: "", artifactSha: "d".repeat(64) })]),
-    ["MACHINE_CANNOT_CORRESPOND", "NO_TARGET", "BAD_DIRECTION", "BAD_DATE", "CAPTURE_AND_TESTIMONY",
-     "NEITHER_CAPTURE_NOR_TESTIMONY", "BAD_SHA", "NO_RESPONSE_HAS_NO_BYTES", "BAD_ACCOUNT", "BAD_MEDIUM", "BAD_PARTY",
+    [RECORDS.MACHINE_CANNOT_CORRESPOND, "NO_TARGET", "BAD_DIRECTION", RECORDS.BAD_DATE, RECORDS.CAPTURE_AND_TESTIMONY,
+     RECORDS.NEITHER_CAPTURE_NOR_TESTIMONY, "BAD_SHA", "NO_RESPONSE_HAS_NO_BYTES", "BAD_ACCOUNT", "BAD_MEDIUM", "BAD_PARTY",
      "LIFECYCLE_TEXT_UNWRITABLE", "LIFECYCLE_TOKEN_MALFORMED", "QUOTE_TEXT_UNWRITABLE", "NO_SUCH_BUNDLE", "NOT_AN_ACTION",
-     "UNREGISTERED_ARTIFACT"]);
+     RECORDS.UNREGISTERED_ARTIFACT]);
   w.record.acquireLease(A, V("bob"), 60000);
   assert.equal(c({}).reason, "LEASE_HELD");
   w.record.acquireLease(A, V("bob"), 0);
@@ -87,7 +89,8 @@ test("R18 R25 actionLaws: refusals in order; the whole list replaced, stamped an
   assert.deepEqual(reasons([L(ok, { author: MACHINE }), L(ok, { target: "" }), L([]), L(Array(13).fill(0).map((_, i) => ({ level: "city", citation: `B${i}` }))),
     L([{ level: "local", citation: "x" }]), L([{ level: "city", citation: "" }]), L([{ level: "city", citation: "a" }, { level: "city", citation: "A" }]),
     L(ok, { target: "ACTN-2026-0404-no" })]),
-    ["MACHINE_CANNOT_SET_LAWS", "NO_TARGET", "NO_LAWS", "TOO_MANY_LAWS", "BAD_LAW_LEVEL", "BAD_CITATION", "BAD_CITATION", "NO_SUCH_BUNDLE"]);
+    ["MACHINE_CANNOT_SET_LAWS", "NO_TARGET", RECORDS.NO_LAWS, RECORDS.TOO_MANY_LAWS, RECORDS.BAD_LAW_LEVEL, RECORDS.BAD_CITATION,
+     RECORDS.BAD_CITATION, "NO_SUCH_BUNDLE"]);
   const lvl = L([{ level: "local", citation: "x" }]);
   assert.equal(lvl.check, "C-73.3");
   /* N246: the translation names the levels LAW_LEVELS holds (jurisdictions R31), and no other. */
