@@ -20,7 +20,7 @@ import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isHypothesisId, canonicalJson, sha256HexSync, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
-import { bounds, compare, fiscalPeriod, validAt } from "../civil-time/index.mjs";
+import { bounds, compare, fiscalPeriod, validAt, reasonText } from "../civil-time/index.mjs";
 import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/index.mjs";
 import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry } from "../connection-grammar/index.mjs";
 import { MONEY_SCHEMA, MONEY_TABLES, MONEY_ADDED_COLUMNS } from "./schema.mjs";
@@ -79,8 +79,7 @@ const list = (xs) => xs.join(", ");
    R10, R11, R12, R13; duties), so `NO_SUCH_FACT` is minted at one site (entities' `noSuchEntity` pattern). The detail is
    one fixed sentence, the same for every caller; `extra` adds a caller's own fields and never replaces these. Writes
    nothing and never throws. */
-const NO_SUCH_FACT_DETAIL = "no money fact with that id is held here, or it is not visible to the asker; a money fact is "
-  + "recorded with op=moneyrecord before anything can name it";
+const NO_SUCH_FACT_DETAIL = localize("money.index.no_money_fact_with_that", "no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it");
 const NO_SUCH_FACT_FIXED = new Set(["ok", "reason", "code", "fact_id", "detail"]);
 export function noSuchFact(factId, extra = null) {
   let own = [];
@@ -223,15 +222,15 @@ export class Money {
      (a fiscal key `civil-time` maps from the profile's `fiscal_year` for the body). Answers the period with its start
      and end instants, or a refusal. */
   #period(p, view) {
-    if (p === undefined || p === null) return refusal("NO_PERIOD", "a money fact states the accounting period it covers");
-    if (!isObj(p)) return refusal("BAD_PERIOD", "a period is {from, to, precision, zone} or {fiscal, body}");
+    if (p === undefined || p === null) return refusal("NO_PERIOD", localize("money.index.a_money_fact_states_the", "a money fact states the accounting period it covers"));
+    if (!isObj(p)) return refusal("BAD_PERIOD", localize("money.index.a_period_is_from_to", "a period is {from, to, precision, zone} or {fiscal, body}"));
     const extra = Object.keys(p).find((k) => !PERIOD_FIELDS.has(k));
     if (extra) return refusal("BAD_PERIOD", localize("money.index.a_period_has_no_field", "a period has no field {extra}", { extra: String(extra.slice(0, 40)) }));
     const tz = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
     const zone = filled(p.zone) ? p.zone : tz;
-    if (!zone) return refusal("BAD_PERIOD", "the period states no zone and the active profiles give no time zone");
+    if (!zone) return refusal("BAD_PERIOD", localize("money.index.the_period_states_no_zone", "the period states no zone and the active profiles give no time zone"));
     if (p.fiscal !== undefined) {
-      if (!filled(p.fiscal)) return refusal("BAD_PERIOD", "a fiscal key is a non-empty string, such as the profile's label for a fiscal year");
+      if (!filled(p.fiscal)) return refusal("BAD_PERIOD", localize("money.index.a_fiscal_key_is_a", "a fiscal key is a non-empty string, such as the profile's label for a fiscal year"));
       const body = filled(p.body) ? p.body : "*";
       const fy = Array.isArray(view.fiscal_year) ? view.fiscal_year : [];
       const entry = fy.find((f) => f && f.body === body) || fy.find((f) => f && f.body === "*");
@@ -251,17 +250,17 @@ export class Money {
     return this.#range({ from: p.from, to: p.to ?? null, precision: p.precision || "day", zone });
   }
   #range({ from, to, precision, zone }) {
-    if (!filled(from)) return refusal("BAD_PERIOD", "a period states its start (from)");
+    if (!filled(from)) return refusal("BAD_PERIOD", localize("money.index.a_period_states_its_start", "a period states its start (from)"));
     if (!["day", "minute", "second"].includes(precision))
-      return refusal("BAD_PERIOD", "a period's precision is day, minute or second");
+      return refusal("BAD_PERIOD", localize("money.index.a_periods_precision_is_day", "a period's precision is day, minute or second"));
     let a, b = null;
     try { a = bounds({ value: from, precision, zone }); } catch { a = { refused: "DATE_INVALID", why: "unreadable" }; }
-    if (a.refused || a.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_start_why", "the period's start: {why}", { why: String(a.why) }));
+    if (a.refused || a.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_start_why", "the period's start: {why}", { why: reasonText(a.why) }), { why: a.why });
     if (to !== null) {
-      if (typeof to !== "string") return refusal("BAD_PERIOD", "a period's end is a value of its precision, or null when unstated");
+      if (typeof to !== "string") return refusal("BAD_PERIOD", localize("money.index.a_periods_end_is_a", "a period's end is a value of its precision, or null when unstated"));
       try { b = bounds({ value: to, precision, zone }); } catch { b = { refused: "DATE_INVALID", why: "unreadable" }; }
-      if (b.refused || b.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_end_why", "the period's end: {why}", { why: String(b.why) }));
-      if (b.latest <= a.earliest) return refusal("BAD_PERIOD", "the period ends before it starts");
+      if (b.refused || b.undetermined) return refusal("BAD_PERIOD", localize("money.index.the_periods_end_why", "the period's end: {why}", { why: reasonText(b.why) }), { why: b.why });
+      if (b.latest <= a.earliest) return refusal("BAD_PERIOD", localize("money.index.the_period_ends_before_it", "the period ends before it starts"));
     }
     return { from, to, precision, zone, start: a.earliest, end: b ? b.latest : null };
   }
@@ -283,7 +282,7 @@ export class Money {
   }
 
   #validate(input, { viewer } = {}) {
-    if (!isObj(input)) return refusal("NO_AMOUNT", "a money fact is an object of its fields");
+    if (!isObj(input)) return refusal("NO_AMOUNT", localize("money.index.a_money_fact_is_an", "a money fact is an object of its fields"));
     /* R6: every field outside the row's shape, a mark of the group's own among them. */
     const unknown = (keys, allowed, where) => {
       const k = keys.find((x) => !allowed.has(x));
@@ -301,27 +300,26 @@ export class Money {
 
     /* R1, in order. */
     const { amount } = input;
-    if (amount === undefined || amount === null || amount === "") return refusal("NO_AMOUNT", "a money fact states its amount");
+    if (amount === undefined || amount === null || amount === "") return refusal("NO_AMOUNT", localize("money.index.a_money_fact_states_its", "a money fact states its amount"));
     let value = null, low = null, high = null;
     if (isObj(amount)) {
       low = exactDecimal(amount.low); high = exactDecimal(amount.high);
       if (low === null || high === null || Object.keys(amount).some((k) => k !== "low" && k !== "high"))
-        return refusal("BAD_AMOUNT", "a range's amount is {low, high}, each an exact decimal written as a string");
+        return refusal("BAD_AMOUNT", localize("money.index.a_ranges_amount_is_low", "a range's amount is {low, high}, each an exact decimal written as a string"));
     } else {
       value = exactDecimal(amount);
       if (value === null)
-        return refusal("BAD_AMOUNT", "an amount is an exact decimal written as a string of digits (thousands separators and "
-          + "one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field");
+        return refusal("BAD_AMOUNT", localize("money.index.an_amount_is_an_exact", "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field"));
     }
-    if (!filled(input.as_read)) return refusal("NO_AS_READ", "a money fact keeps the figure exactly as its source printed it (as_read)");
-    if (!filled(input.currency)) return refusal("NO_CURRENCY", "a money fact names its currency");
-    if (input.sign !== "+" && input.sign !== "-") return refusal("NO_SIGN", "a money fact's sign is explicit: + or -");
+    if (!filled(input.as_read)) return refusal("NO_AS_READ", localize("money.index.a_money_fact_keeps_the", "a money fact keeps the figure exactly as its source printed it (as_read)"));
+    if (!filled(input.currency)) return refusal("NO_CURRENCY", localize("money.index.a_money_fact_names_its", "a money fact names its currency"));
+    if (input.sign !== "+" && input.sign !== "-") return refusal("NO_SIGN", localize("money.index.a_money_facts_sign_is", "a money fact's sign is explicit: + or -"));
     if (!PRECISIONS.includes(input.precision))
       return refusal("UNKNOWN_PRECISION", localize("money.index.precision_is_one_of_list", "precision is one of {list}", { list: String(list(PRECISIONS)) }), { list: PRECISIONS });
     if ((input.precision === "range") !== (value === null))
-      return refusal("BAD_RANGE", input.precision === "range" ? "a range carries its low and high as {low, high}"
-        : "only a fact of precision range carries {low, high}");
-    if (low !== null && relate(exactFigure(low), exactFigure(high)) === "higher") return refusal("BAD_RANGE", "a range's low is above its high");
+      return refusal("BAD_RANGE", input.precision === "range" ? localize("money.index.a_range_carries_its_low", "a range carries its low and high as {low, high}")
+        : localize("money.index.only_a_fact_of_precision", "only a fact of precision range carries {low, high}"));
+    if (low !== null && relate(exactFigure(low), exactFigure(high)) === "higher") return refusal("BAD_RANGE", localize("money.index.a_ranges_low_is_above", "a range's low is above its high"));
     if (!MONEY_KINDS.includes(input.kind))
       return refusal("UNKNOWN_MONEY_KIND", localize("money.index.kind_is_one_of_list", "kind is one of {list}", { list: String(list(MONEY_KINDS)) }), { list: MONEY_KINDS });
     if (!PHASES.includes(input.phase)) return refusal("UNKNOWN_PHASE", localize("money.index.phase_is_one_of_list", "phase is one of {list}", { list: String(list(PHASES)) }), { list: PHASES });
@@ -338,7 +336,7 @@ export class Money {
     if (period.ok === false) return period;
     const codes = input.codes === undefined || input.codes === null ? [] : input.codes;
     const schemes = new Set((Array.isArray(view.classification_schemes) ? view.classification_schemes : []).map((s) => s && s.scheme));
-    if (!Array.isArray(codes)) return refusal("UNKNOWN_CODE_SCHEME", "codes are a list of {scheme, code}");
+    if (!Array.isArray(codes)) return refusal("UNKNOWN_CODE_SCHEME", localize("money.index.codes_are_a_list_of", "codes are a list of {scheme, code}"));
     for (const c of codes) {
       if (!isObj(c) || !filled(c.code) || !schemes.has(c.scheme))
         return refusal("UNKNOWN_CODE_SCHEME", localize("money.index.a_code_names_one_of", "a code names one of the active profiles' classification schemes{v1} and its code", { v1: String(schemes.size ? ` (${list([...schemes])})` : " (they hold none)") }),
@@ -348,7 +346,7 @@ export class Money {
     for (const end of ["from", "to"]) {
       const p = input[end];
       if (p === undefined || p === null) { parties[end] = null; continue; }
-      if (!isObj(p)) return refusal("UNKNOWN_FIELD", `the party ${end} is {entity?, fund?, account?, as_written}`, { field: end });
+      if (!isObj(p)) return refusal("UNKNOWN_FIELD", localize("money.index.the_party_end_is_entity", "the party {end} is {entity?, fund?, account?, as_written}", { end }), { field: end });
       parties[end] = p;
     }
     const balanceClass = input.balance_class === undefined || input.balance_class === null ? null : input.balance_class;
@@ -357,8 +355,8 @@ export class Money {
       const type = fund ? this.fundTypeOf(fund) : null;
       const family = type ? BALANCE_FAMILIES[type] : null;
       if (input.kind !== "balance" || !family || !family.includes(balanceClass))
-        return refusal("BALANCE_CLASS_NOT_IN_FAMILY", input.kind !== "balance" ? "only a balance carries a balance class"
-          : !fund ? "a balance class is read against a fund a party names, and none is named"
+        return refusal("BALANCE_CLASS_NOT_IN_FAMILY", input.kind !== "balance" ? localize("money.index.only_a_balance_carries_a", "only a balance carries a balance class")
+          : !fund ? localize("money.index.a_balance_class_is_read", "a balance class is read against a fund a party names, and none is named")
           : !type ? localize("money.index.no_type_is_held_for", "no type is held for the fund {fund}, so its balance-class family is not known (setFundType)", { fund: String(fund) })
           : localize("money.index.a_type_funds_classes_are", "a {type} fund's classes are {list}", { type: String(type), list: String(list(family)) }), { fund, fund_type: type });
     }
@@ -375,10 +373,10 @@ export class Money {
         return refusal("UNKNOWN_FIELD", localize("money.index.end_as_written_is_the", "{end}.as_written is the party's name as the source writes it", { end: String(end) }), { field: "as_written" });
     }
     const concerns = input.concerns === undefined || input.concerns === null ? [] : input.concerns;
-    if (!Array.isArray(concerns)) return refusal("CONCERNS_UNKNOWN", "concerns is a list of ids");
+    if (!Array.isArray(concerns)) return refusal("CONCERNS_UNKNOWN", localize("money.index.concerns_is_a_list_of", "concerns is a list of ids"));
     const refs = [];
     for (const id of concerns) {
-      if (typeof id !== "string") return refusal("CONCERNS_UNKNOWN", "each id concerned is a string");
+      if (typeof id !== "string") return refusal("CONCERNS_UNKNOWN", localize("money.index.each_id_concerned_is_a", "each id concerned is a string"));
       if (id.startsWith("DUT-")) { refs.push({ id, kind: "duty" }); continue; }
       if (isHypothesisId(id)) { refs.push({ id, kind: "hypothesis" }); continue; }
       if (id.startsWith("EVT-")) {
@@ -403,7 +401,7 @@ export class Money {
       }
     }
     if (refs.some((r) => r.kind === "duty"))
-      return refusal("CONCERNS_DUTY", "a money fact never names a duty; the duty names the fact it cites", { id: refs.find((r) => r.kind === "duty").id });
+      return refusal("CONCERNS_DUTY", localize("money.index.a_money_fact_never_names", "a money fact never names a duty; the duty names the fact it cites"), { id: refs.find((r) => r.kind === "duty").id });
 
     /* R2: the one source. */
     const src = this.#source(input.source, who);
@@ -428,7 +426,7 @@ export class Money {
     if (!METHODS.includes(method))
       return refusal("NO_METHOD", localize("money.index.a_figure_states_how_it", "a figure states how it was read: {list}{v1}", { list: String(list(METHODS)), v1: String(isMachine(by) ? "; a machine's write names its reading" : "") }), { list: METHODS });
     if (method === "typed" && !isMember(by))
-      return refusal("TYPED_NOT_MEMBER", "a typed transcription is a member's act; a machine's reading names its method");
+      return refusal("TYPED_NOT_MEMBER", localize("money.index.a_typed_transcription_is_a", "a typed transcription is a member's act; a machine's reading names its method"));
     if (isMember(by) === false && !MACHINE_METHODS.includes(method) && by !== null)
       return refusal("NO_METHOD", localize("money.index.a_machines_reading_is_one", "a machine's reading is one of {list}", { list: String(list(MACHINE_METHODS)) }));
 
@@ -437,7 +435,7 @@ export class Money {
        be one that entity holds. */
     if (isMachine(by)) {
       const lacks = [];
-      if (!src.table) lacks.push("a canonical table row read through a binding a member adopted (source {table, row, binding})");
+      if (!src.table) lacks.push(localize("money.index.a_canonical_table_row_read", "a canonical table row read through a binding a member adopted (source {table, row, binding})"));
       for (const end of ["from", "to"]) {
         const p = parties[end];
         if (!p || !filled(p.entity)) { lacks.push(word("money.push.party_named_registered", { end: String(end) })); continue; }
@@ -456,7 +454,7 @@ export class Money {
     if (input.buys !== undefined && input.buys !== null) {
       if (!isObj(input.buys) || Object.keys(input.buys).some((k) => !BUYS_FIELDS.has(k))
           || (input.buys.quantity !== undefined && exactDecimal(input.buys.quantity) === null))
-        return refusal("UNKNOWN_FIELD", "buys is {quantity, unit, what}, the quantity an exact decimal", { field: "buys" });
+        return refusal("UNKNOWN_FIELD", localize("money.index.buys_is_quantity_unit_what", "buys is {quantity, unit, what}, the quantity an exact decimal"), { field: "buys" });
       buys = { ...input.buys };
     }
     return { ok: true, by, value, low, high, input, stage, period, codes, parties, balanceClass, refs, src, adjusts,
@@ -467,21 +465,19 @@ export class Money {
      (R3: the source's own, never raised) and the bundle whose sight the fact follows (R21). */
   #source(s, who) {
     const items = Array.isArray(s) ? s : s === undefined || s === null ? [] : [s];
-    if (!items.length) return refusal("NO_SOURCE", "a money fact rests on exactly one source: a content extent or another money fact");
-    if (items.length > 1) return refusal("TWO_SOURCES", "a money fact rests on exactly one source");
+    if (!items.length) return refusal("NO_SOURCE", localize("money.index.a_money_fact_rests_on", "a money fact rests on exactly one source: a content extent or another money fact"));
+    if (items.length > 1) return refusal("TWO_SOURCES", localize("money.index.a_money_fact_rests_on_2", "a money fact rests on exactly one source"));
     const x = items[0];
     if (typeof x === "string" && x.startsWith("CALC-") || isObj(x) && Object.values(x).some((v) => typeof v === "string" && v.startsWith("CALC-"))
         || isObj(x) && x.calculation !== undefined)
-      return refusal("SOURCE_IS_CALCULATION", "a calculation is never a money fact's source: its result is a calculation, "
-        + "and the facts it read are the sources (K1468)");
-    if (!isObj(x)) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id} or {fact}");
+      return refusal("SOURCE_IS_CALCULATION", localize("money.index.a_calculation_is_never_a", "a calculation is never a money fact's source: its result is a calculation, and the facts it read are the sources (K1468)"));
+    if (!isObj(x)) return refusal("NO_SOURCE", localize("money.index.a_source_is_capture_sha_extent", "a source is {capture_sha, extent}, {content_id} or {fact}", { content_id: "{content_id}", fact: "{fact}" }));
     if (x.origin === FOUND) {
       /* A find's match is the citation of a passage, never itself a fact: its capture and extent are the source, as
          any other extent of a held capture, and nothing else of it is kept (R2, R3). A table it names is counted
          through a calculation, never read in here row by row (K1468). */
       if (x.table !== undefined)
-        return refusal("NO_SOURCE", "a found table's amount column is declared and counted through calculations, never "
-          + "read into money facts row by row; record a figure from one passage of the table instead");
+        return refusal("NO_SOURCE", localize("money.index.a_found_tables_amount_column", "a found table's amount column is declared and counted through calculations, never read into money facts row by row; record a figure from one passage of the table instead"));
       return this.#source({ capture_sha: x.capture_sha, extent: x.extent }, who);
     }
     const k = Object.keys(x).find((f) => !SOURCE_FIELDS.has(f));
@@ -489,8 +485,8 @@ export class Money {
     const tableForm = x.table !== undefined || x.row !== undefined || x.binding !== undefined;
     const forms = [x.capture_sha !== undefined || x.extent !== undefined, x.content_id !== undefined, x.fact !== undefined, tableForm]
       .filter(Boolean).length;
-    if (forms === 0) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}");
-    if (forms > 1) return refusal("TWO_SOURCES", "a source is one of a content extent or a money fact, never both");
+    if (forms === 0) return refusal("NO_SOURCE", localize("money.index.a_source_is_capture_sha_extent_2", "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}", { content_id: "{content_id}", fact: "{fact}" }));
+    if (forms > 1) return refusal("TWO_SOURCES", localize("money.index.a_source_is_one_of", "a source is one of a content extent or a money fact, never both"));
     const notHeld = (what) => refusal("SOURCE_NOT_HELD", localize("money.index.what_is_not_held_here", "{what} is not held here, or not visible to the writer", { what: String(what) }));
     if (x.fact !== undefined) {
       const row = this.#factRow(x.fact, who);
@@ -502,7 +498,7 @@ export class Money {
     if (tableForm) {
       /* A canonical table's row, a derived view of captured bytes, read through `calculations`' binding (K1563 (6)). */
       if (!filled(x.table) || x.row === undefined || x.row === null || !filled(x.binding))
-        return refusal("NO_SOURCE", "a table row source names its table, its row and the binding it was read through");
+        return refusal("NO_SOURCE", localize("money.index.a_table_row_source_names", "a table row source names its table, its row and the binding it was read through"));
       let b = null;
       try { b = this.#calculations && typeof this.#calculations.bindingOf === "function" ? this.#calculations.bindingOf(x.binding) : null; }
       catch { b = null; }
@@ -517,7 +513,7 @@ export class Money {
       capture = c.capture_sha; contentId = x.content_id;
       try { extent = JSON.parse(c.extent); } catch { extent = { kind: "document" }; }
     }
-    if (typeof capture !== "string" || !SHA_RE.test(capture)) return notHeld("the capture named");
+    if (typeof capture !== "string" || !SHA_RE.test(capture)) return notHeld(localize("money.index.the_capture_named", "the capture named"));
     const bad = extent === null ? null : checkContentExtent(extent, {});
     /* Only the grammar is asked here: a bound the capture's reading does not hold is not a refusal (content R8). */
     if (bad && bad.ok === false && ["CONTENT_EXTENT_UNREADABLE", "CONTENT_EXTENT_NO_PRODUCER"].includes(bad.code)) return refusal("SOURCE_EXTENT_UNREADABLE", localize("money.index.the_sources_extent_detail", "the source's extent: {detail}", { detail: String(bad.detail) }), { extent_code: bad.code });
@@ -534,7 +530,7 @@ export class Money {
     const at = this.#now();
     const { input, by, src, parties } = v;
     const minted = this.#record.allocId("MNY", at.slice(0, 4));
-    if (!minted || minted.ok === false || !minted.id) return minted && minted.ok === false ? minted : refusal("MINT_EXHAUSTED", "no money fact id could be drawn");
+    if (!minted || minted.ok === false || !minted.id) return minted && minted.ok === false ? minted : refusal("MINT_EXHAUSTED", localize("money.index.no_money_fact_id_could", "no money fact id could be drawn"));
     const id = minted.id;
     const signed = (d) => (input.sign === "-" ? negate(d) : d);
     const party = (p, k) => (p && p[k] !== undefined && p[k] !== null ? (k === "as_written" ? clip(p[k]) : k === "identifier" ? JSON.stringify(p[k]) : String(p[k])) : null);
@@ -623,7 +619,7 @@ export class Money {
   /* ---- R7: withdrawal ---- */
 
   withdrawFact({ factId, reason, by } = {}) {
-    if (!filled(reason)) return refusal("NO_REASON", "a withdrawal states why");
+    if (!filled(reason)) return refusal("NO_REASON", localize("money.index.a_withdrawal_states_why", "a withdrawal states why"));
     const row = this.#factRow(factId);
     if (!row) return noSuchFact(factId);
     if (row.withdrawn_at) return { ok: true, already: true, fact_id: row.fact_id };
@@ -713,8 +709,8 @@ export class Money {
   recordedBy({ captureSha, extent, limit, viewer } = {}) {
     try {
       if (viewer === undefined || viewer === null || viewer === "")
-        return shapeRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
-      if (!filled(captureSha)) return refusal("NO_SHA", "who recorded from a passage is read for one capture, by its sha256");
+        return shapeRefusal("VIEWER_MISSING", localize("money.index.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public"));
+      if (!filled(captureSha)) return refusal("NO_SHA", localize("money.index.who_recorded_from_a_passage", "who recorded from a passage is read for one capture, by its sha256"));
       const asked = extent === undefined || extent === null ? null : extent;
       if (asked !== null && !(isObj(asked) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, asked.kind)))
         return shapeRefusal("EXTENT_MALFORMED", localize("money.index.an_extent_is_one_of", "an extent is one of content's kinds ({list})", { list: String(list(Object.keys(CONTENT_EXTENT_KINDS))) }));
@@ -742,7 +738,7 @@ export class Money {
   /* ---- R9: an entity's money ---- */
 
   moneyOf({ entity, period, kinds, phases, limit, viewer } = {}) {
-    if (!filled(entity)) return noEntity("an entity's money is read by the entity's id (moneyof&entity=ENT-...)");
+    if (!filled(entity)) return noEntity(localize("money.index.an_entitys_money_is_read", "an entity's money is read by the entity's id (moneyof&entity=ENT-...)"));
     const n = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
     const lim = Number.isFinite(n) ? Math.min(Math.max(n, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
     const ks = toList(kinds), ps = toList(phases);
@@ -787,7 +783,7 @@ export class Money {
       const b = rows.find((r) => value(r, dim) !== value(a, dim));
       if (b) {
         const show = (r) => (dim === "period" ? { from: r.period_from, to: r.period_to, precision: r.period_precision, zone: r.period_zone } : r[dim] ?? null);
-        return refusal(code, localize("money.index.these_facts_differ_in_v1", "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period", { v1: String(dim === "phase" || dim === "stage" ? "phase or stage" : dim), fact_id: String(a.fact_id), fact_id_2: String(b.fact_id) }),
+        return refusal(code, localize("money.index.these_facts_differ_in_v1", "these facts differ in {v1}: {fact_id} and {fact_id_2}; a sum is taken only over one kind, phase and stage, basis, currency and period", { v1: String(dim === "phase" || dim === "stage" ? word("money.push.phase_stage") : dim), fact_id: String(a.fact_id), fact_id_2: String(b.fact_id) }),
           { dimension: dim, facts: [a.fact_id, b.fact_id], values: [show(a), show(b)] });
       }
     }
@@ -797,7 +793,7 @@ export class Money {
     return { ok: true, interfund, says: word("money.says.facts_summed_sum") };
   }
   #facts(ids, viewer) {
-    if (!Array.isArray(ids) || !ids.length) return refusal("NO_FACTS", "name the money facts by their ids");
+    if (!Array.isArray(ids) || !ids.length) return refusal("NO_FACTS", localize("money.index.name_the_money_facts_by", "name the money facts by their ids"));
     const rows = [];
     for (const id of ids) {
       const r = this.#factRow(id, viewer === undefined ? null : viewer);
@@ -839,15 +835,15 @@ export class Money {
 
   createSet({ purpose, label, concerns, by } = {}) {
     if (!SET_PURPOSES.includes(purpose)) return refusal("UNKNOWN_PURPOSE", localize("money.index.a_money_sets_purpose_is", "a money set's purpose is {list}", { list: String(list(SET_PURPOSES)) }));
-    if (!filled(label)) return refusal("NO_LABEL", "a money set has a label a person can read");
+    if (!filled(label)) return refusal("NO_LABEL", localize("money.index.a_money_set_has_a", "a money set has a label a person can read"));
     let c = null;
     if (purpose === "attribution") {
       const ent = this.#ent();
       if (!filled(concerns) || !ent.has(concerns) || kindOf(ent, concerns) !== "contract")
-        return refusal("NO_CONTRACT", "an attribution set concerns one registered entity of kind contract");
+        return refusal("NO_CONTRACT", localize("money.index.an_attribution_set_concerns_one", "an attribution set concerns one registered entity of kind contract"));
       c = concerns;
     } else if (concerns !== undefined && concerns !== null && concerns !== "") {
-      if (typeof concerns !== "string") return refusal("NO_LABEL", "a trail concerns one id, or none");
+      if (typeof concerns !== "string") return refusal("NO_LABEL", localize("money.index.a_trail_concerns_one_id", "a trail concerns one id, or none"));
       c = concerns;
     }
     const at = this.#now();
@@ -879,7 +875,7 @@ export class Money {
     });
   }
   proposeInclusion({ setId, factId, method, by } = {}) {
-    if (!filled(method)) return refusal("NO_METHOD", "a proposal names the method that proposed it");
+    if (!filled(method)) return refusal("NO_METHOD", localize("money.index.a_proposal_names_the_method", "a proposal names the method that proposed it"));
     const set = filled(setId) ? this.#one(`SELECT 1 AS x FROM money_sets WHERE set_id=?`, setId) : null;
     if (!set) return refusal("NO_SUCH_SET", localize("money.index.no_money_set_string_is_2", "no money set {String} is held", { String: String(String(setId ?? "").slice(0, 60)) }));
     const fact = this.#factRow(factId, by ?? "");
@@ -963,7 +959,7 @@ export class Money {
     if (!one) {
       const flows = events.filter((e) => MOVING_EVENTS.includes(e.kind));
       if (flows.length !== 1)
-        return undetermined(word("money.undetermined.fact_concerns_events", { events: String(events.length), none: String(flows.length ? "more than one" : "none") }),
+        return undetermined(word("money.undetermined.fact_concerns_events", { events: String(events.length), none: String(flows.length ? localize("money.index.more_than_one", "more than one") : "none") }),
           { events: events.map((e) => e.event_id) });
       one = flows[0];
     }
@@ -1005,7 +1001,7 @@ export class Money {
       .filter((r) => live(r) && this.#visibleBundle(r.sight_bundle, v));
     let committed;
     const ev = this.#ev();
-    if (!ev) committed = { undetermined: true, why: "events is not wired here, so the award and its change orders are not read" };
+    if (!ev) committed = { undetermined: true, why: localize("money.index.events_is_not_wired_here", "events is not wired here, so the award and its change orders are not read") };
     else {
       const got = ev.eventsFor({ entity: contract, kinds: ["award"], limit: LIST_LIMIT_MAX, viewer: v }) || {};
       const awards = [...(got.events || []), ...(got.placed_nowhere || [])].map((e) => e.event_id);
@@ -1071,7 +1067,7 @@ export class Money {
     if (!row) return { ok: true, found: false, fact_id: factId };
     const events = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? AND ref_kind='event' ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
     if (!events.length) return { ok: true, found: true, fact_id: row.fact_id, chains: [], says: word("money.says.fact_concerns_event") };
-    if (!this.#ev()) return { ok: true, found: true, fact_id: row.fact_id, chains: [], undetermined: true, why: "events is not wired here" };
+    if (!this.#ev()) return { ok: true, found: true, fact_id: row.fact_id, chains: [], undetermined: true, why: localize("money.index.events_is_not_wired_here_2", "events is not wired here") };
     const chains = events.map((e) => this.#walk(e, viewer ?? ""));
     return { ok: true, found: true, fact_id: row.fact_id, chains };
   }
@@ -1097,7 +1093,7 @@ export class Money {
       frontier = next; depth += 1;
     }
     const out = { event_id: start, hops, authorising_held: hops.length > 0,
-                  says: hops.length ? "the authorising events held toward this event" : "no authorising event is held for this event" };
+                  says: hops.length ? localize("money.index.the_authorising_events_held_toward", "the authorising events held toward this event") : localize("money.index.no_authorising_event_is_held", "no authorising event is held for this event") };
     return stop ? { ...out, ...exhausted({ visited: seen.size, reason: stop }) } : out;
   }
 
@@ -1115,7 +1111,7 @@ export class Money {
   /** R16: each fact as one edge from payer to payee (entity, else fund), valid over its period, as of `at`. */
   neighbours({ node, kinds, at, page, viewer } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("money.index.a_read_names_the_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     if (Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND)) return { items: [] };
     if (!filled(node)) return { items: [] };
     const g = this.#gate("f.sight_bundle", viewer);
@@ -1157,7 +1153,7 @@ export class Money {
   /** A fund's type, held here with its history; the latest governs. */
   setFundType({ fund, type, basis, by } = {}) {
     if (!FUND_TYPES.includes(type)) return refusal("UNKNOWN_FUND_TYPE", localize("money.index.a_funds_type_is_list", "a fund's type is {list}", { list: String(list(FUND_TYPES)) }), { list: FUND_TYPES });
-    if (!filled(basis)) return refusal("NO_BASIS", "a fund's type names its basis: the source that states it");
+    if (!filled(basis)) return refusal("NO_BASIS", localize("money.index.a_funds_type_names_its", "a fund's type names its basis: the source that states it"));
     const ent = this.#ent();
     if (!filled(fund) || !ent.has(fund)) return noSuchEntityAt(ent, fund, "fund");
     if (kindOf(ent, fund) !== "fund") return refusal("NOT_A_FUND", localize("money.index.fund_is_not_registered_as", "{fund} is not registered as a fund", { fund: String(fund) }));
@@ -1239,20 +1235,20 @@ function factGate(row) {
   const has = (x) => x !== null && x !== undefined;
   const sources = [has(row.source_extent), has(row.source_table), has(row.source_fact)].filter(Boolean).length;
   const capture = has(row.source_capture_sha);
-  if (sources !== 1 || capture === has(row.source_fact)) return { code: "ONE_SOURCE", detail: "a money fact rests on exactly one source" };
+  if (sources !== 1 || capture === has(row.source_fact)) return { code: "ONE_SOURCE", detail: localize("money.index.a_money_fact_rests_on_2", "a money fact rests on exactly one source") };
   if ([row.source_capture_sha, row.source_fact, row.source_content_id].some((x) => typeof x === "string" && x.startsWith("CALC-")))
-    return { code: "SOURCE_IS_CALCULATION", detail: "a calculation is never a money fact's source" };
+    return { code: "SOURCE_IS_CALCULATION", detail: localize("money.index.a_calculation_is_never_a_2", "a calculation is never a money fact's source") };
   for (const [k, v] of Object.entries(row)) {
     if (typeof v === "string" && isHypothesisId(v)) return { code: "HYPOTHESIS_ID", detail: localize("money.index.a_hypothesis_is_never_named", "a hypothesis is never named in a money fact ({k})", { k: String(k) }) };
-    if (/total|sum/i.test(k)) return { code: "TOTAL_NOT_STORED", detail: "a total is a calculation, never stored as a money fact" };
+    if (/total|sum/i.test(k)) return { code: "TOTAL_NOT_STORED", detail: localize("money.index.a_total_is_a_calculation", "a total is a calculation, never stored as a money fact") };
   }
   for (const k of HAS_ID_FIELDS) if (typeof row[k] === "string" && row[k].startsWith("DUT-"))
-    return { code: "CONCERNS_DUTY", detail: "a duty is never named in a money fact" };
+    return { code: "CONCERNS_DUTY", detail: localize("money.index.a_duty_is_never_named", "a duty is never named in a money fact") };
   return null;
 }
 function concernsGate(row) {
-  if (typeof row.concerns === "string" && row.concerns.startsWith("DUT-")) return { code: "CONCERNS_DUTY", detail: "a money fact never concerns a duty" };
-  if (typeof row.concerns === "string" && isHypothesisId(row.concerns)) return { code: "HYPOTHESIS_ID", detail: "a hypothesis is never named in a money fact" };
+  if (typeof row.concerns === "string" && row.concerns.startsWith("DUT-")) return { code: "CONCERNS_DUTY", detail: localize("money.index.a_money_fact_never_concerns", "a money fact never concerns a duty") };
+  if (typeof row.concerns === "string" && isHypothesisId(row.concerns)) return { code: "HYPOTHESIS_ID", detail: localize("money.index.a_hypothesis_is_never_named_2", "a hypothesis is never named in a money fact") };
   return null;
 }
 

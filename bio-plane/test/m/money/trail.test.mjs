@@ -67,11 +67,11 @@ test("R25 moved undetermined: no event concerned (its period unused), an event n
   const { row } = trail(s, [none, onUndated, both, neither]);
   const m = row(none).moved;
   assert.equal(m.state, "undetermined");
-  assert.match(m.why, /concerns no event/);
+  assert.equal(m.why, word("money.undetermined.fact_concerns_event"));
   assert.equal(JSON.stringify(m).includes("2014-02"), false, "never placed by the fact's period");
   assert.deepEqual(row(none).gaps, ["moved"]);
   assert.deepEqual([row(onUndated).moved.state, row(onUndated).moved.event], ["undetermined", undated]);
-  assert.match(row(onUndated).moved.why, /placed nowhere/);
+  assert.equal(row(onUndated).moved.why, word("money.undetermined.event_placed_nowhere", { event_id: undated }));
   assert.deepEqual([row(both).moved.state, row(both).moved.events.sort()], ["undetermined", [a, b].sort()]);
   assert.deepEqual([row(neither).moved.state, row(neither).moved.events.sort()], ["undetermined", [meeting, award].sort()]);
   // events not wired: undetermined, never a date
