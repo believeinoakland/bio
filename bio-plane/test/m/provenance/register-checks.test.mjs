@@ -194,11 +194,11 @@ function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "knock bytes
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
       asserts: `knock ${knockId} was received at ${received} and filed by ${by} at ${at}`,
-      evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+      evidence: `knock receipt ${knockId}: digest and instant`,
       bound: false, via: "doorbell",
     }],
     capture: {
-      method: "doorbell knock, received, hashed at receipt",
+      method: "knock-received-fixture",
       grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
       actor_class: "member", actor: by,
       sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes),

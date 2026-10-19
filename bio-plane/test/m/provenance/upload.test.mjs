@@ -207,7 +207,7 @@ function uploadDoc({ bytes = "a file she holds", by = "member:ruth", at = "2026-
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
       asserts: `${by} brought these bytes in at ${at}`,
-      evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+      evidence: `upload receipt ${s}: digest and instant`,
       bound: false, via: "upload",
     }],
     capture: {
@@ -248,8 +248,8 @@ test("R63, R42: C-18.1 admits capture R86's upload document: no letter on R51's 
   assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: undefined } }), /upload and its capture.grade_basis is 'undefined', not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
   assert.match(one({ ...doc, capture: { ...doc.capture, grade_basis: "CAPTURE_ROUTE_UNRECORDED" } }), /not 'CAPTURE_RECEIVED_NOT_FETCHED'/);
   /* The method is `uploaded`. */
-  assert.match(one({ ...doc, capture: { ...doc.capture, method: "doorbell knock, received, hashed at receipt" } }),
-               /capture.method is 'doorbell knock, received, hashed at receipt', not 'uploaded'/);
+  assert.match(one({ ...doc, capture: { ...doc.capture, method: "knock-received-fixture" } }),
+               /capture.method is 'knock-received-fixture', not 'uploaded'/);
   /* Her statement: present, an object, its text and whose words they are not blank, never evidence of truth. */
   const { origin_statement: _s, ...noStatement } = doc;
   assert.match(one(noStatement), /carries no origin_statement/);
