@@ -17,9 +17,9 @@ import { localize } from "../setup-words/index.mjs";
 export function findIn(r, { scope = null, kinds = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
   const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
   if (typeof viewer !== "string" || !viewer)
-    return no("VIEWER_MISSING", "a find answers only to a stamped viewer, and this request carries none");
+    return no("VIEWER_MISSING", localize("retrieval-browse.find.viewer_missing", "a find answers only to a stamped viewer, and this request carries none"));
   if (scope == null || (typeof scope === "object" && !Array.isArray(scope) && !Object.keys(scope).length))
-    return no("NO_SCOPE", "a find runs over one scope: a capture, a selection, a set of ids or a project");
+    return no("NO_SCOPE", localize("retrieval-browse.find.scope_missing", "a find runs over one scope: a capture, a selection, a set of ids or a project"));
   const forms = ["capture", "selection", "ids", "project"];
   const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
   if (!keys || keys.length !== 1 || !forms.includes(keys[0]))
@@ -37,7 +37,7 @@ export function findIn(r, { scope = null, kinds = null, term = null, limit = nul
   if (unknown.length)
     return no("KIND_UNKNOWN", localize("retrieval-browse.find.no_kind_called_map_the", "no kind called {map}; the kinds are {FIND_KINDS}", { map: String(unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")), FIND_KINDS: String(FIND_KINDS.join(", ")) }), { kinds: FIND_KINDS });
   const words = typeof term === "string" ? term.trim() : "";
-  if (wanted.includes("term") && !words) return no("NO_TERM", "the kind term finds a name or term as written, and none was given");
+  if (wanted.includes("term") && !words) return no("NO_TERM", localize("retrieval-browse.find.term_missing", "the kind term finds a name or term as written, and none was given"));
   const termAbsent = wanted.includes("term") ? r.missing(["planOf", "runQuery"]) : [];
   if (termAbsent.length) return unavailable(termAbsent);
   if (words.length > FIND_TERM_MAX)
@@ -88,7 +88,7 @@ function scopeOf(r, form, value, viewer, owner) {
     const sha = typeof value === "string" ? value.trim() : "";
     const held = sha ? ownersOf(sha) : [];
     if (!held.length)
-      return no("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
+      return no("CAPTURE_NOT_HELD", localize("retrieval-browse.find.capture_not_held", "this record holds no capture with that fingerprint that you may see"));
     held.forEach(keep);
   } else if (form === "selection") {
     /* retrieval R77: read, never resolved, so the find extends no selection's life and writes nothing (N729). */
@@ -105,7 +105,7 @@ function scopeOf(r, form, value, viewer, owner) {
     const id = typeof value === "string" ? value.trim() : "";
     const proj = id ? r.oneOf(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id = ?`, id) : null;
     if (!proj || normalizeType(proj.object_type) !== "project" || !sees(id))
-      return no("NO_SUCH_PROJECT", "this record holds no project by that id that you may see");
+      return no("NO_SUCH_PROJECT", localize("retrieval-browse.find.project_not_held", "this record holds no project by that id that you may see"));
     holdOf([id, ...r.rowsOf(`SELECT bundle_id FROM bundles WHERE project = ? ORDER BY bundle_id`, id).map((row) => row.bundle_id)]);
   }
   const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id }))
