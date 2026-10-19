@@ -15,3 +15,14 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3985). R3's close: `checks/run.mjs` on the tranche after every R3 merge (@ adbbe23886) shows these test copies in your tests; they count now because the sentences became `localize` text in other R3 modules (capture, doorbell, file-safety's own neighbours) after you completed. A fixture's text is no exception: build it with the owner's `localize`/`word` call (same id, en and vars), or use a neutral fixture string that copies no product sentence:
+
+- testcopy provenance bio-plane/test/m/provenance/register-checks.test.mjs:197 [code] "the knock's receipt: its digest, taken as the bytes arrived, and it..."
+- testcopy provenance bio-plane/test/m/provenance/register-checks.test.mjs:201 [code] "doorbell knock, received, hashed at receipt"
+- testcopy provenance bio-plane/test/m/provenance/upload.test.mjs:210 [code] "the upload's receipt: its digest, taken as the bytes arrived, and i..."
+- testcopy provenance bio-plane/test/m/provenance/upload.test.mjs:251 [code] "doorbell knock, received, hashed at receipt"
+
+Merge `tranche/T51` into your branch (never rebase), make `node checks/words.mjs /home/user/bio provenance` read 0, run your tests, and COMPLETE again.
