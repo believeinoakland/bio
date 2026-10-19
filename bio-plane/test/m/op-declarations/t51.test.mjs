@@ -300,7 +300,8 @@ test("R78 (N858, N1046; DEC-340, U366, K3935): over the registry (77 screens at 
   const NAMES = { hold: ["actionhold", "pressurerecord", "writinghelp"], holdnotice: ["holdnoticeprepare", "holdnoticesent", "writinghelp"],
     counsel: ["counselpacket"], grouprules: ["ruledraft", "ruleconfirm", "rulewithdraw", "writinghelp"] };
   for (const [id, names] of Object.entries(NAMES)) {
-    assert.deepEqual(actsOn(id), names, `${id}: the registry's acts changed`);
+    /* the design may add acts to these screens (2a64c5ae77: actionholdrelease on hold): each must be declared too */
+    for (const n of names) assert.ok(actsOn(id).includes(n), `${id}: ${n} is no longer listed`);
     for (const act of actsOn(id)) assert.ok(Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act), `${id}: ${act} is no declared op`);
   }
   assert.ok(!actsOn("action").includes("actionhold") && actsOn("action").includes("procedureguides"));
