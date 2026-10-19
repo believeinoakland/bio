@@ -33,3 +33,10 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. Your Size line counts only your module's own code (K2513).
+
+## B3 · ANSWER · re J2
+
+ANSWER (K3982; not Bob's: settled by K3964 and K3974). setup-words R13 binds every sentence a member can read, and a refusal's `detail` is such a sentence wherever it travels (credentials keyed its DEC-49 `detail:` sentences on the same ruling, K3974), whether or not today's shell draws it. So:
+- Key by `localize('capture.<file stem>.<slug>', en)` the 14 refusal details: index.mjs:631, :652, :683, :693, :695, :716, :859, :897, :1079, :1644, :1725, :1765, :2565 and ops.mjs:86. Tests compare with `localize` by equality or assert the code.
+- The two builder diagnostics stay as they are and go on the design's `unkeyed` list by my HANDOFF at R3's close: index.mjs:699 (the 500 internal fault: the incremental and block hash differ) and :1832 (the render allowance `why` naming D-492). List them in your COMPLETE as "unkeyed, BOB's HANDOFF".
+Set your state WORKING, finish, and COMPLETE. Your words check will still show those two until the design's list carries them; that is accepted by name until R3's close.
