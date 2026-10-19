@@ -6,13 +6,12 @@ import assert from "node:assert/strict";
 import { seeded, world, file, prepare, sign, V, CASE, NOW, HOUR } from "./fixture.mjs";
 import { DOCKET_CHECKS, OUTWARD_ACT_WARNING, RESEND_INVITATION, DOCKET_UNREADABLE, RECEIPT_REASON }
   from "../../../src/docket/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice");
 const OLD_NAME = /\b(this|the|our|its) +(civicsmith +|group's +)?(instance|copy|plane)\b/i;
-const NO_SLUG = "Your team has no name recorded yet, and a docket entry is never anonymous. Record the team's name "
-  + "first. Nothing was published.";
-const STALE = "Your team's Civicsmith holds no prepared docket entry from you with this fingerprint, it was prepared more "
-  + "than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. Nothing was published.";
+const NO_SLUG = word("refusal.DOCKET_NO_GROUP_SLUG");
+const STALE = word("refusal.DOCKET_STALE");
 
 test("R4 R22 (DEC-149, N685) C-129.16 DOCKET_NO_GROUP_SLUG says \"Your group has no name recorded yet\", as C-127.4 says it, not \"This copy\"", () => {
   const bare = world({ slug: null });

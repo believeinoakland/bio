@@ -572,7 +572,8 @@ export class Docket {
     if (counsel) return { refusal: counsel };
     /* DEC-49 REGION is-docket-manager */
     const slug = this.#slug();
-    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG", "no team slug is recorded, and there are no anonymous entries") };
+    if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG",
+      localize("docket.index.no_team_slug_recorded", "no team slug is recorded, and there are no anonymous entries")) };
     /* END DEC-49 REGION is-docket-manager */
     return { c: k.c, member, slug };
   }
@@ -977,6 +978,15 @@ export class Docket {
 
   /* ================================================================ R3: the member's read */
 
+  /* R30 (T51; DEC-340): the member who made a mark as `{member, handle}`, or null when its author is not a member. Only
+     `docketOf`, which answers a viewer who sees the project in full, names her; R27's reads never do. */
+  #markedBy(memberId) {
+    const id = str(memberId);
+    if (!id) return null;
+    const facts = this.#call(() => this.membership.memberFacts(id));
+    return { member: id, handle: facts && str(facts.handle) ? facts.handle : null };
+  }
+
   /* R14's view of one public entry. */
   #publicView(e, backs) {
     const back = backs.get(Number(e.seq));
@@ -1006,7 +1016,8 @@ export class Docket {
         ...(s.state === "placed" || s.state === "receipted" ? { public: { seq: Number(s.pub.seq), entry: publicId(c.case, s.pub.seq) } } : {}),
         ...(s.state === "declined" ? { declined: { reason: s.decline.reason, at: s.decline.at } } : {}),
         ...(s.state === "taken-back" ? { taken_back: { reason: s.back.reason, at: s.back.at } } : {}),
-        pressure: p ? { kind: p.pressure, note: p.note ?? null, at: p.at } : null,
+        /* R30 (T51; DEC-340): who made the mark, for a viewer who sees the project in full */
+        pressure: p ? { kind: p.pressure, note: p.note ?? null, at: p.at, by: this.#markedBy(p.by_member) } : null,
         ...(contests ? { prompts: {
           reevaluation: { cause: "contested", case: c.case, edition: Number(r.edition), entry: r.entry_id, since: r.filed_at,
                           findings: this.#pins(c.case, Number(r.edition)) },
