@@ -6,6 +6,7 @@ import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { AT, INQUIRY, ent, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
 import { seeded, ANN } from "../money/fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { NO_EVENTS_RECORD } from "../../../src/explore/timeline.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3);
@@ -28,13 +29,15 @@ test("R12 rederive recomputes a derived connection through its owner and answers
   // A tampered id.
   const bad = x.rederive({ ...args, id: "0".repeat(64) });
   assert.equal(bad.matches, false);
-  assert.match(bad.why, /not the id its parameters derive/);
+  assert.equal(bad.why, word("explore.text.id_asked_id"));
   // Parameters that do not recompute: matches false with the reason, never a guess.
-  for (const [extra, re] of [[{ method: "other-method" }, /holds no/], [{ as_of: "2025-01-01" }, /holds no/], [{ kind: "line:part_of" }, /not a derived kind/],
-    [{ kind: "nope" }, /no owner registered/], [{ method: undefined }, /method is not stated/]]) {
+  const holdsNo = (method, as_of) => word("explore.no.holds_between", { owner: String(registry.kindOf("mentioned_together").owner), kind: "mentioned_together", from: String(A), to: String(B), method, as_of });
+  for (const [extra, why] of [[{ method: "other-method" }, holdsNo("other-method", "2026-02-01")], [{ as_of: "2025-01-01" }, holdsNo("co-mention", "2025-01-01")],
+    [{ kind: "line:part_of" }, word("explore.no.class_derived_kind", { kind: "line:part_of", class: String(registry.kindOf("line:part_of").class) })],
+    [{ kind: "nope" }, word("explore.no.owner_registered_kind", { kind: "nope" })], [{ method: undefined }, word("explore.no.stated_derivation_recomputed", { f: "method" })]]) {
     const r = x.rederive({ ...args, id: d.id, ...extra });
     assert.equal(r.matches, false, JSON.stringify(extra));
-    assert.match(r.why, re);
+    assert.equal(r.why, why);
   }
   assert.equal(x.rederive({ ...args, id: d.id, viewer: undefined }).refused, "VIEWER_MISSING");
   assert.equal(x.rederive({ ...args, id: d.id, to: "x" }).refused, "BAD_NODE");
@@ -70,7 +73,7 @@ test("R13 timelineOver composes the real events.timeline over the set with the p
   assert.equal(x.timelineOver({ set: [s.contract] }).refused, "VIEWER_MISSING");
   assert.equal(x.timelineOver({ inquiry: "INQ-2026-0001-a-question", viewer }).refused, "NO_SET");
   assert.equal(exploreOf(null, {}).timelineOver({ set: [s.contract], viewer }).refused, "NOT_AVAILABLE");
-  assert.match(exploreOf(null, { events: s.ev }).timelineOver({ set: [s.contract], viewer }).money_note, /no money record connected/);
+  assert.equal(exploreOf(null, { events: s.ev }).timelineOver({ set: [s.contract], viewer }).money_note, word("explore.money_note"));
   // events' own refusal is answered as it is.
   assert.equal(x.timelineOver({ set: [s.contract], from: "not a date", viewer }).reason, "BAD_DATE");
 });
@@ -125,7 +128,7 @@ test("R19 rederive reads the derivation's ends and the hops its inputs name with
     assert.equal(r.matches, false, JSON.stringify(extra));
     assert.equal(r.undetermined, true);
     assert.deepEqual(r.rests_on[1], { input: "HYP-2026-0001-a-hunch", class: null, undetermined: true, why: INPUT_NOT_READ });
-    assert.match(r.why, /not read, so it cannot be re-derived/);
+    assert.equal(r.why, word("explore.text.hops_rests_read", { undetermined: "1", are: "is" }));
   }
   // A hop withheld from the viewer and one no owner holds answer the same, naming nothing the viewer may not see.
   const withheld = ask(onFenced, { scope: { inquiry: INQUIRY } }), absent = ask(onAbsent, { scope: { inquiry: INQUIRY } });
@@ -151,7 +154,7 @@ test("R19 rederive reads the derivation's ends and the hops its inputs name with
 test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the group's Civicsmith by name, never the instance", () => {
   const none = exploreOf(null, {}).timelineOver({ set: [A], viewer: V });
   assert.equal(none.refused, "NOT_AVAILABLE");
-  assert.equal(none.why, "your team's Civicsmith has no events record connected, so no timeline can be read");
+  assert.equal(none.why, NO_EVENTS_RECORD);
   const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
   assert.equal(noMoney.money_note, word("explore.money_note"));
   for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
