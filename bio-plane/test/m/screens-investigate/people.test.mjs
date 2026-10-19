@@ -146,3 +146,75 @@ test("R37 the add form asks the name, then one two-way choice of a person or an 
   assert.equal(p.doc.getElementById("people-add-name") !== null, true);
   assert.ok(button(p, "entitycreate").textContent.includes(word("screen.people.add.submit")));
 });
+
+/* R40, R42 (T51-120) */
+const OTHERS = () => [
+  { entity: "ENT-2026-0500", kind: "fund", name: "Sewer Service Fund", today: { kind: "fund", note: "Pays for the sewers", machine: false }, documents: 2, questions: 0, projects: 0, newest_added: "2026-09-03T09:00:00Z", mine: false },
+  { entity: "ENT-2026-0501", kind: "ordinance", name: "Tenant Notice Ordinance", today: { note: "The city's rule on notices", machine: false }, documents: 0, questions: 0, projects: 0, newest_added: "2026-09-02T09:00:00Z", mine: false },
+  { entity: "ENT-2026-0502", kind: "office", name: "City Clerk", today: { kind: "office", note: "Keeps the record", machine: false }, holders: [{ entity: ENT, label: "L. Chen" }], documents: 4, questions: 0, projects: 0, newest_added: "2026-09-01T09:00:00Z", mine: false }];
+const dirBy = (req) => {
+  const show = req.query.show;
+  const all = OTHERS();
+  const rows = show === "offices" ? all.filter((r) => r.kind === "office") : show === "everything" ? [...DIRECTORY().rows, ...all] : DIRECTORY().rows;
+  return ok(DIRECTORY({ rows, following: rows.length }));
+};
+
+test("R40 the Show choice offers the record's other kinds; Everything lists a fund, an ordinance and an office with kind, counts and the office's holder; Offices lists the office alone; no row of these kinds draws Explore connections", async () => {
+  const p = await open(at, { plane: { peopledirectory: dirBy } });
+  const sel = p.doc.getElementById("people-show");
+  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.getAttribute("value")), ["both", "people", "organisations", "offices", "ordinances", "contracts", "funds", "sources", "everything"]);
+  fill(p, { "people-show": "everything" });
+  await press(p, "search");
+  assert.equal(p.byOp("peopledirectory").pop().query.show, "everything");
+  const m = main(p);
+  drew(m, "screen.people.other.note");
+  const sec = m.querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.people.other.heading"));
+  assert.ok(sec);
+  const [fund, ord, off] = [...m.querySelectorAll(".cs-row")].filter((r) => ["Sewer Service Fund", "Tenant Notice Ordinance", "City Clerk"].some((n) => r.textContent.includes(n)));
+  drew(fund, "screen.people.today.kind.fund");
+  drew(fund, "screen.people.counts", { list: word("screen.people.count.documents", { n: "2" }) });
+  drew(ord, "find.row.kind.ordinance");
+  drew(ord, "screen.people.counts.none");
+  drew(off, "screen.people.today.heldby", { who: "L. Chen" });
+  for (const r of [fund, ord, off]) assert.equal(r.querySelectorAll('button[data-act="explore"]').length, 0, "no explore in the list for these kinds");
+  fill(p, { "people-show": "offices" });
+  await press(p, "search");
+  const rows = [...main(p).querySelectorAll(".cs-row")];
+  assert.ok(rows.some((r) => r.textContent.includes("City Clerk")) && !rows.some((r) => r.textContent.includes("L. Chen") && !r.textContent.includes("City Clerk")), "the office alone");
+});
+
+test("R40 with the record following no one of the kind chosen the screen draws no heading and no sentence of its own, keeps the filters and the add form", async () => {
+  const p = await open(at, { plane: { peopledirectory: (req) => (req.query.show === "funds" ? ok({ ok: true, following: 0, in_your_projects: 0, rows: [], truncated: false }) : ok(DIRECTORY())) } });
+  fill(p, { "people-show": "funds" });
+  await press(p, "search");
+  const m = main(p);
+  assert.equal(m.querySelectorAll("section").filter((x) => x.querySelector("h2").textContent === word("screen.people.other.heading")).length, 0);
+  assert.ok(p.doc.getElementById("people-show") && p.doc.getElementById("people-q"), "the filters stay");
+  assert.ok(button(p, "entitycreate"), "the add form stays");
+  notDrew(m, "screen.people.nomatch", { q: "" });
+});
+
+test("R42 with a kind other than people in view \"Add\" is the state g form: the near-match read is made after a name is typed (never entitycreate before the press), close names are listed, and Follow it sends entitycreate with the kind, aliases and note; the new subject opens", async () => {
+  const similar = ok({ ok: true, name: "Sewer Service Fund", kinds: [], count: 1, limit: 10, truncated: false,
+    similar: [{ entity_id: "ENT-2026-0500", kind: "fund", label: "Sewer Fund", note: "Pays for the sewers", alias: "Sewer Fund", closeness: "contains" }] });
+  const p = await open(at, { plane: { peopledirectory: dirBy, entitysimilar: similar, entitycreate: ok({ ok: true, entity_id: "ENT-2026-0600", kind: "fund" }) } });
+  fill(p, { "people-show": "everything" });
+  await press(p, "search");
+  assert.ok(p.doc.getElementById("people-other-name"), "state g");
+  assert.equal(p.doc.getElementById("people-add-kind"), null, "no two-way form");
+  assert.ok(![...p.doc.getElementById("people-other-kind").querySelectorAll("option")].some((o) => o.getAttribute("value") === "proceeding"), "no A proceeding in the form");
+  await p.clock.tick(1000);
+  assert.equal(p.byOp("entitysimilar").length, 0, "nothing typed, nothing asked");
+  fill(p, { "people-other-name": "Sewer Service Fund", "people-other-kind": "fund" });
+  await p.clock.tick(1000);
+  const q = p.byOp("entitysimilar")[0].query;
+  assert.deepEqual([q.name, q.kind], ["Sewer Service Fund", "fund"]);
+  assert.equal(p.byOp("entitycreate").length, 0, "no registration before the press");
+  drew(main(p), "screen.people.addother.preflight", { name: "Sewer Service Fund" });
+  drew(main(p), "people.nearmatch.contains");
+  assert.ok(main(p).textContent.includes("Sewer Fund"));
+  fill(p, { "people-other-aliases": "Fund 41\n Fund 41 \nSSF", "people-other-note": "Pays for the sewers; the team follows its transfers." });
+  await press(p, "entitycreate");
+  assert.deepEqual(p.byOp("entitycreate")[0].body, { kind: "fund", label: "Sewer Service Fund", note: "Pays for the sewers; the team follows its transfers.", aliases: ["Fund 41", "SSF"] });
+  assert.equal(p.location.pathname, "/app/person/ENT-2026-0600");
+});
