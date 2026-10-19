@@ -49,7 +49,7 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 399,
+  "installer": 417,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15719,
+  "total": 15737,
   "protected": 934
  },
  "words": [
@@ -60127,6 +60127,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): the one-photo form on Home"
+  },
+  {
+   "key": "installer.fleet.left.item",
+   "en": "{member} ({why})",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); one entry of installer.fleet.partial.*'s {list}, joined as a list; {why} an installer.fleet.why.* fragment, never a whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.integrity",
+   "en": "its files didn't match the fingerprints this release states for them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); a bundle or part failed its hash"
+  },
+  {
+   "key": "installer.fleet.why.http",
+   "en": "Civicsmith's software source answered with error {status} for its files",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); an HTTP error for the member, {status} the number"
+  },
+  {
+   "key": "installer.fleet.why.refetch",
+   "en": "its files could not be fetched again for the upload",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the second read at upload failed (installer-steps R18)"
+  },
+  {
+   "key": "installer.fleet.why.unpinned",
+   "en": "this release doesn't tie its software to one exact build",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.unpinned, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.unpullable",
+   "en": "its software isn't published yet where your Cloudflare account can get it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.unpullable, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.freeplan",
+   "en": "containers need the Workers Paid plan, and this account is on the free plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.freeplan, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.planunknown",
+   "en": "the installer couldn't check which Workers plan the account is on",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.planunknown, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.nopermission",
+   "en": "the permission you approved doesn't include Workers Containers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.nopermission, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.permissionunknown",
+   "en": "the installer couldn't confirm that the permission you approved includes Workers Containers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.permissionunknown, which stays the notice's whole sentence"
+  },
+  {
+   "key": "installer.fleet.why.container.parse",
+   "en": "this release's description of its container can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (parse); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.class",
+   "en": "this release's description of its container names no class for it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (class); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.policy",
+   "en": "this release's description of its container states a policy the installer can't apply",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (policy); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.size",
+   "en": "this release's description of its container states a size the installer can't use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (size); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.bindings",
+   "en": "this release's description of its container names connections the installer can't make",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (bindings); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.path",
+   "en": "this release's description of its container names a part that isn't in the release",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (path); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.why.container.duplicate",
+   "en": "this release's description of its container names the same class twice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (duplicate); the bare row stays for a cause not named"
+  },
+  {
+   "key": "installer.fleet.skip.manifest.reason",
+   "en": "This release names helper programs but doesn't say how they are uploaded ({reason}), so none were installed. Your team's Civicsmith itself installed normally; a corrected release fixes this at the next update.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-362 (B375): installer-steps (T51-127, R36); skip.manifest with the manifest's own reason, {reason} a why fragment"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
