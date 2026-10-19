@@ -32,3 +32,5 @@
 {"event":"signin.door","at":"2026-10-19T23:47:35.824Z","trace":"c8d4b9d5-dddb-462c-a121-da11bb3a15da","step":"state","member_ref":"member:mai","outcome":"answered","status":200,"ms_total":12}
 {"event":"signin.door","at":"2026-10-19T23:47:38.617Z","trace":"c411c6d5-42e6-4df7-a3dd-43596780bce7","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":12}
 {"event":"signin.door","at":"2026-10-19T23:47:44.868Z","trace":"82513107-3b44-4fdd-9b8c-170aa8ddfd28","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:47:47.254Z","trace":"467a7302-4264-4e42-887e-bd3936a52d40","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":15}
+{"event":"signin.door","at":"2026-10-19T23:47:51.412Z","trace":"12d6288b-46fc-4b6b-92b0-480a4b095243","step":"state","member_ref":"admin","outcome":"answered","status":200,"ms_total":14}
