@@ -1124,8 +1124,7 @@ export class Membership {
       const row = MEMBERSHIP_CHECKS.TARGET_NOT_A_PARTICIPANT;
       return { ok: false, reason: "TARGET_NOT_A_PARTICIPANT", code: "TARGET_NOT_A_PARTICIPANT", check: row.check,
                translation: row.translation, handle,
-               detail: "the member named holds no participation in this project, so there is nobody to remove "
-                     + "(7.7). Nothing was written." };
+               detail: localize("membership.index.the_member_named_holds_no", "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.") };
     }
     /* END DEC-49 REGION is-remove-target-participant */
     if (p.owner) return { ok: false, reason: "OWNER",
