@@ -16,7 +16,7 @@ import { RELEASE_VERSION, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { FLEET_BINDINGS, HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 import { WORD_ROWS } from "../../bio-plane/src/setup-words/rows.mjs";
 import { req, run, begin, cookieValue, release, armWith, restoreSigners, SIGNER, bump, heldCopy, heldCopies, DESCRIPTOR, DEFAULT_VERSION,
-  CAPABLE_SRC, RUNNER, SCANNER, SCANNER_CLASSES, bindingOf, jres } from "./fixture.mjs";
+  CAPABLE_SRC, RUNNER, SCANNER, SCANNER_CLASSES, bindingOf, jres, headOf, like } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -139,7 +139,7 @@ test("R61 every part comes from one release's own signed fleet statement: the bu
      bytes) installs no member, each named for its integrity. */
   const paired = await run({ slug: "r61-paired", rel: await release({ version: RELEASE_VERSION }), builtInFleet: true });
   for (const m of MEMBERS) assert.ok(!paired.acct.has(`${m}-r61-paired`), m);
-  assert.match(paired.page.label("fleet"), /failed its integrity check/);
+  assert.match(paired.page.label("fleet"), like("installer.fleet.why.integrity"));
   assert.ok(paired.page.done, "the plane still installed");
   /* Control: a member the statement does not name is not installed, whatever the repository serves. */
   armWith(SIGNER.line);
@@ -387,8 +387,7 @@ test("R68 an update that left a container's old image running is not done: the d
   /* The platform answers "no changes" and the other image stays: refused as not done, naming the member. */
   const kept = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: stale } }], rolloutKeepsImage: true });
   assert.equal(kept.page.status("verify"), "no");
-  assert.ok(kept.page.done.includes("the container agent-runner of your team&#39;s Civicsmith still runs another image"), "named");
-  assert.ok(kept.page.done.includes("sha256:ffffffffffff") && kept.page.done.includes("sha256:aaaaaaaaaaaa"), "with both digests");
+  assert.match(kept.page.done.replace(/&#39;/g, "'"), like("installer.image.lag.older", { name: RUNNER }), "named");
   assert.ok(!strip(kept.page.done).includes(word("installer.update.done.title")), "never reported as success");
   /* Control: the matching digest is accepted. */
   const match = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: DESCRIPTOR.image } }] });
@@ -401,7 +400,7 @@ test("R68 an update that left a container's old image running is not done: the d
   const silentPart = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: DESCRIPTOR.image } }],
     copy: { bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "agent-worker": { state: "SILENT" } } }) } });
   assert.equal(silentPart.page.status("verify"), "no");
-  assert.ok(silentPart.page.done.includes("cannot get an answer from the capability worker agent-worker"));
+  assert.match(silentPart.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.silent", { name: "agent-worker" }));
   assert.ok(!strip(silentPart.page.done).includes(word("installer.update.done.title")));
   restoreSigners();
 });
@@ -603,24 +602,23 @@ test("R73 the one-time password is introduced as one-time: the finished panel ho
 test("R15 R38 (K3793) a container member R38 leaves out (images on ghcr.io, which an account cannot pull) is named once at the fleet step with why and what the copy lacks, and is no lag: the install and the update confirm when every other member serves; control: a member whose upload fails still holds the verdict, and the verdict names it", async () => {
   armWith(SIGNER.line);
   const ghcr = (n, c) => `ghcr.io/believeinoakland/${n}@sha256:${c.repeat(64)}`;
-  const why = "this release's image is not yet published where your Cloudflare account can pull it";
   const rel = await release({ version: NEXT, container: true, descriptor: { ...DESCRIPTOR, image: ghcr("agent-runner", "a") }, scanner: true,
     scannerParts: { "container/FileScanner.json": { ...SCANNER_CLASSES[0], image: ghcr("file-scanner-scanner", "d") },
       "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: ghcr("file-scanner-renderer", "e") } } });
   for (const [mode, pre] of [["install", {}], ["update", { "r15-ghcr": planeBase("r15-ghcr") }]]) {
     const w = await run({ slug: "r15-ghcr", mode, rel, pre });
     const said = w.page.label("fleet");
-    for (const m of [RUNNER, SCANNER]) assert.ok(said.includes(`${m} (${why}`), `${mode}: ${m} named once at the fleet step with R38's reason`);
+    for (const m of [RUNNER, SCANNER]) assert.match(said, like("installer.fleet.left.item", { member: m, why: like("installer.fleet.why.unpullable") }), `${mode}: ${m} named once at the fleet step with R38's reason`);
     assert.equal(said.split(`${SCANNER} (`).length - 1, 1, `${mode}: file-scanner named once`);
-    assert.match(said, /no file scanner and no safe view/, `${mode}: what the copy lacks`);
+    assert.match(said, like("installer.image.lacks.scanner"), `${mode}: what the copy lacks`);
     assert.equal(w.page.status("verify"), "ok", `${mode}: the verdict confirms (${w.page.words})`);
     assert.ok(w.page.done, `${mode}: finished`);
-    assert.ok(!/could not be installed/.test(w.page.done), `${mode}: neither member is a lag`);
+    assert.doesNotMatch(w.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.failed", { name: /\S+/ }), `${mode}: neither member is a lag`);
     for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(`${m}-r15-ghcr`), `${mode}: ${m} serves`);
   }
   /* Control: a member whose upload is attempted and fails stays a lag, and the verdict holds. */
   const failed = await run({ slug: "r15-failed", rel: await release({ version: NEXT, missing: "ocr-worker" }) });
   assert.equal(failed.page.status("verify"), "no");
-  assert.ok(failed.page.done.includes("ocr-worker could not be installed"));
+  assert.match(failed.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.failed", { name: "ocr-worker" }));
   restoreSigners();
 });

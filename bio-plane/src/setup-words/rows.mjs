@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15738 design words, 934 protected; SHA-256
-   92b00141d676670ceb903c574e2ce989a1df5c9d1c202bd4c7d063a2e3575062) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15749 design words, 934 protected; SHA-256
+   e6dfdbb1706df8b1916c287f98d4c74250b331f59f30bae7b4afdd0fdc6df901) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "92b00141d6";
+export const WORDS_COMMIT = "e6dfdbb170";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -6910,7 +6910,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.members.nothing.here.changes.anything.explain","Nothing here changes anything.","DEC-330: B306 A72/A74: drawn sentence",null,false,"design"],
   ["screen.members.how.many.must.agree.how.explain","How many must agree, how many have, and who.","DEC-330: B306 A72/A74: drawn sentence",null,false,"design"],
   ["screen.members.a.count.you.can.check.explain","A count you can check against the roster, never just \"pending\".","DEC-330: B306 A72/A74: drawn sentence",null,false,"design"],
-  ["screen.project.dev.is.standing.down.as","Dev is standing down as an owner.","DEC-330: B306 A47: drawn sentence",null,false,"design"],
+  ["screen.project.dev.is.standing.down.as","{member} is standing down as an owner.","DEC-330: B306 A47: drawn sentence",null,false,"design"],
   ["screen.project.this.takes.2.of.2","This takes {n} of {total} owners' votes, and {member}'s own is one of them.","DEC-330: B306 A47: drawn sentence",null,false,"design"],
   ["screen.project.with.two.owners.standing.down","With two owners, standing down is a resignation the other owner agrees to: no owner can be removed against their will.","DEC-330: B306 A47: drawn sentence",null,false,"design"],
   ["screen.project.by.standing.down.17.october","by standing down, {date}","DEC-330: B306 A47: drawn sentence",null,false,"design"],
@@ -8615,7 +8615,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.dash-project.next.prepare.label","Prepare Edition {n}","DEC-360 (B371 1): screens-inquiry, dash-project R79; the reference to the ceremony; its card is shell.card.ceremony",null,false,"design"],
   ["screen.document.record.release","Recorded by Civicsmith release {version}","DEC-360 (B371 1): screens-inquiry, document R65; the record of this copy's first row",null,false,"design"],
   ["screen.document.record.added","Added by {member}","DEC-360 (B371 1): screens-inquiry, document R65; the first revision's row",null,false,"design"],
-  ["screen.document.revisions.truncated","Only the newest {n} revisions are shown here; this copy has more.","DEC-360 (B371 1): screens-inquiry, document R65; a cut history",null,false,"design"],
+  ["screen.document.revisions.truncated","Not every revision is shown here: {n} are, and this copy has more.","DEC-360 (B371 1): screens-inquiry, document R65; a cut history",null,false,"design"],
   ["screen.document.revision.nobytes","This revision's own text isn't held, so it can't be compared.","DEC-360 (B371 1): screens-inquiry, document; a compare side whose bytes are not held",null,false,"design"],
   ["screen.document.compare.grade","Grade:","DEC-360 (B371 1): screens-inquiry, document; the compare panel's label before the grade mark, beside Standing: and Vouched for by:",null,false,"design"],
   ["screen.document.a30.tally.one","{n} links on this page. 1 of them leads outside the record, where the site is as it is today and may differ from what was captured.","DEC-360 (B371 1): screens-inquiry, document R67",null,false,"design"],
@@ -8685,6 +8685,17 @@ export const WORD_ROWS = Object.freeze([
   ["installer.fleet.why.container.path","this release's description of its container names a part that isn't in the release","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (path); the bare row stays for a cause not named",null,false,"design"],
   ["installer.fleet.why.container.duplicate","this release's description of its container names the same class twice","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (duplicate); the bare row stays for a cause not named",null,false,"design"],
   ["installer.fleet.skip.manifest.reason","This release names helper programs but doesn't say how they are uploaded ({reason}), so none were installed. Your team's Civicsmith itself installed normally; a corrected release fixes this at the next update.","DEC-362 (B375): installer-steps (T51-127, R36); skip.manifest with the manifest's own reason, {reason} a why fragment",null,false,"design"],
+  ["screen.question.decision.change","Change your decision","DEC-364 (B379 A): screens-inquiry, question; the fold's summary (say003 is the question inside it)",null,false,"design"],
+  ["screen.question.compare.axis","{axis}: {change}","DEC-364 (B379 A): screens-inquiry, question R72; an axis with no citation to name, {axis} the card word, {change} a screen.question.word.* word; with a citation draw screen.question.say054 ({change}, {source}), which carries the \"since … was cited\" tail",null,false,"design"],
+  ["screen.dash-project.next.vouch.one","Vouch for the photo you captured at {place}","DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch",null,false,"design"],
+  ["screen.project.scale.now","(now)","DEC-364 (B379 A): screens-inquiry, project R75; marks the table row for the current number of owners",null,false,"design"],
+  ["screen.project.scale.takes","{votes} of {owners}","DEC-364 (B379 A): screens-inquiry, project R75; Votes it takes at three owners or more",null,false,"design"],
+  ["screen.project.scale.who","{voters} of {owners} may vote","DEC-364 (B379 A): screens-inquiry, project R75; the Why cell at three owners or more",null,false,"design"],
+  ["network-notices.level.very_active","Very active","DEC-364 (B379 A): screens-inquiry; a level, 10 to 13 of 13 weeks; one family with .level.active|quiet|dormant (network-notices.active stays for its older readers)",null,false,"design"],
+  ["network-notices.level.some_work","Some work","DEC-364 (B379 A): screens-inquiry; a level, 4 to 6 of 13 weeks; one family with the other .level.* rows",null,false,"design"],
+  ["screen.document.a34.kept.noreason","Kept citing the earlier version, by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a keep with no reason given",null,false,"design"],
+  ["screen.document.a34.moved.noreason","Citations moved to this copy by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a move with no reason given",null,false,"design"],
+  ["screen.document.compare.fingerprint","Fingerprint: {digest}","DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
