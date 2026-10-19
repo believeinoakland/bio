@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import { browserActs } from "./browser.mjs";
 import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "../../../src/op-declarations/t47.mjs";
 import { T51_SHARES } from "../../../src/op-declarations/t51.mjs";
@@ -32,7 +33,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* the conditions R55's, R57's and R59's ops share (none in a bearer fence or on a grant's list, no `ai` class, never
    unattended, no alias, frozen) */
 const shared = (op) => {

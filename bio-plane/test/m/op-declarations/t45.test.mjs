@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import * as T45 from "../../../src/op-declarations/t45.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
@@ -306,8 +307,7 @@ test("R49, R5, R7, R51: t45.mjs is frozen data — each share names an owner who
 
 test("R34, R49: every member op T45 declares is explained in affordances' ACT_HELP or named under one ground of ACT_HELP_ABSENT, never both — the reads under the read ground, the acts under the last (an act the design has not yet explained) (negative control: an unnamed op is seen)", () => {
   const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-  const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
-  for (const op of Object.keys(R49)) {
+    for (const op of Object.keys(R49)) {
     assert.ok(SESSION_OPS.member.has(op), op);
     if (explained(op)) { assert.deepEqual(ground(op), [], `${op} is explained and named`); continue; }
     assert.deepEqual(ground(op), [OPS[op].mutating ? "unexplained" : "read"], op);

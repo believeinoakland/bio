@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import { T50_SHARES, T50_FAMILIES } from "../../../src/op-declarations/t50.mjs";
 import { needsRows } from "../../../src/op-capabilities/index.mjs";
 import { SCREEN_REGISTRY, INSTALLER_ROUTES, registryActGaps } from "../../../src/wizard-scripts/index.mjs";
@@ -33,7 +34,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* a caller not arriving by a session is judged against machineClasses where given (admission R5) */
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon", "ai"].filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 

@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import { browserActs } from "./browser.mjs";
 import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
 import * as AFF from "../../../src/affordances.mjs";
@@ -40,7 +41,6 @@ const machineAdmits = (op) => ["admin", "member", "probe", "daemon"].filter((c) 
 const agentReaches = (op) => OPS[op].classes?.includes("member") && !Array.isArray(OPS[op].machineClasses)
   && !GOVERNANCE_ACTIONS.includes(op) && !IDENTITY_ACTIONS.includes(op);
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 
 /* every condition the ops of R50 and R51 share: both session sets, the act gate's session mode, in neither bearer fence,
    not on a grant's list, no `ai` class, never unattended, no alias, frozen */

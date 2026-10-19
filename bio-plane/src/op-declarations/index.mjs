@@ -2604,7 +2604,11 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    `holdsdue`, `templatebyhandle`, `rulefields`, `clocksrunning`, `adminremovalsopen`) are named under the read ground, as
    reads a screen draws from, until `affordances`' `ACT_HELP` holds a text (`heldat`'s `check` button takes its text from
    the design when it gives one). `publishedfrozen` is public and in no session set, so it needs none; the browser acts of
-   R76 are no ops, so R34's partition does not run over them (`BROWSER_ACTS`; `affordances` R69 publishes their texts). */
+   R76 are no ops, so R34's partition does not run over them (`BROWSER_ACTS`; `affordances` R69 publishes their texts).
+   (K4070, B3) `affordances` holds `act.<op>.does` for `counselpacket`, `holdnoticeprepare`, `noticeprepare`, `noticepost`,
+   `signeradd` and `versionnotice` (its R62's reads list), so the six leave their grounds (`unexplained` and `read`); R34's
+   partition tests read an op as explained by `ACT_HELP` or by that word (`test/m/op-declarations/help.mjs`), which holds
+   before and after affordances merges. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: localize("op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it."),
     ops: frozenList([
@@ -2633,7 +2637,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
       "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
       "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
-      "notes", "noticeprepare", "notices", "opencaptures", "originalstate", "overridesof", "partiesof", "patterns",
+      "notes", "notices", "opencaptures", "originalstate", "overridesof", "partiesof", "patterns",
       "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
       "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
       "proceedingstatus", "projectaccountstate", "projectaikeepawaystate", "projectholds", "projectinvitations",
@@ -2648,7 +2652,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "stepproposals", "steps", "stepslike", "stillstanding", "structureat", "subjectsnamed", "successread",
       "successrecords", "sweeps", "table", "tablesat", "templatebyhandle", "templatecomments", "templateread",
       "templates", "templatesforaction", "textattest", "textprovenance", "threatof", "timeline", "translations",
-      "usesof", "verdictnotes", "versioncompare", "versionnotice", "watchquestions", "whatchangeddrafts",
+      "usesof", "verdictnotes", "versioncompare", "watchquestions", "whatchangeddrafts",
       "whereitstands", "whowassent", "wizardcandidates", "wizardcheck", "wizardread", "wizardsat", "wizarduse",
       "workbook", "workbookexport", "workbookinputs", "workbooklint"]) }),
   nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check, a wizard's progress, a capture a tool files (the screen's upload is captureupload), or the mark a screen records of itself when it opens (Home's lookedsince).",
@@ -2665,7 +2669,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "caseimportdocument", "checkrecord", "checktake", "claimfindstep", "claimfound", "clockstate", "coarchiveset",
       "comparisonpropose", "consequencerecord", "consequencerevise", "contentmint", "contradictionclarify",
       "contradictiondismiss", "contradictionoptin", "contradictionpropose", "contradictionrecommend",
-      "contradictionresolve", "contradictionrespond", "contradictiontakeup", "costmessage", "counselpacket",
+      "contradictionresolve", "contradictionrespond", "contradictiontakeup", "costmessage",
       "counselpacketexport", "courttreat", "cureunlink", "determine", "discretionrecord", "dispose", "docketdecline",
       "docketpressure", "dutyadopt", "dutymatch", "dutypropose", "dutyrevise", "dutytransition", "dutywithdraw",
       "editacts", "entityidentify", "escalationattach", "escalationdecline", "escalationevaluate", "escalationresume",
@@ -2673,7 +2677,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "eventsplit", "exportrender", "extractpropose", "filemembershipjudge", "filemembershipstore",
       "findaccept", "findmute", "followbody", "followpersonquery", "followportal", "goalclose", "goaldeclare",
       "goallink", "grouptestset", "guideadopt", "guidedraft", "guideoffer", "guidepropose",
-      "guideproposetocivicsmith", "guideretire", "guidereview", "holdnoticeprepare", "hypothesisrevise",
+      "guideproposetocivicsmith", "guideretire", "guidereview", "hypothesisrevise",
       "hypothesissetaside", "hypothesistakeup", "hypothesiswithdraw", "importacceptwithdraw", "importflagclear",
       "importunwatch", "inquirydivide", "interestcheckdefine", "interestcheckgate", "interestcheckswitch",
       "interviewkeep", "joinlinkoff", "joinlinkreplace", "joinlinkset", "keyedserviceset", "keyedserviceswitch",
@@ -2681,14 +2685,14 @@ const ACT_HELP_ABSENT = Object.freeze({
       "linkproject", "memberpairingset", "milestoneitemremove", "milestonereminder", "milestoneremove",
       "milestonerevise", "milestoneset", "moneycheckparam", "moneydetectordefine", "moneydetectorgate",
       "moneydetectorswitch", "moneyfundtype", "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause",
-      "narrativeclaim", "noteshare", "noteunshare", "noticepost", "objectivecondition", "optionrevise",
+      "narrativeclaim", "noteshare", "noteunshare", "objectivecondition", "optionrevise",
       "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw", "planaccept",
       "plancomment", "planreviewrecord", "planreviewrhythm", "plansubjectremove", "prepitemadd", "prepitemdone",
       "prepitemtakeup", "projectclosewithgaps",
       "projectwatch", "proposalaccept", "provenancechain", "provenanceroute", "questionfollow", "ratify", "readoptin",
       "readpages", "reattest", "recordset", "recordsrequestanswer", "recordsrequestopen",
       "reevaluationrecord", "refreshregister", "registerimport", "relationwithdraw", "reopen", "reportkeep",
-      "resolutiondefect", "reviewpropose", "ruleservicesswitch", "safecopyrequest", "seatsseed", "signeradd",
+      "resolutiondefect", "reviewpropose", "ruleservicesswitch", "safecopyrequest", "seatsseed",
       "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed", "sourcepersonlink",
       "standardadoption", "standardbenchmark", "standardforce", "standardforcepropose", "standardforcewithdraw",
       "standardimpose", "standardinforcethrough", "standardinforcethroughwithdraw", "standardpropose",
