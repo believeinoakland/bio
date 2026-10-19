@@ -7,7 +7,7 @@
    where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
    no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf } from "./send-steps.mjs";
+import { draftsOf, stepOf, readOnly, kindWord, later, WRITE_HELP } from "./send-steps.mjs";
 
 // R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -32,18 +32,22 @@ export const action = Object.freeze({
     return {
       action: { op: "action", query: { id: view.subject }, subject: true },
       filings: { op: "filingsfor", query: { action: view.subject }, empty: function () { return false; } },
-      hold: { op: "actionholdpreview", query: { target: view.subject }, empty: function () { return false; } },
-      // R12: the action's pressure marks and the pressure records, each with where it arrived (action-holds R16).
+      // R12, R31 (3): the action's pressure marks and records, each with where it arrived, who made it and its hold, and the
+      // profile's fact on a legal mark (action-holds R16, R18)
       pressure: { op: "pressurefor", query: { action: view.subject },
         empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
       // R16: the laws the group's places name, from which a law is chosen or proposed.
       profiles: { op: "profiles", empty: function () { return false; } },
+      // R28: a kind the profile defines is worded by its own label; R31 (2): the templates the action's kind holds
+      vocab: { op: "affordances", query: {}, empty: function () { return false; } },
+      templates: { op: "templatesforaction", query: { action: view.subject }, empty: function () { return false; } },
     };
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf,
+    draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord,
+    later: later,
     // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives.
     lawsOf: function (profiles, kind) {
       const v = profiles && profiles.view ? profiles.view : {};
@@ -92,6 +96,12 @@ export const action = Object.freeze({
   render: function (cs, view) {
     const P = view.parts;
     const STATES = ["planned", "active", "awaiting_response", "resolved", "abandoned"];
+    // R31: a section whose tooltip is two sentences, each its own key (`<section>.tip1`, `.tip2`)
+    const tips = function (titleKey, inner, k1, k2) {
+      const tip = cs.esc(cs.w(k1) + " " + cs.w(k2));
+      return '<section class="cs-section"><h2 tabindex="0" data-level="2" data-tip="' + tip + '">' + cs.w(titleKey) + "</h2>" + inner + "</section>";
+    };
+    const aLink = function (screen, id, key) { return '<a class="cs-ref" href="/app/' + screen + "/" + encodeURIComponent(id) + '" data-nav>' + cs.w(key) + "</a>"; };
     return cs.state("action", function (a) {
       const office = a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "";
       const holder = a.addressee && a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? a.addressee.holder_on_date.holder : "";
@@ -99,10 +109,13 @@ export const action = Object.freeze({
       const sent = corr.filter(function (c) { return c.direction === "sent"; });
       const first = sent.length ? sent[0] : null;
       const state = STATES.includes(a.current_state) ? a.current_state : "planned";
-      const head = cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + cs.w("screen.action.kind." + (["records_request", "request_for_comment"].includes(a.kind) ? a.kind : "other"))
-        + (office ? " · " + cs.w("screen.action.to", { office: office }) : "") + (holder ? " · " + cs.w("screen.request.holder", { holder: holder }) : "")
-        + (first ? " · " + cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: String(first.author || "").replace(/^member:/, "") }) : "")
-        + " · " + cs.w("screen.plan.actionstate." + state) + "</p>"
+      const voc = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
+      // R28: the kind in its words, a profile's own kind by its label, never "Other"
+      const kindName = P.kindWord(cs, typeof a.kind === "string" && a.kind ? a.kind : "other", false, voc.action_kind_labels);
+      const sub = [kindName, office ? cs.w("screen.action.to", { office: office }) : "", holder ? cs.w("screen.request.holder", { holder: holder }) : "",
+        first ? cs.w("screen.action.sentby", { date: { html: cs.date(first.at) }, who: String(first.author || "").replace(/^member:/, "") }) : "",
+        cs.w("screen.plan.actionstate." + state)].filter(Boolean).join(" · ");
+      const head = P.readOnly(cs, "screen.action.name") + cs.title(typeof a.title === "string" && a.title ? a.title : null) + '<p class="mk-sub">' + sub + "</p>"
         + (a.confidential ? '<p class="mk-note">' + cs.w("screen.action.confidential") + "</p>" : "");
 
       // R10: an approved text not yet sent opens its send step.
@@ -128,21 +141,33 @@ export const action = Object.freeze({
         return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + "</span>", "", remind);
       }).join("")));
 
-      // R23: "Open a question from this" (`actioninquiry`): the member writes the question, one line; the action is where it
-      // comes from, not evidence in it. At once where a reply's date has passed with none recorded (state b), else on request.
+      // R23, R26: "Open a question from this" (`actioninquiry`): the member writes the question, one line; the action is where it
+      // comes from, not evidence in it. In the drawing's state b (a reply's date passed with none recorded) the act sits in the
+      // sentence block with its form; on any other action it is asked for, behind a fold. On success the page stays and says
+      // where the question is open, with a reference to it.
       const lapsed = clock.filter(function (c) { return c.date && (["pending", undefined].includes(c.status)) && String(c.date) < today; })
         .map(function (c) { return String(c.date); }).sort();
-      const ask = cs.act("actioninquiry", { label: "action.noreply.question", tone: lapsed.length ? "primary" : undefined });
-      const askForm = cs.field("action-question", "act.owed_actioninquiry.label.action", { max: 500, help: "action.noreply.question.help" })
-        + '<div class="mk-acts">' + ask + "</div>";
+      const ask = cs.act("actioninquiry", { label: "action.noreply.question", tone: "primary" });
+      const helpAsk = view.reachable ? cs.act("writinghelp", { data: { field: "question", id: "action-question", forop: "actioninquiry" } }) : "";
+      const projects = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.bundles)
+        ? view.data.projects.value.bundles : [];
+      const ownProject = projects.find(function (b) { return b.bundle_id === a.project; });
+      const asked = view.ui.asked || null;
+      const receipt = asked && asked.inquiry
+        ? cs.row("", cs.w("screen.action.ask.done", { project: ownProject && ownProject.title ? ownProject.title : "" }),
+          aLink("question", asked.inquiry, "screen.question.name")) : "";
+      const askForm = '<p class="mk-small">' + cs.w("action.noreply.question.help") + "</p>"
+        + cs.field("action-question", "action.noreply.question.label", { max: 500, rec: true, help: "action.noreply.question.field.help" })
+        + '<div class="mk-acts">' + ask + helpAsk + "</div>";
       const question = !ask ? "" : lapsed.length
         ? '<div class="cs-reason" role="region"><p class="cs-wait" role="status"><b>' + cs.w("action.noreply.title", { date: { html: cs.date(lapsed[0]) } }) + "</b></p>"
-          + '<p class="mk-small">' + cs.w("action.noreply.says") + "</p>" + askForm + "</div>"
-        : '<details class="mk-details"><summary>' + cs.w("action.noreply.question") + "</summary>" + askForm + "</details>";
+          + '<p class="mk-small">' + cs.w("action.noreply.says") + "</p>" + cs.sec("screen.action.ask.heading", askForm) + receipt + "</div>"
+        : '<details class="mk-details"' + (asked ? " open" : "") + "><summary>" + cs.w("action.noreply.question") + "</summary>" + cs.sec("screen.action.ask.heading", askForm) + receipt + "</details>";
 
       // R5: the replies, each received one markable as pressure (once).
       const entries = Array.isArray(a.entries) ? a.entries : [];
       const received = corr.filter(function (c) { return c.direction !== "sent"; });
+      const helpReply = view.reachable ? cs.act("writinghelp", { data: { field: "account", id: "reply-account", forop: "actioncorrespond" } }) : "";
       const replies = cs.sec("screen.action.replies", (received.length ? cs.sheet(received.map(function (c) {
         const e = entries.find(function (x) { return x.ord === c.ord; }) || {};
         const pr = e.pressure ? cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(e.pressure.kind) ? e.pressure.kind : "other")) : "";
@@ -154,25 +179,78 @@ export const action = Object.freeze({
       }).join("")) : "")
         + cs.field("reply-at", "screen.action.reply.at", { type: "date" })
         + cs.field("reply-account", "screen.action.reply.account", { area: true, help: "screen.action.reply.account.help" })
-        + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + "</div>");
+        + '<div class="mk-acts">' + cs.act("actioncorrespond", { tone: "primary" }) + helpReply + "</div>");
 
-      // R12: the pressure marks and records on this action, each with where it arrived, paged by `after`; none drawn at
-      // zero; a mark that arrived on another action is not this action's.
+      // R12, R31 (3): the pressure marks and records on this action, each with where it arrived, who made it and whether a hold
+      // is placed (a legal one as `screen.action.legalmark`), paged by `after`; none drawn at zero; the profile's fact on a legal
+      // threat once, with its source, and the doors to `hold` and `grouprules`.
       const pr = view.data.pressure;
+      const ownMark = function (m) { return !(m.arrived && m.arrived.action && m.arrived.action !== view.subject); };
       const marks = function (items) {
         return cs.sheet(items.map(function (m) {
           const at = m.arrived && m.arrived.action ? cs.w("screen.action.pressuremark.reply", { ord: String(m.arrived.ord) }) : cs.w("screen.action.pressuremark.record");
-          return cs.row(cs.date(m.at), cs.w("screen.action.pressure." + (["legal", "retaliation", "discrediting"].includes(m.kind) ? m.kind : "other"))
-            + (m.note ? " · " + cs.esc(m.note) : "") + '<span class="meta">' + at + (m.by ? " · " + cs.w("screen.action.pressuremark.by", { who: String(m.by).replace(/^member:/, "") }) : "") + "</span>", "", "");
+          const who = P.who(m.by);
+          const legal = m.kind === "legal";
+          const hold = !legal ? "" : m.hold === "in_place" ? cs.w("screen.action.held") : m.hold === "released" ? "" : cs.w("screen.action.holdnone");
+          return cs.row(cs.date(m.at), (legal ? cs.w("screen.action.legalmark", { member: who })
+            : cs.w("screen.action.pressure." + (["retaliation", "discrediting"].includes(m.kind) ? m.kind : "other"))) + (m.note ? " · " + cs.esc(m.note) : "")
+            + '<span class="meta">' + at + (!legal && who ? " · " + cs.w("screen.action.pressuremark.by", { who: who }) : "") + (hold ? " · " + hold : "") + "</span>", "", "");
         }).join(""));
       };
       let pressureSec = "";
       if (pr && pr.state === "ok") {
-        const first = (pr.value.items || []).filter(function (m) { return !(m.arrived && m.arrived.action && m.arrived.action !== view.subject); });
+        const first = (pr.value.items || []).filter(ownMark);
         const more = pr.value.truncated && pr.value.cursor ? P.pressurePages(cs, view, pr.value.cursor) : { items: [], state: "ok" };
-        const all = first.concat(more.items.filter(function (m) { return !(m.arrived && m.arrived.action && m.arrived.action !== view.subject); }));
-        pressureSec = cs.sec("screen.action.pressuremarks", (all.length ? marks(all) : "") + (more.state !== "ok" ? cs.state(more.page) : ""));
+        const all = first.concat(more.items.filter(ownMark));
+        const facts = Array.isArray(pr.value.facts) ? pr.value.facts : null;
+        const hasLegal = all.some(function (m) { return m.kind === "legal"; });
+        const factRows = !hasLegal ? "" : facts === null ? cs.state({ state: "failed" })
+          : facts.length ? cs.sheet(facts.map(function (x) {
+            return cs.row("", cs.esc(x.statement || "") + '<span class="meta">' + cs.w("screen.action.profilefact.from") + (x.citation ? " · " + cs.esc(x.citation) : "") + "</span>", "", "");
+          }).join("")) + '<p class="mk-note">' + cs.w("screen.action.profilefact.shown") + " " + cs.w("guide.procedure.legalinfo") + "</p>" : "";
+        const doors = hasLegal ? '<p class="mk-note">' + aLink("hold", view.subject, "screen.action.hold.link") + " · " + aLink("grouprules", "", "screen.action.rule.link") + "</p>" : "";
+        pressureSec = all.length ? cs.sec("screen.action.pressuremarks", marks(all) + (more.state !== "ok" ? cs.state(more.page) : "") + factRows + doors) : "";
       } else if (pr && pr.state === "failed") pressureSec = cs.sec("screen.action.pressuremarks", cs.state("pressure"));
+
+      // R31 (2): templates, drawn only because the action exists: each offered one with who approved it and when, each not offered
+      // by its handle with what it lacks, a court petition with none; "Prepare the text" opens `request`.
+      const tm = view.data.templates;
+      let templatesSec = "";
+      if (tm && tm.state === "ok" && tm.value) {
+        const t = tm.value;
+        const offered = Array.isArray(t.versions) ? t.versions : [];
+        const not = Array.isArray(t.not_offered) ? t.not_offered : [];
+        const rows = t.court_petition ? "" : offered.map(function (v) {
+          const by = typeof v.approved_by === "string" && v.approved_by ? P.who(v.approved_by) : "";
+          return cs.row("", cs.esc(v.name || v.template || ""), v.approved_at && by
+            ? '<span class="meta">' + cs.w("screen.action.templates.approved", { member: by, date: { html: cs.date(v.approved_at) } }) + "</span>" : "", "");
+        }).concat(not.map(function (n) {
+          return cs.row("", cs.esc(n.handle || n.name || "") + '<span class="meta">' + cs.w("screen.action.templates.notyet") + "</span>", "", "");
+        })).join("");
+        const prepare = a.kind === "records_request" ? '<p class="mk-note">' + aLink("request", view.subject, "act.communicationprepare.label.request") + "</p>" : "";
+        const lead = t.court_petition ? '<p class="mk-small">' + cs.w("screen.action.templates.nocourt") + "</p>" : '<p class="mk-small">' + cs.w("screen.action.templates.offered") + "</p>";
+        templatesSec = rows || t.court_petition ? tips("screen.action.templates.heading", lead + (rows ? cs.sheet(rows) : "")
+          + (not.length ? '<p class="mk-note">' + cs.w("screen.action.templates.own") + " " + cs.w("screen.action.templates.never") + "</p>" : "") + prepare,
+        "screen.action.templates.tip1", "screen.action.templates.tip2") : "";
+      }
+
+      // R31 (1): the procedure guide: each route with what to expect and its source, in the profile's order, the group's approved
+      // guides after, each marked with who approved it; legal information, not legal advice.
+      const gd = P.later(cs, view, "guides", "procedureguides", { kind: a.kind || "other" }, String(view.ui.guideN || 0));
+      const guides = gd.state === "ok" && gd.value && Array.isArray(gd.value.guides) ? gd.value.guides : [];
+      const guideRows = guides.map(function (g) {
+        const from = g.origin === "group"
+          ? cs.w("screen.action.templates.approved", { member: P.who(g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
+        return (Array.isArray(g.items) ? g.items : []).map(function (it) {
+          return cs.row("", cs.esc(it.route || "") + '<span class="meta">' + (it.expect ? cs.esc(it.expect) + " · " : "") + (it.citation ? cs.esc(it.citation) + " · " : "") + from + "</span>", "", "");
+        }).join("");
+      }).join("");
+      const teamGuides = guides.filter(function (g) { return g.origin === "group"; }).length;
+      const guideAct = cs.act("procedureguides", {});
+      const guideSec = gd.state === "failed" ? tips("screen.action.guide.heading", cs.state({ state: "failed", refusal: gd.refusal }), "screen.action.guide.tip1", "screen.action.guide.tip2")
+        : guideRows || guideAct ? tips("screen.action.guide.heading", '<p class="mk-small">' + cs.w("screen.action.profilefact.from") + " · " + cs.w("screen.action.guide.order") + " · " + cs.w("guide.procedure.legalinfo") + "</p>"
+          + (guideRows ? cs.sheet(guideRows) : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
+          + (guideAct ? '<div class="mk-acts">' + guideAct + "</div>" : ""), "screen.action.guide.tip1", "screen.action.guide.tip2") : "";
 
       // R16: the law it goes under: the laws a member stated (each by level and citation, with the window the group's places
       // give it), who stated them and when, or that none is; a change by choosing among the laws the places name; the
@@ -228,18 +306,15 @@ export const action = Object.freeze({
         + cs.choice("risk-tier", "risk.title", [1, 2, 3].map(function (t) { return [String(t), "risk.tier." + t]; }))
         + '<div class="mk-acts">' + cs.act("actionrisktier", { label: "risk.revise" }) + "</div>", { help: "risk.help" });
 
-      // R5: move, hold and scope.
+      // R5: move and scope (R32: the hold is placed on `hold`, not here).
       const moves = P.moves(state);
       const move = moves.length ? cs.choice("move-to", "screen.action.move.to", moves.map(function (m) { return [m, "screen.plan.actionstate." + m]; }))
         + cs.choice("move-resolution", "screen.action.move.resolution", ["complied", "denied", "escalated", "withdrawn", "completed"].map(function (r) { return [r, "screen.action.resolution." + r]; }))
         + cs.act("actionmove", {}) : "";
-      const h = view.data.hold;
-      const held = h && h.state === "ok" && h.value && h.value.hold === "in_place";
-      const hold = held ? '<p class="mk-note">' + cs.w("screen.action.held") + "</p>" : cs.act("actionhold", {});
       const scope = '<p class="mk-note">' + cs.w(a.confidential ? "screen.action.scope.confidential" : "screen.action.scope.open") + "</p>"
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
-      const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + hold + scope);
-      return head + pickup + wait + question + clocks + replies + pressureSec + lawSec + riskSec + manage;
+      const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
+      return head + pickup + wait + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + manage;
     });
   },
 
@@ -334,14 +409,19 @@ export const action = Object.freeze({
         return { body: { action: view.subject, question: question } };
       },
       rereads: [],
-      done: function (view, answer, cs) { if (answer && answer.inquiry) cs.go("question", answer.inquiry); return { stay: true }; },
+      done: function (view, answer, cs) { if (answer && answer.inquiry) cs.set("asked", { inquiry: answer.inquiry }); return { stay: true }; },
     }),
     {
-      // R5: "Record a litigation hold", with a reason (the shell asks it).
-      op: "actionhold",
-      send: function (view) { return { body: { target: view.subject, hold: "in_place" } }; },
-      rereads: ["hold"],
+      // R31 (1): "Show the routes": the procedure guides for this kind of action, read again; legal information, not advice.
+      op: "procedureguides",
+      send: function (view) {
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        return { query: { kind: a.kind || "other" } };
+      },
+      rereads: [],
+      done: function (view, answer, cs) { cs.set("guideN", (view.ui.guideN || 0) + 1); },
     },
+    WRITE_HELP,
     {
       // R5 (v0.2 rule 15): confidential or not, with a reason; a published case keeps what it said.
       op: "actionscope",

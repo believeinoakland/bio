@@ -6,7 +6,7 @@
    office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
    preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -43,7 +43,7 @@ export const request = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly,
     isRequest: function () { return true; },
     // R20: the offices known: those the member's last "Choose the office" answered, else those the load read answered;
     // null while the read has not answered (or failed).
@@ -63,8 +63,12 @@ export const request = Object.freeze({
   render: function (cs, view) {
     const P = view.parts;
     const s = String(view.subject || "");
-    const head = cs.title(null) + '<p class="mk-sub">' + cs.w("screen.request.lookfirst")
-      + ' <a class="cs-ref" href="/app/capture" data-nav>' + cs.w("screen.request.capture") + "</a></p>";
+    // R29: the door to the composer for any other kind of action, before the office is chosen, in both states
+    const other = /^ACTN-/.test(s) ? "" : '<p class="mk-note">' + cs.w("screen.request.other") + '</p><div class="mk-links" data-list="actionnew"><a class="cs-ref" href="/app/actionnew/'
+      + encodeURIComponent(String(view.subject || "")) + '" data-nav data-screen="actionnew">' + cs.w("screen.request.other.go") + '</a><span class="mk-small" data-purpose="actionnew">'
+      + cs.w("screen.actionnew.name") + " · " + cs.w("screen.actionnew.purpose") + "</span></div>";
+    const head = P.readOnly(cs, "screen.request.name") + cs.title(null) + '<p class="mk-sub">' + cs.w("screen.request.lookfirst")
+      + ' <a class="cs-ref" href="/app/capture" data-nav>' + cs.w("screen.request.capture") + "</a></p>" + other;
     const help = '<a class="cs-ref" href="/app/help-records" data-nav>' + cs.w("screen.help-records.name") + "</a>";
     if (!/^ACTN-/.test(s)) {
       // A new request: the office, then what is wanted; starting it opens the request's own address (its step).

@@ -10,6 +10,10 @@ import { request } from "./request.mjs";
 import { action } from "./action.mjs";
 import { matter } from "./matter.mjs";
 import { helpRecords } from "./help-records.mjs";
+import { actionNew } from "./actionnew.mjs";
+import { hold, holdNotice } from "./hold.mjs";
+import { counsel } from "./counsel.mjs";
+import { dashAction } from "./dash-action.mjs";
 
 export { SCREEN_WORDS };
 
@@ -29,19 +33,41 @@ const EXTRA = {
   action: ["mark.due.means", "law.title", "law.help", "law.stated", "law.undetermined", "law.change", "law.proposed", "law.proposal.not", "law.propose",
     "risk.title", "risk.help", "risk.tier", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined", "risk.set", "risk.revise", "risk.proposed",
     "risk.proposal", "risk.proposal.not", "action.noreply.title", "action.noreply.says", "action.noreply.question", "action.noreply.question.help",
-    "act.owed_actioninquiry.label.action", "refusal.ACTION_INQUIRY_NO_QUESTION", "refusal.ACTION_NO_PROJECT", "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION"],
+    "act.owed_actioninquiry.label.action", "refusal.ACTION_INQUIRY_NO_QUESTION", "refusal.ACTION_NO_PROJECT", "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION",
+    "screen.action.guide.heading", "screen.action.guide.order", "screen.action.guide.sourced", "screen.action.guide.team", "screen.action.guide.teamnone",
+    "screen.action.guide.tip1", "screen.action.guide.tip2", "screen.action.templates.heading", "screen.action.templates.offered", "screen.action.templates.nocourt",
+    "screen.action.templates.approved", "screen.action.templates.notyet", "screen.action.templates.own", "screen.action.templates.never", "screen.action.templates.tip1",
+    "screen.action.templates.tip2", "screen.action.profilefact.from", "screen.action.profilefact.shown", "screen.action.legalmark", "screen.action.holdnone",
+    "screen.action.hold.link", "screen.action.rule.link", "screen.action.held"],
   matter: [],
   "help-records": [],
+  actionnew: ["screen.request.name", "screen.request.purpose", "screen.capture.saw.when", "screen.action.dates", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined",
+    "screen.start-send.rests", "screen.plan.matter.n", "screen.action.kind.other", "refusal.ACTION_KIND_UNKNOWN", "refusal.ACTION_BASIS_REFUSED", "refusal.COUNTERPARTY_REFUSED",
+    "refusal.CLOCK_REFUSED", "screen.start-send.draft.machine", "state.empty"],
+  hold: ["screen.action.pressure.kind", "screen.action.pressure.legal", "screen.action.pressure.retaliation", "screen.action.pressure.discrediting", "screen.action.pressure.other",
+    "screen.start-send.draft.machine"],
+  holdnotice: ["screen.start-send.sentat", "screen.start-send.how", "screen.start-send.outward", "screen.start-send.draft.template", "screen.start-send.draft.machine", "shell.unavailable.nothing"],
+  counsel: ["screen.person.kind.name", "screen.people.kind.organization"],
+  "dash-action": ["home.needsyou.title", "screen.action.kind.other", "screen.plan.matter.n", "screen.actionnew.name"],
 };
 // Keys a screen draws under another screen's prefix (one sentence, one key, wherever it is drawn).
 const BORROWS = {
   plan: ["screen.matter.stage."],
   "start-send": ["screen.plan.support.", "screen.request.", "screen.start-send."],
+  actionnew: ["screen.action.kind."],
+  "dash-action": ["screen.action.kind."],
   request: ["screen.start-send."],
-  action: ["screen.plan.actionstate.", "screen.request.holder", "screen.request.level", "screen.request.window.", "screen.request.law"],
+  action: ["screen.plan.actionstate.", "screen.request.holder", "screen.request.level", "screen.request.window.", "screen.request.law", "screen.action.kind.",
+    "screen.start-send.kind."],
   "help-records": ["screen.request.window."],
 };
-const SHARED_OWN = { plan: ["act.plansubjectadd.label.plan", "act.plansubjectadd.does", "act.planask.does"], "start-send": ["act.filingrecordsent.does"], request: ["act.filingrecordsent.does"] };
+const SHARED_OWN = {
+  action: ["act.communicationprepare.label.request", "guide.procedure.legalinfo", "screen.question.name", "action.noreply.question.label",
+    "action.noreply.question.field.help", "screen.action.ask.heading", "screen.action.ask.done", "screen.action.pressure.kind"],
+  request: ["act.filingrecordsent.does", "screen.request.other", "screen.request.other.go", "screen.actionnew.name", "screen.actionnew.purpose"],
+  plan: ["act.plansubjectadd.label.plan", "act.plansubjectadd.does", "act.planask.does"],
+  "start-send": ["act.filingrecordsent.does"],
+};
 
 const wordsOf = (s) => {
   const id = s.id;
@@ -51,6 +77,6 @@ const wordsOf = (s) => {
   return Object.freeze([...new Set([...SHARED, `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...own])]);
 };
 
-/** The six screens, in the order a member meets them: the plan, starting and sending, a records request, one action,
- *  one matter, and the records request's help. */
-export const SCREENS = Object.freeze([plan, startSend, request, action, matter, helpRecords].map((s) => Object.freeze({ ...s, words: wordsOf(s) })));
+/** The screens, in the order a member meets them: the plan, starting and sending, a records request, one action, one matter, the
+ *  records request's help, then (T51) the composer, the litigation hold and its notice, counsel and the dashboard. */
+export const SCREENS = Object.freeze([plan, startSend, request, action, matter, helpRecords, actionNew, hold, holdNotice, counsel, dashAction].map((s) => Object.freeze({ ...s, words: wordsOf(s) })));
