@@ -3816,6 +3816,15 @@
      ]
     },
     {
+     "op": "actionholdrelease",
+     "label": "Release the hold, with a reason",
+     "status": "declared",
+     "modules": [
+      "action-holds",
+      "store-door"
+     ]
+    },
+    {
      "op": "pressurerecord",
      "label": "Record pressure from elsewhere",
      "status": "declared",
