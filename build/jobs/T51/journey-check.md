@@ -23,3 +23,5 @@
 Accepted reds by name until those land: R1 (a) (aggregate), R20, R22, R25, R27.
 
 **Tests and checks**: format 0 failures; architecture 0; ownership 0; coverage 27 of 28 (R19, conditional, unmet). Words check: the old plain findings plus my new labels, listed in the REPORT.
+
+Size (session_01DySLHCA8d6vPi2gDtHEtm3): test runs 9, module lines 3226
