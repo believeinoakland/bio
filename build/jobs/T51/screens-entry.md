@@ -29,3 +29,7 @@ T51-114 applied: R25 (a skipped setup part reads screen.setup.state.skipped with
 ## Change B2 (K4093)
 
 Merged `tranche/T51`. No local stand-in of a provider (`BROWSER_ACTS`, shell options, patched registry) is held in the module or its tests; the test kit's stand-in of the shell's kit is the module's interface harness, unchanged. Module tests: tests 85, pass 85, fail 0. format, architecture, coverage (25 of 25), words (0 failures) and ownership: 0 failures. Nothing fails; nothing of another module's found.
+
+## J2 · COMPLETE · re B2
+
+B2 applied: tranche/T51 merged; no provider stand-in to drop; module tests 85/85 against the real providers; format, architecture, coverage, words and ownership 0 failures.
