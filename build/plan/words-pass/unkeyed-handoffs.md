@@ -31,3 +31,7 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 - lines (LINES #5 J1 (4)): rows orphaned once `rows.mjs` is regenerated: `lines.text.date_read`, `lines.text.lines_hold_post`, `lines.text.lines_read_holds`, `lines.text.line_naming_office`, `lines.undetermined.line_covers_date`; about 50 new `lines.index.*` refusal details for review.
 - local-facts (LOCAL-FACTS #9 J1): refusal `detail`s beside the keyed `translation` in `index.mjs`/`rules.mjs` (e.g. "the act is one of confirm, correct, dispute."), for review.
 - retrieval (RETRIEVAL #22 J4): "a registration names its module and its function" (`retrieval/index.mjs`:293, 306, 318, 331, 367; a start-up registration diagnostic; the list holds only its prefix, so the full text is asked).
+
+## R6
+- run-rules (RUN-RULES #19 J3): `bio-plane/src/run-rules/checks.mjs`:259, :321, the `where:` field of two refusal rows (the source site that mints the refusal); `deployment.mjs`:71, :213, :230, :296, :300, the deployment gate's mode-record fields (`role`, `means`, `when`, `why`) read by a reviewer changing a deploy flag. Why: developer text, never rendered to a member.
+- reading-guides (READING-GUIDES #7 J1): `registerConductCheck` and `registerGuideChannel` refusal `detail`s (`PROVIDER_MALFORMED`, `PROVIDER_DECLARED`); `library.mjs` `civicsmithGuideProblems` strings and `freezeLibrary`'s TypeError. Why: start-up and release-time diagnostics.
