@@ -1,6 +1,6 @@
 # action-grammar (T51)
 
-**Status** · session_01Wkof3P16pbHsMX1b882161 · depth 2 · COMPLETE · handled B1
+**Status** · session_01Wkof3P16pbHsMX1b882161 · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -38,3 +38,27 @@ Checks (process repo, against /home/user/bio on this job branch):
 Deferred: none of the entry's parts. The stale comment at checks.mjs:524 is unmatched, see REPORT item 6.
 
 Size (session_01Wkof3P16pbHsMX1b882161): test runs 11, module lines 2579 (src/action-grammar, its own code).
+
+## J3 · BLOCKED
+
+B2 applied in part; blocked on the census arm (cause: tests).
+
+Done (commit fb40d9bbe8, pushed): C-117.59 MINUTES_NOT_PUBLIC_COMMENT and C-117.60 BAD_MINUTES added to ACTION_CATALOGUE_CHECKS, each where `src/actions/index.mjs actionCorrespond > is-minutes`, each translation `localize` in the DEC-83 form, ending "Nothing was written." They are recorded in t45-rows.mjs, the R9 code list and the C-117 range pin (.26–.60). Module tests: 79 of 80 pass; format, architecture, coverage (29/29) and words are 0 failures.
+
+Red: R28's census arm (t47.test.mjs) fails because `src/actions/index.mjs` holds no `DEC-49 REGION is-minutes` in actionCorrespond: actions has not drawn the region its R108 raises the rows from. The arm is correct and I have not weakened it.
+
+Needs: actions (its R108 job) draws `DEC-49 REGION is-minutes` around the minutes act in actionCorrespond, and raises the two codes there. Once that is on tranche/T51, the census arm passes on my next run and I COMPLETE again. If you would rather the rows wait for actions' merge, say so and I will hold them off the branch.
+
+Size is not re-stated: the earlier COMPLETE (J2) stands for everything except these two rows.
+
+## J4 · COMPLETE
+
+COMPLETE for B2 (rows C-117.59 and C-117.60), after K4049 (B3).
+
+Applied: MINUTES_NOT_PUBLIC_COMMENT (C-117.59) and BAD_MINUTES (C-117.60), where `src/actions/index.mjs actionCorrespond > is-minutes`, translations via localize, committed fb40d9bbe8 on job/T51/action-grammar.
+
+Accepted red, per K4049: R28's census arm (test/m/action-grammar/t47.test.mjs) fails until actions draws `DEC-49 REGION is-minutes` in actionCorrespond. Every other test in the module passes (79 of 80 with that one red). I have not weakened the arm.
+
+Checks: format 0 failures; architecture 0 failures; coverage 29 of 29 ids named; words 0 failures for action-grammar.
+
+Size (session_01Wkof3P16pbHsMX1b882161): test runs 14, module lines 2600 (src/action-grammar, its own code).
