@@ -846,5 +846,5 @@ const words = Object.freeze([
 
 /** The document screen (interface-shell R21). */
 export function documentScreen(parts) {
-  return Object.freeze({ id: "document", reads, place, render, acts, browserActs, words, parts });
+  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs], words, parts });
 }
