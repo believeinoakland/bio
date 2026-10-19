@@ -1,6 +1,6 @@
 # stewards (T51)
 
-**Status** · session_01UTbi5VPuYNMbViZaenQLKS · depth 2 · COMPLETE · handled B3
+**Status** · session_01W5YqsMzZMroQzj49Q3Ener · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -17,3 +17,11 @@ Entries applied: T51-246 whole. All 56 findings of the words check are gone exce
 ## J4 · COMPLETE
 
 CHANGE B3 (K4084) applied, test-only: R17's scan of bio-plane/src skips the generated word table (setup-words/rows.mjs, words-unreviewed.json), with controls that a route, a workers.dev address or STEWARDS_ADDRESS in any other source still fails the same pattern. Merged tranche/T51 first. Results: node --test stewards/test/: 23 pass, 0 fail; format 0 failures; architecture stewards 0 failures; coverage 23 of 23, 0 failures; ownership 0 failures. The earlier COMPLETE stands (the CSP header remains the one reported words finding). Size (session_01UTbi5VPuYNMbViZaenQLKS): test runs 10, module lines 840
+
+## J5 · REPORT
+
+Found in other modules by checks/run.mjs over /home/user/bio (not touched by this job; stewards' checks unaffected): coverage fails for four modules, each naming live ids no test names: agent-harness R17; agent-runner R36, R37, R38, R40; installer-steps R26, R31; journey-check R19. coverage overall: 6097 of 6105 live ids named. Words over the tree: 0 failures (the stewards CSP header finding no longer appears in this run). For BOB to route to those modules' jobs.
+
+## J6 · COMPLETE
+
+Entries applied: CR-30 · stewards, whole. The R17 scan (stewards/test/requirements.test.mjs) now skips case-checker's generated program.mjs, which embeds the setup-words row for notify_destination_differs, alongside rows.mjs and words-unreviewed.json. Two controls added: a file named case-checker/checks.mjs is still scanned, and program.mjs is skipped. Test-only; no source or requirement changed; nothing else in the module touched. Deferred: nothing. Found in other modules: the coverage failures in the REPORT above. Tests and checks: node --test stewards/test/: 23 pass, 0 fail (before the fix: 22 pass, 1 fail on R17). checks/format.mjs: 0 failures. checks/architecture.mjs stewards: 0 failures. checks/coverage.mjs stewards: 23 of 23 live ids named, 0 failures. checks/ownership.mjs stewards tranche/T51 job/T51/stewards: 0 failures. checks/run.mjs /home/user/bio: format 0, architecture 0, channels 0, words 0 failures; coverage 4 failures in other modules (see REPORT). Npm ci ran for five locked directories with no node_modules (agent-runner, journey-check, file-scanner, sheet-worker, site). Size (session_01W5YqsMzZMroQzj49Q3Ener): test runs 2, module lines 879
