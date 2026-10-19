@@ -40,7 +40,7 @@ test("R1 (D56): accountPropose stores the system's draft of a published case's a
   assert.deepEqual([d1.draft.label.machine_work, d1.draft.label.state], [true, "machine_proposed"]);
   assert.match(d1.draft.label.says, /machine work/);
   assert.match(d1.draft.label.says, /never be the case's account/);
-  assert.match(d1.next, new RegExp(`accountDraft: "${d1.draft.id}"`));
+  assert.ok(d1.next.includes(`accountDraft: "${d1.draft.id}"`), "the next step names the draft to take up");
   /* a member's draft is labelled a member's; one with no proposer says the record does not say who */
   const d2 = propose(w, { framing: "by_rule", proposedBy: "bo", viewer: V("bo") });
   assert.deepEqual(d2.draft.label, proposalLabel("bo", "case_account"));
@@ -74,9 +74,8 @@ test("R1: refusals in order — NO_SUCH_CASE, BAD_ACCOUNT_DRAFT (an unknown kind
     const r = propose(w, a);
     assert.deepEqual([r.ok, r.reason], [false, reason], JSON.stringify(a));
     if (field) assert.equal(r.field, field);
-    /* DEC-315 (N1132): the two draft refusals' sentences are words.json's, read by key; the others keep theirs */
-    if (reason === "BAD_ACCOUNT_DRAFT" || reason === "BAD_ACCOUNT_FRAMING") assert.equal(r.detail, WORD(`refusal.${reason}`));
-    else assert.match(r.detail, /Nothing was written\./);
+    /* DEC-315 (N1132), DEC-327 (R17): each refusal's sentence is words.json's, read by key (NO_SUCH_CASE and NO_SUCH_RUN too) */
+    assert.equal(r.detail, WORD(`refusal.${reason}`), reason);
   }
   const framing = propose(w, { framing: "chronological" });
   assert.deepEqual(framing.allowed, ACCOUNT_FRAMINGS);
@@ -135,9 +134,10 @@ test("R2 (K2536): accountPropose takes kind account_check with flags [{ord, text
                                     { ord: 2, text: "x".repeat(COMPLETENESS_MAX), cites: [{ kind: "leg", ref: Q, ord: 1 }] }]);
   assert.deepEqual(f1.draft.label, proposalLabel(AI, "account_check"));
   assert.match(f1.draft.label.says, /machine work/);
-  assert.match(f1.next, /answers each flag/);
+  assert.equal(typeof f1.next, "string", "the next step is given");
   /* accountFlags: all with none named, only those after the draft named, in proposal order */
-  const d = propose(w, {}).draft;
+  const dp = propose(w, {}), d = dp.draft;
+  assert.notEqual(f1.next, dp.next, "a check's next step is not a draft's");
   flag([{ ord: 3, text: "The award date is not cited.", cites: [{ kind: "finding", ref: Q }] }]);
   const snap = w.snapshot();
   assert.deepEqual(w.cacc.accountFlags(CASE).map((x) => x.ord), [1, 2, 3]);

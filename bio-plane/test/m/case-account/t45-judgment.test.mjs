@@ -13,6 +13,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { CASE_ACCOUNT_CHECKS, COUNSEL_MATTER } from "../../../src/case-account/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", QC = "INQ-2026-0007-c", DC = "INFO-2026-0007-c";
 const CASE = "CASE-2026-0001", PAID = "CNT-2026-0001", PAIDC = "CNT-2026-0007";
@@ -123,10 +124,13 @@ test("R14 (T45; N892; v0.2 rule 15): a cite naming a finding, a leg, a passage o
   const row = CASE_ACCOUNT_CHECKS.ACCOUNT_CITES_COUNSEL_MATTER;
   assert.deepEqual([r.refusal.ok, r.refusal.reason, r.refusal.code, r.refusal.check, r.refusal.translation],
                    [false, "ACCOUNT_CITES_COUNSEL_MATTER", "ACCOUNT_CITES_COUNSEL_MATTER", row.check, row.translation]);
-  assert.equal(row.translation, "This sentence cites something from a counsel matter, which is never used as evidence outside it. "
-    + "Cite something else, or leave it out. Nothing was written.");
+  assert.equal(row.translation, word("refusal.ACCOUNT_CITES_COUNSEL_MATTER"), "read by key");
   assert.deepEqual(r.refusal.sentences.map((x) => [x.ord, x.cites]), [[1, [`finding:${QC}`, `leg:${QC}#1`]],
     [2, [`passage:${PAIDC}`, `material:${DC}`]]]);
+  /* R17 (DEC-327): each named sentence is told in the per-sentence key's words, its number and cites filled; the refusal's own detail is the first's */
+  assert.deepEqual(r.refusal.sentences.map((x) => x.detail), r.refusal.sentences.map((x) =>
+    word("refusal.ACCOUNT_CITES_COUNSEL_MATTER.sentence", { n: String(x.ord), cites: x.cites.join(", ") })));
+  assert.equal(r.refusal.detail, r.refusal.sentences[0].detail);
   assert.deepEqual([r.results.get(1), r.results.get(2), r.results.get(3)],
                    [["ACCOUNT_CITES_COUNSEL_MATTER"], ["ACCOUNT_CITES_COUNSEL_MATTER"], []]);
   assert.deepEqual(w.judged.at(-1).cited.holdings.map((h) => h.address), [`passage:${PAID}`], "no holding for the counsel matter's");

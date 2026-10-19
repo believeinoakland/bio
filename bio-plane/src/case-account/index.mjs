@@ -116,48 +116,48 @@ function citesOf(v) {
  *  code points, and carries no other field (a story has none to hide in, case-authoring R65); its `bias_statement`, when
  *  given, names the printed bias statement whose framing it follows (D58). */
 export function accountShaped(account, statementCites, excludedCount = 0) {
-  const bad = (reason, field, detail) => ({ ok: false, reason, field,
-    detail: reason === "BAD_ACCOUNT" ? word("refusal.BAD_ACCOUNT") : localize("case-account.index.field_detail_nothing_was_written", "{field}: {detail} Nothing was written.", { field: String(field), detail: String(detail) }) });
+  const bad = (reason, field, detail) => ({ ok: false, reason, field, detail });
+  /* R17: the statement a malformed list of cites belongs to, named as the refusal names it (the key, its words apart) */
+  const part = (k) => String(k).replace(/_/g, " ");
   const sentences = [];
   if (account != null) {
-    if (!Array.isArray(account)) return bad("BAD_ACCOUNT", "account", "the account is a list of sentences, each {text, cites, bias_statement?}.");
+    if (!Array.isArray(account)) return bad("BAD_ACCOUNT", "account", word("refusal.BAD_ACCOUNT.list"));
     if (account.length > ACCOUNT_SENTENCES_MAX)
-      return bad("BAD_ACCOUNT", "account", localize("case-account.index.an_account_is_at_most", "an account is at most {ACCOUNT_SENTENCES_MAX} sentences.", { ACCOUNT_SENTENCES_MAX: String(ACCOUNT_SENTENCES_MAX) }));
+      return bad("BAD_ACCOUNT", "account", word("refusal.BAD_ACCOUNT.toomany", { max: String(ACCOUNT_SENTENCES_MAX) }));
     for (let i = 0; i < account.length; i++) {
       const e = account[i], f = `account[${i}]`;
-      if (!e || typeof e !== "object" || Array.isArray(e)) return bad("BAD_ACCOUNT", f, "a sentence is {text, cites, bias_statement?}.");
+      if (!e || typeof e !== "object" || Array.isArray(e)) return bad("BAD_ACCOUNT", f, word("refusal.BAD_ACCOUNT.sentence", { n: String(i + 1) }));
       const extra = Object.keys(e).filter((k) => !["text", "cites", "bias_statement"].includes(k) && e[k] !== undefined);
-      if (extra.length) return bad("BAD_ACCOUNT", `${f}.${extra[0]}`, localize("case-account.index.a_sentence_carries_its_words", "a sentence carries its words, what it cites and the bias statement its framing follows, and nothing else."));
+      if (extra.length) return bad("BAD_ACCOUNT", `${f}.${extra[0]}`, word("refusal.BAD_ACCOUNT.extra", { n: String(i + 1) }));
       if (typeof e.text !== "string" || !e.text.trim() || [...e.text].length > COMPLETENESS_MAX || /[\r\n]/.test(e.text))
-        return bad("BAD_ACCOUNT", `${f}.text`, localize("case-account.index.a_sentence_is_words_on", "a sentence is words on one line, at most {COMPLETENESS_MAX} characters.", { COMPLETENESS_MAX: String(COMPLETENESS_MAX) }));
+        return bad("BAD_ACCOUNT", `${f}.text`, word("refusal.BAD_ACCOUNT.text", { n: String(i + 1), max: String(COMPLETENESS_MAX) }));
       const cites = citesOf(e.cites);
-      if (!cites) return bad("BAD_ACCOUNT", `${f}.cites`, `cites is a list of at most ${ACCOUNT_CITES_MAX} {kind, ref, ord}, kind `
-        + `one of ${ACCOUNT_CITE_KINDS.join(", ")}, ord the leg's for a leg and absent otherwise.`);
+      if (!cites) return bad("BAD_ACCOUNT", `${f}.cites`, word("refusal.BAD_ACCOUNT.cites", { n: String(i + 1), max: String(ACCOUNT_CITES_MAX) }));
       const framing = e.bias_statement == null ? null : str(e.bias_statement);
       if (e.bias_statement != null && (!framing || framing.length > 200 || /["\\\r\n]/.test(framing)))
-        return bad("BAD_ACCOUNT", `${f}.bias_statement`, localize("case-account.index.names_the_printed_bias_statement", "names the printed bias statement whose framing the sentence follows."));
+        return bad("BAD_ACCOUNT", `${f}.bias_statement`, word("refusal.BAD_ACCOUNT.bias", { n: String(i + 1) }));
       sentences.push({ text: e.text.trim(), cites, bias_statement: framing });
     }
   }
   const sc = { statement: [], subject_justification: [], excluded: [], what_changed: [] };
   if (statementCites != null) {
     if (typeof statementCites !== "object" || Array.isArray(statementCites))
-      return bad("BAD_STATEMENT_CITES", "statementCites", "is {statement, subject_justification, excluded, what_changed}.");
+      return bad("BAD_STATEMENT_CITES", "statementCites", word("refusal.BAD_STATEMENT_CITES"));
     for (const k of Object.keys(statementCites)) {
       if (statementCites[k] === undefined) continue;
-      if (!(k in sc)) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, "names no statement.");
+      if (!(k in sc)) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, word("refusal.BAD_STATEMENT_CITES.nostatement", { part: part(k) }));
       if (k === "excluded") {
         const v = statementCites[k];
         if (!Array.isArray(v) || v.length > excludedCount)
-          return bad("BAD_STATEMENT_CITES", "statementCites.excluded", localize("case-account.index.is_one_list_of_cites", "is one list of cites per exclusion row, in its order."));
+          return bad("BAD_STATEMENT_CITES", "statementCites.excluded", word("refusal.BAD_STATEMENT_CITES.excluded"));
         for (let i = 0; i < v.length; i++) {
           const c = citesOf(v[i]);
-          if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.excluded[${i}]`, "is a list of {kind, ref, ord} cites.");
+          if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.excluded[${i}]`, word("refusal.BAD_STATEMENT_CITES.citelist", { part: part("excluded") }));
           sc.excluded.push(c);
         }
       } else {
         const c = citesOf(statementCites[k]);
-        if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, "is a list of {kind, ref, ord} cites.");
+        if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, word("refusal.BAD_STATEMENT_CITES.citelist", { part: part(k) }));
         sc[k] = c;
       }
     }
@@ -272,7 +272,7 @@ export class CaseAccount {
     /* DEC-49 REGION is-account-reauthored */
     if (form === "as_proposed")
       return refusal(SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR, { draft: d.draft_id, caseId,
-        detail: localize("case-account.index.the_account_is_draft_draft", "the account is draft {draft_id}'s words as the system proposed them. The published account is the member's own (D56): write it in your words, from the draft or from nothing, and publish again. Nothing was written.", { draft_id: String(d.draft_id) }) });
+        detail: word("refusal.ACCEPT_MUST_REAUTHOR.account") });
     /* END DEC-49 REGION is-account-reauthored */
     return { ok: true, draft: d.draft_id, framing: d.framing ?? null, form };
   }
@@ -354,7 +354,7 @@ export class CaseAccount {
     } catch (e) { judged = { why: String(e && e.message || e).slice(0, 160) }; }
     const judgedRefusals = judged && Array.isArray(judged.refusals) ? judged.refusals.filter((r) => r && typeof r === "object")
       : [{ ok: false, reason: "ACCOUNT_CHECK_UNDETERMINED", code: "ACCOUNT_CHECK_UNDETERMINED",
-           detail: localize("case-account.index.the_account_could_not_be", "the account could not be checked against what it cites{v1}, so whether every sentence stands is not known. Try again. Nothing was written.", { v1: String(judged && judged.why ? ` (${judged.why})` : "") }) }];
+           detail: word("refusal.ACCOUNT_CHECK_UNDETERMINED") }];
     /* R14: a sentence citing a counsel matter's material, first, naming each sentence and the cites; then the judgment's */
     const counsel = this.#counselRefusal(rows, held);
     /* an outcome row's refusal names the outcome, as a statement's names its kind */
@@ -465,8 +465,9 @@ export class CaseAccount {
     const named = rows.map((r) => ({ ord: r.ord, kind: r.kind, text: r.text,
       cites: [...new Set((Array.isArray(r.cites) ? r.cites : []).filter((c) => c && typeof c === "object" && c.kind && c.ref)
         .map(citeAddress).filter((a) => counsel.has(a)))] })).filter((r) => r.cites.length);
-    return refusal(CASE_ACCOUNT_CHECKS, "ACCOUNT_CITES_COUNSEL_MATTER", { sentences: named, cites: [...counsel],
-      detail: localize("case-account.index.map_held_in_a_counsel", "{map}: held in a counsel matter, which is never used as evidence outside it. Cite something else, or leave it out. Nothing was written.", { map: String(named.map((r) => `sentence ${r.ord} cites ${r.cites.join(", ")}`).join("; ")) }) });
+    /* R17: one sentence of the member's words per row named; the refusal's own `detail` is the first row's */
+    const told = named.map((r) => ({ ...r, detail: word("refusal.ACCOUNT_CITES_COUNSEL_MATTER.sentence", { n: String(r.ord), cites: r.cites.join(", ") }) }));
+    return refusal(CASE_ACCOUNT_CHECKS, "ACCOUNT_CITES_COUNSEL_MATTER", { sentences: told, cites: [...counsel], detail: told[0].detail });
   }
 
   /** R7 (D61; review R33, K2483): the reviewers' comments the publisher chose (`reviewComments: {included: [ids]}`),
@@ -476,14 +477,14 @@ export class CaseAccount {
    *  `REVIEW_COMMENTS_UNREAD` (comments chosen and the list could not be read), `REVIEW_COMMENT_NOT_FOUND` (an id not
    *  among the case's comments, named). With none registered no comment travels. Writes nothing. */
   reviewCommentsChosen(reviewComments, caseId, edition, viewer, draft) {
-    const bad = (detail) => ({ ok: false, reason: "BAD_REVIEW_COMMENTS", field: "reviewComments",
-                               detail: localize("case-account.index.reviewcomments_detail_nothing_was_written", "reviewComments: {detail} Nothing was written.", { detail: String(detail) }) });
+    const bad = () => ({ ok: false, reason: "BAD_REVIEW_COMMENTS", field: "reviewComments",
+                         detail: word("refusal.BAD_REVIEW_COMMENTS", { max: String(REVIEW_COMMENTS_INCLUDED_MAX) }) });
     let included = [];
     if (reviewComments != null) {
       const inc = typeof reviewComments === "object" && !Array.isArray(reviewComments) ? reviewComments.included : undefined;
       if (inc === undefined || !Array.isArray(inc) || inc.length > REVIEW_COMMENTS_INCLUDED_MAX
           || !inc.every((x) => typeof x === "string" && x.trim()))
-        return bad(`is {included: [comment ids]}, at most ${REVIEW_COMMENTS_INCLUDED_MAX}.`);
+        return bad();
       included = [...new Set(inc.map((x) => x.trim()))];
     }
     const out = (carried, leftOut) => ({ ok: true, carried, left_out: leftOut,
@@ -496,7 +497,7 @@ export class CaseAccount {
     if (!list) {
       if (included.length)
         return { ok: false, reason: "REVIEW_COMMENTS_UNREAD", caseId, edition,
-                 detail: localize("case-account.index.the_comments_on_this_cases", "the comments on this case's review copies could not be read, so the ones chosen cannot be carried. Try again. Nothing was written.") };
+                 detail: word("refusal.REVIEW_COMMENTS_UNREAD") };
       return out([], null);
     }
     const rows = list.filter((c) => c && typeof c === "object");
@@ -504,7 +505,7 @@ export class CaseAccount {
     const missing = included.filter((id) => !byId.has(id));
     if (missing.length)
       return { ok: false, reason: "REVIEW_COMMENT_NOT_FOUND", caseId, edition, comments: missing,
-               detail: localize("case-account.index.missing_no_comment_on_this", "{missing}: no comment on this case's review copies answers to that id. Choose among the comments the review copies hold. Nothing was written.", { missing: String(missing.join(", ")) }) };
+               detail: word("refusal.REVIEW_COMMENT_NOT_FOUND") };
     const chosen = new Set(included);
     const carried = rows.filter((c) => chosen.has(String(c.comment_id ?? c.id ?? "")))
       .map((c) => ({ reviewer: c.reviewer ?? null, text: c.text ?? null, at: c.at ?? null }));
@@ -517,8 +518,9 @@ export class CaseAccount {
   /** R7 (D61; K2483): `review` registers `reviewCommentsFor` here once, at its start. A second registration is refused
    *  `REVIEW_COMMENTS_DECLARED`, and one that is not a function `MALFORMED`; each changes nothing. */
   registerReviewComments(fn) {
+    /* R17: MALFORMED and REVIEW_COMMENTS_DECLARED are start-up wiring errors no member reads, so they stay inline */
     if (typeof fn !== "function")
-      return { ok: false, reason: "MALFORMED", field: "fn", detail: "the review comments' reader is a function of {case, edition, viewer, draft}" };
+      return { ok: false, reason: "MALFORMED", field: "fn", detail: "the review comments' reader is a function of {case, edition, viewer, draft}" }; // R17: start-up wiring, no member reads it
     if (this.#reviewCommentsReader)
       return { ok: false, reason: "REVIEW_COMMENTS_DECLARED",
                detail: "a reader of the case's review comments is already registered, once, at start" };
@@ -548,7 +550,7 @@ export class CaseAccount {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-advocacy-member */
     if (!who || isMachineIdentity(who))
-      return refusal(CASE_ACCOUNT_CHECKS, "MACHINE_CANNOT_CHECK_ADVOCACY", { detail: localize("case-account.index.a_members_own_text_is", "a member's own text is checked only at that member's act, and this request named no member. Nothing was written.") });
+      return refusal(CASE_ACCOUNT_CHECKS, "MACHINE_CANNOT_CHECK_ADVOCACY", { detail: word("refusal.MACHINE_CANNOT_CHECK_ADVOCACY") });
     /* END DEC-49 REGION is-advocacy-member */
     const seen = this.#ownProjectSeen(project, viewer);
     if (!seen) return noSuchProject(project ?? null);
@@ -559,7 +561,7 @@ export class CaseAccount {
     } catch { own = false; }
     /* DEC-49 REGION is-advocacy-own-project */
     if (!own)
-      return refusal(CASE_ACCOUNT_CHECKS, "ADVOCACY_NOT_OWN_PROJECT", { project: seen, detail: localize("case-account.index.a_members_own_text_and", "a member's own text and its check are kept only in that member's own project, a hidden project set as their own with them as its one participant, and this project is not one. Nothing was written.") });
+      return refusal(CASE_ACCOUNT_CHECKS, "ADVOCACY_NOT_OWN_PROJECT", { project: seen, detail: word("refusal.ADVOCACY_NOT_OWN_PROJECT") });
     /* END DEC-49 REGION is-advocacy-own-project */
     const shaped = accountShaped(sentences, null);
     if (shaped.ok === false) return { ...shaped, field: shaped.field.replace(/^account/, "sentences") };
@@ -671,7 +673,7 @@ export class CaseAccount {
     } catch { seen = false; }
     if (seen) return { ok: true, caseId: id };
     return { ok: false, reason: "NO_SUCH_CASE",
-             detail: localize("case-account.index.no_case_you_can_see", "no case you can see answers to that id, published or prepared. A case you cannot see is answered as one that does not exist. Nothing was written.") };
+             detail: word("refusal.NO_SUCH_CASE") };
   }
 
   /** R1, R2 (D56; K2536): store a draft of `case`'s account from `run`: `kind` `case_account` (default; `text` in one of
@@ -713,7 +715,7 @@ export class CaseAccount {
     try { found = r ? this.runs.runFor(r, viewer) : null; } catch { found = null; }
     if (!found)
       return { ok: false, reason: "NO_SUCH_RUN", case: seen.caseId, run: r || null,
-               detail: localize("case-account.index.a_draft_of_the_account", "a draft of the account names the run that wrote it, and no run you can see answers to that id. Nothing was written.") };
+               detail: word("refusal.NO_SUCH_RUN") };
     const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
     const label = proposalLabel(by, kind);
     return this.record.transact(() => {
@@ -729,9 +731,8 @@ export class CaseAccount {
       return { ok: true, draft: { id, case: seen.caseId, kind, framing: kind === "case_account" ? framing : null, text: words,
                                   flags: flagged, run: r, label, at },
                next: kind === "case_account"
-                 ? `a member writes the account at op=publish, from this draft (accountDraft: "${id}") in their own words, or `
-                   + "from nothing; until then it is a draft and never the case's account"
-                 : "the member answers each flag at op=publish by tying the sentence to evidence or removing it" };
+                 ? localize("case-account.index.next_member_writes_account", "A member writes the account when publishing, from this draft (accountDraft: \"{id}\") in their own words, or from nothing; until then it is a draft and never the case's account.", { id })
+                 : localize("case-account.index.next_member_answers_flags", "The member answers each flag when publishing, by tying the sentence to evidence or removing it.") };
     });
   }
 

@@ -9,6 +9,7 @@ import { CaseAccount, accountShaped, ACCOUNT_SENTENCES_MAX, ACCOUNT_CITES_MAX, C
   from "../../../src/case-account/index.mjs";
 import { SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR, ACCEPTANCE_FORMS, acceptanceRecord } from "../../../src/record-grammar/index.mjs";
 import { WORD } from "./words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const RUN = "RUN-2026-0001", CASE = "CASE-2026-0001", OTHER = "CASE-2026-0002";
@@ -91,7 +92,7 @@ test("R4: refusals in order, each writing nothing — BAD_ACCOUNT naming the fie
     const r = w.cacc.accountDraftJudged(named, CASE, sentences);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.draft, r.caseId],
                      [false, ACCEPT_MUST_REAUTHOR, ACCEPT_MUST_REAUTHOR, row.check, row.translation, d.id, CASE], JSON.stringify(named));
-    assert.match(r.detail, /Nothing was written\./);
+    assert.equal(r.detail, word("refusal.ACCEPT_MUST_REAUTHOR.account"), "R17: the key's words");
   }
   assert.deepEqual(w.snapshot(), snap, "nothing written");
   /* negative control */
@@ -127,6 +128,23 @@ test("R5 (D56; K2533): accountShaped answers {ok, sentences, statementCites} or 
   const { w } = setup();
   const s = (o) => ({ text: "A.", cites: [], ...o });
   const many = (n, f) => Array.from({ length: n }, (_, i) => f(i));
+  const n = (field) => String(Number(/\[(\d+)\]/.exec(field)[1]) + 1);
+  const shapedWords = (account, reason, field) => {
+    if (reason === "BAD_STATEMENT_CITES") {
+      if (field === "statementCites") return word("refusal.BAD_STATEMENT_CITES");
+      if (field === "statementCites.story") return word("refusal.BAD_STATEMENT_CITES.nostatement", { part: "story" });
+      if (field === "statementCites.excluded") return word("refusal.BAD_STATEMENT_CITES.excluded");
+      return word("refusal.BAD_STATEMENT_CITES.citelist",
+                  { part: field.replace(/^statementCites\./, "").replace(/\[\d+\]$/, "").replace(/_/g, " ") });
+    }
+    if (field === "account") return Array.isArray(account) ? word("refusal.BAD_ACCOUNT.toomany", { max: String(ACCOUNT_SENTENCES_MAX) })
+                                                          : word("refusal.BAD_ACCOUNT.list");
+    if (/^account\[\d+\]$/.test(field)) return word("refusal.BAD_ACCOUNT.sentence", { n: n(field) });
+    if (field.endsWith(".text")) return word("refusal.BAD_ACCOUNT.text", { n: n(field), max: String(COMPLETENESS_MAX) });
+    if (field.endsWith(".cites")) return word("refusal.BAD_ACCOUNT.cites", { n: n(field), max: String(ACCOUNT_CITES_MAX) });
+    if (field.endsWith(".bias_statement")) return word("refusal.BAD_ACCOUNT.bias", { n: n(field) });
+    return word("refusal.BAD_ACCOUNT.extra", { n: n(field) });
+  };
   const bad = [
     ["a story", null, "BAD_ACCOUNT", "account"], [{}, null, "BAD_ACCOUNT", "account"],
     [many(ACCOUNT_SENTENCES_MAX + 1, () => s()), null, "BAD_ACCOUNT", "account"],
@@ -161,9 +179,8 @@ test("R5 (D56; K2533): accountShaped answers {ok, sentences, statementCites} or 
   for (const [account, sc, reason, field] of bad) {
     const r = accountShaped(account, sc, 1);
     assert.deepEqual([r.ok, r.reason, r.field], [false, reason, field], JSON.stringify([account, sc]).slice(0, 100));
-    /* DEC-315 (N1132): BAD_ACCOUNT's sentence is words.json's, read by key; BAD_STATEMENT_CITES keeps its own */
-    if (reason === "BAD_ACCOUNT") assert.equal(r.detail, WORD("refusal.BAD_ACCOUNT"));
-    else assert.match(r.detail, /Nothing was written\./);
+    /* R17 (DEC-327): each field's sentence is words.json's own, read by its key and filled with the sentence number and bound */
+    assert.equal(r.detail, shapedWords(account, reason, field), `${field}: the key's words`);
     assert.deepEqual(w.cacc.accountShaped(account, sc, 1), r, "the instance answers as the export");
   }
   assert.equal(accountShaped(null, { excluded: [[{ kind: "finding", ref: Q }]] }, 1).ok, true, "one list per exclusion row, at most excludedCount");
@@ -279,9 +296,8 @@ test("R6: case-disclosures R30's answer is accountJudged's — results map each 
     const u = w.cacc.accountJudged(judgeArgs());
     assert.deepEqual([u.refusals.length, u.refusal.ok, u.refusal.reason, u.refusal.code],
                      [1, false, "ACCOUNT_CHECK_UNDETERMINED", "ACCOUNT_CHECK_UNDETERMINED"]);
-    assert.match(u.refusal.detail, /could not be checked against what it cites[\s\S]*Nothing was written\./);
+    assert.equal(u.refusal.detail, word("refusal.ACCOUNT_CHECK_UNDETERMINED"), "R17: the key's words, no diagnostic in them");
   }
-  assert.match(w.cacc.accountJudged(judgeArgs()).refusal.detail, /\(down\)/, "the throw's words named");
   /* negative control */
   w.judgeAccount = () => ({ ok: true, refusals: [] });
   assert.equal(w.cacc.accountJudged(judgeArgs()).refusal, null);
