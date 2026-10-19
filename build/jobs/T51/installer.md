@@ -114,3 +114,12 @@ FOR BOB (unchanged from J10 except the three now done): the offered-name row (de
 
 CHECKS: format 0 failures; architecture 0; coverage 70 of 70; ownership 0; words check for installer: no finding; setup-words build --check matches. Suites: wizard 207; requirements 54; t48 10; t50 19; t51 8; corpus 3; realsize 4; embed 23; steps pass; t47 4 pass, R53 red on the stale bundle.
 Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~45, module lines 2900
+
+## J12 · COMPLETE
+
+COMPLETE (B11 applied; pushed on job/T51/installer, tranche/T51 merged in).
+(1) F7: when the account has no workers.dev prefix, the room step says `installer.address.offer` {prefix} (the first name that will be tried) before anything is created; none is said when a prefix exists. Test t50 R70 (said, in the room step before the first resource; control: an account with a prefix).
+(2) An install that continues an unfinished copy and meets a foreign part stops with `installer.install.stopped.foreign` (t51 reads it by key); the update keeps `installer.update.stopped.foreign`.
+(3) requirements R40's by-key exemption for `how.finished` is dropped; the test passes on the reworded row. Both new keys are in KEYS.
+CHECKS: format 0 failures; architecture 0; coverage 70 of 70; ownership 0; words check for installer no finding; setup-words --check matches. Suites: wizard 207, requirements 54, t48 10, t50 19, t51 8, corpus 3, realsize 4, steps and embed pass; t47 red only in R53 (stale bundle).
+Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~55, module lines 2905
