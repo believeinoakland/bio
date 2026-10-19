@@ -1,6 +1,6 @@
 # sources (T51)
 
-**Status** · session_01WG9setBbZFc6ABChv97kKy · depth 2 · WORKING · handled B2
+**Status** · session_01WG9setBbZFc6ABChv97kKy · depth 2 · COMPLETE · handled B2
 
 ## Entries applied
 
