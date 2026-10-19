@@ -23,6 +23,9 @@ const FULL = {
     summary: { filed: 1 }, entries: [{ index: 1, name: "a.pdf", state: "filed", sha256: SHA, bundle: "INFO-2" }] }),
   gradenote: ok({ ok: true, note: "A note." }),
   acquire: ok({ ok: true, existed: true, document: { capture: { sha256: SHA } }, bundleId: "INFO-9" }),
+  /* R38: the capture act looks at the address first; here it is not held */
+  heldat: ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } }),
+  memberlist: ok({ members: [] }),
 };
 const EMPTY = { heldcaptures: ok({ ok: true, held: [] }), verdictnotes: ok({ ok: true, notes: [] }), inbox: ok({ inbox: [] }),
   archivelist: ok({ ok: true, archive: {}, summary: {}, entries: [] }), scanstatus: ok({ queued: 0, overdue: 0, held: 0 }) };
