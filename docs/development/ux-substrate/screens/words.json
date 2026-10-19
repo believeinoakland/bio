@@ -49,7 +49,7 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 419,
+  "installer": 421,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 893,
+  "act": 892,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15752,
+  "total": 15753,
   "protected": 934
  },
  "words": [
@@ -35979,13 +35979,6 @@
    "note": "DEC-276: Turn back on, for a muted kind of item (act.queuemute.does describes muting)"
   },
   {
-   "key": "act.queuemute.here.queue_project",
-   "en": "Lets this project's items reach your queue again, from now on.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-276: Turn back on, for a muted project (act.queuemute.does describes muting)"
-  },
-  {
    "key": "screen.queue.tip.securityfix_waits",
    "en": "It still waits for an administrator's choice; Not now brings it back the next day instead of in two weeks.",
    "protected": false,
@@ -60340,7 +60333,7 @@
   },
   {
    "key": "installer.team.unrecorded.how.finished",
-   "en": "The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.",
+   "en": "The installer can't record it for a team's Civicsmith that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)"
@@ -60358,6 +60351,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed"
+  },
+  {
+   "key": "installer.address.offer",
+   "en": "Your account has no web address prefix yet. The installer can give it a free one, “{prefix}”, which every future program on this account will share. Nothing has been created yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-366 (B383 2a): installer-steps offerSubdomain (F7), shown before anything is created; installer.address.prefix stays the line after it is set"
+  },
+  {
+   "key": "installer.install.stopped.foreign",
+   "en": "Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start the install again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

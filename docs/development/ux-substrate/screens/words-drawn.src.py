@@ -843,7 +843,6 @@ w276('screen.translations.tip.reasoned', 'the mark on an act that asks for a rea
 w276('screen.translations.tip.reasoned_why', '{name}\'s suggestion, "{suggestion}", waits for a granted speaker to keep it or explain why not.', False, "Reasoned, its card; {suggestion} a member's own words")
 w276('act.actionmove.here.queue', 'Marks this unsent request as dropped, with your reason, so it stops waiting. Nothing was sent, so the office never sees it.', False, "Drop the request, with a reason, on an unsent request in the queue")
 w276('act.queuemute.here.queue_kind', 'Lets this kind of item reach your queue again, from now on.', False, "Turn back on, for a muted kind of item (act.queuemute.does describes muting)")
-w276('act.queuemute.here.queue_project', "Lets this project's items reach your queue again, from now on.", False, "Turn back on, for a muted project (act.queuemute.does describes muting)")
 w276('screen.queue.tip.securityfix_waits', "It still waits for an administrator's choice; Not now brings it back the next day instead of in two weeks.", False, "a security fix in the queue, its explanation's second sentence")
 w276('screen.queue.tip.filings_why', 'The hint is only as complete as these filings; a missing year would hide a match.', False, "the filings a hint compared, their card")
 w276('screen.queue.tip.false', "this check's past hints that members looked into and found false", False, "a hint's past false matches, their card")
@@ -4706,9 +4705,13 @@ W.append(dict(key='screen.document.a34.moved.noreason', en='Citations moved to t
 W.append(dict(key='screen.document.compare.fingerprint', en='Fingerprint: {digest}', protected=False, note="DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints"))
 
 # DEC-365: B381 (installer, installer-steps)
-W.append(dict(key='installer.team.unrecorded.how.finished', en="The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.", protected=False, note='DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)'))
+W.append(dict(key='installer.team.unrecorded.how.finished', en="The installer can't record it for a team's Civicsmith that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.", protected=False, note='DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)'))
 W.append(dict(key='screen.install.stopped.plan.done', en='Check again', protected=False, note="DEC-365 (B381 2): installer F2; the Workers Paid stop's button, beside screen.install.stopped.containers.done"))
 W.append(dict(key='installer.fleet.why.pullfailed', en="its software was placed in your account but couldn't be started from there", protected=False, note='DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed'))
+
+# DEC-366: B383 (installer)
+W.append(dict(key='installer.address.offer', en='Your account has no web address prefix yet. The installer can give it a free one, “{prefix}”, which every future program on this account will share. Nothing has been created yet.', protected=False, note='DEC-366 (B383 2a): installer-steps offerSubdomain (F7), shown before anything is created; installer.address.prefix stays the line after it is set'))
+W.append(dict(key='installer.install.stopped.foreign', en="Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start the install again.", protected=False, note="DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"))
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

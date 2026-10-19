@@ -277,6 +277,7 @@ const DECISIONS = [
   ["screens-investigate", "screens-investigate/timeline.mjs", "=a member's reading of the passage", "screen.timeline.method.member"],
   // control-plane
   ["control-plane", "control-plane/app.mjs", "=Not found", dev("diag")],
+  ["control-plane", "control-plane/draft.mjs", "^the draft's {field} is over its limit", dev("wire")], // DEC-366: the detail beside ASSISTANT_DRAFT_UNAVAILABLE; the shell draws refusal.<CODE>
   ["control-plane", "control-plane/archive.mjs", "^${…}, from the archive", "file.archive.entry.title"],
   ["control-plane", "control-plane/archive.mjs", "^Archive captured from", "file.archive.title"],
   ["control-plane", "control-plane/archive.mjs", "^A file cut out of the archive", "file.archive.entry.summary"],
