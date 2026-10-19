@@ -231,7 +231,7 @@ function render(cs, view) {
     return `<div data-aside="${decision.state === "dismissed" ? "dismissed" : "deferred"}">`
       + cs.sheet(cs.row("", `<b>${said}</b>`, "", `<b>${W("shell.reason.lead")}</b> <span class="rec">“${cs.esc(String(decision.reason || ""))}”</span>`))
       + `<p class="mk-note">${mine ? W("screen.question.say001", { project: projectWord }) + " " : ""}${W("screen.question.say002")}</p>`
-      + `<details class="mk-details" data-aside="change"><summary>${W("screen.question.say003")}</summary>${asideForm("2")}</details></div>`;
+      + `<details class="mk-details" data-aside="change"><summary>${W("screen.question.decision.change")}</summary>${asideForm("2")}</details></div>`;
   })();
   const around = [];
   /* R41 state g: concluded; c: nothing cited; d: a run of hers at work; e: the assistant's proposal; f: its limit */
@@ -730,7 +730,14 @@ function render(cs, view) {
         };
         const relWord = (r) => (r === "same" ? W("screen.question.word.same") : r === "stronger" ? W("screen.question.word.stronger")
           : r === "weaker" ? W("screen.question.word.weaker") : W("screen.question.word.unknown"));
-        const axisCard = (a) => `<span class="mk-small" data-axis="${a}" data-relation="${rel(a)}"><span class="cs-card" tabindex="0" data-tip="${cs.esc(W(a === "capture" ? "screen.question.compare.captured.explain" : "screen.question.compare.connected.explain"))}">${W("mark.scale." + a + ".name")}</span>: ${relWord(rel(a))}</span>`;
+        /* R72: the axis and its change; an axis that carries a citation (`strength[axis].cited`, what was cited) draws say054, whose tail names it */
+        const axisCard = (a) => {
+          const name = `<span class="cs-card" tabindex="0" data-tip="${cs.esc(W(a === "capture" ? "screen.question.compare.captured.explain" : "screen.question.compare.connected.explain"))}">${W("mark.scale." + a + ".name")}</span>`;
+          const cited = c.strength && c.strength[a] && typeof c.strength[a].cited === "string" ? c.strength[a].cited : "";
+          const said = cited ? W("screen.question.say054", { change: { html: relWord(rel(a)) }, source: cited })
+            : W("screen.question.compare.axis", { axis: { html: name }, change: { html: relWord(rel(a)) } });
+          return `<span class="mk-small" data-axis="${a}" data-relation="${rel(a)}">${cited ? name + " " : ""}${said}</span>`;
+        };
         return `<div class="mk-ev" data-case-edition="${cs.esc(String(c.case_id))}:${cs.esc(String(c.edition))}" data-pinned="${c.pinned === true ? "yes" : "none"}">${head}`
           + (froze ? `<span class="mk-small" data-frozen="1">${W("screen.question.say048")} ${grades(froze)}</span>` : `<p class="mk-small" data-frozen="none">${W("public-read.frozen.strength_detail.none")}</p>`)
           + (todayS && froze ? `<span class="mk-small" data-today="1">${W("screen.question.frozen.today")} <span class="cs-strength">${axes(todayS)}</span></span>` + axisCard("capture") + axisCard("connection") : "")
@@ -1085,7 +1092,7 @@ const words = Object.freeze([
   "screen.question.say000", "screen.question.say001", "screen.question.say002", "screen.question.say003", "screen.question.say004", "screen.question.say005", "screen.question.say006", "screen.question.say008", "screen.question.say009", "screen.question.say010", "screen.question.say011", "screen.question.say012", "screen.question.say013", "screen.question.say014", "screen.question.say015", "screen.question.say017", "screen.question.say018", "screen.question.say019", "screen.question.say020", "screen.question.say021", "screen.question.say022", "screen.question.say023", "screen.question.say024", "screen.question.say025", "screen.question.say026", "screen.question.say027", "screen.question.say028", "screen.question.say029", "screen.question.say032", "screen.question.say033", "screen.question.say034", "screen.question.say035", "screen.question.say036", "screen.question.say037", "screen.question.say038", "screen.question.say039", "screen.question.say040", "screen.question.say041", "screen.question.say042", "screen.question.say043", "screen.question.say044", "screen.question.say045", "screen.question.say046", "screen.question.say047", "screen.question.say048", "screen.question.say050", "screen.question.say051", "screen.question.say052", "screen.question.say055", "screen.question.say056", "screen.question.say057", "screen.question.say058", "screen.question.say059", "screen.question.say060", "screen.question.say061", "screen.question.say062", "screen.question.say063", "screen.question.say064", "screen.question.say065", "screen.question.say066", "screen.question.say067", "screen.question.say068", "screen.question.say069", "screen.question.say070", "screen.question.say071", "screen.question.say072", "screen.question.say073", "screen.question.say074", "screen.question.say075",
   "screen.question.say000.bymember", "screen.question.say008.bymember", "screen.question.tip076", "screen.question.tip078", "screen.question.tip079",
   "shell.reason", "shell.reason.lead", "public-read.frozen.strength_detail.none", "mark.gap.withheld.name", "mark.gap.withheld.means",
-  "screen.question.compare.captured.explain", "screen.question.compare.connected.explain",
+  "screen.question.compare.captured.explain", "screen.question.compare.connected.explain", "screen.question.decision.change", "screen.question.compare.axis", "screen.question.say054",
   "refusal.VERSION_COMPARE_NO_SUCH_VERSION", "refusal.VERSION_COMPARE_NO_VERSION", "refusal.VERSION_COMPARE_NO_INQUIRY",
   "screen.question.touches.heading", "screen.question.frozen.count", "screen.question.frozen.count.one", "screen.question.frozen.published",
   "screen.question.frozen.today", "screen.question.frozen.unpinned", "screen.question.bias.moved",

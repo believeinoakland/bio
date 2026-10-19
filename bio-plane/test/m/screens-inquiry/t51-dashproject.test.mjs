@@ -289,7 +289,7 @@ test("R79 the vouch step of a capture with no place: the no-place keys by count,
   const mixed = await open({ heldcaptures: ok({ ok: true, held: [heldRow("INFO-H1", "the east gate"), up("INFO-U1")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }) });
   const m = section(mixed, "screen.dash-project.next.heading").querySelectorAll("ol.mk-next > li");
   assert.equal(m.length, 2);
-  assert.ok(said(m[0], "screen.dash-project.next.vouch", { count: "1", place: "the east gate" }));
+  assert.ok(said(m[0], "screen.dash-project.next.vouch.one", { place: "the east gate" }) && !said(m[0], "screen.dash-project.next.vouch", { count: "1", place: "the east gate" }));
   assert.ok(said(m[1], "screen.dash-project.next.vouch.noplace.one"));
   /* the vouch sends the no-place group's own ids */
   const p = await open({ heldcaptures: ok({ ok: true, held: [up("INFO-U1"), none("INFO-U2")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }),

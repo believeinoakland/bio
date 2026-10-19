@@ -153,7 +153,8 @@ function render(cs, view) {
       const button = cs.act("release", { label: "act.release.label.dash-project", data: { ids: g.ids.join(","), f }, tone: "primary" });
       if (!button) return;
       /* a capture with no place (an upload) is vouched for in a step of its own, by the keys that say no place */
-      const text = g.place ? { key: "screen.dash-project.next.vouch", fills: { count: String(g.ids.length), place: g.place } }
+      const text = g.place ? (g.ids.length === 1 ? { key: "screen.dash-project.next.vouch.one", fills: { place: g.place } }
+          : { key: "screen.dash-project.next.vouch", fills: { count: String(g.ids.length), place: g.place } })
         : g.ids.length === 1 ? { key: "screen.dash-project.next.vouch.noplace.one" }
         : { key: "screen.dash-project.next.vouch.noplace", fills: { count: String(g.ids.length) } };
       steps.push({ text,
@@ -351,7 +352,7 @@ const acts = [
 
 /** The keys the dashboard may draw (R44: keys only). */
 const words = Object.freeze([
-  "screen.dash-project.name", "screen.dash-project.purpose", "screen.dash-project.next.heading", "screen.dash-project.next.vouch",
+  "screen.dash-project.name", "screen.dash-project.purpose", "screen.dash-project.next.heading", "screen.dash-project.next.vouch", "screen.dash-project.next.vouch.one",
   "screen.dash-project.next.newer", "screen.dash-project.next.prepare", "screen.dash-project.next.prepare.label",
   "screen.dash-project.next.vouch.noplace", "screen.dash-project.next.vouch.noplace.one", "screen.dash-project.tile.events.undetermined",
   "screen.dash-project.precision.day", "screen.dash-project.precision.minute", "screen.dash-project.precision.second", "screen.dash-project.precision.edtf", "screen.dash-project.glance.heading", "screen.dash-project.tile.questions",

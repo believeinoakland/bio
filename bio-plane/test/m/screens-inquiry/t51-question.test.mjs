@@ -57,6 +57,7 @@ test("R71 the fold sets the question aside for the project: nothing preselected;
   /* "Change your decision": the same choice (nothing preselected), a reason that replaces the earlier one */
   const change = r.querySelector('details[data-aside="change"]');
   assert.ok(change.querySelectorAll("input[type=radio]").every((i) => !i.checked) && says(change, "screen.question.say006"));
+  assert.ok(says(change.querySelector("summary"), "screen.question.decision.change") && !says(change.querySelector("summary"), "screen.question.say003"), "the fold's summary is its own word, say003 the question inside");
   p.doc.getElementById("question-aside2-1").checked = true;
   fill(p, { "question-aside2-why": "the city retired the standard" });
   await press(p, "proposedispose", { within: change });
@@ -174,6 +175,7 @@ test("R72 what each published case froze for the question: one entry for each ca
   assert.ok(says(a.querySelector("[data-today]"), "screen.question.frozen.today") && says(b.querySelector("[data-today]"), "screen.question.frozen.today"), "Today:");
   assert.ok(says(a.querySelector("[data-axis=capture]"), "screen.question.word.same") && says(a.querySelector("[data-axis=connection]"), "screen.question.word.same"));
   assert.ok(says(b.querySelector("[data-axis=capture]"), "screen.question.word.stronger") && says(b.querySelector("[data-axis=connection]"), "screen.question.word.same"), "axis by axis");
+  assert.ok(says(a.querySelector("[data-axis=capture]"), "screen.question.compare.axis", { axis: word("mark.scale.capture.name"), change: word("screen.question.word.same") }), "an axis with no citation: {axis}: {change}");
   assert.ok(says(a.querySelector("[data-axis=capture] .cs-card"), "mark.scale.capture.name") && a.querySelector("[data-axis=capture] .cs-card").getAttribute("data-tip").includes(word("screen.question.compare.captured.explain")));
   assert.ok(says(a, "screen.question.say048") && says(a, "screen.question.say050") && says(a, "screen.question.say051"), "stated in the signed case");
   assert.ok(says(b, "screen.question.say055") && !says(b, "screen.question.say050"), "stated in the member's own bytes");
@@ -385,4 +387,12 @@ test("R78 a page the record states counts from zero and is drawn from one: an ex
   assert.ok(rests.textContent.includes(word("screen.document.passage.where", { page: page(0) })), "the read-back draws the place too");
   /* control: the value the screen sends is the record's own, untouched */
   assert.ok(p.byOp("basisversions").length > 0 && !p.requests.some((r) => r.body && JSON.stringify(r.body).includes('"page"')));
+});
+
+test("R72 an axis that carries a citation draws screen.question.say054 ({change}, {source}), not screen.question.compare.axis", async () => {
+  const cited = [{ ...CASES[1], strength: { capture: { axis: "capture", grade: "C", cited: "the audit" }, connection: { axis: "connection", grade: "C" } } }];
+  const p = await open(at, { ...A, plane: { publishedfrozen: FROZEN(cited), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }) } });
+  const e = entry(p, "CASE-B:1");
+  assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.say054", { change: word("screen.question.word.stronger"), source: "the audit" }));
+  assert.ok(says(e.querySelector("[data-axis=connection]"), "screen.question.compare.axis", { axis: word("mark.scale.connection.name"), change: word("screen.question.word.same") }));
 });
