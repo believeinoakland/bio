@@ -19,7 +19,16 @@
  * it holds (`on_point`, `connections`, connections R4); its acts gain `adoptversion` and `keepversion` (a newer version's
  * notice, reevaluation R15), `connectionchoose` and `explore`. Every sentence is a word by key (R44).
  * R49 (K3560): "In which question" preselects the question the capture was held for, never the group's first; the
- * document's own project's questions come first (passages section). */
+ * document's own project's questions come first (passages section).
+ *
+ * T51 (R65–R70, R78): the screen follows the drawing's order (passages, Versions, "Your citations, leg by leg", "The record of
+ * this copy", Fingerprints, What cites it, the links in five groups, the names with their grade and how they were matched,
+ * Themes, Steps, the copy's own acts). R65 reads `bundlehistory` (the release, the log oldest first, the revisions, and two of
+ * them side by side from the `image` answer the page already holds: no other read); R66 the fingerprints with Copy (`hashcopy`,
+ * nothing sent); R67 the links by their verdict, an outside link opening a warning before its address (the browser acts
+ * `linkopen`, `revisioncompare`: done in the page, nothing sent); R68 the names from `resolutions`; R69 one row for each
+ * question that rests on the document, asked for a newer copy only when the member asks (`versionnotice`); R78 every page
+ * drawn is the record's page + 1, every value sent is the record's own. */
 
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
@@ -46,8 +55,9 @@ function place(view) {
   return { project: { id: m[1], title } };
 }
 
-/** R3, R5: the capture, its grade and note, its passages (each citable), its unread pages, the people it names, its
- *  versions, what cites it, and its acts. */
+/** R3, R5: the capture, its grade and note, its passages (each citable), its unread pages, its versions, what each question that
+ *  rests on it asks of a newer copy, the record of this copy, its fingerprints, what cites it, the links it carries, the names
+ *  it holds, its themes and steps, and its acts. */
 function render(cs, view) {
   const id = String(view.subject || "");
   if (!id) return "";
@@ -65,7 +75,9 @@ function render(cs, view) {
           {
           const f = r && r.ok === false ? r : a || {};
           const code = String(f.code || f.reason || "");
-          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+          /* a refusal is drawn by its words: the plane's own, else the word held for the code, else "could not be read" */
+          const held = ["NO_SUCH_BUNDLE", "NO_BUNDLE", "NO_SHA", "VERSION_NOTICE_NO_INQUIRY", "VERSION_NOTICE_NO_SUBJECT"].includes(code);
+          settle({ state: "failed", refusal: { code, words: f.translation ? cs.esc(f.translation) : held ? cs.w("refusal." + code) : code ? cs.esc(code) : cs.w("shell.unread") } });
         }
         else if (r && r.found === false) settle({ state: "empty" });
         else settle({ state: "ok", value: r });
@@ -73,6 +85,8 @@ function render(cs, view) {
     }
     return L[key];
   };
+  /* R78: a page the record counts from zero is drawn from one; a run of pages as "7–9", the value sent staying the record's */
+  const pg = (p) => (Number.isInteger(p) && p >= 0 ? p + 1 : null);
   const pagesText = (list) => {
     const n = list.slice().sort((a, b) => a - b), runs = [];
     for (const p of n) {
@@ -95,18 +109,35 @@ function render(cs, view) {
   if (doc) doc.source = doc.maps.source || {};
   /* R3, R32 (K3387): every capture read is keyed on the capture's own sha, from its provenance document (a testimony's
      too); never `content_hash`, which is the bundle's dataset digest (capture grammar C-2.7) */
-  const sha = (() => {
-    if (!doc) return "";
+  const prov = (() => {
+    if (!doc) return null;
     let p = null;
     try { p = JSON.parse(String(d.capture.value["data/provenance.json"] || "")); } catch { p = null; }
-    const first = p && Array.isArray(p.documents) ? p.documents[0] : null;
-    const s0 = first && first.capture ? String(first.capture.sha256 || "") : "";
+    return p;
+  })();
+  const regDocs = prov && Array.isArray(prov.documents) ? prov.documents.filter((x) => x && typeof x === "object") : [];
+  const sha = (() => {
+    const s0 = regDocs[0] && regDocs[0].capture ? String(regDocs[0].capture.sha256 || "") : "";
     return /^[0-9a-f]{64}$/.test(s0) ? s0 : "";
   })();
+  /* R65, R66: a copy that came as a set of files lists more than one entry of `documents` in its provenance register */
+  const isSet = regDocs.length > 1;
   const locator = doc && doc.source ? String(doc.source.locator || "") : "";
   const out = [];
   const T = (k, f) => view.parts.plain(cs, k, f);
   const W = (k, f) => cs.w(k, f);
+  const who = (x) => view.parts.who(cs, x);
+  /* R6, R65: a moment with its time of day, through `time.at` ({date} by `cs.date`, {time} through `time.clock`, 12 hours) */
+  const at = (iso) => {
+    const t = new Date(String(iso || ""));
+    if (!iso || isNaN(t.getTime())) return "";
+    const h = t.getHours();
+    const clock = W("time.clock", { hour: String(h % 12 === 0 ? 12 : h % 12), minute: String(t.getMinutes()).padStart(2, "0"), ampm: { html: W(h < 12 ? "time.am" : "time.pm") } });
+    return W("time.at", { date: { html: cs.date(String(iso), { year: true }) }, time: { html: clock } });
+  };
+  const dayOf = (iso) => (iso ? cs.date(String(iso), { year: true }) : "");
+  const undetermined = (raw) => W("state.undetermined", { reason: raw ? { html: `<span class="id">${cs.esc(String(raw))}</span>` } : "" });
+  const shortOf = (h) => String(h).slice(0, 8) + "…" + String(h).slice(-4);
   const text = d.capture && d.capture.state === "ok" ? String(d.capture.value["bundle.md"] || "") : "";
   /* a member's firsthand observation (provenance's `op=testify`): her words, never an address to watch */
   const testimony = /Authored through op=testify/.test(text);
@@ -146,10 +177,11 @@ function render(cs, view) {
   if (!titled && outside) { let site = ""; try { site = new URL(locator).hostname; } catch { site = ""; }
     out[0] = cs.title(site ? T("document.untitled.web", { site, date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : "" }) : T("state.undetermined", { reason: "" }), { thing: "document" }); }
   const note = sha ? later("gradenote", "gradenote", { capture: sha }) : { state: "empty" };
+  /* R66: the head's fingerprint is the first one shortened, with its tip */
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
-    + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-means="screen.document.fingerprint.means">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
+    + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
     const n = ui.gradenote.note;
@@ -188,7 +220,8 @@ function render(cs, view) {
     const none = ui.citeNone ? `<details class="mk-details" data-cite="none" open><summary>${cs.w("screen.document.cite.none.summary")}</summary><p class="mk-small">${cs.w("screen.find-in.questionfirst")}</p></details>` : "";
     return list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
-      const page = extent && Number.isInteger(extent.page) ? extent.page : null;
+      /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
+      const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
         + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
         + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
@@ -198,11 +231,12 @@ function render(cs, view) {
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
   if (reading.state === "ok" && Array.isArray(reading.value.unread_pages) && reading.value.unread_pages.length) {
-    const un = reading.value.unread_pages;
-    out.push(cs.sec("screen.document.unread.head",
-      `<p>${cs.w("document.unread.pages", { pages: pagesText(un) })}</p>`
+    const un = reading.value.unread_pages.filter((p) => Number.isInteger(p) && p >= 0);
+    /* R78: drawn from one, the picker's own choices one-based as well (a transcription sends the record's number) */
+    if (un.length) out.push(cs.sec("screen.document.unread.head",
+      `<p>${cs.w("document.unread.pages", { pages: pagesText(un.map((p) => p + 1)) })}</p>`
       + (view.reachable ? cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } }) : "")
-      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => ({ value: String(p), text: String(p) })), { value: String(un[0]) })
+      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => ({ value: String(p + 1), text: String(p + 1) })), { value: String(un[0] + 1) })
       + cs.field("document-unread-words", "screen.document.unread.words", { area: true, rec: true })
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
@@ -217,17 +251,300 @@ function render(cs, view) {
   if (reading.state === "ok" && reading.value.untested && reading.value.text_provenance && reading.value.text_provenance.transcribed)
     out.push(`<p class="cs-draftlabel" data-label="untested">${cs.w("ai.label.untested")}</p>`);
 
-  /* people it names: a name in its reading claimed as a person the record follows */
-  if (reading.state === "ok") {
-    const rd = reading.value.reading || {};
-    const people = Array.isArray(rd.people) ? rd.people : Array.isArray(rd.entities) ? rd.entities.filter((e) => e && (e.kind === "person" || e.type === "person")) : [];
-    if (people.length) out.push(cs.sec("screen.document.people.head",
-      cs.sheet(people.map((p) => cs.row("", cs.esc(p.name || p.words || ""), cs.act("identityclaim",
-          { label: "act.identityclaim.label.document", data: { entity: String(p.id || p.entity || "") } }))).join(""))
-        + cs.field("document-claim-person", "screen.document.claim.label", {})
-        + cs.choice("document-claim-basis", "screen.document.claim.basis",
-            [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
-        + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim")));
+  /* its versions (provenance's versionchain): a newer version than this copy marked changed; refused by its words
+     (R32). Each question that rests on it asks about a newer copy on its own row (R69), never here. */
+  const backs = d.backlinks && d.backlinks.state === "ok" && Array.isArray(d.backlinks.value.backlinks) ? d.backlinks.value.backlinks : [];
+  const vc = outside && !testimony ? later("versions", "versionchain", { address: locator, ...(sha ? { at: sha } : {}) }) : null;
+  if (vc) {
+    const vbody = vc.state === "failed" ? `<p class="cs-state" data-state="failed" role="alert">${vc.refusal && vc.refusal.words ? vc.refusal.words : cs.w("state.failed", { reason: "" })}</p>`
+      : vc.state === "loading" ? cs.state({ state: "loading" }, () => "") : vc.state === "ok" ? (() => {
+        const v = vc.value;
+        const list = Array.isArray(v.versions) ? v.versions : [];
+        if (list.length < 2) return "";
+        const at0 = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
+        const newer = at0 >= 0 && at0 < list.length - 1;
+        return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
+          + cs.sheet(list.map((x, i) => cs.row("", x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "",
+              i === at0 ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
+      })() : "";
+    if (vbody) out.push(cs.sec("screen.document.versions.head", vbody));
+  }
+
+  /* R69: "Your citations, leg by leg": one row for each question that rests on this document and the viewer may see. Until the
+     member asks, a row says it has not been asked (B314) and no `versionnotice` is sent for it; a notice the sweep raised
+     (`reevaluationnotices`) is a read of the record, so its row is drawn asked from the start; a notice a member closed is
+     drawn as decided. */
+  {
+    const askedFor = ui.asked || {};
+    const versions = vc && vc.state === "ok" && vc.value && Array.isArray(vc.value.versions) ? vc.value.versions : [];
+    const dateOfSha = (s) => { const v = versions.find((x) => x && (x.capture_sha === s || x.sha256 === s)); return v && v.first_retrieved ? String(v.first_retrieved) : ""; };
+    const newestOf = (list) => list.filter(Boolean).sort().pop() || "";
+    const seenQ = new Set();
+    const rows = [];
+    for (const x of backs.filter((b) => b && b.from_type === "inquiry" && b.from)) {
+      const qid = String(x.from);
+      if (seenQ.has(qid)) continue;
+      seenQ.add(qid);
+      const qi = later("qimg:" + qid, "image", { id: qid });
+      const qf = qi.state === "ok" && qi.value && typeof qi.value["bundle.md"] === "string" ? view.parts.front(qi.value["bundle.md"]) : null;
+      const pid = qf && /^PROJ-/.test(String(qf.project || "")) ? String(qf.project) : "";
+      const pi = pid ? later("project:" + pid, "image", { id: pid }) : null;
+      const ptitle = pi && pi.state === "ok" && pi.value && typeof pi.value["bundle.md"] === "string" ? String(view.parts.front(pi.value["bundle.md"]).title || "") : "";
+      /* the place the question rests on: its legs on this document, each at the record's page + 1 (R78) */
+      const places = (qf ? qf.lists.basis || [] : []).filter((l) => l && String(l.target) === id && l.extent_page !== undefined && l.extent_page !== "")
+        .map((l) => pg(Number(l.extent_page))).filter((n) => n !== null);
+      const nt = later("renotices:" + qid, "reevaluationnotices", { holder: qid, state: "all" });
+      const list = nt.state === "ok" && nt.value ? (Array.isArray(nt.value.notices) ? nt.value.notices : Array.isArray(nt.value.items) ? nt.value.items : []) : [];
+      const mine = list.filter((o) => o && (String(o.target || "") === id || o.capture_sha === sha || o.newer_capture === sha) && (o.notice || o.id));
+      const stateOf = (o) => String(o.state || "open");
+      const open = mine.filter((o) => stateOf(o) === "open");
+      const closed = mine.filter((o) => stateOf(o) === "adopted" || stateOf(o) === "kept")
+        .sort((a, b) => String(a.closed_at || "").localeCompare(String(b.closed_at || "")));
+      const ans = askedFor[qid] || null;
+      const place = places.join(", ");
+      const unseen = (inner) => `<span class="mk-small" data-leg-state="asked">${inner}</span>`;
+      let acts = "", meta = [];
+      if (ptitle) meta.push(cs.esc(ptitle));
+      if (places.length) meta.push(places.map((n) => W("screen.document.passage.where", { page: n })).join(", "));
+      if (!open.length && closed.length) {
+        /* decided: what she chose, who and when, in her own words; nothing more is offered for that capture */
+        const c = closed[closed.length - 1];
+        meta.push(`<span data-leg-state="decided" data-decided="${cs.esc(stateOf(c))}">${W(stateOf(c) === "adopted" ? "act.adoptversion.label.document" : "act.keepversion.label.document")}`
+          + (c.closed_by ? " · " + cs.esc(who(c.closed_by)) : "") + (c.closed_at ? " · " + dayOf(c.closed_at) : "")
+          + (c.why ? ` · <span class="rec">“${cs.esc(String(c.why))}”</span>` : "") + "</span>");
+      } else if (ans || open.length) {
+        const lines = [];
+        const legs = ans && ans.state === "ok" ? ans.legs.filter((n) => n && String(n.target) === id) : [];
+        const items = legs.length ? legs.map((n) => ({ state: String(n.state || ""), affects: n.affects,
+          date: newestOf((Array.isArray(n.candidates) ? n.candidates : []).map((c) => c && c.first_retrieved ? String(c.first_retrieved) : "")
+            .concat((Array.isArray(n.chains) ? n.chains : []).map((c) => c && c.newest && c.newest.first_retrieved ? String(c.newest.first_retrieved) : ""))) }))
+          : ans && ans.state === "ok" ? [{ state: "chain_unread", affects: null, date: "" }]
+          : open.map((o) => ({ state: "newer_capture", affects: o.affects || null, date: dateOfSha(String(o.newer_capture || "")) }));
+        if (ans && ans.state === "failed") lines.push(cs.state({ state: "failed", refusal: ans.words ? { words: ans.words } : null }, () => ""));
+        for (const it of items) {
+          if (it.state === "no_newer_capture") continue;
+          if (it.state === "chain_unread" || it.state === "not_asked" || !it.state) {
+            /* never "none": the record could not tell, and it does not guess */
+            lines.push(`<span data-leg="unread">${cs.mark("gap", "undetermined")} ${W("screen.document.a34.it_does_not_guess")}</span>`);
+            continue;
+          }
+          if (it.date) lines.push(`<span data-leg="newer">${W("screen.document.a34.a_newer_copy_exists_captured_2_october", { date: { html: dayOf(it.date) } })}</span>`);
+          if (it.affects === "unaffected" && place) lines.push(`<span data-leg="same">${W("screen.document.a34.section_3_reads_the_same_in_both", { section: place })}</span>`);
+          else if (it.affects === "undetermined") lines.push(`<span data-leg="undetermined">${cs.mark("gap", "undetermined")}</span>`);
+        }
+        if (lines.length) meta.push(unseen(lines.join(" · ")));
+        /* a newer copy is taken up or declined by a notice (reevaluation R15), so each open notice carries its two acts */
+        acts = open.map((o) => { const nid = String(o.notice || o.id);
+          return cs.field("document-version-why-" + nid, "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
+            + cs.act("adoptversion", { label: "act.adoptversion.label.document", data: { notice: nid } })
+            + cs.act("keepversion", { label: "act.keepversion.label.document", data: { notice: nid } }); }).join("");
+        if (nt.state === "failed") meta.push(cs.state(nt, () => ""));
+      } else {
+        meta.push(`<span data-leg-state="unchecked">${W("screen.document.a34.not_checked_yet")}</span>`);
+        acts = cs.act("versionnotice", { label: "act.versionnotice.label.document", data: { question: qid } });
+        if (nt.state === "failed") meta.push(cs.state(nt, () => ""));
+      }
+      rows.push(`<div data-leg-row="${cs.esc(qid)}">` + cs.row("", cs.ref("question", qid, x.from_title || T("state.undetermined", { reason: "" }), [x.from_title || ""]), "", meta.join(" · ")) + acts + "</div>");
+    }
+    if (rows.length) out.push(cs.sec("screen.document.a34.your_citations_leg_by_leg",
+      `<p class="mk-small muted">${W("screen.document.a34.a_newer_copy_never_moves_a_citation_by_i")} ${W("screen.document.a34.each_reasoning_that_rests_on_this_docume")}</p>`
+      + cs.sheet(rows.join("")), { help: "screen.document.a34.one_line_for_each_question_that_rests_on" }));
+  }
+
+  /* R65: "The record of this copy" (`bundlehistory`, promotion R58): the release that wrote it, what was done to its standing
+     oldest first, and every earlier revision, two of which can be set side by side from the `image` answer already held. */
+  const hist = later("history", "bundlehistory", { bundle: id });
+  const image = d.capture.value;
+  const revs = hist.state === "ok" && hist.value && Array.isArray(hist.value.revisions) ? hist.value.revisions.filter((r) => r && typeof r === "object").slice().sort((a, b) => Number(b.seq) - Number(a.seq)) : [];
+  /* a revision's bytes, as the image answer holds them (promotion R58, record-core R15): the newest revision's file is the live
+     one; an older revision's is the snapshot the promotion that replaced it archived, `_history/<name>_<snapKey>.<ext>` by the
+     key of that replacing revision (the nearest newer one that wrote the file), or the live file when none did */
+  const snapPath = (path, key) => { const cut = path.lastIndexOf("/"), dir = cut === -1 ? "" : path.slice(0, cut + 1), name = cut === -1 ? path : path.slice(cut + 1), dot = name.lastIndexOf(".");
+    return dot === -1 ? `_history/${dir}${name}_${key}` : `_history/${dir}${name.slice(0, dot)}_${key}${name.slice(dot)}`; };
+  const bytesOf = (path, i) => {
+    for (let j = i - 1; j >= 0; j--) {
+      const files = Array.isArray(revs[j].files) ? revs[j].files : [];
+      if (files.some((f) => f && f.path === path)) { const v = image[snapPath(path, String(revs[j].snapKey))]; return typeof v === "string" ? v : null; }
+    }
+    const v = image[path];
+    return typeof v === "string" ? v : null;
+  };
+  /* the standing, the grade and who vouched, as one revision's own bytes state them; null when the answer holds none */
+  const factsOf = (i) => {
+    const t = bytesOf("bundle.md", i);
+    if (t === null) return null;
+    const f = view.parts.front(t);
+    const verified = (f.lists.state_history || []).filter((x) => x && x.to_state === "verified");
+    let grade = "";
+    try { const pj = JSON.parse(String(bytesOf("data/provenance.json", i) || "")); const g = pj && pj.documents && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.grade || "") : ""; grade = /^[A-D]$/.test(g) ? g : ""; } catch { grade = ""; }
+    return { standing: String(f.current_state || ""), vouched: verified.length ? String(verified[verified.length - 1].author || "") : "", grade };
+  };
+  const standingWord = (to) => (to === "collected" ? W("screen.document.a27.held_until_vouched_for") : to === "verified" ? W("screen.document.a27.now_used_by_the_team")
+    : to === "retired" ? W("state.item.retired.name") : undetermined(to));
+  const recordBody = (h) => {
+    if (!h || typeof h !== "object") return "";
+    const states = Array.isArray(h.states) ? h.states.filter((s) => s && typeof s === "object") : [];
+    const hop = regDocs[0] && Array.isArray(regDocs[0].provenance_chain) ? regDocs[0].provenance_chain[0] : null;
+    const rel = hop && typeof hop.who === "string" ? /Civicsmith\/([^\s)]+)/.exec(hop.who) : null;
+    const parts = [];
+    if (rel) parts.push(cs.sheet(cs.row("", `<b class="id" data-release="1">${cs.esc(rel[1])}</b>`, "", W("screen.document.a27.the_release_of_civicsmith_that_wrote_thi"))));
+    const first = revs.length ? revs[revs.length - 1] : null;
+    const log = [];
+    if (first) {
+      const f0 = factsOf(revs.length - 1);
+      log.push(cs.row("", `<b>${cs.esc(who(first.author))}</b>`, "", [at(first.at), f0 && f0.standing === "collected" ? W("screen.document.a27.held_until_vouched_for") : "",
+        locator ? `<span class="id">${cs.esc(locator)}</span>` : ""].filter(Boolean).join(" · ")));
+    }
+    for (const s of states) {
+      const to = String(s.to || "");
+      log.push(cs.row("", to === "verified" ? W("screen.document.a27.vouched_for_by_dev", { member: who(s.author) }) : `<b>${cs.esc(who(s.author))}</b>`, "",
+        [at(s.at), standingWord(to)].filter(Boolean).join(" · ") + (s.blurb ? ` · <span class="rec">“${cs.esc(String(s.blurb))}”</span>` : "")));
+    }
+    if (log.length) parts.push(`<p class="mk-note">${W("screen.document.a27.everything_done_to_this_copy_s_standing_")} ${W("screen.document.a27.none_of_it_is_ever_changed_or_removed")}</p>` + cs.sheet(log.join("")));
+    if (revs.length > 1) {
+      const filesOf = (r) => (Array.isArray(r.files) ? r.files.filter((f) => f && f.path) : []);
+      const titleOf = (r) => T("screen.document.revision.title", { n: String(r.seq) });
+      const revRows = revs.map((r, i) => cs.row("", `<b>${cs.esc(titleOf(r))}</b>` + (i === 0 ? ` <span class="mk-small">${W("document.versions.thiscopy")}</span>` : ""), "",
+        [dayOf(r.at), cs.esc(who(r.author))].filter(Boolean).join(" · ")
+        + (isSet ? filesOf(r).map((f) => ` <span class="id">${cs.esc(String(f.path))} ${cs.esc(shortOf(String(f.sha256 || "")))}</span>`).join("") : "")));
+      const opts = revs.map((r) => ({ value: String(r.seq), text: titleOf(r) }));
+      const cmp = ui.revcmp && opts.some((o) => o.value === String(ui.revcmp.a)) && opts.some((o) => o.value === String(ui.revcmp.b)) ? ui.revcmp : null;
+      let panel = "";
+      if (cmp) {
+        const ia = revs.findIndex((r) => String(r.seq) === String(cmp.a)), ib = revs.findIndex((r) => String(r.seq) === String(cmp.b));
+        const fa = factsOf(ia), fb = factsOf(ib);
+        const edit = (same, left, inner) => (same ? inner : left ? `<del>${inner}</del>` : `<ins>${inner}</ins>`);
+        const standingLine = (st) => (st === "collected" ? W("screen.document.a27.standing_held_until_vouched_for") : st === "verified" ? W("screen.document.a27.standing_used_by_the_team")
+          : st === "retired" ? W("state.item.retired.name") : undetermined(st));
+        const lines = (f, g, left) => (!f ? `<p>${cs.mark("gap", "undetermined")}</p>`
+          : `<p>${edit(!g || f.standing === g.standing, left, standingLine(f.standing))}</p>`
+          + `<p>${edit(!g || f.grade === g.grade, left, f.grade ? cs.grade("capture", f.grade) : cs.mark("gap", "undetermined"))}</p>`
+          + `<p>${edit(!g || f.vouched === g.vouched, left, f.vouched ? W("screen.document.a27.vouched_for_by_dev.2", { member: who(f.vouched) }) : W("screen.document.a27.vouched_for_by_nobody"))}</p>`);
+        const side = (i, f, g, left) => `<div><h3>${cs.esc(titleOf(revs[i]))}</h3><span class="mk-date">${at(revs[i].at)} · ${cs.esc(who(revs[i].author))}</span>${lines(f, g, left)}</div>`;
+        /* a set of files: the files that changed between the two, each with its digest on either side */
+        let changed = "";
+        if (isSet) {
+          const fa2 = new Map(filesOf(revs[ia]).map((f) => [String(f.path), String(f.sha256 || "")])), fb2 = new Map(filesOf(revs[ib]).map((f) => [String(f.path), String(f.sha256 || "")]));
+          changed = [...new Set([...fa2.keys(), ...fb2.keys()])].filter((p) => fa2.get(p) !== fb2.get(p))
+            .map((p) => `<p class="mk-small id" data-file-changed="${cs.esc(p)}">${cs.esc(p)} ${fa2.has(p) ? `<del>${cs.esc(shortOf(fa2.get(p)))}</del>` : ""} ${fb2.has(p) ? `<ins>${cs.esc(shortOf(fb2.get(p)))}</ins>` : ""}</p>`).join("");
+        }
+        panel = `<div class="mk-compare" data-compare="revisions">${side(ia, fa, fb, true)}${side(ib, fb, fa, false)}</div>` + changed;
+      }
+      parts.push(`<details class="mk-details" data-fold="revisions"${cmp ? " open" : ""}><summary>${W("screen.document.a27.earlier_revisions_of_this_record")} <span class="muted">· ${revs.length}</span></summary>`
+        + cs.sheet(revRows.join(""))
+        + `<div class="mk-grid2">${cs.choice("document-rev-a", "screen.document.revisions.compare", opts, { value: cmp ? String(cmp.a) : opts[opts.length - 1].value })}`
+        + `${cs.choice("document-rev-b", "screen.document.revisions.with", opts, { value: cmp ? String(cmp.b) : opts[0].value })}</div>`
+        + cs.act("revisioncompare", { label: "screen.document.revisions.compare.act" }) + panel
+        + (isSet ? `<p class="mk-note">${W("screen.document.a27.a_copy_that_came_as_a_set_of_files_such_")}</p>` : "") + "</details>");
+    }
+    return parts.join("");
+  };
+  if (hist.state !== "empty") {
+    const body = cs.state(hist, recordBody);
+    if (body) out.push(cs.sec("screen.document.a27.the_record_of_this_copy", body, { help: "screen.document.a27.who_added_this_copy_who_vouched_for_it_a" }));
+  }
+
+  /* R66: the fingerprints, each in full with its short form beside its title and a Copy that puts the full value on the clipboard
+     (nothing is sent). The second, the current revision's `bundle_sha`, is for a copy that came as a set of files only. */
+  if (sha) {
+    const setSha = isSet && revs.length && /^[0-9a-f]{64}$/.test(String(revs[0].sha256 || "")) ? String(revs[0].sha256) : "";
+    const fp = (value, titleKey, whyKey, tag) => cs.row("", `<b>${W(titleKey)}</b> <span class="id">${cs.esc(shortOf(value))}</span>`, cs.act("hashcopy", { label: "shell.copy", data: { value }, tone: "quiet" }),
+      `<span class="id" data-fingerprint="${tag}">${cs.esc(value)}</span> · ${W(whyKey)}`);
+    out.push(cs.sec("screen.document.fingerprints.head", cs.sheet(fp(sha, "screen.document.a26.this_copy_s_words_and_file", "screen.document.a26.computed_from_the_exact_bytes_of_this_co", "capture")
+      + (setSha ? fp(setSha, "screen.document.a26.this_copy_and_the_files_captured_with_it", "screen.document.a26.computed_from_the_whole_set_so_the_set_c", "set") : ""))
+      + (setSha ? `<p class="mk-note">${W("screen.document.fingerprint.setonly")}</p>` : "") + `<p class="mk-small">${W("screen.document.a26.anyone_holding_the_same_bytes_computes_t")}</p>`,
+      { help: "screen.document.a26.short_codes_computed_from_the_exact_byte" }));
+  }
+
+  /* what cites it (R39: a citer without a title is undetermined, never its id) */
+  out.push(secOf("screen.document.backlinks.head", "backlinks", (bk) =>
+    (bk.backlinks || []).length ? cs.sheet((bk.backlinks || []).map((x) => cs.row("", cs.ref(x.from_type === "project" ? "project" : x.from_type === "inquiry" ? "question" : "document",
+      String(x.from || ""), x.from_title || T("state.undetermined", { reason: "" }), [x.from_title || ""]), "")).join(""))
+    + (bk.out_of_view ? `<p class="mk-small">${cs.w("screen.document.backlinks.hidden")}</p>` : "") : ""));
+
+  /* R32, R67: the links this page carries (capture R57's `links`, resolved by capture R27) and those it makes into held documents
+     (connections R24's `links_to`, its own references), in five groups, each row with the verdict word its link carries. An outside
+     link is not a bare anchor: pressing it opens a warning first, and only "Open it anyway" opens the address. */
+  if (sha && !testimony) {
+    const lk = later("links", "links", { capture: sha, limit: "200" });
+    const linked = (doc.lists.references || []).filter((r) => r && r.rel === "links_to" && r.target);
+    const rows = lk.state === "ok" && Array.isArray(lk.value.links) ? lk.value.links.filter((r) => r && r.address && !r.chrome) : [];
+    if (lk.state === "failed") out.push(cs.sec("document.links.title", cs.state(lk, () => ""), { help: "document.links.help" }));
+    else if (rows.length || linked.length) {
+      const g = { inside: [], beside: [], held: [], outside: [], refused: [] };
+      for (const r of rows) {
+        const part = String(r.resolution || r.partition || "");
+        if (part === "anchor") g.inside.push(r);
+        else if (part === "intra") g.beside.push(r);
+        else if (part === "refused") g.refused.push(r);
+        else if (r.target_bundle) g.held.push(r);
+        else g.outside.push(r);
+      }
+      for (const r of linked) if (!g.held.some((o) => String(o.target_bundle) === String(r.target) || (o.address && o.address === r.address)))
+        g.held.push({ address: String(r.address || ""), target_bundle: String(r.target), verdict: r.verdict, target_retrieved: r.at, title: r.title });
+      const word = (k) => W("screen.document.links.verdict." + k);
+      const verdictOf = (r, group) => (group === "inside" ? word("final") : group === "beside" ? word("checked") : group === "refused" ? word("refused")
+        : r.verdict === "contemporaneous" ? word("same") : r.verdict === "superseded" ? word("different") : r.verdict === "undetermined" ? word("notestablished")
+        : group === "outside" ? word("nocapture") : "");
+      const addr = (r) => `<span class="id">${cs.esc(String(r.address) + (r.fragment && !String(r.address).includes("#") ? "#" + r.fragment : ""))}</span>`;
+      const meta = (verdict, why) => (verdict ? `<b>${verdict}</b>` : "") + (why ? " · " + why : "");
+      const groupOf = (key, list, draw) => (list.length ? `<p class="mk-small"><b>${W("screen.document.links.group." + key, { n: String(list.length) })}</b></p>` + cs.sheet(list.map(draw).join("")) : "");
+      const leaving = ui.leaving ? String(ui.leaving) : "";
+      const leave = leaving && g.outside.some((r) => String(r.address) === leaving)
+        ? `<div class="cs-dialog" role="dialog" data-dialog="leave" aria-label="${W("screen.document.a30.you_are_about_to_leave_the_record")}"><b>${W("screen.document.a30.you_are_about_to_leave_the_record")}</b>`
+          + `<div class="ends">${W("screen.document.a30.this_page_carried_this_address_and_the_r")} ${W("screen.document.a30.what_is_at_the_address_now_the_record_do")} ${W("screen.document.a27.opening_it_leaves_the_record_and_nothing")}</div>`
+          + `<div class="id">${cs.esc(leaving)}</div><span class="mk-acts">${cs.act("linkopen", { label: "act.owed_linkopen.label.document", data: { address: leaving, step: "open" } })}`
+          + `${cs.act("linkopen", { label: "screen.document.a30.stay_in_the_record", data: { step: "stay" }, tone: "quiet" })}</span></div>` : "";
+      out.push(cs.sec("document.links.title",
+        groupOf("inside", g.inside, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "inside"), W("screen.document.a30.a_pointer_into_this_very_copy_settled_wh"))))
+        + groupOf("beside", g.beside, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "beside"), W("screen.document.a64.captured_together_with_this_page_and_che"))))
+        + groupOf("held", g.held, (r) => cs.row("", cs.ref("document", String(r.target_bundle), String(r.title || r.address || T("state.undetermined", { reason: "" })), []), "",
+            meta(verdictOf(r, "held"), (r.verdict === "contemporaneous" ? W("screen.document.a27.the_copy_your_team_holds_is_the_one_this") : "")
+              + (r.target_retrieved ? (r.verdict === "contemporaneous" ? " · " : "") + W("document.links.held", { date: { html: dayOf(r.target_retrieved) } }) : ""))))
+        + (g.held.length ? `<p class="mk-note">${W("screen.document.a30.the_other_verdicts_a_held_link_can_carry")} ${W("screen.document.a64.not_established_means_the_record_cannot_")}</p>` : "")
+        + groupOf("outside", g.outside, (r) => cs.row("", addr(r), /^https?:\/\//i.test(String(r.address)) ? cs.act("linkopen", { label: "act.owed_linkopen.label.document", data: { address: String(r.address), step: "ask" }, tone: "quiet" }) : "",
+            meta(verdictOf(r, "outside"), "")))
+        + leave
+        + groupOf("refused", g.refused, (r) => cs.row("", addr(r), "", meta(verdictOf(r, "refused"), W("screen.document.a30.not_an_address_the_record_will_carry") + " " + W("screen.document.a30.this_is_a_refusal_not_a_gap_in_what_was_")))),
+        { help: "document.links.help" }));
+    }
+  }
+
+  /* R32, R68: the names it holds, each with its grade as one mark and how it was matched (`resolutions`, entities R14, R58), the
+     mention that counts (`on_point`, connections R4) chosen by the record or by a member; a person she says the record follows */
+  if (sha) {
+    const rs = later("resolutions", "resolutions", { sha256: sha, limit: "500" });
+    const cn = later("connections", "connections", { sha256: sha, limit: "200" });
+    const names = rs.state === "ok" && rs.value && Array.isArray(rs.value.names) ? rs.value.names.filter((n) => n && n.entity_id) : [];
+    const conns = cn.state === "ok" && cn.value && Array.isArray(cn.value.connections) ? cn.value.connections : [];
+    if (rs.state === "failed") out.push(cs.sec("document.names.title", cs.state(rs, () => ""), { help: "document.names.help" }));
+    else if (names.length) {
+      const people = names.some((n) => n.kind === "person");
+      out.push(cs.sec("document.names.title", cs.sheet(names.map((n) => {
+        const c = conns.find((x) => x && String(x.entity_id) === String(n.entity_id));
+        const mine = c ? (c.a_capture_sha === sha ? "a" : "b") : "";
+        const op = c && c.on_point ? c.on_point[mine] : null;
+        const other = c ? (mine === "a" ? c.b_capture_sha : c.a_capture_sha) : "";
+        const chosen = op && op.chosen_by && op.chosen_by !== "record"
+          ? W("document.names.chosen.member", { who: who(op.chosen_by), date: { html: op.at ? cs.date(String(op.at), { year: true }) : "" }, why: String(op.why || "") })
+          : W("document.names.chosen.record");
+        const page = op && op.occurrence ? pg(Number(op.occurrence.page)) : null;
+        const count = Number.isInteger(n.mentions) ? n.mentions : c && Number.isInteger(c.occurrences) ? c.occurrences : null;
+        const said = page !== null && count !== null ? W("document.names.row", { n: String(count), page: String(page), chosen: { html: chosen } }) : chosen;
+        const grade = /^[A-D]$/.test(String(n.grade || "")) ? cs.grade("subject", String(n.grade)) : cs.mark("gap", "undetermined");
+        return cs.row("", `<span class="rec">${cs.esc(String(n.label || n.entity_id))}</span>`,
+          (c ? cs.act("connectionchoose", { label: "act.connectionchoose.label.document", data: { capture: sha, other: String(other || ""), entity: String(n.entity_id), ref: String((op && op.ref) || "") } }) : "")
+          + (n.kind === "person" ? cs.act("identityclaim", { label: "act.identityclaim.label.document", data: { entity: String(n.entity_id) } }) : ""),
+          grade + " " + said);
+      }).join(""))
+        + `<p class="mk-note">${W("screen.document.a31.the_grade_on_each_name_says_how_the_matc")} ${W("screen.document.a31.it_says_nothing_about_how_far_to_trust_t")} ${W("screen.document.a31.a_connection_to_another_document_takes_t")}</p>`
+        + (cn.state === "failed" ? cs.state(cn, () => "") : "")
+        + (people ? cs.field("document-claim-person", "screen.document.claim.label", {})
+          + cs.choice("document-claim-basis", "screen.document.claim.basis",
+              [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
+          + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim") : "")
+        + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
+    }
   }
 
   /* R56: themes this document or its passages are placed in (never evidence), placements and hunches apart, and the steps it is
@@ -236,16 +553,18 @@ function render(cs, view) {
     const tl = later("themes", "themeread", { limit: "200" });
     const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
     const lines = [];
+    /* R78: a placement's page is the record's, drawn from one; none stated, none drawn */
+    const pageOf = (v) => (v === null || v === undefined || v === "" || !Number.isInteger(Number(v)) ? null : pg(Number(v)));
     for (const t of themes) {
       const r = later("theme:" + t.theme_id, "themeread", { id: String(t.theme_id), limit: "500" });
       if (r.state !== "ok" || !r.value) continue;
       const mine = (x) => x && (String(x.document || "") === id || String(x.target || "").split(/[#/:?]/)[0] === id);
       for (const m of (Array.isArray(r.value.members) ? r.value.members : []).filter(mine))
-        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${m.page ? cs.w("screen.document.theme.page", { page: String(m.page), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
+        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${pageOf(m.page) !== null ? cs.w("screen.document.theme.page", { page: String(pageOf(m.page)), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
           : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
           + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(m.target || id) } }) + "</p>");
       for (const h of (Array.isArray(r.value.hunches) ? r.value.hunches : []).filter(mine))
-        lines.push(`<p class="mk-small" data-hunch="${cs.esc(t.theme_id)}"><span class="cs-hunch" data-mark="hunch">${cs.w("theme.hunch.mark")}</span> <b>${cs.esc(String(t.name || ""))}</b> ${cs.w("screen.document.theme.proposed", { page: String(h.page || ""), date: { html: h.proposed_at ? cs.date(String(h.proposed_at), { year: true }) : "" }, note: String(h.proposal_note || "") })}`
+        lines.push(`<p class="mk-small" data-hunch="${cs.esc(t.theme_id)}"><span class="cs-hunch" data-mark="hunch">${cs.w("theme.hunch.mark")}</span> <b>${cs.esc(String(t.name || ""))}</b> ${cs.w("screen.document.theme.proposed", { page: String(pageOf(h.page) === null ? "" : pageOf(h.page)), date: { html: h.proposed_at ? cs.date(String(h.proposed_at), { year: true }) : "" }, note: String(h.proposal_note || "") })}`
           + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(h.target || id) } }) + "</p>");
     }
     const placeBox = themes.length ? cs.choice("document-theme-which", "theme.section", themes.map((t) => ({ value: String(t.theme_id), text: String(t.name || "") })), {})
@@ -253,84 +572,12 @@ function render(cs, view) {
       + cs.act("themeplace", { label: "theme.place", data: { target: id } }) + cs.act("themepropose", { label: "theme.propose", data: { target: id } }) : "";
     if (tl.state === "failed") out.push(cs.sec("theme.section", cs.state(tl, () => "")));
     else if (lines.length || placeBox) out.push(cs.sec("theme.section", lines.join("") + `<p class="mk-small">${W("theme.never.evidence")}</p>` + placeBox));
-    const pg = later("progs", "captureprogressions", { sha256: sha });
-    const plist = pg.state === "ok" && pg.value ? (Array.isArray(pg.value.instances) ? pg.value.instances : Array.isArray(pg.value.progressions) ? pg.value.progressions : []) : [];
-    if (pg.state === "failed") out.push(cs.sec("progression.threadedto", cs.state(pg, () => "")));
+    const pgr = later("progs", "captureprogressions", { sha256: sha });
+    const plist = pgr.state === "ok" && pgr.value ? (Array.isArray(pgr.value.instances) ? pgr.value.instances : Array.isArray(pgr.value.progressions) ? pgr.value.progressions : []) : [];
+    if (pgr.state === "failed") out.push(cs.sec("progression.threadedto", cs.state(pgr, () => "")));
     else if (plist.length) out.push(cs.sec("progression.threadedto", cs.sheet(plist.map((x) => cs.row("", `<span class="rec">${cs.esc(String(x.label || x.progression_key || ""))}</span>`, "",
       W("progression.followed", { progression: String(x.label || x.progression_key || ""), n: String(x.definition_version || x.thread_version || "") }))).join("")) + cs.act("thread", { label: "progression.thread.here", data: { sha } })));
   }
-
-  /* its versions (provenance's versionchain): a newer version than this copy marked changed; refused by its words
-     (R32); a newer version's notice to a question citing it decided here, adopted or kept (reevaluation R15) */
-  const backs = d.backlinks && d.backlinks.state === "ok" && Array.isArray(d.backlinks.value.backlinks) ? d.backlinks.value.backlinks : [];
-  if (outside && !testimony) {
-    const vc = later("versions", "versionchain", { address: locator, ...(sha ? { at: sha } : {}) });
-    const notices = backs.filter((x) => x && x.from_type === "inquiry").flatMap((x) => {
-      const n = later("notices:" + x.from, "reevaluationnotices", { holder: String(x.from), state: "open" });
-      const list = n.state === "ok" ? (Array.isArray(n.value.notices) ? n.value.notices : n.value.items || []) : [];
-      return list.filter((o) => o && (o.capture_sha === sha || o.newer_capture === sha) && o.id).map((o) => ({ id: String(o.id), holder: String(x.from) }));
-    });
-    const decide = notices.map((o) => cs.field("document-version-why-" + o.id, "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
-      + cs.act("adoptversion", { label: "act.adoptversion.label.document", data: { notice: o.id } })
-      + cs.act("keepversion", { label: "act.keepversion.label.document", data: { notice: o.id } })).join("");
-    const vbody = vc.state === "failed" ? `<p class="cs-state" data-state="failed" role="alert">${vc.refusal && vc.refusal.words ? vc.refusal.words : cs.w("state.failed", { reason: "" })}</p>`
-      : vc.state === "loading" ? cs.state({ state: "loading" }, () => "") : vc.state === "ok" ? (() => {
-        const v = vc.value;
-        const list = Array.isArray(v.versions) ? v.versions : [];
-        if (list.length < 2) return "";
-        const at = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
-        const newer = at >= 0 && at < list.length - 1;
-        return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
-          + cs.sheet(list.map((x, i) => cs.row("", x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "",
-              i === at ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
-      })() : "";
-    if (vbody || decide) out.push(cs.sec("screen.document.versions.head", vbody + decide));
-  }
-
-  /* R32: the links this page carries (capture R57's `links`), and those it makes into held documents (connections R24's
-     `links_to`, its own references): a held one a reference, an outward one a link opening outside */
-  if (sha && !testimony) {
-    const lk = later("links", "links", { capture: sha, limit: "200" });
-    const linked = (doc.lists.references || []).filter((r) => r && r.rel === "links_to" && r.target);
-    const rows = lk.state === "ok" && Array.isArray(lk.value.links) ? lk.value.links.filter((r) => r && r.address && !r.chrome) : [];
-    if (lk.state === "failed") out.push(cs.sec("document.links.title", cs.state(lk, () => ""), { help: "document.links.help" }));
-    else if (rows.length || linked.length) {
-      const heldRows = linked.map((r) => cs.row("", cs.ref("document", String(r.target), String(r.title || r.address || T("state.undetermined", { reason: "" })), []), "",
-        W("document.links.held", { date: { html: r.at ? cs.date(String(r.at), { year: true }) : "" } })));
-      const outRows = rows.filter((r) => !linked.some((o) => o.address && o.address === r.address)).map((r) => {
-        const target = r.target_bundle ? cs.ref("document", String(r.target_bundle), String(r.address), [])
-          : `<a class="cs-btn" data-tone="quiet" href="${cs.esc(r.address)}" rel="noopener noreferrer" target="_blank" data-outward="1">${cs.esc(r.address)}</a>`;
-        return cs.row("", target, "", r.target_bundle ? W("document.links.held", { date: { html: r.target_retrieved ? cs.date(String(r.target_retrieved), { year: true }) : "" } }) : "");
-      });
-      const heldN = linked.length + rows.filter((r) => r.target_bundle).length;
-      out.push(cs.sec("document.links.title", `<p class="mk-note">${W("document.links.says", { n: String(heldRows.length + outRows.length), held: String(heldN) })}</p>`
-        + cs.sheet(heldRows.concat(outRows).join("")), { help: "document.links.help" }));
-    }
-  }
-
-  /* R32: the names it holds, with the mention that counts for each (connections R4's `on_point`), chosen by a member */
-  if (sha) {
-    const cn = later("connections", "connections", { sha256: sha, limit: "200" });
-    const list = cn.state === "ok" && Array.isArray(cn.value.connections) ? cn.value.connections : [];
-    if (cn.state === "failed") out.push(cs.sec("document.names.title", cs.state(cn, () => ""), { help: "document.names.help" }));
-    else if (list.length) out.push(cs.sec("document.names.title", cs.sheet(list.map((c, i) => {
-      const mine = c.a_capture_sha === sha ? "a" : "b";
-      const op = c.on_point && c.on_point[mine];
-      const other = mine === "a" ? c.b_capture_sha : c.a_capture_sha;
-      const chosen = op && op.chosen_by && op.chosen_by !== "record"
-        ? W("document.names.chosen.member", { who: view.parts.who(cs, op.chosen_by), date: { html: op.at ? cs.date(String(op.at), { year: true }) : "" }, why: String(op.why || "") })
-        : W("document.names.chosen.record");
-      const meta = op && op.occurrence && op.occurrence.page ? W("document.names.row", { n: String(c.occurrences || 1), page: String(op.occurrence.page), chosen }) : chosen;
-      return cs.row("", `<span class="rec">${cs.esc(String(c.entity_name || c.entity_id || ""))}</span>`,
-        cs.act("connectionchoose", { label: "act.connectionchoose.label.document", data: { capture: sha, other: String(other || ""), entity: String(c.entity_id || ""), ref: String((op && op.ref) || "") } }), meta);
-    }).join("")) + cs.act("explore", { label: "act.explore.label.document", data: { from: id } }), { help: "document.names.help" }));
-  }
-
-  /* what cites it (R39: a citer without a title is undetermined, never its id) */
-  out.push(secOf("screen.document.backlinks.head", "backlinks", (bk) =>
-    (bk.backlinks || []).length ? cs.sheet((bk.backlinks || []).map((x) => cs.row("", cs.ref(x.from_type === "project" ? "project" : x.from_type === "inquiry" ? "question" : "document",
-      String(x.from || ""), x.from_title || T("state.undetermined", { reason: "" }), [x.from_title || ""]), "")).join(""))
-    + (bk.out_of_view ? `<p class="mk-small">${cs.w("screen.document.backlinks.hidden")}</p>` : "") : ""));
 
   /* R55: the copy's other acts sit at the foot: attest with when it is useful, watching and checking (R15), and retire folded apart */
   out.push(cs.sec("screen.document.copyacts.head",
@@ -359,18 +606,32 @@ const acts = [
   { op: "thread", label: "progression.thread.here",
     send(view, el) { return { body: { sha256: String(el.dataset.sha || "") } }; },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { progs: null })); } },
-  /* R32: a newer version's notice decided here: adopt it with her reason, or keep the version cited */
+  /* R32, R69: a newer version's notice decided here: adopt it with her reason, or keep the version cited; the rows re-read their
+     notices, so a decided row is drawn as decided */
   { op: "adoptversion", label: "act.adoptversion.label.document", reasonField: "why", rereads: ["backlinks"],
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
       const why = String(cs.value("document-version-why-" + notice) || "").trim();
       return { body: { notice, why } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("later", Object.fromEntries(Object.entries(view.ui.later || {}).filter(([k]) => !k.startsWith("renotices:")))); } },
   { op: "keepversion", label: "act.keepversion.label.document", rereads: ["backlinks"],
     send(view, el, cs) {
       const notice = String(el.dataset.notice || "");
       const why = String(cs.value("document-version-why-" + notice) || "").trim();
       return { body: { notice, ...(why ? { why } : {}) } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.fromEntries(Object.entries(view.ui.later || {}).filter(([k]) => !k.startsWith("renotices:")))); } },
+  /* R69: asked by the member for one question, never on load: whether a newer copy of this document exists (reevaluation R10, R11);
+     the answer is kept for that question's row */
+  { op: "versionnotice", label: "act.versionnotice.label.document", rereads: [],
+    send(view, el) { view.ui.asking = String(el.dataset.question || ""); return { query: { target: String(el.dataset.question || "") } }; },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const q = String((r && r.target) || view.ui.asking || "");
+      const next = Object.assign({}, view.ui.asked);
+      next[q] = r && r.ok !== false && Array.isArray(r.notices) ? { state: "ok", legs: r.notices } : { state: "failed", words: r && r.translation ? cs.esc(r.translation) : "" };
+      cs.set("asked", next);
     } },
   /* R32: the mention that counts for a name, chosen by her (connections R14–R16) */
   { op: "connectionchoose", label: "act.connectionchoose.label.document", rereads: [],
@@ -462,8 +723,9 @@ const acts = [
   { op: "transcribe", label: "act.transcribe.label.document", reasonField: "text",
     send(view, el, cs) {
       const text = String(cs.value("document-unread-words") || "");
-      const page = Number(cs.value("document-unread-page"));
-      if (!text.trim() || !Number.isInteger(page)) return { refuse: "screen.document.unread.empty" };
+      /* R78: the picker draws the page from one; the extent sent is the record's own number */
+      const page = Number(cs.value("document-unread-page")) - 1;
+      if (!text.trim() || !Number.isInteger(page) || page < 0) return { refuse: "screen.document.unread.empty" };
       return { body: { bundleId: String(view.subject || ""), extent: { kind: "pdf-page", page }, text } };
     },
     done(view, answer, cs) {
@@ -478,10 +740,40 @@ const acts = [
     },
     done(view, answer, cs) {
       const t = (answer && (answer.transcription || (answer.result && answer.result.transcription))) || {};
-      const pages = Array.isArray(t.pages) ? t.pages.join(", ") : "";
+      /* R78: the pages the assistant read, drawn from one */
+      const pages = Array.isArray(t.pages) ? t.pages.map((p) => (Number.isInteger(p) ? p + 1 : p)).join(", ") : "";
       cs.set("outcome", Object.assign({}, view.ui.outcome, { pagetranscribe: { ok: true,
         html: cs.w("screen.document.pagetranscribe.done", { pages }) + (t.untested ? " " + cs.w("ai.label.untested") : "") } }));
       cs.set("later", Object.assign({}, view.ui.later, { reading: null }));
+    } },
+];
+
+/** R65–R67 (T51; interface-shell R100, op-declarations R76): the browser acts `revisioncompare`, `hashcopy` and `linkopen`, done in the
+ *  page: each calls its `send` and sends no request. Held apart from `acts`, and handed over as the screen's `browserActs`: interface-shell's `checkScreens` admits a browser
+ *  act only once its R100 is merged and `BROWSER_ACTS` names it (op-declarations R76), and until then an act it does not hold
+ *  would stop every screen of the module. Once R100 is merged the screen's acts are `[...acts, ...browserActs]` (one line, below);
+ *  until then `cs.act` draws none of the three, so no Copy, no compare and no way past an outside link's warning is offered. */
+const browserActs = [
+  /* R66: a fingerprint's full value put on the clipboard, as `cs.copy` does */
+  { op: "hashcopy", label: "shell.copy",
+    send(view, el) {
+      const value = String(el.dataset.value || "");
+      if (/^[0-9a-f]{64}$/.test(value)) { try { const c = window.navigator && window.navigator.clipboard; if (c && c.writeText) c.writeText(value); } catch { /* the clipboard refused: nothing copied */ } }
+      return null;
+    } },
+  /* R65: two revisions of this copy's record set side by side, from the image answer the page holds */
+  { op: "revisioncompare", label: "screen.document.revisions.compare.act",
+    send(view, el, cs) { cs.set("revcmp", { a: String(cs.value("document-rev-a") || ""), b: String(cs.value("document-rev-b") || "") }); return null; } },
+  /* R67: an outside link's warning opens ("ask"), closes ("stay") or lets the address open in a new window ("open"); a script
+     scheme is never opened */
+  { op: "linkopen", label: "act.owed_linkopen.label.document",
+    send(view, el, cs) {
+      const step = String(el.dataset.step || "");
+      const address = String(el.dataset.address || "");
+      if (step === "ask") { if (/^https?:\/\//i.test(address)) cs.set("leaving", address); return null; }
+      if (step === "open" && /^https?:\/\//i.test(address)) { try { window.open(address, "_blank", "noopener"); } catch { /* the browser refused: nothing opened */ } }
+      cs.set("leaving", null);
+      return null;
     } },
 ];
 
@@ -489,7 +781,7 @@ const acts = [
 const words = Object.freeze([
   "screen.document.name", "screen.document.purpose",
   ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe",
-    "adoptversion", "keepversion", "connectionchoose", "explore"].map((op) => "act." + op + ".label.document"),
+    "adoptversion", "keepversion", "versionnotice", "connectionchoose", "explore"].map((op) => "act." + op + ".label.document"),
   "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages",
   /* T50 (R54–R56, R61) */
   "document.held.says", "document.vouched", "document.attest.label", "document.attest.when", "document.retire.fold", "document.retire.when",
@@ -499,13 +791,38 @@ const words = Object.freeze([
   "screen.document.theme.whole", "screen.document.theme.proposed", "progression.threadedto", "progression.followed", "progression.thread.here",
   "shell.card.document", "act.themewithdraw.label.document",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
-  "state.empty", "state.loading", "state.failed", "state.undetermined", "shell.reason", "shell.reason.help", "member.founder.unnamed",
-  "screen.question.supports.head", "screen.question.against.head",
-  "document.links.title", "document.links.help", "document.links.says", "document.links.held",
+  "mark.scale.subject.name", "mark.scale.subject.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
+  "state.empty", "state.loading", "state.failed", "state.undetermined", "shell.reason", "shell.reason.help", "shell.unread", "shell.copy",
+  "member.founder.unnamed", "screen.question.supports.head", "screen.question.against.head",
+  "document.links.title", "document.links.help", "document.links.held",
   "document.names.title", "document.names.help", "document.names.row", "document.names.chosen.record", "document.names.chosen.member",
+  /* T51 (R65–R69, R78): the record of this copy, the fingerprints, the links in five groups, the names, "Your citations, leg by leg" */
+  "time.at", "time.clock", "time.am", "time.pm", "document.versions.thiscopy", "state.item.retired.name",
+  "refusal.NO_SUCH_BUNDLE", "refusal.NO_BUNDLE", "refusal.NO_SHA", "refusal.VERSION_NOTICE_NO_INQUIRY", "refusal.VERSION_NOTICE_NO_SUBJECT",
+  "act.owed_linkopen.label.document", "act.owed_linkopen.does", "act.owed_revisioncompare.label.document", "act.owed_revisioncompare.does",
+  "act.owed_hashcopy.label.document", "act.owed_hashcopy.does", "act.versionnotice.does",
+  ...["fingerprints.head", "revision.title", "revisions.compare", "revisions.with", "revisions.compare.act", "fingerprint.setonly",
+    "links.group.inside", "links.group.beside", "links.group.held", "links.group.outside", "links.group.refused", "links.verdict.final",
+    "links.verdict.checked", "links.verdict.same", "links.verdict.different", "links.verdict.notestablished", "links.verdict.nocapture",
+    "links.verdict.refused"].map((k) => "screen.document." + k),
+  ...["a26.this_copy_s_words_and_file", "a26.computed_from_the_exact_bytes_of_this_co", "a26.this_copy_and_the_files_captured_with_it",
+    "a26.computed_from_the_whole_set_so_the_set_c", "a26.short_codes_computed_from_the_exact_byte", "a26.anyone_holding_the_same_bytes_computes_t",
+    "a27.the_record_of_this_copy", "a27.the_release_of_civicsmith_that_wrote_thi", "a27.everything_done_to_this_copy_s_standing_",
+    "a27.none_of_it_is_ever_changed_or_removed", "a27.held_until_vouched_for", "a27.vouched_for_by_dev", "a27.now_used_by_the_team",
+    "a27.earlier_revisions_of_this_record", "a27.standing_held_until_vouched_for", "a27.vouched_for_by_nobody", "a27.standing_used_by_the_team",
+    "a27.vouched_for_by_dev.2", "a27.a_copy_that_came_as_a_set_of_files_such_", "a27.who_added_this_copy_who_vouched_for_it_a",
+    "a27.the_copy_your_team_holds_is_the_one_this", "a27.opening_it_leaves_the_record_and_nothing",
+    "a30.a_pointer_into_this_very_copy_settled_wh", "a30.the_other_verdicts_a_held_link_can_carry", "a30.you_are_about_to_leave_the_record",
+    "a30.this_page_carried_this_address_and_the_r", "a30.what_is_at_the_address_now_the_record_do", "a30.stay_in_the_record",
+    "a30.not_an_address_the_record_will_carry", "a30.this_is_a_refusal_not_a_gap_in_what_was_",
+    "a31.the_grade_on_each_name_says_how_the_matc", "a31.it_says_nothing_about_how_far_to_trust_t", "a31.a_connection_to_another_document_takes_t",
+    "a34.your_citations_leg_by_leg", "a34.a_newer_copy_never_moves_a_citation_by_i", "a34.each_reasoning_that_rests_on_this_docume",
+    "a34.a_newer_copy_exists_captured_2_october", "a34.section_3_reads_the_same_in_both", "a34.not_checked_yet", "a34.it_does_not_guess",
+    "a34.one_line_for_each_question_that_rests_on", "a64.captured_together_with_this_page_and_che",
+    "a64.not_established_means_the_record_cannot_"].map((k) => "screen.document." + k),
   ...["captured", "copy", "fingerprint", "fingerprint.means", "passages.head", "passage.where", "cite.question", "cite.role",
     "cite.noquestion", "unread.head", "unread.page", "unread.words", "unread.empty", "gradenote.head", "gradenote.none",
-    "backlinks.head", "backlinks.hidden", "versions.head", "versions.changed", "versions.this", "people.head", "claim.label",
+    "backlinks.head", "backlinks.hidden", "versions.head", "versions.changed", "versions.this", "claim.label",
     "claim.basis", "claim.basis.name", "claim.basis.corroborated", "claim.basis.identifier", "claim.note", "claim.empty",
     "copyacts.head", "release.ack", "release.mitigation", "release.empty", "retire.reason", "open", "monitor.done",
     "monitorset.done", "attest.done", "transcribe.done", "pagetranscribe.done"].map((k) => "screen.document." + k),
@@ -513,5 +830,5 @@ const words = Object.freeze([
 
 /** The document screen (interface-shell R21). */
 export function documentScreen(parts) {
-  return Object.freeze({ id: "document", reads, place, render, acts, words, parts });
+  return Object.freeze({ id: "document", reads, place, render, acts, browserActs, words, parts });
 }

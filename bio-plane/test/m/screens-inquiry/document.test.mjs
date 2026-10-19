@@ -3,9 +3,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, READING, DOCUMENT_MD, DATASET, provenanceOf, P, Q, D, SHA } from "./fixtures.mjs";
+import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, day, READING, DOCUMENT_MD, DATASET, provenanceOf, P, Q, D, SHA } from "./fixtures.mjs";
 
 const at = "/app/document/" + D;
+/* R78: a page the record counts from zero is drawn from one; read here through the same arithmetic, never copied */
+const one = (p) => p + 1;
+/* what the plane answers `resolutions` for the document's one named person (entities R58) */
+const NAMES = ok({ ok: true, names: [{ entity_id: "ENT-17", label: "L. Chen, Director of Public Works", kind: "person", grade: "A", established: true,
+  needs_confirmation: false, matched_by: "identifier", mentions: 4 }] });
 const DOCUMENT_MD_NO_HASH = ["---", `id: ${D}`, "object_type: information", "title: \"Policy\"", "source:", "  locator: https://example.org/ai-4-12.pdf",
   "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
 /* a member's firsthand observation (provenance's op=testify) */
@@ -28,13 +33,13 @@ test("R3 reads: the capture and what cites it at once; its reading, grade note, 
 });
 
 test("R3 R32 the document drawn: title, source as an outside link, its grade as one mark, passages with their pages, unread pages, versions, what cites it", async () => {
-  const p = await open(at, { boot: { plane: { ...plane(), ...REACH } } });
+  const p = await open(at, { boot: { plane: { ...plane(), ...REACH, resolutions: NAMES } } });
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repair policy, Administrative Instruction 4.12");
   const src = m.querySelector('.mk-sub a[data-outward="1"]');
   assert.equal(src.getAttribute("href"), "https://example.org/ai-4-12.pdf");
   assert.equal(src.textContent, "https://example.org/ai-4-12.pdf", "the address unquoted");
-  assert.ok(m.querySelector(".mk-sub").textContent.includes("2 October 2026"), "times by cs.date, never ISO");
+  assert.ok(m.querySelector(".mk-sub").textContent.includes(day("2026-10-02T09:00:00Z")), "times by cs.date, never ISO");
   assert.ok(!/\d{4}-\d{2}-\d{2}T/.test(m.textContent));
   const g = m.querySelector(".mk-facts .cs-grade");
   assert.deepEqual([g.getAttribute("data-scale"), g.textContent.slice(-1)], ["capture", "B"]);
@@ -42,14 +47,14 @@ test("R3 R32 the document drawn: title, source as an outside link, its grade as 
   assert.equal(m.querySelector(`a[href="/app/open-file/${SHA}"]`).textContent, word("screen.document.open"), "R22: the original by its digest");
   const passages = m.querySelectorAll("blockquote");
   assert.equal(passages.length, 2);
-  assert.ok(says(passages[0], "screen.document.passage.where", { page: 2 }));
+  assert.ok(says(passages[0], "screen.document.passage.where", { page: one(2) }), "R78: the record's page 2 is drawn from one");
   assert.equal(section(p, "screen.document.passages.head").querySelectorAll('button[data-act="cite"]').length, 2, "each passage citable");
-  assert.ok(says(m, "document.unread.pages", { pages: "7–9" }));
+  assert.ok(says(m, "document.unread.pages", { pages: `${one(7)}–${one(9)}` }));
   assert.ok(m.querySelector('[data-changed="true"]'), "a newer version marked changed");
   const cites = section(p, "screen.document.backlinks.head");
   assert.ok(cites.querySelector(`a.cs-ref[href="/app/question/${Q}"]`) && cites.querySelector(`a.cs-ref[href="/app/project/${P}"]`));
   assert.ok(says(cites, "screen.document.backlinks.hidden"));
-  assert.ok(section(p, "screen.document.people.head").textContent.includes("L. Chen, Director of Public Works"));
+  assert.ok(section(p, "document.names.title").textContent.includes("L. Chen, Director of Public Works"));
   assert.deepEqual(rawKeys(p.root()), []);
 });
 
@@ -65,7 +70,7 @@ test("R32 R39 the title is the document's, never the address's last segment or i
   const slug = DOCUMENT_MD.replace(/^title: .*$/m, "title: \"ai-4-12.pdf\"");
   const p = await open(at, { images: { [D]: { "bundle.md": slug, "data/provenance.json": provenanceOf(SHA) } } });
   /* R55: a held page with no title of its own is headed by its site and capture day, never the address */
-  assert.equal(main(p).querySelector("h1").textContent, word("document.untitled.web", { site: "example.org", date: "2 October 2026" }));
+  assert.equal(main(p).querySelector("h1").textContent, word("document.untitled.web", { site: "example.org", date: day("2026-10-02T09:00:00Z") }));
   for (const h of main(p).querySelectorAll("h1, h2")) assert.doesNotMatch(h.textContent, /INFO-|ai-4-12/);
 });
 
@@ -85,10 +90,10 @@ test("R32 \"Its versions\" draws its refusal by its words", async () => {
   assert.ok(section(p, "screen.document.versions.head").textContent.includes("The versions of this address could not be read just now."));
 });
 
-test("R32 a newer version's notice is adopted with her reason, or kept", async () => {
-  const p = await open(at, { plane: { reevaluationnotices: (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", capture_sha: SHA, newer_capture: "9".repeat(64) }] : [] }),
+test("R32 a newer version's notice is adopted with her reason, or kept (on the question's row, R69)", async () => {
+  const p = await open(at, { plane: { reevaluationnotices: (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ id: "REN-1", state: "open", capture_sha: SHA, newer_capture: "9".repeat(64) }] : [] }),
     adoptversion: ok({ ok: true }), keepversion: ok({ ok: true }) } });
-  const s = section(p, "screen.document.versions.head");
+  const s = section(p, "screen.document.a34.your_citations_leg_by_leg");
   assert.deepEqual(actsIn(s).sort(), ["adoptversion", "keepversion"]);
   fill(p, { "document-version-why-REN-1": "the newer one adds the supervisor" });
   await press(p, "adoptversion");
@@ -97,17 +102,18 @@ test("R32 a newer version's notice is adopted with her reason, or kept", async (
   assert.equal(p.byOp("keepversion")[0].body.notice, "REN-1");
 });
 
-test("R32 the links this page carries, held ones a reference, outward ones a link; the names it holds with the mention that counts; explore", async () => {
-  const links = ok({ ok: true, links: [{ address: "https://example.org/311", chrome: false }, { address: "https://example.org/report.pdf", target_bundle: "INFO-2026-0011", target_retrieved: "2026-10-02T09:00:00Z" }] });
+test("R32 R67 R68 the links this page carries, held ones a reference; the names it holds with the mention that counts; explore", async () => {
+  const links = ok({ ok: true, links: [{ address: "https://example.org/311", partition: "deferred", resolution: "offsite", verdict: null },
+    { address: "https://example.org/report.pdf", partition: "deferred", resolution: "linked", verdict: "contemporaneous", target_bundle: "INFO-2026-0011", target_retrieved: "2026-10-02T09:00:00Z" }] });
   const conns = ok({ ok: true, connections: [{ a_capture_sha: SHA, b_capture_sha: "8".repeat(64), entity_id: "ENT-17", entity_name: "L. Chen",
     on_point: { a: { ref: "c1", occurrence: { page: 1 }, chosen_by: "record" }, b: null }, occurrences: 4 }] });
-  const p = await open(at, { plane: { links, connections: conns, connectionchoose: ok({ ok: true }) } });
+  const p = await open(at, { plane: { links, connections: conns, resolutions: NAMES, connectionchoose: ok({ ok: true }) } });
   const l = section(p, "document.links.title");
-  assert.ok(says(l, "document.links.says", { n: "2", held: "1" }));
-  assert.equal(l.querySelector('a[data-outward="1"]').getAttribute("href"), "https://example.org/311");
+  assert.ok(says(l, "screen.document.links.group.outside", { n: "1" }) && says(l, "screen.document.links.group.held", { n: "1" }));
   assert.ok(l.querySelector('a.cs-ref[href="/app/document/INFO-2026-0011"]'));
+  assert.equal(l.querySelector('a[href="https://example.org/311"]'), null, "R67: an outside address is not a bare anchor");
   const n = section(p, "document.names.title");
-  assert.ok(says(n, "document.names.row", { n: "4", page: "1", chosen: word("document.names.chosen.record") }));
+  assert.ok(says(n, "document.names.row", { n: "4", page: String(one(1)), chosen: word("document.names.chosen.record") }));
   await press(p, "connectionchoose");
   assert.deepEqual(p.byOp("connectionchoose")[0].body, { capture: SHA, other: "8".repeat(64), entity: "ENT-17", ref: "c1" });
   await press(p, "explore");
@@ -139,7 +145,7 @@ test("R3 an unchanged version chain marks nothing changed; the grade note answer
 test("R3 acts send what their owners take", async () => {
   const p = await open(at, { boot: { plane: { ...plane({ plane: {
     attest: ok({ ok: true }), monitor: ok({ ok: true }), transcribe: ok({ ok: true }), cite: ok({ ok: true }), identityclaim: ok({ ok: true }),
-    pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } } } }), ...REACH } } });
+    pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES } }), ...REACH } } });
   fill(p, { "document-cite-question": Q, "document-cite-role": "cuts_against" });
   await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[1].nextElementSibling });
   const cite = p.byOp("cite")[0].query;
@@ -149,7 +155,8 @@ test("R3 acts send what their owners take", async () => {
   assert.deepEqual(p.byOp("attest")[0].body, { sha256: SHA });
   await press(p, "monitor");
   assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: D });
-  fill(p, { "document-unread-page": "8", "document-unread-words": "Repairs are inspected." });
+  /* R78: the picker draws the record's page 8 as its own 9; the extent sent is the record's number */
+  fill(p, { "document-unread-page": String(one(8)), "document-unread-words": "Repairs are inspected." });
   await press(p, "transcribe");
   assert.deepEqual(p.byOp("transcribe")[0].body, { bundleId: D, extent: { kind: "pdf-page", page: 8 }, text: "Repairs are inspected." });
   fill(p, { "document-claim-person": "ENT-3", "document-claim-basis": "corroborated_name", "document-claim-note": "Same title and department" });
@@ -158,7 +165,7 @@ test("R3 acts send what their owners take", async () => {
     { a: "ENT-17", b: "ENT-3", kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: SHA } }, note: "Same title and department" });
   await press(p, "pagetranscribe", { reason: "the pages hold the dates" });
   assert.deepEqual([p.byOp("pagetranscribe")[0].query.sha256, p.byOp("pagetranscribe")[0].query.project], [SHA, P]);
-  assert.ok(says(main(p), "screen.document.pagetranscribe.done", { pages: "7, 8" }) && says(main(p), "ai.label.untested"));
+  assert.ok(says(main(p), "screen.document.pagetranscribe.done", { pages: `${one(7)}, ${one(8)}` }) && says(main(p), "ai.label.untested"));
   await press(p, "findin", { reason: "to find the dates" });
   assert.equal(p.location.pathname, "/app/find-in/" + SHA, "find-in's scope: the capture's digest (screens-daily)");
 });
@@ -181,7 +188,7 @@ test("R3 release and retire act on a selection of this document, made first, and
 });
 
 test("R3 controls: a release, a transcription and a claim with nothing written are refused by their words; no question to cite in, no cite", async () => {
-  const p = await open(at);
+  const p = await open(at, { plane: { resolutions: NAMES } });
   assert.ok(says(await press(p, "release"), "screen.document.release.empty"));
   assert.ok(says(await press(p, "transcribe"), "screen.document.unread.empty"));
   assert.ok(says(await press(p, "identityclaim"), "screen.document.claim.empty"));
@@ -208,7 +215,7 @@ test("R8 the question a passage is cited in, and an unread page, are choices amo
   const p = await open(at, { plane: { list: ok({ bundles: [{ bundle_id: Q, title: "screen.document.copy" }] }) } });
   const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
   assert.deepEqual(opts("document-cite-question"), [["", ""], [Q, "screen.document.copy"]], "R49: none preselected, a title is drawn as data, never read as a key");
-  assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
+  assert.deepEqual(opts("document-unread-page"), [7, 8, 9].map((r) => [String(one(r)), String(one(r))]), "R78: the picker draws each unread page from one");
 });
 
 test("R22 control: a document whose provenance names no capture digest draws no Open the original link, and none opens by its bundle id", async () => {
@@ -229,7 +236,7 @@ test("R3 R32 (K3387) every capture read is keyed on the capture's sha from its p
   assert.equal(p.location.pathname, "/app/find-in/" + SHA);
   /* the versions' dates are provenance's first_retrieved */
   const d = await open(at);
-  assert.ok(section(d, "screen.document.versions.head").textContent.includes("9 October 2026"));
+  assert.ok(section(d, "screen.document.versions.head").textContent.includes(day("2026-10-09T09:00:00Z")));
 });
 
 test("R3 (K3387) the document's words are the reading's text_units; a reading with none says so, and no invented field is read", async () => {
