@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
 import { checkContentExtent, CONTENT_EXTENT_CHECKS, TRANSCRIBE_CHECKS } from "../../../src/content/index.mjs";
 import * as textChain from "../../../src/textchain.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 const OLD = /\b(plane|instance|copy|server)\b/i;
@@ -17,7 +18,7 @@ test("R1 (DEC-149, extent-core.mjs:281): the dom refusal's detail says nothing p
   const r = checkContentExtent({ kind: "dom", selector: "p" }, { chain: LAYER, pageCount: null, container: {} });
   assert.deepEqual([r.code, r.check, r.translation], ["CONTENT_EXTENT_NO_PRODUCER", "C-45.4",
     CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_PRODUCER.translation]);
-  assert.match(r.detail, /Nothing produces a dom address yet \(CONTENT-HTML\), so a row minted against one/);
+  assert.equal(r.detail, localize("content.extent-core.dom_names_a_region", "extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate"));
   assert.doesNotMatch(said(r), OLD);
 });
 
@@ -29,7 +30,7 @@ test("R1 (DEC-149, extent-core.mjs:291): an unlanded kind's detail says what it 
     const r = checkContentExtent({ kind: "test-unlanded" }, { chain: LAYER, pageCount: null, container: {} });
     assert.deepEqual([r.code, r.check, r.translation], ["CONTENT_EXTENT_UNREADABLE", "C-45.3",
       CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation]);
-    assert.match(r.detail, /^extent kind 'test-unlanded' \(a kind under test\) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing\./);
+    assert.equal(r.detail, localize("content.extent-core.extent_kind_kind_human_is", "extent kind '{kind}' ({human}) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85", { kind: "test-unlanded", human: "a kind under test" }));
     assert.doesNotMatch(said(r), OLD);
   } finally {
     delete textChain.CONTENT_EXTENT_KINDS["test-unlanded"];
@@ -41,8 +42,7 @@ test("R21 (DEC-149, index.mjs:758): a row whose extent kind cannot be evaluated 
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: LAYER, pageCount: 1 });
   const id = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "doc-para", para: 0 }, mintedBy: V("bo") }).content_id;
   const why = w.content.standings([id])[id].transcription.why;
-  assert.equal(why, "what a doc-para extent covers cannot yet be evaluated, so what a leg citing it may claim on the "
-    + "transcription axis is undetermined — stated, and never resolved into the whole document's ceiling");
+  assert.equal(why, word("content.why.extent_covers_evaluated", { extent_kind: "doc-para" }));
   assert.doesNotMatch(why, OLD);
   assert.equal(w.content.contentRead({ id, viewer: V("bo") }).transcription.why, why, "the same sentence at the fixed-key read");
 });
@@ -53,7 +53,7 @@ test("R23 (DEC-149, index.mjs:989): C-52.5's detail says the part is one no typi
   const r = w.content.transcribe({ bundleId: DOC, extent: { kind: "doc-para", para: 0 }, text: "x", transcriber: V("ty"), viewer: V("ty") });
   assert.deepEqual([r.code, r.check, r.translation], ["TRANSCRIBE_PORTION_UNREADABLE", "C-52.5",
     TRANSCRIBE_CHECKS.TRANSCRIBE_PORTION_UNREADABLE.translation]);
-  assert.match(r.detail, /^¶1 is a part no typing can be checked against — a second member's attestation needs/);
+  assert.equal(r.detail, localize("content.index.describeextent_is_a_part_no", "{describeExtent} is a part no typing can be checked against — a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good", { describeExtent: "¶1" }));
   assert.doesNotMatch(said(r), OLD);
 });
 
@@ -64,7 +64,6 @@ test("R32 (DEC-149, index.mjs:1404, :1405): a crop with no evidence store says y
   const cid = w.content.mint({ bundleId: DOC, captureSha: "e".repeat(64), extent: { kind: "image", page: 0, rect: [0, 0, 3, 2] }, mintedBy: V("bo") }).content_id;
   const r = await w.content.cropOf({ contentId: cid, viewer: V("bo") });
   assert.equal(r.reason, "CROP_NO_EVIDENCE_STORE");
-  assert.equal(r.detail, "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
-    + "crop was made. That is a fact about how your team's Civicsmith is set up, not about the image");
+  assert.equal(r.detail, localize("content.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image"));
   assert.doesNotMatch(r.detail, OLD);
 });

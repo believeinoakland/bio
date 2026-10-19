@@ -22,13 +22,9 @@ export const VERSION_NOTICE_ADDRESSES_MAX = 20;
 /** The four states, with the sentence a member reads (PL-17: the vocabulary travels with the answer). */
 export const VERSION_NOTICE_STATES = Object.freeze({
   no_newer_capture: word("content.no_newer_capture"),
-  newer_capture_matched: "a newer version of this document exists, and a passage at the same extent "
-    + "is in it. That is a candidate, never the same passage: whether your citation should move is "
-    + "yours to decide, and only your act can move it",
-  newer_capture_undetermined: "a newer version of this document exists; whether your passage survives "
-    + "into it is UNDETERMINED. Nothing has moved — look at the newer version and decide",
-  chain_unread: "whether a newer version of this document exists is UNDETERMINED: the record could not "
-    + "read its version chain, so this is not a statement that there is none",
+  newer_capture_matched: localize("content.notice.newer_capture_matched", "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it"),
+  newer_capture_undetermined: localize("content.notice.newer_capture_undetermined", "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved — look at the newer version and decide"),
+  chain_unread: localize("content.notice.chain_unread", "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none"),
 });
 
 /** The five grades, what each means for the referenced part, and the sentence a member reads. */
@@ -131,8 +127,7 @@ export function heldTextAt(extent, held) {
   if (!u)
     return { text: null, reason: "cited_text_not_held", why: word("content.why.record_holds_text", { extent: String(describeExtent(extent)) }) };
   if (u.truncated)
-    return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit "
-      + "cap, so the whole passage is not held" };
+    return { text: null, reason: "cited_text_truncated", why: localize("content.notice.cited_passage_held_only", "the cited passage's text is held only to the per-unit cap, so the whole passage is not held") };
   return { text: u.text, extent: at };
 }
 
@@ -178,10 +173,9 @@ export function gradeAcross(row, extent, older, newer) {
   const U = (reason, why) => out("UNDETERMINED", reason, why);
   const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
   if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
-    return U("extent_unreadable", "the cited passage's extent could not be read back from its row");
+    return U("extent_unreadable", localize("content.notice.cited_extent_unreadable", "the cited passage's extent could not be read back from its row"));
   if (row.cited_as === "bytes")
-    return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part "
-      + "digest of the newer capture to compare it with");
+    return U("cited_as_bytes", localize("content.notice.image_cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with"));
   /* A sheet passage is compared in ONE form on both sides: its typed cells (R46's sheet arm) where both captures' readings
      hold them for its sheet, else the indexed units, so cell values never meet a unit's tab-joined rows. */
   if (extent.kind === "sheet-cell" || extent.kind === "sheet-range") {
@@ -215,11 +209,9 @@ export function gradeAcross(row, extent, older, newer) {
         localize("content.notice.the_record_does_not_hold", "the record does not hold the newer version's text whole (its index reads {said})", { said: String(said(newer.state)) }));
     const same = newer.units.length === older.units.length
       && newer.units.every((u, i) => u.extent === older.units[i].extent && u.text === older.units[i].text);
-    if (same) return out("A", "identical_at_extent", "every unit of the newer version's text is byte-identical "
-      + "at the same position", { extent, ref: row.ref });
+    if (same) return out("A", "identical_at_extent", localize("content.notice.every_unit_identical", "every unit of the newer version's text is byte-identical at the same position"), { extent, ref: row.ref });
     const text = newer.units.map((u) => u.text).join("\n");
-    if (text === cited.text) return out("B", "identical_elsewhere", "the newer version's text is byte-identical, "
-      + "divided into different units", { extent, ref: row.ref });
+    if (text === cited.text) return out("B", "identical_elsewhere", localize("content.notice.newer_text_divided", "the newer version's text is byte-identical, divided into different units"), { extent, ref: row.ref });
     const sim = dice(bagOf(cited.text), bagOf(text));
     const r = Math.round(sim * 1000) / 1000;
     return sim >= VERSION_NOTICE_SIMILAR
@@ -249,8 +241,7 @@ export function gradeAcross(row, extent, older, newer) {
   if (newer.state !== "whole")
     return U("newer_text_partial", localize("content.notice.the_newer_versions_text_is", "the newer version's text is held only in part (its index reads {said}), so the passage may be in the part not held", { said: String(said(newer.state)) }));
   if (newer.units.some((x) => x.truncated))
-    return U("newer_text_truncated", "a unit of the newer version is held only to the per-unit cap, so the passage "
-      + "may be in the part not held");
+    return U("newer_text_truncated", localize("content.notice.newer_unit_truncated", "a unit of the newer version is held only to the per-unit cap, so the passage may be in the part not held"));
   return out("NOT_FOUND", "text_not_found", word("content.out.newer_version_text_held", { units: String(newer.units.length), r: String(r ?? 0) }), null, r);
 }
 
