@@ -978,8 +978,7 @@ export class Extraction {
                    engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
                    steps: ts.steps, chain, says: describeChain(chain) }
                : { recorded: false,
-                   why: `this reading carries no text provenance, which is not the same as its `
-                      + `text not having been transcribed -- nobody recorded how it was produced` },
+                   why: localize("extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced") },
              reading_history: this.#readingHistoryOf(row.capture_sha),
              ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
              ...(text_units ? { text_units } : {}) };
@@ -1277,7 +1276,7 @@ export class Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again";
+    if (!ev) return localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again");
     const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return "the capture's bytes are not held in the evidence store";
@@ -1481,8 +1480,7 @@ export class Extraction {
           staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
           compared: w.compared ?? null,
           after_read: w.afterRead ?? null,
-          candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
-                    + "what your team's Civicsmith can read; this one is re-read now",
+          candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now"),
         };
       }
     }

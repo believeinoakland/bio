@@ -19,21 +19,37 @@
    code and the CANNED TRANSLATION are one row, read at the site through a helper
    that throws on a code with no sentence behind it.
    =========================================================================== */
-import { rowWord, say, rawWords } from './words.mjs';
+import { rowWord, say, RAW_PLACEHOLDERS } from './words.mjs';
+import { word } from '../setup-words/index.mjs';
 
 /* R27, R47, R71 (T43; N862; DEC-190 (1), (2); K2689; T50 K3632): the words of `words.json`
    (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim as `setup-words` holds it,
    read by key (`words.mjs`), never a copy. `{pages}`, `{why}` and `{reason}` are filled by `fillWords`; a row's
    `translation` is the word itself. R75's four reasons are among them, `transcribe.reason.requestfault` now the list's
    own (K2919 conformed it), no interim word. */
-export const TRANSCRIBE_WORDS = rawWords([
-  'transcribe.refused.notdeployed', 'transcribe.label', 'transcribe.none', 'transcribe.done', 'document.unread.pages',
-  'transcribe.notsent', 'transcribe.why.unbound', 'transcribe.why.evidenceabsent', 'transcribe.why.norender',
-  'transcribe.refused', 'transcribe.failed', 'transcribe.why.silent', 'transcribe.why.ended',
-  'transcribe.picture.unprepared', 'transcribe.picture.why.progressive', 'transcribe.picture.why.toolarge',
-  'capture.picture.unread', 'transcribe.reason.requestfault', 'transcribe.reason.noaccount',
-  'transcribe.reason.badaccount', 'transcribe.reason.needsapikey',
-]);
+export const TRANSCRIBE_WORDS = Object.freeze({
+  'transcribe.refused.notdeployed': word('transcribe.refused.notdeployed', RAW_PLACEHOLDERS),
+  'transcribe.label': word('transcribe.label', RAW_PLACEHOLDERS),
+  'transcribe.none': word('transcribe.none', RAW_PLACEHOLDERS),
+  'transcribe.done': word('transcribe.done', RAW_PLACEHOLDERS),
+  'document.unread.pages': word('document.unread.pages', RAW_PLACEHOLDERS),
+  'transcribe.notsent': word('transcribe.notsent', RAW_PLACEHOLDERS),
+  'transcribe.why.unbound': word('transcribe.why.unbound', RAW_PLACEHOLDERS),
+  'transcribe.why.evidenceabsent': word('transcribe.why.evidenceabsent', RAW_PLACEHOLDERS),
+  'transcribe.why.norender': word('transcribe.why.norender', RAW_PLACEHOLDERS),
+  'transcribe.refused': word('transcribe.refused', RAW_PLACEHOLDERS),
+  'transcribe.failed': word('transcribe.failed', RAW_PLACEHOLDERS),
+  'transcribe.why.silent': word('transcribe.why.silent', RAW_PLACEHOLDERS),
+  'transcribe.why.ended': word('transcribe.why.ended', RAW_PLACEHOLDERS),
+  'transcribe.picture.unprepared': word('transcribe.picture.unprepared', RAW_PLACEHOLDERS),
+  'transcribe.picture.why.progressive': word('transcribe.picture.why.progressive', RAW_PLACEHOLDERS),
+  'transcribe.picture.why.toolarge': word('transcribe.picture.why.toolarge', RAW_PLACEHOLDERS),
+  'capture.picture.unread': word('capture.picture.unread', RAW_PLACEHOLDERS),
+  'transcribe.reason.requestfault': word('transcribe.reason.requestfault', RAW_PLACEHOLDERS),
+  'transcribe.reason.noaccount': word('transcribe.reason.noaccount', RAW_PLACEHOLDERS),
+  'transcribe.reason.badaccount': word('transcribe.reason.badaccount', RAW_PLACEHOLDERS),
+  'transcribe.reason.needsapikey': word('transcribe.reason.needsapikey', RAW_PLACEHOLDERS),
+});
 
 /* R75 (T46; N886; DEC-193): agent-worker R72's refusal codes, each with the key of its reason. */
 export const AGENT_WORKER_REASONS = Object.freeze({

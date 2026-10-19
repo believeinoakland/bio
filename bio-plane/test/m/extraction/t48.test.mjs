@@ -109,7 +109,7 @@ test("R72 (T48, N996): handed both, `accounts` is the paying account's service a
 const KEPT = [
   { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31", translation: "The group keeps its material away from AI.",
     keep_away: { reason: "policy", set_by: "member:admin", set_at: "2026-10-01T00:00:00Z" } },
-  { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: "This project keeps its material away from AI.",
+  { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38", translation: WORD("ai.refused.projectkeptaway"),
     keep_away: { reason: "sealed", set_by: "member:o1", set_at: "2026-10-02T00:00:00Z" } },
   { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: "C-29.31", translation: "The group keeps its material away from AI.",
     keep_away: { reason: null, set_by: null, set_at: null }, detail: "the setting could not be read" },
