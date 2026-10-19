@@ -36,7 +36,7 @@
     {"id": "ocr-worker", "layer": 1, "paths": ["ocr-worker/"], "tests": ["ocr-worker/test/", "bio-plane/test/ocr-measure-probe.mjs"], "uses": ["record-grammar", "pdf-pixels", "bundler", "text-chain", "test-support", "runtime-limits", "setup-words"]},
     {"id": "sheet-worker", "layer": 1, "paths": ["sheet-worker/"], "tests": ["sheet-worker/test/"], "uses": ["runtime-limits", "bundler", "test-support", "setup-words"]},
     {"id": "file-scanner", "layer": 1, "paths": ["file-scanner/"], "tests": ["file-scanner/test/"], "uses": ["runtime-limits", "bundler", "test-support", "setup-words"]},
-    {"id": "member-roster", "layer": 2, "paths": [], "tests": [], "uses": []},
+    {"id": "member-roster", "layer": 2, "paths": ["bio-plane/src/member-roster/"], "tests": ["bio-plane/test/m/member-roster/"], "uses": ["setup-words", "record-grammar"]},
     {"id": "record-core", "layer": 2, "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/", "bio-plane/test/stats-disclosure.test.mjs"], "uses": ["record-grammar", "id-spaces", "test-support", "setup-words"]},
     {"id": "membership", "layer": 2, "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/", "bio-plane/test/members.test.mjs"], "uses": ["setup-words", "record-grammar", "signatures", "record-core", "test-support", "member-roster"]},
     {"id": "project-roster", "layer": 2, "paths": ["bio-plane/src/project-roster/"], "tests": ["bio-plane/test/m/project-roster/"], "uses": ["setup-words", "record-grammar", "record-core", "membership", "test-support", "jurisdictions"]},
