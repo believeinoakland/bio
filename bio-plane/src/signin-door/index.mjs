@@ -30,7 +30,7 @@
    door sends as JSON (`answer-envelope` decorates a refusal with its row). `log(line)` writes one log line (default
    `console.log` of the JSON). Nothing here throws. */
 import { storeSilent } from "../answer-envelope/index.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { hasWord, localize, word } from "../setup-words/index.mjs";
 
 export const SIGNIN_STEPS = Object.freeze(["start", "code", "state", "signout"]);
 /* R1 (K2200 (9)): the steps that start or complete a sign-in, refused under keep-away. */
@@ -39,7 +39,8 @@ const KEPT_AWAY_STEPS = Object.freeze(["start", "code"]);
 const DISCLOSURE_STEPS = Object.freeze(["start"]);
 /* R1: the door's member words under the UX stream's keys, read by key until `words.json` holds them. */
 export const SIGNIN_WORDS = Object.freeze({
-  "ai.refused.signinabsent": localize("signin-door.index.signing_in_with_claude_is", "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it."),
+  "ai.refused.signinabsent": hasWord("ai.refused.signinabsent") ? word("ai.refused.signinabsent")
+    : localize("signin-door.index.signing_in_with_claude_is", "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it."),
 });
 /* R3 (`agent-worker` R83): the two headers the door sends, and no other of its own. */
 export const TRACE_HEADER = "x-civicsmith-trace";

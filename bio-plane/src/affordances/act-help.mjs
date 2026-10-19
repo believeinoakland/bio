@@ -1,11 +1,12 @@
-/* affordances — ACT_HELP (R48, R53, R54, R56, R57, R61, R62; N726, DEC-174 (3) as amended (U117), DEC-99, K3366): the one table of
+/* affordances — ACT_HELP (R48, R53, R54, R56, R57, R61, R62, R69, R70; N726, DEC-174 (3) as amended (U117), DEC-99, K3366): the one table of
  * what each act does, one explanation per op, keyed by op.
  *
  * WORDS BY KEY (R62; K3366, K3368; DEC-257, DEC-258). This module holds no member-facing English: each op is bound to the key of
  * its sentence in the interface's word list (`act.<op>.does`; the exceptions below, where the design keys the text by an alias or
  * by an `owed_` tag it has not yet cleared), and `ACT_HELP` is each key read through `setup-words`' `word`. The text is the
  * design stream's `docs/development/ux-substrate/screens/mock-acts.js` as it stands on `main` at PR #37's merge (`f498560a37`;
- * DEC-229 to DEC-241, DEC-245, DEC-246), 338 entries, held verbatim by the word list (R61); a later design text is a re-generation
+ * DEC-229 to DEC-241, DEC-245, DEC-246), 338 entries, held verbatim by the word list (R61), and re-read at the design commit `8c5e692e19` (R70);
+ * a later design text is a re-generation
  * of the list below, not a re-wording here. A key the list lacks fails the load (`UNKNOWN_WORD`), as `attestFence` does, so the
  * plane never answers an explanation it cannot make true.
  *
@@ -24,6 +25,11 @@
  *     under their ops, and so leave `op-declarations`' `ACT_HELP_ABSENT` (its R75);
  *   - `handlechange`: the design's text still describes a change of handle, which `membership` R129 refuses whatever is asked
  *     (DEC-197), so it is not read; the help states the refusal, `membership`'s own `HANDLE_FIXED` row read by reference (R53);
+ *   - T51 (R70; DEC-340, U366): `holdnoticeprepare` and `counselpacket` are held (`actionhold`'s and `holdnoticesent`'s texts are the
+ *     design's new ones, read by key), as are `noticeprepare`, `noticepost`, `signeradd` and `versionnotice`, whose `does` words the
+ *     design's reads list for this module gives (R62); `op-declarations`' `ACT_HELP_ABSENT` keeps none of them;
+ *   - T51 (K4093; DEC-359): `actionholdrelease`, which the design @ `2a64c5ae77` explains, is held (R70 re-taken at that design);
+ *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61).
  * A retired op is not held. */
 import { word } from "../setup-words/index.mjs";
@@ -84,7 +90,16 @@ export const ACT_HELP_OPS = Object.freeze([
   "publish", "publishatmove", "publishatcancel", "publishat", "verify", "publishedcase", "caseimport", "importaccept",
   "importflag", "importwatch", "docketfile", "docketpost", "inboxpull", "inboxresolve", "sourcelink", "knock",
   "secondlookclear", "reauth", "aliaswithdraw", "factconfirm", "projectrequest", "projectrequestwithdraw", "projectrequestanswer",
+  "holdnoticeprepare", "counselpacket", "noticeprepare", "noticepost", "signeradd", "versionnotice", "actionholdrelease",
 ]);
+
+/** R69 (T51; DEC-330 owed, U348, K3810; `op-declarations` R76): the seven browser acts, each explained under its own name though none
+ *  is an op, read from the design's `act.owed_<name>.does` (the design keeps the `owed_` in the key of these seven). None is in
+ *  `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `NON_ACTS`, `RUNGS` or `RUNG_ABSENT` (so R12's totality neither lists nor misses one) or
+ *  in `ACT_HELP_ABSENT` (R34's partition runs over ops only). R48's rule that a key naming neither a declared op nor an owed act
+ *  is not held is read with these among the names it admits. */
+export const BROWSER_ACTS = Object.freeze(["revisioncompare", "hashcopy", "linkopen", "pubfloorset", "pubfloorclear", "pubprint",
+  "reviewexport"]);
 
 /* Where the design keys a text by something other than `act.<op>.does`: an alias's own name, or an `owed_` tag not yet cleared. */
 const KEY_EXCEPTIONS = Object.freeze({
@@ -128,10 +143,14 @@ const KEY_EXCEPTIONS = Object.freeze({
   aliaswithdraw: "act.owed_aliaswithdraw.does",
 });
 
-/** R62: each held op's word key, `act.<op>.does` unless the design keys it otherwise; `handlechange` has none (R53). */
-export const ACT_HELP_KEYS = Object.freeze(Object.fromEntries(ACT_HELP_OPS.filter((op) => op !== "handlechange")
-  .map((op) => [op, KEY_EXCEPTIONS[op] ?? `act.${op}.does`])));
+/** Every name held: the ops in the design's order, then R69's browser acts. */
+const HELD = Object.freeze([...ACT_HELP_OPS, ...BROWSER_ACTS]);
 
-/** R48, R61, R62: what each act does, each sentence read through `word`; the very object `op=affordances` answers (R49). */
-export const ACT_HELP = Object.freeze(Object.fromEntries(ACT_HELP_OPS.map((op) =>
+/** R62, R69: each held name's word key, `act.<op>.does` unless the design keys it otherwise (a browser act is `act.owed_<name>.does`);
+ *  `handlechange` has none (R53). */
+export const ACT_HELP_KEYS = Object.freeze(Object.fromEntries(HELD.filter((op) => op !== "handlechange")
+  .map((op) => [op, KEY_EXCEPTIONS[op] ?? (BROWSER_ACTS.includes(op) ? `act.owed_${op}.does` : `act.${op}.does`)])));
+
+/** R48, R61, R62, R69, R70: what each act does, each sentence read through `word`; the very object `op=affordances` answers (R49). */
+export const ACT_HELP = Object.freeze(Object.fromEntries(HELD.map((op) =>
   [op, op === "handlechange" ? MEMBERSHIP_CHECKS.HANDLE_FIXED.translation : word(ACT_HELP_KEYS[op])])));

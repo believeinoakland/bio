@@ -103,7 +103,7 @@ export const QUEUE_OBLIGATION_KINDS = {
   "endorsement-owed":            word("queuestate.endorsement_owed"),
   "expertise-confirmation-owed": word("queuestate.expertise_confirmation_owed"),
   "membership-request":          word("queuestate.membership_request"),
-  "project-owners-inactive":     "every owner of a project is inactive; rescue is available (D-47)",
+  "project-owners-inactive":     localize("queue.queuestate.every_owner_of_a_project", "every owner of a project is inactive; rescue is available (D-47)"),
   /* N345 (R1; DEC-84 item 2, DEC-85): a duty is never muted, dismissed or set aside, and it leaves only by resolution
      (contradiction R24), so both are OBLIGATIONs. Their producers are `queue-producers`' (its R4, R7). */
   "contradiction-duty":          "a conflict the record holds that a member of this project must resolve (N345)",
@@ -213,19 +213,19 @@ export const QUEUE_FINDING_KINDS = {
                               + "shows it met; a question, never a violation (K1466) — LIVE: notice-producers R5",
   "source-modified":            "a monitor tick found the source modified — LIVE: queue-producers #findingsSourceFlagged",
   "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue-producers #findingsSourceFlagged",
-  "duplicate-document":         "a duplicate document was detected (D-60)",
-  "link-verdict-changed":       "a link verdict was established or changed when a target landed (LINK-FIDELITY 8)",
+  "duplicate-document":         localize("queue.queuestate.a_duplicate_document_was_detected", "a duplicate document was detected (D-60)"),
+  "link-verdict-changed":       word("queuestate.link_verdict_changed"),
   "reused-asset-changed":       "a reused asset was later found changed, post-hoc (CAP-4)",
   "assistant-surfaced-focus":   "an assistant surfaced a question (D-78, D-82 — must LOOK derived)",
-  "grade-improvable":           "a connection's grade is improvable (D-72)",
+  "grade-improvable":           localize("queue.queuestate.a_connections_grade_is_improvable", "a connection's grade is improvable (D-72)"),
   "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76) — LIVE: queue-producers #findingsObjectiveGap",
-  "measure-decay":              "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
+  "measure-decay":              localize("queue.queuestate.a_bias_statements_measure_has", "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)"),
   /* D-52, LIVE 2026-09-23: queue-producers #findingsExportPerformed, derived on read from `export_log`
      and raised to every administrator and to nobody else (Membership v2 §8.1). */
   "export-performed":           "an export was performed; every administrator is notified (D-52 8.1) "
                               + "— LIVE: queue-producers #findingsExportPerformed",
   "audit-finding":              "op=audit found something about the record",
-  "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
+  "register-unbacked":          localize("queue.queuestate.a_register_entrys_bytes_are", "a register entry's bytes are unbacked (D-9, D-45)"),
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
      queue-producers #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
      while a run was working inquiry A, is CAPTURED — an entry to the store, and
@@ -406,9 +406,8 @@ export const QUEUE_FINDING_KINDS = {
  * EXPORTED plain object of this module whose values are all strings is a MEMBER-FACING vocabulary —
  * the texts a surface renders in place of a machine word (R1: every kind has one sentence). This table
  * is not one: its value is a machine id published as `catalogue_id`, the item contract's "stable
- * catalogue id" (NOTIFICATIONS.md §The item contract), which no surface renders (`civicos-ui/` reads no
- * `catalogue_id`; a member reads `summary` and `detail`). Found by the old DEC-49 guard's arm E
- * (`civicos-ui/check-refusal-codes.mjs`, deleted in T20), which read it exported as a 23rd vocabulary
+ * catalogue id" (NOTIFICATIONS.md §The item contract), which no surface renders (a member reads `summary` and
+ * `detail`). A check that reads every exported all-string object as a vocabulary would have counted it as one,
  * whose one term was the token "N-1". So the TABLE stays here, unexported, and what leaves the module is
  * the LOOKUP below, R2's `catalogueIdOf`, which `test/m/queue/catalogue.test.mjs`' R2 test drives. */
 const QUEUE_KIND_IDS = {

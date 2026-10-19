@@ -283,7 +283,7 @@ test("R7 Home offers \"Welcome a new member\" first and \"Your first question\" 
   const after = unhtml(g.marks());
   assert.ok(!after.includes(welcome) && after.includes(first));
   // the ceremony's required wizard is its own screen's mark (wizardsat on `ceremony`)
-  const c = standIn({ plane: plane({ wizardsat: ok({ ok: true, screen: "ceremony", scripts: [{ id: "WIZ-426b9c2e8b128b6b", version: "WIZ-426b9c2e8b128b6b@2", name: "Publication ceremony", steps: [], finished: 0 }] }) }) });
+  const c = standIn({ plane: plane({ wizardsat: ok({ ok: true, screen: "ceremony", scripts: [{ id: "WIZ-426b9c2e8b128b6b", version: "WIZ-426b9c2e8b128b6b@2", name: said("wizard.WIZ-426b9c2e8b128b6b.name"), steps: [], finished: 0 }] }) }) });
   await c.enter("ceremony");
   await c.control("chip");
   assert.ok(unhtml(c.marks()).includes(said("screen.guide.mark.start", { name: said("wizard.WIZ-426b9c2e8b128b6b.name") })));

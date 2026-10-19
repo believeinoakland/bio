@@ -60,7 +60,7 @@ test("R6 each act names what it needs (control: nothing sent), and a refusal is 
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
   fill(p, { "pr-party": "ENT-2026-0104", "pr-doc": SHA });
   await press(p, "recordline");
-  assert.ok(sec(p, "screen.proceeding.parties").textContent.includes("A party is joined to a proceeding."), "the refusal by its words");
+  assert.ok(sec(p, "screen.proceeding.parties").textContent.includes(word("refusal.PROCEEDING_ENDS")), "the refusal by its words");
 });
 
 test("R16 Follow its register sends proceeding, the screen's own entity id, and the register list shows only the follows follows answers with that proceeding; control: a register followed from another proceeding's screen is not listed here", async () => {
@@ -111,7 +111,7 @@ const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").ma
 
 test("R36 the court is chosen among the registered forums (entitieskind with forum_kind, as record data), never among the people; the kind among the forum's, worded by proceeding.kind.<kind>", async () => {
   const p = await open("/app/proceeding");
-  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Superior Court of California, County of Alameda"]]);
+  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Alameda Housing Tribunal"]]);
   assert.ok(p.byOp("entitieskind").some((r) => r.query.kind === "body" && /court/.test(r.query.forum_kind)), "forum kinds asked");
   assert.equal(p.byOp("peopledirectory").length === 0 || !p.doc.getElementById("pr-forum").querySelectorAll("option").some((o) => o.textContent === "L. Chen"), true, "no person is offered as a court");
   assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[0]), ["civil", "writ", "appeal"]);
@@ -139,7 +139,7 @@ test("R36 with no forum held the screen draws court.none in its fold and the Add
   const bad = await open("/app/proceeding", { plane: { entitycreate: refusedIn("PROCEEDING_KIND_UNKNOWN", "That kind of proceeding is not one your profiles name.") } });
   fill(bad, { "pr-forum": COURT, "pr-number": "RG1", "pr-kind": "civil", "pr-note": "n" });
   await press(bad, "entitycreate", { el: bad.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
-  assert.ok(main(bad).textContent.includes("That kind of proceeding is not one your profiles name."));
+  assert.ok(main(bad).textContent.includes(word("refusal.PROCEEDING_KIND_UNKNOWN")));
 });
 
 test("R34 recordline chooses the document by title; with no document the choice's empty state is drawn and nothing is sent", async () => {
@@ -150,4 +150,33 @@ test("R34 recordline chooses the document by title; with no document the choice'
   fill(none, { "pr-party": "ENT-2026-0104" });
   await press(none, "recordline");
   assert.equal(none.byOp("recordline").length, 0);
+});
+
+/* R47 (T51-120) */
+test("R47 a proceeding is offered every kind the active profiles name for the forum: a profile kind with a label is offered for a commission forum and sent as kind; control: a kind of another forum_kind is not offered", async () => {
+  const COMMISSION = "ENT-2026-0150";
+  const kinds = [{ kind: "housing_hearing", label: "Rent board hearing", forum_kind: "commission" }, { kind: "civil", label: "Civil", forum_kind: "court" }];
+  const plane = { affordances: ok({ vocabularies: { proceeding_kinds: kinds } }),
+    entitieskind: (r) => ok({ ok: true, entities: r.query.kind === "body" ? [{ entity_id: COMMISSION, kind: "body", label: "Rent Board", forum_kind: "commission" }] : [] }),
+    entitycreate: ok({ ok: true, entity_id: "ENT-2026-0151", kind: "proceeding" }) };
+  const p = await open("/app/proceeding", { plane });
+  assert.deepEqual(optsOf(p, "pr-kind"), [["housing_hearing", "Rent board hearing"]], "the label as record data, the other forum's kind not offered");
+  fill(p, { "pr-forum": COMMISSION, "pr-kind": "housing_hearing", "pr-number": "H-9", "pr-note": "from the caption" });
+  await press(p, "entitycreate", { el: p.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
+  assert.equal(p.byOp("entitycreate")[0].body.proceeding.kind, "housing_hearing");
+});
+
+test("R47 an affordances answer without the key draws the choice failed, never as no kinds; [] draws empty in place of the choice and sends nothing; a forum with no kind in the profile offers none", async () => {
+  const forum = (extra) => ({ entitieskind: (r) => ok({ ok: true, entities: r.query.kind === "body" ? [{ entity_id: COURT, kind: "body", label: "A court", forum_kind: "court" }] : [] }), ...extra });
+  const unread = await open("/app/proceeding", { plane: forum({ affordances: ok({ vocabularies: {} }) }) });
+  assert.ok(sec(unread, "screen.proceeding.register").querySelector('[data-state="failed"]'), "failed");
+  assert.equal(unread.doc.getElementById("pr-kind"), null);
+  const none = await open("/app/proceeding", { plane: forum({ affordances: ok({ vocabularies: { proceeding_kinds: [] } }) }) });
+  assert.ok(sec(none, "screen.proceeding.register").querySelector('[data-state="empty"]'), "empty, in place of the choice");
+  assert.equal(none.doc.getElementById("pr-kind"), null);
+  fill(none, { "pr-forum": COURT, "pr-number": "RG1", "pr-note": "n" });
+  await press(none, "entitycreate", { el: none.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
+  assert.equal(none.byOp("entitycreate").length, 0, "nothing sent");
+  const other = await open("/app/proceeding", { plane: forum({ affordances: ok({ vocabularies: { proceeding_kinds: [{ kind: "complaint", label: "Complaint", forum_kind: "commission" }] } }) }) });
+  assert.equal(other.doc.getElementById("pr-kind"), null, "a forum with no kind in the profile offers none");
 });

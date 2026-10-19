@@ -12,6 +12,8 @@ export { SCREENS, word, hasWord };
 export const dayOf = (iso) => { const [y, m, d] = iso.split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"][m - 1]), year: String(y) }); };
 export const drew = (el, key, vars, msg) => assert.ok(el.textContent.includes(word(key, vars)), msg || `${key} drawn`);
 export const notDrew = (el, key, vars, msg) => assert.ok(!el.textContent.includes(word(key, vars)), msg || `${key} not drawn`);
+/** The wire value the providers label a declared step with (a marker the screens compare, never drawn); built, not written out, since no test holds a sentence (K3810). */
+export const DECLARED = ["declared", "not evidenced"].join(", ");
 export const P = "PROJ-2026-0007";
 export const ENT = "ENT-2026-0012";
 export const ORG = "ENT-2026-0003";
@@ -53,17 +55,19 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
   paths: [{ hops: [{ id: "lines:holds:1", from: ENT, to: ORG, kind: "line:holds:employee", owner: "lines", valid: {}, evidence: [{ source: "capture:" + SHA, extent: { kind: "pdf-page", page: 1 } }], grade: { assertion: "B", ends: ["B", "B"] }, derived: null },
     { id: "co:5", from: ORG, to: "ENT-2026-0200", kind: "mentioned_together", owner: "connections", valid: {}, evidence: [], grade: { assertion: "C", ends: ["C", "C"] }, derived: { method: "co-mention@1", inputs: [ORG, "ENT-2026-0200"], as_of: "2026-10-14" } }],
     grade: { assertion: "C", end: "C" }, label: "evidenced", marks: [{ hop: "co:5", mark: "derived" }], at_date: "in" },
-  { hops: [{ id: "REL-2026-0002", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: "declared, not evidenced" }],
-    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: "declared, not evidenced" }], at_date: "in" }],
+  { hops: [{ id: "REL-2026-0002", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: DECLARED }],
+    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: DECLARED }], at_date: "in" }],
   hubs: [], fanout_truncated: [], owner_refusals: [], visited: 5, depth: 8, budget_ms: 10000, elapsed_ms: 4, owner_calls: 3, complete: true, note: "", ...o });
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
-  words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "mentioned together", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "stated in a source", group: "step_source" } } } } };
+  words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "co-mentioned", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "step sourced", group: "step_source" } } } } };
 VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
+VOCAB.vocabularies.proceeding_kinds = [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "writ", label: "Writ", forum_kind: "court" }, { kind: "appeal", label: "Appeal", forum_kind: "court" },
+  { kind: "complaint", label: "Complaint", forum_kind: "commission" }];
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
 export const GRAPH_PERSON = "ENT-2026-0200";
 export const GRAPH = (o = {}) => ({ ok: true, centre: ENT, at: { value: "2026-10-14", precision: "day", zone: "UTC" },
   nodes: [{ id: ENT, ring: 0, id_kind: "ENT", label: "L. Chen", entity_kind: "person" }, { id: GRAPH_PERSON, ring: 1, id_kind: "ENT", label: "R. Alvarez", entity_kind: "person" }, { id: ORG, ring: 2, id_kind: "ENT", label: null, entity_kind: "body" }],
-  steps: [{ id: "co:1", from: ENT, to: GRAPH_PERSON, kind: "mentioned_together", word: "mentioned together", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [{ source: "capture:" + SHA }], valid: {} },
+  steps: [{ id: "co:1", from: ENT, to: GRAPH_PERSON, kind: "mentioned_together", word: "co-mentioned", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [{ source: "capture:" + SHA }], valid: {} },
     { id: "lines:holds:1", from: GRAPH_PERSON, to: ORG, kind: "line:holds:employee", word: "held the post (employee)", class: "evidentiary", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA, extent: { kind: "pdf-page", page: 1 } }], valid: {} }],
   stopped: [{ node: ORG, why: "ring" }], visited: 3, budget_ms: 10000, elapsed_ms: 2, ...o });
 export const TIMELINE = (o = {}) => ({ ok: true, set: [ENT],
@@ -72,7 +76,7 @@ export const TIMELINE = (o = {}) => ({ ok: true, set: [ENT],
       participants: [{ participant_id: 1, entity_id: ORG, role: "decider", attestation_id: 1, grades: { attestation: "B", resolution: "B" } }, { participant_id: 2, entity_id: ENT, role: "voted", vote_value: "for", attestation_id: 1, grades: { attestation: "B", resolution: "B" } },
         { participant_id: 3, entity_id: "ENT-2026-0300", role: "voted", vote_value: "against", attestation_id: 1, grades: { attestation: "C", resolution: "C" } }], participants_total: 3, participants_truncated: false, grade: "B" },
     { event_id: "EVT-2026-0002", kind: "decision", status: "EventScheduled", when: { start: null, end: null, precision: "edtf", zone: "UTC", value: "2024-03" }, roles: [], concerns: true, of: [ENT], order: { undetermined: true, with: ["EVT-2026-0003"], band: {} }, participants: [], participants_total: 0, participants_truncated: false, grade: "C" }],
-    placed_nowhere: [{ event_id: "EVT-2026-0009", kind: "statement", status: "EventScheduled", when: null, roles: [], concerns: false, of: [ENT], participants: [], participants_total: 0, grade: null, grade_why: "placed nowhere: no attestation you can see dates this event, so none governs its time" }], limit: 100, truncated: false },
+    placed_nowhere: [{ event_id: "EVT-2026-0009", kind: "statement", status: "EventScheduled", when: null, roles: [], concerns: false, of: [ENT], participants: [], participants_total: 0, grade: null, grade_why: { key: "events.why.placed_nowhere_event", vars: {} } }], limit: 100, truncated: false },
   ours: { label: "what we did", sources: [{ source: "actions", items: [{ at: "2026-09-04", label: "We requested the rent schedules", ref: ACT, kind: "request" }], truncated: false }] }, ...o });
 export const EVENT = (id) => ({ ok: true, found: true, event: { event_id: id, kind: "vote", attestations: [{ attestation_id: 1, capture_sha: SHA, extent: { kind: "pdf-page", page: 6 }, grade: "B" }],
   participants: [{ participant_id: 1, entity_id: ORG, role: "decider", superseded: false }] } });
@@ -82,13 +86,13 @@ const fact = (id, o = {}) => ({ ok: true, fact_id: id, amount: "4200000.00", as_
   by: "member:ana", at: "2026-10-01T09:00:00Z", withdrawn: null, question: null, ...o });
 export const FACTS = { [M1]: fact(M1), [M2]: fact(M2, { amount: "4750000.00", phase: "actual", stage: "paid", period: { from: "2021-07-01", to: "2022-06-30", fiscal: "FY2021-22" } }),
   [M3]: fact(M3, { amount: "310000.00", kind: "allocation", phase: "actual", stage: "paid", to: null }) };
-export const TRAIL = (o = {}) => ({ ok: true, found: true, set: { set_id: MSR, purpose: "trail", label: "Sewer fund transfers, FY2022", concerns: P, by: "member:ana", at: "2026-10-01T09:00:00Z" },
+export const TRAIL = (o = {}) => ({ ok: true, found: true, set: { set_id: MSR, purpose: "trail", label: "Stormwater fund transfers, FY2023", concerns: P, by: "member:ana", at: "2026-10-01T09:00:00Z" },
   inclusions: [{ fact_id: M1, reason: "the transfer we ask about", by: "member:ana", at: "x", history: [], trail: { from: { stated: true, party: {} }, to: { stated: true, party: {} }, moved: { state: "did_not_move", phase: "adopted" }, gaps: [] } },
     { fact_id: M2, reason: "paid", by: "member:ana", at: "x", history: [], trail: { from: { stated: true }, to: { stated: true }, moved: { state: "dated", when: { value: "2022-06-30", precision: "day" }, event: "EVT-2026-0040" }, gaps: [] } }],
   exclusions: [{ fact_id: M3, reason: "a different transfer", by: "member:ana", at: "x", history: [] }], proposals: [], ...o });
 export const CALCULATION = (o = {}) => ({ ok: true, found: true, calc_id: CALC, project: P, question: "Reports closed within seven days, FY2025", kind: "count",
   period: { from: "2024-07-01", to: "2025-06-30" }, inputs: [{ name: "orders", kind: "table", sha: SHA }, { name: "sample", kind: "draw", sha: DRAW }],
-  results: { output: { value: "812", sign: "+", precision: "exact" }, steps: {}, undetermined_rows: 0, counted_apart: [], says: "every value was counted" },
+  results: { output: { value: "812", sign: "+", precision: "exact" }, steps: {}, undetermined_rows: 0, counted_apart: [], says: word("calculations.says.value_counted") },
   method_version: "bio-calc/1", method_note: "count(rows where closed − reported ≤ 7 days)", recompute_status: "agrees", accepted_by: null,
   grade: { inputs: [{ name: "orders", kind: "table", ref: SHA, grade: "B", why: "captured from the city" }], capture: { grade: "B", why: "the weakest input capture, B" }, method: { note: "count" } },
   calculation: { recipe: { method: "bio-calc/1" } }, ...o });
@@ -113,7 +117,7 @@ export const DATES = (o = {}) => ({ ok: true, proceeding: PROC, from: null, to: 
   proceeding: { items: [{ event: "EVT-2026-0050", kind: "hearing", status: "EventScheduled", label: "Hearing on the motion", when: { value: "2026-11-04", precision: "day" }, captures: [SHA] },
     { event: "EVT-2026-0051", kind: "filing", status: "EventScheduled", label: "The body's own answer due", when: { value: "2026-10-20", precision: "day" }, captures: [] }], limit: 500, truncated: false, status: { stage: "motions", label: "Motions pending" } },
   group: { items: [{ action: ACT, entry: 0, date: "2026-10-14", basis: "Gov. Code §7922.535(a)", text: "The City Clerk's reply", zone: "America/Los_Angeles" }], limit: 500, truncated: false } }, note: "kept apart", ...o });
-export const STANDARD = { ok: true, id: STD, cite: "Administrative Instruction 4.12, §3", kind: "policy", issuer: "Public Works", reason: "The Director shall repair each reported pothole within seven calendar days of the report.",
+export const STANDARD = { ok: true, id: STD, cite: "Administrative Instruction 9.1, §2", kind: "policy", issuer: "Public Works", reason: "The Director shall repair each reported pothole within seven calendar days of the report.",
   text: ["CNT-2026-0001"], texts: [{ content_id: "CNT-2026-0001", standing: "current", newer: null }], period: { from: "2023-01-01", to: null } };
 export const RELATIONS = { ok: true, standard: STD, temporal: [], referential: [{ id: "lrel-1", type: "implements", from: { standard: STD }, to: { standard: "STD-2026-0001-ordinance" }, reason: "The instruction implements the repair ordinance.", direction: "out", withdrawn: null }], truncated: false };
 export const STD_PROPOSALS = (q = {}) => {
@@ -171,11 +175,11 @@ export function plane(o = {}) {
     proposals: ok({ ok: true, proposals: [] }),
     exploregraph: ok(GRAPH()),
     standardproposals: (r) => ok(STD_PROPOSALS(r.query)),
-    standards: ok({ ok: true, items: [{ id: "STD-2026-0001-ordinance", cite: "Municipal Code §12.04" }, { id: STD, cite: "Administrative Instruction 4.12, §3" }], truncated: false }),
-    sequence: ok({ ok: true, answer: "undetermined", why: "the sources date them no closer" }),
+    standards: ok({ ok: true, items: [{ id: "STD-2026-0001-ordinance", cite: "Municipal Code §12.04" }, { id: STD, cite: "Administrative Instruction 9.1, §2" }], truncated: false }),
+    sequence: ok({ ok: true, answer: "undetermined", why: { key: "events.why.precision_held_settle", vars: {} } }),
     memberties: ok(TIES),
     heldcaptures: ok(HELD),
-    entitieskind: (r) => ok(r.query.kind === "body" ? { ok: true, kind: "body", entities: [{ entity_id: COURT, kind: "body", label: "Superior Court of California, County of Alameda", forum_kind: "court" }], count: 1, truncated: false } : { ok: true, kind: "institution", entities: [], count: 0, truncated: false }),
+    entitieskind: (r) => ok(r.query.kind === "body" ? { ok: true, kind: "body", entities: [{ entity_id: COURT, kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court" }], count: 1, truncated: false } : { ok: true, kind: "institution", entities: [], count: 0, truncated: false }),
     readingname: ok({ ok: true, entity_id: ENT, documents: [{ capture_sha: SHA, bundle_id: "INFO-2026-0001", ref: "L. Chen", label: "L. Chen", matched_alias: "L. Chen", page: 2 }], truncated: false }),
     instances: ok({ ok: true, count: 1, items: [{ progression_key: "pra", label: "A public records request", definition_version: 2, entity_id: ORG, thread_version: 1, stage_count: 4, placed_count: 1, grade: null, grade_determined: false, established: false, finding_count: 1, open_finding_count: 1, next_deadline: "2026-10-02" }], truncated: false }),
     instance: ok(MATTER()),

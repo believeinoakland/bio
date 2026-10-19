@@ -8,15 +8,14 @@ import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs"
 import { T35_RUNGS } from "../../../src/op-grades/t35.mjs";
 
 /* Each op driven below, by its owner; the last test holds this list to t35.mjs. */
-const DRIVEN = [
-  "standardforce", "standardforcewithdraw", "standardrelease", "standardadoption", "standardimpose", "standardbenchmark",
-  "usewithdraw",
-  "uselink", "useunlink",
-];
+const DRIVEN = {
+  standardforce: "standards", standardforcewithdraw: "standards", standardrelease: "standards", standardadoption: "standards",
+  standardimpose: "standards", standardbenchmark: "standards", usewithdraw: "events", uselink: "duties", useunlink: "duties",
+};
 
 /* The backing of one op: graded `reasoned`; without its reason refused with `code`, in the family; with it accepted. */
 function backed(op, code, refused, accepted) {
-  assert.ok(DRIVEN.includes(op), op);
+  assert.ok(Object.hasOwn(DRIVEN, op), op);
   assert.equal(RUNGS[op], "reasoned", op);
   const got = refused?.code ?? refused?.reason;
   assert.notEqual(refused?.ok, true, `${op}: accepted without its reason: ${JSON.stringify(refused).slice(0, 300)}`);
@@ -148,5 +147,5 @@ test("R19: duties' uselink and useunlink, graded `reasoned` (op-grades R22), are
 /* ---- the list ---- */
 test("R19: every op op-grades' t35.mjs grades `reasoned` is driven here", () => {
   const graded = Object.keys(T35_RUNGS).filter((op) => T35_RUNGS[op] === "reasoned").sort();
-  assert.deepEqual([...new Set(DRIVEN)].sort(), graded);
+  assert.deepEqual(Object.keys(DRIVEN).sort(), graded);
 });

@@ -43,6 +43,8 @@ import { T48_RUNGS, T48_RUNG_ABSENT, T48_NON_ACTS, T48_MACHINE_REFUSALS } from "
 import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
 /* R45, R47 (T50; DEC-300 (5)): T50's new ops, graded from their owners, and the four acts DEC-300 (5) weighs Reversible. */
 import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
+/* R48 (T51; DEC-340): the three reads the design's new screens add, stated absent as reads. */
+import { T51_NON_ACTS } from "./t51.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -1559,6 +1561,7 @@ export const NON_ACTS = {
   ...T48_NON_ACTS,
   ...T49_NON_ACTS,
   ...T50_NON_ACTS,
+  ...T51_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

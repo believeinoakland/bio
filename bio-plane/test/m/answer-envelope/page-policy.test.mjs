@@ -1,6 +1,6 @@
 /* answer-envelope R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881), R16 (T47; N1002, N1001): every `text/html`
-   response the plane serves (the signer page, and since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the
-   setup page no longer served) leaves `withPagePolicy` with a policy under which a browser loads no
+   response the plane serves (since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the setup page no longer
+   served) leaves `withPagePolicy` with a policy under which a browser loads no
    script, style, font, image or connection from another origin and sends nothing elsewhere, and a `script-src` of the
    response's own fresh nonce alone; every script element of the page served carries that nonce. The policy is parsed
    and judged directive by directive, never matched as text. Driven at this module's interface over the pages' real
@@ -11,7 +11,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M } from "./load.mjs";
-import { SIGN_HTML } from "../../../src/signpage.mjs";
 
 /* A policy's directives, `{name: [sources]}`. */
 const parse = (header) => Object.fromEntries(String(header || "").split(";").map((d) => d.trim()).filter(Boolean)
@@ -74,10 +73,10 @@ const interfaceShaped = (screen) => `<!doctype html>
 </body>
 </html>
 `;
-const pages = () => [["the signer page", SIGN_HTML], ["interfacePage at /", interfaceShaped("front")],
+const pages = () => [["interfacePage at /", interfaceShaped("front")],
                      ["interfacePage at /app/home", interfaceShaped("home")], ["interfacePage at /app/settings", interfaceShaped("settings")]];
 
-test("R6, R16: the signer page and `interfacePage` (at `/` and at `/app/*`; the setup page no longer served), each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
+test("R6, R16: `interfacePage` (at `/` and at `/app/*`; the setup page no longer served), each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
   for (const [where, page] of pages()) {
     const before = scriptTags(page).length;
     assert.ok(before >= 1, `${where} ships a script`);

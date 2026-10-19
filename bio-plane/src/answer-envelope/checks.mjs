@@ -20,8 +20,9 @@
    D-278 (C-69) — NO OPERATION BY THAT NAME.
 
    Group (5) of BOB #26's ruling. `error: "unknown op"` is kept BYTE-IDENTICAL
-   beside the code, and that is load-bearing rather than courtesy: `civicos-ui`
-   reads it (`queueAbsent` and its two siblings) to tell a copy running an OLDER
+   beside the code, and that is load-bearing rather than courtesy: the legacy
+   `civicos-ui` screens read it (`queueAbsent` and its two siblings) until that
+   folder is deleted (CR-5), to tell a copy running an OLDER
    plane — one that has not got the op yet — from a refusal. The translation
    says only what the copy knows: it has no op by that name. It does not guess
    which of "older", "newer" or "misspelt" is true.

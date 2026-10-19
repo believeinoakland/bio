@@ -1,0 +1,416 @@
+/* installer-steps R7 to R15: the probes, the plane's bytes, bindings and uploads, and the read-back. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, ensureSubdomain, planeLimits, memberLimits, reportsBuilds, LIMITS_NOT_STATED,
+  selfBinding, BROWSER_BINDING, instanceAiBinding, instanceAiOk, sealBinding, profilesBinding, ownHostsBinding, memberBindings, membersPresent, heldBindings,
+  hostOf, BINDING_OF, SEAL_BINDING, INSTANCE_AI_BINDING, PROFILES_BINDING, OWN_HOSTS_BINDING, uploadInstall, uploadUpdate, scriptHash, releaseSha, readBack,
+  planeInSync, putSecret, rotateSecrets, namesFor, hex, multipartPart, ascii, find, rand } from "../../src/steps/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
+import { ApproveAgain } from "../../src/steps/index.mjs";
+import { TOK, session, immediateTimers, account, heldCopy, sequence, release, chosen, sha, VERSION, LIMITS, CAPABLE_SRC, realFetch, cfok, cferr } from "./world.mjs";
+
+let restoreTimers;
+test.beforeEach(() => { restoreTimers = immediateTimers(); });
+test.afterEach(() => { restoreTimers(); globalThis.fetch = realFetch; });
+const MEMBERS = FLEET_BINDINGS.map(([m]) => m);
+const NAMES = namesFor("grp");
+const SECRETS = { boot: "boot-secret", probe: "probe-secret", daemon: "daemon-secret", seal: "seal-secret" };
+const byName = (meta, name) => meta.bindings.find((b) => b.name === name);
+
+test("R7: 100328 is free, a 500 is unknown with the platform's message, an accepted upload is paid and the probe is gone", async () => {
+  let w = account({ plan: "free" });
+  assert.deepEqual(await establishPlan(session(), "A1"), { plan: "free" });
+  w.restore();
+  w = account({ plan: "unknown" });
+  assert.deepEqual(await establishPlan(session(), "A1"), { plan: "unknown", detail: "internal error" });
+  w.restore();
+  w = account();
+  assert.deepEqual(await establishPlan(session(), "A1"), { plan: "paid", leftover: false });
+  assert.equal(w.scripts.has(PLAN_PROBE), false);
+  assert.equal(w.probeMeta.limits.cpu_ms > 0, true);
+  assert.ok(w.calls.every((c) => /bio-plan-probe/.test(c.u)), "no plan field of any reply is read: only the probe is touched");
+  assert.ok(w.calls.some((c) => c.method === "DELETE" && c.u.endsWith("bio-plan-probe?force=true")));
+  w.restore();
+});
+
+test("R7: a refused deletion answers paid with leftover", async () => {
+  const w = account({ probeDelete: "fail" });
+  assert.deepEqual(await establishPlan(session(), "A1"), { plan: "paid", leftover: true });
+  w.restore();
+});
+
+test("R8: an existing bucket is named in the answer, a refused creation throws with the platform's message, a 404 is false and a 500 throws", async () => {
+  let w = account({ r2: "exists" });
+  assert.deepEqual(await ensureBuckets(session(), "A1", NAMES), [NAMES.captures]);
+  assert.ok(w.buckets.has(NAMES.published));
+  const posts = w.calls.filter((c) => c.method === "POST" && c.u.endsWith("/r2/buckets")).map((c) => JSON.parse(c.init.body).name);
+  assert.deepEqual(posts, [NAMES.captures, NAMES.published], "the captures bucket and then the published one");
+  w.restore();
+  w = account({ r2: "refused" });
+  await assert.rejects(ensureBuckets(session(), "A1", NAMES), /payment method/);
+  w.restore();
+  w = account({ pre: { there: [] }, lookupFail: ["bad"], preClasses: {} });
+  assert.equal(await scriptExists(session(), "A1", "there"), true);
+  assert.equal(await scriptExists(session(), "A1", "nowhere"), false);
+  w.scripts.set("bad", []);
+  await assert.rejects(scriptExists(session(), "A1", "bad"), (e) => e.status === 500);
+  w.restore();
+});
+
+test("R9: a held prefix is used; none is registered from the slug; a taken slug registers the suffixed name; both taken throws; a refused enabling throws", async () => {
+  let w = account({ subdomain: "held" });
+  assert.deepEqual(await ensureSubdomain(session(), "A1", "grp"), { sub: "held", registered: null });
+  assert.ok(w.enabled.has("grp"));
+  w.restore();
+  w = account({ subdomain: "" });
+  assert.deepEqual(await ensureSubdomain(session(), "A1", "grp"), { sub: "grp", registered: "grp" });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  const r = await ensureSubdomain(session(), "A1", "grp");
+  assert.match(r.registered, /^grp-[a-z0-9]{1,4}$/);
+  assert.equal(r.sub, r.registered);
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  const real = Math.random;
+  const gv = crypto.getRandomValues.bind(crypto);
+  crypto.getRandomValues = (a) => { a.fill(0); return a; };
+  const suffixed = "grp-" + rand(3).toLowerCase().replace(/[^a-z0-9]/g, "x").slice(0, 4);
+  crypto.getRandomValues = gv; Math.random = real;
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  w.calls.length = 0;
+  const gv2 = crypto.getRandomValues.bind(crypto);
+  crypto.getRandomValues = (a) => { a.fill(0); return a; };
+  try {
+    const taken = [ "grp", suffixed ];
+    w.restore(); w = account({ subdomain: "", taken });
+    await assert.rejects(ensureSubdomain(session(), "A1", "grp"), new RegExp(word("installer.address.prefixtaken").replace(/[.]/g, "\\.")));
+  } finally { crypto.getRandomValues = gv2; }
+  w.restore();
+  w = account({ enableFail: true });
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp"), /could not enable/);
+  w.restore();
+  w = account({ subdomain: "", subdomainPut: "fail" });
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp"), /not permitted/, "any other error is thrown as it is");
+  w.restore();
+});
+
+const stmt = (tag, body) => `${tag} ${body}`;
+test("R10: planeLimits reads text and bytes alike; none, two, malformed and unsorted statements are named; a bundler's quoting reads; the member's tag is never read as the plane's", () => {
+  const good = `export const A = "${stmt("bio-plane-limits/1", "cpu_ms=300000 subrequests=10000")}";`;
+  const t = planeLimits(good), b = planeLimits(new TextEncoder().encode(good));
+  assert.deepEqual(t, b);
+  assert.deepEqual(t.limits, { cpu_ms: 300000, subrequests: 10000 });
+  assert.equal(Object.isFrozen(t.limits), true);
+  assert.deepEqual(planeLimits("export {}"), { ok: false, why: "none" });
+  assert.deepEqual(planeLimits(42), { ok: false, why: "none" });
+  const two = good + `export const B = '${stmt("bio-plane-limits/1", "cpu_ms=1")}';`;
+  for (const src of [two, new TextEncoder().encode(two)]) {
+    const r = planeLimits(src); assert.equal(r.ok, false); assert.equal(r.why, "unreadable"); assert.ok(r.detail);
+  }
+  for (const body of ["subrequests=10000 cpu_ms=300000", "cpu_ms=0", "cpu_ms", "CPU=1", "cpu_ms=5 cpu_ms=6"]) {
+    const r = planeLimits(`"${stmt("bio-plane-limits/1", body)}"`);
+    assert.deepEqual([r.ok, r.why], [false, "unreadable"], body);
+  }
+  assert.equal(planeLimits(`const x = \`${stmt("bio-plane-limits/1", "a=1")}\`;`).ok, true, "a backtick-quoted statement reads");
+  assert.equal(planeLimits(`"${stmt("bio-member-limits/1", "cpu_ms=3")}"`).why, "none", "a member's statement is never read as the plane's");
+  assert.deepEqual(Object.keys(LIMITS_NOT_STATED).sort(), ["none", "unreadable"]);
+});
+
+test("R10: reportsBuilds needs both fields as whole words, in text and in bytes; never throws", () => {
+  const both = "export {storeVersion, memberVersions}";
+  assert.equal(reportsBuilds(both), true);
+  assert.equal(reportsBuilds(new TextEncoder().encode(both)), true);
+  assert.equal(reportsBuilds("export {storeVersion}"), false);
+  assert.equal(reportsBuilds("xstoreVersion memberVersions"), false);
+  assert.equal(reportsBuilds(new TextEncoder().encode("storeVersion_ memberVersions")), false);
+  for (const odd of [null, undefined, 7, {}]) assert.equal(reportsBuilds(odd), false);
+});
+
+test("R11: the shared bindings, each over good, absent and malformed input; no value is ever generated for INSTANCE_AI_TOKEN", () => {
+  assert.deepEqual(selfBinding("grp"), { type: "service", name: "SELF", service: "grp" });
+  assert.deepEqual(BROWSER_BINDING, { type: "browser", name: "BROWSER" });
+  const ok = "a".repeat(16);
+  assert.deepEqual(instanceAiBinding(ok), [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: ok }]);
+  for (const bad of [undefined, null, "", "short", "a".repeat(513), "has space 1234567890", 12, "tab\t1234567890123456"]) {
+    assert.deepEqual(instanceAiBinding(bad), [], String(bad));
+    assert.equal(instanceAiOk(bad), false);
+  }
+  assert.equal(instanceAiOk("a".repeat(512)), true);
+  assert.deepEqual(sealBinding("s"), [{ type: "secret_text", name: SEAL_BINDING, text: "s" }]);
+  assert.deepEqual([sealBinding(""), sealBinding(undefined), sealBinding(5)], [[], [], []]);
+  assert.deepEqual(profilesBinding(["a", "b"]), [{ type: "plain_text", name: PROFILES_BINDING, text: "a,b" }]);
+  assert.deepEqual([profilesBinding([]), profilesBinding(undefined)], [[], []]);
+  assert.deepEqual(ownHostsBinding(["h1", "h2"]), [{ type: "plain_text", name: OWN_HOSTS_BINDING, text: "h1,h2" }]);
+  assert.deepEqual([ownHostsBinding([]), ownHostsBinding("x")], [[], []]);
+  assert.equal(hostOf("https://grp.pfx.workers.dev/path"), "grp.pfx.workers.dev");
+  assert.equal(hostOf("not a url"), null);
+  assert.equal(hostOf(null), null);
+  assert.deepEqual(memberBindings(MEMBERS, NAMES), FLEET_BINDINGS.map(([m, name]) => ({ type: "service", name, service: `${m}-grp` })));
+  const omitted = MEMBERS.slice(1);
+  assert.equal(memberBindings(omitted, NAMES).length, omitted.length);
+  assert.deepEqual(memberBindings(undefined, NAMES), []);
+  assert.deepEqual([...BINDING_OF], FLEET_BINDINGS);
+});
+
+test("R11: membersPresent lists the bindable members the account holds; a failing lookup counts as not present; heldBindings is a Map with a list or null", async () => {
+  const held = heldCopy({ slug: "grp", members: ["pdf-worker", "agent-worker"] });
+  let w = account({ ...held, lookupFail: ["agent-worker-grp"] });
+  assert.deepEqual(await membersPresent(session(), "A1", NAMES), ["pdf-worker"]);
+  const map = await heldBindings(session(), "A1", "grp");
+  assert.equal(map.get("VERSION"), "plain_text");
+  assert.ok(Array.isArray(map.list) && map.list.length > 5);
+  assert.equal(await heldBindings(session(), "A1", "nope"), null);
+  w.restore();
+  w = account({ ...held, settingsBlind: true });
+  assert.equal(await heldBindings(session(), "A1", "grp"), null, "unknown, never none");
+  w.restore();
+  w = account({ ...held, expireAfter: 0 });
+  await assert.rejects(membersPresent(session(), "A1", NAMES), (e) => e.approveAgain === true);
+  await assert.rejects(heldBindings(session(), "A1", "grp"), (e) => e.approveAgain === true);
+  w.restore();
+});
+
+test("R12: the install's upload states exactly the listed metadata; the module part is the release's blob as it is; nothing invented for INSTANCE_AI_TOKEN", async () => {
+  const w = account({ pre: { "pdf-worker-grp": [] } });
+  const rel = await release();
+  const release_ = await chosen(rel);
+  await uploadInstall(session(), "A1", "grp", { ...SECRETS, instanceAi: "i".repeat(20) }, release_, { names: NAMES, members: ["pdf-worker"], profiles: ["us-ca"] });
+  const put = w.puts.at(-1);
+  assert.equal(put.name, "grp");
+  assert.deepEqual(put.meta, {
+    main_module: "index.mjs", compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"], limits: { subrequests: 10000 },
+    bindings: [
+      { type: "durable_object_namespace", name: "STORE", class_name: "Store" },
+      { type: "plain_text", name: "VERSION", text: VERSION },
+      { type: "plain_text", name: "INSTANCE_NAME", text: "grp" },
+      { type: "secret_text", name: "ADMIN_TOKEN", text: "boot-secret" },
+      { type: "secret_text", name: "PROBE_TOKEN", text: "probe-secret" },
+      { type: "secret_text", name: "DAEMON_TOKEN", text: "daemon-secret" },
+      { type: "secret_text", name: "INSTANCE_AI_TOKEN", text: "i".repeat(20) },
+      { type: "secret_text", name: "ACCOUNT_SEAL_SECRET", text: "seal-secret" },
+      { type: "plain_text", name: "JURISDICTION_PROFILES", text: "us-ca" },
+      { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures-grp" },
+      { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published-grp" },
+      { type: "service", name: "SELF", service: "grp" },
+      { type: "browser", name: "BROWSER" },
+      { type: "service", name: BINDING_OF.get("pdf-worker"), service: "pdf-worker-grp" },
+    ],
+    migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
+  });
+  assert.equal(await put.form.get("index.mjs").text(), rel.src);
+  w.restore();
+});
+
+test("R12: a member present is bound and one absent is not; noSelf omits SELF and nothing else; a refusal throws; no INSTANCE_AI_TOKEN is invented", async () => {
+  const w = account({ pre: { "pdf-worker-grp": [] } });
+  const release_ = await chosen(await release());
+  await uploadInstall(session(), "A1", "grp", SECRETS, release_, { names: NAMES, members: ["pdf-worker"] });
+  const full = w.puts.at(-1).meta;
+  w.classes.clear();
+  await uploadInstall(session(), "A1", "grp", { boot: "b", probe: "p", daemon: "d" }, release_, { names: NAMES, members: ["pdf-worker"], noSelf: true });
+  const noSelf = w.puts.at(-1).meta;
+  assert.equal(byName(noSelf, "SELF"), undefined);
+  assert.deepEqual(noSelf.bindings.map((b) => b.name), full.bindings.map((b) => b.name).filter((n) => n !== "SELF" && n !== SEAL_BINDING));
+  for (const m of [full, noSelf]) {
+    assert.equal(byName(m, INSTANCE_AI_BINDING), undefined);
+    assert.equal(byName(m, BINDING_OF.get("ocr-worker")), undefined, "an absent member is not bound");
+    assert.equal(byName(m, "JURISDICTION_PROFILES"), undefined);
+  }
+  w.restore();
+  const refusing = account({ refuseAllPlane: true });
+  await assert.rejects(uploadInstall(session(), "A1", "grp", SECRETS, release_, { names: NAMES }), /refused/);
+  refusing.restore();
+});
+
+test("R13: the update's upload states exactly the listed metadata, keeps secrets, the Durable Object and (without R2) the buckets, and never keeps service", async () => {
+  const w = account({ pre: { "pdf-worker-grp": [] } });
+  const release_ = await chosen(await release());
+  await uploadUpdate(session(), "A1", "grp", true, release_, { names: NAMES, members: [], daemon: "fixed-daemon", ownHosts: ["grp.pfx.workers.dev"] });
+  assert.deepEqual(w.puts.at(-1).meta, {
+    main_module: "index.mjs", compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"], limits: { subrequests: 10000 },
+    bindings: [
+      { type: "plain_text", name: "VERSION", text: VERSION }, { type: "plain_text", name: "INSTANCE_NAME", text: "grp" },
+      { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures-grp" }, { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published-grp" },
+      { type: "service", name: "SELF", service: "grp" }, { type: "browser", name: "BROWSER" },
+      { type: "secret_text", name: "DAEMON_TOKEN", text: "fixed-daemon" },
+      { type: "plain_text", name: "OWN_HOSTS", text: "grp.pfx.workers.dev" },
+    ],
+    keep_bindings: ["secret_text", "durable_object_namespace"],
+  });
+  await uploadUpdate(session(), "A1", "grp", false, release_, { names: NAMES, members: ["pdf-worker"] });
+  const noR2 = w.puts.at(-1).meta;
+  assert.deepEqual(noR2.keep_bindings, ["secret_text", "durable_object_namespace", "r2_bucket"], "with withR2 false the buckets are kept, not restated");
+  assert.equal(byName(noR2, "CAPTURES"), undefined);
+  assert.ok(byName(noR2, BINDING_OF.get("pdf-worker")), "a member present is bound");
+  assert.ok(!noR2.keep_bindings.includes("service"));
+  assert.equal(noR2.migrations, undefined);
+  assert.equal(byName(noR2, "DAEMON_TOKEN").text.length > 8, true, "a new random value when none is given");
+  w.restore();
+});
+
+test("R13: credentials are restated only from opts.secrets; a seal only when given; the instance credential only when valid; profiles and noSelf as stated", async () => {
+  const w = account({ pre: { pdf: [] }, preClasses: {} });
+  w.scripts.set("pdf-worker-grp", []);
+  const release_ = await chosen(await release());
+  const put = async (opts) => { await uploadUpdate(session(), "A1", "grp", true, release_, { names: NAMES, ...opts }); return w.puts.at(-1).meta; };
+  let m = await put({});
+  for (const n of ["ADMIN_TOKEN", "PROBE_TOKEN", SEAL_BINDING, INSTANCE_AI_BINDING, "JURISDICTION_PROFILES"]) assert.equal(byName(m, n), undefined, n);
+  m = await put({ secrets: SECRETS, instanceAi: "i".repeat(16), seal: "held-never", profiles: ["p"], noSelf: true, members: ["pdf-worker"] });
+  assert.equal(byName(m, "ADMIN_TOKEN").text, "boot-secret");
+  assert.equal(byName(m, "PROBE_TOKEN").text, "probe-secret");
+  assert.equal(byName(m, "DAEMON_TOKEN").text, "daemon-secret");
+  assert.equal(byName(m, SEAL_BINDING).text, "seal-secret", "a resumed install's credentials replace the kept ones");
+  assert.equal(byName(m, INSTANCE_AI_BINDING).text.length, 16);
+  assert.equal(byName(m, "JURISDICTION_PROFILES").text, "p");
+  assert.equal(byName(m, "SELF"), undefined);
+  assert.ok(byName(m, BINDING_OF.get("pdf-worker")));
+  m = await put({ seal: "new-seal" });
+  assert.equal(byName(m, SEAL_BINDING).text, "new-seal");
+  m = await put({ instanceAi: "short" });
+  assert.equal(byName(m, INSTANCE_AI_BINDING), undefined);
+  w.restore();
+});
+
+const BYTES = Uint8Array.from([...ascii("export default 1;/*"), ...Array.from({ length: 32 }, (_, i) => 0x80 + i), ...ascii("*/")]);
+const multipart = (index, boundary = "bnd") => {
+  const enc = (s) => Buffer.from(s, "latin1");
+  return Buffer.concat([enc(`--${boundary}\r\ncontent-disposition: form-data; name="metadata"\r\n\r\n{}\r\n--${boundary}\r\ncontent-disposition: form-data; name="index.mjs"; filename="index.mjs"\r\n\r\n`),
+    Buffer.from(index), enc(`\r\n--${boundary}--\r\n`)]);
+};
+
+test("R14: a module holding bytes 0x80-0x9F reads back as itself and as a multipart part, and equals the release", async () => {
+  const want = await sha(BYTES);
+  const rel = { version: VERSION, blob: new Blob([BYTES]) };
+  sequence([new Response(BYTES, { headers: { "content-type": "application/javascript+module" } })]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), want);
+  assert.equal(await readBack(session(), "A1", "grp", rel), null);
+  assert.equal(rel.sha, want, "the release's hash is taken once and kept");
+  sequence([new Response(multipart(BYTES), { headers: { "content-type": 'multipart/form-data; boundary="bnd"' } })]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), want);
+  assert.equal(await readBack(session(), "A1", "grp", rel), null);
+  assert.equal(await releaseSha({ blob: new Blob(["x"]) }), await sha("x"));
+});
+
+test("R14: a changed byte is named with the first 16 digits of both hashes, a failed read is named, a read that differs once and then matches is null", async () => {
+  const rel = { version: VERSION, blob: new Blob([BYTES]) };
+  const altered = Uint8Array.from([...BYTES, 33]);
+  sequence([new Response(altered)]);
+  const lag = await readBack(session(), "A1", "grp", rel);
+  assert.ok(lag.includes((await sha(altered)).slice(0, 16)) && lag.includes((await sha(BYTES)).slice(0, 16)) && lag.includes(VERSION));
+  sequence([cferr("trouble", 500)]);
+  const failed = await readBack(session(), "A1", "grp", { version: VERSION, blob: new Blob([BYTES]) });
+  assert.ok(typeof failed === "string" && failed.includes(VERSION) && !/[0-9a-f]{16}…/.test(failed));
+  sequence([new Response(altered), new Response(BYTES)]);
+  assert.equal(await readBack(session(), "A1", "grp", { version: VERSION, blob: new Blob([BYTES]) }), null);
+  for (const odd of [new Response("x", { headers: { "content-type": "multipart/form-data" } }),
+    new Response(multipart(BYTES, "other"), { headers: { "content-type": "multipart/form-data; boundary=bnd" } })]) {
+    sequence([odd]);
+    assert.equal(await scriptHash(session(), "A1", "grp"), null);
+  }
+  sequence([new Error("net")]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), null);
+  assert.equal(hex(new Uint8Array([1, 171]).buffer), "01ab");
+  assert.equal(find(ascii("abcabc"), ascii("ca")), 2);
+  assert.equal(multipartPart(ascii("junk"), "bnd"), null);
+});
+
+async function heldPlane(over = {}) {
+  const rel = await release({ fleet: false });
+  const release_ = await chosen(rel);
+  const held = heldCopy({ slug: "grp", version: VERSION, members: MEMBERS });
+  const w = account({ ...held, preSources: { grp: rel.src }, ...over });
+  return { w, rel, release_ };
+}
+const opts = { names: NAMES, members: MEMBERS, profiles: [] };
+
+test("R15: a held plane equal to R12's upload answers true; with the bytes the same and one binding dropped, false, for each binding in turn", async () => {
+  const { w, release_ } = await heldPlane();
+  const held = (await heldBindings(session(), "A1", "grp")).list;
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, held, opts), true);
+  for (const b of held) {
+    const without = held.filter((x) => x !== b);
+    const expected = ["BROWSER", "CAPTURES", "PUBLISHED", "VERSION", "STORE", "INSTANCE_NAME", "ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN", SEAL_BINDING, "SELF",
+      ...FLEET_BINDINGS.map(([, n]) => n)].includes(b.name) ? false : true;
+    assert.equal(await planeInSync(session(), "A1", "grp", release_, without, opts), expected, b.name);
+  }
+  w.restore();
+});
+
+test("R15: a different version, a different bucket, a wrong kind, a member bound elsewhere, profiles chosen and not held, or different bytes: each false", async () => {
+  const { w, release_ } = await heldPlane();
+  const held = (await heldBindings(session(), "A1", "grp")).list;
+  const swap = (name, patch) => held.map((b) => (b.name === name ? { ...b, ...patch } : b));
+  assert.equal(await planeInSync(session(), "A1", "grp", { ...release_, version: "0.0.1" }, held, opts), false);
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, swap("CAPTURES", { bucket_name: "other" }), opts), false);
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, swap("SELF", { type: "plain_text" }), opts), false);
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, swap(FLEET_BINDINGS[0][1], { service: "elsewhere" }), opts), false);
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, held, { ...opts, profiles: ["us-ca"] }), false);
+  w.sources.set("grp", CAPABLE_SRC + " ");
+  assert.equal(await planeInSync(session(), "A1", "grp", release_, held, opts), false, "identical bindings alone are never already done");
+  w.restore();
+});
+
+test("R15: putSecret sets one secret without an upload; rotateSecrets restates the three credentials and the seal only when not held", async () => {
+  const w = account({ pre: { grp: [{ type: "secret_text", name: SEAL_BINDING }] } });
+  await putSecret(session(), "A1", "grp", "ADMIN_TOKEN", "t");
+  assert.deepEqual(w.secretPuts, ["grp/ADMIN_TOKEN"]);
+  assert.equal(w.puts.length, 0, "no upload");
+  w.secretPuts.length = 0;
+  await rotateSecrets(session(), "A1", "grp", SECRETS, [{ name: SEAL_BINDING }]);
+  assert.deepEqual(w.secretPuts, ["grp/ADMIN_TOKEN", "grp/PROBE_TOKEN", "grp/DAEMON_TOKEN"], "a held seal is not restated");
+  w.secretPuts.length = 0;
+  await rotateSecrets(session(), "A1", "grp", SECRETS, []);
+  assert.deepEqual(w.secretPuts, ["grp/ADMIN_TOKEN", "grp/PROBE_TOKEN", "grp/DAEMON_TOKEN", "grp/ACCOUNT_SEAL_SECRET"]);
+  assert.equal(w.calls.filter((c) => c.init?.body && String(c.init.body).includes(TOK)).length, 0);
+  w.restore();
+});
+
+test("R21: a member's limits, in the shape R10 reads; none stated is null; an unreadable statement is not ok", () => {
+  const stated = `"bio-member-limits/1 cpu_ms=300000"`;
+  assert.deepEqual(memberLimits(stated), { ok: true, limits: { cpu_ms: 300000 } });
+  assert.deepEqual(memberLimits(new TextEncoder().encode(stated)), { ok: true, limits: { cpu_ms: 300000 } });
+  assert.deepEqual(memberLimits("export {}"), { ok: true, limits: null });
+  const two = `"bio-member-limits/1 cpu_ms=1" '"bio-member-limits/1 cpu_ms=2"'`.replace(`'"`, `'`).replace(`"'`, `'`);
+  assert.equal(memberLimits(two).ok, false);
+  const bad = memberLimits(`"bio-member-limits/1 Z=1"`);
+  assert.equal(bad.ok, false); assert.ok(typeof bad.why === "string");
+  assert.equal(memberLimits(`"bio-plane-limits/1 cpu_ms=1"`).limits, null, "the plane's statement is not a member's");
+});
+
+test("R9 (F7): the address is offered before the copy is created, nothing registered; ensureSubdomain then tries exactly the names offered", async () => {
+  const { offerSubdomain } = await import("../../src/steps/index.mjs");
+  let w = account({ subdomain: "held" });
+  assert.deepEqual(await offerSubdomain(session(), "A1", "grp"), { sub: "held", candidates: [] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  const offer = await offerSubdomain(session(), "A1", "grp");
+  assert.equal(offer.sub, null);
+  assert.equal(offer.candidates[0], "grp");
+  assert.match(offer.candidates[1], /^grp-[a-z0-9]{1,4}$/);
+  assert.equal(w.prefix(), "", "nothing is registered by the offer");
+  assert.ok(w.calls.every((c) => c.method === "GET"));
+  const r = await ensureSubdomain(session(), "A1", "grp", offer);
+  assert.deepEqual(r, { sub: offer.candidates[1], registered: offer.candidates[1] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp", { sub: null, candidates: ["grp"] }), /./, "control: only the names offered are tried");
+  w.restore();
+});
+
+test("R14 (R1): the read-back waits out a 429 and a 503 as every call does, and a 401 asks for approval again", async () => {
+  const rel = { version: VERSION, blob: new Blob([BYTES]) };
+  const waits = [];
+  const calls = sequence([cferr("slow down", 429), cferr("trouble", 503), new Response(BYTES)]);
+  assert.equal(await readBack(session((w, b) => waits.push([w, b])), "A1", "grp", rel), null);
+  assert.equal(calls.length, 3);
+  assert.equal(waits.length, 2, "each wait announced");
+  sequence([cferr("Invalid access token", 401, 9109)]);
+  await assert.rejects(scriptHash(session(), "A1", "grp"), (e) => e instanceof ApproveAgain && e.approveAgain === true);
+  const one = sequence([cferr("nope", 404)]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), null);
+  assert.equal(one.length, 1, "a refusal that waiting cannot mend is not repeated");
+  sequence([cferr("trouble", 503)]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), null, "a failure that never mended reads as nothing readable");
+});

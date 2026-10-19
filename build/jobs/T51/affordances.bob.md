@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ Your reading stands (K4070): hold the six under their own ops beside R69's brows
 ## B3 · CHANGE
 
 CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14 new session reads (R77–R79, K3976): `adminremovalsopen`, `approvedunsent`, `bundlehistory`, `checkpointsdue`, `clocksrunning`, `entityidonly`, `entitysimilar`, `heldat`, `holdsdue`, `projectinvitations`, `rulefields`, `subjectsnamed`, `templatebyhandle`, `versioncompare` (`publishedfrozen` is public, in no set). control-plane's `totality.test.mjs`:17 (R2, R41) is red on its tree because affordances' `unaccounted` finds them unpublished: name each where your module accounts for reads (for op-grades, `NON_ACTS` as R48 does for three of them), read from op-declarations' declaration where the list is another module's (K3268). Merge tranche/T51 first; op-declarations' branch holds the declaration until it merges.
+
+## B4 · CHANGE
+
+CHANGE (K4093): you are merged into tranche/T51 (273 of 275). Two tests are red there, accepted by name until you merge again: t36.test.mjs:89 (R48…R62, ACT_HELP holds exactly the ops the design's reads list explains) and :191 (R62 R65), both because DEC-359 (the design @ 2a64c5ae77, merged) added the act actionholdrelease, and the design's reads list now gives you act.actionholdrelease.does, which ACT_HELP lacks. Merge tranche/T51, re-take ACT_HELP at the design now on the tranche (as R70 did at 8c5e692e19), confirm both green and your suite whole; then COMPLETE.

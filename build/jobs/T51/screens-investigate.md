@@ -1,0 +1,52 @@
+# screens-investigate (T51)
+
+**Status** · session_0146dGPcD3Eun2HP73CZiCwq · depth 2 · COMPLETE · handled B5
+
+## J1 · QUESTION
+
+QUESTION (R41 against the plan entry T51-120 and DEC-338). R41 says an ordinance's and an office's page draws no "Ties a member declared" (`relationdeclare` not offered on those kinds, "reported to BOB"). The entry T51-120 says the page does draw it, with `screen.person.ties.none.ordinance` / `.office` (DEC-336 (3), DEC-338 (1)); `words.json` holds those two keys, noted "DEC-338: B326 1: an ordinance's page, under Ties a member declared; the act is relationdeclare". My best reading: the design moved on after R41 was worded, so both pages draw "Ties a member declared" with `relationdeclare` and the two "None yet" sentences. That is what I built. If R41 stands, the change is small (drop `tiesSec` from the non-person page). Please amend R41's text, or tell me to drop it.
+
+## J2 · COMPLETE
+
+COMPLETE · screens-investigate · T51-120 applied in full; one inherited-text conflict asked (J1), eight words findings are identifiers reported below.
+
+**Entries applied**
+- The nine inherited reds are cleared. Seven compared a refusal's builder `detail`: each now compares with `word("refusal.<CODE>")`. `explore.test.mjs`:159 (the attached hop's date) and `person.test.mjs`:89 (the expunge statement's day) compared a date by a regex/format the kit no longer draws: both use `dayOf`.
+- R40/R42 `people`: the Show choice offers the nine values (`both`, `people`, `organisations`, `offices`, `ordinances`, `contracts`, `funds`, `sources`, `everything`); a kind other than people or organizations draws `screen.people.other.note`, `.other.heading` and one row for each subject (kind word, note, holders `screen.people.today.heldby`, count or `counts.none`, no Explore); none of the kind draws no heading and no sentence of ours. With such a kind in view "Add" is state g: name, kind (no proceeding), aliases one per line, required note; `entitysimilar` is asked once a name is typed (by a half-second poll of the field, see Report 3) and its answer drawn under `screen.people.addother.preflight` with `people.nearmatch.*`; "Follow it" sends `entitycreate` with `kind`, `label`, `aliases`, `note` and the new subject opens.
+- R41 `person`: the subject read is `entity` (`found: false` the absence); `person` and `samepersoncandidates` are read (`PARTS.later`, once the entity names a person or organization, again after each act through `view.ui.pn`) and for a subject of any other kind are not read. That page: title, note, kind word, documents named, Explore only where a document names it, "Where the record cites it" (`concerns`, the strongest grade as one mark, a place only where stated; an office has none), "Who has held it" for an office (`linesof` kind `holds`, direction `to`), and "What the team says about it" (other names, ties, and for an ordinance the documents that may name it). No facts, no career, no "Add a fact".
+- R43: an unnamed node draws `connection.node.unnamed` and, when `entityidonly` counts documents above 0, `screen.explore.unnamed.why` (one call, at most 500 ids, graph on `explore`, `person`, `money` and the chains each read their own ids); a count of 0 or a failed read draws no line. A hop is worded `screen.explore.hop` with a name of each end, `.hop.unnamed` for an end with no name.
+- R44: an undetermined fact's reason, a cluster's, a hop's, a path's, a timeline item's `grade_why` and a valid-line's reason are drawn by `PARTS.why` through `word(key, vars)` (an owner's reason with its own key and fills, a nested reason likewise); a bare string draws `state.undetermined` over `people.why.owner_settle_validity`. The keys are listed from the word list's families (`people.why.`, `people.identity_cluster_cache*`, `lines.why.`, `events.why.`, `civil-time.`), `whywords.mjs`.
+- R45: a finding's state by key with `progression.finding.state.help`; the six step labels in order above the Define and Revise step fields, `progression.steps.help` and `progression.revise.help`.
+- R46: pages already counted from one with a page 0 drawn (`!== undefined`); tests now name it (person, explore, concerns' place, the assertion form's typed 1 sends page 0).
+- R47: the proceeding's kind is a choice among `affordances`' `proceeding_kinds` for the forum; the held four-kind list is gone; no key draws the choice failed, `[]` or none for the forum draws empty and sends nothing.
+- R48: a person with no connections draws `person.graph.none`, no graph and no "Explore connections".
+- Words: K3996 (timeline `grade_why`, `{key, vars}`) and K4036 (`sequence`'s `why` in the fixture is a key) done; the fixture's copied sentences ("every value was counted", record names that sat in word rows, the owners' kind words) no longer copy; `node checks/words.mjs` over the whole tree names my module only on the eight lines in Report 1.
+- Pages and `Ties` on the other kinds follow the entry and DEC-338: see QUESTION J1.
+
+**Deferred** none.
+
+**Report (for BOB)**
+1. Eight words findings are identifiers, not sentences: `"declared, not evidenced"` is the wire value of a hop's `label` and of `marks[].mark` that `explore` and `connection-grammar` answer, compared by code at `explore.mjs`:81, :114 and `parts.mjs`:139 and answered by the fixtures (`fixtures.mjs`:56, :57, `graph.test.mjs`:71). The member never reads it (`screen.explore.declared` is the word). BOB settles it with the design stream (K3944).
+2. The option words of People's Show choice for the other kinds ("Offices", "Ordinances", "Contracts", "Funds and programs", "Sources") and of the add form's kinds ("An ordinance", "A contract", "A fund", "A program", "A place", "A parcel", "A source") are not keyed. I used the held `find.row.kind.*` words (Office, Ordinance, Contract, Fund, Program, Place, Parcel, Source), singular, as the stand-ins; ask UX-DESIGN for the plural and "An ..." rows. How the state g form is reached when only people and organizations are in view is not drawn: it opens when a kind other than those is chosen in Show.
+3. `interface-shell` has no typed-input hook. R42 says the near-match is asked "as she types": the screen polls the field with `cs.later(500)` and asks when the name changes. A shell event on a text field's `input` would replace the poll.
+4. `op-declarations`' `OPS` does not hold `entitysimilar` or `entityidonly` (the entities module serves both). The screens call them as reads (`cs.call`), so the harness is happy; whether a real served page lets a read through without an `OPS` row is for `op-declarations` (T51-107) and `interface-shell` to settle before release.
+5. `concerns` answers no title for a document, only a capture digest and bundle; the page names a document by the `heldcaptures` title where the member holds it, else by the kit's "the source passage". It states no place either, so "section 2.20.190" and a page are drawn only where an answer states one.
+6. The module imports no owner's `REASON_KEYS` (no `modules.json` edge): the keys of reasons come from the word list's families by prefix. A reason family an owner adds outside those prefixes would draw `state.undetermined`; if `civil-time` publishes keys outside `civil-time.`, tell me.
+7. In another module: `bio-plane/test/m/interface-shell/t50.test.mjs`:446 (R83) fails at the tranche tip: it expects `NO_AMOUNT` to be uncatalogued and the refusal now has a word (`interface-shell`'s test). `answer-envelope`'s `page-policy.test.mjs` imports `signpage.mjs` of `control-plane` (architecture check).
+8. Found in my own module and fixed: the claim form's basis menu defaulted to the first value while the form behaved as if `testimony` were chosen (the document choices appeared only after a second redraw); it now starts at `testimony`.
+
+**Tests and checks** (from `bio-plane`): `node --test test/m/screens-investigate/`: 155 pass, 0 fail (it was 140 pass, 9 fail at the START). The tests of the modules that name my module (`plane/t47`, `plane/t50`, `op-declarations/t50`, `control-plane/t46-app`, `people/why`) pass; `interface-shell/t50` fails on a case not mine (Report 7). From the process repository: `format` 0 failures; `architecture screens-investigate` 0 failures (the one failure over the whole tree is answer-envelope's); `coverage screens-investigate` 48 of 48 live ids named by a test, 0 failures; `ownership … tranche/T51 job/T51/screens-investigate` 21 files, 0 failures; `words` over the whole tree names my module on the eight lines of Report 1 only; `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match words.json and the source.
+
+Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 38, module lines 2,855
+
+## J3 · COMPLETE
+
+COMPLETE (re B3, K4084): merged tranche/T51; People's Show choice and the add form's kinds now read the design's keys (screen.people.show.offices..sources, screen.people.add.kind.office..source) in place of the find.row.kind stand-ins. 155 pass, 0 fail; format, architecture, coverage (48/48), ownership 0 failures; words names this module only on the eight "declared, not evidenced" lines (now unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 41, module lines 2,855
+
+## J4 · COMPLETE
+
+COMPLETE (re B4, K4093): merged tranche/T51; no local stand-in of a provider was held. The one stand-in was the near-match poll: it now uses the shell typing hook (the name field carries `typing`), poll removed. Suite against the real providers: 155 pass, 0 fail; format, architecture, coverage 48/48, ownership 0 failures; words names this module only on the three "declared, not evidenced" fixture lines (unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 44, module lines 2,845
+
+## J5 · COMPLETE
+
+COMPLETE (re B5, K4096): merged tranche/T51. The three test copies are gone: the declared-step marker the providers answer is built in fixtures.mjs (DECLARED) and graph.test.mjs uses it. words for this module: 0 failures; suite 155 pass, 0 fail. Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 46, module lines 2,851

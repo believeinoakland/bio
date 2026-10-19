@@ -2660,6 +2660,308 @@
     "text": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
     "why": "the Content-Security-Policy header value: wire grammar (B364, L11)"
    }
+  ],
+  "instance-setup": [
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 68,
+    "text": "creation with base null succeeds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 74,
+    "text": "update with correct base succeeds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 79,
+    "text": "the lost-update floor, on real storage",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 89,
+    "text": "live state is the winning revision",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 92,
+    "text": "history holds the superseded revision",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 93,
+    "text": "the verbatim promotion record is projected",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 96,
+    "text": "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 101,
+    "text": "oversize inline refused at the write",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 104,
+    "text": "canary nonce survived the round trip",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 105,
+    "text": "proves the battery actually wrote and read real storage",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 114,
+    "text": "lease returns live sha as edit base",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 116,
+    "text": "second actor denied while lease holds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 141,
+    "text": "no configured token is a published repository value",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 142,
+    "text": "no configured token is shorter than 16 characters",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 155,
+    "text": "one bucket bound without the other breaks the fence",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 966,
+    "text": "this module had already started on this storage",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 1012,
+    "text": "no producers to register with",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 1022,
+    "text": "no public-read to register with",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   }
+  ],
+  "screens-investigate": [
+   {
+    "file": "bio-plane/src/screens-investigate/explore.mjs",
+    "line": 81,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   },
+   {
+    "file": "bio-plane/src/screens-investigate/explore.mjs",
+    "line": 114,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   },
+   {
+    "file": "bio-plane/src/screens-investigate/parts.mjs",
+    "line": 139,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   }
+  ],
+  "interface-shell": [
+   {
+    "file": "bio-plane/src/interface-shell/browser.mjs",
+    "line": 1683,
+    "text": "-----BEGIN SSH SIGNATURE-----\n{}\n-----END SSH SIGNATURE-----\n",
+    "why": "the SSH signature armour: wire grammar (B371 2, INTERFACE-SHELL T51-113)"
+   }
+  ],
+  "journey-check": [
+   {
+    "file": "bio-plane/src/journey-check/investigation.mjs",
+    "line": 155,
+    "text": "document: its first page reads Page 1",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/investigation.mjs",
+    "line": 167,
+    "text": "document: the capture states no page, so none is drawn",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/investigation.mjs",
+    "line": 335,
+    "text": "assistant not ready: the connect screen",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/investigation.mjs",
+    "line": 344,
+    "text": "assistant not ready: the question's dock",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/investigation.mjs",
+    "line": 345,
+    "text": "assistant not ready: the Ask screen",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/journeys.mjs",
+    "line": 197,
+    "text": "setup: claim; she is the team's first administrator",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/journeys.mjs",
+    "line": 212,
+    "text": "setup: her ten recovery codes, shown once",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/journeys.mjs",
+    "line": 328,
+    "text": "capture: her first testimony, labelled as hers",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/journeys.mjs",
+    "line": 472,
+    "text": "sign: /sign answers the nothing-is-here page",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/published.mjs",
+    "line": 21,
+    "text": "published: no case on this instance",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/published.mjs",
+    "line": 46,
+    "text": "published: a minimum strength, the filtered view and the way back",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/published.mjs",
+    "line": 61,
+    "text": "published: a finding's page, and back",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/published.mjs",
+    "line": 68,
+    "text": "published: Print the case, the browser's print stubbed",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/run.mjs",
+    "line": 127,
+    "text": "assistant not ready: her connect screen",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/run.mjs",
+    "line": 233,
+    "text": "assistant not ready: her connect screen",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/run.mjs",
+    "line": 283,
+    "text": "the live arm needs the test instance's address (--live <address>)",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/run.mjs",
+    "line": 365,
+    "text": "no screen draws the administrator an act it does not draw the member: the administrator's walk did not administer",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/runner.mjs",
+    "line": 94,
+    "text": "no token was handed down",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/runner.mjs",
+    "line": 99,
+    "text": "the token is not one this sign-in minted",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/runner.mjs",
+    "line": 100,
+    "text": "the local arm's runner has no fake model bound",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 16,
+    "text": "an owner preparing a notice",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 17,
+    "text": "an owner whose notice is published",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 18,
+    "text": "a project the member is not in",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 23,
+    "text": "concluded on a member's own reading",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 27,
+    "text": "the date passed with no reply",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 29,
+    "text": "a member who may read and not act",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   },
+   {
+    "file": "bio-plane/src/journey-check/states.mjs",
+    "line": 30,
+    "text": "other things the record follows",
+    "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+   }
   ]
  }
 }

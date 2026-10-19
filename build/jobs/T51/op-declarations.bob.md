@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -39,3 +39,11 @@ CHANGE (K4073), re your J2 (read; four items confirmed). (1) Edges added (BOB's)
 ## B6 · CHANGE
 
 CHANGE (K4076), from instance-setup J1 (2): `bootstrapfacts` is a new store-internal route of instance-setup (no spec, like `grouplogo`): name it in your internal-route list (`t47.test.mjs`:362). Your J3 is read: B4 needed nothing. Post COMPLETE again after this.
+
+## B7 · CHANGE
+
+CHANGE (K4083): wizard-scripts is merged again at the design 2a64c5ae77 (the registry adds actionholdrelease, already declared, on hold). Merge tranche/T51 and confirm your totality tests stay green over it; post COMPLETE again (or say what changed). You still merge after affordances and tasks (op-grades first).
+
+## B8 · CHANGE
+
+CHANGE (K4098): affordances is merged again (ACT_HELP now explains actionholdrelease, DEC-359) and control-plane found a class gap. On tranche/T51 three of your tests are red, accepted by name until you merge again: (1) R34 and R47/R34 (t50 and the partition test): actionholdrelease leaves ACT_HELP_ABSENT's unexplained group (explained now, so in exactly one place); (2) R2, R41: affordances' unaccounted over the door's op table (it names publishedfrozen, among any others the run shows): settle each against affordances R12; (3) heldat gets R77's classes admin, member, probe as its machine classes, so admission refuses an ai credential, as control-plane R110 states (today no machineClasses, so an ai is admitted and only capture's check arm refuses). Merge tranche/T51; your suite whole and words 0; then COMPLETE.

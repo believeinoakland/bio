@@ -55,7 +55,7 @@ test("R4 a filter keeps only the rows with something undetermined (its address),
 });
 
 test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a paid one), authoritychain, include/exclude with a reason, gradenote, acquire, findin, recordfact, actioncreate, createevent, checkrequest, hypothesishold", async () => {
-  const p = await open(at, { plane: { moneyreconcile: undefined, reconcile: ok({ ok: true, consistent: false, amounts: "differ", differs: [{ dimension: "basis" }, { dimension: "phase or stage" }] }),
+  const p = await open(at, { plane: { moneyreconcile: undefined, reconcile: ok({ ok: true, consistent: false, amounts: "differ", differs: [{ dimension: "basis" }, { dimension: "phase_stage" }] }),
     authoritychain: ok({ ok: true, found: true, chains: [] }), exclude: ok({ ok: true }), include: ok({ ok: true }), gradenote: ok({ captureSha: SHA, note: "Grade B: bytes as fetched." }),
     acquire: ok({ ok: true }), checkrequest: ok({ ok: true, addressed: 2 }), hypothesishold: ok({ ok: true }), createevent: ok({ ok: true, event_id: "EVT-9" }) } });
   let panel = await openPanel(p, M1);
@@ -63,7 +63,7 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   await press(p, "reconcile", { within: panel });
   assert.deepEqual([p.byOp("reconcile")[0].query.a, p.byOp("reconcile")[0].query.b], [M1, M2]);
   panel = panelOf(p, M1);
-  drew(panel, "screen.money.rec.differs", { dims: "basis, phase or stage" });
+  drew(panel, "screen.money.rec.differs", { dims: "basis, phase_stage" });
   await press(p, "authoritychain", { within: panel });
   assert.equal(p.byOp("authoritychain")[0].query.id, M1);
   drew(panelOf(p, M1), "screen.money.auth.none");
@@ -153,7 +153,7 @@ test("R4 a refused act is drawn beside it, nothing else changed (control)", asyn
   const p = await open(at, { plane: { exclude: refusedIn("NO_SUCH_SET", "There is no such trail.") } });
   const panel = await openPanel(p, M1);
   await press(p, "exclude", { within: panel, reason: "x" });
-  assert.ok(panelOf(p, M1).textContent.includes("There is no such trail."), "the refusal by its words");
+  assert.ok(panelOf(p, M1).textContent.includes(word("refusal.NO_SUCH_SET")), "the refusal by its words");
 });
 
 test("R34 the money trail's figure form chooses the document by title and sends its digest; no field asks for a fingerprint or a page number by itself", async () => {

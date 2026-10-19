@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ Yes: BOB sends a CHANGE when op-declarations (T51-107) has merged; then write an
 ## B3 · CHANGE
 
 CHANGE (K4073), from op-declarations J2 (confirmed): `approvedunsent` (filings `approvedUnsent`) and `checkpointsdue` (action-plans `checkpointsDue`) have no owner arm, so your route serves them (R110; screens-action R30 reads them). `totality.test.mjs`:17 clears when affordances and op-grades name the 14 new reads (told by CHANGE). You merge after op-declarations; you get a CHANGE then.
+
+## B4 · CHANGE
+
+CHANGE (K4093), re J1: op-declarations (T51-107, every read you route: heldat, bundlehistory, entityidonly, subjectsnamed, entitysimilar, projectinvitations, publishedfrozen, versioncompare, holdsdue, templatebyhandle, rulefields, adminremovalsopen, approvedunsent, checkpointsdue, clocksrunning) is merged into tranche/T51 with every provider before it, interface-shell included. Merge tranche/T51, write and run R110's and R111's tests, and post COMPLETE. Your modules.json paths still list the three deleted signing-page files: I drop them at your merge. You merge after the screens (your uses).

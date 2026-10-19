@@ -67,7 +67,7 @@ test("R19, R26, R28, R31, R50: docket-core-due is refused KIND_NOT_PERSONAL by k
     assert.deepEqual([r.ok, r.reason, r.kind_class, r.check, r.translation],
       [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27", QUEUE_ACT_CHECKS.KIND_NOT_PERSONAL.translation]);
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c + w.all(`SELECT count(*) c FROM queue_item_mutes`)[0].c, 0);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, ITEMS.core.id, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice', ?, 'OBLIGATION', ?)`, ITEMS.core.id, iso(NOW));
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-A','docket-core-due')`);
   const f = w.feed("alice");
   assert.ok(byId(f)[ITEMS.core.id], "rows naming it suppress none");

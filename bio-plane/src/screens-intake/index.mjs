@@ -49,6 +49,12 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.capture.tab.file", "screen.capture.tab.saw", "screen.capture.tabs", "shell.unread",
     "capture.finish", "capture.forquestion", "capture.forquestion.help", "capture.forquestion.refused.summary",
     "capture.unfinished", "document.untitled.web", "refusal.BAD_FOR", "screen.capture.forq",
+    "refusal.uncatalogued", "screen.held.untitled", "screen.capture.openit", "screen.capture.openit.help", "screen.capture.leaveit",
+    "screen.capture.leaveit.help", "screen.capture.a64.already_in_the_record_as", "screen.capture.a64.the_site_still_gives_the_same_document",
+    "screen.capture.a64.the_site_has_changed_since", "screen.capture.a64.your_team_holds_a_capture_from_14_septem",
+    "screen.capture.a64.capturing_it_again_keeps_the_new_copy_be", "screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un",
+    "screen.capture.a64.capture_the_new_copy", "state.loading", "screen.capture.a64.captured_by", "screen.capture.a64.nothing_added",
+    "screen.capture.a64.undetermined",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
@@ -104,7 +110,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.open-file.weekly", "screen.open-file.why", "shell.unavailable.home", "shell.unavailable.nothing.says",
     "shell.unavailable.nothing.title", "refusal.NO_SAFE_VIEW", "screen.open-file.check.notyet", "screen.open-file.high.yours",
     "screen.open-file.next.head", "screen.open-file.next.yours", "screen.open-file.safetext", "screen.open-file.safetext.cut",
-    "shell.unread",
+    "shell.unread", "screen.open-file.digest.checked", "refusal.DIGEST_MISMATCH", "refusal.DIGEST_MISMATCH.unheld",
   ]),
   inbox: Object.freeze([
     "act.inboxpull.label.inbox", "act.inboxresolve.label.inbox", "act.sourcelink.label.inbox",

@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K4076), from instance-setup (INSTANCE-SETUP #25 J1, J2; confirmed). (1) instance-setup R95: `bootstrapOp(..., {caller})` states seven facts only to a credentialed caller; the plane's `publicOp` (`plane/door.mjs`:45) passes none. Hand it the caller as the control plane resolved it (`{cls: "admin"}` for an admin-class token, `{administrator: true}` for an administrator's session), with a test and a control (no caller: R132's key set only). (2) `door.test.mjs`:140 counts instance-setup's routes: 45 now (the store-internal `bootstrapfacts`). Merge tranche/T51 (instance-setup's branch until it merges), apply, run your suite, post COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4098), from control-plane's J2 (2): controlPlaneOwnerOps needs the filings and actionPlans getters so control-plane's owner arms for approvedunsent (filings R53) and checkpointsdue (action-plans R17) reach their owners: hand them, as the other owner getters are handed, with a test that both ops answer through the plane. Merge tranche/T51 (much of L11 is merged now: op-declarations, interface-shell, the screens but daily and inquiry); re-run your suite; then COMPLETE. You still merge after control-plane.

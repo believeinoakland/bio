@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, silent, pending } from "../interface-shell/harness.mjs";
-import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, PATHS, dayOf, word, drew, notDrew } from "./fixtures.mjs";
+import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, PATHS, DECLARED, dayOf, word, drew, notDrew } from "./fixtures.mjs";
 
 const graphOf = (p) => main(p).querySelector(".mk-graph");
 
@@ -27,7 +27,7 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.doesNotMatch(g.textContent, /ENT-2026-\d+/, "no node is drawn by its id");
   drew(g, "connection.thing.person", undefined, "the near end of a position is a person");
   assert.deepEqual(g.querySelectorAll("svg .gchip text").map((t) => t.textContent).sort(), ["B", "C"], "each line carries its grade's letter");
-  assert.ok(g.textContent.includes("mentioned together") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
+  assert.ok(g.textContent.includes("co-mentioned") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
   drew(g.querySelector("[data-limit]"), "connection.graph.limit", undefined, "the stop is drawn at its node");
   drew(g.querySelector(`[data-limit="${ORG}"]`), "connection.graph.limit.means");
   assert.ok(g.querySelector(".cs-ref[data-tip], .cs-card[data-tip]"), "the citation");
@@ -68,7 +68,7 @@ test("R18 control: a step the read does not answer (a hidden hop) is not drawn o
 
 test("R18 a declared step is drawn \"declared, not evidenced\" as a lead and a hunch as a hunch, never as evidence", async () => {
   const g = GRAPH();
-  g.steps[0] = { ...g.steps[0], kind: "proxy_for", word: "proxy for", class: "declared", label: "declared, not evidenced", grade: { assertion: "D", ends: ["D", "D"] }, evidence: [] };
+  g.steps[0] = { ...g.steps[0], kind: "proxy_for", word: "proxy for", class: "declared", label: DECLARED, grade: { assertion: "D", ends: ["D", "D"] }, evidence: [] };
   g.steps[1] = { ...g.steps[1], kind: "hunch_of", word: "suspected", class: "hunch", label: "hunch", grade: null, evidence: [] };
   const p = await open("/app/explore/" + ENT, { plane: { exploregraph: ok(g) } });
   const m = graphOf(p);
@@ -105,7 +105,7 @@ test("R18 the money trail draws the graph with the trail's set as the centre; a 
 
 test("R35 a step_source step shows who attached the source and when beside its citation and offers stepsourcewithdraw; control: a step of another kind shows neither", async () => {
   const gr = GRAPH();
-  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "stated in a source", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
+  gr.steps = gr.steps.concat([{ id: "REL-9", from: ENT, to: GRAPH_PERSON, kind: "step_source", word: "step sourced", class: "evidentiary", attached_by: "member:mai", at: "2026-10-05T09:00:00Z", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA }], valid: {} }]);
   const p = await open(PATHS.explore, { plane: { exploregraph: ok(gr), stepsourcewithdraw: ok({ ok: true }) } });
   const g = graphOf(p);
   drew(g, "screen.explore.attached", { by: "mai", date: dayOf("2026-10-05") });

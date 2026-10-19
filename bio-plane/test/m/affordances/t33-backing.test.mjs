@@ -7,24 +7,13 @@ import assert from "node:assert/strict";
 import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS } from "../../../src/op-grades/t33.mjs";
 
-/* Each op driven below, by its owner; the last test holds this list to t33.mjs. */
-const DRIVEN = [
-  "participantcorrect", "eventmerge", "eventsplit", "eventrelationwithdraw",
-  "linewithdraw",
-  "moneywithdraw", "moneysetinclude", "moneysetexclude",
-  "dutyrevise", "dutywithdraw", "dutymatch", "dutytransition",
-  "identityclaim", "identitywithdraw", "personfactwithdraw", "personexpunge", "membertiewithdraw", "sourcepersonlink",
-  "hypothesisrevise", "hypothesiswithdraw",
-  "moneyingest",
-  "workbookunbind", "workbooklintexplain", "workbookmethodnote",
-  "lawrelate", "lawwithdraw", "courtlink", "courttreat",
-  "entityidentify",
-  "airunverify",
-];
+/* Each op driven below, by its owner, is recorded as it is driven; the last test holds the ops driven to those `t33.mjs` grades
+   `reasoned`, so no list of them is held here and a new `reasoned` op in the table that no test drives is seen. */
+const DRIVEN = new Set();
 
 /* The backing of one op: graded `reasoned`; without its account refused with `code`, in the family; with it accepted. */
 function backed(op, code, refused, accepted) {
-  assert.ok(DRIVEN.includes(op), op);
+  DRIVEN.add(op);
   assert.equal(RUNGS[op], "reasoned", op);
   const r = refused;
   const got = r?.code ?? r?.reason;

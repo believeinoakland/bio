@@ -1,0 +1,73 @@
+/* R10, R21: the limits the signed release states for the plane and for each member, read from the verified bytes. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { ascii, find } from "./bytes.mjs";
+
+/* R20 (DIST-15, N336) — THE PLANE'S LIMITS, AS THE SIGNED RELEASE STATES THEM.
+ *
+ * DIST-7 sent a constant pinned to the plane's config, so an installer installing a later release with another ceiling
+ * still sent its own. Now the plane's code states its limits (control-plane's statement, equal to `bio-plane/wrangler.jsonc`'s
+ * `limits`), so the bundle a release signs carries them, and this reads them from the bytes R8 chose and verified: the
+ * installer holds no value of its own. The statement is a string literal, `bio-plane-limits/1 key=n …`, because a bundler
+ * rewrites numbers, renames constants and changes quotes, and a string's text survives all three; the bundle cannot be
+ * executed here (a Worker imports no string), so it is read as text. Nothing is added to the fleet statement: the
+ * limits ride inside the plane bytes the release signature and the fleet statement's plane hash already cover, so an
+ * older installer still verifies the fleet signature of a release that carries them.
+ *
+ * `{ok: true, limits}`; or `{ok: false, why: "none"}` (no statement); or `{ok: false, why: "unreadable", detail}` (two
+ * different statements, or one not of the form). */
+/* One reader for both statements: the plane's (`bio-plane-limits/1`, R20) and a fleet member's (`bio-member-limits/1`,
+   R39). The tag is matched as a whole quoted string, so neither statement is ever read as the other. */
+/* `source` is the module as text, or as bytes (a release's verified download, which is never decoded to text: R33); the
+   statements are found the same way in both. */
+const QUOTES = new Set([34, 39, 96]);                      /* " ' ` */
+const STATEMENT_STOP = new Set([34, 39, 96, 92, 10]);      /* a quote, a backslash, a newline end a statement's text */
+function statementsInBytes(bytes, tag) {
+  const pat = ascii(tag), bodies = new Set();
+  for (let i = find(bytes, pat); i !== -1; i = find(bytes, pat, i + 1)) {
+    const q = i > 0 ? bytes[i - 1] : -1, from = i + pat.length;
+    if (!QUOTES.has(q) || bytes[from] !== 32) continue;
+    let k = from;
+    while (k < bytes.length && !STATEMENT_STOP.has(bytes[k])) k++;
+    if (bytes[k] === q) bodies.add(new TextDecoder().decode(bytes.subarray(from, k)));
+  }
+  return bodies;
+}
+function statedLimits(source, tag) {
+  const isBytes = source instanceof Uint8Array;
+  if (typeof source !== "string" && !isBytes) return { ok: false, why: "none" };
+  let bodies = new Set();
+  if (isBytes) bodies = statementsInBytes(source, tag);
+  else {
+    const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
+    for (const m of source.matchAll(re)) bodies.add(m[2]);
+  }
+  if (bodies.size === 0) return { ok: false, why: "none" };
+  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: `statements=${bodies.size}` };
+  const [body] = bodies;
+  const limits = {};
+  let last = "";
+  for (const part of body.slice(1).split(" ")) {
+    const kv = /^([a-z][a-z0-9_]*)=([1-9][0-9]{0,8})$/.exec(part);
+    if (!kv || kv[1] <= last) return { ok: false, why: "unreadable",
+      detail: `form="${tag}${body}"` };
+    limits[(last = kv[1])] = Number(kv[2]);
+  }
+  return { ok: true, limits: Object.freeze(limits) };
+}
+export const planeLimits = (source) => statedLimits(source, "bio-plane-limits/1");
+/* The key each `why` of a refused release is said by (the installer, which knows the version, draws the sentence). */
+const LIMITS_NOT_STATED = Object.freeze({ none: "installer.release.nolimits", unreadable: "installer.release.badlimits" });
+
+/* R39 (N621; K1686, K1731; `sheet-worker` R17) — A FLEET MEMBER'S LIMITS, AS ITS SIGNED BUNDLE STATES THEM. A member's
+   bundle, fetched and hashed against the fleet statement (R11), may state its own limits as one string
+   `bio-member-limits/1 key=n …`, read exactly as R20 reads the plane's. `{ok: true, limits}` (null when it states none:
+   uploaded with none, as before), or `{ok: false, why}` in words (the member is left out, named). Nothing is added to the
+   fleet statement: the limits ride inside the member bytes the statement's hash already covers. */
+export function memberLimits(bytes) {
+  const source = typeof bytes === "string" ? bytes : new TextDecoder().decode(bytes);
+  const lim = statedLimits(source, "bio-member-limits/1");
+  if (lim.ok) return lim;
+  if (lim.why === "none") return { ok: true, limits: null };
+  return { ok: false, why: word("installer.fleet.why.limits") };
+}
+export { LIMITS_NOT_STATED, statedLimits };

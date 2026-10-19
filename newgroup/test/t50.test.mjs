@@ -8,14 +8,15 @@ import { fileURLToPath } from "node:url";
 import * as installer from "../src/index.mjs";
 import { CFG } from "../src/index.mjs";
 import { word, hasWord, KEYS } from "../src/words.mjs";
-import { WAIT_BOUND_MINUTES } from "../src/cfx.mjs";
+import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { ASSISTANT_NEEDS, ASSISTANT_OFFER } from "../src/ui.mjs";
-import { partsLeftOut } from "../src/images.mjs";
+import { partsLeftOut, leftOutNotice } from "../src/images.mjs";
+import { IMAGE_UNPULLABLE } from "../src/steps/images.mjs";
 import { RELEASE_VERSION, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { FLEET_BINDINGS, HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 import { WORD_ROWS } from "../../bio-plane/src/setup-words/rows.mjs";
 import { req, run, begin, cookieValue, release, armWith, restoreSigners, SIGNER, bump, heldCopy, heldCopies, DESCRIPTOR, DEFAULT_VERSION,
-  CAPABLE_SRC, RUNNER, SCANNER, SCANNER_CLASSES, bindingOf, jres } from "./fixture.mjs";
+  CAPABLE_SRC, RUNNER, SCANNER, SCANNER_CLASSES, bindingOf, jres, headOf, like } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -31,6 +32,10 @@ const metaOf = async (w, name) => {
 const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
   { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
   { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" }, { type: "service", name: "SELF", service: slug }];
+/* The installer's own counts from Cloudflare's API, as the exists page and the removal page say them (R63, R76: a plural pair by the number). */
+const counted = ({ workers, containers, captured, published }) => [word(`installer.fallback.programs.${workers === 1 ? "one" : "other"}`, { n: workers }),
+  word(`installer.fallback.containers.${containers === 1 ? "one" : "other"}`, { n: containers }), word(`installer.fallback.captured.${captured === 1 ? "one" : "other"}`, { n: captured }),
+  word(`installer.fallback.published.${published === 1 ? "one" : "other"}`, { n: published })].join(", ");
 const TEAM = { team_name: "Lakeshore Tenants", installed_at: "2026-09-01T10:00:00Z", last_used_at: "2026-10-10", count_projects: 3, count_documents: 412,
   count_published: 1, count_members: 6 };
 
@@ -49,8 +54,8 @@ test("R57 no page ties the assistant to a container: the Containers permission i
     const sentences = strip(page).split(/(?<=[.!?])\s+/);
     for (const s of sentences) assert.ok(!(/\bassistant\b/i.test(s) && /\bcontainers?\b/i.test(s)), `a sentence ties the assistant to a container: ${s}`);
   }
-  assert.match(strip(pages[0]), /Claude plan with cloud sessions, which an organi[sz]ation can turn off/);
-  assert.match(ASSISTANT_NEEDS, /Claude plan with cloud sessions/);
+  assert.ok(strip(pages[0]).includes(word("installer.assistant.needs")), "the assistant's prerequisite is a Claude plan with cloud sessions");
+  assert.equal(ASSISTANT_NEEDS, word("installer.assistant.needs"));
   assert.ok(ASSISTANT_OFFER.length > 0);
   /* agent-runner is installed as R38 says; left out, it is named with its reason and nothing the assistant lacks. */
   const left = [{ member: RUNNER, class_name: "AgentRunner", image: "ghcr.io/x/agent-runner@sha256:" + "a".repeat(64) }];
@@ -58,7 +63,8 @@ test("R57 no page ties the assistant to a container: the Containers permission i
   /* Control: a container member that provides something (file-scanner) is named with what the copy then lacks. */
   const scanner = [{ member: SCANNER, class_name: "FileScanner", image: "ghcr.io/x/file-scanner@sha256:" + "b".repeat(64) }];
   assert.deepEqual(partsLeftOut(scanner).map((p) => p.member), [SCANNER]);
-  assert.match(partsLeftOut(scanner)[0].lacks, /no file scanner and no safe view/);
+  assert.equal(partsLeftOut(scanner)[0].why, IMAGE_UNPULLABLE);
+  assert.ok(strip(leftOutNotice(scanner, "9.9.9")).includes(word("installer.image.lacks.scanner")), "what the copy then lacks");
 });
 
 /* ------------------------------------------------------------------------------------------------ R59 */
@@ -133,7 +139,7 @@ test("R61 every part comes from one release's own signed fleet statement: the bu
      bytes) installs no member, each named for its integrity. */
   const paired = await run({ slug: "r61-paired", rel: await release({ version: RELEASE_VERSION }), builtInFleet: true });
   for (const m of MEMBERS) assert.ok(!paired.acct.has(`${m}-r61-paired`), m);
-  assert.match(paired.page.label("fleet"), /failed its integrity check/);
+  assert.match(paired.page.label("fleet"), like("installer.fleet.why.integrity"));
   assert.ok(paired.page.done, "the plane still installed");
   /* Control: a member the statement does not name is not installed, whatever the repository serves. */
   armWith(SIGNER.line);
@@ -198,15 +204,19 @@ test("R63 the page draws whose it is, its release and what it holds as that copy
   const asked = known.calls.filter((c) => c.u.includes("mine-one.grp.workers.dev"));
   assert.equal(asked.length, 1);
   assert.equal(asked[0].init?.headers?.authorization, undefined);
-  /* An older copy that states the release alone: the counts it does not state are not known, said "older". */
+  /* A copy that answers without a fact (an older release, or one that withholds the facts from a caller with no credential, R95): the fact is
+     not known, and nothing is claimed of its release (K3864): `.short`, never `.older`. */
   const older = await run({ slug: "other-two", ...h, copy: { held: { "mine-one": { team_name: "Old Team" } } } });
   const po = strip(older.page.done);
-  assert.ok(po.includes(word("installer.fact.unknown", { reason: word("installer.fact.unknown.older") })));
+  assert.ok(po.includes(word("installer.fact.unknown.installed", { reason: word("installer.fact.unknown.short") })));
+  assert.ok(po.includes(word("installer.fact.unknown.counts", { reason: word("installer.fact.unknown.short") })));
+  assert.ok(!po.includes(word("installer.fact.unknown.older")) && !po.includes(word("installer.fact.unknown.silent")), "a copy that answered is never said not to have, nor to be older");
   /* Control: a silent copy: each fact not known with the reason; the installer's own counts in place of the team's; the three ways. */
   const silent = await run({ slug: "other-two", ...h, copy: { silent: true }, objects: { "bio-captures-mine-one": ["a", "b", "c"] } });
   const ps = strip(silent.page.done);
-  assert.ok(ps.includes(word("installer.fact.unknown", { reason: word("installer.fact.unknown.silent") })));
-  assert.match(ps, /4 Workers, 0 container applications, 3 objects in its evidence storage, 0 objects in its published storage/, "the installer's own counts from Cloudflare");
+  assert.ok(ps.includes(word("installer.fact.unknown.counts", { reason: word("installer.fact.unknown.silent") })));
+  assert.ok(ps.includes(word("screen.install.exists.holds", { holdings: counted({ workers: 4, containers: 0, captured: 3, published: 0 }) })), "the installer's own counts from Cloudflare");
+  assert.ok(ps.includes(word("installer.fallback.note")), "and the team's own were not available");
   assert.ok(ps.includes(word("screen.install.exists.update.name")) && ps.includes(word("screen.install.exists.alongside.name")) && ps.includes(word("screen.install.exists.remove.name")));
   assert.deepEqual(writes(silent), []);
 });
@@ -242,7 +252,7 @@ test("R64 installing alongside uses names no other copy holds: two installs into
   /* Control: a slug a copy already holds is refused before anything is created. */
   const clash = await run({ slug: "first-one", alongside: true, rel, pre: firstState, preBuckets: [...first.buckets], preClasses: Object.fromEntries(first.classes) });
   assert.equal(clash.page.status("fresh"), "no");
-  assert.equal(clash.page.failed.h, word("screen.install.stopped.nametaken", { name: "first-one" }));
+  assert.equal(clash.page.failed.said, word("screen.install.stopped.nametaken", { name: "first-one" }));
   assert.deepEqual(writes(clash), []);
   /* Control: a copy under the older fixed names is no collision and is neither read nor changed. */
   const legacy = heldCopy({ slug: "old-one", scheme: "legacy" });
@@ -269,8 +279,8 @@ test("R65 removal is guided, confirmed and complete: the page lists what would b
   assert.match(view.page.done, /id="confirm-remove"[^>]*disabled/, "the act is disabled until the short name is typed");
   /* A silent copy lists the installer's own counts, and says the team's own were unavailable. */
   const silent = await run({ slug: "mine-one", mode: "remove", ...h, copy: { silent: true }, objects: { "bio-captures-mine-one": ["a", "b"] } });
-  assert.match(strip(silent.page.done), /4 Workers, 0 container applications, 2 objects in its evidence storage/);
-  assert.ok(strip(silent.page.done).includes(word("installer.fact.unknown", { reason: word("installer.fact.unknown.silent") })));
+  assert.ok(strip(silent.page.done).includes(counted({ workers: 4, containers: 0, captured: 2, published: 0 })));
+  assert.ok(strip(silent.page.done).includes(word("installer.fact.unknown.counts", { reason: word("installer.fact.unknown.silent") })));
   /* Only the typed short name, exactly, reaches the removal. */
   for (const typed of ["", "mine-on", "MINE-ONE", "mine-one "]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "mine-one", mode: "removeconfirm", typed }) });
@@ -287,10 +297,12 @@ test("R65 removal is guided, confirmed and complete: the page lists what would b
     assert.ok(gone.removed.includes(name), `${name} deleted`);
   assert.ok(gone.page.events.filter((e) => e.k === "ok" && e.label).some((e) => e.label === word("installer.remove.progress", { what: "mine-one" })), "each deletion is named");
   assert.ok(gone.page.done.includes(word("act.bootstrap.label.install")) && gone.page.done.includes('id="after-remove"'), "the new install is offered");
+  assert.ok(strip(gone.page.done).includes(word("installer.removed.what", { team: "mine-one" })) && strip(gone.page.done).includes(word("installer.removed.next")), "what was removed, and that the account is clear");
+  assert.equal(gone.page.says, word("installer.remove.done", { n: gone.removed.filter((x) => x !== "bio-install-lock").length }), "how many parts were deleted");
   /* A refusal names what remains, and the rest stays. */
   const refused = await run({ slug: "mine-one", mode: "removeconfirm", typed: "mine-one", ...h, refuseDelete: ["pdf-worker-mine-one"] });
   assert.ok(refused.acct.has("pdf-worker-mine-one"), "the refused resource remains");
-  const text = `${refused.page.failed?.h ?? ""} ${refused.page.failed?.p ?? ""} ${refused.page.failed?.d ?? ""} ${strip(refused.page.words)}`;
+  const text = `${refused.page.failed?.said ?? ""} ${refused.page.failed?.d ?? ""} ${strip(refused.page.words)}`;
   assert.ok(text.includes("pdf-worker-mine-one"), "the stop names what remains");
   assert.ok(!refused.page.done || !refused.page.done.includes('id="after-remove"'), "the new install is not offered while a resource remains");
 });
@@ -317,7 +329,7 @@ test("R66 waits are sized for a cold start and never report a not-yet-ready step
   }
   /* One that never comes right within the bound is a lasting failure, in plain words with one action. */
   const dead = await run({ slug: "r66-dead", cfFlaky: { status: 503, times: 100000, path: "/r2/buckets", method: "POST" } });
-  assert.equal(dead.page.failed.h, word("screen.install.stopped.lasting"));
+  assert.equal(dead.page.failed.said, word("screen.install.stopped.lasting"));
   assert.equal(dead.page.failed.d, word("screen.install.stopped.lasting.do"));
   assert.deepEqual([...dead.buckets], [], "nothing half-made");
 });
@@ -332,7 +344,7 @@ test("R67 'done' is judged by the whole deployed state: an upload with identical
     return h;
   };
   const same = await run({ slug: "sync-one", ...stateOf(null), preSources: { "sync-one": CAPABLE_SRC } });
-  assert.equal(same.page.label("install"), "Your team's Civicsmith's software is already in place, exactly as this release has it");
+  assert.equal(same.page.label("install"), word("installer.install.inplace"));
   assert.equal(same.planePuts.length, 1, "only the last restatement of the plane, no upload at the install step");
   assert.ok(same.secretPuts.includes("sync-one/ADMIN_TOKEN"), "its credentials are stated by secret, not by upload");
   /* Control: the same bytes with a binding missing are applied. */
@@ -357,7 +369,7 @@ test("R67 'done' is judged by the whole deployed state: an upload with identical
   assert.ok(strip(restarted.page.done).includes(word("installer.update.done.title")));
   /* Control: an update whose new version does not answer is not reported done, and the copy is put back where it was. */
   const silent = await run({ slug: "upd-silent", mode: "update", rel, pre: { "upd-silent": planeBase("upd-silent") }, silentAddress: true });
-  assert.match(silent.page.failed.h, /^Stopped: the new version didn't answer once it was uploaded/);
+  assert.equal(silent.page.failed.said, word("installer.update.stopped.noanswer", { version: word("installer.update.unread") }), "the release before could not be read either: the address is silent");
   assert.deepEqual(silent.rolledBack.map((r) => r.name), ["upd-silent"], "put back through the deployments API");
   assert.ok(!silent.page.done, "never reported done");
   restoreSigners();
@@ -375,8 +387,7 @@ test("R68 an update that left a container's old image running is not done: the d
   /* The platform answers "no changes" and the other image stays: refused as not done, naming the member. */
   const kept = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: stale } }], rolloutKeepsImage: true });
   assert.equal(kept.page.status("verify"), "no");
-  assert.ok(kept.page.done.includes("the container agent-runner of your team&#39;s Civicsmith still runs another image"), "named");
-  assert.ok(kept.page.done.includes("sha256:ffffffffffff") && kept.page.done.includes("sha256:aaaaaaaaaaaa"), "with both digests");
+  assert.match(kept.page.done.replace(/&#39;/g, "'"), like("installer.image.lag.older", { name: RUNNER }), "named");
   assert.ok(!strip(kept.page.done).includes(word("installer.update.done.title")), "never reported as success");
   /* Control: the matching digest is accepted. */
   const match = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: DESCRIPTOR.image } }] });
@@ -389,7 +400,7 @@ test("R68 an update that left a container's old image running is not done: the d
   const silentPart = await run({ ...common, preApps: [{ id: "app9", name: RUNNER, configuration: { image: DESCRIPTOR.image } }],
     copy: { bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "agent-worker": { state: "SILENT" } } }) } });
   assert.equal(silentPart.page.status("verify"), "no");
-  assert.ok(silentPart.page.done.includes("cannot get an answer from the capability worker agent-worker"));
+  assert.match(silentPart.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.silent", { name: "agent-worker" }));
   assert.ok(!strip(silentPart.page.done).includes(word("installer.update.done.title")));
   restoreSigners();
 });
@@ -424,11 +435,11 @@ test("R69 every step is resumable, partial states are detected, one install runs
   /* One at a time: a run that finds another's lock, touched a moment ago, says so and changes nothing. */
   const lock = { "bio-install-lock": [{ type: "plain_text", name: "T", text: String(Date.now()) }, { type: "plain_text", name: "ID", text: "another-run" }] };
   const second = await run({ slug: "second-run", rel, pre: lock });
-  assert.equal(second.page.failed.h, word("screen.install.stopped.running"));
+  assert.equal(second.page.failed.said, word("installer.stopped.running"));
   assert.deepEqual(writes(second), [], "changes nothing");
   assert.deepEqual([...second.acct.keys()], ["bio-install-lock"]);
   const upd = await run({ slug: "second-upd", mode: "update", rel, pre: { ...lock, "second-upd": planeBase("second-upd") } });
-  assert.equal(upd.page.failed.h, word("screen.install.stopped.running"));
+  assert.equal(upd.page.failed.said, word("installer.stopped.running"));
   assert.equal(upd.planePuts.length, 0);
   /* Control: a lock nobody has touched for longer than it lives belongs to a run that died. */
   const stale = await run({ slug: "after-dead", rel, pre: { "bio-install-lock": [{ type: "plain_text", name: "T", text: String(Date.now() - 10 * 60 * 1000) }] } });
@@ -446,16 +457,16 @@ test("R69 every step is resumable, partial states are detected, one install runs
 
 test("R70 what is missing is found before anything is created: a free-plan account, a Containers-off account, an account at its worker limit and a taken name each stop before a write, naming the cause and that nothing was created; control: a clean account passes all four", async () => {
   const stops = [
-    ["plan", { plan: "free" }, word("screen.install.stopped.plan"), word("screen.install.stopped.plan.do")],
+    ["plan", { plan: "free" }, word("screen.install.stopped.plan") + " " + word("installer.install.stopped.plan.why"), word("screen.install.stopped.plan.do")],
     ["containers", { containersOff: true }, word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do")],
-    ["limit", { pre: Object.fromEntries([...Array(496)].map((_, i) => [`other-${i}`, []])) }, word("screen.install.stopped.limit", { limit: "500 Workers" }), word("screen.install.stopped.limit.do")],
+    ["limit", { pre: Object.fromEntries([...Array(496)].map((_, i) => [`other-${i}`, []])) }, word("screen.install.stopped.limit", { limit: word("installer.limit.workers.other", { n: 500 }) }), word("screen.install.stopped.limit.do")],
     ["name", { pre: { "taken-name": [] } }, word("screen.install.stopped.nametaken", { name: "taken-name" }), word("screen.install.stopped.nametaken.do", { free: "taken-name-2" })],
   ];
   for (const [why, opts, head, doo] of stops) {
     const w = await run({ slug: why === "name" ? "taken-name" : "pre-" + why, ...opts });
-    assert.equal(w.page.failed.h, head, why);
-    assert.ok(`${w.page.failed.p} ${w.page.failed.d}`.includes(doo), `${why}: the way out`);
-    assert.match(`${w.page.failed.h} ${w.page.failed.p} ${w.page.failed.d}`, /[Nn]othing was created/, why);
+    /* R70, R75: the cause, and the way out beside it (the keys that say nothing was created hold it themselves). */
+    assert.equal(w.page.failed.said, head, why);
+    assert.equal(w.page.failed.d, doo, `${why}: the way out`);
     assert.deepEqual([...w.buckets], [], `${why}: nothing exists afterwards`);
     assert.ok(![...w.acct.keys()].some((k) => /^pre-|-pre-/.test(k)), why);
     /* Before a write: no write to the account other than the plan probe the plan check itself makes (deleted again) and the lock. */
@@ -486,13 +497,13 @@ test("R71 a lost source or consent ends with a named stop and nothing half-made:
   assert.ok(flaky.page.done);
   assert.ok(flaky.page.waits.length >= 1, "the wait is drawn");
   const down = await run({ slug: "r71-down", rel: null, builtInFleet: true, sourceDown: true });
-  assert.equal(down.page.failed.h, word("screen.install.stopped.source"));
+  assert.equal(down.page.failed.said, word("screen.install.stopped.source"));
   assert.equal(down.page.failed.d, word("screen.install.stopped.source.do"));
   assert.deepEqual([...down.acct.keys()], [], "no resource created");
   assert.deepEqual([...down.buckets], []);
   /* The grant expires mid-install, after the plane stands: the founder is asked to approve again. */
   const first = await run({ slug: "r71-grant", expireAfter: 36 });
-  assert.equal(first.page.failed.h, word("screen.install.approveagain"));
+  assert.equal(first.page.failed.said, word("screen.install.approveagain"));
   assert.ok(first.planePuts.length >= 1 && !first.page.done?.includes("out-boot"), "stopped part way, after the plane");
   const body = JSON.parse(first.page.done.match(/data-begin="([^"]*)"/)[1].replace(/&quot;/g, '"'));
   assert.equal(body.slug, "r71-grant");
@@ -511,11 +522,11 @@ test("R71 a lost source or consent ends with a named stop and nothing half-made:
   /* Control: a second run that does not name the run it continues finds the lock the first could not drop, and says so. */
   const bare = await begin("r71-grant", "install");
   const blocked = await run({ slug: "r71-grant", cookie: bare.cookie, state: bare.state, ...state });
-  assert.equal(blocked.page.failed.h, word("screen.install.stopped.running"));
+  assert.equal(blocked.page.failed.said, word("installer.stopped.running"));
   /* The continuation is a name, not a key: one that does not match the lock's owner does not take it. */
   const wrong = await begin("r71-grant", "install", { lock: "not-the-owner" });
   const refused = await run({ slug: "r71-grant", cookie: wrong.cookie, state: wrong.state, ...state });
-  assert.equal(refused.page.failed.h, word("screen.install.stopped.running"));
+  assert.equal(refused.page.failed.said, word("installer.stopped.running"));
   assert.equal((await req("/begin", { method: "POST", body: JSON.stringify({ slug: "r71-grant", lock: "bad lock!" }) })).status, 200, "a malformed continuation is dropped, not stored");
 });
 
@@ -558,9 +569,9 @@ test("R72 words by key and 'team': every key the installer reads is held by setu
   const arr = text.slice(at + "WORD_ROWS = Object.freeze(".length, text.indexOf("].map(", at) + 1);
   const rows = (await import("node:vm")).runInNewContext("(" + arr + ")");
   const keep = new Set(await bundledKeys());
-  assert.ok(rows.length > 100 && rows.length < 400, `${rows.length} rows, not the whole list`);
-  assert.deepEqual(Array.from(rows, (r) => r[0]).filter((k) => !keep.has(k)), [], "no row the installer does not read");
   assert.ok(WORD_ROWS.length > 5000);
+  assert.ok(rows.length > 100 && rows.length < WORD_ROWS.length / 5, `${rows.length} rows, not the whole list`);
+  assert.deepEqual(Array.from(rows, (r) => r[0]).filter((k) => !keep.has(k)), [], "no row the installer does not read");
   for (const k of KEYS) assert.ok(rows.some((r) => r[0] === k), `${k} is in the bundle`);
 });
 
@@ -591,24 +602,23 @@ test("R73 the one-time password is introduced as one-time: the finished panel ho
 test("R15 R38 (K3793) a container member R38 leaves out (images on ghcr.io, which an account cannot pull) is named once at the fleet step with why and what the copy lacks, and is no lag: the install and the update confirm when every other member serves; control: a member whose upload fails still holds the verdict, and the verdict names it", async () => {
   armWith(SIGNER.line);
   const ghcr = (n, c) => `ghcr.io/believeinoakland/${n}@sha256:${c.repeat(64)}`;
-  const why = "this release's image is not yet published where your Cloudflare account can pull it";
   const rel = await release({ version: NEXT, container: true, descriptor: { ...DESCRIPTOR, image: ghcr("agent-runner", "a") }, scanner: true,
     scannerParts: { "container/FileScanner.json": { ...SCANNER_CLASSES[0], image: ghcr("file-scanner-scanner", "d") },
       "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: ghcr("file-scanner-renderer", "e") } } });
   for (const [mode, pre] of [["install", {}], ["update", { "r15-ghcr": planeBase("r15-ghcr") }]]) {
     const w = await run({ slug: "r15-ghcr", mode, rel, pre });
     const said = w.page.label("fleet");
-    for (const m of [RUNNER, SCANNER]) assert.ok(said.includes(`${m} (${why}`), `${mode}: ${m} named once at the fleet step with R38's reason`);
+    for (const m of [RUNNER, SCANNER]) assert.match(said, like("installer.fleet.left.item", { member: m, why: like("installer.fleet.why.unpullable") }), `${mode}: ${m} named once at the fleet step with R38's reason`);
     assert.equal(said.split(`${SCANNER} (`).length - 1, 1, `${mode}: file-scanner named once`);
-    assert.match(said, /no file scanner and no safe view/, `${mode}: what the copy lacks`);
+    assert.match(said, like("installer.image.lacks.scanner"), `${mode}: what the copy lacks`);
     assert.equal(w.page.status("verify"), "ok", `${mode}: the verdict confirms (${w.page.words})`);
     assert.ok(w.page.done, `${mode}: finished`);
-    assert.ok(!/could not be installed/.test(w.page.done), `${mode}: neither member is a lag`);
+    assert.doesNotMatch(w.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.failed", { name: /\S+/ }), `${mode}: neither member is a lag`);
     for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(`${m}-r15-ghcr`), `${mode}: ${m} serves`);
   }
   /* Control: a member whose upload is attempted and fails stays a lag, and the verdict holds. */
   const failed = await run({ slug: "r15-failed", rel: await release({ version: NEXT, missing: "ocr-worker" }) });
   assert.equal(failed.page.status("verify"), "no");
-  assert.ok(failed.page.done.includes("ocr-worker could not be installed"));
+  assert.match(failed.page.done.replace(/&#39;/g, "'"), like("installer.lag.member.failed", { name: "ocr-worker" }));
   restoreSigners();
 });

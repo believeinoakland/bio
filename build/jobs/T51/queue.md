@@ -1,0 +1,41 @@
+# queue (T51)
+
+**Status** · session_01DggByiBck91qKoo2zJ1P66 · depth 2 · COMPLETE · handled B2
+
+## J1 · QUESTION
+
+Best reading, no waiting on it: K4065's fix (the test world runs project-roster's `migrate()`) needs `bio-plane/test/m/queue/world.mjs` to import `project-roster`, and `checks/architecture.mjs` refuses it: "world.mjs (queue): imports bio-plane/src/project-roster/index.mjs of project-roster, which queue does not declare in uses". `build/modules.json` is yours: please add `project-roster` to queue's `uses` (it is a test-only use; queue-producers, which queue composes, already uses it for R41/R42). With it the 29 inherited reds are green (queue suite 180 pass, 0 fail here). If you would rather not widen `uses`, tell me another door to the roster's `migrate()` and I will use it. Everything else is applied; I am finishing the record and will COMPLETE once the architecture check can pass.
+
+## Completion (QUEUE #26, T51-104)
+
+**Entries applied** (`build/plan/current.md` T51-104):
+- **R58** muted row `{item, class, kind, title, at}`: `queue_item_mutes` gains `item_kind`, `item_title`, `item_subject` (schema and `migrate()`); the item form looks the item up once among her feed's items (`#liveItem`) and stores its kind, its subject's title (R56) and the subject's id; a re-mute keeps what the row held; a row with no kind reads the id's second segment only where `classOfKind` names it a kind of the row's class, else null; a title whose subject the viewer may no longer see is not answered (R33).
+- **R59** `queueFeed({answered: true})`: `{ok, answered, count, window_days, bound, truncated}` with `resolved`, `forwarded`, `snoozed`, `set_aside` rows (`queue.answered.left` dropped: nothing here names it). `queue_state` gains `snoozed_at`. Readings I took: a `resolved` row for a member is a to-do assigned to her, unassigned, or resolved by her (literal reading of R59), and every settled bias debt R39 shows (`bias.settled` names no recipient, so it cannot be narrowed); `forwarded` is one row per forward entry by her, `to` the task's assignee only for its latest forward; a `set_aside` row also carries `project` (null for an instance decision), beyond R59's list.
+- **R60** `feeds` (21 rows: `tasks`, the 19 feed ids of queue-producers R45, `notice-producers`), `all_answered`, `classes_answered`, `all_clear`. `feeds[].failed` is the list of codes the feed named (R45's `reason`s, or notice-producers' failed producer names). The class table (`Queue.QUEUE_FEEDS`) is queue's reading of which classes each feed can raise, over-stated where a feed raises several (that only withholds an all-clear); a feed id R45's list does not know gets a row raising every class. A reader not composed (notice-producers without `noticeItems`, or `facts.absent`) is not answered. queue-producers does not yet publish `facts.failed` / `facts.absent` at this tranche tip (its R45 is not met), so the consumer reads them defensively and every producer feed is `answered: true` until it does; tested with stubbed facts.
+- **R61** `queueFeed({aside: true, after, limit})`: `{ok, aside, count, next, truncated}` over both scopes, newest first then scope, project, finding; instance rows from `progressions.proposalsFeed`'s `dispositions[]` (version it judged), project rows from `finding_dispositions` (`definition_version: null`, no column added); opaque cursor; a row whose project or a bundle its finding's id names the viewer may not see is left out. `title` of a project row is the first visible bundle the finding's id names (a finding's id has no fixed subject segment), null for an instance row (its subject is a progression stage). The route and the door pass `answered`, `aside`, `after`; `queueAnswer` passes the three lists through undecorated.
+- **Words** (K3949, K3957, K3962): the 2 findings, the 11 `plain` and the 3 test copies fixed; also every other refusal `detail` and sentence the answers carried inline in `index.mjs` (exploreapprove, member-left-items, tension-after-publication, NO_SUCH_KIND, resolved block, BAD_KIND, BAD_UNTIL, UNTIL_IN_PAST, NO_REASON, NO_CASE, age) by `localize('queue.index.<slug>')`; the five plain catalogue sentences in `queuestate.mjs` by `localize('queue.queuestate.<slug>')`; `link-verdict-changed` reads the design's row `queuestate.link_verdict_changed`. Tests: `t50` asserts the muted keys one by one, `words.test.mjs` takes its sample from the catalogue. `node checks/words.mjs` over queue: 0 failures; over every module: no line names queue.
+- **K4065**: `world.mjs` runs project-roster's `migrate()` (the 29 reds, green). Needs `project-roster` in queue's `uses` (J1).
+- Stale comments (K3839): the `civicos-ui` mentions in `index.mjs` and `queuestate.mjs` reworded.
+- Test-only: every positional `INSERT INTO queue_item_mutes` in the suite names its four columns now that the table has seven.
+
+**Deferred**: none.
+
+**Found in other modules**:
+- queue-producers: R45's `facts.failed` / `facts.absent` are not published yet (not met at the tip); queue's R60 is ready for them as `[{feed, reason}]` and `[feed id]` (strings are read as ids). Its own words findings (about 14 inline, plain) are its job's.
+- tasks: a `forwarded` history entry names no recipient (R59's `to` is null for an earlier forward, as R59 says); no change asked.
+- Feed ids with no word key (REPORT, never inline English): of R45's ids the word table holds only `queue.allclear.failed` (for `sources`); none of `tasks`, `bias-debts`, `proposals`, `shared-inquiries`, `leads`, `exports`, `references`, `objectives`, `machinery`, `contradictions`, `signing-keys`, `action`, `attribution`, `docket`, `cited-cases`, `wizards`, `schedule`, `places`, `projects` has a key (the table holds `queue.feed.<provider>` keys for other names, and `queue.feed.notice-producers`).
+- Catalogue sentences: the values of `QUEUE_OBLIGATION_KINDS`, `QUEUE_FINDING_KINDS`, `QUEUE_CONDITION_KINDS` that carry ids, ops or "LIVE:" notes are developer catalogue text no member reads (only their keys leave the module; R1 says the words members see are the design's, `queue.kind.<kind>`); the five plain ones the check counted are converted so the check is clear, the others are not hidden and not flagged.
+- Reds met outside queue at the tranche tip, identical with my changes stashed: `answer-envelope` 4 (R7/R13/R15 pins), `plane` 1 (R11, R5 local-facts and filing-templates routes). Not mine.
+
+**Tests and checks** (all from `/home/user/bio`, process repo at its tip):
+- `node --test bio-plane/test/m/queue/`: 180 pass, 0 fail (was 164 pass, 29 red at K4065; plus `t51.test.mjs`, 16 tests for R58–R61). `bio-plane/test/conclude-project.test.mjs`: 1 pass. `store-door`: 48 pass.
+- `node checks/format.mjs`: 0 failures. `node checks/coverage.mjs … queue`: 51 of 51, 0 failures. `node checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures. `node checks/words.mjs … queue`: 0 failures.
+- `node checks/architecture.mjs … queue`: 1 failure, the `project-roster` import above (J1); every other import declared.
+- After K4070 (project-roster in uses) architecture passes: 0 failures; queue suite 180 pass.
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (my new `queue.index.*` and `queue.queuestate.*` ids), as expected.
+
+Size (session_01DggByiBck91qKoo2zJ1P66): test runs 12, module lines 3264
+
+## J2 · COMPLETE
+
+T51-104 applied: R58-R61, words (0 findings in queue), K4065 world. Queue suite 180 pass; format, architecture, coverage, ownership, words all 0 failures. Details, readings taken and REPORT items (feed ids with no word key, queue-producers R45 not yet published) are in the record.

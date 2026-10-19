@@ -68,10 +68,12 @@ test("R1 identityclaim \"Say another record is this person\" with its basis and 
   assert.deepEqual(p.byOp("identityclaim")[0].body, { a: ENT, b: "ENT-2026-0019", kind: "same_as", basis: "testimony", note: "I met both at the same meeting" });
   assert.equal(p.byOp("person").length, 2, "after the claim the screen reads the person again");
   const q = await open(at, { plane: { identityclaim: refusedIn("IDENTITY_GRADE_UNEARNED", "That basis does not earn this grade.") } });
-  fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-doc-a": SHA, "person-claim-doc-b": SHA, "person-claim-note": "same name" });
+  fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name" });
+  q.fire(q.doc.getElementById("person-claim-basis"), "change");
+  fill(q, { "person-claim-doc-a": SHA, "person-claim-doc-b": SHA, "person-claim-note": "same name" });
   await press(q, "identityclaim");
   assert.equal(q.byOp("identityclaim")[0].body.evidence.a.captureSha, SHA);
-  assert.ok(main(q).textContent.includes("That basis does not earn this grade."), "the refusal by its words");
+  assert.ok(main(q).textContent.includes(word("refusal.IDENTITY_GRADE_UNEARNED")), "the refusal by its words");
   assert.equal(q.doc.getElementById("person-claim-note").value, "same name");
 });
 
@@ -89,7 +91,7 @@ test("R1 followregister: a register the person appears in (control: an address t
 test("R1 personexpunge: the consequence statement (op-grades R21) filled with the day and the member, the reason naming the law or order, the Irreversible weight, a dialog before anything is sent", async () => {
   const p = await open(at, { ...admin, plane: { personexpunge: ok({ ok: true, removed: 1 }) } });
   const d = main(p).querySelector('[data-consequence="personexpunge"]');
-  const day = /\d+ \w+ \d{4}/.exec(d.querySelector(".ends").textContent)[0];
+  const day = dayOf(new Date().toISOString().slice(0, 10));
   assert.equal(d.querySelector(".ends").textContent, word("screen.person.expunge.statement", { date: day, member: "rosa" }), "the statement, filled with the day and the member");
   const b = button(p, "personexpunge");
   assert.ok(b.textContent.includes(word("weight.irreversible.name")));
@@ -166,13 +168,13 @@ test("R32 (1) control: an organization's page words it for an organization; writ
 
 test("R32 (2) every fact recorded is listed: valid today, then those whose validity is not stated or settled (marked undetermined with the reason and the source), the withdrawn in a fold with who, when and why", async () => {
   const base = PERSON();
-  const nostate = { fact_id: "PFA-2026-0008", member: ENT, kind: "birth", value: "1971", valid: null, citation: { captureSha: SHA, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: "no validity is stated" } };
-  const unsettled = { fact_id: "PFA-2026-0009", member: ENT, kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: "2021-01-01" }, citation: { captureSha: SHA2, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: "the owner cannot settle it" } };
+  const nostate = { fact_id: "PFA-2026-0008", member: ENT, kind: "birth", value: "1971", valid: null, citation: { captureSha: SHA, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: { key: "people.why.validity_stated", vars: {} } } };
+  const unsettled = { fact_id: "PFA-2026-0009", member: ENT, kind: "address", value: "9 Elm St", valid: { from: "2020-01-01", to: "2021-01-01" }, citation: { captureSha: SHA2, extent: { kind: "document" } }, grade: "C", withdrawn: null, undetermined: { why: { key: "people.why.record_settle_order", vars: {} } } };
   const gone = { fact_id: "PFA-2026-0003", member: ENT, kind: "contact", value: "old@example.org", valid: null, citation: null, grade: "D", withdrawn: { by: "member:mai", at: "2026-10-05T09:00:00Z", reason: "a typo" } };
   const p = await open(at, { plane: { person: ok({ ...base, undetermined: [nostate, unsettled], facts: [...base.facts, gone] }) } });
   const f = secOf(p, "screen.person.facts");
   drew(f, "screen.person.facts.undetermined", { reason: word("people.why.validity_stated"), document: "Lease amendment 1" });
-  drew(f, "screen.person.facts.undetermined", { reason: "the owner cannot settle it", document: "Rent schedule" });
+  drew(f, "screen.person.facts.undetermined", { reason: word("people.why.record_settle_order"), document: "Rent schedule" });
   assert.ok(f.textContent.includes("1971") && f.textContent.includes("9 Elm St"), "none dropped");
   assert.ok(f.querySelectorAll(".cs-gap").length >= 2, "each marked undetermined");
   drew(f, "screen.person.facts.withdrawn", { n: "1" });
@@ -232,8 +234,9 @@ test("R38 the withdraw fold asks its reason before it sends; a basis other than 
   const p = await open(at, { plane: { withdrawidentityclaim: ok({ ok: true }) } });
   await press(p, "withdrawidentityclaim", { el: button(p, "withdrawidentityclaim") });
   assert.equal(p.byOp("withdrawidentityclaim").length, 0, "no reason, nothing sent");
+  assert.equal(p.doc.getElementById("person-claim-doc-a"), null, "control: testimony, the default, names no document");
   fill(p, { "person-claim-basis": "identifier" });
-  await p.click(p.doc.getElementById("person-claim-basis"));
+  p.fire(p.doc.getElementById("person-claim-basis"), "change");
   assert.equal(p.doc.getElementById("person-claim-doc-a") === null, false, "a basis other than testimony chooses a document for each record");
 });
 
@@ -243,4 +246,68 @@ test("R39 a claim of each basis draws screen.person.basis.row.<basis>; the form'
   const p = await open(at, { plane: { person: ok(PERSON({ claims })) } });
   const s = secOf(p, "screen.person.same");
   for (const b of bases) { drew(s, "screen.person.same.because", { grade: "A", basis: word("screen.person.basis.row." + b) }); assert.ok(!s.textContent.includes(word("screen.person.basis." + b))); }
+});
+
+/* R41, R44, R46, R48 (T51-120) */
+const ORDINANCE = "ENT-2026-0400", OFFICE = "ENT-2026-0401";
+const kindEntity = (id, kind, label, extra = {}) => ok({ ok: true, found: true, entity: { entity_id: id, kind, label, note: "The city's rule on tenant notices", aliases: [
+  { alias: label, canonical: true, declared_by: "machine:roster", at: "2026-09-01T09:00:00Z", withdrawn: null },
+  { alias: "Chapter 8.22", canonical: false, declared_by: "member:mai", at: "2026-10-01T09:00:00Z", withdrawn: null }], relations: [], ...extra } });
+const CONCERNS = (docs) => ok({ ok: true, entity_id: ORDINANCE, found: true, count: docs.length, documents: docs, limit: 200, truncated: false });
+
+test("R41 an ordinance opens its own page: its note, kind and documents, \"Where the record cites it\" with each document's grade, its alias and a document that may name it; no person read, no facts, no career (control: a person's page is unchanged)", async () => {
+  const docs = [{ capture_sha: SHA, bundle_id: null, ref: "r1", grade: "B", established: true, extent: { kind: "pdf-page", page: 0 } }, { capture_sha: SHA2, bundle_id: null, ref: "r2", grade: "C" }];
+  const p = await open("/app/person/" + ORDINANCE, { plane: { entity: kindEntity(ORDINANCE, "ordinance", "Tenant Notice Ordinance"), concerns: CONCERNS(docs),
+    readingname: ok({ ok: true, documents: [{ capture_sha: SHA2, ref: "r9", label: "Council packet", matched_alias: "Chapter 8.22", page: 4 }] }) } });
+  assert.equal(p.byOp("person").length, 0, "no person read is made for it");
+  assert.equal(p.byOp("samepersoncandidates").length, 0);
+  const m = main(p);
+  assert.equal(m.querySelector("h1").textContent, "Tenant Notice Ordinance");
+  drew(m, "find.row.kind.ordinance");
+  drew(m, "screen.people.counts", { list: word("screen.people.count.documents", { n: "2" }) });
+  const cited = secOf(p, "screen.person.cited");
+  assert.equal(cited.querySelectorAll(".cs-grade").length, 2, "each document's grade as one mark");
+  assert.ok(cited.textContent.includes(word("screen.person.page", { page: "1" })), "the place, one-based (R46)");
+  assert.ok(secOf(p, "entity.alias.title").textContent.includes("Chapter 8.22"));
+  assert.ok(secOf(p, "entity.naming.title"), "a document that may name it");
+  assert.ok(button(p, "explore"), "explore where a document names it");
+  for (const k of ["screen.person.positions", "screen.person.facts", "screen.person.same"]) assert.equal(secOf(p, k), undefined, k);
+  assert.equal(button(p, "recordpersonfact"), null);
+  assert.ok(button(p, "relationdeclare"), "the ties part, DEC-338");
+  drew(secOf(p, "entity.relation.title"), "screen.person.ties.none.ordinance");
+  const q = await open(at);
+  assert.ok(q.byOp("person").length >= 1 && secOf(q, "screen.person.positions") && secOf(q, "screen.person.facts"), "a person's page is unchanged");
+});
+
+test("R41 an office draws who has held it (the holders, their dates, source and grade) and not 'Where the record cites it'; a subject no document names draws the empty sentence and no explore", async () => {
+  const line = (from, valid) => ({ line_id: "LIN-" + from, kind: "holds", from, to: OFFICE, valid, assertion: "B", basis: { form: "passage", captureSha: SHA, extent: { kind: "pdf-page", page: 2 } }, withdrawn: null });
+  const p = await open("/app/person/" + OFFICE, { plane: { entity: kindEntity(OFFICE, "office", "City Clerk"), concerns: CONCERNS([]),
+    linesof: ok({ ok: true, entity: OFFICE, direction: "to", count: 2, limit: 200, truncated: false, lines: [line(ENT, { from: "2022-03-01", to: null }), line(ORG, { from: "2015-01-01", to: "2021-12-31" })] }) } });
+  assert.equal(p.byOp("linesof")[0].query.direction, "to");
+  const h = secOf(p, "screen.person.holders");
+  assert.equal(h.querySelectorAll(".cs-row").length, 2);
+  assert.ok(h.textContent.includes(word("screen.person.since", { from: dayOf("2022-03-01") })));
+  assert.equal(secOf(p, "screen.person.cited"), undefined);
+  assert.equal(secOf(p, "entity.naming.title"), undefined, "an office draws other names alone of the document part");
+  drew(main(p), "screen.people.counts.none");
+  assert.equal(button(p, "explore"), null, "no document names it: no explore");
+});
+
+test("R44 an undetermined fact's reason is drawn by its word with the owner's fills; a bare string draws no English of this module; R46 a page 0 is drawn as page 1", async () => {
+  const f = (id, why) => ({ fact_id: id, member: ENT, kind: "birth", value: "v" + id, valid: null, citation: { captureSha: SHA, extent: { kind: "pdf-page", page: 0 } }, grade: "C", withdrawn: null, undetermined: { why } });
+  const p = await open(at, { plane: { person: ok(PERSON({ undetermined: [f("PFA-1", { key: "people.why.precision", vars: { precision: "week" } }), f("PFA-2", "an old sentence")] })) } });
+  const facts = secOf(p, "screen.person.facts");
+  drew(facts, "screen.person.facts.undetermined", { reason: word("people.why.precision", { precision: "week" }), document: "Lease amendment 1" });
+  assert.ok(!facts.textContent.includes("an old sentence"), "a bare string is no English of ours");
+  drew(facts, "state.undetermined", { reason: word("people.why.owner_settle_validity") });
+  assert.ok(facts.querySelector('[data-tip*="' + word("screen.person.page", { page: "1" }) + '"]'), "page 0 is drawn as page 1, not hidden");
+});
+
+test("R48 a person with no connections draws person.graph.none and no Explore connections; one connection draws the graph and the act", async () => {
+  const one = await open(at);
+  assert.ok(button(one, "explore"), "control: one connection draws the act");
+  assert.ok(secOf(one, "screen.person.connections").querySelectorAll("svg").length > 0);
+  const none = await open(at, { plane: { exploregraph: ok({ ok: true, centre: ENT, nodes: [{ id: ENT, ring: 0, label: "L. Chen", entity_kind: "person" }], steps: [], stopped: [] }) } });
+  drew(secOf(none, "screen.person.connections"), "person.graph.none");
+  assert.equal(button(none, "explore"), null);
 });

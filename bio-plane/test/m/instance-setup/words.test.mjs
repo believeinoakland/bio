@@ -1,11 +1,12 @@
-/* The words members see (R63; DEC-149, Bob's "S4: B"; T34-87's rows for this module), at the module's interface: each
-   re-worded string is named and read where a member or founder reads it, from the answer that carries it, and every
-   member-facing string this module answers is swept for the words DEC-149 retires. Codes, op names, element ids,
-   binding names and comments are not member-facing and are not read. */
+/* The words members see (R63, R96; DEC-149, DEC-329 (11); T34-87's rows for this module), at the module's interface: each
+   re-worded string is named and read where a member or founder reads it, from the answer that carries it, by key: the answer
+   equals `word(key, vars)` or `localize(id, en, vars)`, and no test holds a sentence's text (K3810). Every member-facing
+   string this module answers is swept for the words DEC-149 retires. Codes, op names, element ids, binding names and
+   comments are not member-facing and are not read. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { INSTANCE_SETUP_CHECKS } from "../../../src/setup.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { HOSTING_CONTROL } from "../../../src/setup-fleet.mjs";
@@ -30,44 +31,42 @@ test("R63 (T50; N1116, N1160) every check row's translation is its word by key, 
   }
 });
 
-test("R63 R47 the hosting block's words (T34-87: setup-fleet.mjs :22, :24, :25, :31) say your group's Civicsmith, never the copy", () => {
-  assert.equal(HOSTING_CONTROL.heading, word("screen.hosting.heading"));                    // :22
-  assert.match(HOSTING_CONTROL.sentences[0], /^Whoever can sign in to the hosting account your team's Civicsmith runs in \(its Cloudflare account\) controls it\./); // :24
-  assert.match(HOSTING_CONTROL.sentences[0], /They can replace the one-time password, claim it again, read everything in it/);    // :25
-  assert.match(HOSTING_CONTROL.sentences.at(-1), /for your team's Civicsmith to be claimed again\.$/);                           // :31 (K3240)
+test("R63 R47 R97 the hosting block's words say your team's Civicsmith, never the copy", () => {
+  assert.equal(HOSTING_CONTROL.heading, word(HOSTING_CONTROL.keys.heading));
   for (const s of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) assert.doesNotMatch(s, RETIRED, s);
 });
 
-test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its refusal, set and unread) say your group's material or your group's Civicsmith, never the retired words", async () => {
+test("R63 R53 R55 R96 the assistant's sentences (T36: the keep-away state and its refusal, set and unread) are read by key and say your team's material or your team's Civicsmith, never the retired words", async () => {
   const w = await world();
   w.prov.keepAway = { on: true, reason: "Kept here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
   const kept = w.m.assistantGate();
   assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: ai-accounts' refusal, as given");
-  assert.match(kept.detail, /the team keeps its material away from every assistant/);
+  assert.equal(kept.detail, localize("ai-accounts.index.the_team_keeps_its_material", "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent."));
   w.prov.keepAway = { on: null, reason: null, set_by: null, set_at: null };
   const stateDetail = w.m.assistantState().detail;
-  assert.match(stateDetail, /^whether your team keeps its material away from every assistant could not be read/);
+  assert.equal(stateDetail, word("instance-setup.assistant.detail.keep_away_unread"));
   const unread = w.m.assistantGate();
-  assert.match(unread.detail, /^whether the team keeps its material away from every assistant could not be read/);
+  assert.equal(unread.detail, localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."));
   /* this module's own sentence on the gate: a provider that throws is the store's silence */
   const thrown = (await boot({ prov: { ...w.prov, aiAccounts: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
-  assert.match(thrown.detail, /^whether your team keeps its material away from every assistant did not answer/);
+  assert.equal(thrown.detail, localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({reason}), so no ask is put to an assistant and no run starts.", { reason: "x" }));
   for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });
 
-test("R63 the profiles' and the group identity's sentences (T34-87: setup.mjs :2245, :2451, :2479, :2493, :2502) say your group's Civicsmith", async () => {
+test("R63 R96 the profiles' and the group identity's sentences are read by key and say your team's Civicsmith", async () => {
   const w = await world();
-  assert.match(w.m.profiles().detail, /^no active profile: your team's Civicsmith reads no local facts/);                         // :2479
-  assert.match(w.m.profilesSet({ profiles: [], by: "ruth" }).detail, /an administrator's act, and your team's Civicsmith stamps who is asking/); // :2493
-  assert.match(w.m.profilesSet({ profiles: ["nowhere"], by: "admin" }).detail, /^your team's Civicsmith holds no profile "nowhere"/); // :2502
-  assert.match(w.m.groupNameSet({ name: "x", by: "ruth" }).detail, /your team's Civicsmith stamps who is asking from the signed-in session/); // :2245
+  assert.equal(w.m.profiles().detail, word("instance-setup.profiles.detail.none_active"));
+  assert.equal(w.m.profilesSet({ profiles: [], by: "ruth" }).detail, localize("instance-setup.setup.choosing_the_jurisdiction_profiles_is", "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators."));
+  assert.equal(w.m.profilesSet({ profiles: ["nowhere"], by: "admin" }).detail, localize("instance-setup.setup.your_teams_civicsmith_holds_no", "your team's Civicsmith holds no profile {map}. Nothing was changed.", { map: JSON.stringify("nowhere") }));
+  assert.equal(w.m.groupNameSet({ name: "x", by: "ruth" }).detail, localize("instance-setup.setup.setting_the_teams_display_name", "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."));
   const bound = await boot({ env: { JURISDICTION_PROFILES: "nowhere-profile" } });
-  assert.match(bound.m.profiles().boot.why, /which your team's Civicsmith does not hold$/);                                        // :2451
+  assert.equal(bound.m.profiles().boot.why, word("setup.why.installer_bound_group", { x: JSON.stringify("nowhere-profile") }));
   for (const s of [w.m.profiles().detail, bound.m.profiles().boot.why]) assert.doesNotMatch(s, RETIRED, s);
 });
 
-test("R63 the domain check's verdict details (T34-87: setup.mjs :2351, :2368, :2371, :2373) never call the group's Civicsmith this plane or this instance", async () => {
+test("R63 R96 the domain check's verdict details are the website check's keys (instance-setup.domain.detail.*), filled, and never call the team's Civicsmith this plane or this instance", async () => {
   const ADDR = "https://river.example";
+  const PATH = "/.well-known/civicsmith-group.json", EARLIER = "/.well-known/civicos-group.json";
   const verdict = async (answer) => {
     const w = await world();
     w.prov.answer = answer;
@@ -75,24 +74,27 @@ test("R63 the domain check's verdict details (T34-87: setup.mjs :2351, :2368, :2
   };
   const json = (o) => () => new Response(JSON.stringify(o), { status: 200 });
   const verified = await verdict(json({ instance: ADDR, group: "river-town" }));
-  assert.match(verified, new RegExp(`names ${OURS} \\(${ADDR.replace(/\./g, "\\.")}\\) and its slug \\(river-town\\)`));               // :2368
+  assert.equal(verified, word("instance-setup.domain.detail.verified", { path: PATH, address: ADDR, slug: "river-town" }));
+  assert.match(verified, new RegExp(OURS.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\'/g, "'")), "the team's Civicsmith is named as the words name it");
   const notObject = await verdict(() => new Response("[1]", { status: 200 }));
-  assert.match(notObject, /is not the JSON object your team's Civicsmith reads/);                                                // :2371
+  assert.equal(notObject, word("instance-setup.domain.detail.not_json", { path: PATH }));
   const other = await verdict(json({ instance: "https://elsewhere.example", group: "x" }));
-  assert.match(other, /gives the address "https:\/\/elsewhere\.example" and the team "x"/);
-  assert.match(other, new RegExp(`; ${OURS} is ${ADDR.replace(/\./g, "\\.")} and its slug is river-town$`));                      // :2373
+  assert.equal(other, word("instance-setup.domain.detail.mismatch", { path: PATH, found_address: JSON.stringify("https://elsewhere.example"), found_team: JSON.stringify("x"), address: ADDR, slug: "river-town" }));
   const unfinished = await verdict(() => { throw new Error("connection refused"); });
-  assert.match(unfinished, /did not complete, and why was not recorded/);                                                         // :2351
-  for (const s of [verified, notObject, other, unfinished]) assert.doesNotMatch(s.replace(/\{ instance, group \}/, ""), RETIRED, s);
+  assert.equal(unfinished, word("instance-setup.domain.detail.not_finished", { path: PATH }));
+  /* absent on the current file's name, then on the earlier file's: both answers, the second deciding */
+  const absent = await verdict(() => new Response("", { status: 404 }));
+  assert.equal(absent, word("instance-setup.domain.detail.both_paths", {
+    first: word("instance-setup.domain.detail.no_file", { path: PATH, status: 404 }),
+    second: word("instance-setup.domain.detail.no_file", { path: EARLIER, status: 404 }) }));
+  for (const s of [verified, notObject, other, unfinished, absent]) assert.doesNotMatch(s.replace(/\{ instance, group \}/, ""), RETIRED, s);
 });
 
 test("R63 every sentence the new acts answer (R60, R62, R64, R65) is free of the retired words", async () => {
   const w = await world();
   const said = [];
-  /* NOT_AN_ADMIN's sentence after the act's phrase, and its translation, are membership's (its R84, C-96.1; N664) */
   const take = (r) => {
-    for (const k of ["detail", "note", "translation"]) if (typeof r[k] === "string")
-      said.push(r.reason === "NOT_AN_ADMIN" ? (k === "detail" ? r[k].split(" is an administrator's act")[0] : "") : r[k]);
+    for (const k of ["detail", "note", "translation"]) if (typeof r[k] === "string") said.push(r[k]);
     return r;
   };
   take(w.m.placeWantedSet({ name: "", by: "admin" }));

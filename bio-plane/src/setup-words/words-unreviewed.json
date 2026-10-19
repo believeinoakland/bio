@@ -6249,7 +6249,7 @@
       "en": "This team's Civicsmith keeps a trace of sign-ins only when it runs as a test instance, and this one does not. Nothing was read or changed.",
       "module": "answer-envelope",
       "file": "bio-plane/src/answer-envelope/checks.mjs",
-      "line": 83
+      "line": 84
     },
     {
       "id": "answer-envelope.index.op_op_needs_argument_in",
@@ -29370,504 +29370,560 @@
       "en": "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 341
-    },
-    {
-      "id": "instance-setup.setup.a_run_completed_a_step",
-      "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. {v1}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2833
-    },
-    {
-      "id": "instance-setup.setup.an_older_release_than_the",
-      "en": "an older release than the {running} that runs",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2526
-    },
-    {
-      "id": "instance-setup.setup.an_older_release_than_the_2",
-      "en": "an older release than the {version} held",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2533
+      "line": 343
     },
     {
       "id": "instance-setup.setup.answered_http_status_without_a",
       "en": "answered HTTP {status} without a version",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 101
+      "line": 103
     },
     {
-      "id": "instance-setup.setup.capture_sha_is_not_a",
-      "en": "capture {sha} is not a Legistar {endpoint} list{v1}. Nothing was seeded.",
+      "id": "instance-setup.setup.capture_not_legistar",
+      "en": "capture {sha} is not a Legistar {endpoint} list. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1890
+      "line": 1908
+    },
+    {
+      "id": "instance-setup.setup.capture_not_legistar_other",
+      "en": "capture {sha} is not a Legistar {endpoint} list (it is {found}). Nothing was seeded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1907
+    },
+    {
+      "id": "instance-setup.setup.capture_not_legistar_why",
+      "en": "capture {sha} is not a Legistar {endpoint} list ({why}). Nothing was seeded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1905
+    },
+    {
+      "id": "instance-setup.setup.check_did_not_complete",
+      "en": "The check did not complete ({why}).",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2502
     },
     {
       "id": "instance-setup.setup.choosing_the_jurisdiction_profiles_is",
       "en": "choosing the jurisdiction profiles is an administrator's act, and your team's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1529
+      "line": 1539
     },
     {
-      "id": "instance-setup.setup.detail_read_instead_detail_2",
-      "en": "{detail}; read instead: {detail_2}",
+      "id": "instance-setup.setup.cite_forum",
+      "en": "jurisdiction profile {id}, forum {label}",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1178
+      "line": 1779
+    },
+    {
+      "id": "instance-setup.setup.cite_forum_basis",
+      "en": "jurisdiction profile {id}, forum {label} (basis: {basis})",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1778
+    },
+    {
+      "id": "instance-setup.setup.cite_office",
+      "en": "jurisdiction profile {profile}, {entry}",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1687
+    },
+    {
+      "id": "instance-setup.setup.cite_office_basis",
+      "en": "jurisdiction profile {profile}, {entry} (basis: {basis})",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1686
+    },
+    {
+      "id": "instance-setup.setup.disclosure_no_member",
+      "en": "The request names no member. Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2074
+    },
+    {
+      "id": "instance-setup.setup.disclosure_no_version",
+      "en": "The request names no version of the disclosure's words. Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2075
+    },
+    {
+      "id": "instance-setup.setup.domain_none_given",
+      "en": "The request names no domain. A domain is claimed as a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1153
+    },
+    {
+      "id": "instance-setup.setup.domain_not_bare_host",
+      "en": "'{domain}' is not a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1152
+    },
+    {
+      "id": "instance-setup.setup.draft_answers_malformed",
+      "en": "The answers are a list of at most {max_answers} {question, text}, each text at most {max_text} characters. Nothing was saved.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2372
     },
     {
       "id": "instance-setup.setup.each_metric_is_stated_in",
       "en": "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2771
+      "line": 2839
     },
     {
       "id": "instance-setup.setup.every_answer_is_empty_so",
       "en": "every answer is empty, so there is nothing to draft from. Nothing was saved.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2355
+      "line": 2374
+    },
+    {
+      "id": "instance-setup.setup.fields_as_they_were",
+      "en": "the fields are as they were",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2367
     },
     {
       "id": "instance-setup.setup.how_quickly_explanations_open_is",
       "en": "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2258
+      "line": 2277
     },
     {
-      "id": "instance-setup.setup.jurisdiction_profile_id_forum_label",
-      "en": "jurisdiction profile {id}, forum {label}{v1}",
+      "id": "instance-setup.setup.language_none_given",
+      "en": "The request names no language. A language is chosen as one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1764
+      "line": 2239
     },
     {
-      "id": "instance-setup.setup.legistar_person_personid_legistar_basis",
-      "en": "Legistar person {PersonId}, {LEGISTAR_BASIS}.{v1}",
+      "id": "instance-setup.setup.language_not_a_tag",
+      "en": "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1975
+      "line": 2238
+    },
+    {
+      "id": "instance-setup.setup.languages_bad_tag",
+      "en": "'{tag}' is not a well-formed BCP 47 language tag (en, es, zh-Hant). The languages are 1 to {max} of them. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1412
+    },
+    {
+      "id": "instance-setup.setup.languages_empty_list",
+      "en": "An empty list names no language. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1409
+    },
+    {
+      "id": "instance-setup.setup.languages_not_a_list",
+      "en": "The languages are sent as a list of 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1407
+    },
+    {
+      "id": "instance-setup.setup.languages_too_many",
+      "en": "A list of {count} names is too many. The languages are 1 to {max} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1411
+    },
+    {
+      "id": "instance-setup.setup.level_none_given",
+      "en": "The request names no level. A level is chosen as one of {levels}. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2281
+    },
+    {
+      "id": "instance-setup.setup.level_not_one_of",
+      "en": "'{level}' is not one of {levels}. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2280
+    },
+    {
+      "id": "instance-setup.setup.name_none_given",
+      "en": "The request names no display name. A display name is one line of 1 to {max} characters with no control characters. Nothing was set.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1133
+    },
+    {
+      "id": "instance-setup.setup.name_not_one_line",
+      "en": "A name of {chars} characters is not one line of 1 to {max} characters with no control characters. Nothing was set.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1132
     },
     {
       "id": "instance-setup.setup.no_producing_team_is_recorded",
       "en": "no producing team is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or — on a store that already held documents when the value arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing team is given no default: a caller's own statement of its team is kept as the caller's, and a write stating none is refused.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 809
+      "line": 810
     },
     {
-      "id": "instance-setup.setup.not_a_well_formed_notice",
-      "en": "not a well-formed notice ({String})",
+      "id": "instance-setup.setup.place_none_given",
+      "en": "The request names no place. A place is named in one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2525
+      "line": 2152
     },
     {
-      "id": "instance-setup.setup.path_gives_the_address_stringify",
-      "en": "{path} gives the address {stringify} and the team {stringify_2}; your team's Civicsmith is {address} and its slug is {slug}",
+      "id": "instance-setup.setup.place_not_one_line",
+      "en": "A name of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1226
+      "line": 2151
     },
     {
-      "id": "instance-setup.setup.path_names_your_teams_civicsmith",
-      "en": "{path} names your team's Civicsmith ({address}) and its slug ({slug})",
+      "id": "instance-setup.setup.probe_cut_off",
+      "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1222
+      "line": 2902
     },
     {
-      "id": "instance-setup.setup.public_read_could_not_be",
-      "en": "public-read could not be reached: {String}",
+      "id": "instance-setup.setup.probe_none_cut_off",
+      "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1020
+      "line": 2903
+    },
+    {
+      "id": "instance-setup.setup.profile_made_up_for_testing",
+      "en": "{tests} is a profile made up for testing. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1550
+    },
+    {
+      "id": "instance-setup.setup.profiles_made_up_for_testing",
+      "en": "{tests} are profiles made up for testing. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1549
     },
     {
       "id": "instance-setup.setup.runner_host_answered_its_version",
       "en": "{RUNNER_HOST} answered its version without saying whether the runner is bound",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 123
+      "line": 125
     },
     {
       "id": "instance-setup.setup.setting_the_teams_display_name",
       "en": "setting the team's display name or claiming its domain is an administrator's act (Publication §7), and your team's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1102
+      "line": 1104
     },
     {
-      "id": "instance-setup.setup.tests_v1_made_up_for",
-      "en": "{tests} {v1} made up for testing. Nothing was changed.",
+      "id": "instance-setup.setup.skip_no_reason",
+      "en": "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1538
+      "line": 2791
     },
     {
-      "id": "instance-setup.setup.the_address_answered_http_status",
-      "en": "the address answered HTTP {status}",
+      "id": "instance-setup.setup.skip_reason_many_lines",
+      "en": "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2511
+      "line": 2793
     },
     {
-      "id": "instance-setup.setup.the_address_redirected_http_status",
-      "en": "the address redirected (HTTP {status}); no redirect is followed",
+      "id": "instance-setup.setup.skip_reason_too_long",
+      "en": "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2511
+      "line": 2792
+    },
+    {
+      "id": "instance-setup.setup.slug_none_given",
+      "en": "The request names no slug. A team is recorded under a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1063
+    },
+    {
+      "id": "instance-setup.setup.slug_not_in_grammar",
+      "en": "'{slug}' is not a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1062
+    },
+    {
+      "id": "instance-setup.setup.stake_empty",
+      "en": "An empty stake is not a stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1319
+    },
+    {
+      "id": "instance-setup.setup.stake_many_lines",
+      "en": "A stake of {chars} characters over more than one line is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1321
+    },
+    {
+      "id": "instance-setup.setup.stake_none_given",
+      "en": "The request names no stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1318
+    },
+    {
+      "id": "instance-setup.setup.stake_too_long",
+      "en": "A stake of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1320
     },
     {
       "id": "instance-setup.setup.the_assistant_could_not_serve",
       "en": "the assistant could not serve a draft of the team's description, so nothing was drafted and the fields are as they were.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2357
+      "line": 2376
     },
     {
       "id": "instance-setup.setup.the_assistant_was_not_on",
       "en": "the assistant was not on when this request was resolved, so nothing was drafted and the fields are as they were.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2345
-    },
-    {
-      "id": "instance-setup.setup.the_check_did_not_complete",
-      "en": "the check did not complete ({String})",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2483
+      "line": 2365
     },
     {
       "id": "instance-setup.setup.the_disclosure_is_recorded_by",
       "en": "the disclosure is recorded by the member it was shown to, from their own signed-in session. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2059
-    },
-    {
-      "id": "instance-setup.setup.the_domain_answered_path_with",
-      "en": "the domain answered {path} with HTTP {status}, which is neither the file nor its absence",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1214
-    },
-    {
-      "id": "instance-setup.setup.the_domain_redirected_path_http",
-      "en": "the domain redirected {path} (HTTP {status}); the file is read on the claimed domain itself",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1210
-    },
-    {
-      "id": "instance-setup.setup.the_domain_serves_no_path",
-      "en": "the domain serves no {path} (HTTP {status})",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1211
+      "line": 2077
     },
     {
       "id": "instance-setup.setup.the_draft_could_not_be",
       "en": "the draft could not be checked, so nothing is offered.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 329
+      "line": 331
     },
     {
       "id": "instance-setup.setup.the_draft_did_not_pass",
       "en": "the draft did not pass the check that it adds no fact, so nothing is offered.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 328
-    },
-    {
-      "id": "instance-setup.setup.the_fetch_of_path_did",
-      "en": "the fetch of {path} did not complete, and why was not recorded",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1205
+      "line": 330
     },
     {
       "id": "instance-setup.setup.the_forum_kind_label_a",
       "en": "The {forum_kind} {label}, a forum as the active {cite} names it; seeded at setup.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1766
-    },
-    {
-      "id": "instance-setup.setup.the_governor_did_not_answer",
-      "en": "the governor did not answer ({String})",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1193
-    },
-    {
-      "id": "instance-setup.setup.the_governor_did_not_answer_2",
-      "en": "the governor did not answer ({String})",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2497
+      "line": 1781
     },
     {
       "id": "instance-setup.setup.the_language_of_the_screens",
       "en": "the language of the screens is set by the member, from their own signed-in session. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2214
-    },
-    {
-      "id": "instance-setup.setup.the_languages_could_not_be",
-      "en": "the languages could not be read ({String}).",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1429
-    },
-    {
-      "id": "instance-setup.setup.the_minute_of_the_day",
-      "en": "the minute of the day could not be drawn: {String}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 977
-    },
-    {
-      "id": "instance-setup.setup.the_notice_is_over_release",
-      "en": "the notice is over {RELEASE_NOTICE_MAX_BYTES} bytes",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2513
-    },
-    {
-      "id": "instance-setup.setup.the_offices_could_not_be",
-      "en": "the offices could not be seeded at setup: {String}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 990
-    },
-    {
-      "id": "instance-setup.setup.the_organisation_the_body_body",
-      "en": "The organisation the body \"{body}\" is part of, as the active {cite} names it; seeded at setup.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1721
-    },
-    {
-      "id": "instance-setup.setup.the_per_host_governor_held",
-      "en": "the per-host governor held {domain} ({v1}); this says nothing about the domain",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1196
-    },
-    {
-      "id": "instance-setup.setup.the_per_host_governor_held_2",
-      "en": "the per-host governor held {host} ({v1}); nothing was asked",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2499
-    },
-    {
-      "id": "instance-setup.setup.the_place_could_not_be",
-      "en": "the place could not be compared: {String}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 996
-    },
-    {
-      "id": "instance-setup.setup.the_profile_names_the_organisation",
-      "en": "the profile names the organisation this body is within with no {v1}, so it is not seeded and no part_of line is",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1717
+      "line": 2232
     },
     {
       "id": "instance-setup.setup.the_profiles_are_sent_as",
       "en": "the profiles are sent as a list of profile ids, in the order they are read; an empty list chooses none. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1533
+      "line": 1543
     },
     {
       "id": "instance-setup.setup.the_record_holds_no_readable",
       "en": "the record holds no readable capture {sha}. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1882
-    },
-    {
-      "id": "instance-setup.setup.the_registry_refused_the_identifier",
-      "en": "the registry refused the identifier {scheme} {id}: {v1}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1775
+      "line": 1896
     },
     {
       "id": "instance-setup.setup.the_request_names_no_capture",
       "en": "the request names no capture of Legistar's {endpoint}. Nothing was seeded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1876
-    },
-    {
-      "id": "instance-setup.setup.the_running_release_could_not",
-      "en": "the running release could not be recorded: {String}",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 979
-    },
-    {
-      "id": "instance-setup.setup.the_store_did_not_confirm",
-      "en": "the store did not confirm step {v1}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 3145
+      "line": 1890
     },
     {
       "id": "instance-setup.setup.this_run_returned_so_the",
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3144
+      "line": 3241
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
       "en": "this store has recorded its producing team since {recorded_at} ({source}), and it is recorded once. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1065
+      "line": 1067
     },
     {
-      "id": "instance-setup.setup.v1_1_to_group_languages",
-      "en": "{v1} 1 to {GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.",
+      "id": "instance-setup.setup.update_no_version",
+      "en": "The request names no version, and a release is decided by its version. The release ready to install is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1399
+      "line": 2727
     },
     {
-      "id": "instance-setup.setup.v1_a_bare_host_name",
-      "en": "{v1} a bare host name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.",
+      "id": "instance-setup.setup.update_none_ready",
+      "en": "No release is ready to install. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1149
+      "line": 2725
     },
     {
-      "id": "instance-setup.setup.v1_a_slug_in_the",
-      "en": "{v1} a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1061
-    },
-    {
-      "id": "instance-setup.setup.v1_nothing_was_recorded",
-      "en": "{v1}. Nothing was recorded.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2056
-    },
-    {
-      "id": "instance-setup.setup.v1_one_line_of_1",
-      "en": "{v1} one line of 1 to {GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1130
-    },
-    {
-      "id": "instance-setup.setup.v1_one_line_of_1_2",
-      "en": "{v1} one line of 1 to {DECLARED_STAKE_MAX} characters with no control characters; null clears it. Nothing was changed.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 1313
-    },
-    {
-      "id": "instance-setup.setup.v1_one_line_of_1_3",
-      "en": "{v1} one line of 1 to {PLACE_NAME_MAX} characters with no control characters; null clears it. Nothing was changed.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2133
-    },
-    {
-      "id": "instance-setup.setup.v1_one_line_of_1_4",
-      "en": "{v1} one line of 1 to {UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.",
+      "id": "instance-setup.setup.update_not_the_ready_one",
+      "en": "'{version}' is not the release ready to install, which is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
       "line": 2726
     },
     {
-      "id": "instance-setup.setup.v1_one_of_info_levels",
-      "en": "{v1} one of {INFO_LEVELS}. Nothing was changed.",
+      "id": "instance-setup.setup.what_asking_draft",
+      "en": "asking the assistant to draft your team's description",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2260
+      "line": 2359
     },
     {
-      "id": "instance-setup.setup.v1_one_well_formed_bcp",
-      "en": "{v1} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.",
+      "id": "instance-setup.setup.what_choosing_update",
+      "en": "choosing to update your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2219
+      "line": 2742
     },
     {
-      "id": "instance-setup.setup.v1_v2_nothing_was_recorded",
-      "en": "{v1} {v2}. Nothing was recorded.",
+      "id": "instance-setup.setup.what_declaring_stake",
+      "en": "declaring what your team has at stake",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2663
+      "line": 1310
     },
     {
-      "id": "instance-setup.setup.what_could_not_be_read",
-      "en": "{what} could not be read ({String}), so it is not known.",
+      "id": "instance-setup.setup.what_naming_place",
+      "en": "naming the place your team works in",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2586
+      "line": 2143
     },
     {
-      "id": "instance-setup.setup.what_did_not_answer_string",
-      "en": "{what} did not answer ({String}), so whether the step is met is not known",
+      "id": "instance-setup.setup.what_reading_place",
+      "en": "reading the place your team named",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2300
+      "line": 2174
     },
     {
-      "id": "instance-setup.setup.whether_the_records_laws_stages",
-      "en": "whether the records laws' stages are known could not be checked ({String}), so it is not known; the profiles stay active as chosen",
+      "id": "instance-setup.setup.what_reading_recovery_step",
+      "en": "reading the step of two administrators holding recovery codes",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1519
+      "line": 2325
+    },
+    {
+      "id": "instance-setup.setup.what_reading_updates",
+      "en": "reading the updates of your team's Civicsmith",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2657
+    },
+    {
+      "id": "instance-setup.setup.what_seeding_offices",
+      "en": "seeding the offices the jurisdiction profiles name",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1668
+    },
+    {
+      "id": "instance-setup.setup.what_seeding_seats",
+      "en": "seeding the seats Legistar records",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1882
+    },
+    {
+      "id": "instance-setup.setup.what_setting_aside_update",
+      "en": "setting aside an update of your team's Civicsmith",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2755
+    },
+    {
+      "id": "instance-setup.setup.what_setting_languages",
+      "en": "setting the languages your team's members use",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1402
+    },
+    {
+      "id": "instance-setup.setup.what_setting_logo",
+      "en": "setting your team's logo",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 1355
+    },
+    {
+      "id": "instance-setup.setup.what_skipping_update",
+      "en": "skipping an update of your team's Civicsmith",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2783
+    },
+    {
+      "id": "instance-setup.setup.what_the_updates",
+      "en": "the updates of your team's Civicsmith",
+      "module": "instance-setup",
+      "file": "bio-plane/src/setup.mjs",
+      "line": 2688
     },
     {
       "id": "instance-setup.setup.whether_this_set_answers_the",
       "en": "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2264
-    },
-    {
-      "id": "instance-setup.setup.whether_your_team_keeps_its",
-      "en": "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.",
-      "module": "instance-setup",
-      "file": "bio-plane/src/setup.mjs",
-      "line": 2043
+      "line": 2284
     },
     {
       "id": "instance-setup.setup.why_nothing_was_changed",
       "en": "{why}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1353
+      "line": 1360
     },
     {
       "id": "instance-setup.setup.your_teams_civicsmith_holds_no",
       "en": "your team's Civicsmith holds no profile {map}. Nothing was changed.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 1536
+      "line": 1546
     },
     {
       "id": "intent.index.a_departure_from_the_teams",
@@ -35481,28 +35537,42 @@
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2643
+      "line": 2661
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2599
+      "line": 2613
+    },
+    {
+      "id": "op-declarations.index.money_detectors_run_sweep",
+      "en": "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
+      "module": "op-declarations",
+      "file": "bio-plane/src/op-declarations/index.mjs",
+      "line": 2520
+    },
+    {
+      "id": "op-declarations.index.reevaluation_raise_sweep",
+      "en": "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or monitoring calls.",
+      "module": "op-declarations",
+      "file": "bio-plane/src/op-declarations/index.mjs",
+      "line": 2518
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs",
       "en": "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2498
+      "line": 2505
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs_2",
       "en": "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2504
+      "line": 2511
     },
     {
       "id": "op-grades.marks.dec_300_5_over_the",
@@ -37616,973 +37686,1169 @@
       "en": "a bounded number of shared questions and of projects per question are read. A conclusion reported over a truncated set is still true; an ABSENCE over one is not, which is why the flags are published.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1012
+      "line": 1126
     },
     {
       "id": "queue-producers.index.a_candidate_is_contradictions_its",
       "en": "a candidate is contradiction's (its R24–R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1429
+      "line": 1566
     },
     {
       "id": "queue-producers.index.a_conclusion_is_the_concluding",
       "en": "a conclusion is the concluding project's own dated row (§7.1), read through basis-versions' one reader (its R22) for each project drawing on this shared question, and the others' own conclusions beside it. Derived on read: nothing is stored, and nobody else's stance moved.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1015
+      "line": 1129
     },
     {
-      "id": "queue-producers.index.a_contradiction_on_what_this",
-      "en": "a contradiction on what this published case's findings rest on, one level deep, was found after its latest edition and is not disclosed there. The signed edition does not change: a later edition discloses or resolves it.",
+      "id": "queue-producers.index.a_core_item_still_due",
+      "en": "a core item still due is docket's fact (its R9), read here and never stored; the case's project is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody else (DEC-116 item 2), and is raised once (DEC-69, DEC-94).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1554
+      "line": 1970
     },
     {
       "id": "queue-producers.index.a_gap_is_derived_intent",
       "en": "a gap is DERIVED (intent R6): the objective's satisfaction test read against the record, recomputed at every read. It leaves this project's list by a recorded decision.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1220
+      "line": 1362
     },
     {
-      "id": "queue-producers.index.a_machine_judged_these_two",
-      "en": "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
+      "id": "queue-producers.index.a_gap_is_recomputed_at",
+      "en": "a gap is recomputed at read time and has no creation instant",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1422
-    },
-    {
-      "id": "queue-producers.index.a_member_registered_their_own",
-      "en": "a member registered their own browser-held signing key from a signed-in session, and it is active. Every administrator is told; an administrator may revoke it. Nothing here changes the key.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1669
-    },
-    {
-      "id": "queue-producers.index.a_members_resolution_of_a",
-      "en": "a member's resolution of a contradiction named a side this rests on wrong{v1}. That side still resolves and says it was corrected; nothing resting on it has moved. A recorded re-evaluation closes this.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1466
+      "line": 1364
     },
     {
       "id": "queue-producers.index.a_newer_approved_version_of",
       "en": "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and version and read here, never stored. It goes to each of the copy's wizard editors it names, once (DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2547
-    },
-    {
-      "id": "queue-producers.index.a_newer_capture_of_what",
-      "en": "a newer capture of what this reference is pinned to was read as {v1}{v2}. Nothing about the reference has moved: it stays on the version it names until the member who holds it adopts the newer one or keeps the earlier one.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1150
+      "line": 2722
     },
     {
       "id": "queue-producers.index.a_notice_is_contradictions_its",
       "en": "a notice is contradiction's (its R50): it names the side this project rests on and nothing of the other, nor who holds it, nor how many do. Your project can ask to resolve it; when every project holding a side has asked, the projects are named to each other and each can respond, sharing only what its responder chose.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1626
+      "line": 1765
+    },
+    {
+      "id": "queue-producers.index.a_notice_is_derived_at",
+      "en": "a notice is derived at read time and carries no instant of its own",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1767
     },
     {
       "id": "queue-producers.index.a_notice_is_reevaluations_its",
       "en": "a notice is reevaluation's (its R14): raised when a newer capture of what a reference is pinned to is graded affected or undetermined, never for A or B. It is read here, never raised, and it closes only by the holder's adoption or keeping (its R15).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1154
+      "line": 1295
     },
     {
       "id": "queue-producers.index.a_refused_entry_is_case",
       "en": "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that failed a check, recorded and never a move. It goes to the member who set the watch, else the administrators, and to nobody else.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2126
+      "line": 2284
     },
     {
       "id": "queue-producers.index.a_scheduled_edition_is_publish",
       "en": "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the team's zone, and its outcome, read here as the plane and never stored. It goes to the member who set the time and to the case's project's owners, and to nobody else (DEC-147).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2428
+      "line": 2597
     },
     {
       "id": "queue-producers.index.a_scripts_break_or_return",
       "en": "a script's break or return is wizard-scripts' record (its R13), made when its checks are run again at start, read here and never stored. It goes to the script's project owners (for a team script, the administrators) and its version's author, once (DEC-69, DEC-70).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2247
+      "line": 2408
     },
     {
       "id": "queue-producers.index.a_submitted_version_is_wizard",
       "en": "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2293
+      "line": 2457
     },
     {
       "id": "queue-producers.index.a_tension_after_publication_is",
       "en": "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1562
+      "line": 1701
+    },
+    {
+      "id": "queue-producers.index.a_tension_is_derived_at",
+      "en": "a tension is derived at read time from the edition and the candidates; it has no creation instant",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1703
     },
     {
       "id": "queue-producers.index.a_verified_entry_of_a",
       "en": "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and never stored. It goes to the member who set the watch, else the administrators, and to nobody else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2083
-    },
-    {
-      "id": "queue-producers.index.a_version_of_this_wizard",
-      "en": "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; this is told once, and it leaves when the version is approved or withdrawn, or the script retired.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2288
-    },
-    {
-      "id": "queue-producers.index.address_was_captured_at_an",
-      "en": "{address} was captured at an investigative session's request while it was working {target}, because it bears on {lead_inquiry}. {statement}. The document is IN THE STORE and is part of NO claim: it was captured, which is an entry to the cache, and it was deliberately not made part of any question's basis. Nothing about any conclusion has moved, and nothing here is evidence until somebody decides it is.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 436
+      "line": 2239
     },
     {
       "id": "queue-producers.index.an_arrival_is_instance_setups",
       "en": "an arrival is instance-setup's fact (its R62): a held profile matching the place the team named, first found at a start, read here through the read it registered and never stored. It goes to every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2491
-    },
-    {
-      "id": "queue-producers.index.an_export_of_the_scope",
-      "en": "An export of the {scope} left your team's Civicsmith with the root-of-trust credential (Membership v2 §8.1). It is row {seq} of the append-only export log{v1}. Every administrator is told; nobody else is. The log is the record of it and nothing here changes the log.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1073
+      "line": 2663
     },
     {
       "id": "queue-producers.index.an_export_of_the_working",
       "en": "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 §8.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1081
-    },
-    {
-      "id": "queue-producers.index.an_installed_update_brought_a",
-      "en": "An installed update brought a profile that matches the place your team named{v1}: {named}{v2}. An administrator may choose it under Places; the offices your team added stay. This status is told once, and it leaves when the profile is chosen or the place's name is cleared or changed.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2488
-    },
-    {
-      "id": "queue-producers.index.an_instance_this_projects_objective",
-      "en": "an instance this project's objective counts is short of the stages {stages_missing}.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1215
-    },
-    {
-      "id": "queue-producers.index.an_instance_this_projects_objective_2",
-      "en": "an instance this project's objective counts reaches {v1} where {v2} is required.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1216
+      "line": 1206
     },
     {
       "id": "queue-producers.index.an_invitation_is_memberships_row",
       "en": "an invitation is membership's row for the member (project-roster R34, membership R118), read here at every read and never stored. It goes to the member invited and to nobody else, and leaves when her state changes: she joins, is removed, or the invitation is withdrawn.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2597
+      "line": 2803
     },
     {
       "id": "queue-producers.index.an_open_request_to_join",
       "en": "an open request to join is project-roster's row (its R12, R14), read here at every read and never stored. It goes to each owner of the project and to nobody else, and leaves for all of them when one owner answers it or the requester withdraws.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2646
+      "line": 2854
+    },
+    {
+      "id": "queue-producers.index.an_unreadable_docket_is_case",
+      "en": "an unreadable docket is case-import's fact about this copy's latest read (its R18, R20), read here and never stored: a signal about our own reading, not about the publisher. It goes to the member who set the watch, else the administrators, and leaves on the first read after it stops holding.",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2318
     },
     {
       "id": "queue-producers.index.bias_debt_is_disclosed_and",
       "en": "bias debt is DISCLOSED and travels with the work; only an uncleared hunch refuses publication (DEC-20). Whether the lens moved is op=airun's own comparison, read by the sweep and never recomputed.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1307
+      "line": 1453
     },
     {
       "id": "queue-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4) and BOTH QUESTIONS ARE NAMED (D-213): the act is the daemon's, performed at the session's request, and the session was working one question when it met evidence for another. The absence of a basis entry is MEASURED and reported on `basis_entry` rather than left to be inferred from an empty field — absence at one level is not evidence of absence at the next, and which one is true is the answer, not a footnote (CLAUDE.md).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 450
-    },
-    {
-      "id": "queue-producers.index.case_case_edition_edition",
-      "en": "case {case}, edition {edition}",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2392
+      "line": 558
     },
     {
       "id": "queue-producers.index.d_216_measured_that_one",
       "en": "D-216 measured that one question sits beneath several projects and that each reads the whole version set (2026-08-08): after two projects diverged, each still saw every version and every leg of the other's. So this item announces an arrival, not a disclosure — the reading was already readable here, and what was missing was anybody being told it had appeared.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 907
+      "line": 1024
     },
     {
       "id": "queue-producers.index.d_216_measured_this_model",
       "en": "D-216 measured this model rather than assuming it (2026-08-08): two projects were driven onto two different readings of one shared question SIMULTANEOUSLY, the plane refused neither, and after divergence each still saw every version and every leg of the other's. The sharing is real and the stance is not shared — which is why this item exists at all.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 711
+      "line": 824
     },
     {
       "id": "queue-producers.index.dec_17s_reasoning_a_settings",
       "en": "DEC-17's reasoning: a settings row would be a way to change the standard with nothing to read afterwards. Every stance named here was read out of a project's own promoted bytes, where the act that wrote it is in the append-only history beside it.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 710
-    },
-    {
-      "id": "queue-producers.index.docket_unreadable_v1_v2_this",
-      "en": "{DOCKET_UNREADABLE}{v1}{v2}. This says the read failed, never that nothing changed. It leaves when a read succeeds or the watch ends.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2150
-    },
-    {
-      "id": "queue-producers.index.edition_edition_of_this_case",
-      "en": "edition {edition} of this case reaches what you observed, and you have chosen no level for how it shows who said it: the team, the project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are its author. This is told once; it leaves when you choose, or the edition no longer uses it, or it is signed or replaced.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1742
-    },
-    {
-      "id": "queue-producers.index.entry_seq_of_the_docket",
-      "en": "Entry {seq} of the docket, {kindWords}{v1}, was read and verified by your team's Civicsmith. Its signing key {v2} among the keys the imported case file lists.{entryWords}{v3} This is told once.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2074
-    },
-    {
-      "id": "queue-producers.index.it_is_not_offered_to",
-      "en": "It is not offered to members while it fails its checks{v1}. A new version that passes them, approved as before, returns it. This is told once.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2242
-    },
-    {
-      "id": "queue-producers.index.it_passed_its_checks_again",
-      "en": "It passed its checks again when your team's Civicsmith started, and members are offered it as before. This is told once.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2243
+      "line": 823
     },
     {
       "id": "queue-producers.index.looked_for_and_not_there",
       "en": "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission. The document was CAPTURED — an entry to the store — and no leg of any inquiry's basis and no leg of any proposed reading points at it (DEC-60, D-213). It was NOT made part of the case, which is a different sentence from nobody having read it, and this producer counted both basis projections to be able to say which.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 355
+      "line": 459
     },
     {
       "id": "queue-producers.index.monitorings_tick_records_what_it",
       "en": "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, as monitoring reads it (its R48).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1265
+      "line": 1409
+    },
+    {
+      "id": "queue-producers.index.no_member_could_be_named",
+      "en": "no member could be named inside this run's read gate, so it is offered to every member who can read the run",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1461
     },
     {
       "id": "queue-producers.index.no_register_entry_answers_to",
       "en": "no register entry answers to this capture, so the bytes are not attached to a document this store can name and there is nothing whose place in a case could be asked. Undetermined, and STATED (D-9/D-45's unbacked-register shape).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 340
+      "line": 444
     },
     {
-      "id": "queue-producers.index.qname_is_drawn_on_by",
-      "en": "{qname} is drawn on by {length} projects and holds NO stance of its own: what a project stands on is that project's own dated, authored property (§7), so this difference is a legal state and nothing in this record refuses it. {id} named '{version}'{v1}{v2}. Nothing here has moved anybody else's stance and nothing here will: this is a report, and moving another project's pointer is that project's own act.",
+      "id": "queue-producers.index.none_in_force",
+      "en": "none in force",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 682
+      "line": 1452
     },
     {
-      "id": "queue-producers.index.qname_is_drawn_on_by_2",
-      "en": "{qname} is drawn on by {length} projects. '{name}' was proposed by a run working under {src}{v1}{v2}, and it is currently {state}{v3}. Nothing about what this project stands on has moved: a reading arriving is not a reading being adopted, and the stance is a per-project act somebody here would have to take (§7).",
+      "id": "queue-producers.index.the_arrival_carries_no_instant",
+      "en": "the arrival carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 884
+      "line": 2664
     },
     {
-      "id": "queue-producers.index.qname_is_drawn_on_by_3",
-      "en": "{qname} is drawn on by {length} projects. {id} concluded it on reading '{version}'{v1}{v2}, adopting that reading's claim. A conclusion belongs to the project that drew it (§7.1): NOTHING about what any other project stands on or has concluded has moved, and nothing here will move it — this is a report, and concluding is each project's own act.",
+      "id": "queue-producers.index.the_candidate_carries_no_instant",
+      "en": "the candidate carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 986
+      "line": 1570
+    },
+    {
+      "id": "queue-producers.index.the_case_document_carries_no",
+      "en": "the case document carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1896
+    },
+    {
+      "id": "queue-producers.index.the_cause_carries_no_instant",
+      "en": "the cause carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2032
+    },
+    {
+      "id": "queue-producers.index.the_cause_carries_no_instant_2",
+      "en": "the cause carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2154
     },
     {
       "id": "queue-producers.index.the_cause_is_reevaluations_its",
       "en": "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1888
+      "line": 2028
     },
     {
       "id": "queue-producers.index.the_cause_is_reevaluations_its_2",
       "en": "the cause is reevaluation's (its R33): a live leg of this finding rests on another team's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry your team's Civicsmith read. It is read here, never raised, and nothing was regraded.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2001
+      "line": 2150
+    },
+    {
+      "id": "queue-producers.index.the_cause_is_reevaluations_its_3",
+      "en": "the cause is reevaluation's (its R27): a live leg of this finding rests on a side contradiction marks stale. It is read here, never raised, and no strength, conclusion or case moved.",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1612
+    },
+    {
+      "id": "queue-producers.index.the_conclusion_row_carries_no",
+      "en": "the conclusion row carries no authored instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1134
+    },
+    {
+      "id": "queue-producers.index.the_debt_row_carries_a",
+      "en": "the debt row carries a raised stamp this producer cannot read as an instant",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1457
+    },
+    {
+      "id": "queue-producers.index.the_edition_carries_no_publishing",
+      "en": "the edition carries no publishing instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2571
+    },
+    {
+      "id": "queue-producers.index.the_edition_carries_no_signing",
+      "en": "the edition carries no signing instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2564
+    },
+    {
+      "id": "queue-producers.index.the_edition_carries_no_stopping",
+      "en": "the edition carries no stopping instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2578
     },
     {
       "id": "queue-producers.index.the_edition_is_publications_prepared",
       "en": "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1747
+      "line": 1892
     },
     {
-      "id": "queue-producers.index.the_entrys_signing_key_is",
-      "en": " The entry's signing key is not among the keys the imported case file lists.",
+      "id": "queue-producers.index.the_entry_carries_no_instant",
+      "en": "the entry carries no instant this copy read it at that this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1937
+      "line": 2341
+    },
+    {
+      "id": "queue-producers.index.the_entry_carries_no_instant_2",
+      "en": "the entry carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2723
+    },
+    {
+      "id": "queue-producers.index.the_export_log_row_carries",
+      "en": "the export log row carries an instant this producer cannot read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1211
+    },
+    {
+      "id": "queue-producers.index.the_flag_carries_no_instant",
+      "en": "the flag carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1413
+    },
+    {
+      "id": "queue-producers.index.the_item_carries_no_instant",
+      "en": "the item carries no instant this producer can read for when it fell due",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1974
     },
     {
       "id": "queue-producers.index.the_key_is_credentials_own",
       "en": "the key is credentials' own row (its R8), registered by its member (its R9) and read here at every read: it is told to every administrator and to nobody else, and it leaves when the key is no longer active, by an administrator's revoke (its R7) or otherwise.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1673
+      "line": 1816
+    },
+    {
+      "id": "queue-producers.index.the_keys_row_carries_an",
+      "en": "the key's row carries an added stamp this producer cannot read as an instant",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1820
+    },
+    {
+      "id": "queue-producers.index.the_lens_in_force_when",
+      "en": "the lens in force when it opened",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1452
+    },
+    {
+      "id": "queue-producers.index.the_lens_it_was_handed",
+      "en": "the lens it was handed",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1452
+    },
+    {
+      "id": "queue-producers.index.the_marking_act_carries_no",
+      "en": "the marking act carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1616
+    },
+    {
+      "id": "queue-producers.index.the_members_row_carries_no",
+      "en": "the member's row carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2805
     },
     {
       "id": "queue-producers.index.the_natural_acts_here_are",
       "en": "the natural acts here are at STANCE grain — move to the reading the others are on, or record why we are staying — and the first of those is op=versioncurrent on THIS project and nobody else's. It is deliberately not offered as an option on an item another project's members can also see: an act one team performs from a notification another team is reading is the single shared stance §7 rejected, arriving through a button (D-222's grain problem).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 729
+      "line": 840
+    },
+    {
+      "id": "queue-producers.index.the_natural_acts_here_are_2",
+      "en": "the natural acts here are at VERSION grain — consider this reading, accept it, turn it down — and they exist (op=versionconsider / accept / reject), but they move the SHARED question's row and are therefore not this project's to take from a notification about somebody else's proposal. What IS this project's own act is op=versioncurrent, which moves only this project's stance (§7).",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1036
+    },
+    {
+      "id": "queue-producers.index.the_newest_exports_are_read",
+      "en": "the newest exports are read up to this bound. An export past it is still in the log (op=exportlog, with a larger limit) and is not told here.",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1205
+    },
+    {
+      "id": "queue-producers.index.the_notice_carries_no_raised",
+      "en": "the notice carries no raised instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1299
+    },
+    {
+      "id": "queue-producers.index.the_project_that_concluded_is",
+      "en": "the project that concluded is not a team this was concluded ELSEWHERE for, so this item is not filed under it. Stated rather than performed silently (DEC-16).",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1092
     },
     {
       "id": "queue-producers.index.the_project_this_reading_was",
       "en": "the project this reading was proposed under is not a team it arrived FROM, so this item is not filed under it. Stated rather than performed silently: a home set that is quietly shorter is indistinguishable from nobody caring (DEC-16).",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 879
+      "line": 990
     },
     {
-      "id": "queue-producers.index.the_publisher_has_since_taken",
-      "en": " The publisher has since taken this entry back (entry {v1}{v2}).",
+      "id": "queue-producers.index.the_read_carries_no_instant",
+      "en": "the read carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1939
+      "line": 2322
     },
     {
-      "id": "queue-producers.index.the_reason_in_its_publishers",
-      "en": " The reason, in its publisher's words: \"{reason}\".",
+      "id": "queue-producers.index.the_read_of_a_named",
+      "en": "the read of a named place's arrivals is registered once at start, and it was",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1935
+      "line": 2618
     },
     {
-      "id": "queue-producers.index.the_record_holds_a_conflict",
-      "en": "the record holds a conflict here ({v1}). It leaves only when it is resolved; it is never muted, dismissed or set aside.",
+      "id": "queue-producers.index.the_record_carries_no_instant",
+      "en": "the record carries no instant this producer can read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1418
+      "line": 2411
+    },
+    {
+      "id": "queue-producers.index.the_registered_read_is_placearrivals",
+      "en": "the registered read is placeArrivals, a function",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2616
+    },
+    {
+      "id": "queue-producers.index.the_request_carries_no_instant",
+      "en": "the request carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2855
     },
     {
       "id": "queue-producers.index.the_request_records_no_capture",
       "en": "the request records no capture digest, so there is no document to ask about. That this producer could not look is a different fact from the document being part of nothing, and it is reported as the first rather than the second.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 334
+      "line": 438
+    },
+    {
+      "id": "queue-producers.index.the_request_row_carries_a",
+      "en": "the request row carries a completion stamp this producer cannot read as an instant",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 563
     },
     {
       "id": "queue-producers.index.the_source_team_is_the",
       "en": "the source team is the RUN's own context project, a fact stored when the run was opened. It is never inferred from who authored the version: a member does not name a team in this record, and a producer that guessed one would be manufacturing the connection the notification is claiming attention for. A version with no run, or a run whose context is not a project, mints NO item — the silence is a declared gap (D-266), not a filtered one.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 905
+      "line": 1022
+    },
+    {
+      "id": "queue-producers.index.the_submission_carries_no_instant",
+      "en": "the submission carries no instant this producer can read",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 2460
+    },
+    {
+      "id": "queue-producers.index.the_version_row_carries_no",
+      "en": "the version row carries no authored instant this producer can read, so how long this reading has been standing unanswered is undetermined",
+      "module": "queue-producers",
+      "file": "bio-plane/src/queue-producers/index.mjs",
+      "line": 1029
     },
     {
       "id": "queue-producers.index.this_document_is_carried_by",
       "en": "this document IS carried by a reading of some question, so the lead has already been acted on or the document was evidence before the lead was raised. Reported rather than suppressed: the item is still the record of an observation somebody made.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 356
+      "line": 460
     },
     {
       "id": "queue-producers.index.this_feed_examines_a_bounded",
       "en": "this feed examines a bounded number of shared questions per read and a bounded number of projects per question. Where either is truncated the divergence reported is a FLOOR: the projects named do stand where this says, and the read did not reach every one that might. A divergence over a truncated set is still true; an ABSENCE of one over a truncated set is not, which is why the flags are published rather than the counts alone.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 701
+      "line": 814
     },
     {
       "id": "queue-producers.index.this_feed_examines_a_bounded_2",
       "en": "this feed examines a bounded number of shared questions per read, a bounded number of projects per question and a bounded number of run-proposed readings per question. A truncation here means READINGS THIS READ DID NOT REACH, never readings that do not exist — the arrival of this one is unaffected by it, and the flag is published so the silence about any other cannot be read as evidence there is none.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 901
+      "line": 1018
     },
     {
-      "id": "queue-producers.index.two_projects_concluded_one_question",
-      "en": "two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer.",
+      "id": "queue-producers.index.this_projects_pointer_carries_no",
+      "en": "this project's pointer carries no date this producer can read as an instant, so how long the two teams have stood apart is undetermined and is reported as such rather than measured from this read",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1421
-    },
-    {
-      "id": "queue-producers.index.v1_the_cited_edition_keeps",
-      "en": "{v1} The cited edition keeps answering as it was signed, and nothing here moved or was regraded. Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1987
-    },
-    {
-      "id": "queue-producers.index.v1_this_is_a_to",
-      "en": "{v1} This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, receipted or disclosed.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1817
-    },
-    {
-      "id": "queue-producers.index.v1_whether_this_still_stands",
-      "en": "{v1} Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1878
-    },
-    {
-      "id": "queue-producers.index.what_changed_in_its_publishers",
-      "en": " What changed, in its publisher's words: \"{what_changed}\".",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1933
-    },
-    {
-      "id": "queue-producers.index.your_teams_civicsmith_noticed_that",
-      "en": "Your team's Civicsmith noticed that the address this document was captured from {v1}, and flagged it for a second look. What the change means is not decided here.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 1260
-    },
-    {
-      "id": "queue-producers.index.your_teams_copy_name_was",
-      "en": "Your team's copy {name} was made from {v1}{baseName}, and version {baseVersion} of it has since been approved. See what changed between the two; you may bring the change across to your copy by your own revision, and nothing is changed in your copy unless you do. This is told once.",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/index.mjs",
-      "line": 2540
+      "line": 833
     },
     {
       "id": "queue-producers.proposals.a_finding_is_derived_d",
       "en": "a finding is DERIVED (D-79): the record's own question, aggregated one per (progression, stage), graded the weakest instance and never averaged.",
       "module": "queue-producers",
       "file": "bio-plane/src/queue-producers/proposals.mjs",
-      "line": 137
-    },
-    {
-      "id": "queue-producers.proposals.n_plural_of_this_progression",
-      "en": "{n} {plural} of this progression thread more than one document at '{stageName}' ({document_count} in all), which is declared to hold {held}: a finding, which decides nothing about which of them belongs (framework 8.2)",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/proposals.mjs",
-      "line": 102
-    },
-    {
-      "id": "queue-producers.proposals.n_plural_of_this_progression_2",
-      "en": "{n} {plural} of this progression reach{plural_2} '{stageName}' without it{v1}{v2}",
-      "module": "queue-producers",
-      "file": "bio-plane/src/queue-producers/proposals.mjs",
-      "line": 158
+      "line": 141
     },
     {
       "id": "queue.index.a_calendar_date_is_snoozed",
       "en": "a calendar date is snoozed until the start of that day where this team is, and no time zone is held for this copy (its jurisdiction profile gives none), so the day cannot be read without guessing one. Send an instant instead (ISO-8601, with its time).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1844
+      "line": 2060
     },
     {
       "id": "queue.index.a_conflict_the_record_holds",
       "en": "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every list only when a member of a project it reaches resolves it, by saying what it turned out to be or by taking it up as a question and concluding it (DEC-84 item 2).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 906
+      "line": 908
     },
     {
       "id": "queue.index.a_disposition_is_recorded_under",
       "en": "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2060
+      "line": 2274
     },
     {
       "id": "queue.index.a_finding_that_carries_no",
       "en": "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, §7/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for — op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance §7 rejected, arriving through a defaulted parameter.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1984
+      "line": 2199
+    },
+    {
+      "id": "queue.index.a_finding_this_case_published",
+      "en": "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it or the conflict is resolved.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 925
+    },
+    {
+      "id": "queue.index.a_kind_is_a_slug",
+      "en": "a kind is a slug and may not contain a comma; the stored set is comma-separated",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1939
     },
     {
       "id": "queue.index.a_lead_is_the_records",
       "en": "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 914
+      "line": 916
     },
     {
       "id": "queue.index.a_mute_is_personal_and",
       "en": "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1797
+      "line": 2014
     },
     {
       "id": "queue.index.a_mute_is_personal_it",
       "en": "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1694
+      "line": 1903
     },
     {
       "id": "queue.index.a_mute_is_personal_this",
       "en": "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. Nothing left the record, no other member's feed moved, no disposition was written, and op=proposals still carries the finding. A finding leaves the team's list only when it is adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the same item arising again stays muted for you until you unmute it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1765
+      "line": 1982
     },
     {
       "id": "queue.index.a_newer_capture_of_what",
       "en": "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable, and takes a why of up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). Either closes this notice.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 824
+      "line": 826
+    },
+    {
+      "id": "queue.index.a_personal_preference_is_keyed",
+      "en": "a personal preference is keyed (member, case); name the case it is about",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1651
     },
     {
       "id": "queue.index.a_project_scoped_disposition_names",
       "en": "a project-scoped disposition names the FINDING it ages, by the queue item's own id (op=queue publishes it as disposition.finding). A project with no finding names a team and no decision.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1982
+      "line": 2197
     },
     {
       "id": "queue.index.a_queue_entry_is_filed",
       "en": "a queue entry is filed under a CASE — an inquiry or a project — and personal state is keyed to that. A document is a SUBJECT, not a home: muting one would be muting every question that rests on it, for reasons none of those questions' owners could see.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1621
+      "line": 1664
     },
     {
       "id": "queue.index.a_reason_is_at_most",
       "en": "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2056
+      "line": 2270
     },
     {
       "id": "queue.index.a_snooze_is_personal_it",
       "en": "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1821
+      "line": 2038
+    },
+    {
+      "id": "queue.index.a_snooze_that_has_already",
+      "en": "a snooze that has already expired is not a snooze; it would report as deferred while deferring nothing",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2078
     },
     {
       "id": "queue.index.a_status_item_is_a",
       "en": "a status item is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it — personally, with the status item persisting and every other member still seeing it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 782
+      "line": 787
     },
     {
       "id": "queue.index.a_to_do_is_a",
       "en": "a to-do is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1044
+      "line": 1086
     },
     {
       "id": "queue.index.a_to_do_is_something",
       "en": "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one.{v1}",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 776
+      "line": 781
     },
     {
       "id": "queue.index.bias_debts_settled_in_the",
       "en": "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1587
+      "line": 1632
+    },
+    {
+      "id": "queue.index.deferring_or_dismissing_the_records",
+      "en": "deferring or dismissing the record's own question is recorded with a reason, in the member's own words — a disposition with no reason ages a finding with no account of why",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2267
     },
     {
       "id": "queue.index.every_finding_here_left_the",
       "en": "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) carrying its author and their reason — never by a preference, which is the block above. It has NOT left the record: the decision is keyed on the finding's own identity, the same id the open feed mints for it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): `scope: instance` cleared this finding for EVERYBODY, because a progression-stage finding is a fact about the shared record and one act clearing it under every case is dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a stance is one project's own property (§7, D-216) and R5 makes forks at the judgment layer legitimate.** So `personal: false` means no member's preference did this, and it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that this plane cannot say; and which act any given finding is open to is published on the item's own `disposition`, never inferred from its kind.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1451
+      "line": 1496
     },
     {
       "id": "queue.index.every_queue_item_says_which",
       "en": "every queue item says which of {map} it is, and this one carries {v1}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1134
+      "line": 1175
+    },
+    {
+      "id": "queue.index.kind_is_not_a_kind",
+      "en": "'{kind}' is not a kind this record's catalogue names. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1181
     },
     {
       "id": "queue.index.muting_is_personal_and_dismissing",
       "en": "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A status item or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1437
+      "line": 1482
+    },
+    {
+      "id": "queue.index.name_either_one_item_item",
+      "en": "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are two different preferences and this plane will not guess which one you meant",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1915
     },
     {
       "id": "queue.index.name_the_instant_to_snooze",
       "en": "name the instant to snooze until. There is no default and there must not be one: P-87 requires re-notification at the stage's OWN declared interval, never at a global one, so this plane holds no instance-wide snooze constant to fall back on.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1829
+      "line": 2046
     },
     {
       "id": "queue.index.name_the_kinds_to_mute",
       "en": "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it was made — that is what lets a NEW kind on this case still reach you — so there is no whole-case mute to ask for.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1724
+      "line": 1932
     },
     {
       "id": "queue.index.no_case_by_that_id",
       "en": "no case by that id is visible to you. A case you may not see and a case that does not exist answer identically here (D-15), so this refusal reveals nothing either way.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1617
+      "line": 1660
     },
     {
       "id": "queue.index.no_queue_item_by_that",
       "en": "no queue item by that id is one this plane can classify: a noticed item's or a status item's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1736
+      "line": 1944
+    },
+    {
+      "id": "queue.index.one_of_your_accounts_may",
+      "en": "one of your accounts may explore today, and the ask is yours as its owner: approve it (op=exploreapprove), or let the day pass and it lapses. No team's list holds it.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 813
     },
     {
       "id": "queue.index.re_notification_about_this_case",
       "en": "re-notification about this case is deferred for YOU until that instant. The items themselves are unchanged, they still appear in your feed, and no other member's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1883
+      "line": 2098
     },
     {
       "id": "queue.index.readings_of_a_shared_question",
       "en": "readings of a SHARED question that this read met and could not attribute to a team, so no `new-version-arrived-from-another-team` item was minted for them. The source team is a run's own stored context or it is nothing: a member does not name a team in this record, and guessing one from who authored a reading would manufacture the very connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts and until now they read the same. The questions are named so a member can go and look (op=basisversions); the readings are not named and no author is implied. Why each one could not be attributed is deliberately NOT distinguished: telling a hand-composed reading from one whose run sat under something other than a project would mean projecting a stored column of `ai_runs`, which this reader's declared role forbids (REC-74). Zero means this read attributed everything it met, not that it did not look.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1475
+      "line": 1520
     },
     {
       "id": "queue.index.recorded_for_this_project_and",
       "en": "recorded for THIS project and for no other. One team's dismissal of a judgment-layer finding governs that team's feed and nothing else (D-266, §7/D-216, R5) — no other project's queue moved by an item, and the finding itself is aged rather than deleted (D-79): it stands until it is re-triaged, whether or not the underlying fact still fires.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2104
+      "line": 2318
     },
     {
       "id": "queue.index.something_this_project_rests_on",
       "en": "something this project rests on is in conflict with a record you cannot see. It is never muted: your project can ask to resolve it, and once every project holding a side has asked, the projects are named to each other and you can respond (DEC-85).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 910
+      "line": 912
     },
     {
       "id": "queue.index.something_you_watch_changed_and",
       "en": "something you watch changed, and you alone are told: no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; the watch goes on and a later change is told as a new item.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 799
+      "line": 804
     },
     {
       "id": "queue.index.string_is_catalogued_as_v1",
       "en": "'{String}' is catalogued as \"{v1}\" and this item mints it as \"{v2}\". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would let one member silence a task the record believes reached a person, and minting a status item's kind as something noticed would make a fact about our own machinery undismissable.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1149
+      "line": 1185
     },
     {
       "id": "queue.index.that_day_has_already_begun",
       "en": "that day has already begun where this team is, so the snooze, which holds until its start, has already lapsed and defers nothing. The items are unchanged and no other member's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1881
+      "line": 2096
     },
     {
       "id": "queue.index.that_day_is_before_today",
       "en": "that day is before today ({today}) where this team is; a snooze that has already expired is not a snooze, it would report as deferred while deferring nothing",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1852
+      "line": 2068
+    },
+    {
+      "id": "queue.index.the_day_could_not_be",
+      "en": "the day could not be read in this copy's time zone; send an instant instead",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2065
     },
     {
       "id": "queue.index.the_feed_keeps_four_orders",
       "en": "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 979
+      "line": 1031
     },
     {
       "id": "queue.index.the_machines_and_the_assistants",
       "en": "the machine's and the assistant's noticed items, duties come due and dated waits come round are read here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed nothing this time: its absence from the feed is not a statement that it has nothing to say.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1466
+      "line": 1511
     },
     {
       "id": "queue.index.the_notification_catalogue_does_not",
       "en": "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1737
+      "line": 1945
     },
     {
       "id": "queue.index.the_snooze_is_cleared_re",
       "en": "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1884
+      "line": 2099
+    },
+    {
+      "id": "queue.index.the_task_row_carries_a",
+      "en": "the task row carries a created stamp this producer cannot read as an instant",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1090
     },
     {
       "id": "queue.index.this_finding_carries_a_progression",
       "en": "this finding carries a progression stage, the identity the disposition act is keyed on, so Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a fact about the shared record, so one act clears it under every case (D-266, DEC-16).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 837
+      "line": 839
     },
     {
       "id": "queue.index.this_finding_carries_no_progression",
       "en": "this finding carries no progression stage, so its disposition is one project's judgment, scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: there is no team to record a decision for. A decision, where one can be made, ages the finding out of the team's open list until it is re-triaged, and deletes nothing (D-79).{v1}",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 878
+      "line": 880
     },
     {
       "id": "queue.index.this_finding_carries_no_progression_2",
       "en": "this finding carries no progression stage, so its disposition is a judgment-layer act, and a stance is one project's own property (§7, D-216): one team's decision governs that team's feed and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting project is yours to name) and `finding` with your disposition and reason. The decision ages the finding out of that team's open list until it is re-triaged, and deletes nothing (D-79).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 881
+      "line": 883
     },
     {
       "id": "queue.index.this_is_about_an_account",
       "en": "this is about an account and is told to whom it concerns; no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 810
+      "line": 814
+    },
+    {
+      "id": "queue.index.this_item_carries_no_kind",
+      "en": "this item carries no kind at all. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1180
     },
     {
       "id": "queue.index.this_names_a_finding_that",
       "en": "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2041
+      "line": 2256
     },
     {
       "id": "queue.index.this_names_v1_and_v2",
       "en": "this names {v1}, and {v2} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its `disposition.instead`. Nothing was written. The rest of a selection is unaffected — under the per-item weight this item alone is kept, carrying this reason.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2033
+      "line": 2248
     },
     {
       "id": "queue.index.this_one_is_a_bias",
       "en": " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason — or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 657
+      "line": 662
     },
     {
       "id": "queue.index.this_one_is_a_case",
       "en": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 665
+      "line": 670
     },
     {
       "id": "queue.index.this_one_is_a_check",
       "en": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays open to the others asked. Once someone takes it, everyone else's closes, naming who took it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 683
+      "line": 688
     },
     {
       "id": "queue.index.this_one_is_a_checkpoint",
       "en": " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 659
+      "line": 664
     },
     {
       "id": "queue.index.this_one_is_a_date",
       "en": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 668
+      "line": 673
     },
     {
       "id": "queue.index.this_one_is_a_date_2",
       "en": " This one is a date you set on a step, keyed by the step and the date rather than by a task, and it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 669
+      "line": 674
     },
     {
       "id": "queue.index.this_one_is_a_holiday",
       "en": " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 664
+      "line": 669
     },
     {
       "id": "queue.index.this_one_is_a_members",
       "en": " This one is a member's request to join a project you own, keyed by the request rather than by a task: it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 680
+      "line": 685
     },
     {
       "id": "queue.index.this_one_is_a_release",
       "en": " This one is a release of your team's Civicsmith that is ready to install, one to-do for every administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that release or newer. A newer release replaces it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 677
+      "line": 682
     },
     {
       "id": "queue.index.this_one_is_a_reminder",
       "en": " This one is a reminder you asked for on one of the team's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 661
+      "line": 666
     },
     {
       "id": "queue.index.this_one_is_a_reminder_2",
       "en": " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on its day only.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 670
+      "line": 675
     },
     {
       "id": "queue.index.this_one_is_a_reminder_3",
       "en": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it is told on its day only.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 671
+      "line": 676
     },
     {
       "id": "queue.index.this_one_is_a_reply",
       "en": " This one is a reply your team marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 662
+      "line": 667
     },
     {
       "id": "queue.index.this_one_is_a_review",
       "en": " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 663
+      "line": 668
     },
     {
       "id": "queue.index.this_one_is_a_review_2",
       "en": " This one is a review day your team set for a plan, keyed by the plan and the day rather than by a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 674
+      "line": 679
     },
     {
       "id": "queue.index.this_one_is_a_signing",
       "en": " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator revokes the key (op=signerset), or when it is otherwise no longer active.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 658
+      "line": 663
     },
     {
       "id": "queue.index.this_one_is_a_watch",
       "en": " This one is a watch a plan set running, asked about once because the plan closed or every promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown with no door.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 673
+      "line": 678
     },
     {
       "id": "queue.index.this_one_is_a_wizard",
       "en": " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 667
+      "line": 672
     },
     {
       "id": "queue.index.this_one_is_an_escalations",
       "en": " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 660
+      "line": 665
     },
     {
       "id": "queue.index.this_one_is_an_invitation",
       "en": " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 679
+      "line": 684
     },
     {
       "id": "queue.index.this_one_is_an_item",
       "en": " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 666
+      "line": 671
     },
     {
       "id": "queue.index.this_one_is_the_date",
       "en": " This one is the date your team set to look again at a paused plan, keyed by the plan and the day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 675
+      "line": 680
     },
     {
       "id": "queue.index.this_projects_conclusion_may_not",
       "en": "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: your project can ask to resolve it (DEC-85).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 920
+      "line": 922
     },
     {
       "id": "queue.index.this_team_decided_this_finding",
       "en": "this team decided this finding at the judgment layer, so it has left their open list; it is still live for the teams named above, whose feed that act did not touch (D-266).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1245
+      "line": 1281
+    },
+    {
+      "id": "queue.index.this_tells_the_projects_owners",
+      "en": "this tells the project's owners that a member who left had items routed to them. There is nothing here for a team to set aside: take up the items you choose (the acts this item offers first), and quiet it for yourself (op=queuemute, naming this item) once you have read it.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 821
+    },
+    {
+      "id": "queue.index.to_dos_that_left_the",
+      "en": "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1633
     },
     {
       "id": "queue.index.two_projects_conclusions_may_not",
       "en": "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference does, or taking it up as a question (DEC-84 item 3).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 917
+      "line": 919
+    },
+    {
+      "id": "queue.index.until_must_be_an_instant",
+      "en": "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a real day",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2056
+    },
+    {
+      "id": "queue.index.until_must_be_an_instant_2",
+      "en": "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2075
     },
     {
       "id": "queue.index.your_standing_questions_answer_is",
       "en": "your standing question's answer is told to you once and to nobody else, so no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; your question keeps running and a later run's new finds are told to you as a new item.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 793
+      "line": 798
+    },
+    {
+      "id": "queue.queuestate.a_bias_statements_measure_has",
+      "en": "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 222
+    },
+    {
+      "id": "queue.queuestate.a_connections_grade_is_improvable",
+      "en": "a connection's grade is improvable (D-72)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 220
+    },
+    {
+      "id": "queue.queuestate.a_duplicate_document_was_detected",
+      "en": "a duplicate document was detected (D-60)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 216
+    },
+    {
+      "id": "queue.queuestate.a_register_entrys_bytes_are",
+      "en": "a register entry's bytes are unbacked (D-9, D-45)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 228
     },
     {
       "id": "queue.queuestate.a_to_do_is_something",
       "en": "a to-do is something a named person must do for the record to proceed, and it leaves every list only when it is DONE (op=taskresolve, or the act its item names as `disposition.instead`): record state, not a preference. Quieting it would remove it from the only list that routes it while `tasks` keeps no per-member quiet, so the record would go on believing the question reached a person.",
       "module": "queue",
       "file": "bio-plane/src/queuestate.mjs",
-      "line": 448
+      "line": 447
+    },
+    {
+      "id": "queue.queuestate.every_owner_of_a_project",
+      "en": "every owner of a project is inactive; rescue is available (D-47)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 106
     },
     {
       "id": "ratification.checks.some_of_these_documents_are",
@@ -42425,21 +42691,21 @@
       "en": "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 42
+      "line": 43
     },
     {
       "id": "signin-door.index.the_sign_in_trace_is",
       "en": "the sign-in trace is kept only on a test instance of Civicsmith, and your team's Civicsmith is not one. Nothing was read.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 269
+      "line": 270
     },
     {
       "id": "signin-door.index.your_teams_civicsmith_has_no",
       "en": "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 110
+      "line": 111
     },
     {
       "id": "site-profiles.aspnet-webforms.an_advertising_or_analytics",
@@ -44199,18 +44465,1019 @@
       "line": 995
     },
     {
+      "id": "stewards.config.account_not_pinned",
+      "en": "is not the project's pinned Cloudflare account ({account})",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 108
+    },
+    {
+      "id": "stewards.config.address_not_one",
+      "en": "is not exactly one e-mail address",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 90
+    },
+    {
+      "id": "stewards.config.address_not_set",
+      "en": "is not set: the stewards' contact address is missing",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 89
+    },
+    {
+      "id": "stewards.config.deploy_configuration_unreadable",
+      "en": "the deploy configuration could not be read",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 87
+    },
+    {
+      "id": "stewards.config.notify_destination_differs",
+      "en": "the mail binding's destination is not STEWARDS_ADDRESS",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 99
+    },
+    {
+      "id": "stewards.config.retention_not_days",
+      "en": "is not a whole number of days from 1 to 3650",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 93
+    },
+    {
+      "id": "stewards.config.retention_not_set",
+      "en": "is not set: a retention period in days is missing",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 92
+    },
+    {
+      "id": "stewards.config.secret_in_vars",
+      "en": "must be a secret, never a plain variable",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 97
+    },
+    {
+      "id": "stewards.config.secret_missing",
+      "en": "is not among the Worker's secrets",
+      "module": "stewards",
+      "file": "stewards/src/config.mjs",
+      "line": 96
+    },
+    {
+      "id": "stewards.index.concerns_invalid",
+      "en": "What the report concerns must be a team's short name or an https:// address, at most {max} characters.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 44
+    },
+    {
+      "id": "stewards.index.contact_invalid",
+      "en": "The contact must be at most {max} characters.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 46
+    },
+    {
+      "id": "stewards.index.credential_in_address",
+      "en": "Stewards' addresses carry nothing after a question mark; nothing was read.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 53
+    },
+    {
+      "id": "stewards.index.decision_unknown",
+      "en": "The decision must be dismiss or withdraw.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 56
+    },
+    {
+      "id": "stewards.index.description_invalid",
+      "en": "The description must be from 1 to {max} characters.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 45
+    },
+    {
+      "id": "stewards.index.intake_full",
+      "en": "The stewards have too many reports waiting to take another now. Please try again later, or write to them by e-mail.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 48
+    },
+    {
+      "id": "stewards.index.intake_unavailable",
+      "en": "The report could not be taken now. Nothing was kept. Please try again later.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 49
+    },
+    {
+      "id": "stewards.index.kind_unknown",
+      "en": "The kind of abuse must be one of: fabricated evidence, harassment, impersonation, other.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 43
+    },
+    {
+      "id": "stewards.index.method_not_allowed",
+      "en": "That method is not allowed here.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 61
+    },
+    {
+      "id": "stewards.index.no_such_page",
+      "en": "There is no such page.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 60
+    },
+    {
+      "id": "stewards.index.no_such_report",
+      "en": "There is no such report.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 55
+    },
+    {
+      "id": "stewards.index.not_withdrawn",
+      "en": "No withdrawal of that shared service stands.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 59
+    },
+    {
+      "id": "stewards.index.not_yet_open",
+      "en": "Reporting to Civicsmith's stewards is not yet open.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 40
+    },
+    {
+      "id": "stewards.index.notice_sender",
+      "en": "Civicsmith's stewards' reporting service",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 173
+    },
+    {
+      "id": "stewards.index.notice_subject",
+      "en": "A report has arrived ({ref})",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 174
+    },
+    {
+      "id": "stewards.index.origin_refused",
+      "en": "This request did not come from the stewards' own pages; nothing was changed.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 54
+    },
+    {
+      "id": "stewards.index.rate_limited",
+      "en": "Too many reports have been sent for now. Please try again later.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 47
+    },
+    {
+      "id": "stewards.index.reason_required",
+      "en": "A reason is required, at most {max} characters.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 57
+    },
+    {
+      "id": "stewards.index.report_too_large",
+      "en": "The report is too large: it must be under 16 KiB in all.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 41
+    },
+    {
+      "id": "stewards.index.request_too_large",
+      "en": "The request is too large.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 42
+    },
+    {
+      "id": "stewards.index.service_could_not_answer",
+      "en": "The service could not answer now.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 287
+    },
+    {
+      "id": "stewards.index.session_required",
+      "en": "Sign in as a steward first.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 52
+    },
+    {
+      "id": "stewards.index.signin_limited",
+      "en": "Too many refused sign-ins. Try again later.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 51
+    },
+    {
+      "id": "stewards.index.signin_refused",
+      "en": "That name and key do not sign in.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 50
+    },
+    {
+      "id": "stewards.index.withdraw_target_invalid",
+      "en": "A withdrawal names one shared service (a shared profile, the template library, a public listing) and its item.",
+      "module": "stewards",
+      "file": "stewards/src/index.mjs",
+      "line": 58
+    },
+    {
+      "id": "stewards.ui.already_withdrawn",
+      "en": "(already withdrawn)",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 167
+    },
+    {
+      "id": "stewards.ui.button_record",
+      "en": "Record the decision",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 177
+    },
+    {
+      "id": "stewards.ui.button_reinstate",
+      "en": "Reinstate",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 178
+    },
+    {
+      "id": "stewards.ui.button_send",
+      "en": "Send the report",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 114
+    },
+    {
+      "id": "stewards.ui.button_signin",
+      "en": "Sign in",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 153
+    },
+    {
+      "id": "stewards.ui.button_signout",
+      "en": "Sign out",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 157
+    },
+    {
+      "id": "stewards.ui.column_concerns",
+      "en": "Concerns",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.column_item",
+      "en": "Item",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 145
+    },
+    {
+      "id": "stewards.ui.column_kind",
+      "en": "Kind",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.column_kind_of_abuse",
+      "en": "Kind of abuse",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 145
+    },
+    {
+      "id": "stewards.ui.column_received",
+      "en": "Received",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.column_reference",
+      "en": "Reference",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.column_service",
+      "en": "Shared service",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 145
+    },
+    {
+      "id": "stewards.ui.column_since",
+      "en": "Since",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 145
+    },
+    {
+      "id": "stewards.ui.column_state",
+      "en": "State",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.decision_dismiss",
+      "en": "Dismissed",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 45
+    },
+    {
+      "id": "stewards.ui.decision_reinstate",
+      "en": "Reinstated",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 47
+    },
+    {
+      "id": "stewards.ui.decision_withdraw",
+      "en": "Withdrawn",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 46
+    },
+    {
+      "id": "stewards.ui.detail_concerns",
+      "en": "Concerns:",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 170
+    },
+    {
+      "id": "stewards.ui.detail_contact",
+      "en": "Contact:",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 170
+    },
+    {
+      "id": "stewards.ui.detail_contact_none",
+      "en": "none kept",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 170
+    },
+    {
+      "id": "stewards.ui.detail_decide",
+      "en": "Decide",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 173
+    },
+    {
+      "id": "stewards.ui.detail_decisions",
+      "en": "Decisions",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 172
+    },
+    {
+      "id": "stewards.ui.detail_decisions_none",
+      "en": "None yet.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 172
+    },
+    {
+      "id": "stewards.ui.detail_description",
+      "en": "Description",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 171
+    },
+    {
+      "id": "stewards.ui.detail_summary",
+      "en": "{kind} · received {received} · {state}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 169
+    },
+    {
+      "id": "stewards.ui.detail_title",
+      "en": "Report {ref}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 168
+    },
+    {
+      "id": "stewards.ui.guide_advice",
+      "en": "This guide is not legal advice. If you need to know what the law could require of your team, ask a lawyer.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 16
+    },
+    {
+      "id": "stewards.ui.guide_compelled",
+      "en": "Those who could be asked or compelled to hand over what your team's Civicsmith holds are your team itself (and anyone in it who keeps a copy), and its hosting provider, under the law that binds that provider. Civicsmith's stewards cannot be, because they hold none of it.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 15
+    },
+    {
+      "id": "stewards.ui.guide_control",
+      "en": "Whoever can sign in to that hosting account controls your team's Civicsmith. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the team's administrators can stop them. Use a team account for it, not anyone's personal login, and add at least one other trusted person to it.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 14
+    },
+    {
+      "id": "stewards.ui.guide_heading",
+      "en": "What a team holds, and who could compel it",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 12
+    },
+    {
+      "id": "stewards.ui.guide_report_link",
+      "en": "To report abuse of Civicsmith itself, use {link}.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 139
+    },
+    {
+      "id": "stewards.ui.guide_title",
+      "en": "What a team holds",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 137
+    },
+    {
+      "id": "stewards.ui.guide_where",
+      "en": "Your team's Civicsmith keeps its record and its evidence in your team's own hosting account (its Cloudflare account), and nowhere else. Civicsmith's stewards hold none of it, and your team's Civicsmith sends them nothing.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 13
+    },
+    {
+      "id": "stewards.ui.header_public",
+      "en": "Civicsmith · reporting abuse to Civicsmith's stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 67
+    },
+    {
+      "id": "stewards.ui.header_stewards",
+      "en": "Civicsmith · for Civicsmith's stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 66
+    },
+    {
+      "id": "stewards.ui.home_heading",
+      "en": "Civicsmith's stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 155
+    },
+    {
+      "id": "stewards.ui.home_signed_in",
+      "en": "Signed in as {name}.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 155
+    },
+    {
+      "id": "stewards.ui.home_title",
+      "en": "Stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 155
+    },
+    {
+      "id": "stewards.ui.kind_fabricated_evidence",
+      "en": "Fabricated evidence",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 29
+    },
+    {
+      "id": "stewards.ui.kind_harassment",
+      "en": "Harassment",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 30
+    },
+    {
+      "id": "stewards.ui.kind_impersonation",
+      "en": "Impersonation",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 31
+    },
+    {
+      "id": "stewards.ui.kind_other",
+      "en": "Other abuse of Civicsmith",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 32
+    },
+    {
+      "id": "stewards.ui.label_concerns",
+      "en": "Which team or published case it concerns",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 108
+    },
+    {
+      "id": "stewards.ui.label_contact",
+      "en": "How to reply to you (optional)",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 112
+    },
+    {
+      "id": "stewards.ui.label_decision",
+      "en": "Decision",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 174
+    },
+    {
+      "id": "stewards.ui.label_description",
+      "en": "What happened",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 110
+    },
+    {
+      "id": "stewards.ui.label_item",
+      "en": "Item (to withdraw)",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 176
+    },
+    {
+      "id": "stewards.ui.label_key",
+      "en": "Key",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 152
+    },
+    {
+      "id": "stewards.ui.label_kind",
+      "en": "What kind of abuse",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 107
+    },
+    {
+      "id": "stewards.ui.label_name",
+      "en": "Name",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 151
+    },
+    {
+      "id": "stewards.ui.label_reason",
+      "en": "Reason",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 165
+    },
+    {
+      "id": "stewards.ui.label_service",
+      "en": "Shared service (to withdraw)",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 175
+    },
+    {
+      "id": "stewards.ui.link_back",
+      "en": "Back",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 125
+    },
+    {
+      "id": "stewards.ui.link_guide",
+      "en": "What a team holds, and who could compel it",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 72
+    },
+    {
+      "id": "stewards.ui.link_home",
+      "en": "Home",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 161
+    },
+    {
+      "id": "stewards.ui.link_newer",
+      "en": "Newer",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 161
+    },
+    {
+      "id": "stewards.ui.link_older",
+      "en": "Older",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 161
+    },
+    {
+      "id": "stewards.ui.link_register_json",
+      "en": "The register (JSON)",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 156
+    },
+    {
+      "id": "stewards.ui.link_report_abuse",
+      "en": "Report abuse",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 72
+    },
+    {
+      "id": "stewards.ui.link_reporting_page",
+      "en": "the reporting page",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 136
+    },
+    {
+      "id": "stewards.ui.link_reports",
+      "en": "Reports",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 156
+    },
+    {
+      "id": "stewards.ui.link_withdrawals",
+      "en": "Withdrawn shared services",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 72
+    },
+    {
+      "id": "stewards.ui.not_yet_open_body",
+      "en": "The service that receives reports of abuse of Civicsmith itself is not yet open, so it cannot take a report now.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 83
+    },
+    {
+      "id": "stewards.ui.not_yet_open_heading",
+      "en": "Reporting to Civicsmith's stewards is not yet open",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 81
+    },
+    {
+      "id": "stewards.ui.not_yet_open_title",
+      "en": "Not yet open",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 82
+    },
+    {
+      "id": "stewards.ui.notice_advice",
+      "en": "This service gives no legal advice.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 93
+    },
+    {
+      "id": "stewards.ui.notice_arrived",
+      "en": "A report has arrived at Civicsmith's stewards' reporting service.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 184
+    },
+    {
+      "id": "stewards.ui.notice_contact",
+      "en": "You do not need an account. The contact field is optional and is used only to reply to you; without it the stewards cannot reply.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 90
+    },
+    {
+      "id": "stewards.ui.notice_email",
+      "en": "You can also send a report by e-mail to {address}.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 92
+    },
+    {
+      "id": "stewards.ui.notice_kept",
+      "en": "What is kept: your report and, if you give one, your contact. Only {stewards} read them. Your contact is erased {contact_days} days after the stewards' latest decision on your report, and the report itself is deleted {report_days} days after it. A report not yet decided is kept until it is decided.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 91
+    },
+    {
+      "id": "stewards.ui.notice_kind",
+      "en": "Kind: {kind}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 187
+    },
+    {
+      "id": "stewards.ui.notice_limits",
+      "en": "{stewards} read every report. They may only withdraw a shared service (a shared profile contribution, an item of the template library, a public listing). They never edit or delete a team's record, and they have no way into any team's Civicsmith.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 89
+    },
+    {
+      "id": "stewards.ui.notice_purpose",
+      "en": "Use this form to report abuse of Civicsmith itself: fabricated evidence, harassment or impersonation, or other abuse, by or about a team's public identity or a published case.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 88
+    },
+    {
+      "id": "stewards.ui.notice_read",
+      "en": "Read it, signed in, at {page}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 190
+    },
+    {
+      "id": "stewards.ui.notice_received",
+      "en": "Received: {received}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 188
+    },
+    {
+      "id": "stewards.ui.notice_reference",
+      "en": "Reference: {ref}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 186
+    },
+    {
+      "id": "stewards.ui.option_dismiss",
+      "en": "Dismiss",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 174
+    },
+    {
+      "id": "stewards.ui.option_withdraw",
+      "en": "Withdraw a shared service",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 174
+    },
+    {
+      "id": "stewards.ui.page_title",
+      "en": "{title} · Civicsmith",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 69
+    },
+    {
+      "id": "stewards.ui.placeholder_concerns",
+      "en": "a team's short name, or an https:// address",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 109
+    },
+    {
+      "id": "stewards.ui.received_heading",
+      "en": "Your report has been received",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 122
+    },
+    {
+      "id": "stewards.ui.received_reference",
+      "en": "Its reference is {ref}.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 123
+    },
+    {
+      "id": "stewards.ui.received_title",
+      "en": "Report received",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 122
+    },
+    {
+      "id": "stewards.ui.received_with_contact",
+      "en": "A steward replies only by the contact you gave, if a reply is needed.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 119
+    },
+    {
+      "id": "stewards.ui.received_without_contact",
+      "en": "You gave no contact, so the stewards cannot reply to you.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 120
+    },
+    {
+      "id": "stewards.ui.refused_title",
+      "en": "Not accepted",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 128
+    },
+    {
+      "id": "stewards.ui.register_heading",
+      "en": "Shared services withdrawn by Civicsmith's stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 143
+    },
+    {
+      "id": "stewards.ui.register_intro",
+      "en": "Each line is a shared service the stewards have withdrawn and not reinstated, with the kind of abuse reported. No team's record is ever changed by a withdrawal.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 144
+    },
+    {
+      "id": "stewards.ui.register_none",
+      "en": "None stands.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 147
+    },
+    {
+      "id": "stewards.ui.register_title",
+      "en": "Withdrawn shared services",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 143
+    },
+    {
+      "id": "stewards.ui.reinstate_heading",
+      "en": "Reinstate {service} {item}",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 178
+    },
+    {
+      "id": "stewards.ui.report_title",
+      "en": "Report abuse of Civicsmith",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 101
+    },
+    {
+      "id": "stewards.ui.reports_title",
+      "en": "Reports",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 159
+    },
+    {
+      "id": "stewards.ui.responsible",
+      "en": "{stewards} decide every report. {publisher}, the publisher of Civicsmith, is responsible for them.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 8
+    },
+    {
+      "id": "stewards.ui.service_advice",
+      "en": "This is not legal advice.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 25
+    },
+    {
+      "id": "stewards.ui.service_compelled",
+      "en": "Civicsmith's stewards could be asked or compelled to hand those over, and so could this service's hosting provider, under the law that binds it. What is kept, and for how long, is said on the reporting page.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 24
+    },
+    {
+      "id": "stewards.ui.service_heading",
+      "en": "What this reporting service holds",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 22
+    },
+    {
+      "id": "stewards.ui.service_holds",
+      "en": "This service, which Civicsmith's stewards run apart from every team's Civicsmith, holds the reports sent to it, the stewards' decisions on them, and the register of withdrawn shared services.",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 23
+    },
+    {
+      "id": "stewards.ui.service_public_listing",
+      "en": "A public listing",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 37
+    },
+    {
+      "id": "stewards.ui.service_shared_profile",
+      "en": "A shared profile contribution",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 35
+    },
+    {
+      "id": "stewards.ui.service_template_library",
+      "en": "An item of the template library",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 36
+    },
+    {
+      "id": "stewards.ui.signin_heading",
+      "en": "Sign in, Civicsmith's stewards",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 150
+    },
+    {
+      "id": "stewards.ui.signin_title",
+      "en": "Stewards' sign-in",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 150
+    },
+    {
+      "id": "stewards.ui.state_dismissed",
+      "en": "Dismissed",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 41
+    },
+    {
+      "id": "stewards.ui.state_undecided",
+      "en": "Undecided",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 40
+    },
+    {
+      "id": "stewards.ui.state_withdrawn",
+      "en": "Withdrawn",
+      "module": "stewards",
+      "file": "stewards/src/ui.mjs",
+      "line": 42
+    },
+    {
       "id": "store-door.dispatch.a_litigation_hold_is_in",
       "en": "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 247
+      "line": 248
+    },
+    {
+      "id": "store-door.dispatch.asking_the_assistant_to_draft",
+      "en": "asking the assistant to draft the team's description",
+      "module": "store-door",
+      "file": "bio-plane/src/store-door/dispatch.mjs",
+      "line": 334
+    },
+    {
+      "id": "store-door.dispatch.the_account_that_would_serve",
+      "en": "the account that would serve this draft could not be read; nothing was used",
+      "module": "store-door",
+      "file": "bio-plane/src/store-door/dispatch.mjs",
+      "line": 309
     },
     {
       "id": "store-door.dispatch.this_bundle_is_or_may",
       "en": "this bundle is, or may be, material a litigation hold preserves. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 248
+      "line": 249
     },
     {
       "id": "store-door.pull.material_handed_to_the_team",
@@ -45127,189 +46394,245 @@
       "en": "a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 80
+      "line": 81
     },
     {
       "id": "translations.index.a_note_is_text_of",
       "en": "a note is text of at most {TRANSLATION_NOTE_MAX} characters. Nothing was recorded.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 650
+      "line": 653
     },
     {
       "id": "translations.index.a_translated_word_is_one",
       "en": "a translated word is one line of 1 to {TRANSLATION_TEXT_MAX} characters. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 552
+      "line": 555
     },
     {
-      "id": "translations.index.every_word_asked_for_is",
-      "en": "every word asked for is {v1} in {tag}, so there is nothing to draft. Nothing was sent.",
+      "id": "translations.index.asking_a_member_to_translate",
+      "en": "asking a member to translate the screens",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 410
+      "line": 277
+    },
+    {
+      "id": "translations.index.every_word_asked_for_is_official",
+      "en": "every word asked for is an official name, shown as it is, in {tag}, so there is nothing to draft. Nothing was sent.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 414
+    },
+    {
+      "id": "translations.index.every_word_asked_for_is_translated",
+      "en": "every word asked for is translated already in {tag}, so there is nothing to draft. Nothing was sent.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 415
     },
     {
       "id": "translations.index.key_already_has_a_kept",
       "en": "{key} already has a kept translation in {tag}, so the assistant does not draft it. Nothing was sent.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 393
+      "line": 396
     },
     {
       "id": "translations.index.key_has_never_been_translated",
       "en": "{key} has never been translated into {tag}. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 619
+      "line": 622
     },
     {
       "id": "translations.index.key_has_not_been_read",
       "en": "{key} has not been read back into English for its current text in {tag}. Read it back into English first, then confirm. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 595
+      "line": 598
+    },
+    {
+      "id": "translations.index.key_is_not_a_word_key",
+      "en": "'{key}' is not a key of the interface's word list. Nothing was changed.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 236
     },
     {
       "id": "translations.index.key_is_v1_in_tag",
       "en": "{key} is {v1} in {tag}, so it is not waiting for a second check. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 327
+      "line": 330
     },
     {
       "id": "translations.index.key_shows_no_translation_in",
       "en": "{key} shows no translation in {tag}. Nothing was recorded.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 646
+      "line": 649
+    },
+    {
+      "id": "translations.index.no_language_named_for_a_tag",
+      "en": "the request names no language, and a language is named by one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 225
+    },
+    {
+      "id": "translations.index.no_member_and_no_language_named",
+      "en": "the request names no member and no language, so no language for the screens is chosen. Nothing was translated.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 761
+    },
+    {
+      "id": "translations.index.no_word_named_for_a_key",
+      "en": "the request names no word, and a word is named by a key of the interface's word list. Nothing was changed.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 237
+    },
+    {
+      "id": "translations.index.tag_is_not_a_well_formed_language_tag",
+      "en": "'{tag}' is not one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 224
     },
     {
       "id": "translations.index.the_assistant_did_not_answer",
       "en": "the assistant did not answer a reading of this word back into English.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 489
+      "line": 492
     },
     {
       "id": "translations.index.the_assistant_did_not_answer_2",
       "en": "the assistant did not answer a draft of these words.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 499
+      "line": 502
     },
     {
-      "id": "translations.index.the_draft_is_not_one",
-      "en": "the draft is not one line of 1 to {TRANSLATION_TEXT_MAX} characters, so it is not stored",
+      "id": "translations.index.the_draft_is_asked_by_the_door",
+      "en": "the door asks the assistant for the draft with these words. Nothing is drafted or saved here.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 508
+      "line": 468
     },
     {
       "id": "translations.index.the_language_could_not_be",
       "en": "the language could not be read ({String}). Nothing was translated.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 761
+      "line": 766
+    },
+    {
+      "id": "translations.index.the_member_language_source_is_a_function",
+      "en": "the member's language source is registered as a function that takes the viewer. Nothing was registered.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 143
+    },
+    {
+      "id": "translations.index.the_member_language_source_is_registered",
+      "en": "the member's language source is already registered, so the first stands. Nothing was registered.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 146
     },
     {
       "id": "translations.index.the_teams_translations_could_not",
       "en": "the team's translations could not be read, so every word is shown in English.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 732
+      "line": 735
     },
     {
       "id": "translations.index.the_texts_placeholders_v1_differ",
       "en": "the text's placeholders ({v1}) differ from the English's ({v2}). Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 551
+      "line": 554
     },
     {
       "id": "translations.index.the_translation_workspace_could_not",
       "en": "the translation workspace could not be read ({String}).",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 703
+      "line": 706
     },
     {
       "id": "translations.index.the_words_to_draft_are",
       "en": "the words to draft are a list of 1 to {TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 382
+      "line": 385
     },
     {
       "id": "translations.index.the_words_to_draft_could",
       "en": "the words to draft could not be read ({String}). Nothing was sent.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 446
+      "line": 450
     },
     {
       "id": "translations.index.there_is_no_stored_draft",
       "en": "there is no stored draft {String} of {key} in {tag}. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 544
+      "line": 547
+    },
+    {
+      "id": "translations.index.this_member_has_no_language_chosen",
+      "en": "this member has no language chosen for the screens, and the request names none. Nothing was translated.",
+      "module": "translations",
+      "file": "bio-plane/src/translations/index.mjs",
+      "line": 760
     },
     {
       "id": "translations.index.translating_the_screens_is_a",
       "en": "translating the screens is a member's own act, from their own signed-in session. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 213
+      "line": 214
     },
     {
-      "id": "translations.index.v1_a_key_of_the",
-      "en": "{v1} a key of the interface's word list. Nothing was changed.",
+      "id": "translations.index.undoing_a_translation_of_the_screens",
+      "en": "undoing a translation of the screens",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 233
-    },
-    {
-      "id": "translations.index.v1_no_language_chosen_for",
-      "en": "{v1} no language chosen for the screens, and the request names none. Nothing was translated.",
-      "module": "translations",
-      "file": "bio-plane/src/translations/index.mjs",
-      "line": 756
-    },
-    {
-      "id": "translations.index.v1_one_well_formed_bcp",
-      "en": "{v1} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.",
-      "module": "translations",
-      "file": "bio-plane/src/translations/index.mjs",
-      "line": 222
+      "line": 613
     },
     {
       "id": "translations.index.whether_your_team_keeps_its",
       "en": "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 169
+      "line": 170
     },
     {
       "id": "translations.index.why_nothing_was_saved",
       "en": "{why} Nothing was saved.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 484
+      "line": 487
     },
     {
       "id": "translations.index.working_on_the_words_of",
       "en": "working on the words of {tag} is for the administrators and the members an administrator has asked to translate it. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 263
+      "line": 266
     },
     {
       "id": "translations.index.you_kept_this_translation_of",
       "en": "you kept this translation of {key}, so its second check is someone else's. Nothing was changed.",
       "module": "translations",
       "file": "bio-plane/src/translations/index.mjs",
-      "line": 585
+      "line": 588
     },
     {
       "id": "workbooks.index.k1447_grade_rule",
