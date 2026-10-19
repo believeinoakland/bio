@@ -26,7 +26,7 @@ import { word, localize } from "../setup-words/index.mjs";
    CLAUDE.md remains the standing instruction and is not superseded. */
 export const OBSERVATION_LEVELS = {
   meaning:  word("observation-log.meaning.framework_layer_findings"),
-  content:  "extracted content within documents (DEC-23: content is the unit)",
+  content:  localize("observation-log.vocabulary.level_content", "extracted content within documents (DEC-23: content is the unit)"),
   document: word("observation-log.document.documents_store_holds"),
   internet: word("observation-log.internet"),
 };
@@ -35,11 +35,11 @@ export const OBSERVATION_LEVELS = {
    and a reader can both use; nothing derives behaviour from the key's spelling
    anywhere, so this object is the vocabulary and not a switch. */
 export const OBSERVATION_STATES = {
-  NEVER_LOOKED:         "nobody looked at this level for this subject",
-  LOOKED_ABSENT:        "we looked and it is positively not there",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT:              "we looked and it is there",
-  partial:              "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)",
+  NEVER_LOOKED:         localize("observation-log.vocabulary.state_never_looked", "nobody looked at this level for this subject"),
+  LOOKED_ABSENT:        localize("observation-log.vocabulary.state_looked_absent", "we looked and it is positively not there"),
+  LOOKED_INDETERMINATE: localize("observation-log.vocabulary.state_looked_indeterminate", "we looked and could not tell"),
+  PRESENT:              localize("observation-log.vocabulary.state_present", "we looked and it is there"),
+  partial:              localize("observation-log.vocabulary.state_partial", "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"),
 };
 
 /* D-682 — THE SAME FIVE IN THE WORDS A MEMBER READS (R21). A sentence above may carry a
@@ -123,10 +123,8 @@ export const DEFINITIVE_STATES = new Set(["LOOKED_ABSENT", "PRESENT"]);
  * safety. `partial` therefore answers `none_owed` and the question is handed
  * to the design, where the rollup question from D-366 is already waiting. */
 export const OBSERVATION_COVERAGE = {
-  backed:    "the row names what the look produced: `result_ref` points at it, and the claim "
-           + "can be checked against the thing itself",
-  none_owed: "the row's state does not assert the record obtained anything, so C-22.10 requires "
-           + "no referent and its absence is a fact about the look rather than an unknown",
+  backed:    localize("observation-log.vocabulary.coverage_backed", "the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself"),
+  none_owed: localize("observation-log.vocabulary.coverage_none_owed", "the row's state does not assert the record obtained anything, so C-22.10 requires no referent and its absence is a fact about the look rather than an unknown"),
 };
 
 /** The value that is NOT one of the two above, and it is the whole point of
@@ -188,14 +186,14 @@ export const OBSERVATION_ACTOR_CLASSES = {
    of `member`) is deliberately ABSENT from this object: the column would take
    the value at the schema, and what stops it is this vocabulary. */
 export const OBSERVATION_AUTHORITY_KINDS = {
-  run:       "an investigative run (the precedent this generalises; IS-6)",
+  run:       localize("observation-log.vocabulary.authority_run", "an investigative run (the precedent this generalises; IS-6)"),
   sweep:     word("observation-log.sweep"),
   link:      word("observation-log.link"),
   ratify:    word("observation-log.ratify"),
   acquire:   word("observation-log.acquire"),
-  extract:   "an extraction attempt over a capture (REC-94)",
-  derive:    "a derivation over extracted content (REC-95)",
-  lead:      "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
+  extract:   localize("observation-log.vocabulary.authority_extract", "an extraction attempt over a capture (REC-94)"),
+  derive:    localize("observation-log.vocabulary.authority_derive", "a derivation over extracted content (REC-95)"),
+  lead:      localize("observation-log.vocabulary.authority_lead", "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)"),
   objective: word("observation-log.objective"),
   /* T41-11 (R1, R13): a step's look (`steps` R9). A step id names no bundle; who sees the row is `steps`' answer,
      through the resolver it registers for this kind (its R18). */
@@ -210,13 +208,12 @@ export const OBSERVATION_AUTHORITY_KINDS = {
    support, at the exact scale this project's worst defect class arrives at.
    `unstated` says the true thing: the kind was never recorded. */
 export const OBSERVATION_SUBJECT_KINDS = {
-  address:     "the web address a document was looked for at, in its normalised form",
+  address:     localize("observation-log.vocabulary.subject_address", "the web address a document was looked for at, in its normalised form"),
   capture:     word("observation-log.capture"),
-  extent:      "a particular passage inside a document — a page, a cell, a paragraph (IC-1)",
+  extent:      localize("observation-log.vocabulary.subject_extent", "a particular passage inside a document — a page, a cell, a paragraph (IC-1)"),
   entity:      word("observation-log.entity"),
   description: word("observation-log.description"),
-  unstated:    "the writer did not record what kind of thing this was about, and the record "
-             + "says so rather than guessing (the folded run log, and nothing new)",
+  unstated:    word("observation-log.unstated"),
   /* THE SEVENTH, ADDED BY REC-95 AND STATED HERE RATHER THAN SMUGGLED, exactly
      as `unstated` above is. It is NOT in design section 3's list either.
 
@@ -237,9 +234,7 @@ export const OBSERVATION_SUBJECT_KINDS = {
      with its date and its reason, never exempted. R1's test in
      `test/m/observation-log/vocabulary.test.mjs` pins the seven now. Reported as a
      DESIGN GAP against sections 3 and 4.3 rather than resolved silently. */
-  reference:   "a reference as a document's reading carries it — the raw, source-assigned "
-             + "kind:key, before any resolution to a canonical entity (D-83). The subject of a "
-             + "RESOLUTION attempt, whose whole point is that it may match no entity at all",
+  reference:   localize("observation-log.vocabulary.subject_reference", "a reference as a document's reading carries it — the raw, source-assigned kind:key, before any resolution to a canonical entity (D-83). The subject of a RESOLUTION attempt, whose whole point is that it may match no entity at all"),
 };
 
 /* ===================================================================== *
@@ -271,13 +266,9 @@ export const OBSERVATION_SUBJECT_KINDS = {
  * rather than the search surface's. */
 export const CONTENT_AXIS_STATES = {
   indexed_full:    word("observation-log.indexed_full"),
-  indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or "
-                 + "only some of its pages could be read",
-  indexed_none:    "none of this capture's text is indexed, and the record says WHY — there was no "
-                 + "text to extract, or this record cannot address a passage of this kind of document",
-  not_extracted:   "nobody has tried to extract this capture's text. This is the ABSENCE of an "
-                 + "observation and not a finding about the document (D-129's NEVER_LOOKED at the "
-                 + "content level)",
+  indexed_partial: word("observation-log.indexed_partial"),
+  indexed_none:    word("observation-log.indexed_none"),
+  not_extracted:   localize("observation-log.vocabulary.content_not_extracted", "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"),
 };
 
 /** The fifth answer, and it is deliberately NOT a member of the four above.
@@ -321,9 +312,7 @@ export const CONTENT_AXIS_UNDETERMINED = "undetermined";
 export const WATERMARK_BAND_CAUSE = "watermark_band";
 
 export const MISSING_ROW_CAUSES = {
-  pre_log:      "this capture was extracted BEFORE the observation log carried the content level, "
-              + "so the look is recorded in the readings table and not here. It is not a capture "
-              + "nobody read",
+  pre_log:      word("observation-log.pre_log"),
   /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
      deleted, because it is the defect and a reader who meets the new one should be
      able to see what it replaced. It read: *"...so either the log did not yet exist
@@ -336,26 +325,14 @@ export const MISSING_ROW_CAUSES = {
      and left it off the never-extracted worklist. **The set is now stated per row in
      `not_ruled_out` rather than asserted in prose here**, so this sentence describes
      the cause and stops claiming what it cannot. */
-  purged:       "this capture predates the earliest content-level row this log holds, so the log "
-              + "may not yet have existed for it, a whole-store purge may have cleared the rows "
-              + "that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` "
-              + "NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
-  never_looked: "the log existed and was not purged over this capture's lifetime, and the record "
-              + "holds nothing else about its text -- so nobody has tried to extract it. This is "
-              + "the one cause that licenses a positive statement",
+  purged:       word("observation-log.purged"),
+  never_looked: localize("observation-log.vocabulary.content_never_looked", "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"),
   /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
      SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
      them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
      because the alternative was the reader PICKING between them. `not_ruled_out`
      is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
-  [WATERMARK_BAND_CAUSE]:
-                "this capture entered the record in the clock second IMMEDIATELY BEFORE the "
-              + "earliest content-level row this log holds, and `observation_log.at` stores whole "
-              + "seconds -- so the stored watermark denotes a one-second interval and this record "
-              + "cannot tell whether the capture entered before that row or within the same second "
-              + "of it. Those are different facts and this record DOES NOT PICK between them. The "
-              + "uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S "
-              + "`not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW",
+  [WATERMARK_BAND_CAUSE]: localize("observation-log.vocabulary.content_watermark_band", "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"),
 };
 
 /** The per-capture content-axis state, computed in ONE place.
@@ -399,9 +376,7 @@ export function contentAxisFor({ observed = null, unitIndex = false,
       return { state: "not_extracted", determined: true, missing_cause: cause,
                why: `${CONTENT_AXIS_STATES.not_extracted} -- ${MISSING_ROW_CAUSES.never_looked}` };
     return { state: CONTENT_AXIS_UNDETERMINED, determined: false, missing_cause: cause,
-             why: `this capture has no content-level observation, and that is NOT by itself a `
-                + `finding that nobody read it (OBSERVATION-LOG-DESIGN.md section 5.1): `
-                + `${MISSING_ROW_CAUSES[cause]}` };
+             why: localize("observation-log.vocabulary.capture_no_content_row", "this capture has no content-level observation, and that is NOT by itself a finding that nobody read it (OBSERVATION-LOG-DESIGN.md section 5.1): {cause}", { cause: MISSING_ROW_CAUSES[cause] }) };
   }
   if (observed === "LOOKED_ABSENT" || observed === "LOOKED_INDETERMINATE")
     return { state: "indexed_none", determined: true,
@@ -504,7 +479,7 @@ export function contentObservationsFor(reading, captureSha, tiersOf) {
     return { rows: [{ tier: last ? last.tier : null, state: "LOOKED_ABSENT", condition: null,
                       resultKind: null, resultRef: null,
                       detail: detailFor(last, terminal, reading,
-                                        "no text: the text this document was read to holds no character") }],
+                                        localize("observation-log.vocabulary.content_no_text", "no text: the text this document was read to holds no character")) }],
              unclassified, why: null };
   }
 
@@ -517,7 +492,7 @@ export function contentObservationsFor(reading, captureSha, tiersOf) {
     return { rows: [{ tier: tiers.length ? tiers[tiers.length - 1].tier : null,
                       state: "LOOKED_INDETERMINATE", condition: "text-undetermined",
                       resultKind: null, resultRef: null,
-                      detail: detailFor(null, terminal, reading, "no text could be produced") }],
+                      detail: detailFor(null, terminal, reading, localize("observation-log.vocabulary.content_no_text_produced", "no text could be produced")) }],
              unclassified, why: null };
   }
 
@@ -554,10 +529,10 @@ export function contentObservationsFor(reading, captureSha, tiersOf) {
                 would make the fence decide the shape of the record. */
              resultKind: "reading", resultRef: sha,
              detail: detailFor(t, terminal, reading,
-                               whole ? "text over the whole document"
+                               whole ? localize("observation-log.vocabulary.text_whole_document", "text over the whole document")
                                      : (so_far === "all"
-                                          ? "text over the document, with pages it could not read"
-                                          : "text over part of the document")) };
+                                          ? localize("observation-log.vocabulary.text_unread_pages", "text over the document, with pages it could not read")
+                                          : localize("observation-log.vocabulary.text_part_document", "text over part of the document"))) };
   });
   return { rows, unclassified, why: null };
 }
@@ -615,8 +590,7 @@ function detailFor(tier, terminal, reading, outcome) {
     parts.push(word("observation-log.parts.push.tier_covered_pages", { covers: String(tier.covers.join(",")) }));
   if (tier && Array.isArray(tier.covers) && tier.covers.length
       && !Number.isInteger(reading.page_count))
-    parts.push("and this record does not hold a page count for this document, so whether those "
-             + "are ALL of its pages is undetermined rather than assumed (CAP-9 / D-345)");
+    parts.push(localize("observation-log.vocabulary.no_page_count", "and this record does not hold a page count for this document, so whether those are ALL of its pages is undetermined rather than assumed (CAP-9 / D-345)"));
   if (reading.tier3_candidate === true)
     parts.push(word("observation-log.parts.push.document_pages_engine"));
   if (typeof reading.text_container === "string" && reading.text_container)
@@ -682,9 +656,7 @@ function detailFor(tier, terminal, reading, outcome) {
    `connections`. What matters about them is `MEANING_EVIDENCE_IS_ONE_SIDED`
    below, because it is not what the design assumes. */
 export const MEANING_MISSING_ROW_CAUSES = {
-  pre_log:      "this subject was looked at BEFORE the observation log carried the meaning level, "
-              + "so the look is recorded in the table that holds what it produced -- a reading, a "
-              + "resolution, a connection -- and not here. It is not a subject nobody looked at",
+  pre_log:      localize("observation-log.vocabulary.meaning_pre_log", "this subject was looked at BEFORE the observation log carried the meaning level, so the look is recorded in the table that holds what it produced -- a reading, a resolution, a connection -- and not here. It is not a subject nobody looked at"),
   /* CORRECTED BY REC-107, the same defect as the content level's above and with one
      member MORE at two of this level's three subject kinds. It read: *"...either the
      log did not yet carry this level for it or a whole-store purge cleared the rows
@@ -695,26 +667,12 @@ export const MEANING_MISSING_ROW_CAUSES = {
      cause (1) to read. That second widening was published, but as the top-level
      `evidence_one_sided` map a caller had to remember to join to the row. Both now
      sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
-  purged:       "this subject entered the record before the earliest meaning-level row this log "
-              + "holds, so the log may not yet have carried this level for it, a whole-store purge "
-              + "may have cleared the rows that described it, or nobody may have looked -- and at a "
-              + "reference or an entity a pre-log look that found NOTHING is live too, having left "
-              + "no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` "
-              + "SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
+  purged:       localize("observation-log.vocabulary.meaning_purged", "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"),
   never_looked: localize("observation-log.vocabulary.the_log_carried_this_level", "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"),
   /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
      the row it is measured against differs, which is A3b's rule applied to the
      word this item adds rather than inherited by it. */
-  [WATERMARK_BAND_CAUSE]:
-                "this subject entered the record in the clock second IMMEDIATELY BEFORE the "
-              + "earliest meaning-level row this log holds, and `observation_log.at` stores whole "
-              + "seconds -- so the stored watermark denotes a one-second interval and this record "
-              + "cannot tell whether the subject entered before that row or within the same second "
-              + "of it. Those are different facts and this record DOES NOT PICK between them; at a "
-              + "reference or an entity a pre-log look that found NOTHING is live in the set as "
-              + "well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and "
-              + "`evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE "
-              + "NARROWED IT",
+  [WATERMARK_BAND_CAUSE]: localize("observation-log.vocabulary.meaning_watermark_band", "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"),
 };
 
 /** THE FINDING THIS LEVEL PAID FOR, AND IT IS A REAL LIMIT RATHER THAN A CAVEAT.
@@ -802,18 +760,9 @@ export const INTERNET_EVIDENCE_IS_ONE_SIDED = {
  *  The liar this refuses is an empty answer with no cause — a frontier that says
  *  nothing reads exactly like one that looked and found nothing. */
 export const INTERNET_FRONTIER_EMPTY_CAUSES = {
-  no_member:        "this credential carries no member, and a lead is readable only by its author, by the "
-                  + "joined participants of a project its author shared it to, and by a machine key only "
-                  + "within the scope a member minted for it. So no lead is reachable from here, and this "
-                  + "says NOTHING about whether any lead exists or was followed",
-  no_leads_visible: "there is no lead this viewer may read — none they wrote, and none shared into a project "
-                  + "they have joined. The internet level's member half is EMPTY FOR YOU, which says nothing "
-                  + "about leads you may not read and nothing about whether anybody looked at the open "
-                  + "internet by another authority",
-  never_followed:   "there are leads this viewer may read and NOT ONE has been followed: no look is recorded "
-                  + "against any of them. This is NEVER_LOOKED, established rather than inferred (a lead and "
-                  + "its looks are only ever cleared together) — it is NOT a finding that what they describe "
-                  + "is absent. They are listed in `never_looked`",
+  no_member:        word("observation-log.no_member"),
+  no_leads_visible: word("observation-log.no_leads_visible"),
+  never_followed:   localize("observation-log.vocabulary.frontier_never_followed", "there are leads this viewer may read and NOT ONE has been followed: no look is recorded against any of them. This is NEVER_LOOKED, established rather than inferred (a lead and its looks are only ever cleared together) — it is NOT a finding that what they describe is absent. They are listed in `never_looked`"),
 };
 
 /** REC-107 — **THE CAUSES THIS RECORD COULD NOT RULE OUT, PUBLISHED AS A SET ON
@@ -1116,8 +1065,7 @@ export function enteredAfterFirstRow(enteredAt, firstAt) {
  *  point in opposite directions on purpose. */
 export function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
-    return { row: null, why: "no reading was persisted for this capture, so no reader run happened "
-                           + "here to record. A look not taken is the ABSENCE of a row (section 5.1)" };
+    return { row: null, why: localize("observation-log.vocabulary.no_reader_run_recorded", "no reading was persisted for this capture, so no reader run happened here to record. A look not taken is the ABSENCE of a row (section 5.1)") };
   const sha = typeof captureSha === "string" && captureSha ? captureSha : null;
   const entities = Array.isArray(reading.entities) ? reading.entities : [];
   const n = entities.length;
@@ -1150,11 +1098,9 @@ export function readerRunObservation(reading, captureSha, { readerRegistered = n
     return { row: { state: "LOOKED_ABSENT", condition: null,
                     resultKind: "reading", resultRef: sha,
                     detail: localize("observation-log.vocabulary.who_ran_over_this_document", "{who} ran over this document and found no entity references{v1}. This is a MEANING-level absence and says nothing about whether the document's TEXT was extracted, which is the content level", { who: String(who), v1: String(reading.found === true && n === 0
-                               ? "; the reading says it found something and carries an empty entity "
-                               + "list, and the empty list is what this record can actually point at"
+                               ? localize("observation-log.vocabulary.empty_entity_list", "; the reading says it found something and carries an empty entity list, and the empty list is what this record can actually point at")
                                : n > 0
-                                 ? `; the reading carries ${n} reference(s) and does not say it found `
-                                 + `anything, so the weaker of the two is what is recorded`
+                                 ? localize("observation-log.vocabulary.reading_carries_references", "; the reading carries {n} reference(s) and does not say it found anything, so the weaker of the two is what is recorded", { n: String(n) })
                                  : "") }) },
              why: null };
 
@@ -1198,7 +1144,7 @@ export function resolutionObservation({ ref = null, matches = null, tier = null 
     return { row: { state: "LOOKED_ABSENT", condition: null,
                     resultKind: null, resultRef: null,
                     detail: localize("observation-log.vocabulary.the_recogniser_tried_r_against", "the recogniser tried '{r}' against the subject registry and matched no entity{v1}. The reference stands unresolved, and this record now says a look was made -- which is the fact that used to end with the request", { r: String(r), v1: String(tried && typeof tried.considered === "string" && tried.considered
-                               ? `; it tried ${tried.considered}` : "") }) },
+                               ? localize("observation-log.vocabulary.it_tried_considered", "; it tried {considered}", { considered: tried.considered }) : "") }) },
              why: null };
 
   /* THE REFERENT IS THE ENTITY THE LOOK FOUND, and here it is genuinely a
@@ -1215,10 +1161,8 @@ export function resolutionObservation({ ref = null, matches = null, tier = null 
   const grades = [...new Set(hits.map((m) => m && m.grade).filter((g) => typeof g === "string"))].sort();
   return { row: { state: "PRESENT", condition: null,
                   resultKind: "entity", resultRef: eid,
-                  detail: localize("observation-log.vocabulary.the_recogniser_matched_r_to", "the recogniser matched '{r}' to {length} registered entity(ies){v1}{v2}", { r: String(r), length: String(hits.length), v1: String(grades.length ? ` at grade(s) ${grades.join(",")}` : ""), v2: String(hits.length > 1
-                             ? `; the name is ambiguous across entities and every match is in the `
-                             + `resolutions table -- this row points at the first and does not `
-                             + `choose between them`
+                  detail: localize("observation-log.vocabulary.the_recogniser_matched_r_to", "the recogniser matched '{r}' to {length} registered entity(ies){v1}{v2}", { r: String(r), length: String(hits.length), v1: String(grades.length ? localize("observation-log.vocabulary.at_grades", " at grade(s) {grades}", { grades: grades.join(",") }) : ""), v2: String(hits.length > 1
+                             ? localize("observation-log.vocabulary.ambiguous_name", "; the name is ambiguous across entities and every match is in the resolutions table -- this row points at the first and does not choose between them")
                              : "") }) },
            why: null };
 }
@@ -1251,10 +1195,7 @@ export function derivationObservation({ entityId = null, count = null, documents
      over an entity id the registry does not describe — the resolutions naming it
      are real even when nothing has been declared about it — and a row that did
      not say so would read as a derivation over a subject the record knows. */
-  const unregistered = entityKnown === false
-    ? "; this entity id is not in the subject registry, so the derivation ran over the resolutions "
-    + "that name it and nothing in the record describes it"
-    : "";
+  const unregistered = entityKnown === false ? word("observation-log.text.entity_id_subject") : "";
 
   if (truncated === true)
     return { row: { state: "partial", condition: null,
@@ -1276,8 +1217,7 @@ export function derivationObservation({ entityId = null, count = null, documents
   return { row: { state: "LOOKED_ABSENT", condition: null,
                   resultKind: "entity", resultRef: id,
                   detail: localize("observation-log.vocabulary.the_derivation_ran_over_ends", "the derivation ran over {ends} document(s) concerning this entity and found no connection to write{v1}. This is a derivation that RAN and produced nothing, which is a different fact from a subject nobody has derived over{unregistered}", { ends: String(ends), v1: String(docs != null && docs < 2
-                             ? `; a connection is a PAIR, and fewer than two documents concern this `
-                             + `subject, so there was no pair to form`
+                             ? localize("observation-log.vocabulary.connection_pair", "; a connection is a PAIR, and fewer than two documents concern this subject, so there was no pair to form")
                              : ""), unregistered: String(unregistered) }) },
            why: null };
 }
@@ -1331,13 +1271,10 @@ export function derivationStatement(row = null, missingCause = null) {
   const cause = typeof missingCause === "string" ? missingCause : "purged";
   if (cause === "never_looked")
     return { state: null, cut: null, at: null, documents: null, derived: "never_derived",
-             says: "never derived: no derivation over this subject is recorded, and the log carried "
-                 + "derivations over its whole lifetime, so an empty answer here is nobody having "
-                 + "derived rather than no connection existing" };
+             says: word("observation-log.says.derived_derivation_over") };
   if (cause === "pre_log")
     return { state: null, cut: null, at: null, documents: null, derived: "pre_log",
-             says: "derived before the observation log recorded derivations: the connection rows "
-                 + "exist, and whether that derivation was cut is NOT recorded" };
+             says: word("observation-log.says.derived_observation_log") };
   /* D-516 — THE BAND SAYS WHY IT COULD NOT TELL, and `derived` stays `undetermined`
      so no consumer of this statement moves. This branch exists because *a fix
      verified only where you changed it is not verified*: this function is the
@@ -1347,14 +1284,9 @@ export function derivationStatement(row = null, missingCause = null) {
      that actually happened — the stored watermark being a whole second. */
   if (cause === WATERMARK_BAND_CAUSE)
     return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
-             says: "undetermined: no derivation over this subject is recorded, and this subject "
-                 + "entered the record in the clock second IMMEDIATELY BEFORE the earliest "
-                 + "meaning-level row the log holds. `observation_log.at` stores whole seconds, so "
-                 + "the record cannot tell which side of that row the subject entered on, and it "
-                 + "does not pick" };
+             says: localize("observation-log.vocabulary.derived_watermark_band", "undetermined: no derivation over this subject is recorded, and this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row the log holds. `observation_log.at` stores whole seconds, so the record cannot tell which side of that row the subject entered on, and it does not pick") };
   return { state: null, cut: null, at: null, documents: null, derived: "undetermined",
-           says: "undetermined: no derivation over this subject is recorded, and the log cannot "
-               + "rule out one made before it carried this level (or cleared by a purge)" };
+           says: word("observation-log.says.undetermined_derivation_over_subject") };
 }
 
 /* THE CONDITION-KIND VOCABULARY C-22.4 checks against (R2). THIS MODULE IS ITS HOME (K78 (3), N174): it moved here
@@ -1363,43 +1295,35 @@ export function derivationStatement(row = null, missingCause = null) {
  * kinds, and since T23 the eight R33 adds. A condition outside it is refused C-22.4 rather than becoming a silent new
  * vocabulary. */
 export const CONDITION_KINDS = Object.freeze({
-  "monitoring-recheck-due":       "a monitoring recheck or deadline sweep has come due (S-7)",
-  "archive-fallback-eligible":    "the archive fallback became eligible: three failures or fourteen days (D-104)",
-  "capture-session-ttl-expiring": "a capture session is expiring with work outstanding (CAPTURE-SCALING)",
-  "source-unreachable-governed":  "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)",
-  "capture-completed-unattended": "a capture the member walked away from has completed (D-61)",
+  "monitoring-recheck-due":       localize("observation-log.vocabulary.condition_monitoring_recheck_due", "a monitoring recheck or deadline sweep has come due (S-7)"),
+  "archive-fallback-eligible":    localize("observation-log.vocabulary.condition_archive_fallback_eligible", "the archive fallback became eligible: three failures or fourteen days (D-104)"),
+  "capture-session-ttl-expiring": localize("observation-log.vocabulary.condition_capture_session_ttl_expiring", "a capture session is expiring with work outstanding (CAPTURE-SCALING)"),
+  "source-unreachable-governed":  localize("observation-log.vocabulary.condition_source_unreachable_governed", "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)"),
+  "capture-completed-unattended": localize("observation-log.vocabulary.condition_capture_completed_unattended", "a capture the member walked away from has completed (D-61)"),
   "partial-capture-outstanding":  word("observation-log.partial_capture_outstanding"),
-  "text-undetermined":            "no text layer, CID fonts, or over the envelope (CPDF, D-121)",
-  "client-rendered-shell":        "a client-rendered shell was captured and is not citable (D-64)",
+  "text-undetermined":            localize("observation-log.vocabulary.condition_text_undetermined", "no text layer, CID fonts, or over the envelope (CPDF, D-121)"),
+  "client-rendered-shell":        localize("observation-log.vocabulary.condition_client_rendered_shell", "a client-rendered shell was captured and is not citable (D-64)"),
   "invitation-spent-or-expired":  word("observation-log.invitation_spent_or_expired"),
-  "governor-holding-host":        "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
-  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
+  "governor-holding-host":        localize("observation-log.vocabulary.condition_governor_holding_host", "the per-host governor is holding a host: the capture is PACED, not broken (D-103)"),
+  "runtime-ceiling-reached":      localize("observation-log.vocabulary.condition_runtime_ceiling_reached", "a CPU or subrequest ceiling was reached (D-54, D-56)"),
   /* D-523, LIVE from its landing: queue-producers' #conditionsRenderDeferred, derived on read from
      `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred":              "a render your team's Civicsmith could not do is held under its C-83 reason until its "
-                              + "request expires, and is then recorded undetermined (D-491, D-523) "
-                              + "— LIVE: queue-producers #conditionsRenderDeferred",
+  "render-deferred":              localize("observation-log.vocabulary.condition_render_deferred", "a render your team's Civicsmith could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) — LIVE: queue-producers #conditionsRenderDeferred"),
   /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement
      there and the rule it cites (R57, R58, R60), and the three notice kinds of `network-notices` R12, R13, which
      `queue-producers` R27 raises for a project's owners. Conditions about our own sweeps and notices, never findings
      about a source. */
-  "sweep-held-backlog":           "a monitoring sweep is held: its backlog of captures still awaiting review is at or "
-                              + "over its ceiling, so it does not run (monitoring R60, R63)",
-  "sweep-yield-anomaly":          "a monitoring sweep's last run noted an anomaly: it filed far more than, or nothing "
-                              + "against, the median of its recent runs (monitoring R60, R63)",
-  "sweep-seed-unreachable":       "a seed of a monitoring sweep failed on the sweep's last run (monitoring R57, R63)",
-  "sweep-redirect-out-of-scope":  "a monitoring sweep's last run met a redirect to an address outside the sweep's "
-                              + "scope (monitoring R57, R58, R63)",
-  "sweep-silent":                 "a monitoring sweep is silent: its last four runs each filed nothing, and it is not "
-                              + "held (monitoring R60, R63)",
-  "notice-attestation-missed":    "a monthly attestation of a project's working-on notice was missed for want of an "
-                              + "instance key (network-notices R13; queue-producers R27)",
-  "notice-lapse-near":            "a project's working-on notice will lapse within 7 days (network-notices R12; "
-                              + "queue-producers R27)",
-  "notice-project-closed":        "the project closed while its working-on notice was open (queue-producers R27)",
+  "sweep-held-backlog":           localize("observation-log.vocabulary.condition_sweep_held_backlog", "a monitoring sweep is held: its backlog of captures still awaiting review is at or over its ceiling, so it does not run (monitoring R60, R63)"),
+  "sweep-yield-anomaly":          localize("observation-log.vocabulary.condition_sweep_yield_anomaly", "a monitoring sweep's last run noted an anomaly: it filed far more than, or nothing against, the median of its recent runs (monitoring R60, R63)"),
+  "sweep-seed-unreachable":       localize("observation-log.vocabulary.condition_sweep_seed_unreachable", "a seed of a monitoring sweep failed on the sweep's last run (monitoring R57, R63)"),
+  "sweep-redirect-out-of-scope":  localize("observation-log.vocabulary.condition_sweep_redirect_out_of_scope", "a monitoring sweep's last run met a redirect to an address outside the sweep's scope (monitoring R57, R58, R63)"),
+  "sweep-silent":                 localize("observation-log.vocabulary.condition_sweep_silent", "a monitoring sweep is silent: its last four runs each filed nothing, and it is not held (monitoring R60, R63)"),
+  "notice-attestation-missed":    localize("observation-log.vocabulary.condition_notice_attestation_missed", "a monthly attestation of a project's working-on notice was missed for want of an instance key (network-notices R13; queue-producers R27)"),
+  "notice-lapse-near":            localize("observation-log.vocabulary.condition_notice_lapse_near", "a project's working-on notice will lapse within 7 days (network-notices R12; queue-producers R27)"),
+  "notice-project-closed":        localize("observation-log.vocabulary.condition_notice_project_closed", "the project closed while its working-on notice was open (queue-producers R27)"),
 });
 
 /* ------------------------------------------------------------------ refusals
@@ -1445,11 +1369,9 @@ function refusal(key, detail, extra = null) {
  * yet, so calling it merely unresolved would hide the one fact the caller got
  * wrong. */
 export const OBSERVATION_REFERENT_FAULTS = {
-  not_earlier:     "the referent names a row at or after the one being written, and a rollup can only "
-                 + "rest on a look that already happened",
+  not_earlier:     word("observation-log.not_earlier"),
   unresolved:      word("observation-log.unresolved"),
-  other_authority: "the referent is a row of a different authority, and a run's rollup can rest only on "
-                 + "its own looks",
+  other_authority: word("observation-log.other_authority"),
   not_present:     word("observation-log.not_present"),
 };
 
@@ -1551,8 +1473,7 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
      and a surface reading the entry needs no second word for it. */
   if (condition === "client-rendered-shell" && state === "PRESENT")
     return refusal("AI_LOG_SHELL_PRESENT",
-      "a client-rendered shell capture is LOOKED_INDETERMINATE and never PRESENT (§11, D-64): "
-      + "an evidentially empty capture that reads as coverage is the false-coverage hazard");
+      localize("observation-log.vocabulary.shell_present_refused", "a client-rendered shell capture is LOOKED_INDETERMINATE and never PRESENT (§11, D-64): an evidentially empty capture that reads as coverage is the false-coverage hazard"));
 
   /* C-22.4 on the entry's own condition, and it DELEGATES rather than restating
      the check — an untranslatable word on a log line is as unreadable as one on

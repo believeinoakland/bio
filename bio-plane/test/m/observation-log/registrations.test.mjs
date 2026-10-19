@@ -8,10 +8,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { provenanceOf, TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { observationLogOf } from "../../../src/observation-log/index.mjs";
-
-const DETAIL = "first extraction; a member's authored observation: its bytes ARE its text, as written, so the whole "
-             + "document is text and no extraction step stands between them";
+import { observationLogOf, AUTHORED_EXTRACTION_DETAIL as DETAIL } from "../../../src/observation-log/index.mjs";
 
 /** A promotion's step context carrying the testimony path (provenance R28's fields). */
 const testimony = (bundleId, captureSha, author = "alice") => ({ bundleId, pkg: { [TESTIMONY_PATH]: {
