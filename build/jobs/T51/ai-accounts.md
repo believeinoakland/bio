@@ -49,3 +49,24 @@ CHANGE B3 applied (K3980). Tranche/T51 merged first (no rebase).
 - Checks: words 0 failures (testcopy 0); format 0; architecture 0; coverage 34 of 34, 0 failures; ownership 0 failures.
 - Committed and pushed; state COMPLETE.
 Size (session_01UqVXapoj5wpdUoADSpasF2): test runs 4, module lines 2147
+
+## J4 · COMPLETE
+
+Completion of T51-175 (ai-accounts, RW words round). Commit e9f791fd5f on job/T51/ai-accounts (tranche/T51 merged at 70f8d6f8b9 range, no rebase).
+
+Entries applied:
+- the five findings of `checks/words.mjs` (civicos-process e8ac153): index.mjs:197 (`ai-accounts.index.only_an_active_member_holds`), :1110 (`the_teams_key_serves_only`), :1246 (`this_project_keeps_its_material`), :217 (`this_member_holds_no_claude_key`), :220 (`no_claude_account_serves_this`). Each is now `localize(id, en)` with the English unchanged, one string literal. The :217 id differs from the existing `this_member_holds_no_claude` (a different sentence) to keep ids unique.
+
+Deferred: none. Reports about other modules: none raised by this job.
+
+Tests and checks:
+- `node --test bio-plane/test/m/ai-accounts/*.test.mjs`: tests 114, pass 114, fail 0.
+- `checks/words.mjs /home/user/bio ai-accounts`: 0 failures (inline 0, plain 0, testcopy 0).
+- `checks/format.mjs /home/user/bio`: 176 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio ai-accounts`: 18 product files, 0 failures.
+- `checks/coverage.mjs /home/user/bio ai-accounts`: 34 of 34 live requirement ids named by a test, 0 failures.
+- `checks/ownership.mjs /home/user/bio ai-accounts tranche/T51 job/T51/ai-accounts`: 1 file changed by ai-accounts, 0 failures.
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage 22 failures and words 1625 failures, all in other modules (no line names ai-accounts).
+- `bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only, naming word 16079 (ai-accounts.index.no_claude_account_serves_this), expected until BOB regenerates rows.mjs at the layer close; no refusal naming ai-accounts.
+
+Size (session_011YKG2GaVfSwqT6prQmCaJM): test runs 3, module lines 2141
