@@ -136,6 +136,14 @@ async function withheldOf(stub, shas) {
   return { answered: true, withheld: w };
 }
 
+/* The container manifest's own sentences (its `verify` and `layout.note`, and the two in-band `over` descriptions) are
+   bytes inside a hash-pinned container, so they stay code, never words (K1333): changing one changes the container's hash. */
+const LAYOUT_NOTE = "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering.";
+const VERIFY_TEXT = "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero — the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this team's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this team's Civicsmith's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it.";
+const VERIFY_MEMBER_PAIR = " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes.";
+const OVER_CONTAINER = "this case edition's container manifest (MANIFEST.json), exactly as served at op=publishedbytes&sha256=<this hash>";
+const OVER_CASE_FILE = "this case edition's case file manifest (MANIFEST.json, at the root of every part), exactly as served at op=publishedbytes&sha256=<this hash>";
+
 /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment a case edition COMPLETES — every member
    finding ratified at the version the case pinned. D-442 moved it out of the op=ratify block VERBATIM
    so op=caseratify can call it too (see the call sites). `cs` is `#caseEditionState`'s answer. Returns
@@ -335,7 +343,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
             path: `${f.bundle_id}/${p.path}`, finding: f.bundle_id,
             sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null }))),
           layout: { root: `${cs.caseId}/`, parts_at: "path", manifest_at: "MANIFEST.json",
-                    note: localize("public-read.worker.the_zip_carries_every_part", "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering.") },
+                    note: LAYOUT_NOTE },
           /* CASE-5: THE INSTRUCTIONS A STRANGER ACTUALLY NEEDS, in the
              artifact rather than in our documentation — which they do not
              have, and which is the whole point of the thing they are
@@ -346,9 +354,9 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
           /* D-442 / BIO_Publication_v0_1.md §3 rule 12 (c): WHICH SIGNATURE COVERS A MEMBER'S
              FROZEN PAIR now depends on the case document's format, and a stranger must be told
              which one to check — in the artifact, for CASE-5's reason above. */
-          verify: localize("public-read.worker.verify_tamper_evident", "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero — the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this team's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this team's Civicsmith's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it.")
+          verify: VERIFY_TEXT
                 + (caseDocumentStatesMemberBlocks(parseFrontmatter(String((cs.document && cs.document.text) || "")).data || {})
-                  ? localize("public-read.worker.verify_member_pair_in_document", " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes.")
+                  ? VERIFY_MEMBER_PAIR
                   : ""),
         };
         /* REC-148: THE MANIFEST'S HASH IS TAKEN BY `inbandQuartet` — the one function the review copy's
@@ -357,7 +365,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
            always hashed over `JSON.stringify(manifest, null, 1)`, which is the function's canonical form. */
         const { bytes: mBytes, quartet: inband } = await inbandQuartet({
           subject: manifest,
-          over: localize("public-read.worker.this_case_edition_s_container", "this case edition's container manifest (MANIFEST.json), exactly as served at op=publishedbytes&sha256=<this hash>"),
+          over: OVER_CONTAINER,
           date: cs.ratified_at ?? null,
           author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
           bar: cs.bar ?? null });
@@ -409,7 +417,7 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
     for (const f of built.files) if (!(await env.PUBLISHED.head(key(f.sha256)))) await env.PUBLISHED.put(key(f.sha256), f.content);
   const { bytes: mBytes, quartet: inband } = await inbandQuartet({
     subject: built.manifest,
-    over: localize("public-read.worker.this_case_edition_s_case", "this case edition's case file manifest (MANIFEST.json, at the root of every part), exactly as served at op=publishedbytes&sha256=<this hash>"),
+    over: OVER_CASE_FILE,
     date: cs.ratified_at ?? null,
     author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
     bar: cs.bar ?? null });
