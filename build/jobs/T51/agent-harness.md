@@ -35,3 +35,30 @@ Fifteen words-check findings in agent-harness are left unkeyed on purpose. I jud
 3. **`subsession.mjs`:581** (documentHoldings' `identity` field, "op=versionchain's address_norm … never a title, a text or a byte comparison"). Why unkeyed: a method description in the wire output. No member sentence is composed from it (holdingsNote does not read it). Recommendation: unkeyed.
 
 Also noted, not changed: `"terminal"` (`harness.mjs` close rows) is a one-word log marker, not a sentence. Some test regular expressions still quote fragments of member sentences (R1 "is not a row in this table", R3 "the '…' budget is spent"). The checker does not count regular expressions, so I left them. Say if Bob wants them converted.
+
+## J3 · COMPLETE
+
+**Entries applied**
+- T51-206 (words, K3949, K3957, K3962): all 39 findings the conversion left were judged. 24 are fixed in code: 21 member-visible sentences in `harness.mjs` and `subsession.mjs` now go through `localize` (run-log `why`s, basis strings, the gate's mode sentences in MODES `does`, the plane-refused and refused-return fragments, the holdings note, the PRESENT note), split so each `localize` call takes one whole-sentence literal. Test `handlist` (line 399) and both `testcopy` findings (lines 163, 500) are fixed. The R2 test now compares the gate's sentence with `localize` instead of a copied regex.
+- The other 15 are left unkeyed and listed in my REPORT for Bob's decision (K3944): 10 model-facing table descriptions and 5 developer-only descriptions.
+- Commit 4196a36825 on job/T51/agent-harness, merged with tranche/T51 first (no rebase).
+
+**Decisions (mine, for Bob to see)**
+- The R6 test no longer imports `bio-plane/src/op-declarations`. That module is layer 11, so the architecture check rejects the import from layer 6. The test now names the three ops R6's own text names (airunspawn, capturerequest, suggest); that is this module's requirement, not another module's list.
+- The `does` of MODES is now localized (all four modes), because the gate's sentence for a not-deployed mode quotes it to members.
+
+**Deferred:** none in my module's code. The 15 unkeyed findings wait on Bob (above).
+
+**Found in other modules:** none new.
+
+**Tests and checks**
+- `node --test agent-harness/test/`: 55 pass, 0 fail, 0 skipped.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio agent-harness`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures (3,622 product files); channels 0 failures; coverage 28 failures across modules, agent-harness only R17 (pre-existing, not met T50, expected per START); words: whole tree 3,348 failures in other modules, agent-harness 15 (the unkeyed list above).
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only, naming my new ids (expected; BOB regenerates at layer close). No refusal.
+- `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures (the three files changed are in agent-harness's paths and tests).
+
+**Words at COMPLETE:** the words check shows 15 findings in agent-harness, all in the REPORT. The COMPLETE condition "no finding in your module" therefore waits on Bob's decision on those 15.
+
+Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 2, module lines 1876
