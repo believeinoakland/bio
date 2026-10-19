@@ -26,7 +26,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
     const c = copy && copy.case ? copy.case : {};
     const gi = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const group = gi ? gi.display_name || gi.group || "" : "";
-    out.push(cs.title(group ? cs.w("screen.review-outside.heading", { group: group }) : null, { thing: "case" }));
+    out.push(cs.title(group ? P.plain(cs.w("screen.review-outside.heading", { group: group })) : null, { thing: "case" }));
     if (!copy) { out.push(cs.state("copy", function () { return ""; })); return out.join(""); }
     const g = copy.grant || {};
     const until = typeof g.until === "string" && g.until ? g.until : null; // R18: the recipient's own grant part

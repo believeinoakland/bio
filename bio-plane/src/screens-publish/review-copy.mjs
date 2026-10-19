@@ -35,7 +35,7 @@ export const REVIEW_COPY = Object.freeze({
     const chosen = drafts.find(function (x) { return x.draft_id === want; }) || drafts[drafts.length - 1] || null;
     view.ui.draft = chosen;
     const c = chosen && chosen.case ? chosen.case : {};
-    const out = [cs.title(c.identity ? cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") }) : null, { thing: "case" })];
+    const out = [cs.title(c.identity ? P.plain(cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" })];
     if (!chosen) { out.push(cs.state("drafts", function () { return ""; }, { empty: "screen.review-copy.nodraft" })); return out.join(""); }
 
     // The named readers: each a row with what they may read and until when, and "Stop sharing" (R2, R18).
