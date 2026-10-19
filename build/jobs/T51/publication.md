@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01W7ArLV5djt9odo9CqsoN5L · depth 2 · WAITING ON BOB (J3) · handled B3
+**Status** · session_01W7ArLV5djt9odo9CqsoN5L · depth 2 · WORKING · handled B3
 
 ## J1 · COMPLETE
 
