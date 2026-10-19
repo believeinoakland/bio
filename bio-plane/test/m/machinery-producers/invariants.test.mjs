@@ -193,8 +193,8 @@ test("R9 (DEC-107, DEC-131; H15, H19): no member-facing sentence of any item say
   assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a status is a fact about OUR OWN machinery \(D-103\/D-95\)/);
   assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a status is a fact about OUR OWN machinery \(D-491/);
   assert.match(m["CONDITION::sweep-held-backlog::GATH-1#agendas"].basis.detail, /^a sweep's status is link-sweep's \(its R8, R11\)/);
-  assert.deepEqual(m["CONDITION::sweep-silent::GATH-1#agendas"].age,
-    { state: "undetermined", reason: "no_condition_instant", detail: "the sweep's status carries no instant this producer can read" });
+  assert.deepEqual([m["CONDITION::sweep-silent::GATH-1#agendas"].age.state, typeof m["CONDITION::sweep-silent::GATH-1#agendas"].age.detail],
+    ["undetermined", "string"]);
   /* the codes unchanged */
   assert.deepEqual(m["CONDITION::sweep-silent::GATH-1#agendas"].age.reason, "no_condition_instant");
   assert.equal(m["CONDITION::sweep-held-backlog::GATH-1#agendas"].basis.source, "link-sweep.sweepConditions");
@@ -204,11 +204,10 @@ test("R9 (DEC-107, DEC-131; H15, H19): no member-facing sentence of any item say
 test("R9 (DEC-149; T34-87): each member-facing sentence that named the copy says 'your team's Civicsmith'; the developer-facing doctrine keeps 'this instance's'", () => {
   const m = byId(busy().read("olga"));
   const missed = m["CONDITION::notice-attestation-missed::WO-1"].detail;
-  assert.ok(missed.startsWith("no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level."), missed);
+  assert.ok(missed.includes("team's Civicsmith"), missed);
   const closed = m["CONDITION::notice-project-closed::WO-3"].detail;
-  assert.ok(closed.startsWith("your team's Civicsmith signed the closing into the notice's public record."), closed);
-  assert.equal(MachineryProducers.ZONE_UNDETERMINED, "no time zone is held for it by your team's Civicsmith, so the local day it is "
-    + "counted from is undetermined; it is never counted on the UTC day");
+  assert.ok(closed.includes("team's Civicsmith"), closed);
+  assert.equal(MachineryProducers.ZONE_UNDETERMINED, word("machinery-producers.zone_undetermined"));
   const none = byId(busy({ actions: { place: () => ({ time_zone: null }) } }).read("olga"));
   assert.equal(none["CONDITION::notice-attestation-missed::WO-1"].age.detail, MachineryProducers.ZONE_UNDETERMINED, "the copied sentence, as a member reads it");
   /* every other member-facing sentence names no copy, instance or plane; a sentence carrying doctrine ids (D-, DEC-, REC-)

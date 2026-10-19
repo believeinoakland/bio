@@ -4893,6 +4893,12 @@
      "line": 45,
      "text": "action-directed: a question opened with an action as its reference, keyed by action; reached from the action, and writes this module's rows, never a bundle's state",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "bio-plane/src/op-grades/t36.mjs",
+     "line": 18,
+     "text": "scheduler: the security wakes; name no member and move no bundle",
+     "why": "a grade-table note (NON_ACTS); no screen draws NON_ACTS (B364, L11)"
     }
    ]
   },
@@ -4911,6 +4917,7 @@
     "act.actioncreate.does",
     "act.actionhold.does",
     "act.actionhold.name",
+    "act.actionholdrelease.does",
     "act.actionholdrelease.name",
     "act.actionlaws.does",
     "act.actionlaws.name",
@@ -5475,14 +5482,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 575,
+    "reads": 576,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 43,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 435,
+    "computedKeys": 436,
     "actHelp": 344,
     "vocabulary": 144
    },
@@ -5501,7 +5508,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 21753
+    "generatedRows": 21979
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5856,6 +5863,12 @@
      "line": 13,
      "text": "that uses it takes viewBox=\"0 0 60 90\", never the symbol's own, or the left third is cut off -->",
      "why": "a comment written into a generated asset"
+    },
+    {
+     "file": "bio-plane/src/interface-assets/generate.mjs",
+     "line": 114,
+     "text": "   {}'s <style> at {}. Never edited by hand. */\n",
+     "why": "the generated CSS file's header comment; no member reads it (B363, INTERFACE-ASSETS #5)"
     }
    ]
   },
@@ -6141,6 +6154,7 @@
     "act.actioncreate.label.request",
     "act.actionhold.does",
     "act.actionhold.label.hold",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlaws.label.action",
     "act.actionlaws.label.request",
@@ -7039,14 +7053,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 909,
+    "reads": 910,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 360,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 549
+    "computedKeys": 550
    },
    "unkeyed": []
   },
@@ -7062,6 +7076,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -7969,6 +7984,8 @@
     "screen.home.purpose",
     "screen.home.rd.admin",
     "screen.home.rd.admins",
+    "screen.home.rd.case",
+    "screen.home.rd.document",
     "screen.home.rd.group",
     "screen.home.rd.invited",
     "screen.home.rd.member",
@@ -7979,6 +7996,7 @@
     "screen.home.rd.question",
     "screen.home.rd.questions",
     "screen.home.rd.release",
+    "screen.home.rd.security",
     "screen.home.request.decline",
     "screen.home.request.grant",
     "screen.home.saywho",
@@ -8088,14 +8106,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1034,
+    "reads": 1038,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 422,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 612
+    "computedKeys": 616
    },
    "unkeyed": [
     {
@@ -8124,6 +8142,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -8811,14 +8830,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 695,
+    "reads": 696,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 113,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 582
+    "computedKeys": 583
    },
    "unkeyed": [],
    "retired": [
@@ -9362,6 +9381,7 @@
     "shell.card.ceremony",
     "shell.card.docket",
     "shell.card.document",
+    "shell.card.hold",
     "shell.card.matter",
     "shell.card.member",
     "shell.card.money",
@@ -9416,14 +9436,14 @@
     "translate.read"
    ],
    "counts": {
-    "reads": 586,
+    "reads": 587,
     "minted": 2,
     "keyedRows": 0,
     "literalKeys": 519,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 67
+    "computedKeys": 68
    },
    "unkeyed": [
     {
@@ -10671,6 +10691,7 @@
     "shell.card.capture",
     "shell.card.cited",
     "shell.card.document",
+    "shell.card.hold",
     "shell.card.matter",
     "shell.card.member",
     "shell.card.money",
@@ -10715,14 +10736,14 @@
     "timeline.dated.title"
    ],
    "counts": {
-    "reads": 974,
+    "reads": 975,
     "minted": 6,
     "keyedRows": 0,
     "literalKeys": 940,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 34
+    "computedKeys": 35
    },
    "unkeyed": [
     {
@@ -11182,6 +11203,7 @@
     "act.actioncorrespond.does",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionholdrelease.does",
     "act.actionlaws.does",
     "act.actionlawspropose.does",
     "act.actionmove.does",
@@ -12494,14 +12516,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1324,
+    "reads": 1325,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 1182,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 142
+    "computedKeys": 143
    },
    "unkeyed": []
   },
@@ -31398,6 +31420,96 @@
      "line": 979,
      "text": "without the advanced editor a revision may reword, delete or reorder the steps, never add one",
      "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 166,
+     "text": "a step is {screen, act, what, why, draft?, via?}",
+     "why": "only a developer or caller reads it: Argument-shape grammar of a step object (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 168,
+     "text": "a step carries only screen, act, what, why, draft and via, not '{}'",
+     "why": "only a developer or caller reads it: Argument-shape grammar: a step carries only the listed fields (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 177,
+     "text": "a draft is one of {text}, {template} or {machine}",
+     "why": "only a developer or caller reads it: Argument-shape grammar of a draft object (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 319,
+     "text": "'{}' is not a registered machine draft",
+     "why": "only a developer or caller reads it: Registration diagnostic: names a machine draft not registered in code (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 453,
+     "text": "'{}' is a machine identity: a machine proposes steps, labelled, and nothing else",
+     "why": "only a developer or caller reads it: Caller-level: a machine identity tried to approve or draft; wire/integration diagnostic naming the identity (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 454,
+     "text": "no member is named as the one acting: this call carries nobody",
+     "why": "only a developer or caller reads it: Caller-level: the call names no acting member; wire/integration diagnostic (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 792,
+     "text": "the registration is made once per construction, and it was",
+     "why": "only a developer or caller reads it: Registration diagnostic: registration is made once per construction (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 864,
+     "text": "a recording is a list of {screen, act}",
+     "why": "only a developer or caller reads it: Argument-shape grammar of a recording (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 869,
+     "text": "a recorded step holds its screen and act, never a typed value",
+     "why": "only a developer or caller reads it: Wire-level usage: a recorded step carries only screen and act (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 919,
+     "text": "a draft starts from one of a recording, a source or a copy",
+     "why": "only a developer or caller reads it: Argument-shape grammar: a draft starts from only one of recording, source or copy (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 1014,
+     "text": "no stamped proposer: a proposal names who made it",
+     "why": "only a developer or caller reads it: Caller-level: a proposal arrives without a stamped proposer (wire/integration diagnostic) (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 1255,
+     "text": "state is offered or one of {}",
+     "why": "only a developer or caller reads it: Wire-level usage: describes the accepted values of a list filter argument (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 1567,
+     "text": "use is counted as start, step or finish: stopping is not an event",
+     "why": "only a developer or caller reads it: Wire-level usage: which progress events a client may report (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 1569,
+     "text": "a step reached is one of the script's, 1 to {}",
+     "why": "only a developer or caller reads it: Wire-level usage: valid range for a reported progress step (B365, WIZARD-SCRIPTS #13 J1)"
+    },
+    {
+     "file": "bio-plane/src/wizard-scripts/index.mjs",
+     "line": 1570,
+     "text": "only a step reached names a step",
+     "why": "only a developer or caller reads it: Wire-level usage: only a step event carries a step number (B365, WIZARD-SCRIPTS #13 J1)"
     }
    ],
    "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.ASSISTANT_DRAFT_UNAVAILABLE, refusal.NOT_AN_APPROVER, refusal.NOT_A_DRAFT",
@@ -31761,6 +31873,12 @@
      "line": 55,
      "text": "Changes: created from the pulled knock.",
      "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+    },
+    {
+     "file": "bio-plane/src/store-door/dispatch.mjs",
+     "line": 244,
+     "text": "purge refused: a litigation hold is in place",
+     "why": "the envelope's legacy `error` key, kept byte-identical for civicos-ui (D-278) until T51-126 deletes it; the member reads the localized `detail` (B363, STORE-DOOR #10)"
     }
    ],
    "batch": "DEC-260"
@@ -45717,7 +45835,6 @@
     "installer.connect.done",
     "installer.connect.refused",
     "installer.copy.done",
-    "installer.fact.unknown",
     "installer.fact.unknown.counts",
     "installer.fact.unknown.documents",
     "installer.fact.unknown.installed",
@@ -45989,14 +46106,12 @@
     "installer.success.save",
     "installer.success.title.installed",
     "installer.success.title.ready",
-    "installer.team.unrecorded.address",
     "installer.team.unrecorded.certain",
     "installer.team.unrecorded.effect",
     "installer.team.unrecorded.head",
     "installer.team.unrecorded.how",
     "installer.team.unrecorded.suggest",
     "installer.team.unrecorded.unknown",
-    "installer.tryagain.install",
     "installer.update.address.found",
     "installer.update.address.none",
     "installer.update.after",
@@ -46049,6 +46164,7 @@
     "installer.update.progress.title",
     "installer.update.progress.verified",
     "installer.update.read.failed",
+    "installer.update.retired",
     "installer.update.row.now",
     "installer.update.running",
     "installer.update.stopped",
@@ -46215,7 +46331,7 @@
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 544,
+    "reads": 542,
     "unkeyed": 0
    },
    "unkeyed": [],
@@ -50732,6 +50848,21 @@
      "line": 53,
      "text": "the ordinary exit, naming the bound (C-22.5)",
      "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "stewards": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "stewards/src/ui.mjs",
+     "line": 63,
+     "text": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+     "why": "the Content-Security-Policy header value: wire grammar (B364, L11)"
     }
    ],
    "batch": "DEC-344"
