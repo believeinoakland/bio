@@ -26,3 +26,7 @@ COMPLETE: R35, R36, R37 (R14, R26 amended) met; 87 module tests pass; format, ar
 - **Found in another module:** op-declarations does not yet declare `projectinvitations` (its R77 entry exists in the plan, T51-107), so my ops test cannot assert every op is declared; nothing else.
 - **Tests and checks:** `node --test bio-plane/test/m/project-roster/`: 88 pass, 0 fail (R38 new test `project-list.test.mjs`); users run green: plane roster and t47, queue-producers projects, screens-daily projects, store-door dispatch. `checks/run.mjs`: format 0 failures, architecture 0 failures, words 0 findings in project-roster; `checks/words.mjs … project-roster` 0 failures; `checks/coverage.mjs … project-roster` 38 of 38; `checks/ownership.mjs` 0 failures; `setup-words/build.mjs --check` stale-rows note only (not mine).
 - Size (session_016HFawRGBKLpkHSqkgZXjmz): test runs 9, module lines 1538
+
+## J3 · COMPLETE
+
+COMPLETE (T51-157, re-run): R38 met (mine {in, owner} and scope on projectList rows); K3958 said() read by template/literal key; words findings fixed (inline 1, plain 8, handlist 1, testcopy 1), none judged unread. 88 module tests pass; format, architecture, words, coverage 38/38, ownership 0 failures. Reading: in = state joined exactly (leaving reads false). Note: op-declarations lacks projectinvitations (T51-107). Details in the record.
