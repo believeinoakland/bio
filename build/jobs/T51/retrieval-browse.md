@@ -67,3 +67,7 @@ Merged `tranche/T51` (fast-forward to `f89484903d`). `test/m/retrieval-browse/fi
 Checks re-run: `node --test bio-plane/test/m/retrieval-browse/`: 51 tests, 51 pass, 0 fail. `checks/words.mjs /home/user/bio retrieval-browse`: 0 failures (testcopy 0). `checks/coverage.mjs ... retrieval-browse`: 18 of 18 live ids, 0 failures. `checks/architecture.mjs ... retrieval-browse`: 0 failures. `checks/ownership.mjs ... tranche/T51 job/T51/retrieval-browse`: 0 failures.
 
 Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 2, module lines 1365
+
+## J3 · COMPLETE
+
+B3 (K4003) done on job/T51/retrieval-browse. Fixture stand-in refusal is now a neutral string, not retrieval's sentence. Merged tranche/T51 (fast-forward). Tests 51/51; words, coverage, architecture, ownership 0 failures for retrieval-browse. Record: Completion again (B3). No product code changed.
