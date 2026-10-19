@@ -38,3 +38,20 @@ Ids are new, none existed in `rows.mjs` or the module (checked). No judgment was
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only, naming the new ids; `rows.mjs` is BOB's regeneration at the layer close, not edited here.
 
 Size (session_013Tga7i7jYNnsamprMqvJ3m): test runs 2, module lines 3804 (`bio-plane/src/ai-runs/*.mjs`, index.mjs and schema.mjs).
+
+## J3 · COMPLETE
+
+**CHANGE B2 (K4015) handled.** Pulled civicos-process `main` @ d424c32. `node checks/words.mjs /home/user/bio ai-runs` first showed one finding, which the new `+`-chain folding exposed: `bio-plane/src/ai-runs/index.mjs` (the planning-run refusal for a caller who is not a member) is now `localize('ai-runs.index.only_a_member_starts', en)`, the text unchanged. Commit on `job/T51/ai-runs`; tranche/T51 merged in again (no change to ai-runs' files).
+
+**Checks, after the fix:**
+- `node checks/words.mjs /home/user/bio ai-runs`: 1 module, 5590 literals read; inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, unkeyed 0; 0 failures.
+- `node --test test/m/ai-runs/`: 132 pass, 0 fail.
+- `node checks/format.mjs /home/user/bio`: 0 failures. `node checks/architecture.mjs /home/user/bio ai-runs`: 0 failures. `node checks/coverage.mjs /home/user/bio ai-runs`: 58 of 58, 0 failures.
+- `node checks/ownership.mjs /home/user/bio ai-runs tranche/T51 job/T51/ai-runs`: 3 files changed by ai-runs; 0 failures.
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only, naming ids from this module and others; `rows.mjs` is BOB's regeneration at the layer close.
+
+**Unkeyed list:** none. No sentence in this module is judged as one no person reads.
+
+**Deferred:** none. The run-rules finding from the first COMPLETE (`bio-plane/src/run-rules/checks.mjs:259`) is reported to BOB separately and is not this module's.
+
+Size (session_013Tga7i7jYNnsamprMqvJ3m): test runs 4 (module suite 3, words check 1 more after the fix ... see the earlier record), module lines 3804 (`bio-plane/src/ai-runs/*.mjs`, index.mjs and schema.mjs).
