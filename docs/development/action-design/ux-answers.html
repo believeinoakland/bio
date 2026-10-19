@@ -1,0 +1,123 @@
+<title>Action UX Answers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>The UX substrate after the Action rulings</h1>
+<p class="lede"><span class="eyebrow">Status</span> APPROVED by Bob 2026-09-30 ("action UX answers have been answered"). Written by ACTION_DESIGN #1 for BOB, who keeps the UX substrate page (<code>docs/development/ux-substrate/</code>, K438: when Bob closes a question the page lists as open, the page is updated in the same change that records the ruling). This lists the open questions and use cases in <code>ux-experience.json</code> that Bob's Action rulings of 2026-09-29 and 2026-09-30 settle or change, with the text to enter. The substrate files are not edited here.</p>
+<h2>Open questions</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>question</th>
+<th>now</th>
+<th>text for the substrate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OQ-8</strong> Where does a member record why something is, or is not, worth escalating?</td>
+<td><strong>answered</strong></td>
+<td>Bob, 2026-09-29 (ruling 7) and 2026-09-30: the judgment lives in acts and their reasons, never in a score. Not pursuing a matter is an option declined in its action plan, with a short reason (<code>action-plans</code> R13); a proposed escalation stage is declined with a reason (<code>escalation</code> R13, built).</td>
+</tr>
+<tr>
+<td><strong>OQ-9</strong> What does the action plan surface (S11) look like?</td>
+<td><strong>answered</strong> (layout remains Design's)</td>
+<td>Bob, 2026-09-29 and 2026-09-30 (rulings 1–10, D1–D6, the closing rule): an outline, not a graph: subjects with their support, options collapsed to a summary and sorted by category, date, subject or disposition, up to three scenarios of phases with checkpoints and branches, and what each started option became. Requirements: <code>action-plans</code> R1–R28. The member's path: <code>docs/development/action-design/PATH.md</code>. A graph view may come later.</td>
+</tr>
+<tr>
+<td><strong>OQ-14</strong> How does the queue avoid nagging while making sure obligations with clocks are not missed?</td>
+<td><strong>answered by earlier rulings</strong></td>
+<td>Bob, 2026-09-30: answered already by DEC-69 (the workflow must not nag or second-guess; inform at the act, once), DEC-70 (a pushed notice tells once, is dispositionable and ages, never a recurring nag) and DEC-10 (recorded in <code>NOTIFICATIONS.md</code> at D-125: an overdue condition notifies once, and its response offers another reminder at a further time or none) and DEC-94 (a deadline reminder is the member's own request, set when the action is chosen; nearing is display only; no outside channel), as K613–K615 record. The Action drafts follow them.</td>
+</tr>
+<tr>
+<td><strong>OQ-25</strong> How are our own missed deadlines kept from reading as findings about the world?</td>
+<td><strong>answered for plans</strong> (the OBLIGATION relabelling stays Bob's)</td>
+<td>A plan's checkpoints are the group's own intentions: a missed or <code>not_met</code> checkpoint is never a finding, a condition of the record or a fact about the government (<code>action-plans</code> R23); its reminder is an obligation of the group's own; the counterparty's deadline is a condition on the action.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Use cases whose coverage changes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>use case</th>
+<th>was</th>
+<th>now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UC-067 Judge significance</td>
+<td>partial</td>
+<td>covered by acts and reasons (OQ-8's answer)</td>
+</tr>
+<tr>
+<td>UC-124 Media outreach, public comment and testimony</td>
+<td>partial: "no requirement shapes the communication itself"</td>
+<td>drafted: an addressee beyond government offices (<code>actions</code> R9, D1); communication drafts approved and sent by a member, with the in-band stamp (<code>filings</code> R22–R23)</td>
+</tr>
+<tr>
+<td>UC-126 Build an action plan</td>
+<td>no</td>
+<td>drafted: <code>action-plans</code> R1–R28</td>
+</tr>
+<tr>
+<td>UC-127 Overdue clocks marked, next stage proposed</td>
+<td>partial: <code>monitoring</code> R34–R35 not reaching members</td>
+<td>drafted: the scheduled deadline recheck and three queue kinds (<code>drafts/deltas.md</code> §4)</td>
+</tr>
+<tr>
+<td>UC-129 Document pressure against supporters</td>
+<td>no</td>
+<td>drafted: pressure entries on an action (<code>actions</code> R47), a litigation-hold reminder for legal threats</td>
+</tr>
+</tbody>
+</table></div>
+<h2>New audiences' lines (the substrate's <code>audiences</code>)</h2>
+<ul>
+<li><strong>Journalist or media:</strong> may now be an action's addressee by role and outlet (D1); receives what a member sends, never anything by a system path.</li>
+<li><strong>Activist or partner group (outside this instance):</strong> may be an addressee by role and organisation (D1); joint action recorded and deferred (Bob, 2026-09-30; trigger: a coalition asks).</li>
+</ul>
+</div>

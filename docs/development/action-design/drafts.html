@@ -1,0 +1,496 @@
+<title>Action Requirement Drafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>action-plans — requirements</h1>
+<p class="lede"><span class="eyebrow">Status</span> Reviewed by Bob 2026-09-30: "correct and complete enough". DRAFT by ACTION_DESIGN #1, 2026-09-30, from <code>docs/development/action-design/ACTION-PLAN.md</code> (rules A1–A17) and Bob's rulings of 2026-09-29 (1–10) and 2026-09-30 (D1–D6, <code>MATRIX.md</code> §6); for BOB's review and fold. Adding the module is BOB's (Bob, 2026-09-30: a technical detail); the closing rule R20 was approved by Bob 2026-09-30. Layer 9 (Action), last, after <code>escalation</code>. A new module: no <code>from</code>, nothing moves. Code today: none; the nearest is <code>escalation</code>, whose record-object pattern it follows. Ids may renumber until Bob approves (conventions, rule 6).</p>
+<p><strong>Size (P6).</strong> New. Estimated 900–1,400 lines of code with its tables; one session reads it with the public parts of <code>conformance</code>, <code>consequences</code>, <code>actions</code>, <code>escalation</code>, <code>filings</code>, <code>inquiry</code>, <code>jurisdictions</code>, <code>membership</code>, <code>record-core</code> and <code>promotion</code>.</p>
+<h2>Public</h2>
+<h3>Purpose</h3>
+<p>An action plan is a project's working material for deciding what to do about one or more matters: an inquiry still open (a suspected matter) or a determination's outcomes (determined). It holds options the assistant suggests or a member adds, each bound to the matters it serves; the member's choice of which to pursue; up to three scenarios laying the chosen options out over time, with checkpoints a member judges; and the link from each started option to the Action it created. It is not a project-management system: it holds no costs, assignees or hours. It is never published. The gate stays at the outward act (DEC-26): a plan may rest on what is not yet established; an action asserting a breach may not.</p>
+<h3>Provides</h3>
+<p>Terms. A <strong>subject</strong> is <code>{kind: "inquiry", inquiry, act?, standards?}</code> (suspected) or <code>{kind: "outcome", determination, standard}</code> (determined: one standard's outcome of a live determination, <code>compliant</code>, <code>noncompliant</code> or <code>unclear</code>). Its <strong>support</strong> is <code>established</code> (determined), <code>short</code> (determined, a finding short of the project's bar) or <code>hypothetical</code> (suspected). A <strong>category</strong> is one of <code>mitigation</code>, <code>legal</code>, <code>awareness</code>, <code>journalistic</code>, <code>grassroots</code>, <code>other</code>. A <strong>regulated date</strong> is <code>{date: YYYY-MM-DD, basis}</code>, the basis naming the statute, order or commitment. A <strong>checkpoint</strong> is relative: <code>{after_days}</code> counted from its phase's start. A refusal is <code>{ok: false, reason, code, check, translation, ...}</code>.</p>
+<p><strong>planOpen({project, subjects, title, author, viewer})</strong> (<code>op=planopen</code>)
+- <strong>R1</strong> Refusals in order: <code>MACHINE_CANNOT_PLAN</code> (a machine or unstamped author); <code>PLAN_NO_TITLE</code> (empty, over 200 characters, or a quote, backslash or line break); <code>NO_SUCH_PROJECT</code>; <code>membership.projectAuthority(project, author, "joined")</code>'s refusal; <code>PLAN_NO_SUBJECT</code> (an empty list, or over 50); <code>SUBJECT_MALFORMED</code> (with its index); <code>NO_SUCH_INQUIRY</code> or <code>NO_SUCH_DETERMINATION</code> (a subject the author may not see, answered alike); <code>SUBJECT_NOT_OF_PROJECT</code> (an inquiry or determination of another project); <code>SUBJECT_NOT_LIVE</code> (a superseded determination, a closed inquiry); <code>SUBJECT_IN_ACTIVE_PLAN</code> (R3, naming the plan).
+- <strong>R2</strong> Otherwise it records a plan of type <code>PLN-</code>, state <code>open</code>, with its project, title, subjects in order, author and time (this module's clock), and answers <code>{ok, id, subjects: [{subject, support}]}</code>.
+- <strong>R3</strong> Within a project, a subject is in at most one open plan. Two subjects are the same when they name the same inquiry, or the same determination and standard. Another project may hold the same subject in its own plan.</p>
+<p><strong>planSubjectAdd / planSubjectRemove({plan, subject, reason, author, viewer})</strong> (<code>op=plansubjectadd</code>, <code>op=plansubjectremove</code>)
+- <strong>R4</strong> Each takes R1's author, project and subject refusals, <code>NO_SUCH_PLAN</code>, <code>PLAN_CLOSED</code>, and <code>PLAN_NO_REASON</code> (empty, over 500 characters, or a quote, backslash or line break). Removing a subject that options still serve is allowed; those options keep it and are marked <code>subject_removed</code> in R8.
+- <strong>R5</strong> When a determination is recorded on the act of a suspected subject's inquiry (<code>conformance.determinationsFor({act})</code>), <code>planRead</code> answers the determined outcomes beside the suspected subject as <code>determined_since</code>, and a member adds them with R4; nothing is added or removed without a member.</p>
+<p><strong>planRead({id, nowMs?, viewer})</strong> (<code>op=plan</code>); <strong>plansFor({project?, subject?, state?, after?, limit?, viewer})</strong> (<code>op=plans</code>)
+- <strong>R6</strong> <code>planRead</code> answers the plan's title, state, subjects with their support and liveness, options (R9) with their dispositions, proposals apart (R11), scenarios (R14), each started option's action with its lifecycle state and each determined subject's escalation stage (<code>actions.actionRead</code>, <code>escalation.escalationRead</code>), the checks (R19), and its history (every act, oldest first, with who, when and why). <code>NO_SUCH_PLAN</code> for an absent id or one the viewer may not see, one answer (R22).
+- <strong>R7</strong> <code>plansFor</code> lists plans the viewer may see, in id order, at most 200 per page, <code>truncated</code> measured by reading one past; <code>subject</code> finds the plans holding it.
+- <strong>R8</strong> Liveness is derived when read, never stored: a subject is <code>live</code>, <code>superseded</code> (naming its successor), <code>closed</code> (an inquiry), or <code>subject_removed</code>; an option bound only to subjects no longer live says so.</p>
+<p><strong>optionAdd({plan, summary, detail, category, subjects, addressee?, dates?, tier?, enforces?, author, viewer})</strong> (<code>op=optionadd</code>); <strong>optionRevise({plan, option, reason, ...fields, author, viewer})</strong> (<code>op=optionrevise</code>)
+- <strong>R9</strong> Refusals in order: <code>MACHINE_CANNOT_ADD_OPTION</code>; <code>NO_SUCH_PLAN</code>; <code>PLAN_CLOSED</code>; <code>projectAuthority(..., "joined")</code>; <code>OPTION_NO_SUMMARY</code> (empty or over 200 characters); <code>OPTION_DETAIL_TOO_LONG</code> (over 5,000); <code>CATEGORY_UNKNOWN</code>; <code>OPTION_NO_SUBJECT</code> (none, or one not in the plan); <code>ADDRESSEE_REFUSED</code> (R10); <code>DATE_REFUSED</code> (not <code>YYYY-MM-DD</code>, or no basis); <code>TIER_REFUSED</code> (a tier on a non-legal option, or not 1, 2, 3 or <code>undetermined</code>); <code>LOBBYING_NO_REQUIREMENT</code> (R12); <code>OPTION_KEY_REFUSED</code> (R21). A legal option with no tier stated reads <code>undetermined</code>, never a default. <code>optionRevise</code> records the new fields as a revision with its reason; earlier revisions stay readable.
+- <strong>R10</strong> An addressee is <code>actions</code>' addressee shape (<code>actions</code> R9 as amended by D1): an office by role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience; never a private individual.
+- <strong>R11</strong> <code>optionPropose({plan, ...R9's fields, why, proposer, viewer})</code> (<code>op=optionpropose</code>): any credential may propose. The proposal is stored apart from the options, labelled with its proposer and whether it is machine work (<code>legacy-checks</code>' <code>proposalLabel(proposer, "plan_option")</code>), with a <code>why</code> of at most 500 characters; it is never an option, and is answered with a sentence saying so. <code>optionAdopt({proposal, author, viewer, ...overrides})</code> (<code>op=optionadopt</code>) is R9 by a member naming the proposal; the option records the proposal it came from, and a proposal is adopted at most once.
+- <strong>R12</strong> An option whose detail or category states lobbying names, in <code>enforces</code>, the standard (a <code>standards</code> id) or the determined subject whose requirement it enforces or restores; without one it is refused <code>LOBBYING_NO_REQUIREMENT</code> (ruling 6). The module never judges whether text is lobbying; the member marks it (<code>lobbying: true</code>).</p>
+<p><strong>optionDispose({plan, options, disposition, reason?, author, viewer})</strong> (<code>op=optiondispose</code>)
+- <strong>R13</strong> A disposition is <code>open</code> (the default), <code>chosen</code>, <code>declined</code>, <code>done</code> or <code>blocked</code>; <code>declined</code> and <code>blocked</code> need a reason (R4's rule), the others refuse one over 500 characters. Several options may be disposed of in one act, all or none. Every change is kept in the option's history. <code>NO_SUCH_OPTION</code> names the first unknown option.</p>
+<p><strong>scenarioSet({plan, scenario, name, phases, author, viewer})</strong> (<code>op=scenarioset</code>); <strong>checkpointRecord({plan, scenario, phase, judged, note, author, viewer})</strong> (<code>op=checkpointrecord</code>)
+- <strong>R14</strong> A plan holds at most three scenarios, numbered 1–3; <code>scenarioSet</code> replaces one whole, keeping the earlier version in history. A phase is <code>{id, name, options, starts, checkpoint?, condition?, branches?}</code>: <code>options</code> are chosen options of the plan; <code>starts</code> is <code>plan_start</code>, <code>{after: phase}</code> or <code>{branch_of: phase, when: "met" | "not_met"}</code>; <code>checkpoint</code> is <code>{after_days}</code>, 1–3,650; <code>condition</code> is words of at most 500 characters; <code>branches</code> names the phase each judgement leads to. Refusals: <code>SCENARIO_OUT_OF_RANGE</code>, <code>PHASE_MALFORMED</code> (with its index), <code>PHASE_OPTION_NOT_CHOSEN</code>, <code>PHASE_CYCLE</code> (a phase reachable from itself), <code>BRANCH_UNKNOWN</code>.
+- <strong>R15</strong> A branch may name another subject's track: <code>starts: {when_subject: subject, reaches: "resolved" | "stage", stage?}</code>, true when that subject's escalation reaches the stage or its started action is resolved (R6's reads); it is derived when read.
+- <strong>R16</strong> <code>checkpointRecord</code> records a member's judgement (<code>met</code> or <code>not_met</code>) with a note of at most 500 characters: <code>CHECKPOINT_NOT_DUE</code> before the phase's start plus <code>after_days</code>, <code>CHECKPOINT_JUDGED</code> if judged already. The scenario then reads the branch the judgement names. The module never judges a condition.
+- <strong>R17</strong> <code>checkpointsDue({nowMs, limit?})</code> answers, for open plans, the checkpoints whose day has come and that no member has judged, oldest first, at most 500, with the plan, scenario, phase and days since due. It is the one read <code>queue</code> uses for its reminder (one item per checkpoint, reaching members as Bob's notification rulings provide: DEC-10, DEC-69, DEC-70 and DEC-94). A checkpoint passed unjudged is never a finding about the government (R23).</p>
+<p><strong>optionStart({plan, option, kind, contact?, breach?, author, viewer})</strong> (<code>op=optionstart</code>)
+- <strong>R18</strong> Refusals: <code>MACHINE_CANNOT_START</code>; <code>NO_SUCH_PLAN</code>; <code>PLAN_CLOSED</code>; <code>NO_SUCH_OPTION</code>; <code>OPTION_NOT_CHOSEN</code>; <code>OPTION_STARTED</code> (it names the action); <code>CONTACT_NOT_A_MEMBER</code>; then any refusal of the action's write (<code>actions</code> R1–R11). Otherwise it composes an action document (kind, the option's addressee, the option's regulated dates as pending clock entries with their bases, a <code>rests_on</code> leg to each subject's inquiry or determination, <code>plan</code> and <code>option</code>, <code>contact</code> when given, the reminders R29 set, <code>breach: true</code> when asked) and promotes it; an action asserting a breach is refused by <code>actions</code> R8 unless it rests on a live noncompliant determination or the member states an override with a reason (<code>actions</code> R8 as amended, Bob 2026-09-30), which the action and everything prepared from it disclose. It records the link and answers the action's id. The plan never opens, advances or ends an escalation.</p>
+<p><strong>The checks (derived on read, R6)</strong>
+- <strong>R19</strong> <code>planRead</code> answers, each with its reason: an option whose regulated date is past, or falls before the phase that holds it can start in a scenario; a phase whose judgement has no branch for one outcome; an option bound only to subjects no longer live; an outward option (one that addresses anyone) bound only to hypothetical subjects; a scenario whose outward options have no branch answering a hostile response (refusal, obstruction, retaliation; rule 12 of <code>BIO_Action_v0_1.md</code>, Bob 2026-09-30); a lobbying option whose <code>enforces</code> target is superseded. A check informs; it never refuses or changes anything.</p>
+<p><strong>planClose({id, reason, author, viewer})</strong> (<code>op=planclose</code>)
+- <strong>R20</strong> A member closes a plan with a reason (R4's rule); a plan never closes itself. A closed plan stays readable; its subjects become free to join another plan (R3). <code>PLAN_CLOSED</code> if already closed. Closing does not change any action or escalation. <em>(Bob, 2026-09-30)</em></p>
+<p><strong>The project's kind of work (D4)</strong>
+- <strong>R21</strong> A project document may state <code>work_kinds</code>, a list from <code>reporting</code>, <code>fixing</code>, <code>legal</code>, <code>oversight</code>, <code>other</code>, set by an owner; this module registers a check with <code>promotion</code> refusing any other value <code>WORK_KIND_UNKNOWN</code> and a machine's change <code>MACHINE_CANNOT_SET_WORK_KIND</code>. It is read by the assistant's suggestions (R11's proposer may be given it) and shown in <code>planRead</code>; it gates, filters and orders nothing.</p>
+<p><strong>Reminders, set when an option is chosen</strong> (Bob, 2026-09-30, K613–K615; DEC-94)
+- <strong>R29</strong> Choosing an option that carries regulated dates (R13) includes setting its reminders: for each dated entry, whether and when the member wants to be reminded, from defaults the member sees and can change at that moment (nothing preselected unseen, DEC-77). The schedule is the member's own request; it is carried to the action R18 creates, and fires as asked. When a reminder fires, its response offers another reminder at a further time the member picks, or no further reminder (DEC-10, recorded in <code>NOTIFICATIONS.md</code> at D-125); a further reminder is one the member accepts, perhaps at the system's suggestion. A deadline coming near changes the item's position, colour or wording only, which is display, not a notification; "due within N days" is not new unless the member asked for it; an overdue date is new and notifies once (DEC-10, DEC-94). No outside channel (email, push) is used (DEC-94 (3)). Nothing reminds unless the member asked (DEC-69).</p>
+<p><strong>noSuchPlan(planId, extra?) → refusal</strong>
+- <strong>R22</strong> The one answer to "no plan the caller may read answers to this id", in <code>standards</code> R17's form, its catalogue row this module's.</p>
+<h2>Private</h2>
+<h3>Uses</h3>
+<ul>
+<li><code>record-core</code>: <code>allocId</code>, <code>transact</code>, <code>stampInstant</code>, <code>declarePurge</code>.</li>
+<li><code>membership</code>: <code>projectAuthority</code>, <code>viewerPredicate</code>, <code>sight</code>; <code>noSuchProject</code>.</li>
+<li><code>legacy-checks</code>: <code>isMachineIdentity</code>, <code>proposalLabel</code> (subject <code>plan_option</code>); the <code>PLN-</code> type registration.</li>
+<li><code>promotion</code>: <code>promote</code> (a plan being a record object; R18's action; R21's check).</li>
+<li><code>inquiry</code>: an inquiry's visibility, project and state (R1, R5, R8).</li>
+<li><code>strength</code>: <code>projectBar</code>, for <code>short</code> support (the project's bar against a finding's strength).</li>
+<li><code>conformance</code>: <code>determinationRead</code>, <code>determinationsFor</code>; <code>noSuchDetermination</code>.</li>
+<li><code>standards</code>: <code>standardRead</code> (R12's <code>enforces</code>).</li>
+<li><code>actions</code>: <code>actionRead</code>, the addressee shape (R10); <code>noSuchAction</code>.</li>
+<li><code>escalation</code>: <code>escalationRead</code> (R6, R15).</li>
+<li><code>filings</code>: <code>availableActions</code> (shown beside legal options; never a catalogue, ruling 2).</li>
+<li><code>jurisdictions</code>: <code>combine</code>'s view: <code>deadlines</code>, <code>legal_organisations</code>, for the assistant's suggestions; nothing here names a place.</li>
+</ul>
+<h3>Invariants</h3>
+<ul>
+<li><strong>R23</strong> A plan's checkpoints are the group's own intentions: a checkpoint missed or judged <code>not_met</code> is never recorded, projected or answered as a finding, a condition of the record or a fact about the government.</li>
+<li><strong>R24</strong> A machine proposes (R11) and nothing else: it never adds, revises, disposes, schedules, judges, starts or closes.</li>
+<li><strong>R25</strong> A plan is never published: it is not reachable from <code>publication</code> or any public read, and an outsider asking for it is answered as for something that does not exist (DEC-25).</li>
+<li><strong>R26</strong> No field, input or answer holds a cost, budget, amount of money to be spent, assignee, hours or significance score; a key named <code>budget</code>, <code>cost</code>, <code>assignee</code>, <code>hours</code>, <code>significance</code>, <code>priority</code> or <code>score</code> is refused <code>OPTION_KEY_REFUSED</code> (rulings 3, and DEC-24 on significance).</li>
+<li><strong>R27</strong> Every act is append-only history; each table is declared to <code>record-core</code>'s purge.</li>
+<li><strong>R28</strong> A fact not supplied is answered undetermined, never a default; no place is named in this module's behaviour or outward text, and its tests run against the test profile.</li>
+</ul>
+<h3>Satisfies</h3>
+<ul>
+<li><code>BIO_Case_Making_v0_1.md</code>, §THE ACTION PLAN (Bob, 2026-08-03), as changed by Bob's rulings of 2026-09-29 and 2026-09-30.</li>
+<li><code>BIO_Functional_Architecture_v3.md</code>, Layer 3: Action ("turn findings into outputs").</li>
+<li><code>BIO_Complete_Roadmap_v5.md</code> §5 (Operational Principles 1, 3, 6) and §10 ("Humans make every decision").</li>
+<li><code>BIO_Design_Requirements_v2.md</code>, Requirements 5 and 12.</li>
+<li>DEC-25 (never published), DEC-26 (the gate at the act), DEC-24 and DEC-27 (the assistant proposes, the member acts), DEC-69 (singly or in bulk, forced into neither).</li>
+<li><code>build/layers.md</code>, layer 9, as amended (<code>deltas.md</code> §1).</li>
+</ul>
+<h3>Suggestions</h3>
+<ul>
+<li>Id prefix <code>PLN-</code>, states <code>open</code> and <code>closed</code>, one edge open→closed; tables <code>plans</code>, <code>plan_subjects</code>, <code>plan_options</code>, <code>plan_option_revisions</code>, <code>plan_option_proposals</code>, <code>plan_scenarios</code>, <code>plan_checkpoints</code>, <code>plan_history</code>.</li>
+<li>The assistant's suggestions (R11) come from an AI run the <code>skills</code> job adds; its inputs are the subjects, the standards' text, the consequences, the project's <code>work_kinds</code>, the profile's deadlines and legal organisations, and earlier plans of this instance on similar standards. It writes through <code>optionPropose</code> only.</li>
+<li>Tests: each refusal with a negative control; R3 across two projects; R15 with an escalation fixture; R17 at and past a checkpoint's day, and never twice; R23 by showing no queue FINDING or CONDITION is minted from a missed checkpoint; R26's refused keys.</li>
+</ul>
+<h2>Open for Bob</h2>
+<p>None: R20 approved by Bob 2026-09-30; every other point follows his rulings of 2026-09-29 and 2026-09-30.</p>
+<h2>Decided (for BOB to confirm and record)</h2>
+<ul>
+<li>Adding the module, last in layer 9 after <code>escalation</code> since it reads every layer-9 module (BOB's: Bob, 2026-09-30).</li>
+<li>Proposals follow <code>standards</code> R9's pattern with <code>proposalLabel</code> subject <code>plan_option</code>.</li>
+<li>Page cap 200; history cap none (a plan's history is short).</li>
+</ul>
+<h1>Changes to existing modules and build state</h1>
+<p><strong>Status</strong> · Reviewed by Bob 2026-09-30: "correct and complete enough". DRAFT by ACTION_DESIGN #1, 2026-09-30, from <code>MATRIX.md</code> §5 and Bob's decisions D1–D6 (agreed 2026-09-30); for BOB's review and fold. Wording is proposed; the requirement ids are the next free in each file as of <code>main</code> @ <code>5bb688333c</code>, for BOB to confirm. Items marked <strong>Bob</strong> change a layer contract, a module list or a vocabulary members see, and were approved in substance by Bob's rulings cited; items marked <strong>BOB</strong> are BOB's (P17).</p>
+<h2>1. <code>build/layers.md</code> and <code>modules.json</code> (the contract wording follows Bob's rulings 1, 5, 10 and D1; adding the module is BOB's)</h2>
+<ul>
+<li><strong>Layer 9's contract</strong>, replacing "An action rests on a published finding and a standard held in the record; the group decides every act, the AI prepares and never files; compliance is recorded as carefully as noncompliance; every deadline names its basis." with: "An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis."</li>
+<li><strong>Layer 9's row</strong> gains <code>action-plans</code> after <code>escalation</code>. <code>modules.json</code> gains <code>action-plans</code> (layer 9; path <code>bio-plane/src/action-plans/</code>; tests <code>bio-plane/test/m/action-plans/</code>; uses as in <code>drafts/action-plans.md</code>, Uses). <code>queue</code> gains <code>action-plans</code> (R17's <code>checkpointsDue</code>).</li>
+<li>The layer's sources gain <code>BIO_Case_Making_v0_1.md</code> §THE ACTION PLAN and <code>docs/development/action-design/ACTION-PLAN.md</code>.</li>
+</ul>
+<h2>2. <code>actions</code></h2>
+<ul>
+<li><strong>R9, amended (Bob: D1).</strong> <code>counterparty</code> becomes the action's <strong>addressee</strong>, one of: <code>{state: named, kind: office, role, body, level?, entity_id?}</code> (as today; <code>kind</code> absent reads <code>office</code>); <code>{state: named, kind: press | organisation | group, role, organisation}</code>; <code>{state: audience, description}</code> (at most 500 characters); <code>{state: undetermined, basis}</code>. Never a private individual: a reporter is addressed by role and outlet, a group by role and organisation. A breach action (R8) must address an office, <code>ADDRESSEE_NOT_AN_OFFICE</code>. Refusals extend R9's as <code>COUNTERPARTY_REFUSED</code> with the arm named. Written actions read as written.</li>
+<li><strong>R7, amended (Bob: D3).</strong> Resolutions gain <code>completed</code>, allowed on any kind: the action was carried out and no counterparty answer decides it. <code>resolved</code> still needs one of the five. The action's own outcome (R26, DEC-14) says what happened; an impact claim still needs a leg outside the group's own actions.</li>
+<li><strong>New R44 (Bob: D5).</strong> An action may state <code>contact</code>, a member id, the group's contact for it; set or changed only by a member (<code>MACHINE_CANNOT_SET_CONTACT</code>), refused <code>CONTACT_NOT_A_MEMBER</code>; shown in the read (R25). It grants nothing.</li>
+<li><strong>New R45 (ruling 1; A12).</strong> An action may state <code>plan</code> and <code>option</code>, set only when created by <code>action-plans</code> R18 and never changed (<code>PLAN_LINK_REWRITTEN</code>); shown in the read.</li>
+<li><strong>New R47 (Bob, 2026-09-30: prepared for opposition).</strong> A received correspondence entry may be marked <code>pressure: {kind: legal | retaliation | discrediting | other, note}</code> (note at most 500 characters): a threat, retaliation, discrediting or legal harassment directed at the group or its supporters (Operational Principle 8, Design Requirement 13). Only a member marks it; the read (R25) lists an action's pressure entries apart; <code>actionsFor</code> can filter by it. It is evidence like any capture, and may be cited by a new inquiry.</li>
+<li><strong>New R48 (Bob, 2026-09-30: the venue sets the standard).</strong> No action, filing or packet is refused for the capture grade of what it rests on. <code>filings</code>' drafts and counsel packets show each exhibit's grade and whether it is co-attested; a profile kind may state its venue's standard of evidence and the grades it accepts (<code>jurisdictions</code>), shown beside the grades; an exhibit below that standard, or at a grade the profile marks contestable, is flagged so counsel and members can prepare.</li>
+<li><strong>R8, amended (Bob, 2026-09-30: DEC-26 with Requirement 12, option (c)).</strong> An action stating <code>breach: true</code> without a live noncompliant determination is still refused <code>ACTION_NO_DETERMINATION</code>, unless it states <code>premise_override: {reason}</code> (at most 500 characters, R14's text rule), authored by a member (<code>MACHINE_CANNOT_OVERRIDE</code> for a machine). The override is stamped with who and when, never edited, shown in the read (R25), and carried as a disclosure on every filing, counsel packet and communication prepared from the action (<code>filings</code> R24). An overridden breach action is never attachable to an escalation (which exists only for a determined breach, <code>escalation</code> R9).</li>
+<li><strong>New (reminders; Bob, 2026-09-30, K613–K615, DEC-94).</strong> An action may carry <code>reminders</code>: the member's own requests to be reminded of its dated clock entries, set when the option is chosen (<code>action-plans</code> R29) or later by a member, never by a machine (<code>MACHINE_CANNOT_SET_REMINDER</code>). Each reminder names its clock entry and when it fires; a member changes or removes it at any time; the read (R25) shows them. They fire as asked and nothing else reminds (DEC-69).</li>
+<li><strong>New R46 (BOB).</strong> <code>actionCreate({document, viewer, author})</code> (<code>op=actioncreate</code>): the same write as a promotion of an action document, answered with the action's id; and <code>op=action</code> (R29's <code>actionRead</code>) and <code>op=actions</code> (R30's <code>actionsFor</code>) routed.</li>
+<li><strong>Stale marks (BOB).</strong> Strike "not yet met" from R4–R11, R22, R28–R33, R40, R41: all built and tested (K253, K370).</li>
+</ul>
+<h2>3. <code>filings</code></h2>
+<ul>
+<li><strong>New R22 (BOB: Publication §3 rule 9).</strong> Every filing draft's approved bytes (R6), every counsel-packet export (R11) and every communication draft (R23) carries <code>publication.inbandQuartet</code> (its R16): hash, date, author and both threshold floors, in-band.</li>
+<li>
+<p><strong>New R23 (Bob: D2).</strong> <code>communicationPrepare({action, text, purpose, preparer, viewer})</code> (<code>op=communicationprepare</code>): a draft message, briefing or statement for an action whose addressee is anyone, stored apart and labelled as R5's drafts are (<code>proposalLabel(preparer, "communication")</code>); a machine may prepare it from the published case and the plan; no template is needed. <code>filingApprove</code> (R6) and <code>filingRecordSent</code> (R7) apply to it unchanged: a member approves it, sends it by their own hand, and the sending is recorded with the bytes sent. Nothing is transmitted by the instance (R7). Placement: <code>filings</code> is "what the group sends"; this keeps one draft–approve–send path for every outward text (BOB to confirm).</p>
+</li>
+<li>
+<p><strong>New R24 (Bob, 2026-09-30).</strong> A filing draft, counsel packet or communication prepared from an action with a <code>premise_override</code> (<code>actions</code> R8) carries, on its face and in every export, "Rests on an unestablished premise:" with the override's reason, author and time.</p>
+</li>
+<li>
+<p><strong>New (the template library; Bob, 2026-09-30, K613 (3)).</strong> Every filing has case-specific parts. A group builds a library of boilerplate templates over time: a member may keep an approved draft, or a derivative of it, as a template of the group's (<code>templateSave({from, name, kind?, author})</code>, never a machine), and <code>filingPrepare</code> fills either the profile's template for the kind or one of the group's. Where none fits, members use the assistant to draft one for the action at hand, a proposal a member adopts (R23's path, D2). No job and no machine invents legal text that is filed without a member adopting it.</p>
+</li>
+</ul>
+<h2>4. <code>monitoring</code>, <code>scheduler</code>, <code>queue</code> (BOB)</h2>
+<ul>
+<li><code>scheduler</code> gains a <code>deadline-recheck</code> consumer calling <code>monitoring.deadlineRecheck</code> on its cadence, so <code>monitoring</code> R34–R35 reach members (today nothing calls it outside tests).</li>
+<li><code>queue</code> (its producers are <code>queue-producers</code>', N363) gains: (i) <strong>a reminder the member asked for</strong> (<code>actions</code>' reminders, <code>action-plans</code> R29), fired as asked; its response offers another reminder at a further time or none (DEC-10 at D-125); (ii) <strong>an action's clock entry overdue</strong> (a CONDITION, K611), new and notifying once (DEC-10, DEC-94 (4)); (iii) <strong>an escalation stage proposed</strong> (an OBLIGATION); (iv) <strong>a plan checkpoint due</strong> (an OBLIGATION of the group's own, never a FINDING). A deadline coming near changes only the item's position, colour or wording (DEC-94 (2)). No item is repeated unless the member asks (DEC-69, DEC-70), and no outside channel is used (DEC-94 (3)). A fifth: when a member marks a received entry as pressure of a legal kind (a threat of suit, a subpoena, a demand to preserve), an OBLIGATION for an administrator to consider a litigation hold (DEC-61); like every item it is not repeated unless the member asks; the hold may be cleared when responding to it, and if not cleared the item stays open until it is (Bob, 2026-09-30, K613 (2)): clearing is its disposing door.</li>
+<li>Strike the stale "not yet met" marks on <code>monitoring</code> R34, R35 and <code>publication</code> R36, R37 once the wiring lands.</li>
+</ul>
+<h2>5. <code>skills</code> (BOB, with the pack's doctrine)</h2>
+<ul>
+<li>An action-planning skill: proposes plan options (<code>action-plans</code> R11) from the plan's subjects and the project's <code>work_kinds</code>; proposes standards (<code>standards</code> R9), comparisons (<code>conformance</code> R12), candidate theories (<code>filings</code> R14) and communication drafts (<code>filings</code> R23). It writes through proposal ops only.</li>
+</ul>
+<h2>6. <code>jurisdictions</code> (BOB: data)</h2>
+<ul>
+<li>
+<p><strong>New R39 (Bob, 2026-09-30: the venue sets the standard of evidence).</strong> An <code>action_kinds</code> entry (R25) may carry <code>evidence: {standard, accepts, contestable?, basis}</code>: <code>standard</code> in words (at most 200 characters, naming the rule or practice, e.g. a rule of evidence's number), <code>accepts</code> a non-empty list of <code>{grade, coattested?}</code> the venue admits, <code>grade</code> a letter of <code>provenance</code>'s <code>BASIS_GRADES</code> and <code>coattested: true</code> requiring the capture's co-attestation (its trusted timestamp and co-archive, <code>capture</code>'s co-attestation), <code>contestable</code> a list in the same form of what it admits but the opposition may contest. Refusals join R28: <code>GRADE_UNKNOWN</code>, <code>EVIDENCE_NO_STANDARD</code>. Combined as one value per kind (R15): profiles that disagree on a kind's <code>evidence</code> have it withheld and reported in <code>conflicts</code>. Absent, the venue's standard reads undetermined (R27) and <code>actions</code> R48 shows grades alone. The test profile supplies <code>evidence</code> on at least one kind with a <code>contestable</code> grade (R36).</p>
+</li>
+<li>
+<p>A complete holiday calendar for the first profile, and measured offices and deadlines (all five offices and the one deadline are <code>UNMEASURED</code> today). Tier 1–2 templates come from the group's library or the assistant's adopted drafts (<code>filings</code>' template library, K613 (3)); a profile may still carry a venue's official form where one is captured and measured.</p>
+</li>
+</ul>
+<h2>7. Deferred (Bob, 2026-09-30)</h2>
+<ul>
+<li>Joint action with another group: recorded in <code>BIO_Action_v0_1.md</code> §8 and deferred, including the near-term level (partner groups named on each group's own action, one jointly approved text). Trigger: a coalition asks.</li>
+</ul>
+<h2>8. Doctrine, no requirement change (Bob: D6)</h2>
+<ul>
+<li>Any group may use CivicOS. A group with a stake in a matter discloses it (Design Requirement 6, already carried by the published case's declared bias and disclosures); its lobbying is limited by ruling 6 (<code>action-plans</code> R12). BOB records this with the rulings.</li>
+</ul>
+<h2>9. Record-keeping (BOB)</h2>
+<ul>
+<li><code>build/plan/next.md</code>: drop N61, N129, N130 (applied in T8, K232).</li>
+<li>DEC-1 to DEC-67: bring <code>docs/archive/ledgers/DECISIONS-2026-08.md</code> back onto <code>main</code> from <code>coord</code>, since the canon cites them.</li>
+</ul>
+<h1>Tests the drafts require</h1>
+<p><strong>Status</strong> · DRAFT by ACTION_DESIGN #1, 2026-09-30, for the jobs that build <code>drafts/action-plans.md</code> and <code>drafts/deltas.md</code> (P7: every requirement tested at the module's interface, never its source text). Each line names the requirement, what the test shows, and its negative control (the same call with the one fact that should refuse it). Fixtures: the test profile only (<code>jurisdictions</code> test profile); a project with an owner, a joined participant, an invited non-joined member and a machine credential; one open inquiry; one published case with a live determination holding a <code>noncompliant</code>, a <code>compliant</code> and an <code>unclear</code> outcome.</p>
+<h2><code>action-plans</code></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R1</td>
+<td>each refusal fires, in order, one test per code (<code>MACHINE_CANNOT_PLAN</code>, <code>PLAN_NO_TITLE</code>, <code>NO_SUCH_PROJECT</code>, the joined-authority refusal, <code>PLAN_NO_SUBJECT</code> at 0 and 51, <code>SUBJECT_MALFORMED</code>, <code>NO_SUCH_INQUIRY</code>/<code>NO_SUCH_DETERMINATION</code> for absent and invisible alike, <code>SUBJECT_NOT_OF_PROJECT</code>, <code>SUBJECT_NOT_LIVE</code>, <code>SUBJECT_IN_ACTIVE_PLAN</code>)</td>
+<td>the valid call lands; two faults at once answer the earlier code</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>a plan opens with an inquiry subject (support <code>hypothetical</code>) and an outcome subject (<code>established</code>); the answer lists both</td>
+<td>a title of 201 characters refuses</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>a second plan in the same project naming the same outcome refuses, naming the first; another project's plan with the same subject lands; after R20 closes the first, the same project's second plan lands</td>
+<td>the same determination with a different standard lands</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>add and remove land with a reason; removing a subject an option serves marks the option <code>subject_removed</code></td>
+<td>no reason refuses <code>PLAN_NO_REASON</code>; a closed plan refuses <code>PLAN_CLOSED</code></td>
+</tr>
+<tr>
+<td>R5</td>
+<td>after a determination is recorded on the inquiry's act, <code>planRead</code> shows <code>determined_since</code>; the plan's subjects are unchanged until R4</td>
+<td>before the determination, <code>determined_since</code> is absent</td>
+</tr>
+<tr>
+<td>R6</td>
+<td><code>planRead</code> returns every named part, including a started option's action state and a subject's escalation stage; history oldest first with who, when, why</td>
+<td>an invited non-joined member of another project gets <code>NO_SUCH_PLAN</code>, identical to an absent id</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>pages of 200, <code>truncated</code> by reading one past; <code>subject</code> filter finds the plan</td>
+<td>a limit above 200 is capped</td>
+</tr>
+<tr>
+<td>R8</td>
+<td>superseding the determination shows <code>superseded</code> naming the successor; closing the inquiry shows <code>closed</code>; nothing is stored (read twice around the change)</td>
+<td>an untouched subject reads <code>live</code></td>
+</tr>
+<tr>
+<td>R9</td>
+<td>each refusal fires in order; a legal option with no tier reads <code>undetermined</code>; <code>optionRevise</code> keeps the prior revision readable</td>
+<td>a tier on an awareness option refuses <code>TIER_REFUSED</code></td>
+</tr>
+<tr>
+<td>R10</td>
+<td>each addressee arm lands (office, press, organisation, group, audience)</td>
+<td>a named person with no role and organisation refuses <code>ADDRESSEE_REFUSED</code></td>
+</tr>
+<tr>
+<td>R11</td>
+<td>a machine proposal is stored apart, labelled machine work, absent from options; a member adopts it once; the option names the proposal</td>
+<td>a second adoption refuses; a machine calling <code>optionAdopt</code> refuses</td>
+</tr>
+<tr>
+<td>R12</td>
+<td>a lobbying option naming a held standard in <code>enforces</code> lands</td>
+<td>the same option without <code>enforces</code> refuses <code>LOBBYING_NO_REQUIREMENT</code></td>
+</tr>
+<tr>
+<td>R13</td>
+<td>bulk choose of three options lands all; <code>declined</code> with a reason lands; history keeps each change</td>
+<td>bulk with one unknown option changes none (<code>NO_SUCH_OPTION</code>); <code>declined</code> without a reason refuses</td>
+</tr>
+<tr>
+<td>R14</td>
+<td>a three-phase scenario with a checkpoint and both branches lands; a fourth scenario refuses</td>
+<td>a phase holding an unchosen option refuses <code>PHASE_OPTION_NOT_CHOSEN</code>; a cycle refuses <code>PHASE_CYCLE</code></td>
+</tr>
+<tr>
+<td>R15</td>
+<td>a phase starting when another subject's escalation reaches stage 5 reads not started, then started after the escalation advances</td>
+<td>a subject not in the plan refuses <code>BRANCH_UNKNOWN</code></td>
+</tr>
+<tr>
+<td>R16</td>
+<td>on the checkpoint's day a member judges <code>not_met</code>; the scenario reads the <code>not_met</code> branch</td>
+<td>a day early refuses <code>CHECKPOINT_NOT_DUE</code>; judging twice refuses <code>CHECKPOINT_JUDGED</code>; a machine refuses</td>
+</tr>
+<tr>
+<td>R17</td>
+<td><code>checkpointsDue</code> lists the due, unjudged checkpoint once, oldest first, with days since due</td>
+<td>after judging, it is absent; a closed plan's checkpoint is absent</td>
+</tr>
+<tr>
+<td>R18</td>
+<td>starting a chosen option creates an action with the option's addressee, dated clock entries with bases, <code>rests_on</code> legs, <code>plan</code> and <code>option</code>, and <code>contact</code>; the plan records the link</td>
+<td>an unchosen option refuses <code>OPTION_NOT_CHOSEN</code>; <code>breach: true</code> on an inquiry-only subject is refused by <code>actions</code> R8</td>
+</tr>
+<tr>
+<td>R19</td>
+<td>each check appears with its reason (past date, unbranched outcome, dead subject, outward option on hypothetical subjects, superseded <code>enforces</code>) and changes nothing</td>
+<td>a plan with none of these answers no checks</td>
+</tr>
+<tr>
+<td>R19b</td>
+<td>a scenario whose outward options have no branch for a hostile response is flagged</td>
+<td>adding a <code>not_met</code> branch to a refusal clears it</td>
+</tr>
+<tr>
+<td>R29</td>
+<td>choosing a dated option shows default reminders the member can change; the schedule reaches the action R18 creates and fires as asked; the response offers another reminder or none; an overdue date notifies once; a nearing date changes display only</td>
+<td>nothing reminds when the member set none; a machine setting reminders refuses; no outside channel is used</td>
+</tr>
+<tr>
+<td>R20</td>
+<td>a member closes with a reason; the plan stays readable; its subjects join a new plan</td>
+<td>no reason refuses; closing twice refuses <code>PLAN_CLOSED</code>; a machine refuses; nothing closes a plan on its own (advance the clock a year: still open)</td>
+</tr>
+<tr>
+<td>R21</td>
+<td>an owner sets <code>work_kinds: ["reporting"]</code>; <code>planRead</code> shows it; a proposal made with and without it lands identically in R11's checks</td>
+<td>an unknown kind refuses <code>WORK_KIND_UNKNOWN</code>; a machine refuses</td>
+</tr>
+<tr>
+<td>R22</td>
+<td>every <code>NO_SUCH_PLAN</code> site answers through <code>noSuchPlan</code>, one code and sentence</td>
+<td>an existing visible plan never answers it</td>
+</tr>
+<tr>
+<td>R23</td>
+<td>a checkpoint passed unjudged produces no queue FINDING or CONDITION and no record fact (read <code>queue</code> and the record after the day passes)</td>
+<td>the reminder (R17) is present</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>every act with a machine credential refuses, except <code>optionPropose</code></td>
+<td><code>optionPropose</code> by a machine lands</td>
+</tr>
+<tr>
+<td>R25</td>
+<td>the public read path and <code>publication</code> answer nothing for a plan id, exactly as for a non-existent id</td>
+<td>a joined member reads it</td>
+</tr>
+<tr>
+<td>R26</td>
+<td>each refused key (<code>budget</code>, <code>cost</code>, <code>assignee</code>, <code>hours</code>, <code>significance</code>, <code>priority</code>, <code>score</code>) refuses <code>OPTION_KEY_REFUSED</code></td>
+<td>an option without them lands</td>
+</tr>
+<tr>
+<td>R27</td>
+<td>no act rewrites a row (read history before and after each act); every table is declared to purge (purge a test instance: counts zero)</td>
+<td>not applicable</td>
+</tr>
+<tr>
+<td>R28</td>
+<td>against the test profile only; with no profile active, suggestions' deadlines read undetermined</td>
+<td>not applicable</td>
+</tr>
+</tbody>
+</table></div>
+<h2><code>actions</code> (deltas §2)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R9 amended</td>
+<td>each addressee arm lands; a written <code>{state: named, name}</code> action reads as written</td>
+<td>a breach action addressed to press refuses <code>ADDRESSEE_NOT_AN_OFFICE</code>; a private person refuses</td>
+</tr>
+<tr>
+<td>R7 amended</td>
+<td><code>completed</code> lands on a <code>media</code>-kind action and on a records request</td>
+<td><code>resolved</code> with no resolution still refuses <code>NO_RESOLUTION</code></td>
+</tr>
+<tr>
+<td>R44</td>
+<td>a member sets <code>contact</code>; the read shows it</td>
+<td>a machine refuses; a non-member id refuses <code>CONTACT_NOT_A_MEMBER</code></td>
+</tr>
+<tr>
+<td>R45</td>
+<td>an action created by <code>action-plans</code> R18 carries <code>plan</code> and <code>option</code></td>
+<td>changing either on a revision refuses <code>PLAN_LINK_REWRITTEN</code></td>
+</tr>
+<tr>
+<td>R8 amended</td>
+<td>a member's breach action with no determination but a <code>premise_override</code> lands, stamped, shown in the read; a filing prepared from it carries the disclosure</td>
+<td>without the override it refuses <code>ACTION_NO_DETERMINATION</code>; a machine's override refuses; attaching it to an escalation refuses</td>
+</tr>
+<tr>
+<td>R47</td>
+<td>a member marks a received entry <code>pressure</code>; the read lists it apart; <code>actionsFor</code> filters by it</td>
+<td>a machine refuses; a <code>sent</code> entry refuses</td>
+</tr>
+<tr>
+<td>R48</td>
+<td>a Tier 2 filing resting on a Grade B capture is prepared and shows the grade and the venue's stated standard</td>
+<td>not applicable (nothing refuses)</td>
+</tr>
+<tr>
+<td>R46</td>
+<td><code>op=actioncreate</code> answers the id and writes what a promote would; <code>op=action</code> and <code>op=actions</code> answer R29's and R30's reads</td>
+<td>a malformed document refuses as promote does</td>
+</tr>
+</tbody>
+</table></div>
+<h2><code>filings</code> (deltas §3)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R22</td>
+<td>the approved bytes of a filing draft, a counsel-packet export and a communication draft each carry the in-band quartet, verifiable with <code>publication</code>'s R16</td>
+<td>a draft not yet approved carries none</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>a draft and a packet prepared from an overridden action carry "Rests on an unestablished premise:" with reason, author and time, in every export</td>
+<td>a draft from a determined breach action carries none</td>
+</tr>
+<tr>
+<td>R23</td>
+<td>a machine prepares a communication draft for an action addressed to press; it is labelled machine work; a member approves; sending records the bytes</td>
+<td>a machine approving refuses (R6); sending before approval refuses <code>NOT_APPROVED</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2><code>jurisdictions</code> (deltas §6)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>req</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R39</td>
+<td>a kind's <code>evidence</code> validates and reaches <code>combine</code>; two profiles that disagree on it withhold it and report the conflict</td>
+<td>an unknown grade refuses <code>GRADE_UNKNOWN</code>; no <code>standard</code> refuses <code>EVIDENCE_NO_STANDARD</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2>Wiring (deltas §4)</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>change</th>
+<th>test</th>
+<th>negative control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scheduler <code>deadline-recheck</code></td>
+<td>a pending clock entry past its date is marked overdue within one cadence, and escalation is asked</td>
+<td>an entry dated today stays pending</td>
+</tr>
+<tr>
+<td>queue kinds</td>
+<td>a reminder the member asked for fires as asked and offers another or none; an overdue clock (CONDITION) notifies once; a proposed stage and a due checkpoint (OBLIGATIONs) appear once; none repeats unless the member asks</td>
+<td>an unrequested 'due within N days' produces no item</td>
+</tr>
+<tr>
+<td>litigation-hold reminder</td>
+<td>a <code>legal</code> pressure entry yields one OBLIGATION for an administrator; it stays open until cleared, and responding may clear it</td>
+<td>kind <code>retaliation</code> yields none; the item is not repeated unless asked</td>
+</tr>
+<tr>
+<td>template library</td>
+<td>a member keeps an approved draft as a group template; <code>filingPrepare</code> fills it for the kind; an assistant draft is a proposal until adopted</td>
+<td>a machine calling <code>templateSave</code> refuses</td>
+</tr>
+</tbody>
+</table></div>
+</div>
