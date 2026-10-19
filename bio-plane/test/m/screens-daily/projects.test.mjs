@@ -214,3 +214,32 @@ test("R34: every key projects reads is a word of the list; the retired rows are 
   for (const k of ["projects.empty.sub", "projects.empty.note", "project.start.title", "project.visibility.start.later", "member.founder.unnamed", "act.projectjoin.label.projects"])
     assert.ok(screen("projects").words.includes(k), k);
 });
+
+test("R63: projects draws a search by name and a filter (all, in, own), narrowing the rows in the page from projectlist's mine; it sends no op and changes nothing", async () => {
+  const three = ok({ ok: true, truncated: false, projects: [
+    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", mine: { in: true, owner: true } },
+    { id: "PROJ-2", name: "Sewer fund transfers", stage: "closed", mine: { in: true, owner: false } },
+    { id: "PROJ-3", name: "Pothole repairs", stage: "forming", mine: { in: false, owner: false } },
+  ] });
+  const p = await open("/app/projects", { projectlist: three, projectquestions: QUESTIONS }, { screens: withScreens("project") });
+  const names = () => rows(p).map((r) => r.querySelector("a.cs-ref").textContent);
+  assert.ok(hasWord("screen.projects.search.label") && hasWord("screen.projects.search.help") && hasWord("screen.projects.search.go"));
+  assert.ok(main(p).querySelector('label[for="projects-search"]') && text(p).includes(word("screen.projects.search.help")));
+  assert.equal(text(p, main(p).querySelector('label[for="projects-filter"]')), word("screen.projects.filter.label"));
+  assert.deepEqual(main(p).querySelectorAll("#projects-filter option").map((o) => o.textContent), ["screen.projects.filter.all", "screen.projects.filter.in", "screen.projects.filter.own"].map((k) => word(k)));
+  assert.deepEqual(names(), ["The Coliseum lease", "Sewer fund transfers", "Pothole repairs"], "control: at all, every row shows");
+  const before = p.requests.length;
+  const set = async (id, v) => { const el = p.doc.getElementById(id); el.value = v; p.fire(el, "change"); await settle(); };
+  await set("projects-search", "  FUND  sewer ");
+  assert.deepEqual(names(), ["Sewer fund transfers"], "case-folded, every word present");
+  await set("projects-search", "");
+  await set("projects-filter", "in");
+  assert.deepEqual(names(), ["The Coliseum lease", "Sewer fund transfers"]);
+  await set("projects-filter", "own");
+  assert.deepEqual(names(), ["The Coliseum lease"]);
+  await set("projects-search", "pothole");
+  assert.equal(rows(p).length, 0);
+  assert.ok(text(p).includes(word("projects.empty.sub")), "a search finding none says so with the empty-list sentence");
+  assert.deepEqual(p.requests.slice(before).filter((r) => r.op === "projectlist"), [], "it sends no read of the list again and no act");
+  assert.equal(p.requests.slice(before).filter((r) => r.method !== "GET").length, 0);
+});
