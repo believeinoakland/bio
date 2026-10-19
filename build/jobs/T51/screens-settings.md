@@ -51,3 +51,7 @@ I wait for the three providers' merges and the CHANGE for item 1.
 ## J4 · COMPLETE
 
 COMPLETE: T51-116 screens-settings met; 177 module tests pass against the merged providers; format, architecture, coverage (60 of 60), ownership and the words check clean. Record: build/jobs/T51/screens-settings.md.
+
+## J5 · COMPLETE
+
+COMPLETE (re B9, K4094). This module draws no legend from a provider slug: `security` has no fieldset legend and draws no `google-web-risk` or `opswat-deep-cdr`; those legends are on the setup page's scanner list, which is not this module's (installer / instance-setup, please check). What I did find and fix here: the "tools in use" table drew each tool by `provider_id`, a slug. It now draws the provider's display name (vendor and product from the catalogue the screen already reads), and, with the catalogue unread, the column's word, never the slug; test added (R15). Catalogue labels and hints are drawn as read. Suite 178 pass, 0 fail; words check clean. Pushed.
