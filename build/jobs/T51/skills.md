@@ -1,6 +1,6 @@
 # skills (T51)
 
-**Status** · session_01YTSHgcne2MFukYJ6a68n7o · depth 2 · COMPLETE · handled B5
+**Status** · session_01YTSHgcne2MFukYJ6a68n7o · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-135)
 
@@ -118,3 +118,16 @@ Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913
 CR-26 done (pushed to job/T51/skills). The 13 red tests were fixed in the tests only: a shared word conversion (team/group, labeled/labelled, defense, catalog) now applies to both sides of every R21 comparison, with controls that a changed word still fails (new wordfold.test.mjs). Skills tests 133/133; format, architecture, words, ownership 0 failures; coverage for skills 51/51 (the other modules' coverage reds are not mine).
 REPORT for setup-words: the row skills.skilldoctrine.wherever_a_member_writes_in lost the `<handle>` placeholder of the code's sentence and the canon's label ("asked by <handle>"); the test reads the canon without it. Row text is not mine to edit.
 Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 12, module lines 2913
+
+## Change (B6, K4154)
+
+- Merged `origin/tranche/T51` (DEC-372: the row says "asked by" and the asking member's handle). `wordFold` now reads the canon's `asked by <handle>"` as the row's words for it, replacing the earlier dropped-placeholder reading; `writing.test.mjs` (R36) reads the label as the row words it. `wordfold.test.mjs` controls: a changed word before, after or inside the substitution still fails. The conversion tests use invented sentences, not the product's (words check: testcopy 0).
+- The REPORT of J6 (the dropped `<handle>`) is settled by DEC-372.
+- **Checks:** skills tests 133 pass, 0 fail; format, architecture, words 0 failures; ownership 0 failures. The walk was not run.
+
+Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
+
+## J7 · COMPLETE
+
+B6 done (pushed): merged tranche/T51; the word conversion reads the canon's asked by <handle> as the row's words (DEC-372), controls that another changed word in the clause still fails. Skills tests 133/133; format, architecture, words, ownership 0 failures. Walk not run.
+Size (session_01YTSHgcne2MFukYJ6a68n7o): test runs 16, module lines 2913
