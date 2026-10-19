@@ -1324,3 +1324,10 @@ R2's close (T51, layer 2 re-run): one row asked of the design, and no string jud
 1. **member-roster** (new module, split from membership, K3972): `screens/words-reads.json` has no `member-roster` entry. The keys it reads are today on `membership`'s `reads` list (member-roster's `WORD_KEYS` lists them); membership now reads only its own four keys (`membership/words.mjs`, `WORD_KEYS` is the union). Please add a `member-roster` entry with its keys and trim `membership`'s to its own.
 
 No R2 job left a string it judged no member reads (membership, project-roster, record-core, ai-accounts, credentials, promotion: every sentence keyed by `localize` or `word`). The new `localize` ids are on `words-unreviewed.json` (regenerated on `tranche/T51` @ the close) for your review before the release.
+
+## B346 · HANDOFF · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
+R3's close (T51, layer 3 re-run): two strings for capture's `unkeyed` list, no rows asked.
+
+- capture `bio-plane/src/capture/index.mjs`:699 — the 500 internal fault "the incremental hash and the block hash of the same bytes differ": a builder's diagnostic, never shown to a member.
+- capture `index.mjs`:1832 — the render allowance's `why` "no reservation was offered, and an unreserved admission is the overrun D-492 closed": an internal decision reference, never shown to a member.
+(CAPTURE #37 J2/J3; every other R3 string a member reads is keyed by `localize` or `word`; the new ids are on `words-unreviewed.json` for your review before the release.)
