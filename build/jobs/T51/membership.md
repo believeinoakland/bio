@@ -119,3 +119,23 @@ Size (session_018652bxpkEPx4gMoCSpbHne): test runs 3, module lines 1626
 **Raw lines of source**: `bio-plane/src/membership/` four files: 1,625 (unchanged by RW).
 
 Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 5, module lines 1625
+
+## J7 · BLOCKED
+
+**BLOCKED** (cause: tests), for B6 (CHANGE, K4036: membership's `WORD_KEYS` as its own keys only). Code reverted; the branch is at J6's commit `058368a0a2` plus the merge of `tranche/T51`. Nothing pushed for B6.
+
+**What I did.** `WORD_KEYS` built from membership's own rows (`MEMBERSHIP_CHECKS` minus member-roster's codes, plus the project and case-authority tables) and `SENTENCE_KEYS`, without member-roster's 46 keys. That set is exactly the 15 keys of `membership`'s `reads` list in `words-reads.json`, so R151's reads-list test (`t50-words.test.mjs`:36) passes.
+
+**What stays red with that change.** Four assertions in the R151/R123 tests assert that `WORD_KEYS` contains member-roster's rows too, so no single `WORD_KEYS` passes them unchanged alongside the reads-list test:
+1. `t50-words.test.mjs`:26 `WORD_KEYS.length >= 60` (now 15).
+2. `t50-words.test.mjs`:60 every refusal row's key is in `WORD_KEYS`; fails on `refusal.BAD_MEMBER_ID`, a member-roster row.
+3. `t50-words.test.mjs`:158 every table's code is in `WORD_KEYS`; fails on `MEMBER_ID_RESERVED`.
+4. `t41-sight-words.test.mjs`:232 `WORD_KEYS` includes `handle.refused.paused` (`HANDLE_CHECK_PAUSED`, a member-roster row).
+
+So "R151's test passes unchanged, module suite green" cannot hold: the reads-list test needs 15 keys, and tests 1 to 4 need the union. Current suite with the change: 168 pass, 4 fail (the four above); without it, the only red is the inherited reads-list test.
+
+**Ruling needed (BOB).** My proposal: membership's `WORD_KEYS` is its 15 own keys (DEC-345, as B6 says), and tests 1 to 4 are re-pointed, not weakened: each asserts the key is held in the union of `membership`'s `WORD_KEYS` and `member-roster`'s `WORD_KEYS` (the same strength, the member-roster half read from its own declaration, K3268), and test 1's `>= 60` becomes the union's count. The reads-list test stays unchanged. I will make that change on your go, or on a different ruling if you pick one (for example, keep the union and change the design's `reads` entry instead, which is the design stream's and not mine to edit).
+
+**Size**: no change to the module's source from this job; module lines 1625 as at J6.
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 4, module lines 1625
