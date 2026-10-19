@@ -99,3 +99,12 @@ B3 (b): two details left in source, not keyed; each names an op for an API calle
 2. EXPERTISE_IS_NOT_ASSIGNED (memberAdd, when expertise is passed): "expertise is declared by the member and then confirmed by an administrator (section 1.3). It is not set when the invitation is created, ... Use op=expertisedeclare and op=expertiseconfirm." Why: the invitation screens never pass expertise (section 1.3 forbids it), so only a direct API caller reaches this refusal; its last sentence names two ops, which is wire grammar.
 
 Both refusals keep their codes and rows. Their detail is one fixed string, so keying would change nothing a member sees.
+
+## J4 · COMPLETE
+
+member-roster, CHANGE B3 complete. Record: build/jobs/T51/member-roster.md, section "Completion (MEMBER-ROSTER #2) · CHANGE B3" on job/T51/member-roster at b1b70b1721.
+
+(a) Act phrases passed to notAnAdmin and #custodialBar, and the capabilities refusal's detail, are localize ids with the English unchanged. The module holds no capability label: its capability words are identifiers, and their labels are not words.json rows, so none is keyed here. Tests that copied these sentences now compare with localize by the same ids.
+(b) Two op-naming details are in a REPORT (J3), not keyed.
+
+Tests 164 pass. words.mjs member-roster 0 failures (testcopy 0). ownership 0. format 0. Merged tranche/T51 (no tranche commit touched this module).
