@@ -32,3 +32,7 @@
 - `checks/ownership.mjs`: 0 failures.
 
 Size (session_01ST4CngevnjWcyxth5PJjXe): test runs 14, module lines 1449
+
+## J1 · COMPLETE
+
+T51-158 done on job/T51/local-facts: R18 ruleFields (+op rulefields) with effective_from, R19 rows (applies_to, tier, source), words findings fixed (words check clean for local-facts). Module tests 71 pass, coverage 19/19, format/architecture/ownership 0 failures. Record: build/jobs/T51/local-facts.md. Needs you: (1) four reds I caused in other modules' tests, not touched: duties R5 response.test.mjs:346 and affordances t45-backing.test.mjs:153,156 draft without effective_from; affordances op-map test and plane compose.test.mjs:84 list the ops without rulefields (T51-107 declares it). (2) readings in my record: starts offers third_party but starter has no drawable kind (deferred); claim added to a deadline's applies_to choices; extra many:true key; refusal detail strings are diagnostics for you to settle with the design (K3944). (3) setup-words rows stale for 3 new localize ids; regenerate at layer close.
