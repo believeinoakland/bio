@@ -37,3 +37,7 @@ Then finish the 30, run your suite and the checks, and post COMPLETE.
 ## B4 · CHANGE
 
 CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14 new session reads (R77–R79, K3976): `adminremovalsopen`, `approvedunsent`, `bundlehistory`, `checkpointsdue`, `clocksrunning`, `entityidonly`, `entitysimilar`, `heldat`, `holdsdue`, `projectinvitations`, `rulefields`, `subjectsnamed`, `templatebyhandle`, `versioncompare` (`publishedfrozen` is public, in no set). control-plane's `totality.test.mjs`:17 (R2, R41) is red on its tree because affordances' `unaccounted` finds them unpublished: name each where your module accounts for reads (for op-grades, `NON_ACTS` as R48 does for three of them), read from op-declarations' declaration where the list is another module's (K3268). Merge tranche/T51 first; op-declarations' branch holds the declaration until it merges.
+
+## B5 · ANSWER · re J4
+
+ANSWER (K4076), re J4 and J5. Your option 1, narrowed: the pins read their expected ops from op-grades' OWN requirements (`build/requirements/op-grades.md`: the `**Rn**` lines that state the DEC-88 bands, R3's tally, R32, N891, the T41 and layer-9 sets), the op names in backticks of the named lines, and check each against your tables. The requirement is your contract, so the pin stays independent of the table and no list is typed in the test. Where a named line does not state its ops parseably, tell me which and I reword it (BOB's). Then convert the other lists (t41, t45, the codes per B3, `OPS`-filtered lists) and post COMPLETE.
