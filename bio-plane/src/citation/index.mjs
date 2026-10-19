@@ -697,9 +697,7 @@ export class Citation {
                cited: [], alreadyCited: already.sort(), severed: [], question: questionId,
                bundleSha: p.bundleSha, rowVersion: null,
                detail: localize("citation.index.every_member_of_the_selection", "every member of the selection was already cited; nothing was written{v1}", { v1: String(authored.length
-                        ? ". The part of the document this call named was written NOWHERE, because no leg "
-                        + "was written at all: making an existing citation more specific is a separate "
-                        + "authored act on this record's own plan."
+                        ? localize("citation.index.part_named_written_nowhere", ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.")
                         : "") }) };
 
     /* THE WRITE, PER ARM; both go through the document (R6). */
@@ -777,8 +775,9 @@ export class Citation {
       ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
     /* R3 (T35): what the act was cited FROM, a selection or a passage found by search in its document, and the
        question it was looked for for, when one was named. */
-    const trigger = (fromFound ? `Trigger: a part of ${foundDoc} found by search in capture ${foundCapture}`
-                               : `Trigger: selection ${handle}${setMovedNote}`)
+    const trigger = (fromFound
+      ? localize("citation.index.trigger_a_part_found_in_capture", "Trigger: a part of {doc} found by search in capture {capture}", { doc: String(foundDoc), capture: String(foundCapture) })
+      : `Trigger: selection ${handle}${setMovedNote}`)
       + (questionId ? `; for question ${questionId}` : "") + "\n";
     text = appendSessionLog(text, ontoInquiry
       ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"}`

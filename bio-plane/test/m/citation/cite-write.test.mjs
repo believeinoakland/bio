@@ -5,8 +5,14 @@ import assert from "node:assert/strict";
 import { world, V, STAMP, sha } from "./fixture.mjs";
 import { CITE_LOG_SAMPLE } from "../../../src/citation/index.mjs";
 import { machinePassageUnchecked } from "../../../src/inquiry/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
+/* The detail of an answer whose selection had nothing left to cite, read through the list (R14): `tail` is the part
+   that says a part of the document was named and written nowhere, empty when none was named. */
+const everyMember = (tail = "") => localize("citation.index.every_member_of_the_selection",
+  "every member of the selection was already cited; nothing was written{v1}", { v1: tail });
+const NOWHERE_TAIL = localize("citation.index.part_named_written_nowhere", ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.");
 
 function setup() {
   const w = world();
@@ -120,7 +126,7 @@ test("R2: a member already cited is reported, not rewritten; with nothing new th
     const none = w.cit.cite({ project: obj, handle: one, ...ANN, ...extra });
     assert.deepEqual([none.ok, none.cited, none.alreadyCited, none.severed, none.bundleSha, none.rowVersion],
                      [true, [], ["INFO-2026-0001"], [], head.bundleSha, null]);
-    assert.equal(none.detail, "every member of the selection was already cited; nothing was written");
+    assert.equal(none.detail, everyMember());
     assert.deepEqual(w.snapshot(), snap, "nothing written");
   }
   /* On a question, a target it merely references is not "already cited": the leg is written. */
@@ -130,7 +136,7 @@ test("R2: a member already cited is reported, not rewritten; with nothing new th
   assert.deepEqual(w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports" }).cited, ["INFO-2026-0003"]);
   const nowhere = w.cit.cite({ project: q2, handle: three, ...ANN, role: "supports", extent: { extent_kind: "pdf-page", extent_page: "1" } });
   assert.deepEqual([nowhere.ok, nowhere.cited], [true, []]);
-  assert.match(nowhere.detail, /^every member of the selection was already cited; nothing was written\. The part of the document this call named was written NOWHERE/);
+  assert.equal(nowhere.detail, everyMember(NOWHERE_TAIL));
 });
 
 test("R3: the write moves last_updated and appends one Session Log entry naming the author, the selection, at most 20 ids and a count of the rest, and the note; it counts records, a question among them, never calling them all information", async () => {
