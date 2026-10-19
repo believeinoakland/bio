@@ -82,10 +82,14 @@ export const setup = {
       const open = !skipped && (o.open || ui.at === key);
       return `<details class="cs-part" data-part="${key}" data-state="${state}"${skipped ? ' data-skipped="true"' : ""}${open ? " open" : ""}><summary>`
         + `<span class="n">${n}</span><span class="t">${W(titleKey)}</span><span class="why">${o.why || W(whyKey)}</span>`
-        + `<span class="cs-due"${state === "done" ? ' data-due="met"' : ""}>${W(S + "state." + state)}</span><span class="chev" aria-hidden="true"></span></summary>`
+        + (skipped
+          ? `<span class="cs-due cs-card" tabindex="0" data-level="1" data-skipped-mark="true" data-tip="${E(W(S + "state.skipped.help"))}">${W(S + "state.skipped")}</span>`
+          : `<span class="cs-due"${state === "done" ? ' data-due="met"' : ""}>${W(S + "state." + state)}</span>`)
+        + `<span class="chev" aria-hidden="true"></span></summary>`
         + `<div class="body">${inner}${o.skip === false ? "" : skip(key)}</div></details>`;
     };
-    // R23: "Skip for now" sends nothing and records nothing; the part is shown skipped while the page is open
+    // R23, R25: "Skip for now" sends nothing and records nothing; the part is shown skipped (its mark reads
+    // `screen.setup.state.skipped`, explained by `.skipped.help`) while the page is open
     const skip = (key) => `<div class="mk-acts"><label class="cs-btn" data-tone="quiet" data-skip="${key}" tabindex="0" data-level="2" data-tip="${E(W("setup.skip_does"))}">`
       + `<input type="checkbox" class="sr" id="su-skip-${key}"${ui.skipped && ui.skipped[key] ? " checked" : ""}>${W("setup.skip")}</label></div>`;
 
@@ -461,7 +465,7 @@ export const setup = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.invite) view.ui.invite = { expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) };
       } },
-    // a tool added with the fields its entry names, then tested (file-safety R28, R29), as setup-page R30 did
+    // a tool added with the fields its entry names, then tested (file-safety R28, R29)
     { op: "securitytooladd", rereads: ["tools"],
       send(view, el, cs) {
         view.ui.at = "security";

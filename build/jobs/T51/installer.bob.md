@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -54,3 +54,7 @@ CHANGE (K4092): a code review of every install situation (build/plan/install-sit
 5. F11 (R74): foreignContainers looks only at container applications: also examine the Workers on the copy's names (a foreign Worker stops the update, named; a retired one is named once and left), and run the same check on an install that continues an unfinished copy.
 6. F12 (R18, R78): a FINISHED copy whose team is unrecorded is told to run the installer again, which lands on the "already holds a copy" page and never records it: a loop. The installer may seed only in a run that generated the install credential (K3868, K3892). Make the telling honest and the path real: propose in a QUESTION the smallest correct route (your reading of the code first), and do not ship the loop; I answer at once.
 Merge tranche/T51 first (installer-steps gets its own list). Then COMPLETE.
+
+## B9 · RESUME
+
+RESUME (K4094): you are INSTALLER #19 (sonnet), restarted from #18 at half its window. Read your record (J9 lists the next steps 2–5 in detail) and this mailbox; merge tranche/T51. Then: (a) FIRST, a flaw journey-check found (it blocks every local journey arm): readGroup (src/index.mjs:918–922) reads j.group at the top of op=instancegroup's answer, but the copy answers {ok, result:{ok, group}, store}: read the group inside result (the envelope), with a test against the real answer shape and a control. (b) J9's steps 2, 3, 4, 5 as #18 wrote them, with these answers: step 2 (F2) as written, the retry by POSTing /begin again with the saved slug and mode; the plan stop's 'Check again' row is asked of the design (HANDOFF): draw the containers stop's existing 'It's on now' now and the plan stop's once its row exists. Step 3 (F3): no Cloudflare endpoint states these ceilings; keep ACCOUNT_LIMITS as the ceilings, run limitReached on the update path when the release adds members, classes, buckets or containers; no new sentence. Step 4: exchange through patiently/cfCall here; scriptHash and readCopyFacts are installer-steps' (told). Step 5 (F11) as written. Also call installer-steps' new offerSubdomain(session, account, slug) before anything is created and show the offered name (F7). (c) F12, your J8: option A, ruled: for a finished copy, no 'run the installer again': draw head, effect and suggestion, omit 'how' until the design's row for a finished copy exists (HANDOFF sent); nothing seeded in an update (K3892). Then COMPLETE with the reports you listed.
