@@ -5,6 +5,8 @@
  * checks each entry's length and CRC-32 against the directory before handing the bytes over. An entry that is
  * compressed, encrypted, truncated or fails its CRC is named, never read around. Pure; never throws. */
 
+import { word, localize } from "../setup-words/index.mjs";
+
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -35,23 +37,23 @@ const utf8 = new TextDecoder("utf-8", { fatal: false });
  *  a stored ZIP this checker can read. An entry it cannot read whole is named in `problems` and left out. */
 export function readStoredZip(input) {
   const b = asBytes(input);
-  if (!b) return { ok: false, problem: "the part is not bytes" };
+  if (!b) return { ok: false, problem: word("case-checker.problem.part_bytes") };
   const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
   let eocd = -1;
   for (let i = b.length - 22; i >= Math.max(0, b.length - 22 - 0xffff); i--) {
     if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
-  if (eocd < 0) return { ok: false, problem: "the part is not a ZIP archive: it has no end-of-central-directory record" };
+  if (eocd < 0) return { ok: false, problem: word("case-checker.problem.part_zip_archive") };
   const count = dv.getUint16(eocd + 10, true);
   const cdSize = dv.getUint32(eocd + 12, true);
   const cdStart = dv.getUint32(eocd + 16, true);
-  if (cdStart + cdSize > eocd) return { ok: false, problem: "the part's central directory lies outside the archive" };
+  if (cdStart + cdSize > eocd) return { ok: false, problem: word("case-checker.problem.part_central_directory") };
   const entries = new Map();
   const problems = [];
   let p = cdStart;
   for (let k = 0; k < count; k++) {
     if (p + 46 > b.length || dv.getUint32(p, true) !== 0x02014b50)
-      return { ok: false, problem: `the part's central directory is cut short at entry ${k + 1} of ${count}` };
+      return { ok: false, problem: word("case-checker.problem.part_central_directory_cut", { k: k + 1, count }) };
     const flags = dv.getUint16(p + 8, true);
     const method = dv.getUint16(p + 10, true);
     const crc = dv.getUint32(p + 16, true);
@@ -61,14 +63,14 @@ export function readStoredZip(input) {
     const local = dv.getUint32(p + 42, true);
     const name = utf8.decode(b.subarray(p + 46, p + 46 + nlen));
     p += 46 + nlen + xlen + clen;
-    if (entries.has(name)) { problems.push(`the part names ${name} twice`); continue; }
-    if (flags & 1) { problems.push(`${name} is encrypted`); continue; }
-    if (method !== 0 || csize !== usize) { problems.push(`${name} is compressed; a case file stores every file as it is`); continue; }
-    if (local + 30 > b.length || dv.getUint32(local, true) !== 0x04034b50) { problems.push(`${name} has no local header`); continue; }
+    if (entries.has(name)) { problems.push(word("case-checker.push.part_names_twice", { name })); continue; }
+    if (flags & 1) { problems.push(localize("case-checker.zip.encrypted", "{name} is encrypted", { name })); continue; }
+    if (method !== 0 || csize !== usize) { problems.push(word("case-checker.push.compressed_case_file", { name })); continue; }
+    if (local + 30 > b.length || dv.getUint32(local, true) !== 0x04034b50) { problems.push(word("case-checker.push.local_header", { name })); continue; }
     const start = local + 30 + dv.getUint16(local + 26, true) + dv.getUint16(local + 28, true);
-    if (start + usize > b.length) { problems.push(`${name} is cut short`); continue; }
+    if (start + usize > b.length) { problems.push(word("case-checker.push.cut_short", { name })); continue; }
     const bytes = b.subarray(start, start + usize);
-    if (crc32(bytes) !== crc) { problems.push(`${name} fails its CRC-32`); continue; }
+    if (crc32(bytes) !== crc) { problems.push(localize("case-checker.zip.crc_fails", "{name} fails its CRC-32", { name })); continue; }
     entries.set(name, bytes);
   }
   return { ok: true, entries, problems };

@@ -23,6 +23,7 @@
 import { programData } from "./program.mjs";
 import { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export { checkCaseFile, RESULTS, RESULT_WORDS, CHECKER_VERSIONS, RECREATION_STATEMENT, REST_ON_ANOTHER_GROUP_STATEMENT,
          KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, NOT_RECOMPUTED_STATEMENT, CAPTURES_NOT_CARRIED_STATEMENT, CALCULATION_RESULTS, accountStatement,
@@ -54,15 +55,18 @@ export function caseCheckerProgram() {
            run: "node case-checker.mjs <part> [<part> ...] [--document <file> ...] [--keys <file>]" };
 }
 
+/* Why no specification is answered: no version was named, or the version named is not one this copy holds. */
+const noSpecification = (v) => (v === null ? localize("case-checker.index.no_version_named", "no version was named")
+  : localize("case-checker.index.no_specification", "this team's Civicsmith holds no specification of that version"));
+
 /** R14, R15: the specification of one case-file format version. An unknown or absent version is answered, not
  *  refused, with the versions held (`held: false`), so the read raises no refusal of its own. */
 export function caseFileSpec(version) {
   const v = typeof version === "string" ? version : null;
   if (v === null || !Object.hasOwn(CASE_FILE_SPECS, v))
     return { held: false, version: v === null ? null : v.slice(0, 80), versions: [...CASE_FILE_SPEC_VERSIONS],
-             detail: `${v === null ? "no version was named" : "this team's Civicsmith holds no specification of that version"}; it holds `
-                   + (CASE_FILE_SPEC_VERSIONS.length === 1 ? `the specification of ${CASE_FILE_SPEC_VERSIONS[0]}, named as version`
-                     : `the specifications of ${CASE_FILE_SPEC_VERSIONS.slice(0, -1).join(", ")} and ${CASE_FILE_SPEC_VERSIONS.at(-1)}, each named as version`) };
+             detail: localize("case-checker.index.holds_several", "{reason}; it holds the specifications of {head} and {last}, each named as version",
+                              { reason: noSpecification(v), head: CASE_FILE_SPEC_VERSIONS.slice(0, -1).join(", "), last: CASE_FILE_SPEC_VERSIONS.at(-1) }) };
   return { held: true, version: v, media_type: "text/markdown", text: CASE_FILE_SPECS[v], versions: [...CASE_FILE_SPEC_VERSIONS] };
 }
 

@@ -10,13 +10,12 @@ import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { GRADING_METHOD_VERSIONS } from "../../../src/strength/method.mjs";
 import { METHOD as CALC_METHOD } from "../../../src/calc-grammar/index.mjs";
 import { captureAccountStatement, ratifyStatement, NS_RELEASE } from "../../../src/sshsig.mjs";
-import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, calcRow, CALC, CALC_INPUT, CALC_INPUT_SHA, COPY_BYTES, COPY_SHA, OBSCURED_LABEL, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
+import { W, like, hasLike, caseFile, caseFiles, gradingFacts, byId, sha, keyFor, MINUTES_SHA, calcRow, CALC, CALC_INPUT, CALC_INPUT_SHA, COPY_BYTES, COPY_SHA, OBSCURED_LABEL, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
 
 const passagesOfFixture = () => Object.fromEntries([A, B, C].map((id) => [id, JSON.parse(caseFiles().texts.get(CG.caseFilePath("passages", id)))]));
 const check = (opts = {}, args = {}) => CC.checkCaseFile({ parts: caseFile(opts).parts, ...args });
 const results = (answer) => Object.fromEntries(answer.findings.map((f) => [f.finding, f.result]));
 const ALL_RECREATED = { [A]: "recreated", [C]: "recreated", [B]: "recreated" };
-const has = (list, check, re) => list.some((e) => e.check === check && re.test(e.detail));
 
 test("R1 R11: a clean case file recreates every finding, members and the finding a member's chain reaches, with the answer's whole shape", async () => {
   for (const parts of [1, 2, 3]) {
@@ -38,7 +37,7 @@ test("R1 R11: a clean case file recreates every finding, members and the finding
     assert.deepEqual(byId(r)[A].role, "load_bearing"); assert.deepEqual(byId(r)[C].role, "supporting"); assert.deepEqual(byId(r)[B].role, "reached");
     assert.equal(r.integrity.intact, true); assert.deepEqual(r.integrity.departures, []);
     assert.equal(r.statement, CC.RECREATION_STATEMENT);
-    assert.match(r.statement, /intact and consistent/); assert.match(r.statement, /does not show that the case is true/);
+    assert.equal(r.statement, W("case-checker.recreation_statement"));
   }
 });
 
@@ -58,28 +57,30 @@ test("R1: pure and never throws: any input answers the whole answer, malformed i
   /* a part that is not a ZIP among good ones is named, and nothing is thrown */
   const cf = caseFile({ parts: 2 });
   const r2 = await CC.checkCaseFile({ parts: [cf.parts[0], new Uint8Array([1, 2, 3])] });
-  assert.ok(r2.integrity.departures.some((d) => /part 2 given: the part is not a ZIP/.test(d)));
+  assert.ok(r2.integrity.departures.includes(W("case-checker.check.part_given_problem", { given: 2, problem: W("case-checker.problem.part_zip_archive") })));
 });
 
 test("R2 R11: a changed byte in a carried file differs for each finding that needs it; a missing part makes its findings recreated_in_part, naming each file to fetch", async () => {
   const r = await check({ edit: (b) => { const x = Buffer.from(b.get(CG.caseFilePath("document", MINUTES))); x[3] ^= 1; b.set(CG.caseFilePath("document", MINUTES), x); } });
   assert.equal(byId(r)[A].result, "did_not_recreate");
-  assert.ok(has(byId(r)[A].differs, "integrity", /materials\/INFO-2026-0001-minutes\/document does not match the manifest/));
+  assert.ok(hasLike(byId(r)[A].differs, "integrity", "case-checker.check.file_differs_manifest", { path: CG.caseFilePath("document", MINUTES) }));
   assert.equal(byId(r)[C].result, "recreated");     /* C's chain does not reach the minutes */
   /* bytes the manifest lists consistently, but not the bytes the signed materials block fingerprints */
   const swapped = await check({ mutate: (t) => t.set(CG.caseFilePath("document", MINUTES), "%PDF other minutes") });
   assert.deepEqual(swapped.integrity.departures, []);
-  assert.ok(has(byId(swapped)[A].differs, "integrity", /the carried document INFO-2026-0001-minutes is not the bytes the signed case fingerprints/));
+  assert.ok(hasLike(byId(swapped)[A].differs, "integrity", "case-checker.check.carried_not_signed_bytes",
+    { carried: W("case-checker.check.carried_document", { ref: MINUTES }), sha: sha(MINUTES_BYTES) }));
   assert.equal(byId(swapped)[C].result, "recreated");
   /* a part fingerprint the manifest lists falsely is a departure of the whole case */
   const fp = await check({ parts: 2, manifest: (m) => { m.parts[1].sha256 = sha("not it"); } });
-  assert.ok(fp.integrity.departures.some((d) => /part 2's files do not recompute the fingerprint/.test(d)), fp.integrity.departures.join("; "));
+  assert.ok(fp.integrity.departures.includes(W("case-checker.push.part_files_recompute", { index: 2, sha256: sha("not it") })), fp.integrity.departures.join("; "));
   assert.deepEqual(new Set(Object.values(results(fp))), new Set(["did_not_recreate"]));
   /* a file absent from its part: missing for the findings needing it, named with its fingerprint */
   const gone = await check({ edit: (b) => b.delete(CG.caseFilePath("document", MEMO)) });
   assert.equal(byId(gone)[A].result, "recreated_in_part");
   assert.equal(byId(gone)[B].result, "recreated_in_part");
-  assert.ok(byId(gone)[A].missing.some((e) => e.sha256 === sha(MEMO_BYTES) && /fetch the document whose SHA-256 is/.test(e.detail)));
+  assert.ok(byId(gone)[A].missing.some((e) => e.sha256 === sha(MEMO_BYTES)
+    && e.detail.includes(W("case-checker.check.fetch_material", { kind: W("case-checker.check.kind_document"), sha: sha(MEMO_BYTES) }))));
   assert.equal(byId(gone)[C].result, "recreated");
   /* a whole part missing (part 2 of 2 not given) */
   const two = caseFile({ parts: 2 });
@@ -117,7 +118,7 @@ test("R19: readCaseFile answers the manifest, every file with its kind, fingerpr
   assert.equal(extra.parts.length, 1);
   /* the unlisted entry is named, and every listed file is still read */
   const ex = CC.readCaseFile(extra.parts);
-  assert.ok(ex.departures.some((d) => /carries extra\.txt, which the manifest does not list/.test(d)), ex.departures.join(" | "));
+  assert.ok(ex.departures.includes(W("case-checker.push.part_given_carries_manifest_list", { given: 1, name: "extra.txt" })), ex.departures.join(" | "));
   assert.equal(ex.files.some((f) => f.path === "extra.txt"), false);
   assert.ok(ex.files.every((f) => f.state === "intact"));
 });
@@ -132,7 +133,7 @@ test("R3: the case document's signature and each member's verify over their stat
   assert.equal(forged.signatures.case.verified, false);
   assert.equal(forged.signatures.case.reason, "UNKNOWN_KEY");
   assert.deepEqual(new Set(Object.values(results(forged))), new Set(["did_not_recreate"]));
-  assert.ok(forged.findings.every((f) => has(f.differs, "signature", /case document's signature/)));
+  assert.ok(forged.findings.every((f) => hasLike(f.differs, "signature", "case-checker.check.case_signature_says", { words: W("case-checker.text.made_key_case") })));
   /* a signature over other bytes */
   const wrong = await check({ mutate: (t) => t.set(CG.caseFilePath("case_signature"), t.get(CG.caseFilePath("finding_signature", A))) });
   assert.equal(wrong.signatures.case.verified, false);
@@ -140,7 +141,7 @@ test("R3: the case document's signature and each member's verify over their stat
   /* a member's signature by an unlisted key differs for that member */
   const fsig = await check({ findingSigner: "mallory" });
   assert.equal(byId(fsig)[A].result, "did_not_recreate");
-  assert.ok(has(byId(fsig)[A].differs, "signature", new RegExp(`finding ${A}'s signature`)));
+  assert.ok(hasLike(byId(fsig)[A].differs, "signature", "case-checker.check.finding_signature_says", { id: A, words: W("case-checker.text.made_key_case") }));
 });
 
 test("R3: with the group's published keys each signing key is said to be among them or not; without them the answer says they were not checked", async () => {
@@ -168,7 +169,7 @@ test("R3 R8 (K1275): material from a source whose identity is withheld recreates
   assert.equal(forged.signatures.attestations.find((a) => a.ref === MEMO && a.by_kind === "member").state, "fails");
   assert.equal(byId(forged)[A].result, "did_not_recreate");
   assert.equal(byId(forged)[B].result, "did_not_recreate");
-  assert.ok(has(byId(forged)[B].differs, "signature", /signed account attesting INFO-2026-0002-memo/));
+  assert.ok(hasLike(byId(forged)[B].differs, "signature", "case-checker.check.member_account_says", { ref: MEMO, words: W("case-checker.text.made_key_case") }));
   assert.equal(byId(forged)[C].result, "recreated");
   /* an account whose words were changed after signing */
   const changed = await check({ memoAccountSigned: "Some other words." });
@@ -198,23 +199,26 @@ test("R3 (N530): a member's account is verified over signatures.captureAccountSt
   /* signed over that statement, but in another namespace */
   const ns = await check({ memoAccountNamespace: NS_RELEASE });
   assert.equal(ns.signatures.attestations.find((a) => a.ref === MEMO && a.by_kind === "member").state, "fails");
-  assert.ok(has(byId(ns)[B].differs, "signature", /signed account attesting INFO-2026-0002-memo was made for another purpose/));
+  assert.ok(hasLike(byId(ns)[B].differs, "signature", "case-checker.check.member_account_says", { ref: MEMO, words: W("case-checker.text.made_purpose") }));
 });
 
 test("R4: each relied-on passage is found where it is said to be; a moved passage or a wrong content id differs, and extracted text not carried is missing", async () => {
   const moved = await check({ quoted: "Adjourned at nine." });             /* on page 2, said to be on page 1 */
   assert.equal(byId(moved)[A].result, "did_not_recreate");
-  assert.ok(has(byId(moved)[A].differs, "passage", /not found where it is said to be/));
+  assert.ok(hasLike(byId(moved)[A].differs, "passage", "case-checker.check.passage_not_found", { where: W("case-checker.where", { document: MINUTES_SHA, id: A }) }));
   const forgedRows = (rows) => rows.map((p) => ({ ...p, content_id: sha("another") }));
   const forged = await check({ signedPassages: { [A]: forgedRows(passagesOfFixture()[A]) }, mutate: (t) =>
     t.set(CG.caseFilePath("passages", A), JSON.stringify(forgedRows(passagesOfFixture()[A]))) });
-  assert.ok(has(byId(forged)[A].differs, "passage", /does not recompute to the content id/));
+  assert.ok(hasLike(byId(forged)[A].differs, "passage", "case-checker.check.passage_content_id_differs",
+    { where: W("case-checker.where", { document: MINUTES_SHA, id: A }), content_id: sha("another") }));
   /* the carried file must say what the signed document states: only the document is signed */
   const unsigned = await check({ mutate: (t) => t.set(CG.caseFilePath("passages", A), JSON.stringify(forgedRows(passagesOfFixture()[A]))) });
-  assert.ok(has(byId(unsigned)[A].differs, "passage", /carried passages are not the passages the signed case document states/));
+  assert.ok(hasLike(byId(unsigned)[A].differs, "passage", "case-checker.check.carried_passages_differ", { id: A }));
   const noText = await check({ edit: (b) => b.delete(CG.caseFilePath("extracted_text", MINUTES)) });
   assert.equal(byId(noText)[A].result, "recreated_in_part");
-  assert.ok(has(byId(noText)[A].missing, "passage", /extracted text is not carried; fetch the document whose SHA-256 is/));
+  const whereMinutes = W("case-checker.where", { document: MINUTES_SHA, id: A });
+  assert.ok(byId(noText)[A].missing.some((e) => e.check === "passage" && e.detail.startsWith(W("case-checker.check.passage_text_not_carried", { where: whereMinutes }))
+    && e.detail.includes(W("case-checker.check.fetch_material", { kind: W("case-checker.check.kind_document"), sha: MINUTES_SHA }))));
   /* the text at an extent */
   const units = CG.extractedTextOf([{ extent: { kind: "pdf-page", page: 0 }, ref: "p1", text: "one" }, { extent: { kind: "pdf-page", page: 1 }, ref: "p2", text: "two" }]);
   assert.equal(CC.textAtExtent(units, { kind: "pdf-page", page: 1 }), "two");
@@ -234,11 +238,12 @@ test("R5: each pair recomputes at the stated method version; a changed recorded 
   /* the answer a leg states for the finding it rests on recomputes too: changed, it differs for both */
   const legFacts = gradingFacts(); legFacts[A].legs[1].answer.capture = { state: "graded", grade: "D" };
   const leg = await check({ signedFacts: legFacts, mutate: (t) => t.set(CG.caseFilePath("grading_facts", A), JSON.stringify(legFacts[A])) });
-  assert.ok(has(byId(leg)[B].differs, "grade", /the grading facts of INQ-2026-0001-lease records D/));
-  assert.ok(has(byId(leg)[A].differs, "grade", /rests on INQ-2026-0002-board, whose stated grade on capture does not recompute/));
+  assert.ok(byId(leg)[B].differs.some((e) => e.check === "grade" && e.recorded === "D" && e.detail === W("case-checker.check.grade_differs",
+    { axis: e.axis, from: W("case-checker.from.grading_facts", { from: A }), recorded: e.recorded, id: B, recomputed: e.recomputed })));
+  assert.ok(hasLike(byId(leg)[A].differs, "grade", "case-checker.check.rests_on_unrecomputed", { parent: A, id: B, axis: "capture" }));
   /* the carried grading facts must be what the signed document states */
   const lied = await check({ mutate: (t) => t.set(CG.caseFilePath("grading_facts", C), JSON.stringify({ legs: [] })) });
-  assert.ok(has(byId(lied)[C].differs, "grade", /carried grading facts are not the facts the signed case document states/));
+  assert.ok(hasLike(byId(lied)[C].differs, "grade", "case-checker.check.carried_facts_differ", { id: C }));
   /* a version this checker does not hold */
   /* the version the case file states is replaced, whichever it is (strength R31 moves the current one) */
   const unknown = await check({ mutate: (t) => {
@@ -247,7 +252,8 @@ test("R5: each pair recomputes at the stated method version; a changed recorded 
     t.set(CG.caseFilePath("case_document"), doc.replace(/grading: "bio-grading\/\d+"/, 'grading: "bio-grading/99"'));
   } });
   for (const f of unknown.findings) {
-    assert.ok(f.missing.some((e) => e.check === "grade" && e.version === "bio-grading/99" && /does not hold/.test(e.detail)), f.finding);
+    assert.ok(f.missing.some((e) => e.check === "grade" && e.version === "bio-grading/99"
+      && e.detail === W("case-checker.check.grading_method_not_held", { version: "bio-grading/99", held: GRADING_METHOD_VERSIONS.join(", ") })), f.finding);
     assert.equal(f.pair, null);
   }
 });
@@ -276,22 +282,23 @@ test("R7: the publication checks run over the case document; a refusal differs f
   assert.ok(r.publication_checks.unasked.some((u) => /C-21\.1/.test(u)));
   const refused = await check({ mutate: (t) => t.set(CG.caseFilePath("case_document"), t.get(CG.caseFilePath("case_document")).replace('case_scope: "Who approved the lease, and on what record."', 'case_scope: ""')) });
   assert.ok(refused.publication_checks.findings.some((x) => x.check === "C-41.5"));
-  assert.ok(refused.findings.every((f) => f.result === "did_not_recreate" && has(f.differs, "publication", /C-41\.5/)));
+  assert.ok(refused.findings.every((f) => f.result === "did_not_recreate" && hasLike(f.differs, "publication", "case-checker.check.publication_check_fails", { check: "C-41.5" })));
   const older = await check({ mutate: (t) => t.set(CG.caseFilePath("case_document"), t.get(CG.caseFilePath("case_document")).replace(`checks: "${CATALOG_VERSION}"`, 'checks: "1.0.0"')) });
   assert.equal(older.publication_checks.stated_version, "1.0.0");
   assert.equal(older.publication_checks.statement, CC.CHECKS_VERSION_STATEMENT("1.0.0", CATALOG_VERSION));
-  assert.match(older.publication_checks.statement, /ran at this checker's version/);
+  assert.equal(older.publication_checks.statement, W("case-checker.text.publication_checks_ran", { own: CATALOG_VERSION, stated: "1.0.0" }));
+  assert.equal(CC.CHECKS_VERSION_STATEMENT(null, CATALOG_VERSION), W("case-checker.text.publication_checks_ran", { own: CATALOG_VERSION, stated: W("case-checker.check.none") }));
 });
 
 test("R8: every material a load-bearing chain reaches is listed included and carried whole; listed not included differs, and carried bytes missing are missing", async () => {
   const notIncluded = await check({ memoIncluded: false, mutate: (t) => { t.delete(CG.caseFilePath("document", MEMO)); t.delete(CG.caseFilePath("extracted_text", MEMO)); } });
   assert.equal(byId(notIncluded)[A].result, "did_not_recreate");
-  assert.ok(has(byId(notIncluded)[A].differs, "presentability", /load-bearing and rests on the document INFO-2026-0002-memo, which the case lists as not travelling whole/));
+  assert.ok(hasLike(byId(notIncluded)[A].differs, "presentability", "case-checker.check.load_bearing_not_whole", { id: A, what: W("case-checker.check.the_document", { ref: MEMO }) }));
   /* B is reached, not a load-bearing member: not asked to be presentable, and nothing it lacks is missing */
   assert.equal(byId(notIncluded)[B].result, "recreated");
   const more = gradingFacts(); more[A].legs.push({ target: "INFO-2026-0077-gone", kind: "document", role: "supports", grade: "C", grade_axis: "capture", grade_source: "capture" });
   const unlisted = await check({ facts: more });
-  assert.ok(has(byId(unlisted)[A].differs, "presentability", /reaches document INFO-2026-0077-gone, which the case document's materials do not list/));
+  assert.ok(hasLike(byId(unlisted)[A].differs, "presentability", "case-checker.check.chain_reaches_unlisted", { id: A, kind: "document", target: "INFO-2026-0077-gone" }));
   const gone = await check({ edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
   assert.equal(byId(gone)[A].result, "recreated_in_part");
   assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.origin === "https://records.example/minutes.pdf"));
@@ -316,7 +323,7 @@ test("R8 R9 R2 (T37; N757): a copy listed but not carried is missing naming the 
   const cf = caseFile({ obscureMemo: true, edit: (b) => b.delete(path) });
   const gone = await CC.checkCaseFile({ parts: cf.parts });
   assert.deepEqual(results(gone), { [A]: "recreated_in_part", [C]: "recreated", [B]: "recreated_in_part" });
-  const fetch = new RegExp(`the copy of the document ${MEMO} carried in its place \\(a photo with its marked areas obscured, or a member document cleaned\\) is not carried; fetch the file whose SHA-256 is ${COPY_SHA}`);
+  const fetch = like("case-checker.check.copy_not_carried_fetch", { what: W("case-checker.check.the_document", { ref: MEMO }), sha: COPY_SHA });
   assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.copy === COPY_SHA && e.sha256 === COPY_SHA && fetch.test(e.detail)));
   assert.ok(byId(gone)[B].missing.some((e) => e.check === "integrity" && e.copy === COPY_SHA && fetch.test(e.detail)));
   /* the original's bytes and extracted text are not asked, and nothing differs */
@@ -338,7 +345,7 @@ test("R8 R9 R2 (T37; N757): a copy listed but not carried is missing naming the 
   const other = await check({ obscureMemo: true, edit: (b) => b.set(path, Buffer.from("%PDF-1.7 the memo, uncovered")) });
   assert.equal(byId(other)[A].result, "did_not_recreate");
   assert.equal(byId(other)[B].result, "did_not_recreate");
-  assert.ok(has(byId(other)[A].differs, "integrity", /materials\/INFO-2026-0002-memo\/obscured does not match the manifest/));
+  assert.ok(hasLike(byId(other)[A].differs, "integrity", "case-checker.check.file_differs_manifest", { path }));
   assert.equal(byId(other)[C].result, "recreated");
 });
 
@@ -378,14 +385,14 @@ test("R9: a document supplied later that matches a missing file's fingerprint fi
   assert.deepEqual(after.integrity.documents.used, [sha(MINUTES_BYTES)]);
   /* the files to supply (K2143): named before, in the manifest's order; none once supplied */
   const path = CG.caseFilePath("document", MINUTES);
-  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "document", sha256: sha(MINUTES_BYTES), detail: `${path} is not carried; fetch the file whose SHA-256 is ${sha(MINUTES_BYTES)}` }]);
+  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "document", sha256: sha(MINUTES_BYTES), detail: W("case-checker.check.not_carried_fetch", { what: path, sha: sha(MINUTES_BYTES) }) }]);
   assert.deepEqual(after.integrity.documents.wanted, []);
   assert.deepEqual((await check()).integrity.documents.wanted, []);
   assert.equal(after.integrity.files.find((f) => f.path === CG.caseFilePath("document", MINUTES)).state, "supplied");
   const stranger = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from("some other document")] });
   assert.equal(byId(stranger)[A].result, "recreated_in_part");
   assert.deepEqual(stranger.integrity.documents.unmatched.map((u) => u.sha256), [sha("some other document")]);
-  assert.match(stranger.integrity.documents.unmatched[0].detail, /matches no fingerprint/);
+  assert.equal(stranger.integrity.documents.unmatched[0].detail, W("case-checker.check.supplied_matches_nothing", { sha: sha("some other document") }));
   assert.deepEqual(stranger.integrity.documents.used, []);
   /* bytes matching a file that is carried are not "used": nothing was missing there */
   const carried = await check({}, { documents: [Buffer.from(MINUTES_BYTES)] });
@@ -418,7 +425,7 @@ test("R9 R20 R11 (N599): a supplied document whose SHA-256 is a calculation inpu
   assert.equal(otherAfter.integrity.intact, false);
   /* carried with other bytes: wanted until a document fills it */
   assert.deepEqual(otherBefore.integrity.documents.wanted.map((w) => [w.kind, w.sha256]), [["calculation", CALC_INPUT_SHA]]);
-  assert.match(otherBefore.integrity.documents.wanted[0].detail, /is carried with other bytes; fetch the file whose SHA-256 is/);
+  assert.match(otherBefore.integrity.documents.wanted[0].detail, like("case-checker.check.carried_other_bytes_fetch", { sha: CALC_INPUT_SHA }));
   assert.deepEqual(otherAfter.integrity.documents.wanted, []);
   /* bytes that are not the input fill nothing and are named; bytes matching an input carried intact are not used */
   const stranger = await CC.checkCaseFile({ parts: absent.parts, documents: [Buffer.from(CALC_INPUT.replace('"60"', '"61"'))] });
@@ -426,7 +433,7 @@ test("R9 R20 R11 (N599): a supplied document whose SHA-256 is a calculation inpu
   assert.equal("supplied" in stranger.calculations[0], false);
   assert.equal(byId(stranger)[A].result, "recreated_in_part");
   assert.deepEqual(stranger.integrity.documents.used, []);
-  assert.match(stranger.integrity.documents.unmatched[0].detail, /matches no fingerprint this case file records as missing, and no calculation input it lacks/);
+  assert.equal(stranger.integrity.documents.unmatched[0].detail, W("case-checker.check.supplied_matches_nothing", { sha: sha(CALC_INPUT.replace('"60"', '"61"')) }));
   const intact = await check({ withCalculation: true }, { documents: [doc] });
   assert.deepEqual([intact.integrity.documents.used, intact.integrity.documents.unmatched.map((u) => u.sha256)], [[], [CALC_INPUT_SHA]]);
   assert.equal("supplied" in intact.calculations[0], false);
@@ -457,7 +464,7 @@ test("R10: the carried complete edition equals the one the rest of the case file
   const other = await check({ completeEdition: "<!doctype html><p>another edition</p>" });
   assert.equal(other.complete_edition.equal, false);
   assert.deepEqual(new Set(Object.values(results(other))), new Set(["did_not_recreate"]));
-  assert.ok(other.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+  assert.ok(other.findings.every((f) => hasLike(f.differs, "complete_edition", "case-checker.check.complete_edition_differs")));
 });
 
 /* R10 (DEC-124; K1365 (1)): a `/6` case file as published before T31, built and packed by this fixture on `main` @
@@ -490,7 +497,7 @@ test("R10: a bio-case-document/7 case file compares its complete edition rendere
   const old = await check({ ...seven, completeEdition: edition.replaceAll("Civicsmith", "CivicOS") });
   assert.equal(old.complete_edition.equal, false);
   assert.deepEqual(new Set(Object.values(results(old))), new Set(["did_not_recreate"]));
-  assert.ok(old.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+  assert.ok(old.findings.every((f) => hasLike(f.differs, "complete_edition", "case-checker.check.complete_edition_differs")));
   /* and a /6 case file carrying the new words differs the same way */
   const six = caseFile().bytesOf.get(CG.caseFilePath("complete_edition")).toString("utf8");
   const renamed = await check({ completeEdition: six.replaceAll("CivicOS", "Civicsmith") });
@@ -510,7 +517,7 @@ test("R10 R25 (T51-142): a bio-case-document/8 case file is accepted as a /7 one
   /* control: the /7 case file's edition carried in the /8 case file is not the edition the rest renders; and the other way round */
   const swapped = await check({ ...eight, completeEdition: edition7 });
   assert.equal(swapped.complete_edition.equal, false);
-  assert.ok(swapped.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+  assert.ok(swapped.findings.every((f) => hasLike(f.differs, "complete_edition", "case-checker.check.complete_edition_differs")));
   const swapped7 = await check({ format: "bio-case-document/7", completeEdition: edition8 });
   assert.equal(swapped7.complete_edition.equal, false);
   /* control: a /7 case file checked beside it is as before */
@@ -547,7 +554,7 @@ test("R18: a finding resting on another group's accepted finding recreates up to
   assert.deepEqual(byId(r)[A].missing, []);
   assert.deepEqual(r.rests_on_another_group, [{ group: "riverside-watch", case: "CASE-2026-0007", edition: 2, finding: "INQ-2026-0042-lease", manifest_sha: sha("their manifest") }]);
   assert.equal(r.rests_on_another_group_statement, CC.REST_ON_ANOTHER_GROUP_STATEMENT);
-  assert.match(r.rests_on_another_group_statement, /checked against that team's own case file/);
+  assert.equal(r.rests_on_another_group_statement, W("case-checker.rest_on_another_group_statement"));
   /* the imported finding is not itself a finding of this answer */
   assert.equal(r.findings.some((f) => f.finding === REF || f.finding === "INQ-2026-0042-lease"), false);
   /* the row's pair is that leg's fact: a recorded pair that differs from it differs */
@@ -573,7 +580,8 @@ test("R20 R11: a stated result or result key that recomputes differently differs
   assert.equal(c.result, "differs");
   assert.deepEqual([c.differs[0].result, c.differs[0].stated.value, c.differs[0].recomputed.value], [row.result_key, "3", "2"]);
   assert.equal(byId(wrong)[A].result, "did_not_recreate");
-  assert.ok(has(byId(wrong)[A].differs, "calculation", /result is stated as .*"3".* and it recomputes to .*"2"/));
+  assert.ok(hasLike(byId(wrong)[A].differs, "calculation", "case-checker.check.result_differs",
+    { calc: CALC, stated: canonicalJson(c.differs[0].stated), recomputed: canonicalJson(c.differs[0].recomputed) }));
   assert.equal(byId(wrong)[C].result, "recreated");      /* C's chain rests on no calculation */
   /* case-grammar's writer keys every row itself, so a stated key that does not recompute is a document changed after */
   const key = await check({ withCalculation: true, calcRow: { results: { [sha("another key")]: row.results[row.result_key] } },
@@ -583,14 +591,14 @@ test("R20 R11: a stated result or result key that recomputes differently differs
   /* a recipe the evaluator refuses does not recompute */
   const bad = await check({ withCalculation: true, calcRow: { recipe: { ...row.recipe, steps: [{ op: "eval", as: "n" }] } } });
   assert.equal(bad.calculations[0].result, "differs");
-  assert.ok(has(bad.calculations[0].differs, "calculation", /refuses it \(RECIPE_INVALID/));
+  assert.ok(hasLike(bad.calculations[0].differs, "calculation", "case-checker.check.evaluator_refuses", { calc: CALC, refused: "RECIPE_INVALID" }));
 });
 
 test("R20 R11: an input absent or whose bytes differ from its hash, or a method version not held, is missing; the finding resting on it is recreated_in_part", async () => {
   const gone = await check({ withCalculation: true, dropCalcInput: true });
   /* an input the manifest does not list at all */
   assert.equal(gone.calculations[0].result, "not_recomputed");
-  assert.ok(gone.calculations[0].missing.some((e) => e.input === "pay" && e.sha256 === CALC_INPUT_SHA && /fetch the file whose SHA-256 is/.test(e.detail)));
+  assert.ok(gone.calculations[0].missing.some((e) => e.input === "pay" && e.sha256 === CALC_INPUT_SHA && like("case-checker.check.input_not_carried", { name: "pay", calc: CALC, sha: CALC_INPUT_SHA }).test(e.detail)));
   assert.equal(byId(gone)[A].result, "recreated_in_part");
   assert.equal(byId(gone)[C].result, "recreated");
   /* listed, but its carried bytes are not the bytes its hash names */
@@ -599,7 +607,7 @@ test("R20 R11: an input absent or whose bytes differ from its hash, or a method 
   assert.notEqual(byId(changed)[A].result, "recreated");
   /* a method version this checker does not hold */
   const later = await check({ withCalculation: true, calcRow: { method_version: "bio-calc/9" } });
-  assert.ok(later.calculations[0].missing.some((e) => e.version === "bio-calc/9" && /does not hold/.test(e.detail)));
+  assert.ok(later.calculations[0].missing.some((e) => e.version === "bio-calc/9" && like("case-checker.check.calculation_method_not_held", { calc: CALC, held: "bio-calc/9" }).test(e.detail)));
   assert.equal(byId(later)[A].result, "recreated_in_part");
   /* a document supplied later that is the input completes it (R9) */
   const cf = caseFile({ withCalculation: true, edit: (b) => { for (const k of [...b.keys()]) if (k.includes(CALC_INPUT_SHA)) b.delete(k); } });
@@ -637,16 +645,16 @@ test("R20 (K1448): a workbook, or a value from a third party's engine, is not_re
     assert.equal(c.result, "not_recomputed");
     if (over.calc) assert.equal(byId(r)[C].result, "recreated");
     assert.equal(c.statement, CC.NOT_RECOMPUTED_STATEMENT);
-    assert.match(c.statement, /recomputed by the publishing copy's engine/);
+    assert.equal(c.statement, W("case-checker.not_recomputed_statement"));
     assert.deepEqual([c.differs, c.missing], [[], []]);
   }
   /* the carried row file and the PROV-O rendering must say what the signed rows state: only the document is signed */
   const rowLies = await check({ withCalculation: true, mutate: (t) => t.set(CG.caseFilePath("calculation", CALC), CG.calculationFileText(calcRow({ disclosed: "x" }))) });
-  assert.ok(has(byId(rowLies)[A].differs, "calculation", /carried file is not the row the signed case document states/));
+  assert.ok(hasLike(byId(rowLies)[A].differs, "calculation", "case-checker.check.calculation_file_differs", { calc: CALC }));
   assert.equal(byId(rowLies)[C].result, "recreated");
   const provLies = await check({ withCalculation: true, mutate: (t) => t.set(CG.caseFilePath("calculation", "prov"), CG.provOf([])) });
-  assert.ok(provLies.findings.every((f) => has(f.differs, "calculation", /provenance file .* is not the rendering/)));
+  assert.ok(provLies.findings.every((f) => hasLike(f.differs, "calculation", "case-checker.check.provenance_file_differs")));
   /* a chain resting on a calculation the document does not list differs */
   const unlisted = await check({ withCalculation: true, calculations: [] });
-  assert.ok(has(byId(unlisted)[A].differs, "calculation", /rests on calculation CALC-2026-0001-late, which the case document's calculations do not list/));
+  assert.ok(hasLike(byId(unlisted)[A].differs, "calculation", "case-checker.check.chain_rests_on_unlisted_calculation", { id: A, calc: CALC }));
 });
