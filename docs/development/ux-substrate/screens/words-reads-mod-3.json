@@ -2567,18 +2567,6 @@
    },
    {
     "file": "money/index.mjs",
-    "line": 524,
-    "text": "the capture named",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
-    "line": 750,
-    "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
-    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
     "line": 966,
     "text": "events is not wired here, so no event the fact concerns is read",
     "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
@@ -2588,12 +2576,6 @@
     "line": 1001,
     "text": "committed against paid is read for one contract (committedagainstpaid&contract=ENT-...)",
     "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-   },
-   {
-    "file": "money/index.mjs",
-    "line": 1014,
-    "text": "events is not wired here, so the award and its change orders are not read",
-    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
    },
    {
     "file": "money/index.mjs",

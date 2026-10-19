@@ -5329,6 +5329,30 @@
     "label.connectionkinds.court_holds_invalid",
     "label.connectionkinds.court_interprets",
     "label.connectionkinds.court_requires",
+    "label.connectionkinds.event_actor",
+    "label.connectionkinds.event_amends",
+    "label.connectionkinds.event_answers",
+    "label.connectionkinds.event_author",
+    "label.connectionkinds.event_authorises",
+    "label.connectionkinds.event_concerns",
+    "label.connectionkinds.event_copied",
+    "label.connectionkinds.event_decider",
+    "label.connectionkinds.event_implementer",
+    "label.connectionkinds.event_mover",
+    "label.connectionkinds.event_organizer",
+    "label.connectionkinds.event_party",
+    "label.connectionkinds.event_precedes",
+    "label.connectionkinds.event_present",
+    "label.connectionkinds.event_recipient",
+    "label.connectionkinds.event_reverses",
+    "label.connectionkinds.event_seconder",
+    "label.connectionkinds.event_sender",
+    "label.connectionkinds.event_signatory",
+    "label.connectionkinds.event_speaker",
+    "label.connectionkinds.event_stated_cause",
+    "label.connectionkinds.event_subject",
+    "label.connectionkinds.event_voted",
+    "label.connectionkinds.event_within",
     "label.connectionkinds.holds",
     "label.connectionkinds.in_force_at_event",
     "label.connectionkinds.law_amends",
@@ -5451,16 +5475,16 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 551,
+    "reads": 575,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 43,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 411,
+    "computedKeys": 435,
     "actHelp": 344,
-    "vocabulary": 120
+    "vocabulary": 144
    },
    "unkeyed": [
     {
@@ -16786,17 +16810,12 @@
     "label.linekinds.post_in",
     "label.linekinds.seat_on",
     "lines.holds.held_post",
-    "lines.text.date_read",
-    "lines.text.line_naming_office",
-    "lines.text.lines_hold_post",
-    "lines.text.lines_read_holds",
     "lines.text.recorded",
-    "lines.undetermined.line_covers_date",
     "lines.why.entity_lines_kinds",
     "lines.why.stated_current_through"
    ],
    "counts": {
-    "reads": 22,
+    "reads": 17,
     "unkeyed": 15
    },
    "unkeyed": [
@@ -30121,6 +30140,12 @@
      "line": 1378,
      "text": "the criterion now answers differently; which rows moved is not recoverable because a query selection stores the criterion rather than the rows",
      "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+    },
+    {
+     "file": "bio-plane/src/retrieval/index.mjs",
+     "line": 293,
+     "text": "a registration names its module and its function",
+     "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
     }
    ],
    "batch": "DEC-260"
@@ -31199,7 +31224,7 @@
    ],
    "counts": {
     "reads": 36,
-    "unkeyed": 9
+    "unkeyed": 6
    },
    "unkeyed": [
     {
@@ -31216,18 +31241,6 @@
     },
     {
      "file": "money/index.mjs",
-     "line": 524,
-     "text": "the capture named",
-     "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-    },
-    {
-     "file": "money/index.mjs",
-     "line": 750,
-     "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
-     "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-    },
-    {
-     "file": "money/index.mjs",
      "line": 966,
      "text": "events is not wired here, so no event the fact concerns is read",
      "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
@@ -31237,12 +31250,6 @@
      "line": 1001,
      "text": "committed against paid is read for one contract (committedagainstpaid&contract=ENT-...)",
      "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
-    },
-    {
-     "file": "money/index.mjs",
-     "line": 1014,
-     "text": "events is not wired here, so the award and its change orders are not read",
-     "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
     },
     {
      "file": "money/index.mjs",

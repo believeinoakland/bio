@@ -732,6 +732,38 @@
     "text": "no reservation was offered, and an unreserved admission is the overrun D-492 closed",
     "why": "the render allowance's internal decision reference, never shown to a member (B346, CAPTURE #37 J3)"
    }
+  ],
+  "retrieval": [
+   {
+    "file": "bio-plane/src/retrieval/index.mjs",
+    "line": 293,
+    "text": "a registration names its module and its function",
+    "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
+   },
+   {
+    "file": "bio-plane/src/retrieval/index.mjs",
+    "line": 306,
+    "text": "a registration names its module and its function",
+    "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
+   },
+   {
+    "file": "bio-plane/src/retrieval/index.mjs",
+    "line": 318,
+    "text": "a registration names its module and its function",
+    "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
+   },
+   {
+    "file": "bio-plane/src/retrieval/index.mjs",
+    "line": 331,
+    "text": "a registration names its module and its function",
+    "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
+   },
+   {
+    "file": "bio-plane/src/retrieval/index.mjs",
+    "line": 367,
+    "text": "a registration names its module and its function",
+    "why": "a start-up registration diagnostic for the wiring; never shown to a member (B349, RETRIEVAL #22 J4)"
+   }
   ]
  }
 }
