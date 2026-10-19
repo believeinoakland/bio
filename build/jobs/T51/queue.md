@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_01DggByiBck91qKoo2zJ1P66 · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01DggByiBck91qKoo2zJ1P66 · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
