@@ -5496,3 +5496,63 @@ decided: 2026-10-19 · the design session (P17)
 the design: rows, each a label after its number as home's other readings: `screen.home.rd.document`/`documents`, `screen.home.rd.case`/`cases`, `screen.home.rd.followed.one` ("person followed")/`.other` ("people followed"), `screen.home.rd.clock` ("clock running")/`clocks`, `screen.home.rd.security` ("security level") after its value `screen.home.rd.level.ordinary`/`raised`/`high` (the security screen's levels in lower case). The drawing's "usual" becomes "ordinary", the security screen's own word. A reading at zero is never shown (DEC-219).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: nothing.
+
+### DEC-355 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B362; journey-check R17; DEC-281; K3472, K3930, K4066)
+for: design
+question: 69 code rows say "group"; which mean the team, and which another sense?
+why it is Bob's: it is not (P17): the design's words and its rule.
+provisional: as below.
+alternative: none weighed: each row's sense is read from its own text.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) 29 rows mean the team and get a words.json row under the same id saying "team" (the table wins, K3930), American spelling fixed on the way ("labeled", "organization", "defense", "catalog"): the 28 `skills.skilldoctrine.*` rows in the team sense (the team's own writing, choices, record and language, "from team to team", "members or teams") and `case-grammar.casefile.group` ("the source team is named by its slug"). (2) 40 rows keep "group" in another sense and join `GROUP_SENSE` in `build_words.mjs`: a grouping of reasons or legs (inquiry 5, strength 12, calc-grammar, calculations, case-authoring's axis group), regular-expression groups (link-sweep 8, court-citations), SQL `GROUP BY` (query-language), the owner token or parameter `group` (ai-use 7, strength's `&group=`, promotion's `group:` line), a kind of organization ("a civic group by role": action-grammar, `skills.skilldoctrine.an_action_is_addressed_to`) and the verb ("groups by the address": `skills.skilldoctrine.the_count_a_run_publishes`). R17's rule run over the tranche's rows with these words leaves only journey-check's own two.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/build_words.mjs`.
+owed: nothing.
+
+### DEC-356 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's QUESTION B363, items 2 to 4; L11)
+for: design
+question: Words for the members screen's administrator-removal scale table; two strings no member reads.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (2) `screen.members.scale.head.admins` ("Administrators"), `.head.takes` ("Votes it takes"), `.head.who` ("Who votes"), `.takes` ("{k} of {n}"), `.who` ("{v} of {n} may vote"), `.not_removable` ("not removable"), `.no_majority` ("no majority that leaves out the one facing removal can be reached"), `.now` ("(now)"), each with a translator's note, as drawn. (3) interface-assets' `generate.mjs`:114 (the generated CSS file's header comment) and (4) store-door's `dispatch.mjs`:244 on tranche/T51 (the legacy `error` key, byte-identical for civicos-ui until T51-126) go on their modules' unkeyed lists. Item 1 (the rule-drafting form) is DEC-357.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.
+
+### DEC-357 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's QUESTION B363 item 1; SCREENS-SETTINGS #7, grouprules R61; local-facts R18 `rulefields`; DEC-340, DEC-341)
+for: design
+question: The rule-drafting form on "Your team's own rules": its fields and words, how a held capture and its passage are chosen, and whether "Help me write this" is drawn.
+why it is Bob's: it is not (P17): the form beneath Bob's ruling that a member drafts a rule from its primary source and a second member confirms it.
+provisional: as below.
+alternative: a free-text "What it requires" for both kinds (DEC-340's drawing), rejected: the op takes the profile entry's fields, so free text would have to be parsed; a passage picked by tapping inside the document reader, rejected for now: DEC-341's minutes passage already sets the pattern of copying the words exactly, and one way is easier to learn; "A link to it", retired: the op keeps no link and the capture carries its address.
+recommendation: as below.
+reversal cost: low: one form's drawing and words.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (a) After "What kind of rule", "Its name" (one short name; Civicsmith derives the stored `rule` or `key` from it, so no member types an id). A deadline asks, grouped as "The deadline": "The kind of action it applies to" (the profile's kinds by their own names, and "A claim against a public body"), "How long" (a whole number), "Counted in" (Days, Hours, Business hours, Months, Years), "Which days count" (Every day, Business days only; asked only for days), "Counted from" (the seven events, `trigger.start.*`), "Before or after it" (After it, Before it), "Who must act by then" (The office, Your team, The source doesn't say = left out), "By what time on the last day" (Any time that day = left out, Close of business, A set time in the 12-hour clock, stored as HH:MM). A legal fact asks instead (a details block): "When it is shown" (`trigger.fact.*`), "What it says" (the statement), "The kinds of action it bears on" (optional ticks; none ticked = left out). Both then ask "Its citation", "In effect from", the source, and "Why your team needs it". (b) The source, as DEC-341's minutes passage: "Its primary source" (A capture your team holds / Capture the source first), "The document that states it" (the captures the member can see), and "The passage", the words copied exactly; Civicsmith finds them in the capture and sends their place as `source.extent`; words not found refuse with "Those words are not in that document as written. Copy them exactly, or choose the document that holds them. Nothing was written." (c) "Help me write this" is drawn, in the assistant-on variant only, under "What it says"; never under the passage (an exact copy) or the reason. Rows: 51 `screen.grouprules.*` rows (name, deadline, app, amount, units, count, start, dir, owed, due, fact, shown, statement, bears, src.legend, doc, pass); retired, read by no code: `screen.grouprules.text.label`, `.text.help1`, `.text.help2`, `.trigger.label`, `.trigger.help1`, `.trigger.help2`, `.link.label`, `.link.help1`, `.src.help1`.
+reasoning recorded in: this entry; `screens/mock-screens.js` (SCR.grouprules), `screens/words-drawn.src.py`.
+owed: nothing.
+
+### DEC-358 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFFs B364 and B365, L11; K3930, K3944)
+for: design
+question: Rows owed to L11's waiting jobs (wizard-scripts, notice-producers, screens-intake) and strings no member reads (op-grades, stewards, control-plane).
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (B365 1) wizard-scripts' 64 sentences: 48 rows `wizard-scripts.names.*`, `.refusal.*`, `.warning.*` (the two script names say "team"; refusals in plain words, named placeholders, "the assistant" for the machine), and 16 caller-only sentences (argument shapes, registration and wire diagnostics) on its unkeyed list. (B365 2) `notice-producers.index.the_security_level_of_your` and `…_no_time` ("has been high since {from}, and in that time {got}", the level in lower case as home's reading). (B365 3) `screen.capture.a64.captured_by` ("captured by {name}, {date}"), `screen.capture.a64.nothing_added`, `screen.capture.a64.undetermined` ("whether the site still gives the same document isn't known yet"). (B364) op-grades `t36.mjs`:18 and stewards' Content-Security-Policy value (`ui.mjs`:63 on the tranche) on their unkeyed lists; control-plane's named details are not counted by the check and need no entry; screens-entry's two reads come from its code when it reaches the tranche (the reads list is generated). Also: the phone frame's 24 px rule for inputs in a `fieldset.mk-checks` now applies to checkboxes and radios only, so text inputs in such a fieldset (DEC-341's minutes form, DEC-357's rule form) keep their width.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`, `screens/page.src.html`.
+owed: nothing.

@@ -314,6 +314,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 ### Uses
 
 - (T51; R77) The owners of the reads R77 declares, each earlier in `build/modules.json`: `capture` (`heldat`, its R96), `promotion` (`bundlehistory`, its R58; a new edge, only if this module's tests import its ops map), `entities`, `project-roster` and `public-read` (`publishedfrozen`, its R38), already uses. R76 reads the registry file (`registry.json`) at the design commit, as R21 does, tests only.
+- (T51; K4073) `promotion` and `basis-versions` (`versioncompare`, its R55), tests only: the driven stamp checks of `bundlehistory` and `versioncompare` import their owners' ops maps.
 - (T50; R73) The owners of T50's ops, each earlier in `build/modules.json`: `following`, `membership`, `retrieval`, `acquisition`, `capture`, `inquiry`, `progressions`, `project-roster`, `action-records` and `filings`; `progressions` is a new edge, and `doorbell` (R74's `inboxpull`, `inboxresolve`) another, only if this module's tests import their ops maps; the others are already uses.
 - (T49; R3, R71, R72) `op-capabilities`: `needsRows()` (its R1), composed into `NEEDS` (R3). `membership` (`founderhandleset`, its R144) and `project-roster` (`projectownervotes`, its R30), already used.
 
