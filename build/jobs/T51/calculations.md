@@ -51,3 +51,7 @@ Effect. calculations' #ties (index.mjs:1816–1840) reads only `items` from neig
 Route to lines' running job. Its undetermined `at` reasons should be keyed (civil-time reasons pass through as {key, vars}, as K3958 says), and the R32 test (which names relationships) then reads "contract;former_employment" as expected. No calculations change is needed.
 
 On B2's NO_CHANGE wording: accepted, noted.
+
+## J4 · COMPLETE
+
+COMPLETE again after K3993 (B2). NO_CHANGE wording accepted as is. R32 freezeUses red is the lines module (its undetermined at reasons, lines/index.mjs:351-600, not keyed); reported in J3 for routing. Calculations module: words check 0 failures; the one red remains until lines fixes it.
