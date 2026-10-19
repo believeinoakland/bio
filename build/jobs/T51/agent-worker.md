@@ -59,3 +59,7 @@ agent-worker delegates to agent-steps (R119). src is 2,724 lines. Moved code, re
 **For BOB.** (1) the bundle `agent-worker/dist/*` is stale (R45); regenerate at the layer close. (2) `agent-steps` still needs listing in `uses` (B2). (3) The words check reads only string-literal ops, not identifier keys: consider that for the hand-list arm. (4) `harness.control` F4's anchor in `bio-plane/src/ai-runs` (the `cancelled` sentence) is stale. (5) Rows added to the design's review list: about 70 new `agent-worker.*` ids.
 
 Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 14, module lines 2598
+
+## J3 · COMPLETE
+
+Words pass applied (T51-209, B3, B4): all 84 findings keyed or compared by localize, text unchanged; 4 ops.mjs why strings left for the design's unkeyed list. npm test: only R45 (stale bundle). Controls re-pointed and green but harness F4 (anchor in ai-runs, not mine). Checks: format 0, architecture 0, ownership 0. Details and 5 items for you in my record.
