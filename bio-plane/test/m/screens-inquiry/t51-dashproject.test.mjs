@@ -106,7 +106,8 @@ test("R79 Next for you here: the vouch, the newer version and the ceremony, in t
   assert.equal(steps[1].getAttribute("aria-current"), null);
   assert.deepEqual(acts(steps[0]), ["release"]);
   assert.deepEqual(acts(steps[1]), ["adoptversion", "keepversion"]);
-  assert.ok(said(steps[2], "screen.ceremony.name"), "the ceremony, a reference opening `ceremony`");
+  assert.ok(said(steps[2], "screen.dash-project.next.prepare.label", { n: "3" }), "the ceremony, a reference opening `ceremony`, labelled by its own key");
+  assert.ok(String(steps[2].querySelector(".cs-card").getAttribute("data-tip")).includes(word("shell.card.ceremony").replace(/<[^>]*>/g, "").slice(0, 20)), "its card is shell.card.ceremony");
   assert.equal(p.byOp("heldcaptures").filter((r) => r.query.member === "mai").length, 1, "her own held captures only");
   assert.equal(p.byOp("publishpreflight")[0].body.draft, "DRAFT-1");
   assert.deepEqual(p.byOp("publishpreflight")[0].body.targets, [Q1, Q2]);
@@ -166,6 +167,7 @@ test("R79 This project at a glance: Questions with how many meet the bar, Events
   assert.ok(said(q, "screen.home.area.meetbar", { count: "2" }), "two meet the bar of B and B");
   const ev = by("screen.dash-project.tile.events");
   assert.equal(ev.querySelector("b.v").textContent, "5", "four events of the world lane and one of the team's");
+  assert.ok(said(ev, "screen.dash-project.tile.events.undetermined", { n: "2" }), "the two undetermined in order, by its own key");
   const m = by("screen.dash-project.tile.members");
   assert.equal(m.querySelector("b.v").textContent, "3", "the invited member is not a member yet");
   assert.ok(m.textContent.includes("dev, mai, rosa"), "their handles");
@@ -188,7 +190,7 @@ test("R79 The story so far: what they did above the line, what the team did belo
   assert.ok(said(evs[0], "screen.timeline.kind", { kind: "adopted" }));
   assert.ok(evs[2].textContent.includes("Demand to rescind"), "the team's own words");
   assert.equal(evs.filter((e) => e.textContent.includes(word("screen.timeline.kind", { kind: "effective" }))).length, 0);
-  assert.ok(said(s, "screen.dash-project.story.undetermined", { events: "effective, issued", precision: word("label.timeprecisions.edtf") }));
+  assert.ok(said(s, "screen.dash-project.story.undetermined", { events: "effective, issued", precision: word("screen.dash-project.precision.edtf") }));
   const link = s.querySelector("a[href='/app/timeline/" + P + "']");
   assert.ok(link && said(link, "shell.glance.timeline"), "Open the timeline");
   assert.equal(p.byOp("timeline")[0].query.set, "ENT-17,EVT-4", "the project's set is the people and events its document cites");
@@ -271,4 +273,41 @@ test("R79 journey-check no longer excepts it: the registry screen `dash-project`
   const reg = JSON.parse((await import("node:fs")).readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
   const row = reg.screens.find((s) => s.id === "dash-project");
   assert.deepEqual(row.acts.map((a) => a.op).sort(), SCREENS.find((s) => s.id === "dash-project").acts.map((a) => a.op).sort());
+});
+
+test("R79 the vouch step of a capture with no place: the no-place keys by count, one step of its own, never a place composed; the placed ones keep theirs", async () => {
+  const up = (id, extra) => ({ bundle_id: id, title: "A photo", source: { address: "upload:" + id, via: "upload", ...extra }, capture: { sha256: SHA1 } });
+  const none = (id) => ({ bundle_id: id, title: "A photo", capture: { sha256: SHA2 } });
+  const two = await open({ heldcaptures: ok({ ok: true, held: [up("INFO-U1"), none("INFO-U2")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }) });
+  const steps = section(two, "screen.dash-project.next.heading").querySelectorAll("ol.mk-next > li");
+  assert.equal(steps.length, 1);
+  assert.ok(said(steps[0], "screen.dash-project.next.vouch.noplace", { count: "2" }));
+  assert.ok(!steps[0].textContent.includes("upload:"), "no address is drawn as a place");
+  assert.deepEqual(acts(steps[0]), ["release"]);
+  const one = await open({ heldcaptures: ok({ ok: true, held: [up("INFO-U1")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }) });
+  assert.ok(said(section(one, "screen.dash-project.next.heading"), "screen.dash-project.next.vouch.noplace.one"));
+  const mixed = await open({ heldcaptures: ok({ ok: true, held: [heldRow("INFO-H1", "the east gate"), up("INFO-U1")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }) });
+  const m = section(mixed, "screen.dash-project.next.heading").querySelectorAll("ol.mk-next > li");
+  assert.equal(m.length, 2);
+  assert.ok(said(m[0], "screen.dash-project.next.vouch", { count: "1", place: "the east gate" }));
+  assert.ok(said(m[1], "screen.dash-project.next.vouch.noplace.one"));
+  /* the vouch sends the no-place group's own ids */
+  const p = await open({ heldcaptures: ok({ ok: true, held: [up("INFO-U1"), none("INFO-U2")] }), queue: ok({ ok: true, items: [] }), casedrafts: ok({ ok: true, drafts: [] }),
+    select: ok({ ok: true, handle: "SEL-2" }), release: ok({ ok: true }) });
+  fill(p, { "dp-vouch-0-ack": "Mine", "dp-vouch-0-mitigation": "Checked" });
+  await p.click(section(p, "screen.dash-project.next.heading").querySelector('button[data-act="release"]'));
+  await p.settle();
+  assert.deepEqual(p.byOp("select")[0].body.ids, ["INFO-U1", "INFO-U2"]);
+});
+
+test("R79 The story so far: the undetermined line names each event and the precision it is dated to by the precision key; the Events note is drawn only where an order is undetermined", async () => {
+  for (const code of ["day", "minute", "second", "edtf"]) {
+    const items = ["EVT-2", "EVT-3"].map((id, i) => ({ event_id: id, kind: i ? "issued" : "effective", when: { value: "2024-03", precision: code }, order: { undetermined: true } }));
+    const p = await open({ timeline: ok({ ok: true, world: { items, placed_nowhere: [] }, ours: { sources: [] } }) });
+    assert.ok(said(section(p, "screen.dash-project.story.heading"), "screen.dash-project.story.undetermined", { events: "effective, issued", precision: word("screen.dash-project.precision." + code) }), code);
+    assert.ok(said(section(p, "screen.dash-project.glance.heading"), "screen.dash-project.tile.events.undetermined", { n: "2" }), code);
+  }
+  const settled = await open({ timeline: ok({ ok: true, world: { items: [{ event_id: "EVT-1", kind: "adopted", when: { value: "2024-01-12", precision: "day" } }], placed_nowhere: [] }, ours: { sources: [] } }) });
+  assert.ok(!main(settled).textContent.includes(word("screen.dash-project.tile.events.undetermined", { n: "0" })), "no count at zero");
+  assert.ok(!said(section(settled, "screen.dash-project.glance.heading"), "screen.dash-project.tile.events.undetermined", { n: "1" }));
 });

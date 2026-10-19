@@ -144,7 +144,7 @@ function render(cs, view) {
       const docId = r && (r.bundle_id || r.document);
       const s = r && r.source;
       const at = s && typeof s.address === "string" && s.address && s.via !== "upload" && !/^upload:/.test(s.address) ? s.address : "";
-      if (!docId || !at) continue;
+      if (!docId) continue;
       const g = groups.find((x) => x.place === at) || (groups.push({ place: at, ids: [] }), groups[groups.length - 1]);
       g.ids.push(String(docId));
     }
@@ -152,7 +152,11 @@ function render(cs, view) {
       const f = "dp-vouch-" + i;
       const button = cs.act("release", { label: "act.release.label.dash-project", data: { ids: g.ids.join(","), f }, tone: "primary" });
       if (!button) return;
-      steps.push({ text: { key: "screen.dash-project.next.vouch", fills: { count: String(g.ids.length), place: g.place } },
+      /* a capture with no place (an upload) is vouched for in a step of its own, by the keys that say no place */
+      const text = g.place ? { key: "screen.dash-project.next.vouch", fills: { count: String(g.ids.length), place: g.place } }
+        : g.ids.length === 1 ? { key: "screen.dash-project.next.vouch.noplace.one" }
+        : { key: "screen.dash-project.next.vouch.noplace", fills: { count: String(g.ids.length) } };
+      steps.push({ text,
         act: `<details class="mk-details"><summary>${W("act.release.label.dash-project")}</summary>`
           + cs.field(f + "-ack", "screen.held.ack", { help: "screen.held.ackhelp", max: 500 })
           + cs.field(f + "-mitigation", "screen.held.mitigation", { help: "screen.held.mitigationhelp", max: 500 }) + button + "</details>" });
@@ -205,7 +209,7 @@ function render(cs, view) {
           const pin = list.find((x) => x && typeof x === "object" && Array.isArray(x.pinned));
           const n = pin ? pin.pinned.length : 0;
           if (n > 0) steps.push({ text: { key: "screen.dash-project.next.prepare", fills: { edition, count: String(n) } },
-            act: cs.ref("ceremony", id, T("screen.ceremony.name"), []) });
+            act: cs.ref("ceremony", id, T("screen.dash-project.next.prepare.label", { n: edition }), []) });
         }
       }
     }
@@ -253,10 +257,14 @@ function render(cs, view) {
     tiles.push(cs.reading({ label: "screen.dash-project.tile.questions", value: String(items.length),
       change: barOf && settled && met > 0 ? { key: "screen.home.area.meetbar", fills: { count: String(met) } } : null }));
   }
-  /* Events: the count the timeline answers (the order of those undetermined has no key of its own: reported) */
+  /* Events: the count the timeline answers, and how many are undetermined in order (the world lane's, `order.undetermined`) */
   if (tl && tl.state === "failed") tiles.push(failedState(tl));
   else if (tl && tl.state === "ok" && worldItems.length + nowhere.length + ourItems.length > 0)
-    tiles.push(cs.reading({ label: "screen.dash-project.tile.events", value: String(worldItems.length + nowhere.length + ourItems.length) }));
+  {
+    const undetermined = worldItems.filter((it) => it && it.order && it.order.undetermined).length;
+    tiles.push(cs.reading({ label: "screen.dash-project.tile.events", value: String(worldItems.length + nowhere.length + ourItems.length),
+      change: undetermined > 0 ? { key: "screen.dash-project.tile.events.undetermined", fills: { n: String(undetermined) } } : null }));
+  }
   /* Members: the count, with their handles in words */
   if (d.participants && d.participants.state === "failed") tiles.push(failedState(d.participants));
   else if (active.length) {
@@ -279,7 +287,7 @@ function render(cs, view) {
     const kinds = open.map((it) => it.kind).filter(Boolean).map(String);
     const precisions = [...new Set(open.map((it) => it.when && it.when.precision).filter(Boolean))];
     const sayOpen = open.length ? (kinds.length === open.length && precisions.length === 1 && ["day", "minute", "second", "edtf"].includes(precisions[0])
-      ? cs.mark("gap", "undetermined", { reason: W("screen.dash-project.story.undetermined", { events: kinds.join(", "), precision: T("label.timeprecisions." + precisions[0]) }) })
+      ? cs.mark("gap", "undetermined", { reason: W("screen.dash-project.story.undetermined", { events: kinds.join(", "), precision: T("screen.dash-project.precision." + precisions[0]) }) })
       : cs.mark("gap", "undetermined")) : "";
     if (events.length || sayOpen) out.push(cs.sec("screen.dash-project.story.heading", (events.length ? cs.storyline(events, { open: { screen: "timeline", subject: id } }) : "") + sayOpen,
       { help: "screen.dash-project.tip.story" }));
@@ -344,16 +352,17 @@ const acts = [
 /** The keys the dashboard may draw (R44: keys only). */
 const words = Object.freeze([
   "screen.dash-project.name", "screen.dash-project.purpose", "screen.dash-project.next.heading", "screen.dash-project.next.vouch",
-  "screen.dash-project.next.newer", "screen.dash-project.next.prepare", "screen.dash-project.glance.heading", "screen.dash-project.tile.questions",
+  "screen.dash-project.next.newer", "screen.dash-project.next.prepare", "screen.dash-project.next.prepare.label",
+  "screen.dash-project.next.vouch.noplace", "screen.dash-project.next.vouch.noplace.one", "screen.dash-project.tile.events.undetermined",
+  "screen.dash-project.precision.day", "screen.dash-project.precision.minute", "screen.dash-project.precision.second", "screen.dash-project.precision.edtf", "screen.dash-project.glance.heading", "screen.dash-project.tile.questions",
   "screen.dash-project.tile.events", "screen.dash-project.tile.members", "screen.dash-project.story.heading", "screen.dash-project.story.undetermined",
   "screen.dash-project.activity.heading", "screen.dash-project.tip.next", "screen.dash-project.tip.story", "shell.card.dash-project",
   "act.release.label.dash-project", "act.adoptversion.label.dash-project", "act.keepversion.label.dash-project",
   "screen.held.ack", "screen.held.ackhelp", "screen.held.mitigation", "screen.held.mitigationhelp", "screen.held.none", "screen.held.vouchmissing",
   "screen.held.vouchbad", "screen.held.selectfailed", "shell.reason", "shell.reason.help", "screen.home.area.meetbar",
-  "screen.timeline.kind", "screen.ceremony.name", "shell.card.ceremony", "shell.card.timeline", "screen.projects.owner", "screen.projects.lastchange",
+  "screen.timeline.kind", "shell.card.ceremony", "shell.card.timeline", "screen.projects.owner", "screen.projects.lastchange",
   "screen.projects.lastchange.none", "screen.project.stage.forming", "screen.project.stage.investigating", "screen.project.stage.matured",
   "screen.project.stage.closed", "screen.project.members.head", "screen.project.notjoined", "screen.project.notjoined.owners", "shell.card.project",
-  "label.timeprecisions.day", "label.timeprecisions.minute", "label.timeprecisions.second", "label.timeprecisions.edtf",
   "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "shell.glance.people", "shell.glance.more", "shell.glance.timeline", "shell.glance.weeks",
   "shell.unavailable.notyours.title", "shell.unavailable.notyours.says", "state.empty", "state.loading", "state.failed", "state.undetermined", "shell.unread",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "member.founder.unnamed",
