@@ -29,3 +29,30 @@ T51-102 queue-producers: what the word list lacks, and what I found beside my mo
 - A member is named by handle (the signing key's registrant, a wizard's submitter); a case by its id.
 - `facts.absent` names `places` (no read registered) and `attribution` (publication's case documents not migrated here). `facts.failed` carries a provider machinery-producers or action-producers names failed as `partial`.
 - Items now come in feed order: R39's wizard-base items follow R32 and R33 (they used to follow the place item); queue sorts before it cuts.
+
+## J2 · COMPLETE
+
+T51-102 queue-producers applied whole. Branch job/T51/queue-producers @ f87911f624, tranche/T51 merged at fe5d5656fb (nothing newer at the time).
+
+**Entries applied**
+- R43 (N1231, DEC-329 (10), K3766, K3806): every older producer's `summary` and `detail` read through `word(key, vars)` (the item answers `summary_key` and `detail_key`); facts, not English, in the placeholders (a local day as `date.daymonth` or `date.daymonthyear`, a set time as `time.at` with `time.clock`, a published instant read in the group's zone through civil-time's `localDay` and `localClock`; a count by `.one` or `.other`; an optional fact its own sentence). R1's bias debt now carries its detail. The producers, the keys they read and the gaps are in `words.mjs` and the REPORT.
+- R44 (N1209, K3843): `project-invitation` reads `project-roster.projectInvitations({viewer})`, following `next` to 50; the inviter by handle, the handle-less founder as `member.founder.unnamed`'s word (never `admin`), none recorded or a read that fails: the unnamed summary, the item still raised; age from `invited_at`, else her row's `created`; `basis.inviter` as `{member, handle, founder}` or null.
+- R45 (DEC-330 A62): `feedItems` reads 19 feeds each on its own; `facts.failed` `[{feed, reason}]` (`threw`, `refused`, `undetermined`, `partial`), `facts.absent`; `[]` when every feed answered.
+- Words findings (W, K3957, K3962): the 35 findings, the 33 plain strings (each judged a sentence a member may read: converted to `localize` ids) and the 7 test copies; `node checks/words.mjs /home/user/bio queue-producers`: 0 failures, and none naming my module over all 175 modules.
+- Inherited reds (K4065): `wizard.test.mjs`:105, :139 green (see the REPORT: R45 contains the roster read that fails in wizard-scripts' fixture).
+
+**Deferred:** none.
+
+**Found in other modules:** in the REPORT (queue's 29 reds now contained, wizard-scripts' fixture, plane `compose.test.mjs`, and the keys the word list lacks).
+
+**Tests and checks** (from /home/user/civicos-process unless stated)
+- `node --test bio-plane/test/m/queue-producers/` (bio): 117 tests, 117 pass, 0 fail. Added: `words.test.mjs` (R43, 22), `inviter.test.mjs` (R44, 5), `feeds.test.mjs` (R45, 7), `every.mjs` (the shared fixtures, moved out of `feeditems.test.mjs`). The 83 earlier tests were changed only where they held a sentence's text.
+- Users of the services I provide: `bio-plane/test/m/queue/` 164 pass, 0 fail; `bio-plane/test/m/instance-setup/` 182 pass, 0 fail; `bio-plane/test/m/plane/` 259 pass, 1 fail (`compose.test.mjs`, red on the tranche tip without my change).
+- `node checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio queue-producers`: 19 product files, 87 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio queue-producers`: 33 of 33 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`: 23 files changed by queue-producers; 0 failures.
+- `node checks/run.mjs /home/user/bio`: format 0; architecture 1 failure and coverage 24 failures, none in my module; words 1024 failures, none in my module.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only (the `localize` ids I changed are not in `rows.mjs` yet); no refusal naming my module.
+
+Size (session_01LGxvuQMoQnNwSkNodRjiu5): test runs 44, module lines 3144
