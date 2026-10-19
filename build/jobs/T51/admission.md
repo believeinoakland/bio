@@ -21,3 +21,7 @@
 - `node checks/run.mjs` was not run as a whole: this step was not needed for the words-only change, and the individual checks above cover its parts.
 
 **Size (session_01TfUBwfzbh3tVDcKbv3gYqo): test runs 2, module lines 1567.**
+
+## J1 · COMPLETE
+
+T51-108 (words pass) is done and pushed (f71da31fdc). The one words finding, the handlist in t50.test.mjs:34, is fixed by asserting the count of administrator acts read from op-declarations; the stale civicos-ui comment at checks.mjs:139 is reworded. Admission: 58 of 58 tests pass; words, format, architecture, coverage (31 of 31), ownership, setup-words --check all clean. Full words run lists no admission line (K3986). Record: build/jobs/T51/admission.md.
