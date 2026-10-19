@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { combine, get } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
@@ -145,7 +146,7 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   assert.equal(p.calendar.status, "unconfirmed");
   assert.deepEqual(p.calendar.years.map((y) => [y.path, y.status]), [[clerk, "unconfirmed"], [all26, "unconfirmed"]]);
   assert.equal(p.calendar.says.length, 2);
-  for (const s of p.calendar.says) assert.match(s, /^counted on an unconfirmed calendar \(TEST, /);
+  for (const s of p.calendar.says) assert.equal(s, word("action-clocks.counted_unconfirmed_calendar", { basis: "TEST", last_at: word("action-clocks.confirmed"), which: "" }));
   /* one confirmed, one not: still unconfirmed, the confirmed one not named among what is said. */
   act(all26, "confirm");
   p = propose();
@@ -186,8 +187,8 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   x.clock.ms = Date.parse("2027-01-02T00:00:00Z");
   const lapsed = q();
   assert.deepEqual([lapsed.calendar.status, lapsed.entry.date], ["unconfirmed", "2027-01-06"]);
-  assert.deepEqual(lapsed.calendar.says, ["counted on an unconfirmed calendar (TEST, 2026-09-28)",
-                                          "counted on an unconfirmed calendar (TEST, 2026-09-28)"], "the two 2026 entries");
+  const lapsedSays = word("action-clocks.counted_unconfirmed_calendar", { basis: "TEST", last_at: "2026-09-28", which: "" });
+  assert.deepEqual(lapsed.calendar.says, [lapsedSays, lapsedSays], "the two 2026 entries");
   /* a local-facts that cannot answer reads as absent: undetermined. */
   const absent = clocks.computeDeadline(R5, fm(CLERK, "records_request", "2026-08-12"), TEST, { factOf: () => ({ status: "absent", why: "x" }) });
   assert.equal(absent.date, null); assert.match(absent.why, /cannot be read/);

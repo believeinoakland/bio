@@ -6,6 +6,8 @@
  * `VALUE=DATE` (the day as the action's jurisdiction reads it), and the calendar carries each zone's `VTIMEZONE` (its
  * offsets and transitions over the events' years) and, for one zone, `X-WR-TIMEZONE`. */
 
+import { localize } from "../setup-words/index.mjs";
+
 const CRLF = "\r\n";
 const DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -96,7 +98,7 @@ export function icsCalendar({ events, stampMs }) {
   const y0 = years.length ? Math.min(...years) : new Date(stampMs).getUTCFullYear();
   const y1 = years.length ? Math.max(...years) : y0;
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CivicOS//action-clocks//EN", "CALSCALE:GREGORIAN",
-                 "METHOD:PUBLISH", "X-WR-CALNAME:Deadlines", ...(zones.length === 1 ? [`X-WR-TIMEZONE:${zones[0]}`] : [])];
+                 "METHOD:PUBLISH", `X-WR-CALNAME:${icsText(localize("action-clocks.ics.calendar_name", "Deadlines"))}`, ...(zones.length === 1 ? [`X-WR-TIMEZONE:${zones[0]}`] : [])];
   for (const z of zones) lines.push(...vtimezone(z, y0, y1));
   const stamp = utcStamp(stampMs);
   for (const e of events) {

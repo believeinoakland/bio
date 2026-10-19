@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { get as profile, combine } from "../../../../jurisdictions/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
@@ -123,7 +123,7 @@ test("R2 clockPropose computes from the profile's deadline through civil-time, s
   const P = (x) => w.c.clockPropose({ target: A, rule: dl.rule, proposer: MACHINE, viewer: MACHINE, ...x });
   const und = P({});
   assert.equal(und.ok, true); assert.equal(und.proposal.entry.date, null, "no start event in the ledger");
-  assert.match(und.proposal.undetermined, /no sent entry/);
+  assert.ok([word("action-clocks.why.action_ledger_holds"), word("action-clocks.why.action_ledger_holds_sent")].includes(und.proposal.undetermined));
   /* C-1: `received` is the counterparty's receipt of the group's request, counted from the group's own `sent` entry:
      a `received` entry alone starts nothing (the correction of this test's old reading, which counted from it). */
   assert.equal(w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-08-20", account: "got it", viewer: M, author: M }).ok, true);
@@ -132,7 +132,7 @@ test("R2 clockPropose computes from the profile's deadline through civil-time, s
   const before = w.text(A);
   const p = P({});
   assert.equal(p.ok, true); assert.equal(p.evidence, false); assert.equal(p.proposal.machine_work, true);
-  assert.equal(p.proposal.state, "machine_proposed"); assert.match(p.proposal.says, /machine work/);
+  assert.equal(p.proposal.state, "machine_proposed"); assert.equal(p.proposal.says, word("action-clocks.machine_credential_computed"));
   assert.equal(p.proposal.counted_from, "the day after 2026-09-01", "counted from the day after the start event (B4)");
   /* Tue 2026-09-01, 5 business days on the 'town' list the rule names, the profile's weekend Sunday alone: Wed 2, Thu 3,
      Fri 4, Sat 5, (Sun 6), Mon 7. */
@@ -196,7 +196,7 @@ test("R2 a rule held without a primary source is no basis (UNMEASURED, K1445): a
   /* computeDeadline itself refuses an UNMEASURED basis, whatever its caller. */
   const d = { rule: "r", units: "days", amount: 5, count: "calendar", starts: "filed", basis: "UNMEASURED" };
   const c = clocks.computeDeadline(d, { correspondence: [{ direction: "sent", at: "2026-09-01" }] }, null);
-  assert.equal(c.date, null); assert.match(c.why, /UNMEASURED/);
+  assert.equal(c.date, null); assert.equal(c.why, localize("action-clocks.index.the_rule_is_not_held", "the rule is not held with a primary source: UNMEASURED is not a basis"));
   assert.equal(clocks.computeDeadline({ ...d, basis: "TEST" }, { correspondence: [{ direction: "sent", at: "2026-09-01" }] }, null).date, "2026-09-06");
 });
 

@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CP, actionMd } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
@@ -89,7 +89,7 @@ test("R15 never a finding about government: no rule entry the group does not owe
   assert.ok(!r.entries.some((x) => x.action === A && x.ord === 4) && !r.not_counted.some((x) => x.ord === 4 && x.action === A), "a rule entry the group does not owe is not counted, nor listed");
   const text = JSON.stringify(r);
   for (const word of ["Town Clerk", "Port Ellery", "counterparty", "violation", "breach", "noncompli"]) assert.ok(!text.includes(word), word);
-  assert.match(r.says, /never a finding about anyone else's conduct/);
+  assert.equal(r.says, word("action-clocks.says.index_group_deadlines"));
   assert.equal(w.c.remindersDue({ viewer: M }).items.length, 0, "no reminder or item minted");
   for (const [from, to] of [["2026-09-30", "2026-09-01"], ["soon", "2026-09-30"], ["2026-09-01", "2026-02-30"], [null, null]])
     assert.equal(w.c.lateness({ from, to, viewer: M }).reason, "LATENESS_REFUSED", `${from}–${to}`);
