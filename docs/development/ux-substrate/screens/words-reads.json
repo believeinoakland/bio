@@ -5501,7 +5501,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 19582
+    "generatedRows": 20934
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -14450,6 +14450,102 @@
      "line": 157,
      "text": "undetermined:issuer:${…}|${…} (no date settles the lines between them)",
      "why": "an internal token, fragment or code-bearing string (field names, op=, sha256, a column list) the module matches or emits for builders; no member reads it"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 279,
+     "text": "How {} grades a finding (method {}).",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 284,
+     "text": "for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 288,
+     "text": "on a leg to another question, or to another {}'s finding, has nothing to grade and is listed, not counted.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 291,
+     "text": "strength is stated as undetermined: unknown, not low.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 292,
+     "text": "4. Another {}'s work. A leg to a finding of another {}'s case that this {} has accepted contributes the ",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 294,
+     "text": "that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 298,
+     "text": "strength is then the weaker of the legs needed by every set and that strongest set.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 301,
+     "text": "stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 302,
+     "text": "7. Anonymous testimony and evidence. Testimony from a member credited only to the {} or the project, and ",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 308,
+     "text": "name is graded as usual.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 309,
+     "text": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. ",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 310,
+     "text": "It also states how many hunches it left out.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 321,
+     "text": "that cannot be read, makes the strength undetermined.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 323,
+     "text": "that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/method.mjs",
+     "line": 326,
+     "text": "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
+     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    },
+    {
+     "file": "bio-plane/src/strength/index.mjs",
+     "line": 232,
+     "text": "{}\n## Session Log\n\n{}",
+     "why": "the session log's document grammar (B350, STRENGTH #16 J4)"
     }
    ],
    "batch": "DEC-260"
@@ -14647,6 +14743,18 @@
      "line": 1746,
      "text": "the part of the document this narrowing names",
      "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (its translation), never the detail"
+    },
+    {
+     "file": "bio-plane/src/basis-versions/checks.mjs",
+     "line": 105,
+     "text": "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
+     "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
+    },
+    {
+     "file": "bio-plane/src/basis-versions/checks.mjs",
+     "line": 236,
+     "text": "src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a state",
+     "why": "a source locator read by control-plane's region checks (B350, BASIS-VERSIONS #20 J5)"
     }
    ],
    "batch": "DEC-260"
@@ -27750,6 +27858,18 @@
      "line": 244,
      "text": "the end date is a date after today",
      "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
+    },
+    {
+     "file": "bio-plane/src/answers/check.mjs",
+     "line": 59,
+     "text": "the summary names the sentences it rests on, as s<i>",
+     "why": "an ANSWER_MALFORMED detail naming the model contract's wire tokens; the member reads only the row's translation (B350, ANSWERS #12 J1)"
+    },
+    {
+     "file": "bio-plane/src/answers/sentences.mjs",
+     "line": 92,
+     "text": "a sentence's support names holdings, rule items or looks as h<i>, r<i>, l<i>",
+     "why": "an ANSWER_MALFORMED detail naming the model contract's wire tokens; the member reads only the row's translation (B350, ANSWERS #12 J1)"
     }
    ],
    "note": "the design's words govern, the module's own differing: refusal.ANSWER_MALFORMED",
@@ -27777,376 +27897,9 @@
    ],
    "counts": {
     "reads": 17,
-    "unkeyed": 61
+    "unkeyed": 0
    },
-   "unkeyed": [
-    {
-     "file": "citation/index.mjs",
-     "line": 232,
-     "text": "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 245,
-     "text": "${…} an edge records WHY. The catalog's own remediation for a bad reference is \"sever with reason\", and an edge moved with no reason is an unexplained change wearing a status field.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 250,
-     "text": "a reason is at most ${…} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 258,
-     "text": "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 274,
-     "text": "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 286,
-     "text": "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 320,
-     "text": "${…} requires an edge currently in ${…}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 339,
-     "text": "the references block is not in a shape this grammar can edit in place",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 346,
-     "text": "### Session ${…} | ${…} ${…} citation${…} | ${…} Trigger: selection ${…} ${…}",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 350,
-     "text": "Changes: basis legs on ${…} moved to '${…}', each leg kept as it was. Reason: ${…}.",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 351,
-     "text": "Changes: cites edges to ${…} moved to '${…}'. Reason: ${…}.",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 356,
-     "text": "the reasons appended to these citations would push bundle.md past the 1MB inline limit",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 409,
-     "text": "this call names a passage found by search and also a selection or a part of a document. A found passage already names its document and its part, so the record could not tell which you meant; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 412,
-     "text": "this call names neither a selection nor a passage found by search, so there is nothing to cite; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 429,
-     "text": "a passage found by search is cited by the document it is in, the capture it was found in and its part of that capture, and this one names no document you can see, no capture, or no part; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 438,
-     "text": "this passage was found in capture ${…} of ${…}, and a citation of ${…} is pinned to ${…}, so its part could name different words. Nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 455,
-     "text": "no question by that id is one you can see, so this citation cannot be kept with it; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 460,
-     "text": "${…} is not a question, so it cannot be the question this was cited for; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 480,
-     "text": "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 497,
-     "text": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 509,
-     "text": "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and your group's Civicsmith was created without them, so nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 518,
-     "text": "a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: ${…}.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 525,
-     "text": "'${…}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: ${…}.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 530,
-     "text": "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded — refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 552,
-     "text": "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 559,
-     "text": "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 570,
-     "text": "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new record and cite that. The whole call is refused rather than narrowed to the members that are not retired.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 576,
-     "text": "the project's own bundle.md does not parse under the restricted grammar",
-     "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 608,
-     "text": "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 626,
-     "text": "this call names ${…}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: ${…}.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 635,
-     "text": "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded — refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 644,
-     "text": "a part of a document is a part of ONE document, and this call would write ${…} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made — the extent was named once. Cite the one document this part belongs to, and cite the rest separately.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 655,
-     "text": "'${…}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 676,
-     "text": "the part of the document this citation names",
-     "why": "states the wire's fields or grammar for whoever builds the request (a grammar finding's message or repair); no screen draws it"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 682,
-     "text": "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 691,
-     "text": "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 701,
-     "text": "every member of the selection was already cited; nothing was written${…}",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 703,
-     "text": ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 727,
-     "text": "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 759,
-     "text": "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 766,
-     "text": "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 780,
-     "text": "(the set had moved since it was made; citing is report-weight and proceeded)",
-     "why": "a diagnostic for builders (module registration, release history, file-structure signals, an HTTP user agent); no member reads it"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 787,
-     "text": "### Session ${…} | Rested this question on ${…} record${…} (${…}) | ${…} ${…}Changes: basis legs added for ${…}, each with role ${…}. Grades: ${…} filled from the record's own resolutions to this question's subject; ${…} left undetermined and stated.${…}",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 794,
-     "text": "### Session ${…} | Cited ${…} record${…} | ${…} ${…}Changes: cites edges added to ${…}.${…}",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 811,
-     "text": "citing this many records at once would push this ${…}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 863,
-     "text": "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 871,
-     "text": "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 879,
-     "text": "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 884,
-     "text": "${…} is not a question, so it cannot be drawn into this case as one; nothing was written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 888,
-     "text": "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 891,
-     "text": "the project's own bundle.md does not parse under the restricted grammar",
-     "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 900,
-     "text": "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 908,
-     "text": "this case already draws on this question; nothing was written",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 915,
-     "text": "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 920,
-     "text": "### Session ${…} | Cited 1 record | ${…} Trigger: question ${…} drawn into this case Changes: cites edges added to ${…}.${…}",
-     "why": "a session-log entry in the record's grammar, carrying the op that triggered it, for builders"
-    },
-    {
-     "file": "citation/index.mjs",
-     "line": 928,
-     "text": "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/recorded.mjs",
-     "line": 135,
-     "text": "a read names the member reading; with none, nothing is answered",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/recorded.mjs",
-     "line": 136,
-     "text": "who cited a passage is read for one captured document, named by its capture sha256",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/recorded.mjs",
-     "line": 140,
-     "text": "an extent is an object of one of the kinds ${…}",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/recorded.mjs",
-     "line": 152,
-     "text": "the legs that cite a passage are found through the inquiry module's leg projection, and your group's Civicsmith was created without it, so this read could not be made.",
-     "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
-    },
-    {
-     "file": "citation/splice.mjs",
-     "line": 76,
-     "text": "- rel: ${…} target: ${…} status: ${…} note: \"${…}\"${…}",
-     "why": "a frontmatter line in the record's own grammar (rel, target, status), written for the grammar's reader"
-    }
-   ],
+   "unkeyed": [],
    "batch": "DEC-260"
   },
   "action-records": {
@@ -28852,6 +28605,48 @@
      "line": 99,
      "text": "\"}]}. Output the JSON only.",
      "why": "instructions or a prompt the assistant reads (a due-slate framing, a judging prompt, a run mode's task); no member screen draws it"
+    },
+    {
+     "file": "bio-plane/src/contradiction.mjs",
+     "line": 31,
+     "text": "You are judging CANDIDATE CONTRADICTIONS for a civic research record. For each pair below, a deterministic pairing\nput two assertions side by side for a stated reason (its KEY). You propose ONE label per pair. A member of the team\nwill see your proposal and decide; you decide nothing.\n\nKEYS (why the two were paired):\n- K1: two SOURCES one inquiry rests on, one cited as supporting and one as cutting against it.\n- K2: two claims our team HOLDS, on two inquiries about the same subject.\n- K3: two claims our team HOLDS, both resting on the same source passage (given as context).\n- K4: two SOURCES about the same entity, of different document kinds or dates (each side's doctype/date given).\n\nLABELS — exactly one per pair:\n- world: the two SOURCES say incompatible things about the same matter (e.g. a rule requires X and the record shows\n  the body did not-X; a body said X at one date and the contrary at another). Only for source sides (K1, K4).\n- record: two things our team HOLDS cannot both be true. Only for held claims (K2, K3).\n- precision: the same fact stated at different precision or with different emphasis — rounded vs exact figures,\n  \"approximately N\" vs a stated number, a summary vs the table it summarises, \"reduced a little\" vs \"dropped a lot\".\n  NOT a contradiction.\n- unrelated: the two are not about the same matter after all (same entity, different subject).\n- undetermined: you cannot tell from what is shown. Use it honestly; never force a label.\n\nRULES:\n- A FALSE CONFLICT IS THE WORST ERROR. Label world/record only when both statements cannot be true at the same time\n  about the same matter. Differences of wording, rounding, emphasis, or vague magnitude are precision.\n- Two statements at DIFFERENT DATES can both be true if the thing changed; that is world only when the later source\n  contradicts what the earlier one says held (e.g. a body stating X, then stating not-X about the same thing), or\n  a rule is contradicted by an act. Read dates and doctypes when given.\n- Read figures, units and dates carefully, in full.\n- Do not assign a CAUSE (misquote, opinion, double-speak) — only the label.\n- Use only what is shown. Do not assume facts not in the two sides and their context.\n\nOUTPUT: a JSON array, one object per pair, in input order: {\"n\": <pair number>, \"label\": \"<label>\", \"reason\": \"<one sentence>\"}.\nOutput the JSON only.\n",
+     "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+    },
+    {
+     "file": "bio-plane/src/contradiction.mjs",
+     "line": 99,
+     "text": "You are recommending, for CONTRADICTIONS a civic research record holds, the RESPECTS in which the two sides\nof each pair may differ, so that they need not conflict. A member of the team will see your recommendation and\ndecide; you decide nothing.\n\nEach pair carries its KEY (why the two were paired) and the RESPECTS you may name for it:\n- For K1-K4 pairs: time_or_occasion, scope, meaning, observer_or_method, subject.\n- For K5 pairs (two projects' conclusions on one question): scope, time_or_occasion, standard, evidence_set,\n  weighing.\n\nRULES:\n- Name only respects from the pair's own list. Never say which side is wrong. Never name a kind of conflict\n  (misquote, error, double-speak, reversal, a conflict of norms). Never assign a cause.\n- Name a respect only when something SHOWN in the two sides suggests they differ in it (e.g. different dates or\n  occasions; one about a part and one about the whole; a word used in two senses; two methods or observers; two\n  different subjects under one name). Give one sentence saying what you saw.\n- If nothing shown suggests a respect, name none for that pair. An empty answer is honest; never force one.\n- Use only what is shown. Do not assume facts not in the two sides and their context.\n\nOUTPUT: a JSON array, one object per pair, in input order:\n{\"n\": <pair number>, \"coordinates\": [{\"coordinate\": \"<respect>\", \"reason\": \"<one sentence>\"}]}.\nOutput the JSON only.\n",
+     "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+    },
+    {
+     "file": "bio-plane/src/contradiction/index.mjs",
+     "line": 2001,
+     "text": "contradiction {}: candidate {}",
+     "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+    },
+    {
+     "file": "bio-plane/src/contradiction/index.mjs",
+     "line": 361,
+     "text": "a run gate is registered by a module name and a function",
+     "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+    },
+    {
+     "file": "bio-plane/src/contradiction/index.mjs",
+     "line": 364,
+     "text": "the run gate is already registered by {}",
+     "why": "the model's input pinned by digest, a run-gate registration diagnostic, an internal label or the session log's grammar (B350, CONTRADICTION #11 J2, J3; R2, R41, R57)"
+    },
+    {
+     "file": "bio-plane/src/contradiction.mjs",
+     "line": 84,
+     "text": "PAIR {} · key {}\n  A: {}\n  B: {}",
+     "why": "the model's pinned input (the pair line) or the session log's grammar (B350, CONTRADICTION #11 J2, J3)"
+    },
+    {
+     "file": "bio-plane/src/contradiction/text.mjs",
+     "line": 43,
+     "text": "{}\n## Session Log\n\n{}\n",
+     "why": "the model's pinned input (the pair line) or the session log's grammar (B350, CONTRADICTION #11 J2, J3)"
     }
    ],
    "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.DISCLOSURE_MALFORMED",
@@ -37209,6 +37004,42 @@
      "line": 19,
      "text": "who wrote the answers; never a machine",
      "why": "states the wire's fields or grammar for whoever builds the request (a grammar finding's message, a field's description, a shape check); no screen draws it"
+    },
+    {
+     "file": "bio-plane/src/run-rules/checks.mjs",
+     "line": 259,
+     "text": "src/ai-runs/index.mjs groupTestSet, reached from the team's test investigations",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+    },
+    {
+     "file": "bio-plane/src/run-rules/checks.mjs",
+     "line": 321,
+     "text": "src/run-rules/rules.mjs levelEmptyHolds, called from agent-harness before it composes a level-empty candidate",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+    },
+    {
+     "file": "bio-plane/src/run-rules/deployment.mjs",
+     "line": 213,
+     "text": "nothing of the record: only the passage of the team's own writing the door hands in, to be put into the asking member's language",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+    },
+    {
+     "file": "bio-plane/src/run-rules/deployment.mjs",
+     "line": 230,
+     "text": "and draft's flag alone never deploys them",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+    },
+    {
+     "file": "bio-plane/src/run-rules/deployment.mjs",
+     "line": 299,
+     "text": "modes' state and whatever ask's or draft's flag",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
+    },
+    {
+     "file": "bio-plane/src/run-rules/deployment.mjs",
+     "line": 71,
+     "text": "threat model the doctrine names",
+     "why": "developer text: a refusal row's source-site `where`, or the deployment gate's mode-record fields read by a reviewer changing a deploy flag; never rendered to a member (B350, RUN-RULES #19 J3)"
     }
    ],
    "note": "the design's words govern, the module's own differing: refusal.AI_RUN_BOUND_NO_ALLOWANCE, refusal.AI_RUN_NOT_PRINCIPAL, refusal.AI_RUN_ORIGIN_UNKNOWN",
@@ -38837,7 +38668,7 @@
     {
      "file": "capture-requests/index.mjs",
      "line": 521,
-     "text": "the tie to the step did not complete and your group's Civicsmith did not record why",
+     "text": "the tie to the step did not complete and your team's Civicsmith did not record why",
      "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
     },
     {
@@ -38855,7 +38686,7 @@
     {
      "file": "capture-requests/index.mjs",
      "line": 662,
-     "text": "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it",
+     "text": "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it",
      "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
     },
     {
@@ -38957,7 +38788,7 @@
     {
      "file": "capture-requests/index.mjs",
      "line": 982,
-     "text": "no scope check is registered in your group's Civicsmith, so nothing can say that ${…} is ratified, not held and reaches ${…}",
+     "text": "no scope check is registered in your team's Civicsmith, so nothing can say that ${…} is ratified, not held and reaches ${…}",
      "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
     },
     {
@@ -38993,7 +38824,7 @@
     {
      "file": "capture-requests/index.mjs",
      "line": 1143,
-     "text": "the promotion did not complete and your group's Civicsmith did not record why",
+     "text": "the promotion did not complete and your team's Civicsmith did not record why",
      "why": "the wire's `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these"
     },
     {
@@ -39119,7 +38950,7 @@
     {
      "file": "capture-requests/index.mjs",
      "line": 1733,
-     "text": "is not a sweep your group's Civicsmith holds",
+     "text": "is not a sweep your team's Civicsmith holds",
      "why": "a refusal's `detail` (or a note or finding beside its code) for builders; the shell draws refusal.<CODE>, never this"
     },
     {
@@ -49526,6 +49357,273 @@
      "line": 119,
      "text": "an image past the memory bound",
      "why": "a codec mapping key, not a sentence (B343, PDF-PIXELS #6 J1)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "agent-harness": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 1042,
+     "text": "the same gate: refuse a mode that is not deployed, before anything is spent",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 1061,
+     "text": "which options to propose, in order of strength, and why",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 1080,
+     "text": "how to answer the refusal",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 1085,
+     "text": "the one exit, naming the bound (C-22.5). Terminal",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 320,
+     "text": "form candidate versions from the reports",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 321,
+     "text": "what each level's reports mean, and what the version says",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 329,
+     "text": "whether this reading differs in substance",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/harness.mjs",
+     "line": 349,
+     "text": "the pass counter and the loop's termination — neither is the model's to decide",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/subsession.mjs",
+     "line": 116,
+     "text": "nobody looked at this level for this subject",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/subsession.mjs",
+     "line": 117,
+     "text": "we looked and it is positively not there",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/subsession.mjs",
+     "line": 118,
+     "text": "we looked and could not tell",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/subsession.mjs",
+     "line": 119,
+     "text": "we looked and it is there",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    },
+    {
+     "file": "agent-harness/src/subsession.mjs",
+     "line": 581,
+     "text": "never a title, a text or a byte comparison",
+     "why": "model-facing instructions composed into the step prompt, or developer text (report-state values, a method description); no member reads it (B350, AGENT-HARNESS #11 J2)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "agent-runner": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "agent-runner/src/entry.mjs",
+     "line": 111,
+     "text": "the first frame must be a conversation request",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/manifest.mjs",
+     "line": 16,
+     "text": "the manifest names no image repository",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/manifest.mjs",
+     "line": 18,
+     "text": "the image has no sha256 digest yet; the release writes it when it publishes the image",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 106,
+     "text": "no tool named {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 146,
+     "text": "the request carries no usable credential",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 147,
+     "text": "no Claude sign-in is held for this member: connect Claude again",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 155,
+     "text": "Anthropic refused this member's Claude sign-in: connect Claude again",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 199,
+     "text": "the query ended with no result",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 201,
+     "text": "stopped after {} turns (max_turns {})",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 36,
+     "text": "model must be a non-empty string",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 37,
+     "text": "system must be a string",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 38,
+     "text": "prompt must be a non-empty string",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 40,
+     "text": "max_turns must be an integer from 1 to {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 41,
+     "text": "effort must be one of {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 42,
+     "text": "tools must be an array",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 46,
+     "text": "tool {}: description must be a string",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 48,
+     "text": "tool {}: input_schema must be an object",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 75,
+     "text": "an image block's media_type must be {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 76,
+     "text": "an image block's data must be base64",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/runner.mjs",
+     "line": 90,
+     "text": "the picture was not passed: {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/signin.mjs",
+     "line": 125,
+     "text": "stty cols {} rows {}; exec {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/worker.mjs",
+     "line": 122,
+     "text": "Failed to reach the container: {}",
+     "why": "wire grammar, release-time and SDK diagnostics, details the plane replaces by its own row; the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    },
+    {
+     "file": "agent-runner/src/entry.mjs",
+     "line": 97,
+     "text": "HTTP/1.1 404 Not Found\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{}",
+     "why": "wire grammar the runner answers (an HTTP status line and headers); the image cannot import the word table (B350, AGENT-RUNNER #14 J3, R41)"
+    }
+   ],
+   "batch": "DEC-344"
+  },
+  "agent-worker": {
+   "reads": [],
+   "counts": {
+    "reads": 0
+   },
+   "unkeyed": [
+    {
+     "file": "agent-worker/src/ops.mjs",
+     "line": 26,
+     "text": "who the plane says this credential is (FL-2's round trip, kept)",
+     "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+    },
+    {
+     "file": "agent-worker/src/ops.mjs",
+     "line": 27,
+     "text": "the run object: its conditions, its live budget",
+     "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+    },
+    {
+     "file": "agent-worker/src/ops.mjs",
+     "line": 50,
+     "text": "log-always and budget spend, through the plane's own producer",
+     "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
+    },
+    {
+     "file": "agent-worker/src/ops.mjs",
+     "line": 53,
+     "text": "the ordinary exit, naming the bound (C-22.5)",
+     "why": "a developer description in the worker's op table; no person reads it (B350, AGENT-WORKER #33 J3)"
     }
    ],
    "batch": "DEC-344"
