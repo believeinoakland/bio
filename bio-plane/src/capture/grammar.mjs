@@ -74,7 +74,7 @@ export async function checkInformationExtension(ctx, findings) {
     if (!dsRaw) findings.push(f('C-2.7', 'error', 'verified state requires data/dataset.json'));
     const hasSnap = [...ctx.files.keys()].some(p => p.startsWith('snapshots/'))
       || (ctx.elided && [...ctx.elided].some(p => p.startsWith('snapshots/')));
-    if (!hasSnap) findings.push(f('C-2.7', 'error', 'verified state requires at least one file in snapshots/'));
+    if (!hasSnap) findings.push(f('C-2.7', 'error', localize('capture.grammar.verified_needs_snapshot', 'verified state requires at least one file in snapshots/')));
   }
   // change records, when present
   const chRaw = ctx.files.get('data/changes.json');

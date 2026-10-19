@@ -221,7 +221,7 @@ export const HELD_PAGE_WAIT_MS = 5000;
 const HELD_PAGE_LANES = 8;
 /* R88 (T51): a vouched row is not asked of R78's examination, so its eligibility reads undetermined with this basis. A
    builder's diagnostic: screens draw `standing` and `vouched`, not this sentence. */
-const VOUCHED_BASIS = "this document is already vouched for, so whether it could be vouched for in a batch is not asked";
+const VOUCHED_BASIS = localize("capture.index.vouched_basis", "this document is already vouched for, so whether it could be vouched for in a batch is not asked");
 /* R88 (T51): the state a vouched document is at (released through `ratification`). */
 const VOUCHED_STATE = "verified";
 /* R91: what a wait answers when it ran out first. */
@@ -776,7 +776,7 @@ export class Capture {
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: word("capture.upload.asserts", { by: String(by), at: String(at) }),
-        evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+        evidence: localize("capture.index.upload_receipt_evidence", "the upload's receipt: its digest, taken as the bytes arrived, and its instant"),
         bound: false, via: UPLOAD_VIA,
       }],
       capture: {
@@ -1083,11 +1083,11 @@ export class Capture {
     try { found = this.#heldAtRead({ address, sha256, viewer }); }
     catch {
       return { ok: true, held: null, copy: null, versions: null, truncated: false,
-               changed: undetermined("the record could not be read, so whether it holds this, and whether the source has changed, is not known") };
+               changed: undetermined(localize("capture.index.heldat_record_unreadable", "the record could not be read, so whether it holds this, and whether the source has changed, is not known")) };
     }
     if (!found)
       return { ok: true, held: false, copy: null, versions: 0, truncated: false,
-               changed: undetermined("the record holds no copy of this that you may see, so there is nothing to compare") };
+               changed: undetermined(localize("capture.index.heldat_no_copy_seen", "the record holds no copy of this that you may see, so there is nothing to compare")) };
     const { copy, receipt, kind, versions, truncated, differs } = found;
     const asOf = copy.as_of;
     delete copy.as_of;
@@ -1096,14 +1096,14 @@ export class Capture {
       return { ok: true, ...base, changed: undetermined(
         localize("capture.index.the_record_holds_this_copy", "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone", { asOf: String(asOf) }), asOf, differs) };
     const no = (basis) => ({ ok: true, ...base, changed: undetermined(basis, asOf, differs) });
-    if (!receipt.address) return no("this copy has no address to look at");
+    if (!receipt.address) return no(localize("capture.index.heldat_no_address", "this copy has no address to look at"));
     if (receipt.via !== "direct" || kind === null || kind === "rendered" || !receipt.plain_address)
-      return no(receipt.via !== "direct" ? "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it"
-              : kind === "rendered" ? "this copy is a rendered capture, which a plain look at the site cannot be compared with"
-              : kind === null ? "the record cannot say how this copy was captured, so a plain look at the site is not compared with it"
-              : "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it");
+      return no(receipt.via !== "direct" ? localize("capture.index.heldat_not_plain_fetch", "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it")
+              : kind === "rendered" ? localize("capture.index.heldat_rendered", "this copy is a rendered capture, which a plain look at the site cannot be compared with")
+              : kind === null ? localize("capture.index.heldat_capture_unknown", "the record cannot say how this copy was captured, so a plain look at the site is not compared with it")
+              : localize("capture.index.heldat_export", "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it"));
     if (!isPublicHttpsLocator(receipt.address))
-      return no("this copy has no public address to look at");
+      return no(localize("capture.index.heldat_no_public_address", "this copy has no public address to look at"));
     /* One governed request, conditional on the validators of the copy's own filed fetch when it has them; nothing is filed. */
     const validators = this.validatorsOf({ addressNorm: receipt.address_norm, captureSha: copy.sha256 });
     const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
@@ -1114,15 +1114,15 @@ export class Capture {
     };
     let g;
     try { g = await governedFetch(this, receipt.address, "heldat", null, { headers: conditional }); }
-    catch { await outcome("fetch_failed"); return no("the request for the address did not complete, so the source was not looked at"); }
+    catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_request_incomplete", "the request for the address did not complete, so the source was not looked at")); }
     if (g.refusedByGovernor) {
       await outcome("governed");
-      return no("the host is being given time between requests, so the source was not looked at");
+      return no(localize("capture.index.heldat_host_paced", "the host is being given time between requests, so the source was not looked at"));
     }
     const res = g.res;
     const drop = async () => { try { await res.body?.cancel?.(); } catch { /* gone */ } };
     const looks = (state, extra = {}) => ({ ok: true, ...base, changed: { state, basis: state === "unchanged"
-      ? "the site still gives the same document as this copy" : "the site now gives a different document from this copy",
+      ? localize("capture.index.heldat_same_document", "the site still gives the same document as this copy") : localize("capture.index.heldat_changed_document", "the site now gives a different document from this copy"),
       as_of: asOf, looked_at: looked, ...extra, earlier_differs: differs } });
     if (res.status === 304 && conditional) { await drop(); await outcome("success", 304); return looks("unchanged"); }
     if (!res.ok || !res.body) {
@@ -1137,10 +1137,10 @@ export class Capture {
         if (done) break;
         total += value.length;
         if (total > CAPTURE_MAX) { try { await reader.cancel(); } catch { /* gone */ } await outcome("success", res.status);
-          return no("the document at the address is larger than this surface compares, so it was not looked at whole"); }
+          return no(localize("capture.index.heldat_too_large", "the document at the address is larger than this surface compares, so it was not looked at whole")); }
         h.update(value);
       }
-    } catch { await outcome("fetch_failed"); return no("the document did not arrive whole, so the source was not looked at"); }
+    } catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_not_whole", "the document did not arrive whole, so the source was not looked at")); }
     await outcome("success", res.status);
     const served = h.hex();
     return served === copy.sha256 ? looks("unchanged") : looks("changed", { served_sha256: served });
@@ -2386,8 +2386,7 @@ export class Capture {
              SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
                FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
             host, o.address_norm, cur.sha256, o.sha256,
-            "a later direct capture of this host fetched different bytes for this address; "
-              + "this earlier capture reused the old ones, which are now unverified against the source", now,
+            localize("capture.index.reuse_posthoc_unverified", "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source"), now,
             host, o.address_norm);
           this.#sql.exec(
             `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
