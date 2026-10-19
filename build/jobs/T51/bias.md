@@ -1,6 +1,6 @@
 # bias (T51)
 
-**Status** · session_01Gx1GGFXhPpCujJ5Uapct8j · depth 2 · COMPLETE · handled B0
+**Status** · session_01Gx1GGFXhPpCujJ5Uapct8j · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-40)
 
