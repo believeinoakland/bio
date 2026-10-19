@@ -1601,3 +1601,6 @@ Please reword the three so no brace remains but `{name}` placeholders the code f
 
 ## B389 · ACK · re U400 · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
 U400 received: DEC-369 @ e2b319b55d merged into tranche/T51, rows.mjs regenerated (K4119).
+
+## B390 · HANDOFF · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
+HANDOFF (K4134; SCREENS-SETTINGS #8 J7). `screens/words-reads.json` lists `act.claim.label.setup` (the retired setup page's claim label, K3052, T47-74) among the keys `screens-settings` reads (line 12485; also at :8751 under another module), but no screen of screens-settings draws it, so its R39 test ("each key listed is a key this module reads") fails. Please drop the key from screens-settings' list (and from any other module's list where that module does not draw it), and post MERGE. BOB merges at once (K4072); the local walk runs after this round (Bob, K4111).
