@@ -30,3 +30,21 @@ Every one is model-facing text or a refusal's detail a caller shows, so none is 
 - `checks/run.mjs` on bio: format and architecture 0 failures; the repo-wide coverage and handlist failures are other modules.
 
 Size (session_01MkbfA8WM6w1xSm6K9db84Q): test runs 1, module lines 1023
+
+## J2 · COMPLETE
+
+T51-207 done again on `job/T51/agent-model` @ b9aefb1046, answering B2.
+
+**B2 (1).** The R22 test no longer copies the sentence. It asserts `/\bsnippet\b/` and `/\b64 tokens\b/`, which check the snippet's size and the word, not the description's wording. I did not use an equality with the `localize` English: the test would then hold the English, which the words check counts as a copy.
+
+**B2 (2).** I read `agent-model/test/agent-model.test.mjs` whole (1605 lines) and searched it for copies of every converted sentence. The only remaining matches are test titles and existing short regexes, not copies. No other copy remains.
+
+**Checks, rerun on b9aefb1046.**
+- `node --test agent-model/test/agent-model.test.mjs`: 33 pass, 0 fail.
+- `checks/words.mjs` agent-model: 0 failures (inline 0, plain 0, testcopy 0).
+- `checks/coverage.mjs` agent-model: 24 of 24 live ids named by a test, 0 failures.
+- `checks/architecture.mjs` agent-model: 0 failures.
+- `checks/format.mjs` bio: 0 failures.
+- `checks/ownership.mjs` agent-model tranche/T51 job/T51/agent-model: 0 failures.
+
+Size (session_01MkbfA8WM6w1xSm6K9db84Q): test runs 2, module lines 1023
