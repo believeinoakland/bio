@@ -5,10 +5,9 @@ import { readFileSync } from "node:fs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, memberVersions } from "../../../src/setup.mjs";
 import * as leaf from "../../../src/setup-fleet.mjs";
 
-test("N234 (K405): the installer's names come from a leaf that loads alone, importing nothing, and setup.mjs re-exports the same values; R47's block is held there too", async () => {
-  /* Loaded as a data: module, where no import can resolve: a leaf that imported anything would fail to load here. */
-  const text = readFileSync(new URL("../../../src/setup-fleet.mjs", import.meta.url), "utf8");
-  const alone = await import("data:text/javascript;base64," + Buffer.from(text).toString("base64"));
+test("N234 (K405, R98): the installer's names come from a leaf whose only import is setup-words, and setup.mjs re-exports the same values; R47's block is held there too", async () => {
+  /* The leaf's import is setup-words (R98), which the installer already carries: loaded as the module it is, not as a data: module. */
+  const alone = await import("../../../src/setup-fleet.mjs");
   assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "FORGOT_HELP", "GROUP_SLUG_RE", "HOSTING_CONTROL", "HOSTING_RECOVERY_DEPLOYER", "HOSTING_RECOVERY_DEPLOYER_KEY", "hostingControlBlock"]);
   assert.deepEqual(alone.HOSTING_CONTROL, leaf.HOSTING_CONTROL);
   assert.equal(alone.hostingControlBlock("notice"), leaf.hostingControlBlock("notice"));
