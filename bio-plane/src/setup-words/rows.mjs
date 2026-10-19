@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15752 design words, 934 protected; SHA-256
-   9b67ad8c13e24ee01d783aadf0088a4fe4d3e8322fe7d5bb760cde04e372aeb9) followed by 6663 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15753 design words, 934 protected; SHA-256
+   7162e368ca7987d4532ee4576ff0abb8ea46b7f1ea66b456611ee72e47aceb0b) followed by 6662 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "9b67ad8c13";
+export const WORDS_COMMIT = "7162e368ca";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -5216,7 +5216,6 @@ export const WORD_ROWS = Object.freeze([
   ["screen.translations.tip.reasoned_why","{name}'s suggestion, \"{suggestion}\", waits for a granted speaker to keep it or explain why not.","DEC-276: Reasoned, its card; {suggestion} a member's own words",null,false,"design"],
   ["act.actionmove.here.queue","Marks this unsent request as dropped, with your reason, so it stops waiting. Nothing was sent, so the office never sees it.","DEC-276: Drop the request, with a reason, on an unsent request in the queue","Moves the action to its next stage, with what happened.",false,"design"],
   ["act.queuemute.here.queue_kind","Lets this kind of item reach your queue again, from now on.","DEC-276: Turn back on, for a muted kind of item (act.queuemute.does describes muting)","Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",false,"design"],
-  ["act.queuemute.here.queue_project","Lets this project's items reach your queue again, from now on.","DEC-276: Turn back on, for a muted project (act.queuemute.does describes muting)","Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",false,"design"],
   ["screen.queue.tip.securityfix_waits","It still waits for an administrator's choice; Not now brings it back the next day instead of in two weeks.","DEC-276: a security fix in the queue, its explanation's second sentence",null,false,"design"],
   ["screen.queue.tip.filings_why","The hint is only as complete as these filings; a missing year would hide a match.","DEC-276: the filings a hint compared, their card",null,false,"design"],
   ["screen.queue.tip.false","this check's past hints that members looked into and found false","DEC-276: a hint's past false matches, their card",null,false,"design"],
@@ -8696,9 +8695,11 @@ export const WORD_ROWS = Object.freeze([
   ["screen.document.a34.kept.noreason","Kept citing the earlier version, by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a keep with no reason given",null,false,"design"],
   ["screen.document.a34.moved.noreason","Citations moved to this copy by {member}, {date}","DEC-364 (B379 A): screens-inquiry, document R69; a move with no reason given",null,false,"design"],
   ["screen.document.compare.fingerprint","Fingerprint: {digest}","DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints",null,false,"design"],
-  ["installer.team.unrecorded.how.finished","The installer can't record it for a copy that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.","DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)",null,false,"design"],
+  ["installer.team.unrecorded.how.finished","The installer can't record it for a team's Civicsmith that has finished installing, so those writes stay refused until it is recorded. Only the person who holds the hosting account can set it, from that account.","DEC-365 (B381 1): installer F12; for a finished copy, instead of installer.team.unrecorded.how (K3868, K3892)",null,false,"design"],
   ["screen.install.stopped.plan.done","Check again","DEC-365 (B381 2): installer F2; the Workers Paid stop's button, beside screen.install.stopped.containers.done",null,false,"design"],
   ["installer.fleet.why.pullfailed","its software was placed in your account but couldn't be started from there","DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed",null,false,"design"],
+  ["installer.address.offer","Your account has no web address prefix yet. The installer can give it a free one, “{prefix}”, which every future program on this account will share. Nothing has been created yet.","DEC-366 (B383 2a): installer-steps offerSubdomain (F7), shown before anything is created; installer.address.prefix stays the line after it is set",null,false,"design"],
+  ["installer.install.stopped.foreign","Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start the install again.","DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -18296,6 +18297,7 @@ export const WORD_ROWS = Object.freeze([
   ["contradiction.index.words_malformed_detail","{field} is {length} characters; at most {cap}",null,null,false,"code"],
   ["contradiction.index.wrong_side_no_reason_detail","say why that side is wrong",null,null,false,"code"],
   ["contradiction.index.wrong_side_unnamed_detail","name the side that is wrong: a or b",null,null,false,"code"],
+  ["control-plane.draft.draft_over_limit","the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.",null,null,false,"code"],
   ["corpus-export.index.a_rendering_is_one_of","a rendering is one of {FORMATS}; nothing was rendered or logged",null,null,false,"code"],
   ["corpus-export.index.canonical_page_of_rows","a canonical page of rows",null,null,false,"code"],
   ["corpus-export.index.declared_table_carried_or_named","every declared table carried or named",null,null,false,"code"],
@@ -20891,8 +20893,6 @@ export const WORD_ROWS = Object.freeze([
   ["plan-work.index.the_plan_holds_no_preparation","the plan holds no preparation item of that id. Nothing was written.",null,null,false,"code"],
   ["plan-work.index.the_plan_is_not_about","the plan is not about that matter. Nothing was written.",null,null,false,"code"],
   ["plan-work.index.this_answer_reads_the_provider","this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.",null,null,false,"code"],
-  ["plane.screens.the_cases_your_teams_civicsmith","The cases your team's Civicsmith has published, readable by somebody holding no credential at all.",null,null,false,"code"],
-  ["plane.screens.the_whole_record_as_rows","The whole record as rows: every bundle your team's Civicsmith holds, with its type and its state.",null,null,false,"code"],
   ["progressions.checks.not_a_disposition_detail","a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition",null,null,false,"code"],
   ["progressions.index.a_set_of_at_most","a set of at most {INSTANCES_SET_MAX} entity ids is read at once; {length} were named",null,null,false,"code"],
   ["progressions.index.key_has_no_version_string","'{key}' has no version {String}; it holds versions {map}",null,null,false,"code"],

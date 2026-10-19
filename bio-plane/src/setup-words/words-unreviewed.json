@@ -17753,6 +17753,13 @@
       "line": 2284
     },
     {
+      "id": "control-plane.draft.draft_over_limit",
+      "en": "the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/draft.mjs",
+      "line": 110
+    },
+    {
       "id": "corpus-export.index.a_rendering_is_one_of",
       "en": "a rendering is one of {FORMATS}; nothing was rendered or logged",
       "module": "corpus-export",
@@ -35916,20 +35923,6 @@
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
       "line": 1143
-    },
-    {
-      "id": "plane.screens.the_cases_your_teams_civicsmith",
-      "en": "The cases your team's Civicsmith has published, readable by somebody holding no credential at all.",
-      "module": "plane",
-      "file": "bio-plane/src/plane/screens.mjs",
-      "line": 61
-    },
-    {
-      "id": "plane.screens.the_whole_record_as_rows",
-      "en": "The whole record as rows: every bundle your team's Civicsmith holds, with its type and its state.",
-      "module": "plane",
-      "file": "bio-plane/src/plane/screens.mjs",
-      "line": 22
     },
     {
       "id": "progressions.checks.not_a_disposition_detail",
