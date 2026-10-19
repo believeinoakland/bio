@@ -19,3 +19,6 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 
 ## Rows asked of the design (R2)
 - member-roster (new, K3972): `words-reads.json` has no `member-roster` entry; the keys it reads are on `membership`'s `reads` list (its `WORD_KEYS` lists them); please add the entry (MEMBER-ROSTER #1, finding 2).
+
+## R3
+- capture `index.mjs`:699 (the 500 internal fault: the incremental and block hash of the same bytes differ) and :1832 (the render allowance `why`, naming D-492): builder diagnostics no member reads (CAPTURE #37 J2, K3982).

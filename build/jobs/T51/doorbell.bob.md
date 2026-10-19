@@ -1,6 +1,6 @@
 # BOB to doorbell (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,10 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio doorbell tranche/T51 job/T51/doorbell`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3982), on your two open points, before I merge:
+1. `knocker.test.mjs`:205 matches a regular-expression copy of the product sentence ("received at the doorbell of your team's Civicsmith as knock … not fetched"). setup-words R13 binds it whatever the check counts (K3964): compare `asserts` with the product's own `localize`/`word` call evaluated with the fixture's vars, by equality.
+2. `expect.mjs`:18 mints `localize("doorbell.checks.group_can_see", …)`, an id no product code reads. A test never holds a sentence (K3810) and never mints an id (the extraction would make it a row): if the product shows that sentence, the test reads the product's key; if not, delete the constant and assert what the product actually answers.
+Merge `tranche/T51` (never rebase), run your tests and `node checks/words.mjs /home/user/bio doorbell`, and COMPLETE again.

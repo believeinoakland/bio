@@ -739,7 +739,7 @@ export class FileSafety {
       SCAN_PENDING: "The scan before first opening has not finished within the call. Nothing was served.",
       NOT_SCANNED: "The scan before first opening could not decide. Nothing was served.",
       SCAN_STALE: "The file's last clean scan is older than a week and the scanner cannot run now. Nothing was served.",
-      WARNING_NOT_CONFIRMED: "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",
+      WARNING_NOT_CONFIRMED: localize("file-safety.index.warned_must_be_exactly", "warned must be exactly {own_device: true, no_macros: true}. Nothing was served."),
       SAFE_VIEW_ONLY: "The file is high risk and neither a fresh deeper check nor the warned path opens it. Nothing was served.",
     }[d.refuse];
     return refusal(d.refuse, detail, d.reason ? { not_scanned: d.reason } : {});
@@ -971,7 +971,7 @@ export class FileSafety {
   /** R5: the scanner's state for administrators, so a lag is stated, never silent. */
   async scanStatus({ viewer = undefined } = {}) {
     try {
-      const bar = this.#adminBar(viewer, "reading the scanner's state");
+      const bar = this.#adminBar(viewer, localize("file-safety.index.reading_scanners_state", "reading the scanner's state"));
       if (bar) return bar;
       const now = this.now();
       const v = await this.#scanner("/version", null, { method: "GET" });
@@ -1056,7 +1056,7 @@ export class FileSafety {
   /** R27: the catalogue for administrators: what each offered tool is sent and who keeps it (its digest is what an
    *  administrator confirms seeing, R28), and the services not offered, each with its reason in member words. */
   securityToolCatalogue({ viewer = undefined } = {}) {
-    const bar = this.#adminBar(viewer, "reading the security tools offered");
+    const bar = this.#adminBar(viewer, localize("file-safety.index.reading_security_tools_offered", "reading the security tools offered"));
     if (bar) return bar;
     return { ok: true,
       offered: PROVIDERS.map((d) => ({ provider_id: d.provider_id, vendor: d.vendor, product: d.product, kinds: d.kinds,
@@ -1072,7 +1072,7 @@ export class FileSafety {
 
   /** R27: the group's tools, without credentials. */
   securityTools({ viewer = undefined } = {}) {
-    const bar = this.#adminBar(viewer, "reading the team's security tools");
+    const bar = this.#adminBar(viewer, localize("file-safety.index.reading_teams_security_tools", "reading the team's security tools"));
     if (bar) return bar;
     return { ok: true, tools: this.#rows(`SELECT * FROM fs_tools ORDER BY seq`).map(FileSafety.#toolOut) };
   }
