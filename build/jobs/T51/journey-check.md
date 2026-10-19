@@ -25,3 +25,15 @@ Accepted reds by name until those land: R1 (a) (aggregate), R20, R22, R25, R27.
 **Tests and checks**: format 0 failures; architecture 0; ownership 0; coverage 27 of 28 (R19, conditional, unmet). Words check: the old plain findings plus my new labels, listed in the REPORT.
 
 Size (session_01DySLHCA8d6vPi2gDtHEtm3): test runs 9, module lines 3226
+
+## J1 · COMPLETE
+
+T51-131 applied; details in build/jobs/T51/journey-check.md ("Completion record").
+
+Done: words findings; R17 fixtures and my two rows (old ids stay in rows.mjs until you regenerate); R20 (one switch, assistant steps noted not walked, 13 of 18 pairs, not-ready asserted); R22, R23 (passes), R25, R26; R27 pseudo walk; R28 checks; R21 mechanism + 20 states; R24 (JOURNEY_PUBLISHED_CASE).
+Checks: format, architecture, ownership 0 failures; coverage misses only R19 (conditional). B2 merged.
+
+Defects found in other modules (accepted reds by name until fixed): (1) connect draws disclosureshown/subscriptionsignin while no sign-in route exists: R20 fails on R9 and R10 connect; (2) dash-project draws "Nothing is here" from Home: R22; (3) /sign answers 200 with a non-interface page: R25; (4) R27 finds hard-coded sentences: setup screen's scanner labels (MetaDefender, ICAP, Glasswall, Splunk...), "City of Oakland and Alameda County", and more on home, security, places, group, elsewhere, finder, held, people. R1 (a) is red in aggregate for these.
+
+Deferred for your call: R21 has no per-state reach functions, so all 20 states are notes "not reached on this instance" on both arms (not failures); R24/R28 selectors for published controls, graph and Explore are my reading, confirm on your live walk.
+Words check still lists the 8 old plain strings plus my new walk labels and the states table, all harness text no member reads (for the design's unkeyed list, K3944), and ADMIN_READING (walk data).
