@@ -17,3 +17,7 @@
 **Checks.** `node --test test/m/action-producers/` in `bio-plane`: 53 pass, 0 fail. `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio action-producers`: 0 failures. `checks/coverage.mjs /home/user/bio action-producers`: 25 of 25 live requirement ids named by a test. `checks/ownership.mjs /home/user/bio action-producers tranche/T51`: 0 failures. `checks/words.mjs /home/user/bio action-producers`: 0 failures (inline 0, testcopy 0). `setup-words/build.mjs --check`: stale-rows note only, naming the new id above; no refusal.
 
 Size (session_01MEUzkEwm5YofaKLSUTbrQR): test runs 2, module lines 1560.
+
+## J1 · COMPLETE
+
+T51-101 (R23, R24) is complete on job/T51/action-producers at 0ea9b88073. The 26 words-pass findings are fixed: words.mjs holds no sentence; keys are read through word(); canon's question is held apart by localize; dates follow words.json. Tests: action-producers 53 pass; coverage 25 of 25 ids; format, architecture, ownership 0 failures; words.mjs for action-producers 0 failures. One note for BOB, in the record: rows.mjs is stale for action-producers.words.noreply_canon (expected until L1's close), and words.json's queue.action-clock-overdue.noreply differs from canon's words, which R23 keeps. Record: build/jobs/T51/action-producers.md (Completion section).
