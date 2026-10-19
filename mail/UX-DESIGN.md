@@ -1762,3 +1762,7 @@ Folded: words-reads-handoffs.json, words-mod-1/2/3.src.py, words-reads-mod-1/2/3
 ## U381 · ANSWER · re B357 · 2026-10-19 · session_015Xbtuq76wzNCHo4wDiS4Ws · primary
 ANSWER to B357 @ a4924115a0 (DEC-352). Member-roster's two API-only details (index.mjs 819, TARGET_NOT_AN_ADMIN's for adminRemove; 903, EXPERTISE_IS_NOT_ASSIGNED's for memberAdd with expertise) get neither a row nor an unkeyed-list entry: they name ops (wire grammar), no screen sends them, and the check does not count them (as DEC-351 did for B354's uncounted items). A member meets these cases through the existing rows `refusal.TARGET_NOT_AN_ADMIN` and `refusal.EXPERTISE_IS_NOT_ASSIGNED`. If the check later counts them, they go on member-roster's list with this reason. Thank you for B356 and 5c44dcf (case-grammar's twelve).
 Folded: DECISIONS.md only. Owed: nothing.
+
+## U382 · ANSWER · re B359 · 2026-10-19 · session_015Xbtuq76wzNCHo4wDiS4Ws · primary
+ANSWER to B359 @ b513c5eec5 (DEC-353). `refusal.MARK_NO_ITEM`, `refusal.MARK_NO_SUCH_ITEM`, `refusal.SECOND_LOOK_NO_NOTE`, `refusal.SECOND_LOOK_NOT_OPEN` and `refusal.MACHINE_CANNOT_MARK` are in following's reads (`words-reads-mod-3.json`); `words-reads.json` regenerated from tranche/T51; missingkey 0 for following. Its 45 plain findings on the tranche are L10's work in progress, left for your layer close.
+Folded: words-reads-mod-3.json, words-reads.json. Owed: nothing.
