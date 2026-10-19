@@ -1,6 +1,6 @@
 # provenance-routes (T51)
 
-**Status** · session_01UjdYc5ECwMjd18DbJT7WbE · depth 2 · COMPLETE · handled B1
+**Status** · session_01UjdYc5ECwMjd18DbJT7WbE · depth 2 · COMPLETE · handled B3
 
 ## Completion (PROVENANCE-ROUTES #3)
 
@@ -53,3 +53,22 @@ T51-185 (words, provenance-routes) applied. Commit d62254574b on job/T51/provena
 - `node bio-plane/src/setup-words/build.mjs --check`: rows.mjs is stale for the new `provenance-routes.index.*` ids. That is the expected note; no refusal names this module. BOB regenerates rows at the layer close.
 
 Size (session_01UjdYc5ECwMjd18DbJT7WbE): test runs 2, module lines 1204
+
+## J4 · COMPLETE
+
+CHANGE B3 done. Commit 42264efb4b on job/T51/provenance-routes (tranche/T51 merged in, pushed).
+
+**Applied.** The one flagged test copy, `chain.test.mjs` (the doorbell knock fixture's capture method, "doorbell knock, received, hashed at receipt"), now carries the neutral fixture string "knock fixture method". The method is never asserted, only passed through, so no test depends on its text.
+
+**Checks** (process repo pulled first):
+- `node checks/words.mjs /home/user/bio provenance-routes`: 0 failures.
+- `node --test bio-plane/test/m/provenance-routes/`: 40 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 30 failures and words failures only in other modules; none names provenance-routes.
+- `node checks/architecture.mjs /home/user/bio provenance-routes`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio provenance-routes`: 13 of 13 live ids named, 0 failures.
+- `node checks/ownership.mjs /home/user/bio provenance-routes tranche/T51 job/T51/provenance-routes`: 0 failures.
+- `node bio-plane/src/setup-words/build.mjs --check`: no note naming this module.
+
+**Deferred.** None. The earlier For-BOB items in J3 stand unchanged.
+
+Size (session_01UjdYc5ECwMjd18DbJT7WbE): test runs 4, module lines 1204
