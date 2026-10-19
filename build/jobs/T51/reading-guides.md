@@ -1,6 +1,6 @@
 # reading-guides (T51)
 
-**Status** · session_017dxijPVwvN3Wk5fPMK9V4W · depth 2 · COMPLETE · handled B1
+**Status** · session_017dxijPVwvN3Wk5fPMK9V4W · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-159)
 
