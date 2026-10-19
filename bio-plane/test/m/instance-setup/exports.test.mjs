@@ -83,9 +83,6 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed", "memberlanguage",
     "memberlanguageset", "officesseed", "placewanted", "placewantedstate", "profiles", "profilesset",
     "recordcpuprobestep", "runtimeobservations", "seatsseed",
-    /* T37 (R67–R74): the translation ops and the door's store-internal record route */
-    "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord", "translationgrant",
-    "translationmark", "translationrevert", "translations", "interfacewords",
     /* T45 (R77): the administrators' act setting the group's declared stake */
     "declaredstakeset",
     /* T46 (R79): a member's own explanation level */

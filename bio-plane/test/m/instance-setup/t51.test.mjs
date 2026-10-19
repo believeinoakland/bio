@@ -7,6 +7,7 @@ import { bootstrapReport, bootstrapOp, instanceSetupOps, BOOTSTRAP_FACT_KEYS, RE
          PLACE_NAME_MAX, GROUP_DISPLAY_NAME_MAX, GROUP_LANGUAGES_MAX, GROUP_DRAFT_ANSWERS_MAX,
          GROUP_DRAFT_ANSWER_MAX, UPDATE_SKIP_REASON_MAX } from "../../../src/setup.mjs";
 import { CREDENTIALS_SCHEMA } from "../../../src/credentials/schema.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { word, localize, hasWord } from "../../../src/setup-words/index.mjs";
 import { HOSTING_CONTROL, FORGOT_HELP, HOSTING_RECOVERY_DEPLOYER, HOSTING_RECOVERY_DEPLOYER_KEY } from "../../../src/setup-fleet.mjs";
 import { NS_RELEASE_NOTICE, releaseNoticeStatement } from "../../../src/sshsig.mjs";
@@ -34,7 +35,10 @@ async function copy({ members = ["admin", "ruth", "ada"], documents = 5, publish
   prov.membership.memberList = () => ({ members: [...members.map((id) => ({ member_id: id, status: "active" })), { member_id: "sam", status: "proposed" }] });
   prov.provenance = { counts: () => ({ register: documents }) };
   prov.publicRead.publishedList = () => ({ published: [], cases: Array.from({ length: published }, (_, i) => ({ case_id: `CASE-${i}`, edition: 1 })) });
-  const w = await boot({ env: { INSTANCE_NAME: "river-town", VERSION: "1.4.0" }, prov, now: at("2026-10-10T08:00:00Z"), more: { provenance: prov.provenance } });
+  /* `credentials` is the real module over this store (R80's `lastActivity`, the read R95 takes), made once the store exists. */
+  const creds = { ctx: null, lastActivity: () => credentialsOf(creds.ctx).lastActivity() };
+  const w = await boot({ env: { INSTANCE_NAME: "river-town", VERSION: "1.4.0" }, prov, now: at("2026-10-10T08:00:00Z"), more: { provenance: prov.provenance, credentials: creds } });
+  creds.ctx = w.ctx;
   if (sessions) {
     applySchema(w.st, CREDENTIALS_SCHEMA);
     const row = (sha, last) => w.st.db.exec(`INSERT INTO sessions (token_sha, role, expires, created, device, last_active) VALUES ('${sha}', 'admin', 9e15, 'x', 'own', ${last})`);
