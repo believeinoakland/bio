@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio filings tranche/T51 job/T51/filings`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your reading holds (K4041): actions R108 now says the author's reply mints or finds the passage's content row (`content.mint`, its R12, R13) and `minutes.passage` keeps its `content_id`; ACTIONS #22 builds it (CHANGE). Read `content.passageText(content_id)` after `content.sees`, and throw when the id or text is missing, as you built. Merge `tranche/T51` (actions' requirements changed) and, once BOB says actions has merged, again.
+
+## B3 · CHANGE
+
+filing-templates has merged into `tranche/T51` (K4045): R35 `unofferedFor` is there for your R65; merge `tranche/T51` into your branch. actions has not merged yet; I will tell you when it has.

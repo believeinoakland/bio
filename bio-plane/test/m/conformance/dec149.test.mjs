@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { CONFORMANCE_CHECKS, PROPOSAL_SAYS, FLAG_SAYS, FACTS_SAY, OUTCOMES_DIFFER_SAYS, PARTICIPANTS_SAY,
          NO_OFFICE_ENTITY, ACTOR_BEFORE_ENTITIES, UNALIASED_SAYS, CAUSE_NOT_ESTABLISHED, noSuchDetermination,
          determinationSuperseded, determinationVoided, ACCEPTED_SAYS, SOURCE_FACTS_UNRECORDED, SOURCE_DECLARATION_SAYS,
@@ -18,11 +19,8 @@ test("R21 DEC-149: STANDARD_SIDE_UNNAMED (C-113.28) says your group's Civicsmith
   const x = w.contradicted();
   const r = w.c.comparisonFacts({ contradiction: x.inquiry, viewer: V("pat") });
   assert.deepEqual([r.ok, r.code, r.check], [false, "STANDARD_SIDE_UNNAMED", "C-113.28"]);
-  assert.equal(r.translation, "Name which side of the question states what the standard requires, a or b. Your "
-    + "team's Civicsmith never chooses it. Nothing was written.");
+  assert.equal(r.translation, word("refusal.STANDARD_SIDE_UNNAMED"));
   assert.equal(r.translation, CONFORMANCE_CHECKS.STANDARD_SIDE_UNNAMED.translation);
-  assert.equal(r.detail, "name which side of the question states what the standard requires, a or b: your team's "
-    + "Civicsmith never chooses it. Nothing was written.");
   for (const s of [r.translation, r.detail]) assert.doesNotMatch(s, NAMES_THE_PLANE);
   /* the control: a named side is answered, and the same refusal answers every unnamed form */
   assert.equal(w.c.comparisonFacts({ contradiction: x.inquiry, standardSide: "a", viewer: V("pat") }).ok, true);

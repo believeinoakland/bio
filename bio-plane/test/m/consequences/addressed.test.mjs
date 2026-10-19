@@ -113,7 +113,7 @@ test("R9 R5 (N257, K172, K283): a group's judgment of no consequence, a zero mea
   const overall = () => w.c.addressed({ determination: E, viewer: V("alice") });
   const zero = (measure, over = {}) => w.c.consequenceRecord({ determination: E, standard: S,
     affected: { kind: "other", description: "no consequence" }, period: { from: "2026-01-01", to: "2026-01-31" }, measure,
-    basis: { rationale: "the team judges the breach had no consequence" }, author: V("alice"), ...over });
+    basis: { rationale: "the team judges the breach did no harm" }, author: V("alice"), ...over });
   /* No live part: undetermined, never addressed (K172). */
   assert.equal(overall().state, "undetermined");
   /* An assessed zero, no causation named: not_applicable, so not unproven; never assessed until a member records it. */
