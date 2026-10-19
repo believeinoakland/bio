@@ -5,6 +5,7 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { PROJECTION_RELATION, FIELD_VIEWS } from "../../../src/retrieval/index.mjs";
 import { FIELDS, FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX, PROVENANCE_COLS, cachedNotes, compile, meaningVocabulary }
   from "../../../src/query.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 /* A small corpus: four documents, two states, two schemas, one hidden project. */
 function corpus() {
@@ -82,7 +83,7 @@ test("R9: a conjunction of more than one atom that finds nothing counts the OR r
   const miss = w.retrieval.search({ q: "water library", viewer: V("vera") });
   assert.equal(miss.total, 0);
   assert.deepEqual(miss.widen, { interpretation: "OR", total: 3, q: "water library",
-    detail: "no record matches all of these terms; this many match any of them" });
+    detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") });
   assert.equal(w.retrieval.search({ q: "water library", viewer: V("vera"), widen: false }).widen, null);
   assert.equal(w.retrieval.search({ q: "zzqx yyqx", viewer: V("vera") }).widen, null, "the OR reading finds nothing");
   assert.equal(w.retrieval.search({ q: "zzqx", viewer: V("vera") }).widen, null, "one atom is not a conjunction");
@@ -143,7 +144,7 @@ test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumn
   assert.deepEqual([f.ftsColumns, f.defaultFacets, f.idsMax], [FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX]);
   assert.deepEqual(f.meaning, meaningVocabulary());
   assert.ok(f.syntax.every((s) => typeof s === "string" && s.length));
-  assert.ok(f.syntax.some((s) => /content: does NOT search the text of the documents/.test(s)));
+  assert.ok(f.syntax.includes(localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says")));
   assert.ok(f.syntax.some((s) => /cited or marked citable/.test(s)));
 });
 

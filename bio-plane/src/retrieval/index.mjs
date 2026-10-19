@@ -827,7 +827,7 @@ export class Retrieval {
       /* R88: the OR reading is never offered across routes, since it would count what the query was refused for. */
       const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
-                               detail: "no record matches all of these terms; this many match any of them" };
+                               detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") };
     }
     out.gate.applied = tally.applied;
     return out;
@@ -1035,24 +1035,19 @@ export class Retrieval {
         /* R54 (K105): the proximity operator, stated in the published grammar. */
         say("retrieval.syntax.near_finds_words"),
         say("retrieval.syntax.field_value_filters"),
-        "field:>value, field:<value, field:a..b compare and range",
+        localize("retrieval.index.field_compare_range", "field:>value, field:<value, field:a..b compare and range"),
         say("retrieval.syntax.field_asks_field"),
         say("retrieval.syntax.fm_path_fm"),
         say("retrieval.syntax.leg_resolves_concerns"),
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
-        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
-        + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
-        + "record has replaced, content:machine by who minted it, content:ocr by the chain's last step, "
-        + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
-        "content: does NOT search the text of the documents -- it searches what has been cited or marked "
-        + "citable in them, so an empty answer is a fact about citation and never about what a document says",
+        localize("retrieval.index.content_reaches_layer", "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages"),
+        localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says"),
         say("retrieval.syntax.passage_searches_documents"),
         say("retrieval.syntax.content_cap_undetermined"),
         say("retrieval.syntax.content_chain_apply"),
         say("retrieval.syntax.content_cap_apply"),
-        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
-        + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
+        localize("retrieval.index.meaning_arm_takes", "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)"),
         say("retrieval.syntax.leg_asks_record"),
         say("retrieval.syntax.sort_field_sort"),
       ],
@@ -1706,6 +1701,11 @@ function registerFigures(r) {
 
 /** R58, K3: the ops this module answers (R78 adds none: its decorations reach `op=search`'s page through `search`), as entries of the store's op map (its dispatcher spreads them in). `url` carries
  *  the control plane's stamps (`viewer`, `owner`, `identity`), never taken from the caller's own parameters there. */
+/* The names `retrievalRoutes` answers (R58, R66, R90): this module's own list, which its test pins the map against. */
+export const RETRIEVAL_ROUTE_OPS = Object.freeze(["browse", "contentaxis", "file", "findin", "frontier", "image", "index", "list",
+  "meaningrows", "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck",
+  "select", "selection", "selectionlist", "selectionrelease"]);
+
 export function retrievalRoutes(r, url, body) {
   const q = url.searchParams;
   return {

@@ -48,3 +48,32 @@ Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
 B4 applied: merged tranche/T51, findin.mjs is a one-line re-export of retrieval-browse's findin (the R90 no-copy test now asserts exactly that). retrieval tests plus citation recorded.test.mjs: 179 pass, 0 fail. Architecture, format, coverage (79/79) and ownership: 0 failures. Source 2,942 lines. Size (session_01JxyVZhdF7dFTzuF5dsCwRc): test runs 17, module lines 2942
 
 Ringing BOB for J3 failed (its session session_01SWiZCAUEHumgaPPppY3QhQ is archived: triggers bind only to active or paused sessions); J3 is pushed, and is the message for BOB's backstop (mechanics §13).
+
+## Completion (T51-203)
+
+**Entries applied.** The words findings in `build/plan/words-pass/retrieval.md`: the 1 handlist and the 19 plain findings (K3957), and the test copies named in B5.
+- **Handlist** (`projection.test.mjs`, the route map's names): the test no longer hand-lists them. `RETRIEVAL_ROUTE_OPS` in `index.mjs` is the module's own list, and the test pins the map against it. A retrieval test cannot import `op-declarations` (the architecture check: it is later in the order), so the pin is against this list, not against the declaration; BOB may want an `op-declarations` check for the declared reads.
+- **Converted through `localize`**, each `en` byte-identical to the text it replaces (checked against `HEAD`):
+  - `frontier.mjs`: `FRONTIER_INTERNET_NOTE` (plain, line 31) → `retrieval.frontier.internet_note`; the two `not_read` reasons (plain, line 466, and the acquire reason beside it) → `retrieval.frontier.run_searches_not_read`, `retrieval.frontier.acquire_not_here`.
+  - `index.mjs`: the OR-reading `widen` detail (plain, line 830) → `retrieval.index.no_record_matches_all`; the `content:` syntax sentences (plain, line 1049, and the sentence before it) → `retrieval.index.content_reaches_layer`, `retrieval.index.content_searches_citations`; and two bare syntax sentences the check does not count (`field:>value…`, `a meaning arm takes…`) → `retrieval.index.field_compare_range`, `retrieval.index.meaning_arm_takes`, since R13 binds them too.
+  - Tests: `search.test.mjs` and `words.test.mjs` compare with `localize` by equality where they held the sentence in a string or a regular expression (K3965); the words test's "REPORTed" wording is gone.
+
+**Not converted: REPORT to BOB** (15 plain findings, all in `index.mjs`; the check still counts them). Each is a refusal's `detail` beside its code, or a developer's registration diagnostic:
+- Refusal `detail`, beside its code (DEC-258 (3): the shell draws `refusal.<CODE>`, never the detail): `NO_OWNER` "a selection is owned by the credential that made it" (1248); `BAD_KIND` "a selection is 'query' or 'enumerated'" (1252); `EMPTY` "an enumerated selection needs at least one id" (1257); `NOT_YOURS` "a selection is readable only by the credential that made it" (1329, 1348); the catch branch of `selectionRead` "the selection could not be read, so it is answered as one not held" (1350); `NOT_YOUR_QUERY` "no saved query of yours answers to that" (1471); `FIELD_DECLARED` "a field is registered once" (405); `FACTS_DECLARED` "the action facts are registered once" (296).
+- Developer registration diagnostics (a module's start-up call, never a member's read): "a registration names its module and its function" (293, 306, 318, 331, 367).
+- `NO_FTS_ID` "the record has no text index key" (1073): a finding's `detail` in `op=searchindexcheck`, an operator's check, read beside its code `NO_FTS_ID`.
+The design's `unkeyed` list for `retrieval` holds only the prefixes of these (for example "a registration names its module"), so the check does not match the full texts. BOB to add the full texts (K3944), or to rule that they are not drawn.
+
+**Found in this module, not flagged by the check, converted above:** the two syntax sentences listed under *Converted*. Not found in other modules.
+
+**Deferred.** None.
+
+**Tests and checks** (from `/home/user/bio`):
+- `node --test` over all 22 files of `bio-plane/test/m/retrieval/`: 167 tests, 167 pass, 0 fail.
+- `bio-plane/test/m/citation/recorded.test.mjs` (the `findin.mjs` shim): 12 pass, 0 fail.
+- `checks/architecture.mjs retrieval`: 0 failures. `checks/format.mjs`: 0 failures. `checks/coverage.mjs retrieval`: 79 of 79 live ids named, 0 failures. `checks/ownership.mjs retrieval tranche/T51 job/T51/retrieval`: 0 failures.
+- `checks/words.mjs retrieval`: 0 testcopy, 0 handlist, 0 missingkey, 0 marker; 15 plain (inline), all listed under REPORT above.
+- `bio-plane/src/setup-words/build.mjs --check`: `rows.mjs` is stale, the expected note (the new `retrieval.*` ids are not in it yet; BOB regenerates it at the layer close). No refusal names `retrieval`.
+- `checks/run.mjs` over all modules still reports other modules' words findings (not mine, not read).
+
+Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 6, module lines 2924
