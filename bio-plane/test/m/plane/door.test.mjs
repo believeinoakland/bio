@@ -109,6 +109,7 @@ const DRIVES = [
   ["grouplogoset?by=member:nobody", "POST", { raw: null }],
   ["grouplanguagesset?by=member:nobody", "POST", { languages: ["en"] }],
   ["grouplanguages", "GET"],
+  ["bootstrapfacts", "GET"],
   ["grouplogo", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
