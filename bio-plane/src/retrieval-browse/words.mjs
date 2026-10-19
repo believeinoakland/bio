@@ -1,10 +1,10 @@
-/* retrieval-browse's words (T51-29; N1212, K3366, K3854; DEC-334; plan rule 6; `setup-words` R11-R13): this module holds no
+/* retrieval-browse's words (T51-29; N1212, K3366, K3854; DEC-334; plan rule 6; `setup-words` R11-R14): this module holds no
    member-facing English the design stream's list keys: every such sentence it answers is read through `setup-words`'
    `word(key, vars)`, and what is held here is keys. The keys are the `reads` list for `retrieval-browse` in
-   `docs/development/ux-substrate/screens/words-reads.json` (split from `retrieval`'s by DEC-334); the strings that file
-   marks `unkeyed` (a matching lexicon's phrases, a refusal's `detail` beside its code, a note describing the answer's own
-   fields) stay in source, and each sentence no key holds is a REPORT to BOB for the design lane (the job's record names
-   them). */
+   `docs/development/ux-substrate/screens/words-reads.json` (split from `retrieval`'s by DEC-334). The sentences no key holds
+   (a refusal's `detail`, a `not_read` or `undetermined` reason) are read through `localize('retrieval-browse.<file>.<slug>',
+   en, vars)` where they are answered (T51-263, K3957, K3964, K3974); the strings that file marks `unkeyed` (a matching
+   lexicon's phrases) stay in source, and they are no sentence a member reads. */
 import { word } from "../setup-words/index.mjs";
 
 /** Every key this module reads. */

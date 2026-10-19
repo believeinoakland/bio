@@ -5,11 +5,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { notAProceeding, NOT_A_PROCEEDING_DETAIL, noSuchEntity, noEntity, ENTITY_CHECKS, IDSPACE_CHECKS }
   from "../../../src/entities/index.mjs";
 
-const TRANSLATION = "This is asked of a proceeding, such as a case before a court or a board, and the subject named is "
-  + "registered as another kind. Name the proceeding itself. Nothing was written.";
+const TRANSLATION = word("refusal.NOT_A_PROCEEDING");
 
 test("R53 NOT_A_PROCEEDING's one row is this module's C-91.9, its where naming notAProceeding, its sentence naming no act and no place (R31)", () => {
   const row = ENTITY_CHECKS.NOT_A_PROCEEDING;
