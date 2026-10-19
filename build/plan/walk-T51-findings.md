@@ -10,7 +10,7 @@
 | 4 | `investigation.mjs`:422, the fixture document's text (words check) | journey-check | B4 (the reading is the fixture's `NOTICE_PASSAGE`) | words check 0 | **closed** (K4113) |
 | 5 | `document` draws no `screen.document.passages.head` (R9 step 7, R16): stale step | journey-check | B5 (`document.read.title`) | `dec340.test.mjs`, `words.test.mjs` | **closed** (K4113) |
 | 3b | `security`'s catalogue sentence `ADMIN` ("stated by the administrator"), excluded by R27 as a row name (JOURNEY-CHECK #7 J3) | file-scanner | CR-17 (START, K4113) | CR-17's own test | open: CR |
-| 3c | three `lines.index.*` rows hold `{a, b}` braces a member would see literally (setup-words R13) | UX-DESIGN | HANDOFF B388 (K4115) | setup-words R13 (`word-list.test.mjs`:247) | open: design |
+| 3c | three `lines.index.*` rows hold `{a, b}` braces a member would see literally (setup-words R13) | UX-DESIGN | DEC-369 @ e2b319b55d (U400, K4119) | setup-words R13 (`word-list.test.mjs`:247) | **closed** once setup-words merges |
 | 6 | `dash-project` from Home's door draws "Nothing is here" (R22) | screens-daily | R51, K4107 | screens-daily's door test (several, one, none) | **closed** (K4110) |
 
 ## Changes since the last run that could add a finding (each covered by its own test before the run)
