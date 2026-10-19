@@ -93,3 +93,7 @@ No PR opened, per JOB step 1.
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs capture-requests`: 0 failures. `checks/coverage.mjs capture-requests`: 56 of 56, 0 failures.
 
 **Size (session_019pe7uRW2gPXhRG61G9zuCe): test runs 5, module lines 2559.**
+
+## J3 · COMPLETE
+
+CHANGE (B3, K4015) applied at 17f8ba30c9: the words check folds pure-literal + chains. It found one more sentence (index.mjs step-tie fallback), now localize(). Checks: words 0 failures (inline 0, plain 0, testcopy 0; unkeyed 55); module tests 127/127; format, architecture, coverage (56/56) 0 failures; ownership 8 files, 0 failures. Nothing judged unread, so nothing added to the unkeyed list. Record: build/jobs/T51/capture-requests.md, section 'Completion again'. Waiting on BOB.
