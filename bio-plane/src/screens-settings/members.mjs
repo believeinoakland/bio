@@ -217,9 +217,16 @@ export const members = {
       };
       // a removal under way, from the answer alone: who faces it, how many of those who may vote have agreed, and who it waits for (R56 item 4)
       const removalsOf = (v) => (Array.isArray(v.removals) ? v.removals : []).map((r) => {
-        const eligible = (Array.isArray(r.voters) ? r.voters.length : 0) + (Array.isArray(r.awaiting) ? r.awaiting.length : 0);
-        const target = whoOf(r.target) || String(r.target);
-        return `<div data-removal="${E(String(r.target))}"><p>${W(S + "2.of.3.have.agreed", { n: r.have, total: eligible })}</p><p>${W(S + "teo.is.counted.but.doesn", { member: target, n: eligible })}</p>${(r.awaiting || []).map((x) => `<p class="mk-small">${W(S + "the.removal.waits.for.ana", { member: whoOf(x) || String(x) })}</p>`).join("")}</div>`;
+        const voters = (Array.isArray(r.voters) ? r.voters : []).map((x) => x && x.voter), awaiting = Array.isArray(r.awaiting) ? r.awaiting : [];
+        const eligible = voters.length + awaiting.length;
+        const nameOf2 = (id) => whoOf(id) || String(id);
+        const target = nameOf2(r.target);
+        // every administrator named in one list, the one facing removal among them (Intl's conjunction list)
+        const everyone = [...voters, ...awaiting, r.target].map(nameOf2);
+        const list = new Intl.ListFormat("en", { style: "long", type: "conjunction" }).format(everyone);
+        // "Agree" is drawn on the viewer's own row only: an administrator who has not voted, on a removal that is not theirs
+        const agree = awaiting.indexOf(me.member) >= 0 ? `${cs.field("rm-" + r.target, S + "remove.reason", { area: true, rec: true, max: 2000 })}${cs.act("adminremove", { label: S + "agree.remove.teo.as.administrator", fills: { member: target }, data: { member: r.target } })}` : "";
+        return `<div data-removal="${E(String(r.target))}"><h3>${W(S + "removing.teo.as.an.administrator", { member: target })}</h3><p>${W(S + "four.administrators.rosa.dev.ana", { n: eligible + 1, members: list })}</p><p>${W(S + "2.of.3.have.agreed", { n: r.have, total: eligible })}</p><p>${W(S + "teo.is.counted.but.doesn", { member: target, n: eligible })}</p><p class="mk-small"><b>${E(target)}</b> ${W(S + "counted.in.the.4.doesn", { n: eligible + 1 })}</p>${awaiting.map((x) => `<p class="mk-small">${W(S + "the.removal.waits.for.ana", { member: nameOf2(x) })}</p>`).join("")}${agree}</div>`;
       }).join("");
       out.push(cs.sec(S + "what.removing.an.administrator.takes", `${cs.state(data.arith, arithOf)}${cs.state(data.removals, removalsOf)}<p class="mk-small">${W(S + "nothing.here.changes.anything.explain")}</p>`, { help: S + "the.team.s.own.rule.explain" }));
     }
@@ -258,7 +265,8 @@ export const members = {
     // its reason in the administrator's own words, from the row's field (membership R7; interface-shell R11's `reasonField`)
     { op: "adminremove", rereads: ["roster", "recovery"], reasonField: "reason",
       send(view, el, cs) {
-        const reason = String(cs.value("mr-" + el.dataset.member) || "").trim();
+        // the reason in the field of the member's row, or of the removal under way (R56 item 4)
+        const reason = String(cs.value("mr-" + el.dataset.member) || cs.value("rm-" + el.dataset.member) || "").trim();
         return reason && reason.length <= 2000 ? { body: { memberId: el.dataset.member, reason } } : { refuse: "screen.members.remove.noreason" };
       } },
     { op: "expertiseconfirm", rereads: ["roster", "expertise"],

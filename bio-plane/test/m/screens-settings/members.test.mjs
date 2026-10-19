@@ -439,6 +439,14 @@ test("R56 a removal under way is drawn from adminremovalsopen alone: who it wait
   assert.ok(t.includes(said("screen.members.2.of.3.have.agreed", { n: 1, total: 2 })));
   assert.ok(t.includes(said("screen.members.teo.is.counted.but.doesn", { member: "lu", n: 2 })));
   assert.ok(t.includes(said("screen.members.the.removal.waits.for.ana", { member: "rosa" })));
+  assert.ok(t.includes(said("screen.members.removing.teo.as.an.administrator", { member: "lu" })));
+  assert.ok(t.includes(said("screen.members.four.administrators.rosa.dev.ana", { n: 3, members: "the founder, rosa, and lu" }).replace("the founder", said("member.founder.unnamed"))));
+  assert.ok(t.includes(said("screen.members.counted.in.the.4.doesn", { n: 3 })));
+  // "Agree" is on the viewer's own row only: rosa has not voted, so she is offered it; the founder, who has, is not
+  assert.equal(btn(block, "adminremove").length, 1);
+  assert.deepEqual((await a.press("adminremove", { data: { member: "lu" }, values: { "rm-lu": " we agree " } })).sent[0].body, { memberId: "lu", reason: "we agree" });
+  const other = await open("members", { me: { ...ADMIN, member: "lu2", handle: "lu2" }, table: membersTable({ adminremovalsopen: under }) });
+  assert.equal(btn(all(other.tree, (e) => e.attrs["data-removal"] === "lu")[0], "adminremove").length, 0, "not drawn on another's row");
   // control: none under way, whatever the roster holds, draws nothing
   const none = await open("members", { me: ADMIN, table: membersTable() });
   assert.equal(all(none.tree, (e) => e.attrs["data-removal"] !== undefined).length, 0);
