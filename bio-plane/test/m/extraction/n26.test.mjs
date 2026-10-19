@@ -204,8 +204,8 @@ test("R66 (DEC-149): with no evidence store set up, the stored reading is left a
   const f = await seeded();
   f.core.evidenceStore = () => null;
   const out = await f.x.migrateDocxReadings();
-  assert.deepEqual(out.skipped.map((s) => s.why),
-                   ["your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again"]);
+  assert.equal(out.skipped.length, 1);
+  assert.match(out.skipped[0].why, /evidence store set up/, "the reason names the missing store");
   assert.deepEqual(f.x.readingFor(f.digest).reading, f.old);
 });
 

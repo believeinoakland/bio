@@ -307,9 +307,7 @@ function namedGrade(e) {
              why: word("extractrun.why.earned_proposal_names_name", { grade: String(grade) }) };
   }
   return { grade: null,
-           why: `earned nothing: this proposal names neither an identifier nor a name, so there is `
-              + `nothing to grade. Undetermined is stated rather than defaulted to the weakest `
-              + `letter, because a letter is a claim and there is no claim here` };
+           why: word("extractrun.why.earned_nothing_proposal") };
 }
 
 /** One proposed reference, checked. Returns a refusal or null.
@@ -348,7 +346,7 @@ export function checkProposedRef(entry, capture = null) {
   const ceiling = graded.verified_quote ? (capture.ceiling ?? null) : PROPOSED_READING_CEILING;
   if (rank(graded.grade) != null && (ceiling == null || rank(graded.grade) < rank(ceiling)))
     return no("PROPOSAL_ABOVE_CEILING",
-      localize("extraction.extractrun.a_proposed_reading_earned_grade", "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more", { grade: String(graded.grade), v1: String(ceiling == null ? "undetermined ceiling of the capture its quote is read from" : ceiling) }));
+      localize("extraction.extractrun.a_proposed_reading_earned_grade", "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more", { grade: String(graded.grade), v1: String(ceiling == null ? localize("extraction.extractrun.undetermined_ceiling", "undetermined ceiling of the capture its quote is read from") : ceiling) }));
   /* The position is OPTIONAL and its absence is honest: a reading that cannot
      say WHERE is most readings today (FW-17 / IC-86), and `readingSource`'s own
      contract is that every malformed or incomplete input answers null rather
@@ -358,9 +356,7 @@ export function checkProposedRef(entry, capture = null) {
      nothing can resolve looks like a binding and joins to nothing. */
   if (e.source !== undefined && e.source !== null && readingSource(e.source) == null)
     return no("PROPOSAL_POSITION",
-      `this proposal states WHERE it read the reference and the address cannot be read in IC-1's `
-    + `element-reference vocabulary. An address nothing resolves is worse than the honest absence, `
-    + `because it looks like a binding and joins to nothing`);
+      localize("extraction.extractrun.position_unreadable", "this proposal states WHERE it read the reference and the address cannot be read in IC-1's element-reference vocabulary. An address nothing resolves is worse than the honest absence, because it looks like a binding and joins to nothing"));
   return null;
 }
 
@@ -426,8 +422,7 @@ export function mintRatio({ minted = 0, cited = 0 } = {}) {
   const c = Number.isFinite(Number(cited)) ? Math.max(0, Math.trunc(Number(cited))) : 0;
   if (m === 0)
     return { minted: 0, cited: c, uncited: 0, ratio: null,
-             says: `no machine credential has marked a passage citable in this scope, so there is `
-                 + `nothing to measure. This is an absence and not a clean result` };
+             says: word("extractrun.says.machine_credential_marked") };
   const uncited = Math.max(0, m - c);
   return { minted: m, cited: c, uncited, ratio: c / m,
            says: word("extractrun.says.passage_machine_marked", { count: String(c), m: String(m), uncited: String(uncited) }) };
