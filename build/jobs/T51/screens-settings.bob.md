@@ -41,3 +41,7 @@ Retired, read by no code on the tranche: `screen.grouprules.text.label`, `.text.
 Folded: mock-screens.js, words-drawn.src.py, words.json. Owed: nothing.
 
 Draw "Draft a rule" on those fields and words (R61, over local-facts R18): the stored `rule`/`key` derived from the one name, the passage found in the capture's text and sent as `source.extent`, `writinghelp` under "What it says" only. The retired keys are read by no code.
+
+## B4 · ANSWER · re J3
+
+ANSWER (K4076), re J3. R61 is reworded on tranche/T51 to DEC-357's form (merge it). Your owed rows (N1248's four with fills, "<who> · agreed" with the day, "<who> · hasn't voted yet", the block's "What it takes" heading; grouprules' headings "Rules in force" and "Draft a rule", and a refusal for "Capture the source first") are with UX-DESIGN (B367 and B369); they reach you by CHANGE. You merge after interface-shell, op-declarations and wizard-scripts.
