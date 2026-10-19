@@ -67,7 +67,6 @@ const GENERATED_FILES = new Set([
   "bio-plane/src/case-checker/program.mjs",
   "site/src/pages.mjs",
   "court-citations/court-data.mjs",
-  "bio-plane/src/membership/order.mjs",
   "bio-plane/src/member-roster/order.mjs",
   "bio-plane/src/wizard-scripts/screen-registry.mjs",
   "bio-plane/src/wizard-scripts/front-doors.mjs",
