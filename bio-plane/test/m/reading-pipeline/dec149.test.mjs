@@ -12,9 +12,9 @@ import { word } from "../../../src/setup-words/index.mjs";
 const OLD_NAMES = /\binstance\b|\bthe plane\b/i;
 const NO_OCR = word("reading-pipeline.document_text_layer");
 const NO_TIER2 = word("reading-pipeline.tier_read_essentially");
-const NO_STORE = "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read";
+const NO_STORE = word("reading-pipeline.no_evidence_store");
 
-test("R24 R21 (DEC-149): with no evidence store handed in, the failed reading's basis is exactly \"your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read\", never \"this instance\"", async () => {
+test("R24 R21 (DEC-149): with no evidence store handed in, the failed reading's basis is exactly the word row \"reading-pipeline.no_evidence_store\", never \"this instance\"", async () => {
   const { reading } = await fresh({ evidence: null }).read(doc({ digest: "a".repeat(64), fromText: true }));
   assert.equal(reading.found, false);
   assert.equal(reading.basis, NO_STORE);

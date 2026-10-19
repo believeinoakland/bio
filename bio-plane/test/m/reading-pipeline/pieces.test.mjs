@@ -216,8 +216,11 @@ const PDF = new Uint8Array(readFileSync(new URL("../../fixtures/legistar-agenda-
    text, one entity's label ("Code Enforcement’s"), and the basis's full-decode statement. The docx pin is unchanged. */
 const PINNED = {
   pdf: "5b1437e6bb0062322d648ad10b22df16aba636dab1b342fecb9f42646199f17a",
-  docx: "b70fa4e8976d4c6ef3f663145af1b943d204b306eab29f7470dd9ea50038cd25",
+  docx: "d9fed8a2df2b60d328a087abe6ef8a28a0cd830af64396e7b51dc1f3676da01d",
 };
+/* T51-190 (K3930: the list wins): the docx pin was re-taken once. The no-page-grain sentence on `provenance.pages_why`
+   is now the word row `reading-pipeline.text_carries_per`, which spells "itemized" where the source had "itemised";
+   that letter is the whole difference from the earlier pin (checked by replacing it back, which reproduced the old digest). */
 
 test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin, beside R28's and R34's added keys", async () => {
   for (const [name, bytes, format, ct] of [["pdf", PDF, "pdf", "application/pdf"], ["docx", DOCX, "docx", DOCX_CT]]) {

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, hold, doc, member, withEntry, i2, noText, folio, ocrAnswer, sha } from "./fixture.mjs";
 import { checkChain } from "../../../src/textchain.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { ACQUIRE_TEXT_UNITS_BUDGET, CAPTURE_TEXT_UNIT_CAP, ACQUIRE_TEXT_UNIT_ENVELOPE, ReadHooks, tier4Extend } from "../../../src/reading-pipeline/index.mjs";
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
@@ -428,7 +429,7 @@ test("R22 (N1065): no place is named in this module's behaviour or outward text:
   assert.ok(places.size >= 4, "the profiles name places");
   const all = await outwardText();
   assert.ok(all.length > 20000, `the module said a good deal: ${all.length} characters`);
-  for (const must of ["tier 1 read essentially nothing", "OCR member", "the AI was not asked", "was not read as text"])
+  for (const must of [word("reading-pipeline.tier_read_essentially_nothing"), "OCR member", "the AI was not asked", "was not read as text"])
     assert.ok(all.includes(must), `the scenarios reached "${must}"`);
   const lower = all.toLowerCase();
   for (const p of places) assert.equal(lower.includes(p.toLowerCase()), false, `names ${p}`);

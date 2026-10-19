@@ -121,8 +121,7 @@ export async function readingProvenance({ text = null, chain = null, tier = null
                 text_sha256: null, text_chars: 0, text_from: null,
                 producers: [], pages: null, pages_why: null };
   if (text == null) {
-    out.why = "no text surface answered for this document, so no text was classified and there is nothing "
-            + "to digest";
+    out.why = word("reading-pipeline.why.text_surface_answered");
     out.pages_why = out.why;
     return out;
   }
@@ -173,8 +172,7 @@ export async function readingProvenance({ text = null, chain = null, tier = null
   } else {
     /* NO PAGE GRAIN — an office container, a bare string. The whole text is one producer's, and which
        part of it changed on a re-read is not said, rather than guessed. */
-    out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read "
-                  + "that differs is attributed to the document, not to a page";
+    out.pages_why = word("reading-pipeline.text_carries_per");
     const c = chainTierOf(chain, -1);
     if (flat.text.length) credit(c && c.tier != null ? c.tier : out.text_tier, c && c.engine, null,
            typeof offLadder === "string" && offLadder ? offLadder : null);
@@ -226,8 +224,7 @@ export function compareProvenance(prior, next) {
     const pp = (prior.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(prior.text_tier, null);
     const np = (next.producers || []).map((p) => who(p.tier, p.member)).join(" and ") || who(next.text_tier, null);
     return { state: "differs", changed: [],
-             says: `the re-read classified different text (earlier: ${pp}; now: ${np}); `
-                 + `the text carries no per-page grain, so which part of the document changed is not said` };
+             says: word("reading-pipeline.says.read_classified_different", { pp: String(pp), np: String(np) }) };
   }
   const before = new Map(prior.pages.map((p) => [p.page, p]));
   const after = new Map(next.pages.map((p) => [p.page, p]));
@@ -246,8 +243,7 @@ export function compareProvenance(prior, next) {
   const changed = [...groups.values()];
   if (!changed.length)
     return { state: "differs", changed,
-             says: "the re-read classified different text but no page's text differs, so the difference is in "
-                 + "how the pages were joined into the text the reader was handed" };
+             says: word("reading-pipeline.says.read_classified_different_text") };
   const says = changed.map((g) => {
     const pgs = describePages(g.pages);
     if (!g.before) return word("reading-pipeline.returned_earlier_reading", { now: String(whoOf(g.now)), pgs: String(pgs) });
