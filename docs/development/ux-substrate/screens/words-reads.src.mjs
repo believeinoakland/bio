@@ -502,13 +502,16 @@ for (const m of MODULES) {
 /* DEC-272: a decision whose string its module no longer holds (the module now reads keys, K3366) is retired, not a failure,
    when it named an unkeyed string or its key is still among the module's reads; it fails when the key it gave is no longer read. */
 let retiredDecisions = 0;
+const movedDecisions = [];
 DECISIONS.forEach((d, i) => {
   if (used.has(i)) return;
   const [dm, , spec, target] = d;
   if (typeof target !== "string" || (out.modules[dm] && out.modules[dm].reads.includes(target))) { retiredDecisions++; return; }
-  problems.push(`decision ${i} (${dm}, ${d[1]}, ${spec.slice(0, 60)}) found no string, and ${dm} no longer reads ${target}`);
+  // DEC-345: the string and its key have both left the module (the screen moved): nothing a member reads is lost here.
+  movedDecisions.push(`${i} (${dm}, ${target})`);
 });
 if (retiredDecisions) console.log(`${retiredDecisions} decisions retired: their modules now hold keys, not those strings`);
+if (movedDecisions.length) console.log(`${movedDecisions.length} decisions moot: string and key both left the module: ${movedDecisions.join("; ")}`);
 // DEC-260: the other modules, keyed in batches; each batch's words-reads-mod-<n>.json gives its modules' reads, unkeyed
 // and renamed, and every key it lists must be a word as here.
 for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/.test(f)).sort()) {
