@@ -56,6 +56,26 @@ export const DOCKET = Object.freeze({
       + cs.field("dk-reason", "screen.docket.reason.label", { area: true, help: "screen.docket.reason.help" })
       + '<div class="mk-acts">' + cs.act("docketfile") + "</div>" + P.said(view, "docketfile")));
     out.push('<p class="muted">' + cs.w("screen.docket.order") + "</p>" + P.said(view, "docketpost"));
+
+    // R43 (N858 D10; DEC-340; docket R30; action-holds R19): "Pressure marked on this case", after the record: each entry that
+    // carries a mark with its date, who made it, the note, and "No hold is placed for it yet" when `holdsdue` lists it; the
+    // counsel sentence and the way to the hold. A viewer not seeing the project in full is answered no entries with marks, so none is drawn.
+    const marked = dk && Array.isArray(dk.entries) ? dk.entries.filter(function (e) { return e && e.pressure && typeof e.pressure === "object"; }) : [];
+    if (marked.length) {
+      const due = P.later(cs, view, "holdsdue", "holdsdue", {});
+      const listed = due.state === "ok" && due.value && Array.isArray(due.value.items) ? due.value.items : [];
+      const lacks = function (e) { return listed.some(function (x) { return x && x.arrived && String(x.arrived.docket_entry) === String(e.entry); }); };
+      out.push(P.secTips(cs, "screen.docket.pressure.heading", cs.sheet(marked.map(function (e) {
+        const m = e.pressure, who = m.by && (m.by.handle || m.by.member) ? String(m.by.handle || m.by.member) : "";
+        const kind = ["legal", "retaliation", "discrediting", "other"].includes(m.kind) ? m.kind : "other";
+        const said = !who ? "" : kind === "legal" ? cs.w("screen.docket.pressure.mark", { member: who })
+          : cs.w("screen.action.pressure." + kind) + " · " + cs.w("screen.action.pressuremark.by", { who: who });
+        return cs.row("", "<b>" + (m.at ? cs.date(m.at) : "") + "</b>" + (said ? " · " + said : ""),
+          '<span class="meta">' + (m.note ? '<span class="rec">' + cs.esc(m.note) + "</span>" : "") + (lacks(e) ? (m.note ? " · " : "") + cs.w("screen.hold.nohold") : "") + "</span>");
+      }).join("")) + '<p class="mk-note">' + cs.w("screen.docket.pressure.counsel") + "</p>"
+        + '<div class="mk-acts">' + marked.map(function (e) { return cs.ref("hold", e.entry, P.plain(cs.w("screen.action.hold.link")), []); }).join(" ") + "</div>",
+      ["screen.docket.pressure.tip1", "screen.docket.pressure.tip2"]));
+    }
     return out.join("");
   },
 

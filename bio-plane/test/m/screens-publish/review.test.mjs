@@ -207,8 +207,9 @@ test("R23 a copy whose statement is absent draws no section and no acknowledgeme
     assert.equal(main(p).querySelector('button[data-act="statementack"]'), null);
     assert.equal(p.doc.getElementById("ro-note"), null);
   }
-  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NOT_RECORDED", translation: "It was not recorded." }) } });
+  const SAID = "The plane's own words for a code the list does not hold.";
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NO_WORDS_FOR_THIS_CODE", translation: SAID }) } });
   await press(p, "statementack", { values: { "ro-note": NOTE } });
-  assert.ok(text(p).includes("It was not recorded.") && !drew(p, "screen.review-outside.sent"));
+  assert.ok(text(p).includes(SAID) && !drew(p, "screen.review-outside.sent"));
   assert.equal(p.doc.getElementById("ro-note").value, NOTE, "kept");
 });

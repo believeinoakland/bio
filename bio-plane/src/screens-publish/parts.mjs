@@ -17,8 +17,7 @@ export const PARTS = Object.freeze({
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false)) {
           const f = r && r.ok === false ? r : a || {};
-          const code = String(f.code || f.reason || "");
-          settle({ state: "failed", refusal: { code: code, words: cs.esc(f.translation || f.detail || code) } });
+          settle({ state: "failed", refusal: { code: String(f.code || f.reason || ""), words: view.parts.refusalText(cs, f) || cs.w("shell.unread") } });
         } else if (typeof isEmpty === "function" && isEmpty(r)) settle({ state: "empty", value: r });
         else settle({ state: "ok", value: r });
       }, function () { settle({ state: "failed", refusal: null }); });
@@ -59,10 +58,16 @@ export const PARTS = Object.freeze({
     return t || String(fallback || "");
   },
 
-  /* A refusal the plane answered inside a read's value (`blockers`, `first`): its words as the plane gave them. */
+  /* A refusal the plane answered (a read that failed, or one inside a read's value: `blockers`, `first`), in the words the shell
+     gives it (interface-shell R13, R61, R83; DEC-342): `refusal.<CODE>` when the list holds it, else the answer's translation,
+     else `refusal.uncatalogued` with the code as the act gave it; never the builder's `detail`. "" when it names no code and
+     carries no translation. */
   refusalText: function (cs, f) {
     if (!f || typeof f !== "object") return "";
-    return cs.esc(f.translation || f.detail || f.code || f.reason || "");
+    const code = String(f.code || f.reason || "");
+    if (code) { const held = cs.w("refusal." + code, f); if (held !== "refusal." + code) return held; }
+    if (typeof f.translation === "string" && f.translation) return cs.esc(f.translation);
+    return code ? cs.w("refusal.uncatalogued") + " <code>" + cs.esc(code) + "</code>" : "";
   },
 
   /* What an act said once it was answered, beside the screen's own section: `{key, html, ok}` in `view.ui.said`. */
@@ -175,6 +180,13 @@ export const PARTS = Object.freeze({
   at: function (date, time) {
     const d = String(date || "").trim(), t = String(time || "").trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(d) && /^\d{2}:\d{2}$/.test(t) ? { date: d, time: t } : null;
+  },
+
+  /* A section whose heading is explained by several sentences, each its own key, in order (the kit's `cs.sec` takes one
+     key): the design's explanations that run to two or three sentences (R37, R38, R43). */
+  secTips: function (cs, key, inner, helpKeys) {
+    const tip = helpKeys.map(function (k) { return cs.w(k); }).join(" ");
+    return cs.sec(key, inner).replace('<h2 tabindex="0">', '<h2 tabindex="0" data-level="2" data-tip="' + cs.esc(tip) + '">');
   },
 
   /* R20: a section that holds nothing is not drawn. */
