@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, webcrypto } from "node:crypto";
 import * as DECLARATIONS from "../../../src/op-declarations/index.mjs";
-import { interfacePage, checkScreens, ADMIN_ACTS, PATHS, HOOK_CLASSES, PUBLIC_PAGES, browserActs } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkScreens, ADMIN_ACTS, PATHS, HOOK_CLASSES, PUBLIC_PAGES, SHELL_OPS, browserActs } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
@@ -136,7 +136,7 @@ test("R91 cs.words draws a document's words for choosing; a click, Shift with a 
   assert.equal(unit(p, 1).getAttribute("aria-checked"), "true", "Shift with an arrow extends the run");
   assert.equal(p.doc.activeElement, unit(p, 1), "the focus moves along");
   assert.ok([0, 1, 2].every((i) => unit(p, i).getAttribute("tabindex") === "0"), "each unit takes focus");
-  assert.equal(p.requests.filter((r) => r.op !== "whoami" && !["interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "bootstrap", "version"].includes(r.op)).length, 0, "it reads no op and sends nothing");
+  assert.equal(p.requests.filter((r) => !SHELL_OPS.includes(r.op) && r.op !== "version").length, 0, "it reads no op and sends nothing");
   assert.ok(p.requests.length >= sent);
   /* leaving the screen drops the selection (page memory only) */
   await p.back("/app/finder/other");

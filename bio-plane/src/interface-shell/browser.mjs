@@ -1924,7 +1924,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       ];
       const inside = (c) => c.left >= 0 && c.top >= 0 && (!vw || c.left + tw <= vw) && (!vh || c.top + th <= vh);
       const others = [];
-      for (const c of doc.getElementById("cs-root").querySelectorAll("a[href], button, input, select, textarea, [tabindex]")) {
+      for (const c of doc.getElementById("cs-root").querySelectorAll(["a[href]", "button", "input", "select", "textarea", "[tabindex]"].join(","))) {
         if (c === el || (el.contains && (el.contains(c) || c.contains(el))) || typeof c.getBoundingClientRect !== "function") continue;
         const b = c.getBoundingClientRect();
         if (b && b.right > b.left && b.bottom > b.top) others.push(b);

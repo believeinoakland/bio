@@ -5,7 +5,7 @@
    `setup-words`' `word` (R70); a test holds no English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
@@ -508,7 +508,10 @@ test("R86 a first load settles quickly: the working frame is drawn before the fi
   assert.equal(times.whoami, 0);
   assert.equal(times.bootstrap, 0);
   await p.clock.tick(500);
-  for (const op of ["interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "projectdirectory"]) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
+  /* everything else sent: the frame's own reads (the module's SHELL_OPS) and the screen's, all in flight on whoami's answer */
+  const rest = Object.keys(times).filter((op) => op !== "whoami" && op !== "bootstrap");
+  assert.equal(rest.filter((op) => SHELL_OPS.includes(op)).length, 8, "the frame's eight reads");
+  for (const op of rest) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
   assert.ok(times.projectdirectory < 1000, "the screen's first read leaves after one round trip, not two");
   await p.clock.tick(500);
   assert.ok(p.root().querySelector("#cs-main section"), "the screen settles on its reads");
