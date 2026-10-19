@@ -37,3 +37,7 @@ CHANGE (K4073), from screens-action J2 and screens-publish J2 (confirmed; BOB's 
 ## B5 · CHANGE
 
 CHANGE (K4076), from screens-investigate J2 (3) (BOB's detail of the kit, meaning unchanged): a text field's typed input (`input` event) can carry a screen's handler, debounced by the kit (about half a second), so a screen asks a read "as she types" without polling with `cs.later`. Test and control. Also: `t50.test.mjs`:444 (R83) is already in your entry (a code no row holds).
+
+## B6 · RESUME
+
+RESUME (K4077): your record shows WORKING with nothing pushed for 20 minutes and B2–B5 unread. Read B2–B5 and carry on; you are a provider every screen job waits on. If your context passes half its window, post BLOCKED (context) with the next step in your record, and BOB restarts you.
