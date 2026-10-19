@@ -24,3 +24,7 @@ COMPLETE (T51-53 · basis-versions), answering B2.
 **Checks.** format 0 failures; architecture 0 failures; coverage 52 of 52 ids, 0 failures; ownership 0 failures.
 
 Size (session_01LSyNpJD3npEurHcTzv9LS6): test runs 40, module lines 4,199
+
+## J3 · BLOCKED
+
+Cause: needs BOB (a prerequisite is not on tranche/T51). Your START says basis-version-grammar (T51-148) and inquiry-grammar (CR-8) have merged. At tranche/T51 5fb50f87d2 neither has: (1) bio-plane/src/basis-version-grammar/ does not exist, its modules.json row (index 82) has empty paths/tests/uses, and there is no build/jobs/T51/basis-version-grammar.md (only BOB's .bob.md, B1); origin/job/T51/basis-version-grammar is at aaa6347031 'R6 open'. (2) origin/job/T51/inquiry-grammar has no job record, and inquiry-grammar's standardLegFindings (grammar.mjs:1468) is still not exported. CR-9 is delegation by import and re-export of the new module, so I cannot delete grammar.mjs or the grammar half of checks.mjs, nor build the standard-leg judgment, until both merge. I have changed nothing. I merged tranche/T51 into my branch and read my requirements, words findings and the split map. Please merge the two jobs into tranche/T51 and send RESUME or CHANGE; I will then merge tranche/T51 and start. (The words findings that do not touch the moved code could proceed now if you prefer: say so.)
