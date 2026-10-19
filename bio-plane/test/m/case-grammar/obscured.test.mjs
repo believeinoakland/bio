@@ -174,9 +174,9 @@ test("R14 (T37) a photo carried as its copy is listed with the original's finger
   assert.equal(photo.length > 0 && photo.length < mats.length, true);
   const lis = [...photo.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
   assert.deepEqual(lis.slice(0, 6), [esc(`${CG.OBSCURED_WORDS.original}${sha(PHOTO_BYTES)}`),
-    esc(`Extracted text fingerprint: ${sha("the photo's text")}`), esc("Origin: a member's capture"), esc("Archived copy: none recorded"),
+    esc(CG.SENTENCES.textFingerprint(sha("the photo's text"))), esc("Origin: a member's capture"), esc("Archived copy: none recorded"),
     esc(`${CG.OBSCURED_WORDS.copy}${COPY}`), esc(OBSCURED_LABEL)], "the original's fingerprint, the copy's, and its label");
-  assert.equal(photo.includes(esc("Included whole in this case file.")) || photo.includes(esc("Not included: only its fingerprint")), false);
+  assert.equal(photo.includes(esc(CG.SENTENCES.includedWhole)) || photo.includes(esc("Not included: only its fingerprint")), false);
   assert.equal(mats.indexOf(MINUTES) < mats.indexOf(PHOTO), true, "in the document's order");
   /* the label is the row's, word for word, whatever it says; a copy with no label lists none (T38, below) */
   const other = CG.materialsLines([{ ...PHOTO_ROW, obscured: { copy: COPY, label: "Another label & its <words>" } }]);
@@ -263,7 +263,7 @@ test("R14 (T38) an unmarked photo's copy is listed with the original's fingerpri
   const plain = mats.slice(mats.indexOf(`<h3>${PLAIN_PHOTO} (document)</h3>`));
   const lis = (part) => [...part.slice(0, part.indexOf("</ul>")).matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
   assert.deepEqual(lis(plain), [esc(`${CG.OBSCURED_WORDS.original}${sha(PLAIN_PHOTO_BYTES)}`), esc("Origin: a member's capture"),
-    esc("Archived copy: none recorded"), esc(`${CG.OBSCURED_WORDS.unmarked}${PLAIN_COPY}`), esc("Only supporting findings rest on it.")],
+    esc("Archived copy: none recorded"), esc(`${CG.OBSCURED_WORDS.unmarked}${PLAIN_COPY}`), esc(CG.SENTENCES.onlySupporting)],
     "the original's fingerprint and the copy's; no label, and no line saying whether it is included");
   assert.equal(plain.includes("label") || plain.includes("marked areas covered"), false);
   const marked = mats.slice(mats.indexOf(`<h3>${PHOTO} (document)</h3>`), mats.indexOf(`<h3>${PLAIN_PHOTO} (document)</h3>`));
@@ -352,10 +352,10 @@ test("R14 (T39) a member document carried as its cleaned copy is listed with the
     const html = CG.completeEditionOf(editionInput(manifest, files));
     assert.equal(files.get("complete-edition.html"), html);
     assert.deepEqual(lis(sectionAt(html, MEMBER_DOC)), [esc(`${CG.OBSCURED_WORDS.original}${sha(MEMBER_DOC_BYTES)}`),
-      esc(`Extracted text fingerprint: ${sha("the lease draft's text")}`), esc("Origin: a member's file"), esc("Archived copy: none recorded"),
-      esc(`${CG.OBSCURED_WORDS.cleaned}${sha(memberDocCopyBytes(as))}`), esc(COPY_CLEANED_LABEL), esc("A finding this case relies on rests on it.")], as);
+      esc(CG.SENTENCES.textFingerprint(sha("the lease draft's text"))), esc("Origin: a member's file"), esc("Archived copy: none recorded"),
+      esc(`${CG.OBSCURED_WORDS.cleaned}${sha(memberDocCopyBytes(as))}`), esc(COPY_CLEANED_LABEL), esc(CG.SENTENCES.reliesOn)], as);
     const docPart = sectionAt(html, MEMBER_DOC);
-    for (const not of [CG.OBSCURED_WORDS.copy, CG.OBSCURED_WORDS.unmarked, "marked areas covered", "Included whole in this case file."])
+    for (const not of [CG.OBSCURED_WORDS.copy, CG.OBSCURED_WORDS.unmarked, "marked areas covered", CG.SENTENCES.includedWhole])
       assert.equal(docPart.includes(esc(not)), false, `never "${not.slice(0, 30)}"`);
     /* content handed as bytes renders the same */
     const input = editionInput(manifest, files);
