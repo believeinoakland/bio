@@ -1,4 +1,4 @@
-/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44, R52–R54, R60, R63: the project screen (Projects › <project>;
+/* screens-inquiry R1, R9–R11, R14, R16, R20, R21, R27–R30, R38–R40, R43, R44, R52–R54, R60, R63, R75–R77: the project screen (Projects › <project>;
  * registry screen `project`).
  *
  * Self-contained functions (interface-shell R21 (1)); the readers they share are the screen's `parts` (common.mjs). The
@@ -309,7 +309,8 @@ function render(cs, view) {
       const since = Number(x.owner) ? x.owner_since || null : x.joined_at || null;
       const date = since ? W(Number(x.owner) ? "project.member.since" : "project.member.joined", { date: { html: cs.date(String(since), { year: true }) } }) : "";
       const self = x.handle && x.handle === me;
-      const acts = self && Number(x.owner) ? cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle) } })
+      /* R75: "Stand down as owner…" opens the vote in place (state e) and sends nothing */
+      const acts = self && Number(x.owner) ? cs.act("projectownerremove", { label: "act.projectownerremove.label.project", data: { handle: String(x.handle), mode: "open" } })
         : owner && !self && x.handle && x.state === "joined" ? (Number(x.owner) ? "" : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
           + cs.field("project-remove-why-" + x.handle, "shell.reason", { help: "shell.reason.help" })
           + cs.act("projectremove", { label: "act.projectremove.label.project", data: { handle: String(x.handle) } }) : "";
@@ -323,8 +324,8 @@ function render(cs, view) {
         agreed: (c.agreed || []).map((h) => P.who(cs, h)).join(", "), awaiting: (c.awaiting || []).map((h) => P.who(cs, h)).join(", ") };
       const mineToAgree = owner && (c.awaiting || []).includes(me);
       return `<p class="mk-small" data-pending="${c.change === "remove" ? "remove" : "add"}">${W(c.change === "remove" ? "project.owners.pending.remove" : "project.owners.pending", fills)}</p>`
-        + (mineToAgree ? cs.act(c.change === "remove" ? "projectownerremove" : "projectowneradd", { label: c.change === "remove" ? "act.projectownerremove.label.project" : "project.owners.agree",
-            fills: { who: fills.who }, data: { handle: String(c.target || "") } }) : "");
+        + (mineToAgree ? cs.act(c.change === "remove" ? "projectownerremove" : "projectowneradd", { label: c.change === "remove" ? "screen.project.agree.dev.stands.down.as" : "project.owners.agree",
+            fills: c.change === "remove" ? { member: fills.who } : { who: fills.who }, data: c.change === "remove" ? { handle: String(c.target || ""), mode: "open" } : { handle: String(c.target || "") } }) : "");
     }).join("");
     return (rows ? cs.sheet(rows) : "") + waiting + `<p class="mk-small">${W("project.owners.rule")}</p>`
       + `<p class="mk-small">${W("screen.project.members.who")}</p>`
@@ -335,6 +336,189 @@ function render(cs, view) {
         + cs.choice("project-fork-visibility", "project.visibility.title", [["hidden", "project.visibility.start.hidden"], ["discoverable", "project.visibility.start.discoverable"]], { value: "hidden" })
         + cs.act("projectfork", { label: "act.projectfork.label.project", data: { project: id } }) : "");
   })));
+  /* R75 (state e): an owner stands down by a vote, in place, before anything is sent. Every heading, row and count is a key
+     of the design's, filled from the reads (`projectownerarith`, `projectownervotes`, `projectparticipants`). */
+  const standing = owner && typeof ui.standdown === "string" ? ui.standdown : "";
+  const leaver = standing ? people.find((x) => x && x.handle === standing && Number(x.owner) && x.state === "joined") : null;
+  if (leaver) {
+    const arith = later("ownerarith", "projectownerarith", { projectId: id });
+    out.push(arith.state !== "ok" ? cs.sec("screen.project.standdown.heading", `<div data-state-e="${arith.state}">${cs.state(arith, () => "")}</div>`) : (() => {
+      const live = arith.value && arith.value.live ? arith.value.live : {};
+      const table = Array.isArray(arith.value && arith.value.table) ? arith.value.table : [];
+      const seated = people.filter((x) => Number(x.owner) && x.state === "joined");
+      const n = Number(live.owners) || seated.length;
+      const waitingOn = (d.votes && d.votes.state === "ok" && Array.isArray(d.votes.value.changes) ? d.votes.value.changes : [])
+        .concat(ui.consensus ? [ui.consensus] : []).filter((c) => c && c.change === "remove" && (!c.target || String(c.target) === standing));
+      const change = waitingOn.length ? waitingOn[waitingOn.length - 1] : null;
+      const agreed = change && Array.isArray(change.agreed) ? change.agreed.map((a) => String(a && typeof a === "object" ? a.handle || "" : a)) : [];
+      const isTarget = me === standing;
+      const cast = agreed.includes(String(me));
+      const others = seated.filter((x) => x.handle !== standing);
+      const holds = [true, others.length > 0, live.possible === true, cast || !isTarget || live.targetMayVote === true];
+      const offered = holds.every(Boolean) && !cast;
+      const need = Number(live.votesNeeded) || 0;
+      const dateOf = (iso) => (iso ? { html: cs.date(String(iso), { year: true }) } : "");
+      const bold = (name) => ({ html: `<b>${cs.esc(name)}</b>` });
+      /* the cast act: another owner agrees to this one standing down ("Agree: <name> stands down as owner"); the one standing
+         down sends her own vote by the act's own label */
+      const castAct = cs.act("projectownerremove", isTarget
+        ? { label: "act.projectownerremove.label.project", data: { handle: standing, mode: "cast" }, tone: "primary" }
+        : { label: "screen.project.agree.dev.stands.down.as", fills: { member: P.who(cs, leaver) }, data: { handle: standing, mode: "cast" }, tone: "primary" });
+      const voters = seated.map((o) => {
+        const h = String(o.handle || "");
+        const voted = agreed.includes(h);
+        const silent = n >= 3 && h === standing;
+        const name = P.who(cs, o);
+        const text = voted ? W("screen.project.standdown.agreed", { member: bold(name) }) : silent ? `<b>${cs.esc(name)}</b>`
+          : W("screen.project.standdown.notyet", { member: bold(name) });
+        /* what a voter's row says beneath it: the departing owner's vote is cast by standing down, on the date the change was
+           proposed; an owner who has not voted, that the change waits for her */
+        const meta = voted && h === standing && change && change.proposed_at ? W("screen.project.by.standing.down.17.october", { date: dateOf(change.proposed_at) })
+          : !voted && !silent ? W("screen.project.the.change.waits.for.ana", { member: name }) : "";
+        return `<div data-vote-for="${cs.esc(h)}" data-voted="${voted ? "yes" : "no"}">${cs.row(voted ? "✓" : silent ? "" : cs.icon("clock"), text,
+          h === me && offered ? castAct : "", meta)}</div>`;
+      }).join("");
+      /* "This takes n of m owners' votes", at two owners with the departing owner's own among them; none for a sole owner */
+      const takes = live.possible === true && need > 0
+        ? `<p>${n === 2 ? W("screen.project.this.takes.2.of.2", { n: String(need), total: String(n), member: P.who(cs, leaver) }) + " " + W("screen.project.with.two.owners.standing.down")
+          : W("screen.project.standdown.takes", { n: String(need), total: String(n) })}</p>` : "";
+      const count = change && Number.isFinite(Number(change.have)) ? Number(change.have) : agreed.length;
+      const total = change && Number.isFinite(Number(change.need)) && Number(change.need) > 0 ? Number(change.need) : need;
+      const arithTable = `<table class="mk-table" data-arith="owners"><thead><tr><th>${W("screen.project.scale.head.owners")}</th><th>${W("screen.project.scale.head.takes")}</th><th>${W("screen.project.scale.head.why")}</th></tr></thead><tbody>${table.map((t) => {
+        const k = Number(t.owners);
+        const votes = k === 2 ? W("screen.project.2.of.2.the.departing") : k >= 3 ? W("screen.project.scale.takes", { votes: String(t.votesNeeded), owners: String(t.owners) }) : "";
+        const why = k === 1 ? W("screen.project.the.last.owner.stays") : k === 2 ? W("screen.project.both.agree.a.resignation.the") : W("screen.project.scale.who", { voters: String(t.eligibleVoters), owners: String(t.owners) });
+        return `<tr data-owners="${cs.esc(t.owners)}"${k === n ? " aria-current=\"true\"" : ""}><td>${cs.esc(t.owners)}${k === n ? " " + W("screen.project.scale.now") : ""}</td><td>${votes}</td><td>${why}</td></tr>`;
+      }).join("")}</tbody></table>`;
+      const check = (i, key, fills, meta, why) => `<div data-check="${i}" data-holds="${holds[i - 1] ? "yes" : "no"}">${cs.row(holds[i - 1] ? "✓" : cs.mark("gap", "refused", { reason: why || "" }),
+        W(key, fills), "", holds[i - 1] ? meta : "")}</div>`;
+      const first = others[0] || null;
+      const reasonOwed = [check(1, "screen.project.ownerstand.you.are.an.owner.of"),
+        check(2, "screen.project.ownerstand.an.owner.is.named.dev", { member: first ? P.who(cs, first) : "" }, "", T("refusal.LAST_OWNER")),
+        check(3, "screen.project.ownerstand.standing.down.is.possible.at", {}, n === 2 ? W("screen.project.ownerstand.with.2.owners.an.owner") : "", T("refusal.LAST_OWNER")),
+        check(4, "screen.project.ownerstand.this.is.a.vote.you", {}, n === 2 && isTarget ? W("screen.project.ownerstand.at.2.owners.the.departing") : "", T("refusal.TARGET_CANNOT_VOTE")),
+        `<div data-check="5" data-holds="no">${cs.row(cs.icon("clock"), W("screen.project.ownerstand.a.reason.in.your.words"), "",
+          `${W("screen.project.ownerstand.required")} ${W("screen.project.ownerstand.nothing.is.drafted.or.suggested")}`)}</div>`].join("");
+      const waitLine = change ? `<p class="mk-small" data-pending="remove">${W("project.owners.pending.remove", { who: P.who(cs, standing), by: P.who(cs, change.proposed_by || ""),
+        date: dateOf(change.proposed_at), agreed: agreed.map((h) => P.who(cs, h)).join(", "),
+        awaiting: (Array.isArray(change.awaiting) ? change.awaiting : seated.map((o) => o.handle).filter((h) => h !== standing && !agreed.includes(String(h)))).map((h) => P.who(cs, h)).join(", ") })}</p>` : "";
+      return cs.sec("screen.project.standdown.heading", `<div id="state-e" data-state-e="votes"><p data-standing="down">${W("screen.project.dev.is.standing.down.as", { member: P.who(cs, leaver) })}</p>${takes}${cs.sheet(voters)}`
+          + (count > 0 && total > 0 ? `<p data-agreed="so-far"><b>${W("screen.project.1.of.2.have.agreed", { n: String(count), total: String(total) })}</b></p>` : "") + waitLine
+          + (change && change.short === true ? `<p class="cs-gap" data-gap="refused" data-refusal="VOTES_SHORT" role="alert">${W("refusal.VOTES_SHORT")}</p>` : "")
+          + `<p class="mk-small">${W("screen.project.how.many.owners.must.agree.explain")} ${W("screen.project.a.count.you.can.check.explain")}</p></div>`)
+        + cs.sec("screen.project.how.it.changes.with.the", `${arithTable}<p class="mk-note">${W("screen.project.owners.follow.the.same.rule")} ${W("screen.project.a.project.can.always.be")}</p>`)
+        + cs.sec("screen.project.standdown.beforevote", `<div data-state-e="checks">${cs.sheet(reasonOwed)}${cs.field("project-ownerstand-reason", "shell.reason", { area: true, rec: true, help: "screen.project.ownerstand.it.is.kept.with.your" })}`
+          + `<p class="mk-note">${W("screen.project.ownerstand.a.project.with.no.owner")} ${W("screen.project.ownerstand.check.that.another.owner.remains")}</p>`
+          + `<p class="mk-small">${W("screen.project.ownerstand.help")} ${W("screen.project.ownerstand.help2")}</p></div>`);
+    })());
+  }
+
+  /* R76, R77: "Telling the network", an owner's section: the entry, the form and its preview, the ceremony, and the notice
+     once published, with its level, its next check and "Change it or stop it". Names no member; no word of it is composed from
+     the project. A section is drawn for an owner only. */
+  if (owner) {
+    const nstate = ui.notice && typeof ui.notice === "object" ? ui.notice : null;
+    const nr = later("notices", "notices", { project: id });
+    const list = nr.state === "ok" && nr.value && Array.isArray(nr.value.notices) ? nr.value.notices : [];
+    const last = list.length ? list[list.length - 1] : null;
+    const isOpen = !!(last && last.status === "open");
+    const revs = last && Array.isArray(last.revisions) ? last.revisions : [];
+    const rev = revs.length && revs[revs.length - 1] && typeof revs[revs.length - 1].json === "object" && revs[revs.length - 1].json ? revs[revs.length - 1].json : {};
+    const tell = "screen.project.notice.heading";
+    /* the five levels as the plane states them, each by its key (a table key is an identifier, never a sentence) */
+    const LEVEL = { "Very active": "network-notices.level.very_active", Active: "network-notices.level.active", "Some work": "network-notices.level.some_work",
+      Quiet: "network-notices.level.quiet", Dormant: "network-notices.level.dormant" };
+    const STATUS = { open: "network-notices.status.open", stopped: "network-notices.status.stopped", closed: "network-notices.status.closed", lapsed: "network-notices.status.lapsed" };
+    const dateOf = (iso) => (iso ? { html: cs.date(String(iso), { year: true }) } : "");
+    const ack = Array.isArray(ui["pick:notice-ack"]) && ui["pick:notice-ack"].includes("ack");
+    const refusal = ui.noticeRefusal && typeof ui.noticeRefusal === "object" ? ui.noticeRefusal : null;
+    const parts = [];
+    /* the fold "When a notice can't be prepared": the plane's refusal, in plain words (the four the drawing holds by its keys) */
+    const foldWords = (r) => {
+      const c = String(r.code || "");
+      if (c === "NOTICE_ALREADY_OPEN") return `${W("screen.project.notice.this.project.already.has.an")} ${W("screen.project.notice.change.that.one.or.stop")}`;
+      if (c === "NOTICE_SINCE_BEFORE_PROJECT") return W("screen.project.notice.the.date.is.before.the", { date: dateOf(r.from) });
+      if (c === "NOTICE_NO_GROUP_SLUG" || c === "NOTICE_NO_INSTANCE_KEY") return `${W("screen.project.notice.your.teams.public.address.or")} ${W("screen.project.notice.an.administrator.can.finish.setting")}`;
+      if (c === "NOTICE_PROJECT_CLOSED") return `${W("screen.project.notice.this.project.is.closed")} ${W("screen.project.notice.a.closed.project.can.only")}`;
+      return W("refusal." + c);
+    };
+    const fold = refusal ? `<details class="mk-details" data-fold="noticerefusal" open><summary>${W("screen.project.notice.when.a.notice.cant.be")}</summary>`
+      + `<p class="cs-gap" data-gap="refused" role="alert" data-refusal="${cs.esc(refusal.code)}">${foldWords(refusal)}</p></details>` : "";
+    if (nr.state === "loading" || nr.state === "failed") parts.push(cs.sec(tell, cs.state(nr, () => "")));
+    else if (nstate) {
+      /* state f: the form (a new notice, or the change of the open one), the public part, and the ceremony once previewed */
+      const pre = nstate.mode === "change" ? rev : {};
+      if (nstate.mode !== "stop") {
+        parts.push(cs.sec(tell, `<p class="mk-note">${W("screen.project.notice.only.an.owner.can.do")} ${W("screen.project.notice.you.sign.it.in.your")} ${W("screen.project.notice.it.names.no.member.only")}</p>`));
+        parts.push(cs.sec("screen.project.notice.what.the.notice.says",
+          cs.field("project-notice-wording", "screen.project.notice.what.the.team.is.working", { rec: true, help: "screen.project.notice.one.line.up.to.280", value: pre.wording || "" })
+          + `<p class="mk-small">${W("screen.project.notice.nothing.is.filled.in.from")}</p>`
+          + cs.field("project-notice-body", "screen.project.notice.a.few.words.more.optional", { rec: true, help: "screen.project.notice.one.line.up.to.120", value: pre.body || "" })
+          + cs.field("project-notice-matter", "screen.project.notice.the.matter.it.belongs.to", { rec: true, help: "screen.project.notice.one.line.up.to.120.2", value: pre.matter || "" })
+          + cs.field("project-notice-since", "screen.project.notice.working.on.it.since", { type: "date", help: "screen.project.notice.a.date.no.earlier.than", value: pre.since || "" })
+          + cs.checks("project-notice-collab", "screen.project.notice.legend.welcome", [{ value: "yes", key: "screen.project.notice.we.welcome.others.who.want", on: !!pre.collaborate }])
+          + `<p class="mk-small">${W("screen.project.notice.the.notice.then.points.to")}</p>`
+          + cs.act("noticeprepare", { label: "act.noticeprepare.label.project", data: { mode: "preview" }, tone: "primary" })
+          + cs.act("noticeprepare", { label: "shell.cancel", data: { mode: "close" }, tone: "quiet" })));
+      }
+      parts.push(fold);
+      if (nstate.mode !== "stop") parts.push(cs.sec("screen.project.notice.what.the.public.sees",
+        `<p>${W("screen.project.notice.the.wording.the.date.you")}</p><p>${W("screen.project.notice.the.teams.own.civicsmith.then")} ${W("screen.project.notice.work.by.the.assistant.is")}</p>`,
+        { help: "screen.project.notice.help" }));
+      const pr = nstate.prepared && typeof nstate.prepared === "object" ? nstate.prepared : null;
+      if (pr) {
+        let rv = {};
+        try { rv = JSON.parse(String(pr.revision || "{}")) || {}; } catch { rv = {}; }
+        parts.push(cs.sec("screen.project.notice.once.you.preview.it", `<div class="cs-dialog" data-notice="preview">${cs.mark("outward")} ${W("screen.connect.outward")}`
+          + `<p class="rec" data-notice="wording">${cs.esc(rv.wording || "")}</p>`
+          + (rv.handoff ? `<p class="rec" data-notice="handoff">${cs.esc(rv.handoff)}</p>` : "")
+          + `<p class="mk-small">${[rv.since ? W("screen.project.notice.working.on.it.since.3", { date: dateOf(rv.since) }) : "", rv.collaborate === true ? W("network-notices.others_working_welcome") : "",
+            STATUS[rv.status] ? W(STATUS[rv.status]) : ""].filter(Boolean).join(" · ")}</p>`
+          + `<div class="ends">${W("screen.project.notice.anyone.can.read.this.including")} ${W("screen.project.notice.stopping.the.notice.later.ends")}</div>`
+          + (pr.caution === "two_open_without_published_work" ? `<p class="mk-small" data-notice="caution">${cs.mark("gap", "undetermined", { reason: `${W("screen.project.notice.your.team.has.two.other")} ${W("screen.project.notice.you.can.still.publish.readers")}` })}</p>` : "")
+          + `<fieldset class="cs-field"><legend>${W("screen.project.notice.legend.sign")}</legend><label><input type="checkbox" id="project-notice-ack" data-shell="pick" data-table="notice-ack" data-id="ack"${ack ? " checked" : ""}> <span>${W("screen.project.notice.i.understand.that.this.is")}</span></label></fieldset>`
+          + `<p class="mk-small"><code data-notice="statement">${cs.esc(String(pr.statement || "").trim())}</code></p>`
+          + `<p class="mk-small muted">${W("screen.project.notice.your.key.signs.this.exact")} ${W("screen.project.notice.if.anything.changes.you.preview")} ${W("screen.project.notice.a.preview.is.good.for")}</p>`
+          + (ack ? cs.act("noticepost", { label: "act.noticepost.label.project", tone: "primary", icon: "signed" }) : "") + "</div>"));
+      }
+    } else if (isOpen) {
+      /* state g: the notice as published, what the team's Civicsmith worked out, and "Change it or stop it" */
+      const published = revs.length && revs[0] ? revs[0].published_at : null;
+      const lv = last.level && typeof last.level === "object" ? last.level : null;
+      const levelKey = lv ? LEVEL[String(lv.level)] || null : null;
+      const att = Array.isArray(last.attestations) && last.attestations.length ? last.attestations[last.attestations.length - 1] : null;
+      const cases = att && att.json && Array.isArray(att.json.cases) ? att.json.cases.length : 0;
+      const missed = Array.isArray(last.missed_monthlies) && last.missed_monthlies.length > 0;
+      const rows = cs.row(cs.icon("clock"), `<span class="rec" data-notice="wording">${cs.esc(rev.wording || "")}</span>`, "",
+          `${published ? W("state.item.published.name") + " " + cs.date(String(published), { year: true }) : ""}${rev.since ? " · " + W("screen.project.notice.working.on.it.since.3", { date: dateOf(rev.since) }) : ""}${rev.collaborate === true ? " · " + W("network-notices.others_working_welcome") : ""} · ${W(STATUS.open)}`)
+        + (lv ? cs.row("", `${levelKey ? `<b data-notice="level">${W(levelKey)}</b> · ` : ""}${W("screen.project.notice.as.the.teams.civicsmith.worked", { date: dateOf(lv.as_of) })}`, "",
+            `${last.next_monthly ? W("screen.project.notice.the.next.monthly.check.is", { date: dateOf(last.next_monthly) }) : ""}${last.lapse_date ? " " + W("screen.project.notice.a.notice.that.stays.dormant") : ""}`) : "")
+        + (cases > 0 ? cs.row("", `<b>${W(cases === 1 ? "screen.project.notice.1.case.published.from.this" : "screen.project.notice.cases.published.from.this", { n: String(cases) })}</b>`, "") : "");
+      /* a monthly check missed: the last level attested, with its date (a level the list does not hold names none) */
+      const missedLine = missed && lv && levelKey && lv.as_of ? `<p class="mk-small" data-notice="missed">${W("screen.project.notice.missed", { level: T(levelKey), date: dateOf(lv.as_of) })}</p>` : "";
+      parts.push(cs.sec(tell, `<p><b>${W("screen.project.notice.thenotice")}</b></p><div data-notice="published" data-status="open"${missed ? " data-missed=\"1\"" : ""}>${cs.sheet(rows)}</div>${missedLine}`
+        + `<p class="mk-small">${W("network-notices.week_counts_holds")} ${W("network-notices.counted_assistant_work")}</p>`
+        + `<p class="mk-note">${W("screen.project.notice.anyone.can.read.this.at")} ${W("screen.project.notice.each.owner.of.the.project")}</p>`, { help: "screen.project.notice.help2" }));
+      parts.push(fold);
+      parts.push(cs.sec("screen.project.notice.change.it.or.stop.it",
+        cs.field("project-notice-handoff", "screen.project.notice.if.you.stop.where.the", { rec: true, help: "screen.project.notice.one.line.up.to.280.2" })
+        + `<p class="mk-small">${W("screen.project.notice.it.is.published.with.the")}</p>`
+        + cs.act("noticeprepare", { label: "screen.project.notice.change", data: { mode: "change", notice: String(last.notice || "") } })
+        + cs.act("noticeprepare", { label: "screen.project.notice.stop", data: { mode: "stop", notice: String(last.notice || "") }, tone: "quiet" })
+        + `<p class="mk-note">${W("screen.project.notice.a.change.is.a.new")} ${W("screen.project.notice.a.stop.is.signed.too")} ${W("screen.project.notice.neither.removes.what.was.published")}</p>`));
+    } else {
+      /* the entry: a new notice is offered only where network-notices R1 allows (a closed project refuses it, in words) */
+      const stopped = last && last.status !== "open";
+      parts.push(cs.sec(tell, `<p>${W("screen.project.notice.an.owner.can.publish.a")}</p><p>${W("screen.project.notice.it.is.public.and.it")}</p>`
+        + (stopped ? `<div data-notice="last" data-status="${cs.esc(String(last.status || ""))}">${cs.sheet(cs.row("", `<span class="rec" data-notice="wording">${cs.esc(rev.wording || "")}</span>`, "",
+            [revs.length && revs[revs.length - 1].published_at ? cs.date(String(revs[revs.length - 1].published_at), { year: true }) : "",
+              STATUS[String(last.status)] ? W(STATUS[String(last.status)]) : "",
+              last.status === "lapsed" && last.lapse_date ? W("screen.project.notice.lapsed.on", { date: dateOf(last.lapse_date) }) : ""].filter(Boolean).join(" · ")))}</div>` : "")
+        + cs.act("noticeprepare", { label: "screen.project.notice.tell.the.network.we.are", data: { mode: "open" } })));
+      parts.push(fold);
+    }
+    out.push(parts.join(""));
+  }
   /* R52 (2): the foot folds the project's settings: the setting of its bar (R10) and who can find it (R28) */
   const letters2 = () => [{ value: "", text: T("screen.project.bar.unset") }].concat(["A", "B", "C", "D"].map((g) => ({ value: g, text: g })));
   const barSet = joined ? cs.state("bar", view, () =>
@@ -370,8 +554,10 @@ const acts = [
         const id = r.id + (slug ? "-" + slug : "");
         const now = clock.toISOString().split(".")[0] + "Z";
         /* an inquiry document as record-grammar's inquiry grammar asks (HEADINGS.inquiry; first legal state `open`),
-           stating its project (promotion R53); the headings are the grammar's, matched exactly (unkeyed) */
-        const heads = ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"];
+           stating its project (promotion R53); the headings are the grammar's, matched exactly: the two the grammar keys
+           (`conformance.rests`, `conformance.falsify`, as record-grammar's `HEADINGS.inquiry` reads them) by their words, the
+           rest identifiers it spells (this page is served as text, so it cannot import the grammar's list) */
+        const heads = ["## Question", view.parts.plain(cs, "conformance.rests"), "## Conclusion", view.parts.plain(cs, "conformance.falsify"), "## Session Log", "## Review Notes"];
         const lines = ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", "title: " + JSON.stringify(title),
           "current_state: open", "prior_state: null", "created: " + now, "last_updated: " + now, "project: " + project,
           "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []",
@@ -453,9 +639,35 @@ const acts = [
       if (!reason) return { refuse: "shell.reason.needed" };
       return { query: { projectId: String(view.subject || ""), setting: String(el.dataset.to || "hidden"), reason }, raw: "" };
     } },
-  /* R29: an owner stands down (or agrees to another's standing down), with her reason in the query */
-  { op: "projectownerremove", label: "act.projectownerremove.label.project", rereads: ["participants", "votes"],
-    send(view, el) { return { query: { projectId: String(view.subject || ""), handle: String(el.dataset.handle || "") }, raw: "" }; } },
+  /* R29, R75: an owner stands down (or agrees to another's standing down). Pressed on a row it opens the vote in place and
+     sends nothing; the vote itself is sent from there with her own reason, written in the field the vote draws (the reason
+     field: no writing help). A removal still short is answered `VOTES_SHORT` (its `have` a count, its `deciders` named) or
+     `CONSENSUS_REQUIRED` (its `have` and `awaiting` named): the counts are redrawn from the answer, the vote stays open. */
+  { op: "projectownerremove", label: "act.projectownerremove.label.project", reasonField: "reason", rereads: ["participants", "votes"],
+    send(view, el, cs) {
+      const handle = String(el.dataset.handle || "");
+      if (String(el.dataset.mode || "") !== "cast") { cs.set("standdown", handle); return null; }
+      const reason = String(cs.value("project-ownerstand-reason") || "").trim();
+      if (!reason) return { refuse: "shell.reason.needed" };
+      return { query: { projectId: String(view.subject || ""), handle, reason }, raw: "" };
+    },
+    done(view, answer, cs) { cs.set("consensus", null); cs.set("standdown", null); },
+    refusals: {
+      CONSENSUS_REQUIRED: (r, cs) => {
+        const nm = (x) => (x && typeof x === "object" ? (x.handle || (x.founder === true ? cs.w("member.founder.unnamed") : "")) : String(x == null ? "" : x));
+        const agreed = (Array.isArray(r && r.have) ? r.have : []).map(nm), awaiting = (Array.isArray(r && r.awaiting) ? r.awaiting : []).map(nm);
+        cs.set("consensus", { change: "remove", target: String((r && r.handle) || ""), proposed_by: "", proposed_at: null, agreed, awaiting });
+        return cs.w("screen.project.1.of.2.have.agreed", { n: String(agreed.length), total: String(agreed.length + awaiting.length) });
+      },
+      VOTES_SHORT: (r, cs) => {
+        const nm = (x) => (x && typeof x === "object" ? (x.handle || (x.founder === true ? cs.w("member.founder.unnamed") : "")) : String(x == null ? "" : x));
+        const agreed = (Array.isArray(r && r.deciders) ? r.deciders : []).map(nm);
+        /* the vote is recorded and the removal waits: the counts (`have` of `need`) are redrawn in the vote, and the refusal says so */
+        cs.set("consensus", { change: "remove", target: String((r && r.handle) || ""), proposed_by: "", proposed_at: null, agreed, awaiting: null,
+          short: true, have: Number(r && r.have) || agreed.length, need: Number(r && r.need) || 0 });
+        return cs.w("refusal.VOTES_SHORT");
+      },
+    } },
   /* R29: make an owner (or agree to it, the same act sent by her); a consensus still owed redraws the pending line */
   { op: "projectowneradd", label: "act.projectowneradd.label.project", rereads: ["participants", "votes"],
     send(view, el) { return { query: { projectId: String(view.subject || ""), handle: String(el.dataset.handle || "") } }; },
@@ -499,6 +711,95 @@ const acts = [
       const reason = String(cs.value("project-rescue-why") || "").trim();
       return { query: { projectId: String(view.subject || ""), handle: String((view.me && view.me.handle) || ""), reason }, raw: "" };
     } },
+  /* R76, R77: "Telling the network". `noticeprepare` composes the next revision and writes nothing; pressed in its `open`,
+     `change` and `close` modes it only opens or closes the form (nothing is sent). A new notice, a change (`notice` named) and a
+     stop (`final: "stopped"`, with the optional handoff) are previewed alike. What the member types is kept on a refusal;
+     no word of the notice is composed from the project. */
+  { op: "noticeprepare", label: "act.noticeprepare.label.project", rereads: [],
+    send(view, el, cs) {
+      const mode = String(el.dataset.mode || "preview");
+      const project = String(view.subject || "");
+      if (mode === "close") { cs.set("noticeRefusal", null); cs.set("notice", null); return null; }
+      if (mode === "open") { cs.set("noticeRefusal", null); cs.set("pick:notice-ack", []); cs.set("notice", { mode: "new", notice: "", prepared: null }); return null; }
+      const noticeId = String(el.dataset.notice || (view.ui.notice && view.ui.notice.notice) || "");
+      const current = () => {
+        const nv = view.ui.later && view.ui.later.notices && view.ui.later.notices.state === "ok" ? view.ui.later.notices.value : null;
+        const list = nv && Array.isArray(nv.notices) ? nv.notices : [];
+        const n = list.find((x) => x && x.notice === noticeId) || null;
+        const revs = n && Array.isArray(n.revisions) ? n.revisions : [];
+        return revs.length && revs[revs.length - 1] && revs[revs.length - 1].json ? revs[revs.length - 1].json : {};
+      };
+      if (mode === "change") { cs.set("noticeRefusal", null); cs.set("pick:notice-ack", []); cs.set("notice", { mode: "change", notice: noticeId, prepared: null }); return null; }
+      const line = (s) => !/[\r\n]/.test(s);
+      let body;
+      if (mode === "stop") {
+        const cur = current();
+        body = { project, notice: noticeId, final: "stopped", wording: String(cur.wording || ""), since: String(cur.since || ""), collaborate: cur.collaborate === true };
+        if (cur.body) body.body = String(cur.body);
+        if (cur.matter) body.matter = String(cur.matter);
+        const handoff = String(cs.value("project-notice-handoff") || "").trim();
+        if (handoff) {
+          if (handoff.length > 280 || !line(handoff)) return { refuse: "refusal.NOTICE_WORDING_MALFORMED" };
+          body.handoff = handoff;
+        }
+      } else {
+        const wording = String(cs.value("project-notice-wording") || "").trim();
+        const more = String(cs.value("project-notice-body") || "").trim();
+        const matter = String(cs.value("project-notice-matter") || "").trim();
+        const since = String(cs.value("project-notice-since") || "").trim();
+        if (!wording || wording.length > 280 || !line(wording) || more.length > 120 || !line(more) || matter.length > 120 || !line(matter)) return { refuse: "refusal.NOTICE_WORDING_MALFORMED" };
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) return { refuse: "refusal.NOTICE_SINCE_MALFORMED" };
+        if (since > new Date(cs.now()).toISOString().slice(0, 10)) return { refuse: "refusal.NOTICE_SINCE_IN_FUTURE" };
+        const collab = cs.value("project-notice-collab");
+        body = { project, wording, since, collaborate: Array.isArray(collab) && collab.includes("yes") };
+        if (more) body.body = more;
+        if (matter) body.matter = matter;
+        if (view.ui.notice && view.ui.notice.mode === "change" && noticeId) body.notice = noticeId;
+      }
+      cs.set("noticeRefusal", null);
+      return { body };
+    },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (!r || typeof r.statement !== "string") return;
+      const was = view.ui.notice && typeof view.ui.notice === "object" ? view.ui.notice : {};
+      const stopping = (() => { try { return JSON.parse(String(r.revision || "{}")).status === "stopped"; } catch { return false; } })();
+      cs.set("pick:notice-ack", []);
+      cs.set("notice", { mode: stopping ? "stop" : was.mode === "change" ? "change" : "new", notice: String(was.notice || ""),
+        prepared: { statement: r.statement, digest: String(r.digest || ""), revision: String(r.revision || ""), caution: r.caution || null, expires: String(r.expires || "") } });
+    },
+    refusals: {
+      NOTICE_ALREADY_OPEN: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_ALREADY_OPEN", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_SINCE_BEFORE_PROJECT: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_SINCE_BEFORE_PROJECT", from: String((r && r.project_created) || "") }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_SINCE_IN_FUTURE: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_SINCE_IN_FUTURE", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_NO_GROUP_SLUG: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_NO_GROUP_SLUG", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_NO_INSTANCE_KEY: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_NO_INSTANCE_KEY", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_PROJECT_CLOSED: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_PROJECT_CLOSED", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_WORDING_MALFORMED: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_WORDING_MALFORMED", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_SINCE_MALFORMED: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_SINCE_MALFORMED", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_NOT_OPEN: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_NOT_OPEN", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_UNCHANGED: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_UNCHANGED", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_SINCE_EARLIER: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_SINCE_EARLIER", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+      NOTICE_NOT_THE_OWNER: (r, cs) => { cs.set("noticeRefusal", { code: "NOTICE_NOT_THE_OWNER", from: "" }); return cs.w("screen.project.notice.when.a.notice.cant.be"); },
+    } },
+  /* R76 (network-notices R4): the previewed statement signed in the shell signer, in the notice namespace; the digest, the
+     signature and the acknowledgement are posted. A declined signing sends nothing; nothing is drawn as published before the
+     answer. The signature is the shell signer's alone: no key, passphrase or signature is kept by this screen. */
+  { op: "noticepost", label: "act.noticepost.label.project", outward: true, rereads: [],
+    send: async (view, el, cs) => {
+      const pr = view.ui.notice && view.ui.notice.prepared;
+      if (!pr || !pr.statement) return null;
+      const ticked = Array.isArray(view.ui["pick:notice-ack"]) && view.ui["pick:notice-ack"].includes("ack");
+      if (!ticked) return null;
+      const signed = await cs.signer.sign([{ label: String(pr.digest || ""), bytes: new TextEncoder().encode(String(pr.statement)), namespace: "bio-working-on" }]);
+      if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== 1) return { refuse: "signing.ceremony.declined" };
+      return { body: { digest: pr.digest, signature: signed.signatures[0], acknowledged: true } };
+    },
+    done(view, answer, cs) {
+      cs.set("pick:notice-ack", []);
+      cs.set("notice", null);
+      cs.set("later", Object.assign({}, view.ui.later, { notices: null }));
+    } },
 ];
 
 /** The keys the project screen may draw (R44: keys only). */
@@ -506,7 +807,7 @@ const words = Object.freeze([
   "screen.project.name", "screen.project.purpose", "screen.projectai.name",
   ...["promote", "drawquestion", "findin", "projectbarset", "projectinvite", "projectjoin", "planopen", "projectvisibilityset",
     "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue",
-    "projectrequest", "projectrequestwithdraw"]
+    "projectrequest", "projectrequestwithdraw", "noticeprepare", "noticepost"]
     .map((op) => "act." + op + ".label.project"),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.grade.reading", "mark.strength.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
@@ -533,7 +834,39 @@ const words = Object.freeze([
     "question.label", "question.help", "question.empty", "account.head", "account.project", "account.member", "account.off",
     "account.where", "members.head", "members.invited", "members.who", "invite.label", "invite.empty", "notjoined",
     "notjoined.owners", "plan.label", "plan.about", "plan.empty", "plan.head"].map((k) => "screen.project." + k),
-]);
+  /* R75, R76, R77 (T51): the stand-down vote, "Telling the network", the published notice and the refusals they draw */
+  ...["you.are.an.owner.of", "an.owner.is.named.dev", "standing.down.is.possible.at", "with.2.owners.an.owner", "this.is.a.vote.you",
+    "at.2.owners.the.departing", "a.reason.in.your.words", "nothing.is.drafted.or.suggested", "it.is.kept.with.your", "a.project.with.no.owner",
+    "check.that.another.owner.remains", "help", "help2"].map((k) => "screen.project.ownerstand." + k),
+  "screen.project.2.of.2.the.departing", "screen.project.the.last.owner.stays", "screen.project.both.agree.a.resignation.the",
+  "screen.project.how.it.changes.with.the", "screen.project.owners.follow.the.same.rule", "screen.project.a.project.can.always.be",
+  "screen.project.how.many.owners.must.agree.explain", "screen.project.a.count.you.can.check.explain", "screen.project.1.of.2.have.agreed", "screen.project.agree.dev.stands.down.as", "screen.project.by.standing.down.17.october",
+  "screen.project.the.change.waits.for.ana", "screen.project.this.takes.2.of.2", "screen.project.with.two.owners.standing.down",
+  ...["heading", "beforevote", "takes", "agreed", "notyet"].map((k) => "screen.project.standdown." + k),
+  ...["owners", "takes", "why"].map((k) => "screen.project.scale.head." + k), "screen.project.scale.now", "screen.project.scale.takes", "screen.project.scale.who",
+  "screen.project.dev.is.standing.down.as", "screen.project.ownerstand.required",
+  ...["heading", "legend.welcome", "legend.sign", "thenotice", "change", "stop", "lapsed.on", "missed", "your.team.has.two.other", "tell.the.network.we.are", "an.owner.can.publish.a", "it.is.public.and.it", "only.an.owner.can.do",
+    "you.sign.it.in.your", "it.names.no.member.only", "what.the.notice.says", "what.the.team.is.working", "one.line.up.to.280",
+    "nothing.is.filled.in.from", "a.few.words.more.optional", "one.line.up.to.120", "the.matter.it.belongs.to", "one.line.up.to.120.2",
+    "working.on.it.since", "a.date.no.earlier.than", "we.welcome.others.who.want", "the.notice.then.points.to", "when.a.notice.cant.be",
+    "what.the.public.sees", "the.wording.the.date.you", "the.teams.own.civicsmith.then", "work.by.the.assistant.is", "help", "help2",
+    "once.you.preview.it", "working.on.it.since.3", "anyone.can.read.this.including", "stopping.the.notice.later.ends",
+    "you.can.still.publish.readers", "i.understand.that.this.is", "your.key.signs.this.exact", "if.anything.changes.you.preview",
+    "a.preview.is.good.for", "as.the.teams.civicsmith.worked", "the.next.monthly.check.is", "a.notice.that.stays.dormant",
+    "1.case.published.from.this", "cases.published.from.this", "anyone.can.read.this.at", "each.owner.of.the.project", "change.it.or.stop.it",
+    "if.you.stop.where.the", "one.line.up.to.280.2", "it.is.published.with.the", "a.change.is.a.new", "a.stop.is.signed.too",
+    "neither.removes.what.was.published", "this.project.already.has.an", "change.that.one.or.stop", "the.date.is.before.the",
+    "your.teams.public.address.or", "an.administrator.can.finish.setting", "this.project.is.closed", "a.closed.project.can.only"].map((k) => "screen.project.notice." + k),
+  "screen.connect.outward", "network-notices.others_working_welcome",
+  ...["very_active", "active", "some_work", "quiet", "dormant"].map((k) => "network-notices.level." + k), ...["open", "stopped", "closed", "lapsed"].map((k) => "network-notices.status." + k),
+  "network-notices.week_counts_holds", "network-notices.counted_assistant_work", "state.item.published.name", "mark.outward.means",
+  "mark.gap.refused.name", "mark.gap.refused.means", "shell.icon.clock", "shell.cancel", "signing.ceremony.declined", "conformance.rests", "conformance.falsify",
+  ...["NOTICE_ALREADY_OPEN", "NOTICE_NOT_OPEN", "NOTICE_NOT_THE_OWNER", "NOTICE_NO_GROUP_SLUG", "NOTICE_NO_INSTANCE_KEY", "NOTICE_PROJECT_CLOSED",
+    "NOTICE_SIGNATURE_REFUSED", "NOTICE_SINCE_BEFORE_PROJECT", "NOTICE_SINCE_EARLIER", "NOTICE_SINCE_IN_FUTURE", "NOTICE_SINCE_MALFORMED",
+    "NOTICE_STALE", "NOTICE_UNCHANGED", "NOTICE_WARNING_NOT_ACKNOWLEDGED", "NOTICE_WORDING_MALFORMED", "MACHINE_CANNOT_POST_NOTICE",
+    "NO_REASON", "ALREADY_VOTED", "LAST_OWNER", "LAST_COMMITTED_OWNER", "TARGET_CANNOT_VOTE", "VOTES_SHORT", "NOT_AN_OWNER", "NOT_THE_OWNER",
+    "NO_SUCH_HANDLE", "PROJECT_ACT_NOT_THE_OWNER", "PROJECT_ACT_NOT_A_PARTICIPANT"].map((c) => "refusal." + c),
+  ]);
 
 /** The project screen (interface-shell R21), with the module's shared readers as its parts. */
 export function projectScreen(parts) {

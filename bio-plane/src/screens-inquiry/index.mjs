@@ -6,6 +6,7 @@
 
 import { COMMON } from "./common.mjs";
 import { projectScreen } from "./project.mjs";
+import { dashProjectScreen } from "./dashproject.mjs";
 import { questionScreen } from "./question.mjs";
 import { documentScreen } from "./document.mjs";
 import { ASSISTANT_SCREEN, MODE_BOUNDS, REFUSALS, WITHHELD } from "./assistant.mjs";
@@ -14,8 +15,8 @@ import { PROJECTAI_SCREEN } from "./projectai.mjs";
 /** interface-shell R5's own rows: none since R44 (every word is `words.json`'s, through setup-words). */
 export const SCREEN_WORDS = Object.freeze([]);
 
-/** interface-shell R21: the five registry screens this module draws, `project`, `question`, `document`, `assistant`
+/** interface-shell R21: the registry screens this module draws, `project`, `dash-project` (R79), `question`, `document`, `assistant`
  *  and (R14) `projectai`, each with the readers it shares (common.mjs) as its parts; the question's "Ask the assistant
  *  to look" opens its run with the dock's bounds (R33, R41). */
-export const SCREENS = Object.freeze([projectScreen(COMMON), questionScreen(Object.freeze({ ...COMMON, bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD })),
+export const SCREENS = Object.freeze([projectScreen(COMMON), dashProjectScreen(COMMON), questionScreen(Object.freeze({ ...COMMON, bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD })),
   documentScreen(COMMON), ASSISTANT_SCREEN, PROJECTAI_SCREEN]);

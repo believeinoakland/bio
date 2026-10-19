@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word,
+import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
   SCREENS, P, Q, D } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
@@ -38,7 +38,7 @@ test("R2 state a: its words, two grades and the phrase against the project's bar
     "two grades, never one score; an ungraded testimony axis is not drawn");
   assert.ok(says(box, "screen.question.strength.against", { capture: "B", connection: "B" }));
   assert.ok(says(box, "screen.question.strength.short") && says(box, "mark.scale.connection.name"));
-  assert.ok(says(box, "screen.question.strength.weakest", { weakest: "Administrative Instruction 4.12" }));
+  assert.ok(says(box, "screen.question.strength.weakest", { weakest: POLICY }));
   assert.ok(says(box, "screen.question.strength.raise", { raise: "a work-order number on both would raise it to B" }));
   assert.ok(says(box, "screen.question.strength.two"));
   assert.deepEqual(rawKeys(p.root()), []);
@@ -120,9 +120,9 @@ test("R24 R54 the read-back: one single part and one two-passage part in both sh
       strength_now: { capture: { grade: "B" }, connection: { grade: "C" } } }) } });
   const r = section(p, "question.rests.title");
   assert.ok(says(r, "question.rests.any"));
-  assert.ok(r.textContent.includes("Administrative Instruction 4.12"), "the single part, by its title as the reading shown names it");
+  assert.ok(r.textContent.includes(POLICY), "the single part, by its title as the reading shown names it");
   assert.ok(says(r, "question.rests.all", { passages: "The count, The audit" }));
-  assert.ok(says(r, "question.origin.shared", { passages: "Administrative Instruction 4.12, The count, The audit", origin: "Public Works" }));
+  assert.ok(says(r, "question.origin.shared", { passages: POLICY + ", The count, The audit", origin: "Public Works" }));
   assert.ok(r.textContent.includes(lead("question.rests.set")) && r.textContent.includes("dev"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("the audit stands alone"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B/C"), "the strength before, as the change records it");
@@ -154,8 +154,8 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
   const p = await open(at, { ...A, plane: { basisversions: answer, ...acts } });
   const s = section(p, "question.readings.title");
   const row = (name) => section(p, "question.readings.title").querySelector(`[data-reading="${name}"]`);
-  assert.ok(says(row("Seven-day standard"), "question.reading.accepted", { who: "dev", date: "6 October 2026" }));
-  assert.ok(says(row("Two counts"), "question.reading.weighing", { who: "ana", date: "7 October 2026", reason: "it may hold" }));
+  assert.ok(says(row("Seven-day standard"), "question.reading.accepted", { who: "dev", date: day("2026-10-06") }));
+  assert.ok(says(row("Two counts"), "question.reading.weighing", { who: "ana", date: day("2026-10-07"), reason: "it may hold" }));
   assert.ok(row("The audit alone").textContent.includes(lead("question.reading.suggested")));
   assert.ok(says(row("Seven-day standard"), "question.reading.standson", { project: "Pothole repairs" }));
   assert.ok(says(row("Seven-day standard"), "question.reading.strength") && row("Seven-day standard").querySelector('[data-whatif="no"]'));
@@ -326,7 +326,7 @@ test("R41 state g: concluded, who and when, the reading's words, what would chan
   const p = await open(at, { ...A, plane: { basisversions: ok(BASIS({ conclusion: { claim: { text: "No: 1 in 10 is not repaired in time." }, by: "member:dev",
     at: "2026-10-13T09:00:00Z", falsifier: "logs showing repairs dated later" }, conclusion_stance: "concluded" })) } });
   const g = section(p, "question.concluded.heading");
-  assert.ok(g.textContent.includes(lead("question.concluded.by")) && g.textContent.includes("dev") && g.textContent.includes("13 October 2026"));
+  assert.ok(g.textContent.includes(lead("question.concluded.by")) && g.textContent.includes("dev") && g.textContent.includes(day("2026-10-13")));
   assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time."));
   assert.ok(says(g, "question.concluded.falsifier", { falsifier: "logs showing repairs dated later" }));
   assert.equal(g.querySelectorAll(".cs-grade").length, 2);
@@ -466,7 +466,7 @@ test("R2 R39 (K3402) the question says who opened it, by handle from the record'
     "INFO-2026-0002-2026-118": { "bundle.md": "---\nid: INFO-2026-0002-2026-118\ntitle: \"The 2026 performance report\"\n---\n" } },
     plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
   const sub = main(p).querySelector(".mk-sub");
-  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "dev", date: "3 October 2026", project: "" }).trim()), "the opener filled");
+  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "dev", date: day("2026-10-03"), project: "" }).trim()), "the opener filled");
   assert.doesNotMatch(main(p).textContent, /\{name\}/);
   assert.ok(main(p).textContent.includes("The 2026 performance report"), "the document's title");
   for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, /INFO-2026-0002-2026-118/, "never the record id");

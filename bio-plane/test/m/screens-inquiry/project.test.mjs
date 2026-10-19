@@ -7,6 +7,9 @@ import { NEEDS } from "../../../src/op-declarations/index.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, lead, word, projectWith, SCREENS, P, Q, Q2 } from "./fixtures.mjs";
 
 const PROJECT = SCREENS.find((s) => s.id === "project");
+/* a day as `cs.date` draws it (`date.daymonthyear`, `date.month.*`, DEC-333), read through the same words, never copied */
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const day = (iso) => { const [y, m, d] = iso.slice(0, 10).split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + MONTHS[m - 1]), year: String(y) }); };
 const at = () => "/app/project/" + P;
 const options = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 /* mai (the harness's member) as an owner of the project, beside dev */
@@ -190,8 +193,8 @@ test("R28 who can find it: the setting, its history newest first ending with how
   const s = section(p, "project.visibility.title");
   assert.ok(says(s, "project.visibility.discoverable"));
   assert.ok(says(s.querySelector('[data-visibility="change"]'), "project.visibility.history",
-    { change: word("project.visibility.discoverable"), who: "dev", date: "4 October 2026", reason: "the team should know" }));
-  assert.ok(says(s.querySelector('[data-visibility="started"]'), "project.visibility.started", { setting: word("project.visibility.hidden"), date: "1 October 2026" }));
+    { change: word("project.visibility.discoverable"), who: "dev", date: day("2026-10-04"), reason: "the team should know" }));
+  assert.ok(says(s.querySelector('[data-visibility="started"]'), "project.visibility.started", { setting: word("project.visibility.hidden"), date: day("2026-10-01") }));
   fill(p, { "project-visibility-why": "a counsel matter now" });
   await press(p, "projectvisibilityset");
   assert.deepEqual([p.byOp("projectvisibilityset")[0].query.projectId, p.byOp("projectvisibilityset")[0].query.setting, p.byOp("projectvisibilityset")[0].query.reason],
@@ -213,8 +216,8 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   const rows = s.querySelectorAll(".cs-row");
   assert.ok(says(rows[0], "member.founder.unnamed") && says(rows[0], "project.member.owner"));
   assert.ok(!/\badmin\b/.test(s.textContent), "never admin");
-  assert.ok(says(rows[1], "project.member.since", { date: "2 October 2026" }));
-  assert.ok(says(rows[2], "project.member.joined", { date: "3 October 2026" }) && says(rows[2], "project.member.member"));
+  assert.ok(says(rows[1], "project.member.since", { date: day("2026-10-02") }));
+  assert.ok(says(rows[2], "project.member.joined", { date: day("2026-10-03") }) && says(rows[2], "project.member.member"));
   assert.deepEqual(actsIn(rows[1]), ["projectownerremove"], "her own row: stand down");
   assert.deepEqual(actsIn(rows[2]).sort(), ["projectowneradd", "projectremove"], "a member's row, to an owner");
   assert.ok(says(s, "project.owners.rule"));
@@ -223,8 +226,9 @@ test("R29 R40 R54 members: one row each with role, the founder unnamed by key, n
   await press(p, "projectremove", { within: section(p, "screen.project.members.head").querySelectorAll(".cs-row")[2] });
   assert.equal(p.byOp("projectremove")[0].query.handle, "ana");
   assert.ok(!("comment" in p.byOp("projectremove")[0].query), "an empty reason is not refused, and none is sent");
-  await press(p, "projectownerremove", { within: section(p, "screen.project.members.head").querySelectorAll(".cs-row")[1], reason: "I step back" });
-  assert.deepEqual([p.byOp("projectownerremove")[0].query.handle, p.byOp("projectownerremove")[0].query.reason], ["mai", "I step back"]);
+  /* R75: "Stand down as owner…" opens the vote in place and sends nothing (the vote itself is t51-project.test.mjs's) */
+  await press(p, "projectownerremove", { within: section(p, "screen.project.members.head").querySelectorAll(".cs-row")[1] });
+  assert.equal(p.byOp("projectownerremove").length, 0, "opened, not sent");
   /* control: with a handle, the handle */
   assert.ok(rows[1].textContent.includes("mai"));
   /* R54: a null date draws no date, never "since null" */
@@ -237,7 +241,7 @@ test("R29 three owners with one change agreed by one draw waiting for the other 
   const votes = ok({ ok: true, projectId: P, changes: [{ change: "add", target: "ana", proposed_by: "dev", proposed_at: "2026-10-09T09:00:00Z", agreed: ["dev"], awaiting: ["mai", "rosa"] }] });
   const p = await open(at(), { plane: { ...OWNERS, projectownervotes: votes, projectowneradd: ok({ ok: true }) } });
   const s = section(p, "screen.project.members.head");
-  assert.ok(says(s.querySelector('[data-pending="add"]'), "project.owners.pending", { who: "ana", by: "dev", date: "9 October 2026", agreed: "dev", awaiting: "mai, rosa" }));
+  assert.ok(says(s.querySelector('[data-pending="add"]'), "project.owners.pending", { who: "ana", by: "dev", date: day("2026-10-09"), agreed: "dev", awaiting: "mai, rosa" }));
   const agree = s.querySelectorAll('button[data-act="projectowneradd"]').find((b) => says(b, "project.owners.agree", { who: "ana" }));
   assert.ok(agree, "she agrees by the same act");
   /* control: a non-owner sees no owner act */
@@ -275,7 +279,7 @@ test("R30 state c: an administrator at a hidden project's existence, its owners 
   const dated = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null), projectparticipants: refusedIn("NO_SUCH_PROJECT"),
     affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownersgone: ok({ ok: true, projectId: P, gone: true, since: "2026-09-30T09:00:00Z" }) } }), whoami: ok(ADMIN) } } });
   assert.equal(dated.byOp("projectownersgone")[0].query.projectId, P);
-  assert.ok(section(dated, "project.rescue.title", { date: "30 September 2026" }));
+  assert.ok(section(dated, "project.rescue.title", { date: day("2026-09-30") }));
   /* control: refused by its words (a project kept for its owner alone) */
   const r = await open(at(), { boot: { plane: { ...plane({ plane: { projectstage: seenWith, image: ok(null),
     affordances: ok({ ok: true, roster: { rescue_open: true } }), projectownerrescue: refusedIn("PROJECT_SCOPE_OWN", "A project kept for one member alone is never taken over.") } }), whoami: ok(ADMIN) } } });
@@ -293,7 +297,7 @@ test("R1 R60 a member who has not joined: a findable project shows its name with
   /* her open request is said, with Withdraw */
   const asked = await open(at(), { plane: { projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", request: { state: "open", asked: "2026-10-05T09:00:00Z", closed: null } }] }) } });
   assert.deepEqual(actsIn(main(asked)), ["projectrequestwithdraw"]);
-  assert.ok(says(main(asked), "projects.request.asked", { date: "5 October 2026" }));
+  assert.ok(says(main(asked), "projects.request.asked", { date: day("2026-10-05") }));
   await press(asked, "projectrequestwithdraw");
   assert.equal(asked.byOp("projectrequestwithdraw")[0].query.projectId, P);
   /* a hidden project she is not in: unavailable (state b), nothing else of it */
