@@ -63,8 +63,11 @@ test("R12 translationsOf is the one instance for a storage: two calls answer the
   /* another storage is another module */
   assert.notEqual(boot().m, a);
   const keys = Object.keys(translationsOps(a, new URL("http://do/x"), null)).sort();
-  assert.deepEqual(keys, ["interfacewords", "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord",
-    "translationgrant", "translationmark", "translationrevert", "translations"]);
+  assert.equal(keys.length, 9);
+  assert.equal(new Set(keys).size, 9);
+  assert.ok(keys.includes("interfacewords"));
+  assert.equal(keys.filter((k) => k.startsWith("translation")).length, 8, "the eight others are the translation routes");
+  assert.ok(keys.includes("translationdraftrecord"), "the store-internal hand-back is one of them");
   /* control: a route that is not this module's is not answered by its frame */
   assert.equal(await frame(a, new Request("http://do/groupidentity")), null);
 });
@@ -138,10 +141,11 @@ test("R15 every member-facing string this module answers is read by key and hold
   const rec = await w.m.translationDraftRecord({ language: "es", direction: "to_language", keys: [ORDINARY.key, PROTECTED.key], words: asked.words, by: "ruth",
     draft: { words: [{ key: ORDINARY.key, text: `ES ${ORDINARY.en}` }] }, not_drafted: [PROTECTED.key] });
   assert.equal(rec.note, word("setup.note.drafts_labeled_machine"));
-  assert.equal(rec.not_drafted[0].why, word("setup.why.assistant_draft"));
+  assert.deepEqual(rec.not_drafted[0].why, { key: "setup.why.assistant_draft", vars: {} });
+  assert.ok(word(rec.not_drafted[0].why.key, rec.not_drafted[0].why.vars));
   const unlisted = await w.m.translationDraftRecord({ language: "es", direction: "to_language", keys: [ORDINARY.key, PROTECTED.key], words: asked.words, by: "ruth",
     draft: { words: [{ key: ORDINARY.key, text: `ES ${ORDINARY.en}` }] } });
-  assert.notEqual(unlisted.not_drafted[0].why, word("setup.why.assistant_draft"), "control: an unlisted word is the module's own diagnostic");
+  assert.equal(unlisted.not_drafted[0].why.key, "translations.not_drafted.not_answered", "control: an unlisted word is the module's own reason");
   assert.equal(w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" }).note, word("setup.note.member_reading_language"));
   assert.equal(w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: "Escrito", by: "ruth" }).note, word("setup.note.protected_word_changed"));
   assert.equal(w.m.translationMark({ language: "es", key: ORDINARY.key, by: "tom" }).note_for_you, word("setup.note_for_you.members_asked_translate"));

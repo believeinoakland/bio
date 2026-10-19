@@ -158,7 +158,7 @@ test("R88 a notice that is no well-formed signed JSON object records MALFORMED a
   w.prov.answer = () => new Response(new ReadableStream({ pull(c) { pulls += 1; c.enqueue(new Uint8Array(16384).fill(120)); if (pulls > 400) c.close(); } }), { status: 200 });
   const big = await w.tick();
   assert.equal(big.updatecheck.outcome, "MALFORMED");
-  assert.match(big.updatecheck.detail, /over 65536 bytes/);
+  assert.equal(big.updatecheck.detail, word("instance-setup.updates.detail.too_big", { bytes: RELEASE_NOTICE_MAX_BYTES }));
   assert.ok(pulls * 16384 <= RELEASE_NOTICE_MAX_BYTES + 3 * 16384, `read ${pulls * 16384} bytes of a body without end`);
   assert.equal(w.count("release_notices"), 0);
   /* control: a notice just inside the cap is read whole */
@@ -178,7 +178,7 @@ test("R88 a failed fetch records unreachable, stores no notice and raises nothin
   w.prov.answer = () => new Response(null, { status: 302, headers: { location: "https://elsewhere.example/NOTICE.json" } });
   const redirected = await outcome();
   assert.equal(redirected.outcome, "unreachable");
-  assert.match(redirected.detail, /redirected \(HTTP 302\); no redirect is followed/);
+  assert.equal(redirected.detail, word("instance-setup.updates.detail.redirected", { status: 302 }));
   assert.equal(w.prov.fetched.length, 4);
   assert.ok(w.prov.fetched.every((f) => f.url === RELEASE_NOTICE_ADDRESS), "the redirect target was never fetched");
   w.prov.governorHold = "too many asks";

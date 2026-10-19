@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { world, seeded, registration, step, V } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const F = V("frank"), E = V("erin");
 const src = (f) => readFileSync(new URL(`./source/${f}`, import.meta.url), "utf8");
@@ -59,9 +60,10 @@ test("R31 (T47; N992; DEC-198 (1), DEC-199 (6)) the registry carries DEC-198's a
 });
 
 test("R35 (K3062, K3127, K3137; DEC-200–DEC-217; amended by R38, R41) the registry as PR #33's head held it, re-taken at the design commit named at T50's START (7be06eb4cb), named as the source: 71 screens, the two remaining dash-* treatments registered (dash-home is gone, R38); the owed acts passwordreset, passwordresetlink, grouplanguagesset, grouplogoset and signrequest registered as those ops once declared, projectaikeepaway as today; wizardsAt(\"group\") and op=wizardcheck admit grouplogoset; control: hostingaccess on setup is refused", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/registry.json",
+  /* R44 moved the pin on to 8c5e692e19 and its 77 screens; this test's own claim is the registry the file then held, now the carried one */
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "20c8001300", path: "docs/development/ux-substrate/screens/registry.json",
                                                 sha256: createHash("sha256").update(src("registry.json"), "utf8").digest("hex") });
-  assert.equal(wz.SCREEN_REGISTRY.length, 71);
+  assert.equal(wz.SCREEN_REGISTRY.length, 77);
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id));
   const w = real();
   const registered = new Map(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
@@ -89,7 +91,7 @@ test("R35 (K3062, K3127, K3137; DEC-200–DEC-217; amended by R38, R41) the regi
 });
 
 test("R32 (T47; N992; DEC-198 (2); K2241) Connect your Claude account's version 3, from a0fab7abf0, approved by BOB on the date of the adoption and authored by the Civicsmith library: its code step sends the code by subscriptionsignin, a step for an API key (accountreferenceset) follows, and its last step disconnects by subscriptiondisconnect, as the file words them; id, name, required and start kept; version 2 updated, naming it, readable and not offered; control: wizardsAt(\"connect\") answers the latest version (4 since the re-take, R42), version 3 readable and updated, and no offered version's last step is accountreferenceremove", () => {
-  const c = by("Connect your Claude account");
+  const c = by(word("wizard.WIZ-74328804ddae3503.name"));
   const file = LIB_T47A.scripts.find((s) => s.name === c.name);
   const v3 = { version: 3, ...c.earlier[2] };   /* R42's re-take made version 4 of it, version 3 kept whole */
   assert.deepEqual([c.id, c.name, c.required, c.start, v3.version, v3.source, v3.author, v3.approved],
@@ -116,7 +118,7 @@ test("R32 (T47; N992; DEC-198 (2); K2241) Connect your Claude account's version 
 });
 
 test("R33 (T47; N992; DEC-198 (4); R41) FRONT_DOORS are library.json's doors at the design commit named at T50's START (7be06eb4cb; the same five as at a0fab7abf0), frozen: five, problem, person, money, read and tip, each {door, scripts} naming the file's script ids in its order; with every named script offered startFrom answers the five in that order; with Follow the money withdrawn, money names only Get a record; with Get a record withheld too (no @records-request template offered), money is left out", () => {
-  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: "7be06eb4cb", path: "docs/development/ux-substrate/screens/library.json",
+  assert.deepEqual(wz.FRONT_DOORS_SOURCE, { commit: "20c8001300", path: "docs/development/ux-substrate/screens/library.json",
                                             sha256: createHash("sha256").update(src("library-7be06eb4cb.json"), "utf8").digest("hex") });
   assert.deepEqual(wz.FRONT_DOORS, LIB_T50.doors.filter((d) => d.door !== "elsewhere").map((d) => ({ door: d.door, scripts: d.scripts })));
   assert.deepEqual(wz.FRONT_DOORS, LIB_T47A.doors.map((d) => ({ door: d.door, scripts: d.scripts })), "the five are those of a0fab7abf0");
@@ -134,12 +136,12 @@ test("R33 (T47; N992; DEC-198 (4); R41) FRONT_DOORS are library.json's doors at 
   assert.deepEqual(five(all.wz.startFrom({ viewer: F }).doors), wz.FRONT_DOORS.map((d) => ({ door: d.door, scripts: [...d.scripts] })));
   assert.deepEqual(all.snapshot(), before, "writes nothing");
   /* Follow the money withdrawn (not in the library registered) */
-  const money = by("Follow the money"), get = by("Get a record");
+  const money = by(word("wizard.WIZ-df0b5c4d0ffcdde7.name")), get = by(word("wizard.WIZ-cb0ad18a17a04233.name"));
   const without = real({ library: wz.CIVICSMITH_LIBRARY.filter((e) => e.id !== money.id) });
   const doors = five(without.wz.startFrom({ viewer: F }).doors);
-  assert.deepEqual(names(doors), [["problem", ["Your first question", "Get a record", "Check a claim"]], ["person", ["Your first question", "Build a timeline"]],
-                                  ["money", ["Get a record"]], ["read", ["Check a claim", "Follow a proceeding", "Use another team's case"]],
-                                  ["tip", ["Check a claim", "Build a timeline"]]]);
+  assert.deepEqual(names(doors), [["problem", [word("wizard.WIZ-86b7f4007e3b0e3c.name"), word("wizard.WIZ-cb0ad18a17a04233.name"), word("wizard.WIZ-33b5887790b7561b.name")]], ["person", [word("wizard.WIZ-86b7f4007e3b0e3c.name"), word("wizard.WIZ-9f2b79390d6940a0.name")]],
+                                  [word("label.connectionkinds.money_flow"), [word("wizard.WIZ-cb0ad18a17a04233.name")]], ["read", [word("wizard.WIZ-33b5887790b7561b.name"), word("wizard.WIZ-a15d174f7a2c1dc5.name"), word("wizard.WIZ-4cdbd26939d4cc6d.name")]],
+                                  ["tip", [word("wizard.WIZ-33b5887790b7561b.name"), word("wizard.WIZ-9f2b79390d6940a0.name")]]]);
   /* Get a record withheld too: no @records-request template offered */
   const neither = real({ library: wz.CIVICSMITH_LIBRARY.filter((e) => e.id !== money.id), templates: "unreviewed" });
   const left = five(neither.wz.startFrom({ viewer: F }).doors);
@@ -147,9 +149,9 @@ test("R33 (T47; N992; DEC-198 (4); R41) FRONT_DOORS are library.json's doors at 
   assert.ok(!left.some((d) => d.scripts.includes(get.id) || d.scripts.includes(money.id)));
   assert.deepEqual(neither.wz.startFrom({ viewer: "nobody" }).doors.map((d) => d.door), ["elsewhere"], "a viewer the rule admits to nothing is offered no script door, only the way out (R37)");
   /* a door names any offered script, a required one included, though the guided starts leave it out */
-  const req = real({ library: wz.CIVICSMITH_LIBRARY.map((e) => (e.name === "Check a claim" ? { ...e, required: true } : e)) });
+  const req = real({ library: wz.CIVICSMITH_LIBRARY.map((e) => (e.name === word("wizard.WIZ-33b5887790b7561b.name") ? { ...e, required: true } : e)) });
   const answered = req.wz.startFrom({ viewer: F });
-  const check = by("Check a claim");
+  const check = by(word("wizard.WIZ-33b5887790b7561b.name"));
   assert.ok(!answered.scripts.some((x) => x.id === check.id), "a required script is no guided start");
   assert.deepEqual(five(answered.doors).filter((d) => d.scripts.includes(check.id)).map((d) => d.door), ["problem", "read", "tip"], "it stays behind its doors");
 });
@@ -218,7 +220,7 @@ test("R34 the label follows ai-runs' admission, read at each call: a part the ba
 
 test("R36 (K2241; DEC-205 (3), DEC-207 (10), DEC-208 (2), DEC-213 (1)) Set up and claim and Publication ceremony as PR #33's head (f90b187c7b) worded them are adopted as version 3 (Set up and claim's since followed by versions 4 and 5, R38, R42; the ceremony's by version 4, R42), approved by BOB: Set up and claim's step 1 names the Workers Paid plan and its step 14 is hostingaccessset; the ceremony's steps 9–11 as the file re-words them; each keeps its id, name, required and start; versions 1 and 2 updated, each naming its successor, readable and not offered", () => {
   const BOB = { by: "BOB", at: "2026-10-14", ruling: "K2241" };
-  const setup = by("Set up and claim"), ceremony = by("Publication ceremony");
+  const setup = by(word("wizard.WIZ-c887066cc553dd41.name")), ceremony = by(word("wizard.WIZ-426b9c2e8b128b6b.name"));
   for (const e of [setup, ceremony]) {
     const f = LIB_T47.scripts.find((s) => s.name === e.name);
     /* the version R36 adopts: the entry's own for the ceremony, the earlier version 3 of Set up and claim (R38's version 4 follows it) */
@@ -234,7 +236,7 @@ test("R36 (K2241; DEC-205 (3), DEC-207 (10), DEC-208 (2), DEC-213 (1)) Set up an
   assert.deepEqual([setup3.steps[13].screen, setup3.steps[13].act], ["setup", "hostingaccessset"]);
   assert.equal(setup.earlier[1].steps[13].act, "hostingaccess", "control: version 2's step 14");
   for (const i of [8, 9, 10]) {
-    const want = fileStep(LIB_T47, "Publication ceremony", i);
+    const want = fileStep(LIB_T47, word("wizard.WIZ-426b9c2e8b128b6b.name"), i);
     const c3 = ceremony.earlier[2].steps[i];   /* version 3, the one R36 adopts */
     assert.deepEqual([c3.act, c3.what, c3.why], [want.act, want.what, want.why], `step ${i + 1}`);
     assert.notDeepEqual([c3.what, c3.why], [ceremony.earlier[1].steps[i].what, ceremony.earlier[1].steps[i].why], `step ${i + 1} re-worded`);
