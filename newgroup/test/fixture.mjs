@@ -230,7 +230,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
 
 /* ---- the world: one install or update, end to end ---- */
 export async function run({ slug, mode = "install", ai, cookie: givenCookie, state: givenState,
-  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
+  accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, tokenFlaky = 0, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
   lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {},
@@ -359,7 +359,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (!rel || tagged) return new Response("not found", { status: 404 });
       return p in rel.assets ? new Response(rel.assets[p]) : new Response("gone", { status: 404 });
     } },
-    { m: (u) => u === CFG.TOKEN, f: () => tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
+    { m: (u) => u === CFG.TOKEN, f: () => tokenFlaky-- > 0 ? new Response("unavailable", { status: 503 }) : tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
       : jres({ access_token: TOK, ...(grantedScope === null ? {} : { scope: grantedScope }) }) },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: (u, init) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];

@@ -504,6 +504,44 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   assert.equal(under.page.status("room"), "ok");
 });
 
+test("R70 an update checks the account's limits too when the chosen release adds members, classes, buckets or containers: stopped before an upload, naming the limit; control: an update that adds nothing, or an account with room, goes on", async () => {
+  armWith(SIGNER.line);
+  const slug = "r70-upd";
+  const others = (n) => Object.fromEntries([...Array(n)].map((_, i) => [`other-${i}`, []]));
+  const adds = await release({ version: bump(RELEASE_VERSION), container: true });
+  const adds0 = await release({ version: bump(RELEASE_VERSION), fleet: false });
+  const full = { [slug]: planeBase(slug), ...others(499) };
+  const stop = await run({ slug, mode: "update", rel: adds, pre: full });
+  assert.equal(stop.page.failed.said, word("screen.install.stopped.limit", { limit: word("installer.limit.workers.other", { n: 500 }) }));
+  assert.equal(stop.page.failed.d, word("screen.install.stopped.limit.do"));
+  assert.equal(stop.planePuts.length, 0, "nothing uploaded");
+  /* Control: the same account with a release that adds nothing, and an account with room, update. */
+  const none = await run({ slug, mode: "update", rel: adds0, pre: full });
+  assert.equal(none.page.failed, null);
+  const room = await run({ slug, mode: "update", rel: adds, pre: { [slug]: planeBase(slug), ...others(400) } });
+  assert.equal(room.page.failed, null);
+  restoreSigners();
+});
+
+test("R66 R71 the sign-in's token exchange waits out a 503 as every call does (the wait drawn), a token endpoint that never comes right is the named lasting stop, and a refused code is still the permission stop; the same for an update", async () => {
+  for (const mode of ["install", "update"]) {
+    const slug = "r66-tok-" + mode;
+    const opts = mode === "update" ? { mode, pre: { [slug]: planeBase(slug) } } : {};
+    const flaky = await run({ slug, tokenFlaky: 2, ...opts });
+    assert.equal(flaky.page.status("auth"), "ok", `${mode}: a 503 twice then the token completes`);
+    assert.ok(flaky.page.done, mode);
+    assert.ok(flaky.page.waits.length >= 1, `${mode}: the wait is drawn`);
+    const dead = await run({ slug, tokenFlaky: 100000, ...opts });
+    assert.equal(dead.page.failed.said, word("screen.install.stopped.lasting"), mode);
+    assert.equal(dead.page.status("auth"), "no");
+    assert.equal(dead.page.done, null);
+    /* Control: a code Cloudflare refuses is not waited on. */
+    const refused = await run({ slug, tokenFail: true, ...opts });
+    assert.equal(refused.page.waits.length, 0, `${mode}: no wait`);
+    assert.ok(refused.page.failed.said.includes("code spent"), mode);
+  }
+});
+
 /* ------------------------------------------------------------------------------------------------ R71 */
 
 test("R71 a lost source or consent ends with a named stop and nothing half-made: a registry that answers 503 three times then 200 completes; one that never answers ends the named stop with no resource created; an expired grant mid-install asks again and the install continues after approval; control: without the continuation the second run finds the lock the first left", async () => {

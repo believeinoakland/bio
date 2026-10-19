@@ -254,18 +254,24 @@ const setCookie = (v, maxAge) =>
 
 /* ---------------------------------------------------- management API glue */
 
-async function exchange(code, verifier) {
+/* R66, R71 (F4, F6): the sign-in's token exchange waits out what waiting can mend, as every call to Cloudflare does: a 429 or a
+   5xx or a dropped connection backs off within the bound (a wait is drawn through `onWait`), and what is still failing at the
+   bound is a lasting failure, named. An answer that refuses the code is the stop it always was. */
+async function exchange(code, verifier, onWait = null) {
   const body = new URLSearchParams({
     grant_type: "authorization_code", code, redirect_uri: CFG.REDIRECT,
     client_id: CFG.CLIENT_ID, code_verifier: verifier,
   });
-  const r = await fetch(CFG.TOKEN, { method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" }, body });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.access_token)
-    throw new Error(j.error_description || j.error || `HTTP ${r.status}`);
-  /* R38: the scopes the operator actually granted, as the token response states them (null when it states none). */
-  return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
+  return patiently(async () => {
+    let r;
+    try { r = await fetch(CFG.TOKEN, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body }); }
+    catch (e) { throw Object.assign(new Error(String(e && e.message || e)), { network: true }); }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.access_token)
+      throw Object.assign(new Error(j.error_description || j.error || `HTTP ${r.status}`), { status: r.status });
+    /* R38: the scopes the operator actually granted, as the token response states them (null when it states none). */
+    return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
+  }, { onWait });
 }
 
 /* R36 (K1502, K1755) — THE INSTALLER BINDS NO CLAUDE CREDENTIAL. The team's Anthropic API key, when the group chooses
@@ -483,12 +489,26 @@ const ACCOUNT_LIMITS = Object.freeze({
   buckets: { ceiling: 1000, need: 2 },
   containers: { ceiling: 100, need: RELEASE_CONTAINERS.length },
 });
-async function limitReached(api) {
+/* `needs` is what the act adds to each count: the install's table above, or (an update) what the chosen release adds to the copy. */
+async function limitReached(api, needs = null) {
   const [scripts, spaces, buckets, apps] = await Promise.all([listScripts(api), listNamespaces(api), listBuckets(api), listApps(api).catch((e) => { if (special(e)) throw e; return []; })]);
   const have = { workers: scripts.size, classes: spaces.length, buckets: buckets.length, containers: apps.length };
-  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) if (have[k] + l.need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
+  const add = needs ? needs({ scripts, spaces, buckets }) : null;
+  for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) {
+    const need = add ? add[k] : l.need;
+    if (need > 0 && have[k] + need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
+  }
   return null;
 }
+/* F3 (R70): what an update adds to the account. Only the members and container classes the copy does not hold already, and the
+   storage buckets it lacks, count: an update that adds nothing needs no room. The ceilings stay Cloudflare's published defaults
+   (no endpoint states an account's own). */
+const updateNeeds = (names, loaded) => ({ scripts, spaces, buckets }) => {
+  const inFleet = (loaded?.members || []).filter((L) => !L.error);
+  const newClasses = inFleet.flatMap((L) => (L.classes || []).filter((c) => !spaces.some((s) => s && s.script === names.member(L.m.member) && s.class === c.class_name)));
+  return { workers: inFleet.filter((L) => !scripts.has(names.member(L.m.member))).length, classes: newClasses.length,
+    buckets: [names.captures, names.published].filter((n) => !buckets.includes(n)).length, containers: newClasses.length };
+};
 /* F2 (R70): whether Containers are turned on for the account, decided positively. An answer that lists applications shows it on;
    a refusal naming the setting shows it off; a refusal for want of permission leaves it to the container member's own check (R38
    leaves that member out and the install continues); any other answer is "could not tell", and the install stops saying so,
@@ -582,9 +602,10 @@ async function installRun(emit0, code, saved, guard) {
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
 
   await emit.step("auth", word("installer.step.auth"));
-  try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
+  try { const ex = await exchange(code, saved.v, onWait); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
+    if (special(e)) throw e;
     return emit.fail(word("installer.install.stopped.permission", { said: e.message }));
   }
 
@@ -1006,9 +1027,10 @@ async function updateRun(emit00, code, saved, guard) {
   let token, scope;
 
   await emit.step("auth", word("installer.step.auth"));
-  try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
+  try { const ex = await exchange(code, saved.v, onWait); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
+    if (special(e)) throw e;
     return stopped(word("installer.update.stopped.permission", { said: e.message }));
   }
 
@@ -1081,6 +1103,12 @@ async function updateRun(emit00, code, saved, guard) {
     retiredParts = held.retired;
   }
   catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds, and R67 judges what was deployed */ }
+
+  /* R70 (F3): an update that adds members, classes, buckets or containers meets the account's limits first, with nothing changed. */
+  try {
+    const limit = await limitReached(api, updateNeeds(names, loaded));
+    if (limit) return stopped(word("screen.install.stopped.limit", { limit }), word("screen.install.stopped.limit.do"));
+  } catch (e) { if (special(e)) throw e; /* a count that cannot be read is not a stop: the platform refuses what it will not hold */ }
 
   /* What is it running now? Asked before the upload, so an update that changes
      nothing can say so instead of reading as a success. A no-op reported as
@@ -1219,7 +1247,7 @@ async function runRemoveView(emit, code, saved) {
   let token, acct;
   await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
@@ -1252,7 +1280,7 @@ async function runRemove(emit0, code, saved, guard) {
   const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
   await emit.step("auth", word("installer.step.auth"));
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
-  catch (e) { emit.no("auth"); return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
+  catch (e) { emit.no("auth"); if (special(e)) throw e; return emit.fail(word("installer.remove.refused.permission", { said: e.message })); }
   await emit.step("acct", word("installer.step.acct"));
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error(word("installer.account.none")); acct = accts[0]; emit.ok("acct", word("installer.account.using", { account: acct.name })); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail(word("installer.remove.refused.account", { said: e.message })); }
