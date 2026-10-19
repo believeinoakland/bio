@@ -157,8 +157,7 @@ test("R53, R34: the pre-flight's blockers gain R55 (case-disclosures R6)'s, R55 
   assert.equal(pre.first.reason, "FLAG_NOT_DISCLOSED", "exactly op=publish's refusal");
   const [one, two, three] = pre.steps;
   assert.ok(one.says.includes(REPUBLISH_SENTENCE));
-  assert.equal(REPUBLISH_SENTENCE, "The published case republishes in full every document it includes, and judging whether "
-    + "they may be republished, copyright included, is the team's.");
+  assert.equal(REPUBLISH_SENTENCE, word("case-authoring.republish_sentence"));
   assert.deepEqual(two.accepted_work.map((x) => [x.member, x.leg_of, x.ref, x.group, x.case, x.edition, x.finding, x.result,
                                                  x.accepted_by, x.reason]),
     [[Q, Q, ref, "other-group", "CASE-2026-0900", 2, THEIRS, "recreated", "alice", "We recreated it whole."]]);

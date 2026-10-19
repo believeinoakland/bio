@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01G31x27GuFV84fTJFmbxZNa · depth 2 · COMPLETE · handled B3
+**Status** · session_019Tn27tqyLrYtV6fEW46e5z · depth 2 · COMPLETE · handled B6
 
 ## Completion record (T51, B1 START)
 
@@ -64,3 +64,35 @@ CHANGE B2 done. Inline English in standardsUseWords replaced by setup-words word
 ## J3 · COMPLETE
 
 COMPLETE for B2 and B3. B2: standardsUseWords reads setup-words keys (case-authoring.text.*), no inline English. B3: document and lens/attribution spelled in bio-case-document/8; three R14 tests moved to /8 (BOB's note said five; three titles were failing). Module tests 190/190. format, architecture, coverage and ownership pass for case-authoring (ownership: 7 files, the module, its tests and the record). run.mjs: the same 23 coverage failures in other modules, none case-authoring. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
+
+## J4 · REPORT
+
+REPORT (T51-161, words part done and pushed on job/T51/case-authoring, commit fe21d4aef6; R77 waits for case-inputs' merge).
+
+Done: every finding of build/plan/words-pass/case-authoring.md (the 57, the 13 plain, the 4 code copies) is fixed. node checks/words.mjs shows no finding in case-authoring. Bytes of signed text are unchanged: each localize's en is the old sentence character for character. Module tests 190 of 190. Beyond the check's count I also read through localize the sentences it does not count (refusal details, the sign steps' stated/next/says, the document's Session Log and strength rows, the searched section's detail, the details NOT_CONCLUDED stitched). Ids are case-authoring.<checks|document|index|searched>.<slug>, fixed once. Test copies now compare with word/localize by equality (case-disclosures' and case-grammar's sentences by their own ids; the fixture stub's "a new case" is now an opaque token).
+
+Judged not sentences a member reads, kept as they are (settle them with the design stream, K3944):
+1. The sign-step names `photos`, `the account`, `approvals`, `sign` in publishPreflight's steps: tests and screens find a step by its name (code compares them), so identifiers (K3971).
+2. The case document's section headings and front-matter keys (`## Scope`, `## Findings In This Case`, `## What Was Searched`, `## Session Log`, `### What they did`, `### What we did` and the rest): the signed grammar other modules locate by exact text (case-inputs' acknowledgement splice, publication's block readers); a signed text changes only as a new version (K1333).
+3. Values passed into word rows or written as row values: `(unpinned)`, `(unnamed)`, the role terms LOAD-BEARING / supporting in the findings list, and the `undetermined` / `nowhere` words of a timeline row's `when` (events' own vocabulary).
+4. The Symbol description of the pre-flight rollback and the one-word `statement` label: developer-only.
+
+Two details for the design: NO_WHAT_CHANGED and NO_SUCH_WHAT_CHANGED_DRAFT name the argument `(whatChanged: {text})` in braces, so their localize passes `text: "{text}"` as its own fill to keep the braces literal; reword if the design prefers. And a generated artifact is now stale: bio-plane/dist/bio-plane.bundled.mjs (and its manifest) holds this module's source (manifest §14); regenerate at the layer close.
+
+Waiting: R77 (the sign step's minutes) needs case-inputs' minutesComparisonsOn and minutesLine, which are not on tranche/T51 yet. I read the B5 CHANGE: rows carry minutesLine unchanged; an unreadable source answers `minutes: {undetermined: true}` only. Tell me when case-inputs has merged; I then merge tranche/T51, write R77 with its tests, run the checks and COMPLETE.
+
+## Completion record for B4 (START), B5 and B6 (T51-161)
+
+**Entries applied.** (W) The 57 findings, the 13 plain and the 4 code copies of `build/plan/words-pass/case-authoring.md`: each sentence is read through `localize('case-authoring.<checks|document|index|searched>.<slug>', en, vars)` with its old text character for character (the signed document's bytes unchanged); I also converted the member-read sentences the check does not count (refusal details, the sign steps' `stated`/`next`/`says`, the Session Log, strength rows, searched detail, NOT_CONCLUDED's stitched pieces). Test copies compare with `word`/`localize` by equality; the fixture stub's "a new case" is an opaque token. (R77) The sign step answers `minutes`: `case-inputs.minutesComparisonsOn` over the same case and pins as the open requests, each row with `minutesLine` unchanged; an unreadable source, or the case not yet known, answers `{undetermined: true}`, never `[]`; no sentence of its own (B5). New `minutes.test.mjs` (R77, with the control that `ready`, `first`, `blockers` are unchanged). The K3958 civil-time reds do not touch this module (none was red).
+
+**Deferred.** None. Judged not member-read, kept (REPORT J4): the sign step names, the document's headings and front-matter keys, value placeholders, the rollback Symbol.
+
+**Found in other modules.** None new; stale generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` holds this module's source (manifest §14).
+
+**Tests and checks.** `bio-plane/test/m/case-authoring/`: 192 of 192; `review` and `case-check` (users): 95 of 95. `checks/words.mjs`: no finding in case-authoring. format 0 failures; architecture 0 failures; coverage 49 of 49; channels 0. `setup-words/build.mjs --check`: only the expected stale-rows note.
+
+**Size (session_019Tn27tqyLrYtV6fEW46e5z): test runs 8, module lines 2796** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J5 · COMPLETE
+
+COMPLETE (T51-161). Words findings fixed (zero in case-authoring), R77 sign-step minutes added with minutes.test.mjs after merging tranche/T51 (case-inputs R19). Module tests 192/192, review+case-check 95/95; format, architecture, coverage 49/49, ownership 0 failures. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.

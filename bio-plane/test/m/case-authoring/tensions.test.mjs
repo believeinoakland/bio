@@ -8,7 +8,7 @@ import { CASE_DOCUMENT_FORMAT, caseTensionsOf } from "../../../src/publication/i
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED } from "../../../src/case-authoring/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", F = "INQ-2026-0001-q", G = "INQ-2026-0002-g";
 const RUN = "RUN-2026-0001", ADMIN = "class:admin";
@@ -121,7 +121,7 @@ test("R55 (case-disclosures R1), R14: the tension section lists each one — the
   assert.match(s[0].sentence, /Disclosed by alice/);
   /* the body: the section, the owner's words marked as the owner's, the member block's sentence */
   const body = text.slice(text.indexOf("\n---\n", 4) + 5);
-  assert.ok(body.includes("## Tensions Disclosed"));
+  assert.ok(body.includes(localize("case-disclosures.document.tensions_disclosed_heading", "## Tensions Disclosed")));
   assert.ok(body.includes("In the owner's words: we read the later page as the award"));
   assert.ok(body.includes("The explanation recorded: the two pages speak of different years"));
   assert.ok(body.includes(`Acknowledged by alice on ${w.clock.now}`));

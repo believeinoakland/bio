@@ -12,7 +12,7 @@ import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { readFileSync } from "node:fs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word as listed } from "../../../src/setup-words/index.mjs";
 /* words.json's words, read by key (K2220). */
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const word = (key) => WORDS.words.find((x) => x.key === key).en;
@@ -56,7 +56,7 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     localize("refusal.CO_ATTESTATION_UNACKNOWLEDGED", "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written."),
     localize("refusal.SELF_ATTESTED_NO_REASON", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."),
-    "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.",
+    listed("case-disclosures.checks.a_document_acknowledged_as_self"),
     localize("refusal.UNCLEARED_HUNCH", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.")]);
   assert.deepEqual(rows.map(([, v]) => v.where), [
     "src/case-disclosures/index.mjs selfAttestedJudged > is-co-attestation-acknowledged",
@@ -105,8 +105,8 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     word("photo.refused.unchecked"),
     /* T39 (N806): case-disclosures R22's drafts, word for word, until words.json holds their keys */
     localize("refusal.DOCUMENT_COPY_UNDETERMINED", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."),
-    "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.",
-    "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."]);
+    listed("document.refused.pending", { document: "{document}" }),
+    listed("document.refused.clean", { document: "{document}" })]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
@@ -208,8 +208,8 @@ test("R55 (case-disclosures R2): the grade that needs co-attestation or an ackno
   assert.deepEqual([row.grade, row.co_attested, row.self_attested_only], [ARCHIVE_CAPTURE_GRADE, false, false]);
   /* the document's words name the ceiling from the same definition */
   const acked = w.publish(P, "alice", [Q], { selfAttested: [{ capture: b, reason: REASON }] });
-  assert.ok(bodyOf(docOf(w, acked).text).includes(`A co-attested Grade ${EARNED_CAPTURE_CEILING} document is enough to publish on; `
-    + "one that is not is published only as self-attested"));
+  assert.ok(bodyOf(docOf(w, acked).text).includes(listed("case-disclosures.document.each_document_this_cases_findings",
+    { EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING) })));
 });
 
 test("R55 (case-disclosures R2): a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {
@@ -290,8 +290,7 @@ test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested
   assert.deepEqual([row.self_attested_only, row.acknowledgement],
     [true, { reason: REASON, acknowledged_by: "alice", at: w.clock.now, sentence: SELF_ATTESTED_SENTENCE }]);
   assert.deepEqual(row.accounts, [{ by: "alice", at: "2026-09-27T12:00:00Z", text, signature }], "exact bytes");
-  assert.equal(SELF_ATTESTED_SENTENCE, "Without co-attestation an outsider can verify the copy has not changed since capture "
-    + "and can follow the reasoning, but cannot independently verify that the source served those bytes, or when.");
+  assert.equal(SELF_ATTESTED_SENTENCE, listed("case-disclosures.without_attestation_outsider"));
   const body = bodyOf(doc);
   for (const s of [SELF_ATTESTED_SENTENCE, `SELF-ATTESTED ONLY, acknowledged by alice on ${w.clock.now}: ${REASON}`, text, signature])
     assert.ok(body.includes(s), s.slice(0, 40));
@@ -345,7 +344,7 @@ test("R14: the /5 document states the captures and sources blocks, always, empty
   assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
   const blocks = caseDocumentBlocks(docOf(w, n).text);
   assert.deepEqual([blocks.captures, blocks.sources, blocks.detail], [[], [], null]);
-  assert.ok(bodyOf(docOf(w, n).text).includes("This case's findings rest on no document the record holds a capture of"));
+  assert.ok(bodyOf(docOf(w, n).text).includes(listed("case-disclosures.case_findings_rest")));
 });
 
 /* ---- R34 ---- */

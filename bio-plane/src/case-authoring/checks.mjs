@@ -32,9 +32,7 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   NO_STATEMENT: {
     check: 'C-33.14',
     where: at('#publishCase', 'is-publish-statement'),
-    translation: 'A published case has to say what it does NOT cover. A case that is silent about '
-      + 'its own limits is claiming to cover everything, and that is the overclaim this record '
-      + 'exists to refuse.',
+    translation: localize('case-authoring.checks.a_published_case_has_to_say', 'A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse.'),
   },
   /* R56 (C:A-15; DEC-76.4; T33-69): a load-bearing finding's calculation that differs on recompute or rests on an
      unbound input, not disclosed. A new row of this module's table (R29); its id and words are BOB's (J1 (2), as

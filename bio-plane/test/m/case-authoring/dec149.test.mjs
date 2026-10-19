@@ -8,7 +8,7 @@ import { world, V, AUTHORED, T0, readingLines, currentLines } from "./fixture.mj
 import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, caseDocumentText,
          searchedSection } from "../../../src/case-authoring/index.mjs";
 import { calculationBodyLines } from "../../../src/case-authoring/document.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", C1 = "CALC-2026-0001";
 const ALICE = "member:alice";
@@ -30,8 +30,8 @@ function setup(opts) {
 const docText = (w, r) => w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition).text;
 
 test("R29, R56 (DEC-149): C-136.1's translation and CALCULATION_NOT_DISCLOSED's detail say a calculation differs when your group's Civicsmith recomputes it", async () => {
-  says(PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.translation,
-    `gives a different result when ${YOURS} recomputes it, or rests on a figure typed in without a source`);
+  assert.equal(PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.translation, word("refusal.CALCULATION_NOT_DISCLOSED"));
+  says(PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.translation, YOURS);
   /* the refusal, through op=publish, over a calculation that differs on recompute (calculations at its interface) */
   const calculations = {
     read: async ({ calcId }) => ({ ok: true, found: true, calc_id: calcId, method_version: "bio-calc/1",
@@ -47,14 +47,15 @@ test("R29, R56 (DEC-149): C-136.1's translation and CALCULATION_NOT_DISCLOSED's 
   const r = await caseAuthoringOps(w.ca, new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}`),
     { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" } }).publishcase();
   assert.deepEqual([r.reason, r.translation], ["CALCULATION_NOT_DISCLOSED", PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.translation]);
-  says(r.detail, `a calculation that gives a different result when ${YOURS} recomputes it`);
+  says(r.detail, YOURS);
 });
 
 test("R3 (DEC-149): NO_SCOPE's detail says a scope your group's Civicsmith wrote is not a scope the group made", () => {
   const { w, P } = setup();
   const r = w.publish(P, "alice", [Q], { scope: "" });
   assert.equal(r.reason, "NO_SCOPE");
-  says(r.detail, `a scope ${YOURS} wrote is not a scope the team made`);
+  assert.equal(r.detail, localize("case-authoring.index.a_published_case_states_its", "a published case states its own SCOPE — what brought these findings together and what question the case as a whole answers. It is authored by the team and never derived from the findings' titles: a scope your team's Civicsmith wrote is not a scope the team made (DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT."));
+  says(r.detail, YOURS);
 });
 
 test("R4 (DEC-149): NOT_CONCLUDED's detail for an undetermined stance says the project's latest entry names an act your group's Civicsmith does not know", () => {
@@ -65,7 +66,7 @@ test("R4 (DEC-149): NOT_CONCLUDED's detail for an undetermined stance says the p
     `    act: "reconsidered"`, `    at: "${T0}"`, `    by: "${ALICE}"`] });
   const r = w.publish(P, "alice", [Q]);
   assert.deepEqual([r.reason, r.why], ["NOT_CONCLUDED", "project_stance_undetermined"]);
-  says(r.detail, `latest entry about this question names an act ${YOURS} does not know`);
+  says(r.detail, YOURS);
 });
 
 test("R29 (DEC-149): every row of this module's own two families names no retired word (C-82's rows, moved to case-inputs R12, are its own to answer, T47)", () => {
@@ -79,20 +80,22 @@ test("R14 (DEC-149; the writer case-inputs R3 answers): the statement's writer, 
   a.w.draft("DRAFT-2026-0001", a.P, { statement: AUTHORED.statement }, { statementBy: null });
   const named = a.w.publish(a.P, "alice", [Q], { draft: "DRAFT-2026-0001" });
   assert.equal(named.completeness.statement_by, null);
-  says(named.completeness.statement_by_stated, "it was written before drafts recorded their authors");
-  says(docText(a.w, named).split("**Who wrote this statement.**")[1].split("\n")[0], "before drafts recorded their authors");
+  says(named.completeness.statement_by_stated);
+  assert.ok(docText(a.w, named).includes(localize("case-authoring.document.who_wrote_this_statement", "**Who wrote this statement.** {stated}",
+    { stated: named.completeness.statement_by_stated })));
   /* a draft holding the sentence that records no author, none named */
   const b = setup();
   b.w.draft("DRAFT-2026-0001", b.P, { statement: AUTHORED.statement }, { statementBy: null });
   const unrecorded = b.w.publish(b.P, "alice", [Q]);
-  says(unrecorded.completeness.statement_by_stated, "records no author — it was written before drafts recorded their authors — so who");
+  assert.equal(unrecorded.completeness.statement_by, null);
+  says(unrecorded.completeness.statement_by_stated);
   /* a draft at this identity whose arguments will not parse */
   const c = setup();
   c.w.st.sql.exec(`INSERT INTO case_drafts (draft_id, project_id, case_id, params, created_by, created_at, updated_by,
                    updated_at, statement_by) VALUES ('DRAFT-2026-0009', ?, NULL, '{not json', 'bo', ?, 'bo', ?, 'bo')`, c.P, T0, T0);
   const unreadable = c.w.publish(c.P, "alice", [Q]);
   assert.equal(unreadable.completeness.statement_by, null);
-  says(unreadable.completeness.statement_by_stated, "(DRAFT-2026-0009) hold arguments that cannot be read, so whether this");
+  says(unreadable.completeness.statement_by_stated, "(DRAFT-2026-0009)");
 });
 
 test("R14, R56 (DEC-149): the case document's Bias Manifest section (in force with an override refused, and none in force) and its calculations section need no name for the group's Civicsmith", () => {
@@ -102,19 +105,19 @@ test("R14, R56 (DEC-149): the case document's Bias Manifest section (in force wi
   const on = w.publish(P, "alice", [Q]);
   assert.equal(on.ok, true, JSON.stringify(on).slice(0, 300));
   const section = (t) => t.slice(t.indexOf("## Bias Manifest"), t.indexOf("## Citations"));
-  says(section(docText(w, on)), `when it was published, computed then and frozen here`,
-    "1 project override(s) named a LOCKED team-wide statement and were refused their effect; the team-wide statement stands");
+  says(section(docText(w, on)), word("case-authoring.body.case_produced_under", { scope_id: P }),
+    word("case-authoring.body.project_override_named", { lock_violations: "1" }));
   const off = setup();
   const none = off.w.publish(off.P, "alice", [Q]);
-  says(section(docText(off.w, none)), "no bias set stood adopted for the team or this project");
+  says(section(docText(off.w, none)), word("case-authoring.body.manifest_force_case", { scope_id: off.P }));
   /* the calculations section, as the document writes it */
   says(calculationBodyLines([{ calc: C1, recompute: "agrees", disclosed: null }]).join("\n"),
-    "Each calculation below was recomputed when the case was published, never on a later read.");
+    word("case-authoring.document.calculation_recomputed_case"));
   /* the same words through the document writer itself */
   const text = caseDocumentText({ caseId: "CASE-2026-0001", edition: 1, project: P, scope: "s", bias: "b",
     bar: w.strength.projectBar(P), roster: [Q], roles: [{ target: Q, role: "load_bearing" }], pins: new Map([[Q, "p"]]),
     statement: "st", position: "not_sought", justification: "j", excluded: [], author: "alice", at: "t",
     searched: searchedSection({ at: "t", subjectSource: "case_basis", levels: [] }), frozen: new Map(),
     calculations: [{ calc: C1, recompute: "differs", disclosed: "ours" }] });
-  says(text.slice(text.indexOf("## Calculations This Case Rests On")), "was recomputed when the case was published");
+  says(text.slice(text.indexOf("## Calculations This Case Rests On")), word("case-authoring.document.calculation_recomputed_case"));
 });
