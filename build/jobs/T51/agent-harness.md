@@ -109,3 +109,14 @@ Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
 - `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures.
 
 Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
+
+## J6 · REPORT
+
+The RW item "`harness.control`'s F4 anchor" is not in this module, and I have not changed it.
+
+- The F4 arm is in `agent-worker/test/harness.control.mjs` (lines 478–500), under agent-worker's tests path. It is not in `agent-harness/test/`, and my job writes only `agent-harness/src/` and `agent-harness/test/`, so the fix belongs to agent-worker's job (or whoever owns that control file).
+- Its `file` is `bio-plane/src/run-rules/rules.mjs`, not an ai-runs file (RW says "ai-runs"). The run-rules module is the one that owns `RUN_ENDINGS`.
+- Its `find` string, `  cancelled:  "a member stopped it",`, no longer exists in any source. The sentence is now `word("run-rules.member_stopped")` at `bio-plane/src/run-rules/rules.mjs:261`, so the arm's find cannot match. The arm also quotes the old sentence in its own prose (line 481), and `agent-worker/test/harness.test.mjs` at lines 1223 and 1229 quotes it too.
+- Recommendation (K4018: anchor on the call or the key, never a copied sentence): anchor on `cancelled:  word("run-rules.member_stopped"),`, and state the replacement as a different word key in the same table. The owner of `harness.control` decides the exact replacement.
+
+Nothing else in agent-harness is anchored on an ai-runs sentence. `agent-harness/test/agent-harness.test.mjs` has no `ai-runs` or `F4` reference.
