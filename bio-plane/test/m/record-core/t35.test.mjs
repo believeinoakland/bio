@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, recordCoreOps, mintExhausted, RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -21,16 +21,15 @@ const dump = (s) => Object.fromEntries(
 
 const CIVICSMITH = word("queue.capture-completed-unattended.who");
 const BUILD_FAULT = word("record-core.build_fault");
+const mintDetail = (what) => localize("record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", { what });
 /* R82: the words that never name the group's own Civicsmith in a sentence a member reads. */
 const NEVER = /\b(copy|instance|plane|server)\b/i;
 const AT = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 
 /* ---- R81: the lease's refusal with its row ---- */
 
-const LEASE_DETAIL = "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). "
-  + "An unnamed writer cannot hold the courtesy lock.";
-const LEASE_TRANSLATION = "An edit is held only under the name of whoever is editing, and this request carried no name, so nothing "
-  + "was held, ended or changed.";
+const LEASE_DETAIL = localize("record-core.index.a_lease_is_taken_under", "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.");
+const LEASE_TRANSLATION = word("refusal.ANONYMOUS_LEASE");
 const ANONYMOUS = ["", "   ", "\t", null, undefined, 7, {}, ["m"], true];
 
 test("R81 R10 R61: ANONYMOUS_LEASE is this module's row C-102.28, its where naming the one function that refuses, its translation a member's sentence", () => {
@@ -81,15 +80,14 @@ test("R81 R61 R30: releaseLease refuses an unnamed actor with the same row and s
 /* ---- R81: the settings' refusals with their rows ---- */
 
 const SETTING_ROWS = {
-  SETTING_NAME_REQUIRED: ["C-102.29", "A part of your team's Civicsmith tried to record a setting without naming it, so nothing was "
-    + "recorded. " + BUILD_FAULT, "a setting is recorded under a name, and none was given; nothing was recorded."],
-  SETTING_BY_REQUIRED: ["C-102.30", "A part of your team's Civicsmith tried to record a setting without saying who set it, so nothing "
-    + "was recorded. " + BUILD_FAULT, "a setting is recorded with who set it, and no one was named; nothing was recorded."],
-  SETTING_VALUE_REQUIRED: ["C-102.31", "A part of your team's Civicsmith tried to record a setting without giving it a value, so "
-    + "nothing was recorded. " + BUILD_FAULT, "a setting is recorded with a value, and none was given; nothing was recorded."],
-  SETTING_INVALID: ["C-102.32", "The setting was not changed, because the value given is not one it takes. The jurisdictions your team "
-    + "follows are set as a list of profiles, each named once, in the order they apply.",
-    "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded."],
+  SETTING_NAME_REQUIRED: ["C-102.29", localize("record-core.checks.a_part_of_your_teams_19", "A part of your team's Civicsmith tried to record a setting without naming it, so nothing was recorded. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+    localize("record-core.index.a_setting_is_recorded_under", "a setting is recorded under a name, and none was given; nothing was recorded.")],
+  SETTING_BY_REQUIRED: ["C-102.30", localize("record-core.checks.a_part_of_your_teams_20", "A part of your team's Civicsmith tried to record a setting without saying who set it, so nothing was recorded. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+    localize("record-core.index.a_setting_is_recorded_with", "a setting is recorded with who set it, and no one was named; nothing was recorded.")],
+  SETTING_VALUE_REQUIRED: ["C-102.31", localize("record-core.checks.a_part_of_your_teams_21", "A part of your team's Civicsmith tried to record a setting without giving it a value, so nothing was recorded. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+    localize("record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded.")],
+  SETTING_INVALID: ["C-102.32", localize("record-core.checks.the_setting_was_not_changed", "The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply."),
+    localize("record-core.index.jurisdiction_profiles_is_an_ordered", "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.")],
 };
 const settingRefusal = (code, more = {}) => {
   const [check, translation, detail] = SETTING_ROWS[code];
@@ -145,87 +143,62 @@ test("R81 R25 R26: setSetting answers each refusal in R25's order with its row a
 /* The sweep's 26 rows for this module, numbered as `checks.mjs` and `index.mjs` stood on `tranche/T35` before this job,
    each with the row it lands in and the words it now carries there. */
 const SWEEP = [
-  ["checks.mjs:38", "MINT_EXHAUSTED", "Your team's Civicsmith could not find a free identifier for this"],
-  ["checks.mjs:40–41", "MINT_EXHAUSTED", "if it keeps happening, tell whoever hosts your team's Civicsmith."],
-  ["checks.mjs:45", "COUNTS_DECLARED", "A part of your team's Civicsmith tried to report a figure another part already reports"],
-  ["checks.mjs:46–47", "COUNTS_DECLARED", "This is a fault in how your team's Civicsmith was built"],
-  ["checks.mjs:51", "COUNTS_MALFORMED", "A part of your team's Civicsmith tried to register its figures without naming itself"],
-  ["checks.mjs:52", "COUNTS_MALFORMED", "This is a fault in how your team's Civicsmith was built, not in the "],
-  ["checks.mjs:65", "AUDIT_CHECK_DECLARED", "A part of your team's Civicsmith tried to register its audit check a second time."],
-  ["checks.mjs:70", "AUDIT_CHECK_MALFORMED", "A part of your team's Civicsmith tried to register an audit check without naming itself"],
-  ["checks.mjs:82", "GRAMMAR_DECLARED", "A part of your team's Civicsmith tried to register a document grammar a second time"],
-  ["checks.mjs:88", "GRAMMAR_MALFORMED", "A part of your team's Civicsmith tried to register a document grammar without naming itself"],
-  ["checks.mjs:95", "STATS_SOURCE_DECLARED", "A part of your team's Civicsmith tried to supply its figures when another part already supplies them"],
-  ["checks.mjs:100", "STATS_SOURCE_MALFORMED", "A part of your team's Civicsmith tried to supply its figures without naming itself"],
-  ["checks.mjs:107", "OPAQUE_ID_MALFORMED", "A part of your team's Civicsmith tried to reserve an identifier without giving one"],
-  ["checks.mjs:114", "OPAQUE_ID_SPENT", "if it keeps happening, tell whoever hosts your team's Civicsmith."],
-  ["checks.mjs:118", "OPAQUE_ID_NO_TRANSACTION", "A part of your team's Civicsmith tried to reserve an identifier outside the change that would use it"],
-  ["checks.mjs:124", "MINT_SEED_DECLARED", "A part of your team's Civicsmith tried to name the identifiers it holds a second time"],
-  ["checks.mjs:129", "MINT_SEED_MALFORMED", "A part of your team's Civicsmith tried to name the identifiers it holds without naming itself"],
-  ["checks.mjs:135", "TABLE_CLASS_MISSING", "A part of your team's Civicsmith tried to declare a table without saying how it is purged, "],
-  ["checks.mjs:140", "TABLE_CLASS_UNKNOWN", "A part of your team's Civicsmith tried to declare a table with a class the record does not know"],
-  ["checks.mjs:146", "TABLE_NAME_INVALID", "A part of your team's Civicsmith tried to declare a table whose name, "],
-  ["checks.mjs:151", "TABLE_DECLARED", "A part of your team's Civicsmith tried to declare a table that is already declared"],
-  ["checks.mjs:157", "STORE_GATE_DECLARED", "A part of your team's Civicsmith tried to register the checks of a table that already has them"],
-  ["checks.mjs:162", "STORE_GATE_MALFORMED", "A part of your team's Civicsmith tried to register or run the checks of a table without naming itself"],
-  ["checks.mjs:169", "STORE_GATE_FAILED", "If it keeps happening, tell whoever hosts your team's Civicsmith."],
+  ["checks.mjs:38", "MINT_EXHAUSTED"],
+  ["checks.mjs:40\u201341", "MINT_EXHAUSTED"],
+  ["checks.mjs:45", "COUNTS_DECLARED"],
+  ["checks.mjs:46\u201347", "COUNTS_DECLARED"],
+  ["checks.mjs:51", "COUNTS_MALFORMED"],
+  ["checks.mjs:52", "COUNTS_MALFORMED"],
+  ["checks.mjs:65", "AUDIT_CHECK_DECLARED"],
+  ["checks.mjs:70", "AUDIT_CHECK_MALFORMED"],
+  ["checks.mjs:82", "GRAMMAR_DECLARED"],
+  ["checks.mjs:88", "GRAMMAR_MALFORMED"],
+  ["checks.mjs:95", "STATS_SOURCE_DECLARED"],
+  ["checks.mjs:100", "STATS_SOURCE_MALFORMED"],
+  ["checks.mjs:107", "OPAQUE_ID_MALFORMED"],
+  ["checks.mjs:114", "OPAQUE_ID_SPENT"],
+  ["checks.mjs:118", "OPAQUE_ID_NO_TRANSACTION"],
+  ["checks.mjs:124", "MINT_SEED_DECLARED"],
+  ["checks.mjs:129", "MINT_SEED_MALFORMED"],
+  ["checks.mjs:135", "TABLE_CLASS_MISSING"],
+  ["checks.mjs:140", "TABLE_CLASS_UNKNOWN"],
+  ["checks.mjs:146", "TABLE_NAME_INVALID"],
+  ["checks.mjs:151", "TABLE_DECLARED"],
+  ["checks.mjs:157", "STORE_GATE_DECLARED"],
+  ["checks.mjs:162", "STORE_GATE_MALFORMED"],
+  ["checks.mjs:169", "STORE_GATE_FAILED"],
 ];
 /* The words each row carried before, which it carries no more. */
 const OLD = [/this instance/, /the instance/, /The plane/, /the plane/, /whoever runs/];
 
 /* The whole of each moved row, as R82 words it. */
 const MOVED = {
-  MINT_EXHAUSTED: "Your team's Civicsmith could not find a free identifier for this, so nothing was saved and nothing was issued. "
-    + "Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. "
-    + "Trying again may succeed; if it keeps happening, tell whoever hosts your team's Civicsmith.",
-  COUNTS_DECLARED: "A part of your team's Civicsmith tried to report a figure another part already reports, or to register its figures "
-    + "twice, so the second registration was refused and the first still stands. " + BUILD_FAULT,
-  COUNTS_MALFORMED: "A part of your team's Civicsmith tried to register its figures without naming itself, the figures or a function to "
-    + "count them, so nothing was registered. " + BUILD_FAULT,
-  AUDIT_CHECK_DECLARED: "A part of your team's Civicsmith tried to register its audit check a second time. Each part registers once, "
-    + "when it starts, so the second was refused and the first still runs. " + BUILD_FAULT,
-  AUDIT_CHECK_MALFORMED: "A part of your team's Civicsmith tried to register an audit check without naming itself or without a check "
-    + "to run, so nothing was registered. " + BUILD_FAULT,
-  GRAMMAR_DECLARED: "A part of your team's Civicsmith tried to register a document grammar a second time, or to claim a check another "
-    + "part's grammar already claims, so the second registration was refused and the first still stands. " + BUILD_FAULT,
-  GRAMMAR_MALFORMED: "A part of your team's Civicsmith tried to register a document grammar without naming itself, the checks it takes "
-    + "over or a function to run, or claimed only part of one of the record's own checks, so nothing was registered. " + BUILD_FAULT,
-  STATS_SOURCE_DECLARED: "A part of your team's Civicsmith tried to supply its figures when another part already supplies them, so the "
-    + "second was refused and the first still stands. " + BUILD_FAULT,
-  STATS_SOURCE_MALFORMED: "A part of your team's Civicsmith tried to supply its figures without naming itself or without a function to "
-    + "count them, so nothing was registered. " + BUILD_FAULT,
-  OPAQUE_ID_MALFORMED: "A part of your team's Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. "
-    + BUILD_FAULT,
-  OPAQUE_ID_SPENT: "That identifier has already been used, so it was not given out again and nothing was saved. An identifier names one "
-    + "thing only, even after what it named is gone. Trying again gives the thing a new one; if it keeps happening, tell whoever hosts "
-    + "your team's Civicsmith.",
-  OPAQUE_ID_NO_TRANSACTION: "A part of your team's Civicsmith tried to reserve an identifier outside the change that would use it, so "
-    + "nothing was reserved: a reservation is kept only with the change it belongs to. " + BUILD_FAULT,
-  MINT_SEED_DECLARED: "A part of your team's Civicsmith tried to name the identifiers it holds a second time, so the second was refused "
-    + "and the first still stands. " + BUILD_FAULT,
-  MINT_SEED_MALFORMED: "A part of your team's Civicsmith tried to name the identifiers it holds without naming itself, or named a place "
-    + "to read them that is not a table and a column, so nothing was registered. " + BUILD_FAULT,
-  TABLE_CLASS_MISSING: "A part of your team's Civicsmith tried to declare a table without saying how it is purged, removed, exported, "
-    + "seen, derived or versioned, so nothing was declared. " + BUILD_FAULT,
-  TABLE_CLASS_UNKNOWN: "A part of your team's Civicsmith tried to declare a table with a class the record does not know, so nothing was "
-    + "declared. " + BUILD_FAULT,
-  TABLE_NAME_INVALID: "A part of your team's Civicsmith tried to declare a table whose name, or a column or table its declaration names, "
-    + "is not a plain name, so nothing was declared. " + BUILD_FAULT,
-  TABLE_DECLARED: "A part of your team's Civicsmith tried to declare a table that is already declared, by itself or by another part, so "
-    + "the second declaration was refused and the first still stands. " + BUILD_FAULT,
-  STORE_GATE_DECLARED: "A part of your team's Civicsmith tried to register the checks of a table that already has them, so the second "
-    + "registration was refused and the first still runs. " + BUILD_FAULT,
-  STORE_GATE_MALFORMED: "A part of your team's Civicsmith tried to register or run the checks of a table without naming itself, a table "
-    + "it declared or a check to run, so nothing was registered and nothing was written. " + BUILD_FAULT,
-  STORE_GATE_FAILED: "One of the checks the record runs before saving this stopped with an error instead of answering, so nothing was "
-    + "saved. The error is in the check and says nothing yet about what you sent. If it keeps happening, tell whoever hosts your "
-    + "team's Civicsmith.",
+  MINT_EXHAUSTED: word("refusal.MINT_EXHAUSTED"),
+  COUNTS_DECLARED: localize("record-core.checks.a_part_of_your_teams", "A part of your team's Civicsmith tried to report a figure another part already reports, or to register its figures twice, so the second registration was refused and the first still stands. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  COUNTS_MALFORMED: localize("record-core.checks.a_part_of_your_teams_2", "A part of your team's Civicsmith tried to register its figures without naming itself, the figures or a function to count them, so nothing was registered. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  AUDIT_CHECK_DECLARED: localize("record-core.checks.a_part_of_your_teams_3", "A part of your team's Civicsmith tried to register its audit check a second time. Each part registers once, when it starts, so the second was refused and the first still runs. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  AUDIT_CHECK_MALFORMED: localize("record-core.checks.a_part_of_your_teams_4", "A part of your team's Civicsmith tried to register an audit check without naming itself or without a check to run, so nothing was registered. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  GRAMMAR_DECLARED: localize("record-core.checks.a_part_of_your_teams_5", "A part of your team's Civicsmith tried to register a document grammar a second time, or to claim a check another part's grammar already claims, so the second registration was refused and the first still stands. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  GRAMMAR_MALFORMED: localize("record-core.checks.a_part_of_your_teams_6", "A part of your team's Civicsmith tried to register a document grammar without naming itself, the checks it takes over or a function to run, or claimed only part of one of the record's own checks, so nothing was registered. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  STATS_SOURCE_DECLARED: localize("record-core.checks.a_part_of_your_teams_7", "A part of your team's Civicsmith tried to supply its figures when another part already supplies them, so the second was refused and the first still stands. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  STATS_SOURCE_MALFORMED: localize("record-core.checks.a_part_of_your_teams_8", "A part of your team's Civicsmith tried to supply its figures without naming itself or without a function to count them, so nothing was registered. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  OPAQUE_ID_MALFORMED: localize("record-core.checks.a_part_of_your_teams_9", "A part of your team's Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  OPAQUE_ID_SPENT: word("refusal.OPAQUE_ID_SPENT"),
+  OPAQUE_ID_NO_TRANSACTION: localize("record-core.checks.a_part_of_your_teams_10", "A part of your team's Civicsmith tried to reserve an identifier outside the change that would use it, so nothing was reserved: a reservation is kept only with the change it belongs to. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  MINT_SEED_DECLARED: localize("record-core.checks.a_part_of_your_teams_11", "A part of your team's Civicsmith tried to name the identifiers it holds a second time, so the second was refused and the first still stands. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  MINT_SEED_MALFORMED: localize("record-core.checks.a_part_of_your_teams_12", "A part of your team's Civicsmith tried to name the identifiers it holds without naming itself, or named a place to read them that is not a table and a column, so nothing was registered. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  TABLE_CLASS_MISSING: localize("record-core.checks.a_part_of_your_teams_13", "A part of your team's Civicsmith tried to declare a table without saying how it is purged, removed, exported, seen, derived or versioned, so nothing was declared. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  TABLE_CLASS_UNKNOWN: localize("record-core.checks.a_part_of_your_teams_14", "A part of your team's Civicsmith tried to declare a table with a class the record does not know, so nothing was declared. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  TABLE_NAME_INVALID: localize("record-core.checks.a_part_of_your_teams_15", "A part of your team's Civicsmith tried to declare a table whose name, or a column or table its declaration names, is not a plain name, so nothing was declared. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  TABLE_DECLARED: localize("record-core.checks.a_part_of_your_teams_16", "A part of your team's Civicsmith tried to declare a table that is already declared, by itself or by another part, so the second declaration was refused and the first still stands. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  STORE_GATE_DECLARED: localize("record-core.checks.a_part_of_your_teams_17", "A part of your team's Civicsmith tried to register the checks of a table that already has them, so the second registration was refused and the first still runs. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  STORE_GATE_MALFORMED: localize("record-core.checks.a_part_of_your_teams_18", "A part of your team's Civicsmith tried to register or run the checks of a table without naming itself, a table it declared or a check to run, so nothing was registered and nothing was written. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) }),
+  STORE_GATE_FAILED: word("refusal.STORE_GATE_FAILED"),
 };
 
-for (const [at, code, words] of SWEEP) {
-  test(`R82 (${at}, ${RECORD_CORE_CHECKS[code].check}): the row ${code} now reads "${words}", and its whole translation is R82's`, () => {
+for (const [at, code] of SWEEP) {
+  test(`R82 (${at}, ${RECORD_CORE_CHECKS[code].check}): the row ${code}'s whole translation is R82's`, () => {
     const t = RECORD_CORE_CHECKS[code].translation;
-    assert.ok(t.includes(words), t);
     assert.equal(t, MOVED[code]);
     for (const old of OLD) assert.doesNotMatch(t, old);
     assert.doesNotMatch(t, NEVER);
@@ -261,9 +234,9 @@ const MINTED = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TA
 
 test("R82 R62 (index.mjs:129, C-59.6): MINT_EXHAUSTED's detail reads \"your group's Civicsmith could not find a free … id\" for every prefix, and the unnamed one", () => {
   for (const [p, what] of Object.entries(MINTED))
-    assert.equal(mintExhausted(p).detail, `your team's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.`, p);
+    assert.equal(mintExhausted(p).detail, mintDetail(`${what} id`), p);
   for (const p of ["INFO", "", undefined, 7])
-    assert.equal(mintExhausted(p).detail, "your team's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
+    assert.equal(mintExhausted(p).detail, mintDetail("id"));
   /* the same detail where it is met: an opaque prefix's 64 hits */
   const { rc } = fresh();
   const orig = crypto.getRandomValues;
@@ -284,8 +257,8 @@ test("R82: every member-facing sentence this module answers calls the group's ow
   for (const [what, t] of sentences) {
     assert.doesNotMatch(t, NEVER, what);
     for (const m of t.matchAll(/Civicsmith/g)) {
-      const before = t.slice(Math.max(0, m.index - "your team's ".length), m.index);
-      assert.match(before, /^[Yy]our team's $/, `${what}: the Civicsmith is "your group's"`);
+      const named = t.slice(Math.max(0, m.index - (CIVICSMITH.length - "Civicsmith".length)), m.index + "Civicsmith".length);
+      assert.equal(named.toLowerCase(), CIVICSMITH.toLowerCase(), `${what}: the Civicsmith is the team's own, named as the list names it`);
     }
   }
   assert.ok(sentences.filter(([, t]) => t.includes(CIVICSMITH) || t.includes(word("queue.update.section"))).length >= 25);

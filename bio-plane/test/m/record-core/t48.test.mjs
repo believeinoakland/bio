@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { ID_TABLE } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RecordCore, mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -15,8 +16,9 @@ const dump = (s) => Object.fromEntries(
     .map((r) => [r.name, JSON.stringify(rows(s, `SELECT * FROM ${r.name} ORDER BY rowid`))]));
 
 const NEVER = /\b(copy|instance|plane|server)\b/i;
-const sentence = (what) => `your team's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.`;
-const WCD = sentence("id for a draft of a new edition's statement of what changed");
+const sentence = (what) => localize("record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", { what });
+const DRAFT = localize("record-core.index.a_draft_of_a_new", "a draft of a new edition's statement of what changed");
+const WCD = sentence(`id for ${DRAFT}`);
 const OUTC = sentence("carried outcome id");
 /* Every other prefix R62 names, each with its sentence as it stood before T48, and the unnamed one. */
 const OTHERS = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source", EVT: "event", LIN: "line",
@@ -35,12 +37,11 @@ test("R62 (T48, N1018): mintExhausted(\"WCD\") and mintExhausted(\"OUTC\") each 
     assert.deepEqual(mintExhausted(p), r, "the same answer for every caller, every time");
     assert.deepEqual(mintExhausted(p, undefined), r);
     /* one sentence, saying nothing was written, naming no count or id, in R82's words */
-    assert.match(r.detail, /Nothing was written\.$/);
     assert.equal(r.detail.split(". ").length, 2, "one sentence, then the fixed close every prefix's carries");
     assert.ok(!/\d/.test(r.detail) && !NEVER.test(r.detail), p);
     assert.notEqual(r.detail, UNNAMED, `${p} is named, not the unnamed sentence of a prefix outside the set`);
   }
-  assert.match(WCD, /a draft of a new edition's statement of what changed/);
+  assert.ok(WCD.includes(DRAFT));
   assert.match(OUTC, /carried outcome/);
   /* distinct from every other prefix's and from each other */
   const all = [...Object.keys(OTHERS), "WCD", "OUTC"].map((p) => mintExhausted(p).detail);
@@ -49,7 +50,7 @@ test("R62 (T48, N1018): mintExhausted(\"WCD\") and mintExhausted(\"OUTC\") each 
 });
 
 test("R62 (T48): control: CASE's sentence, and every other prefix's, is unchanged; a prefix that only resembles WCD or OUTC is named by no object", () => {
-  assert.equal(mintExhausted("CASE").detail, "your team's Civicsmith could not find a free case id: every one it drew was already taken. Nothing was written.");
+  assert.equal(mintExhausted("CASE").detail, sentence("case id"));
   for (const [p, what] of Object.entries(OTHERS)) assert.equal(mintExhausted(p).detail, sentence(`${what} id`), p);
   assert.deepEqual(Object.keys(OTHERS).slice(0, 5), [...RecordCore.GATED_ID_PREFIXES]);
   for (const near of ["WCDX", "XWCD", "wcd", "OUT", "OUTCOME", "outc", " OUTC", "WCD-2026"])

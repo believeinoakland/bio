@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { recordOf, RECORD_CORE_CHECKS, SETTING_UNREADABLE } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -15,11 +15,11 @@ const dump = (s) => Object.fromEntries(
     .map((r) => [r.name, JSON.stringify(rows(s, `SELECT * FROM ${r.name} ORDER BY rowid`))]));
 
 const BUILD_FAULT = word("record-core.build_fault");
+const CIVICSMITH = word("queue.capture-completed-unattended.who");
 const NEVER = /\b(copy|instance|plane|server)\b/i;
 const AT = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
-const TRANSLATION = "A part of your team's Civicsmith tried to record a setting with a value that cannot be stored as it was given, so "
-  + "nothing was recorded. " + BUILD_FAULT;
-const DETAIL = "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.";
+const TRANSLATION = localize("record-core.checks.a_part_of_your_teams_22", "A part of your team's Civicsmith tried to record a setting with a value that cannot be stored as it was given, so nothing was recorded. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) });
+const DETAIL = localize("record-core.index.a_settings_value_is_stored", "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.");
 const notJson = (name) => ({ name, ok: false, reason: "SETTING_NOT_JSON", code: "SETTING_NOT_JSON", check: "C-102.33",
                              translation: TRANSLATION, detail: DETAIL });
 
@@ -66,7 +66,8 @@ test("R84 R81: SETTING_NOT_JSON is this module's row C-102.33, beside the settin
   assert.ok(Object.isFrozen(row) && Object.isFrozen(RECORD_CORE_CHECKS));
   assert.ok(row.translation.endsWith(` ${BUILD_FAULT}`), "a build fault, as R82 words it");
   assert.ok(!/SETTING_|C-102|JSON/.test(row.translation) && !NEVER.test(row.translation), "a member's sentence, R82's words");
-  for (const m of row.translation.matchAll(/Civicsmith/g)) assert.match(row.translation.slice(m.index - 12, m.index), /^[Yy]our team's $/);
+  for (const m of row.translation.matchAll(/Civicsmith/g))
+    assert.equal(row.translation.slice(m.index - (CIVICSMITH.length - "Civicsmith".length), m.index + "Civicsmith".length).toLowerCase(), CIVICSMITH.toLowerCase());
   /* beside the four settings rows, each where the same region; the next free number of C-102, held once */
   const settings = ["SETTING_NAME_REQUIRED", "SETTING_BY_REQUIRED", "SETTING_VALUE_REQUIRED", "SETTING_NOT_JSON", "SETTING_INVALID"];
   assert.deepEqual(settings.map((c) => RECORD_CORE_CHECKS[c].check), ["C-102.29", "C-102.30", "C-102.31", "C-102.33", "C-102.32"]);
@@ -95,7 +96,6 @@ test("R84 R25: setSetting refuses every value that does not round-trip through J
   assert.deepEqual(rc.getSetting("limits"), { a: 1 }, "the value set before stands");
   assert.equal(rc.getSetting("fresh_name"), null);
   /* the detail is one fixed sentence: the value cannot be stored as written, nothing was recorded */
-  assert.match(DETAIL, /cannot be stored as written; nothing was recorded\.$/);
   assert.equal(DETAIL.split(". ").length, 1);
   assert.doesNotMatch(DETAIL, NEVER);
 });
