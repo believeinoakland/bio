@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, shareDetector, ALICE, ADMIN_BOB } from "./fixture.mjs";
 import { DETECTORS_DEFAULT_BUDGET_MS, SHIPPED } from "../../../src/money-checks/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 function seeded() {
   const w = world();
@@ -164,7 +165,7 @@ test("R6 R4: a subject whose party is a person is never a subject and never writ
   w.factAs("MNY-2026-p1", { to: "ENT-2026-0010", amount: "5", kind: "payment", stage: "paid" });
   const r = w.c.runDetectors({ budgetMs: 10_000 });
   assert.equal(r.persons_skipped >= 1, true);
-  assert.equal(r.skipped["no threshold stated"], 1);
+  assert.equal(r.skipped[word("money-checks.why.threshold_stated")], 1);
   for (const row of results(w)) assert.notEqual(JSON.parse(row.subject).party, w.id("ENT-2026-0012"));
   assert.equal(results(w).filter((row) => row.detector_id === "md-shipped-payee-share").length, 0);
 });
