@@ -20,3 +20,8 @@
 **Checks** (process repo): `words.mjs screens-wizards` 0 failures; `format.mjs` 0 failures; `architecture.mjs` over screens-wizards 0 failures (the repo-wide run's one failure is answer-envelope's `page-policy.test.mjs`, not this module); `coverage.mjs screens-wizards` 19 of 19 ids named, 0 failures; `setup-words/build.mjs --check` rows match; `ownership.mjs` 0 failures. Module tests: 59 pass with `templatebyhandle` in `OPS`, 51 pass and 8 fail without it.
 
 Size (session_01M31mHwuWGwKStqD3B57zBx): test runs 10, module lines 888
+
+## J1 · COMPLETE
+
+T51-115 done on job/T51/screens-wizards (record: build/jobs/T51/screens-wizards.md). R18 (plan asks which project, a plan's id never taken for the project), R19 (template draft placed from templatebyhandle), the recording list's doubled bullet+number fixed (rendered at 1280/390), 7 words findings fixed (0 left in the module). Checks green: words, format, architecture, coverage 19/19, ownership, setup-words --check.
+TWO THINGS FOR BOB: (1) DEPENDENCY: templatebyhandle is not in op-declarations' OPS yet (T51-107, merges before me). Until it lands, 8 of my 59 tests are red (the page's checkGuide refuses a guide naming an op OPS lacks). With a local uncommitted declaration: 59 pass, 0 fail. I changed nothing in op-declarations; after T51-107 merges into tranche/T51, merge it into my branch and my suite is green. (2) R19 names the label key wizard.draft.template; it does not exist; the key with that English is screen.guide.draft.template (DEC-252) and I used it. Confirm or have the design add the key.
