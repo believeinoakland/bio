@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
   vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, MEMBER_OBJECTS, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
-  CONTAINER_PART, WORKER_PART } from "../../src/steps/index.mjs";
+  CONTAINER_PART, WORKER_PART, confirmContainers, withByteLags } from "../../src/steps/index.mjs";
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { session, sink, immediateTimers, account, heldCopy, sequence, release, chosen, sha, armWith, restoreSigners, SIGNER, STRANGER, VERSION,
@@ -49,9 +49,9 @@ test("R16: 503 three times then 200 answers the bytes; 503 for the whole bound t
   await assert.rejects(fetchVerified("https://x.test/f", want, "ocr-worker"), (e) => !e.source && e.message.includes("ocr-worker"));
 });
 
-test("R17: a signed fleet installs every member, container members first, and answers {done, left, imageLags, completed}", async () => {
+test("R17: a signed fleet installs every member, container members first, and answers {done, left, imageLags, completed, containers}", async () => {
   const f = await fleet({ rel: { container: true, scanner: true } });
-  assert.deepEqual(Object.keys(f.result).sort(), ["completed", "done", "imageLags", "left"]);
+  assert.deepEqual(Object.keys(f.result).sort(), ["completed", "containers", "done", "imageLags", "left"]);
   assert.deepEqual([...f.result.done].sort(), [...ALL].sort());
   assert.deepEqual(f.result.left, []);
   assert.deepEqual(f.result.done.slice(0, 2).sort(), [RUNNER, SCANNER].sort(), "container members first: a member bound to a class is refused while the class is not there");
@@ -469,4 +469,91 @@ test("R24 (F10): a member's Durable Objects are read from its signed Worker part
   assert.deepEqual(f.result.left.map((l) => l.member), [SCANNER]);
   assert.equal(f.result.left[0].why, word("installer.fleet.why.program"));
   f.w.restore();
+});
+
+/* F5: whether the platform could pull the image, read from the application after the create or the rollout. */
+const waitsOf = () => { const waits = []; return { waits, onWait: (w, b) => waits.push([w, b]) }; };
+async function runnerFleet(acct, onWait = null) {
+  const rel = await release({ container: true });
+  const w = account({ pre: { grp: [] }, rel, ...acct });
+  const release_ = await chosen(rel);
+  const loaded = await loadFleet(release_);
+  const emit = sink();
+  const result = await installFleet(emit, session(onWait), "A1", "grp", release_, loaded, CTX);
+  return { w, emit, result, release_ };
+}
+const OLD_APP = { id: "app1", name: "agent-runner-grp", durable_objects: { namespace_id: "ns-agent-runner-grp-AgentRunner" }, configuration: { image: "docker.io/civicos/agent-runner@sha256:" + "b".repeat(64) } };
+const HELD_RUNNER = { preClasses: { "agent-runner-grp": ["AgentRunner"] }, pre: { grp: [], "agent-runner-grp": [] }, preApps: [OLD_APP] };
+
+test("R20 (F5): an instance that failed to start, or a rollout that failed, leaves the member out as unpullable, named with what it lacks, after its upload was attempted", async () => {
+  for (const [how, acct] of [["health", { pullFails: "health" }], ["rollout", { ...HELD_RUNNER, pullFails: "rollout" }]]) {
+    const f = await runnerFleet(acct);
+    const left = f.result.left.find((l) => l.member === RUNNER);
+    assert.ok(left, how);
+    assert.equal(left.why, word("installer.fleet.why.unpullable"), how);
+    assert.equal(left.out, undefined, "the upload was attempted: a failure of the verdict, not a part left out");
+    assert.ok(!f.result.done.includes(RUNNER), how);
+    assert.ok(f.w.puts.some((p) => p.name === "agent-runner-grp"), "its Worker was uploaded");
+    assert.ok(!f.emit.last("fleet").label.includes("installer-steps"), how);
+    f.w.restore();
+  }
+  const ok = await runnerFleet({});
+  assert.ok(ok.result.done.includes(RUNNER) && ok.result.left.length === 0, "control: a healthy application installs");
+  ok.w.restore();
+});
+
+test("R20 (F5): it waits, drawn through onWait, only while the rollout is pending or an instance is starting; an application that starts nothing is not waited on", async () => {
+  const quiet = waitsOf();
+  const none = await runnerFleet({}, quiet.onWait);
+  assert.deepEqual(quiet.waits, [], "no wait when nothing is pending");
+  assert.ok(none.w.appReads <= 2);
+  none.w.restore();
+  const slow = waitsOf();
+  const f = await runnerFleet({ startingFor: 3 }, slow.onWait);
+  assert.equal(slow.waits.length, 3, "one announced wait for each read that found it starting");
+  assert.ok(f.result.done.includes(RUNNER), "a pull that completes after waiting installs");
+  f.w.restore();
+  const never = waitsOf();
+  const g = await runnerFleet({ startingFor: 10000 }, never.onWait);
+  assert.equal(never.waits.length, WAIT_BOUND_MINUTES * 60 / 5, "nominal waiting stops at the bound");
+  assert.ok(g.result.done.includes(RUNNER), "a start still pending at the bound is not a pull failure");
+  g.w.restore();
+});
+
+test("R20 (S9): placed applications are answered as {member, id, appName, config}, and a member still on the old build after placement is restarted by a further rollout and then confirmed", async () => {
+  const VERSIONED = { pre: { grp: [{ type: "plain_text", name: "VERSION", text: VERSION }] } };
+  const f = await runnerFleet({ ...VERSIONED, memberServes: { [RUNNER]: 1 } });
+  assert.deepEqual(f.result.containers, [{ member: RUNNER, id: "app1", appName: "agent-runner-grp", config: { image: IMAGE } }]);
+  assert.equal(f.w.rollouts.length, 0, "created, not rolled out");
+  const r = await confirmContainers(session(), "A1", "https://grp.grp.workers.dev", f.release_, f.result);
+  assert.deepEqual([r.confirmed, r.restarted, r.lags], [[RUNNER], [RUNNER], []]);
+  assert.equal(f.w.rollouts.length, 1);
+  assert.deepEqual(f.w.rollouts[0].target_configuration, { image: IMAGE }, "the restart rolls out to the release's own configuration");
+  f.w.restore();
+  const fine = await runnerFleet({ ...VERSIONED, memberServes: { [RUNNER]: 0 } });
+  const again = await confirmContainers(session(), "A1", "https://grp.grp.workers.dev", fine.release_, fine.result);
+  assert.deepEqual([again.confirmed, again.restarted, again.lags], [[RUNNER], [], []], "control: a member already on the release is not restarted");
+  assert.equal(fine.w.rollouts.length, 0);
+  fine.w.restore();
+});
+
+test("R20 (S9): a member still old after the restart is the named lag 'still runs <version>', never success; a member the plane does not report is no reading and is not restarted", async () => {
+  const VERSIONED = { pre: { grp: [{ type: "plain_text", name: "VERSION", text: VERSION }] } };
+  const f = await runnerFleet({ ...VERSIONED, memberServes: { [RUNNER]: 99 } });
+  const r = await confirmContainers(session(), "A1", "https://grp.grp.workers.dev", f.release_, f.result);
+  assert.deepEqual(r.confirmed, []);
+  assert.deepEqual(r.restarted, [RUNNER]);
+  assert.deepEqual(r.lags, [word("installer.lag.member.version", { name: RUNNER, version: "0.0.1" })]);
+  assert.equal(f.w.rollouts.length, 1, "one restart, not a loop");
+  const joined = withByteLags({ confirmed: false, lags: r.lags, capable: true }, r.lags, true);
+  assert.deepEqual(joined.lags, r.lags, "the same sentence in the verdict is said once");
+  f.w.restore();
+  const silent = await runnerFleet({ ...VERSIONED });
+  const none = await confirmContainers(session(), "A1", "https://grp.grp.workers.dev", silent.release_, silent.result);
+  assert.deepEqual([none.confirmed, none.restarted, none.lags], [[RUNNER], [], []]);
+  assert.equal(silent.w.rollouts.length, 0);
+  const left = await runnerFleet({ pullFails: "health" });
+  assert.deepEqual(await confirmContainers(session(), "A1", "https://grp.grp.workers.dev", left.release_, left.result), { confirmed: [], restarted: [], lags: [] },
+    "a member left out is nothing to confirm");
+  silent.w.restore(); left.w.restore();
 });

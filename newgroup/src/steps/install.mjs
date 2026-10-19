@@ -11,7 +11,8 @@ import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 /* Install (or refresh — the PUT is the same act) every member `loadFleet` verified. DEGRADES PER MEMBER, never fails the
    install: a team's plane must not be lost over a member it can add at the next update, and what was left out is SAID
    (D-115's "quietly doing less" is the defect; the cure is the saying, not the refusing). `ctx.vpc`: the Workers VPC service
-   the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed}`. */
+   the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed, containers}`; `containers` is each
+   placed application `{member, id, appName, config}`, which `confirmContainers` (verify.mjs) restarts when its member still serves the old build. */
 /* F10: a class a later release adds to a container member that is already installed is created by a migration from the tag it
    holds, in order, on an update as on a first install; nothing when it holds every class. */
 function classMigration(heldTag, heldClasses, classes) {
@@ -26,7 +27,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
   if (loaded.skip) { emit.ok("fleet", loaded.skip); return; }
   const names = ctx.names;
   const man = release.man;
-  const done = [], left = [], notes = [], imageLags = [], completed = [];
+  const done = [], left = [], notes = [], imageLags = [], completed = [], containers = [];
   const classOf = new Map();
   let conditions = null, leftover = false, vpcTaken = false;
   const scripts = await listScripts(apiOf(token, acct)).catch((e) => { if (approve(e)) throw e; return new Map(); });
@@ -112,6 +113,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       for (const d of classes) {
         const placed = await placeContainer(token, acct, m, d, names.app(m.member, d.class_name, multi), names);
         if (placed.lag) imageLags.push(placed.lag);
+        if (placed.id) containers.push({ member: m.member, id: placed.id, appName: placed.appName, config: placed.config });
       }
       await schedule();
       binds();
@@ -137,7 +139,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
   }
   /* D-116: WHICH members this act uploaded, so the verify step can require each of them to answer THROUGH the plane's
      binding. Every early return above uploads nothing and returns undefined, which the caller reads as none. */
-  return { done, left, imageLags, completed };
+  return { done, left, imageLags, completed, containers };
 }
 
 /* DIST-6, step 3 of the order at BINDING_OF: RE-PUT the plane bound to every bindable member now present — those
