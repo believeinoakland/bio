@@ -39,3 +39,12 @@ Found in other modules while meeting R40 (I passed each reason on exactly as its
 **Found in other modules**: see the REPORT (J2): civil-time, lines and events answer English reasons; screens-investigate reads `String(why)` and offers three `show` values.
 
 Size (session_016nx6W8cHCnGj3NUy1ARzAe): test runs 14, module lines 2238
+
+## J4 · REPORT
+
+R40 needs your amendment; two decisions are yours (P17).
+
+1. Requirement text. R40 says that where connection-grammar's contract judges an undetermined reason as a filled string, `why` stays a string with `why_key` beside it. connection-grammar R6 (its reads.mjs:17-21, as merged) now judges a hop's `undetermined.why` as a `{key, vars}`; a string fails OWNER_NONCONFORMING. I changed the hop to pass civil-time's `{key, vars}` on as it answers, and dropped `why_key` on hops. The hub answer keeps its string `why` (connection-grammar still requires a filled string there) with `why_key` beside it. Requested: amend R40 to say so.
+2. Composed reason. `lines.why.stated_current_through` takes its `{why}` fill as the owner's sentence (civil-time's key read through `word`), as lines R21 does; the test in why.test.mjs:62 says the same. reads.test.mjs:251 expected the nested key object, which `word` cannot draw: its fill is String-written, so a nested key shows as "[object Object]". I changed that expectation to the sentence. Choice for you: keep the sentence (current code), or extend setup-words so a fill can take a key (its owner, not mine).
+
+The rows for `people.index.evidence_names_cited_line`, `people.index.read_names_member` and `people.checks.join_shape` are new ids: rows.mjs regenerates at the layer close (BOB's step).
