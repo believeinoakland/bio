@@ -4,7 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, READER, ROSTER, FOUNDER_ROW, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
+import { SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { ADMIN, MEMBER, READER, ROSTER, FOUNDER_ROW, SIGNERS, SIGNER_KEYS, ARITH, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
 
 const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-act"] === op && pred(b));
 
@@ -12,16 +13,20 @@ test("R1 the reads: the roster for every member; the recovery step and the signi
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
   // the screen's own reads, from its first (the frame's own reads, interface-shell R20, come before it)
   const all0 = a.p.requests.map((r) => [r.op, r.query]);
-  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 4);
-  assert.deepEqual(reads, [["memberlist", {}], ["expertiselist", { memberId: "ana" }], ["adminrecoverystep", {}], ["signerlist", {}]]);
-  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory", "aiuseovertime"]) assert.ok(!a.p.requests.some((r) => r.op === op), `${op} is teamai's (R47)`);
+  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 5);
+  assert.deepEqual(reads, [["memberlist", {}], ["expertiselist", { memberId: "ana" }], ["adminrecoverystep", {}], ["signerlist", {}], ["adminarith", {}]]);
+  // the team's key and its use are `teamai`'s reads (R47): whatever it reads beyond the roster's own and the frame's is not read here
+  const mine = Object.values(SCREENS.find((s) => s.id === "members").reads({ me: ADMIN, subject: "ana" })).map((r) => r.op);
+  const teams = Object.values(SCREENS.find((s) => s.id === "teamai").reads({ me: ADMIN })).map((r) => r.op).filter((op) => !mine.includes(op) && !SHELL_OPS.includes(op));
+  assert.ok(teams.length >= 5, "the team's account reads");
+  for (const op of teams) assert.ok(!a.p.requests.some((r) => r.op === op), `${op} is teamai's (R47)`);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   const mo = m.p.requests.map((r) => r.op);
-  assert.deepEqual(mo.filter((op) => !["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"].includes(op)), ["memberlist"]);
+  assert.deepEqual(mo.filter((op) => !SHELL_OPS.includes(op)), ["memberlist"]);
   // what the owners refuse a member: the reads the screen asks of an administrator beyond those it asks of a member (N1073)
   const members = SCREENS.find((s) => s.id === "members");
   const adminOnly = Object.values(members.reads({ me: ADMIN, subject: "ana" })).map((r) => r.op).filter((op) => !Object.values(members.reads({ me: MEMBER })).some((r) => r.op === op));
-  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("signerlist"), "the administrators' reads");
+  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("signerlist") && adminOnly.includes("adminarith"), "the administrators' reads");
   for (const op of adminOnly) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
@@ -94,7 +99,7 @@ test("R1 each read drawn in its state: still loading, empty, could not read (nev
 
 /* R2's act table (R47: the roster's eleven): every registry act of `members`, the state in which it applies, and where it is drawn. */
 const TABLE = [
-  ["passwordresetlink", "dev"], ["signerset", "dev"],
+  ["passwordresetlink", "dev"], ["signerset", null], ["signeradd", null],
   ["memberadd", null], ["membercaps", "dev"], ["memberset", "dev"], ["adminendorse", "kim"], ["adminremove", "lu"], ["expertiseconfirm", "ana"],
   ["invitewithdraw", "mai-k"], ["websitekeycreate", null], ["joinlinkenable", null],
 ];
@@ -206,18 +211,154 @@ test("R23 a member's row offers Make a reset link (passwordresetlink), the link 
   assert.ok(!btn(m.tree, "passwordresetlink").length);
 });
 
-test("R23 More for administrators links group, places and recovery; a row offers Withdraw <handle>'s signing key (signerset) for a lost or stolen device", async () => {
-  const KEY = "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000009";
-  const a = await open("members", { me: ADMIN, table: membersTable({ signerlist: env({ signers: [{ key_b64: KEY, member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z" }, { key_b64: "AAAAold", member_id: "dev", status: "revoked", added: "2026-10-01T00:00:00Z" }] }), signerset: (q, b) => env({ ok: true, ...b, by: "rosa" }) }) });
+test("R23 More for administrators links group, places and recovery; a member's row offers no signing-key act of its own (R55 draws them in the keys section)", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
   for (const id of ["group", "places", "recovery"]) assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/" + id).length, id);
   has(a, "screen.members.more.heading");
-  const w = btn(panelOf(a.tree, "dev"), "signerset");
-  assert.equal(w.length, 1, "only the active key");
-  assert.equal(textOf(w[0]).startsWith(said("screen.members.signer.withdraw", { handle: "dev" })), true);
-  assert.deepEqual((await a.press("signerset", { data: { key: KEY } })).sent[0].body, { keyB64: KEY, status: "revoked" });
+  for (const m of ROSTER) assert.ok(!btn(panelOf(a.tree, m.member_id), "signerset").length, `${m.member_id}'s panel`);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   lacks(m, "screen.members.more.heading");
   assert.ok(!m.p.requests.some((r) => r.op === "signerlist"));
+});
+
+/* R55 (T51; K3807; DEC-330 A74, B5; DEC-332 (4); DEC-335, DEC-336 (7)): the members' signing keys, withdrawn and reactivated, and one registered for a member */
+const keysSection = (o) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.members.keys.heading")))[0];
+const keyRow = (o, id) => all(keysSection(o), (e) => e.tag === "li" && e.attrs["data-member"] === id)[0];
+
+test("R55 the keys section lists a row for each active member and the founder: who registered each active key and when, the founder named as R51 names her, and no key says so", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const sec = keysSection(a);
+  assert.ok(sec, "drawn to an administrator");
+  assert.ok(all(sec, (e) => e.tag === "li").length === 5, "the founder, rosa, dev, ana and lu: each active member once");
+  assert.ok(!keyRow(a, "kim") && !keyRow(a, "old") && !keyRow(a, "mai-k"), "no row for a member proposed, revoked or not joined");
+  // the founder, named by `member.founder.unnamed` (her roster row has no handle), registered by herself
+  assert.ok(textOf(keyRow(a, "admin")).includes(said("member.founder.unnamed")));
+  assert.ok(textOf(keyRow(a, "admin")).includes(said("screen.members.key.registered.by.rosa.3", { member: said("member.founder.unnamed"), date: day("2026-10-02T00:00:00Z") })));
+  // an administrator registered lu's key: named by handle through the roster, with the day
+  assert.ok(textOf(keyRow(a, "lu")).includes(said("screen.members.key.registered.by.rosa.3", { member: "rosa", date: day("2026-10-05T00:00:00Z") })));
+  assert.ok(textOf(keyRow(a, "dev")).includes(said("screen.members.key.registered.by.rosa.3", { member: "dev", date: day("2026-10-04T00:00:00Z") })));
+  // ana has none
+  assert.ok(textOf(keyRow(a, "ana")).includes(said("screen.members.no.signing.key.yet")));
+  // the notes
+  for (const k of ["screen.members.a.signing.key.lets.a", "screen.members.civicsmith.holds.only.the.public", "screen.members.use.this.when.a.member", "screen.members.key.react.withdraw.a.key.when.a", "screen.members.key.react.a.key.a.member.withdrew"]) has(a, k);
+});
+
+test("R55 Withdraw is offered on another member's active key and never on the viewer's own (she revokes it on account); it sends signerset revoked for that key", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const withdraw = (id) => btn(keyRow(a, id), "signerset").filter((b) => b.attrs["data-status"] === "revoked");
+  assert.equal(withdraw("rosa").length, 0, "not on her own key");
+  for (const id of ["dev", "lu", "admin"]) assert.equal(withdraw(id).length, 1, id);
+  assert.ok(textOf(withdraw("dev")[0]).startsWith(said("screen.members.signer.withdraw", { handle: "dev" })));
+  const r = await a.press("signerset", { data: { key: SIGNER_KEYS.dev, status: "revoked" } });
+  assert.deepEqual(r.sent.find((x) => x.op === "signerset").body, { keyB64: SIGNER_KEYS.dev, status: "revoked" });
+  assert.ok(r.sent.some((x) => x.op === "signerlist"), "the list is read again (R8)");
+});
+
+test("R55 a withdrawn key reads who withdrew it and when, that it does not sign, and offers Reactivate: signerset active; never for a member who has left", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const row = keyRow(a, "dev");
+  assert.ok(textOf(row).includes(said("screen.members.key.react.key.withdrawn.by.rosa.12", { member: "rosa", date: day("2026-10-12T00:00:00Z") })));
+  assert.ok(textOf(row).includes(said("screen.members.key.react.it.does.not.sign")));
+  const back = btn(row, "signerset").filter((b) => b.attrs["data-status"] === "active");
+  assert.equal(back.length, 1);
+  assert.ok(textOf(back[0]).startsWith(said("screen.members.key.react.reactivate.devs.signing.key", { member: "dev" })));
+  // explained by its three sentences
+  const tip = all(row, (e) => e.attrs["data-tip"] && e.attrs["data-tip"].includes(said("screen.members.key.react.help")))[0];
+  assert.ok(tip && tip.attrs["data-tip"].includes(said("screen.members.key.react.help2")) && tip.attrs["data-tip"].includes(said("screen.members.key.react.help3")));
+  const r = await a.press("signerset", { data: { key: SIGNER_KEYS.devOld, status: "active" } });
+  assert.deepEqual(r.sent.find((x) => x.op === "signerset").body, { keyB64: SIGNER_KEYS.devOld, status: "active" });
+  // control: a key whose member is no longer active offers no Reactivate (credentials R7 refuses it)
+  const gone = SIGNERS.map((k) => (k.key_b64 === SIGNER_KEYS.devOld ? { ...k, member_status: "revoked", attests_why: "member_revoked" } : k));
+  const g = await open("members", { me: ADMIN, table: membersTable({ signerlist: env({ signers: gone }) }) });
+  assert.ok(textOf(keyRow(g, "dev")).includes(said("screen.members.key.react.it.does.not.sign")));
+  assert.ok(!btn(keyRow(g, "dev"), "signerset").some((b) => b.attrs["data-status"] === "active"));
+});
+
+test("R55 a registered_by or status_by of `not recorded`, or a null status_at, is never drawn as a person or a day: the unrecorded lines", async () => {
+  const rows = [
+    { ...SIGNERS[3], registered_by: "not recorded" },
+    { ...SIGNERS[4], status_by: "not recorded", status_at: null },
+    { ...SIGNERS[2], key_b64: SIGNER_KEYS.lu, added: null },
+  ];
+  const a = await open("members", { me: ADMIN, table: membersTable({ signerlist: env({ signers: rows }) }) });
+  assert.ok(textOf(keyRow(a, "dev")).includes(said("screen.members.key.registered.unrecorded")));
+  assert.ok(textOf(keyRow(a, "dev")).includes(said("screen.members.key.withdrawn.unrecorded")));
+  assert.ok(textOf(keyRow(a, "lu")).includes(said("screen.members.key.registered.unrecorded")), "no day drawn");
+  assert.ok(!/not recorded|null|undefined/.test(textOf(keysSection(a)).replaceAll(said("screen.members.key.registered.unrecorded"), "").replaceAll(said("screen.members.key.withdrawn.unrecorded"), "")), "nothing else says so");
+});
+
+test("R55 Register a key for this member (signeradd): the pasted line is split into keyB64 and comment, with memberId; a line not of that shape, a private key or an empty line sends nothing", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const opts = all(all(a.tree, (e) => e.attrs.id === "ms-who")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
+  assert.deepEqual(opts, [["rosa", "rosa"], ["dev", "dev"], ["ana", "ana"], ["lu", "lu"]], "the active members who have a handle");
+  has(a, "screen.members.keys.whose"); has(a, "screen.members.keys.public"); has(a, "screen.members.keys.public.help");
+  has(a, "screen.members.the.one.line.the.member"); has(a, "screen.members.the.record.shows.that.you"); has(a, "screen.members.they.see.it.under.your");
+  const line = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnaKey0000000000000000000000000000000000 ana@laptop";
+  const r = await a.press("signeradd", { choose: { "ms-who": "ana" }, values: { "ms-line": line } });
+  assert.deepEqual(r.sent[0].body, { memberId: "ana", keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIAnaKey0000000000000000000000000000000000", comment: "ana@laptop" });
+  assert.ok(r.sent.some((x) => x.op === "signerlist"), "the section reads the list again");
+  const bare = await a.press("signeradd", { choose: { "ms-who": "dev" }, values: { "ms-line": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDevKey00000000000000000000000000000000000" } });
+  assert.deepEqual(bare.sent[0].body, { memberId: "dev", keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIDevKey00000000000000000000000000000000000" }, "no comment is sent when there is none");
+  for (const bad of ["", "AAAAC3NzaC1lZDI1NTE5", "-----BEGIN OPENSSH PRIVATE KEY----- b3BlbnNzaC1rZXktdjE=", "ssh-ed25519 not-base64!", "ssh-ed25519"]) {
+    const x = await a.press("signeradd", { choose: { "ms-who": "ana" }, values: { "ms-line": bad } });
+    assert.deepEqual(x.sent, [], `nothing is sent for ${JSON.stringify(bad.slice(0, 20))}`);
+    assert.equal(a.refused.key, "refusal.BAD_KEY");
+  }
+});
+
+test("R55 control: a member who does not administer is drawn none of it and reads no signerlist; a failed read is drawn failed, never as no keys", async () => {
+  const m = await open("members", { me: MEMBER, table: membersTableMember() });
+  assert.equal(keysSection(m), undefined);
+  assert.ok(!btn(m.tree, "signeradd").length && !btn(m.tree, "signerset").length);
+  const failed = await open("members", { me: ADMIN, table: membersTable({ signerlist: "none" }) });
+  assert.ok(all(keysSection(failed), (e) => e.attrs["data-state"] === "failed").length === 1);
+  assert.ok(!textOf(keysSection(failed)).includes(said("screen.members.no.signing.key.yet")));
+});
+
+/* R56 (T51; K3807; DEC-330 A72, B5; DEC-332 (3); DEC-335): what removing an administrator takes; a removal under way is not drawn (N1248, T52's) */
+const arithSection = (o) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.members.what.removing.an.administrator.takes")))[0];
+
+test("R56 with adminarith answering the live row for 4 administrators the sentence carries 3 and 4; at 3 and above it says how many votes it takes", async () => {
+  const members = [FOUNDER_ROW, ...ROSTER, { member_id: "ana2", handle: "ana2", role: "admin", status: "active", capabilities: [], cover: "A2", expertise: [], invitation: "spent" }];
+  const a = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(4), memberlist: env({ members }) }) });
+  const sec = arithSection(a);
+  assert.ok(sec, "drawn to an administrator");
+  assert.ok(textOf(sec).includes(said("screen.members.this.takes.3.of.4", { n: 3, total: 4 })));
+  assert.ok(textOf(sec).includes(said("screen.members.nothing.here.changes.anything.explain")));
+  assert.ok(all(a.tree, (e) => e.tag === "h2" && textOf(e) === said("screen.members.what.removing.an.administrator.takes") && /own rule for removing an administrator/.test(e.attrs["data-tip"])).length, "the heading is explained");
+  // the fold of how it changes, with its notes
+  const fold = all(sec, (e) => e.tag === "details" && textOf(e).includes(said("screen.members.how.it.changes.with.the")))[0];
+  assert.ok(fold);
+  for (const k of ["screen.members.removal.takes.a.majority.of", "screen.members.the.one.facing.removal.is", "screen.members.a.lone.administrator.can.never"]) assert.ok(textOf(fold).includes(said(k)), k);
+  // the roster lists every counted administrator (the founder's row included): no reconcile fold
+  assert.ok(!all(sec, (e) => e.tag === "details" && textOf(e).includes(said("screen.members.founder.if.the.count.is.higher"))).length);
+});
+
+test("R56 control: one administrator reads that none can be removed by vote; a roster that lists every counted administrator draws no reconcile fold; more counted than listed draws it with the difference", async () => {
+  const one = [{ ...FOUNDER_ROW }];
+  const a = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(1), memberlist: env({ members: one }) }) });
+  const sec = arithSection(a);
+  assert.ok(textOf(sec).includes(said("screen.members.with.1.administrator.no.administrator", { n: 1 })));
+  assert.ok(textOf(sec).includes(said("screen.members.a.majority.that.leaves.out")) && textOf(sec).includes(said("screen.members.that.is.the.rule.holding")));
+  assert.ok(!textOf(sec).includes(said("screen.members.this.takes.3.of.4", { n: 1, total: 1 })));
+  // two counted, one listed: the founder is counted and the roster has no entry for her (membership R147 not claimed)
+  const two = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(2), memberlist: env({ members: [ROSTER[0]] }) }) });
+  const fold = all(arithSection(two), (e) => e.tag === "details" && textOf(e).includes(said("screen.members.founder.if.the.count.is.higher")))[0];
+  assert.ok(fold, "more counted than listed");
+  assert.ok(textOf(fold).includes(said("screen.members.founder.the.count.includes.1.administrator", { n: 1 })));
+  assert.ok(!textOf(arithSection(two)).includes(said("screen.members.with.1.administrator.no.administrator", { n: 2 })), "no singular sentence for 2");
+  const three = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(5), memberlist: env({ members: [ROSTER[0]] }) }) });
+  assert.ok(textOf(arithSection(three)).includes(said("screen.members.founder.the.count.includes.n.administrators", { n: 4 })));
+  // a member who does not administer is drawn none (R47's table), and reads no arithmetic
+  const m = await open("members", { me: MEMBER, table: membersTableMember() });
+  assert.equal(arithSection(m), undefined);
+  assert.ok(!m.p.requests.some((r) => r.op === "adminarith"));
+  // no block of a removal under way is drawn, whatever the roster holds
+  assert.ok(!/faces removal|hasn.t voted/.test(a.text), "no removal under way");
+  assert.equal(all(a.tree, (e) => /Agree: remove/.test(textOf(e))).length, 0);
+  // a failed read is drawn failed
+  const f = await open("members", { me: ADMIN, table: membersTable({ adminarith: "none" }) });
+  assert.ok(all(arithSection(f), (e) => e.attrs["data-state"] === "failed").length === 1);
 });
 
 /* R29, R35, R51: the counts agree with what they name, and the founder's row is the roster's own */

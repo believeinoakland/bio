@@ -2,7 +2,8 @@
    screens of the member interface: `members`, `account`, `connect` and `notes` (registry screens, DEC-139), with the AI
    account panel drawn once for the group's key and the member's own (R9); since T47, `group-identity`, `security` and
    `translations` (R14–R16), and the settings index and the sections the setup page held, `settings`, `group`, `places`
-   and `recovery` (R17–R20); since T50, `teamai`, the team's assistant (R47, R48). Pure: every read and act is an op the plane
+   and `recovery` (R17–R20); since T50, `teamai`, the team's assistant (R47, R48), and `updates` (R27); since T51, `glossary` (R59) and
+   `grouprules` (R61), with the members' signing keys on `members` (R55, R56) and the key made on `account` (R57). Pure: every read and act is an op the plane
    serves, called through `interface-shell`'s screen contract (its R21) and kit; nothing here reads a table, writes, or
    keeps anything in the browser.
 
@@ -23,6 +24,8 @@ import { identity } from "./identity.mjs";
 import { security } from "./security.mjs";
 import { translations } from "./translations.mjs";
 import { updates } from "./updates.mjs";
+import { glossary } from "./glossary.mjs";
+import { grouprules } from "./grouprules.mjs";
 import { aiPanel, aiPanelSend, aiUsageBars, PANEL_KEYS } from "./panel.mjs";
 import { SCREEN_WORDS } from "./words.mjs";
 import { KEYS } from "./keys.mjs";
@@ -38,13 +41,13 @@ const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`
 const WORDS = {
   members: [...STATES, "screen.members.name", ...own("screen.members."), ...["member", "may-do", "expertise"].flatMap((c) => [`column.members.${c}.name`, `column.members.${c}.shows`]), "member.founder.unnamed", "member.founder.unnamed.help", "screen.group.name", "screen.places.name", "screen.recovery.name",
     ...LABELS("members", ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
-      "websitekeycreate", "joinlinkenable", "signerset"]),
+      "websitekeycreate", "joinlinkenable", "signerset", "signeradd"]), "refusal.BAD_KEY", "refusal.NO_SUCH_MEMBER", "screen.members.signer.held.nodate",
     "act.owed_passwordresetlink.label.members"],
   teamai: [...STATES, "screen.teamai.name", ...own("screen.teamai.", "screen.members.key.", "screen.members.keepaway."), ...PANEL, "ai.whopays", "act.aikeepaway.does", "screen.connect.whopays.summary", "ai.usage.meter.month_group",
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions"].map((u) => `ai.use.${u}.inline`),
     ...LABELS("teamai", ["groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway"])],
   account: [...STATES, "screen.account.name", ...own("screen.account."), "handle.fixed", "level.prompt.name", "level.pause.name", "signing.ceremony.keepkey",
-    "screen.connect.name", "screen.notes.name",
+    "screen.connect.name", "screen.notes.name", "screen.ties.name", "screen.glossary.name", "screen.glossary.purpose", "member.founder.unnamed", "screen.members.signer.held.nodate",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere"])],
   connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "member.founder.unnamed", ...PANEL, "ai.whopays", "mark.outward.means", "screen.setup.state.needed", "shell.working",
     ...["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions", "standing"].flatMap((u) => [`ai.use.${u}.name`, `ai.use.${u}.means`]),
@@ -59,7 +62,7 @@ const WORDS = {
   group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup", "settings.set.system", "settings.set.line.setup", "settings.set.line.system", "term.hostingaccount.means", "term.bar.team.means", "member.founder.unnamed",
     ...["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"].map((z) => `label.timezones.${z}`), "stake.group.title", "stake.group.help", "stake.group.label", "stake.group.save", "stake.set", "stake.none", "stake.history", "stake.unreadable", "ai.label.untested",  "screen.group-identity.draft.label",
     ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset", "declaredstakeset", "writinghelp", "factconfirm"])],
-  places: [...STATES, "screen.places.name", ...own("screen.places."), "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
+  places: [...STATES, "screen.places.name", ...own("screen.places."), "screen.grouprules.name", "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", "court.add", "court.add.name", "court.add.help", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
   recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add", "member.founder.unnamed",
     ...LABELS("recovery", ["recoverycodesissue"])],
   "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested",
@@ -75,6 +78,9 @@ const WORDS = {
     "updates.handoff.copy", "updates.none", "updates.earlier.head", "updates.earlier.installed", "updates.earlier.skipped"],
   translations: [...STATES, "screen.translations.name", ...own("screen.translations."),
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
+  glossary: [...STATES, "screen.glossary.name", ...own("screen.glossary.", "glossary.term.", "state.item.")],
+  grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION",
+    ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft"])],
 };
 
 const PARTS = Object.freeze({ aiPanel, aiPanelSend, aiUsageBars });
@@ -85,4 +91,4 @@ const freeze = (s) => Object.freeze({
   parts: PARTS,
 });
 
-export const SCREENS = Object.freeze([settings, members, teamai, account, connect, notes, group, identity, places, recovery, security, translations, updates].map(freeze));
+export const SCREENS = Object.freeze([settings, members, teamai, account, connect, notes, group, identity, places, recovery, security, translations, updates, glossary, grouprules].map(freeze));

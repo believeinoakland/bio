@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, SIGNER_KEYS, membersTable, teamaiTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, grouprulesTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
@@ -48,7 +48,11 @@ const PRESSES = [
   ["notes", "writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "n" } }],
   // T47
   ["members", "passwordresetlink", { data: { member: "dev" }, reason: "lost it" }],
-  ["members", "signerset", { data: { key: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001" }, reason: "stolen" }],
+  ["members", "signerset", { data: { key: SIGNER_KEYS.dev, status: "revoked" }, reason: "stolen" }],
+  // T51 (R55, R61): a key registered for a member; a rule confirmed and one withdrawn (`ruledraft` and `writinghelp` of grouprules are held, J1)
+  ["members", "signeradd", { choose: { "ms-who": "ana" }, values: { "ms-line": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnaKey0000000000000000000000000000000000 ana@laptop" } }],
+  ["grouprules", "ruleconfirm", { data: { rule: "GR-0001" }, reason: "checked" }],
+  ["grouprules", "rulewithdraw", { data: { rule: "GR-0005" }, reason: "repealed" }],
   ["group", "groupnameset", { values: { "gr-name": "G" } }],
   ["group", "groupdomainset", { values: { "gr-domain": "g.example" } }],
   ["group", "grouplanguagesset", { values: { "gr-langs": "en es" }, reason: "r" }],
@@ -74,7 +78,7 @@ const PRESSES = [
   ["translations", "translationdraft", { data: { key: "mark.outward.means", direction: "to_english" }, reason: "r" }],
 ];
 const TABLES = { members: membersTable, teamai: teamaiTable, account: () => accountTable(ADMIN), notes: () => notesTable(ADMIN), group: groupTable, places: placesTable, recovery: recoveryTable,
-  "group-identity": identityTable, security: securityTable, translations: translationsTable };
+  "group-identity": identityTable, security: securityTable, translations: translationsTable, grouprules: grouprulesTable };
 const tableOf = (screen, situation, over, extra = {}) => (screen === "connect" ? connectTable(MEMBER, situation || "group", { ...extra, ...over }) : { ...TABLES[screen](), ...extra, ...over });
 const meOf = (screen) => (screen === "connect" ? MEMBER : ADMIN);
 const subjectOf = (screen) => (screen === "members" ? "ana" : screen === "translations" ? "es" : null);
@@ -87,7 +91,7 @@ const CHANGES = {
   setpassword: [], signout: [], signouteverywhere: [], signerregisterown: ["signers"], signerrevokeown: ["signers"], groupkeynoticeseen: ["notice"], disclosureshown: ["disclosure"],
   subscriptionsignin: ["signin", "reference"], accountreferenceset: ["reference", "uses"], accountreferenceremove: ["reference", "uses"], subscriptiondisconnect: ["signin", "reference"],
   notewrite: ["notes"], noterevise: ["notes"], notedelete: ["notes"], noteturn: ["notes"], writinghelp: [],
-  passwordresetlink: [], signerset: ["signers"], groupnameset: ["identity"], groupdomainset: ["identity"], grouplanguagesset: ["languages"], courtnoticeset: ["court"],
+  passwordresetlink: [], signerset: ["signers"], signeradd: ["signers"], ruleconfirm: ["rules"], rulewithdraw: ["rules"], groupnameset: ["identity"], groupdomainset: ["identity"], grouplanguagesset: ["languages"], courtnoticeset: ["court"],
   hostingaccessset: ["hosting"], strengthbarset: ["bar"], profilesset: ["profiles"], placewanted: ["place"], officesseed: ["offices"], entitycreate: ["offices"],
   recoverycodesissue: ["codes"], groupdescriptionset: ["description"], groupdescriptiondraft: [], securitymap: ["map"], securitytooladd: ["tools"], securitytooltest: ["tools"],
   securitytoolremove: ["tools"], translationadopt: ["words"], translationconfirm: ["words"], translationrevert: ["words"], translationgrant: [], translationdraft: ["words"],

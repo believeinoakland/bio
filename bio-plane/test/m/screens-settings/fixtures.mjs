@@ -56,6 +56,22 @@ export const HISTORY = (owner) => ({ ok: true, owner, count: 3, limit: 200, trun
   { at: "2026-10-07T08:00:00Z", by: "member:lu", change: "use_set", switch: "explore", value: "ask" },
 ] });
 
+/** `adminarith` (membership R5): the table for 1 to 9 administrators and the live row for `n`. */
+const arithRow = (n) => { const votesNeeded = Math.floor(n / 2) + 1, eligibleVoters = Math.max(0, n - 1); return { administrators: n, votesNeeded, eligibleVoters, possible: votesNeeded <= eligibleVoters }; };
+export const ARITH = (n) => env({ ok: true, table: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(arithRow), live: arithRow(n) });
+
+/** `signerlist` rows (credentials R8): the founder's, an administrator's own, one an administrator registered for lu, dev's active key and a key of dev's withdrawn
+ *  by rosa; ana has none. */
+const KEY = (n) => "AAAAC3NzaC1lZDI1NTE5AAAAI" + String(n).padEnd(40, "0");
+export const SIGNER_KEYS = Object.freeze({ founder: KEY("F"), rosa: KEY("R"), lu: KEY("L"), dev: KEY("D"), devOld: KEY("X") });
+export const SIGNERS = [
+  { key_b64: SIGNER_KEYS.founder, member_id: "admin", comment: "", status: "active", added: "2026-10-02T00:00:00Z", status_by: "admin", status_at: "2026-10-02T00:00:00Z", origin: "self", registered_by: "admin", member_status: "active", attests: true },
+  { key_b64: SIGNER_KEYS.rosa, member_id: "rosa", comment: "laptop", status: "active", added: "2026-10-03T00:00:00Z", status_by: "rosa", status_at: "2026-10-03T00:00:00Z", origin: "self", registered_by: "rosa", member_status: "active", attests: true },
+  { key_b64: SIGNER_KEYS.lu, member_id: "lu", comment: "", status: "active", added: "2026-10-05T00:00:00Z", status_by: "rosa", status_at: "2026-10-05T00:00:00Z", origin: "admin", registered_by: "rosa", member_status: "active", attests: true },
+  { key_b64: SIGNER_KEYS.dev, member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z", status_by: "dev", status_at: "2026-10-04T00:00:00Z", origin: "self", registered_by: "dev", member_status: "active", attests: true },
+  { key_b64: SIGNER_KEYS.devOld, member_id: "dev", comment: "old phone", status: "revoked", added: "2026-10-01T00:00:00Z", status_by: "rosa", status_at: "2026-10-12T00:00:00Z", origin: "self", registered_by: "dev", member_status: "active", attests: false, attests_why: "key_revoked" },
+];
+
 /** members, read by an administrator: every read answering (R47: the roster only; the team's key is `teamai`'s). */
 export function membersTable(over = {}) {
   return {
@@ -73,8 +89,11 @@ export function membersTable(over = {}) {
     websitekeycreate: () => env({ ok: true, keyId: "wk1", key: "a".repeat(64), capabilities: ["contribute"], dailyCap: 5, expiresInDays: 7, warning: "" }),
     joinlinkenable: () => env({ ok: true, linkId: "jl1", link: "b".repeat(64), capabilities: ["contribute"], dailyCap: 5, expiresInDays: 7, warning: "" }),
     // T47 (R23): the signing keys an administrator withdraws, and the reset link (credentials R10, R69)
-    signerlist: env({ signers: [{ key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001", member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z" }] }),
+    signerlist: env({ signers: SIGNERS }),
     signerset: (q, b) => env({ ok: true, keyB64: b.keyB64, status: b.status, by: "rosa" }),
+    signeradd: (q, b) => env({ ok: true, keyB64: b.keyB64, memberId: b.memberId, status: "active", origin: "admin", registered_by: "rosa" }),
+    // R56: three administrators are listed (the founder's row, rosa, lu) and three are counted
+    adminarith: ARITH(3),
     passwordresetlink: (q, b) => env({ ok: true, member: b.member, link: "rl-0123456789", expiresAt: "2026-10-19T00:00:00Z" }),
     ...over,
   };
@@ -123,9 +142,11 @@ export function accountTable(me, over = {}) {
     grouplanguages: env({ ok: true, languages: ["en", "es", "vi"] }),
     expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: [exp("Tenant organiser", true), exp("Interpreter", false)], gates: "nothing" }),
     signerlist: env({ signers: [
-      { key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001", member_id: me.member, comment: "laptop", status: "active", added: "2026-10-04T00:00:00Z" },
-      { key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIOther0000000000000000000000000000000000002", member_id: "someone", comment: "", status: "active", added: "2026-10-04T00:00:00Z" },
+      { key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001", member_id: me.member, comment: "laptop", status: "active", added: "2026-10-04T00:00:00Z", origin: "self", registered_by: me.member },
+      { key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIOther0000000000000000000000000000000000002", member_id: "someone", comment: "", status: "active", added: "2026-10-04T00:00:00Z", origin: "self", registered_by: "someone" },
     ] }),
+    // who registered a key for the member, by handle (R57)
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     infolevel: env({ ok: true, level: "pause", set_at: "2026-10-05T00:00:00Z", asked_at: null }),
     memberlanguageset: (q, b) => env({ ok: true, member: me.member, language: b.language, set_at: "2026-10-12T00:00:00Z" }),
     infolevelset: (q, b) => env({ ok: true, level: b.level }),
@@ -340,6 +361,28 @@ export function updatesTable(notice = {}, over = {}) {
     updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
     updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),
     updateskip: (q, b) => env({ ok: true, version: b.version, kind: "skip" }),
+    ...over,
+  };
+}
+
+/** grouprules, read by a member (local-facts R12, R19): rules drafted and waiting (tiers 1, 2 and none; one the viewer drafted), one in force, one withdrawn. */
+const SHA = (c) => c.repeat(64);
+const rule = (n, over) => ({ rule: "GR-" + String(n).padStart(4, "0"), section: "deadlines", state: "drafted", entry: {}, source: { captureSha: SHA("a"), extent: "p1" }, reason: "r", applies_to: null, tier: 1,
+  drafter: "ana", drafted_at: "2026-10-09T00:00:00Z", confirmer: null, confirmed_at: null, ...over });
+export const GROUP_RULES = [
+  rule(1, { entry: { rule: "Parks Commission: written comments close five days before the meeting", applies_to: "request_for_comment", starts: "hearing", citation: "Parks Commission Rule 4(b)", effective_from: "2026-07-01" }, applies_to: "request_for_comment", tier: 1 }),
+  rule(2, { entry: { rule: "Rent Board: a party's written statement is due ten days before the hearing", applies_to: "party_participation", starts: "hearing", citation: "Hearing Rule 6(a)", effective_from: "2026-01-01" }, applies_to: "party_participation", tier: 2, drafted_at: "2026-10-10T00:00:00Z" }),
+  rule(3, { section: "legal_facts", drafter: "dev", drafted_at: "2026-10-11T00:00:00Z", entry: { key: "council-speakers", trigger: "pending_measure_or_candidate", statement: "Speakers register by noon on the meeting day", citation: "Council Rules of Procedure 3.2", applies_to: ["public_comment"], effective_from: "2026-03-01" }, applies_to: ["public_comment"], tier: 1 }),
+  rule(4, { section: "legal_facts", entry: { key: "city-clerk-office-hours", trigger: "recording", statement: "A recording needs notice", citation: "Clerk Rule 2", effective_from: "2026-10-01" }, applies_to: null, tier: null }),
+  rule(5, { section: "legal_facts", state: "confirmed", entry: { key: "three-minutes", trigger: "pending_measure_or_candidate", statement: "Each speaker gets three minutes", citation: "Planning Commission Bylaws, Article 5", applies_to: ["public_comment"], effective_from: "2026-01-01" }, applies_to: ["public_comment"], tier: 1, drafted_at: "2026-09-22T00:00:00Z", confirmer: "lu", confirmed_at: "2026-09-24T00:00:00Z" }),
+  rule(6, { state: "withdrawn", entry: { rule: "A withdrawn rule never drawn", starts: "filed", citation: "x", effective_from: "2026-01-01" }, withdrawn: { by: "lu", at: "2026-10-01T00:00:00Z", reason: "wrong" } }),
+];
+export function grouprulesTable(over = {}) {
+  return {
+    grouprules: env({ ok: true, rules: GROUP_RULES, count: GROUP_RULES.length }),
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
+    ruleconfirm: (q, b) => env({ ok: true, rule: b.rule, state: "confirmed", at: "2026-10-12T00:00:00Z", tier: 1, with_statement: !!b.statement }),
+    rulewithdraw: (q, b) => env({ ok: true, rule: b.rule, state: "withdrawn", already: false, at: "2026-10-12T00:00:00Z" }),
     ...over,
   };
 }
