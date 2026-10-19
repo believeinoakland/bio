@@ -1255,7 +1255,7 @@ export class Credentials {
            minted_by, minted_at, confined_to, expires_at, run, project)
          VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?, ?)`,
         tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
-        "minted by your team's Civicsmith for one segment of your run", id, now, expiresAt, run, named ? project : null);
+        localize("credentials.index.minted_by_your_teams_civicsmith", "minted by your team's Civicsmith for one segment of your run"), id, now, expiresAt, run, named ? project : null);
     });
     return { ok: true, tokenId, token, run, writes: declared, expiresAt };
   }
@@ -1288,7 +1288,8 @@ export class Credentials {
     try {
       const s = this.membership.sight(project, viewer);
       if (s === Membership.SIGHT_FULL)
-        return this.membership.projectAuthority(project, viewer, "joined", "a run in a project");
+        return this.membership.projectAuthority(project, viewer, "joined",
+          localize("credentials.index.a_run_in_a_project", "a run in a project"));
       const absent = noSuchProject(project);
       return s === Membership.SIGHT_EXISTENCE ? (this.membership.existenceAct(project, viewer) ?? absent) : absent;
     } catch { return noSuchProject(project); }
@@ -1933,9 +1934,10 @@ export class Credentials {
   #keyedService(service) {
     /* DEC-49 REGION is-keyed-service */
     if (!KEYED_SERVICES.includes(service) && !(typeof service === "string" && SECURITY_SERVICE_RE.test(service)))
-      return Credentials.#row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE", `the keyed services are `
-        + `${KEYED_SERVICES.join(", ")}, and ${SECURITY_SERVICE_PREFIX}<tool id> for each security tool. Nothing was `
-        + `changed.`, { service: typeof service === "string" ? service.slice(0, 40) : null });
+      return Credentials.#row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE", localize("credentials.index.the_keyed_services_are",
+        "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.",
+        { services: KEYED_SERVICES.join(", "), prefix: SECURITY_SERVICE_PREFIX }),
+        { service: typeof service === "string" ? service.slice(0, 40) : null });
     return null;
     /* END DEC-49 REGION is-keyed-service */
   }
@@ -1963,7 +1965,7 @@ export class Credentials {
   }
 
   async keyedServiceSet({ service = null, key = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "setting the team's key for an outside service");
+    const bar = this.#adminBar(by, localize("credentials.index.setting_the_teams_key", "setting the team's key for an outside service"));
     if (bar) return bar;
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
@@ -1990,7 +1992,7 @@ export class Credentials {
   }
 
   keyedServiceSwitch({ service = null, on = false, by = null } = {}) {
-    const bar = this.#adminBar(by, "switching the team's key for an outside service");
+    const bar = this.#adminBar(by, localize("credentials.index.switching_the_teams_key", "switching the team's key for an outside service"));
     if (bar) return bar;
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;

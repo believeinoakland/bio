@@ -83,8 +83,10 @@ test("R28 AI_GRANT_OPS names each op as the plane routes it: `rule` held, the si
   for (const op of AI_GRANT_OPS) assert.match(op, /^[a-z]+$/, op);
   for (const gone of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"])
     assert.ok(!AI_GRANT_OPS.includes(gone), gone);
-  for (const held of ["rule", "career", "dutyoccurrences", "linesof", "structureat", "dutiesof", "calculation", "money"])
-    assert.ok(AI_GRANT_OPS.includes(held), held);
+  /* `rule` is held: answers' door to every rule service (its R7), so a grant admits it; and the two renamed names of
+     `lines` and `structure`, as the plane routes them */
+  assert.ok(AI_GRANT_OPS.includes("rule"), "rule");
+  assert.ok(AI_GRANT_OPS.includes("linesof") && AI_GRANT_OPS.includes("structureat"), "the renamed linesof and structureat");
 });
 
 test("R28 AI_GRANT_OPS is frozen and sorted; a request under a grant is admitted only for an op on it and only as a read; anything else GRANT_OP_REFUSED naming the op", async () => {

@@ -9,6 +9,7 @@ import { world, PASSWORD, SEAL } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_SERVICE_PREFIX,
          credentialsOf } from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const H = 3600e3;
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -35,7 +36,7 @@ test("R29 a security tool's credentials are held under `security:<tool_id>` by a
   const before = w.snapshot();
   for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", null])
     assert.deepEqual(await w.c.keyedServiceSet({ service: "security:t1", key: FIELDS, by }),
-      notAnAdmin(by, "setting the team's key for an outside service"), String(by));
+      notAnAdmin(by, localize("credentials.index.setting_the_teams_key", "setting the team's key for an outside service")), String(by));
   assert.equal(w.snapshot(), before, "no refusal writes");
   /* a set of named fields: held, off when first set, answered as the object it was set as once on */
   const s = await w.c.keyedServiceSet({ service: "security:t1", key: FIELDS, by: "second" });
@@ -86,7 +87,7 @@ test("R29 a set with no key removes the service's key and the service is off: fo
     w.c.keyedServiceSwitch({ service, on: true, by: "admin" });
     assert.equal((await w.c.keyedServiceFor({ service })).ok, true, service);
     const before = w.snapshot();
-    assert.deepEqual(await w.c.keyedServiceSet({ service, by: "ann" }), notAnAdmin("ann", "setting the team's key for an outside service"));
+    assert.deepEqual(await w.c.keyedServiceSet({ service, by: "ann" }), notAnAdmin("ann", localize("credentials.index.setting_the_teams_key", "setting the team's key for an outside service")));
     assert.equal(w.snapshot(), before, "a refused removal removes nothing");
     for (const key of [undefined, null]) {
       const r = await w.c.keyedServiceSet({ service, key, by: "second" });
