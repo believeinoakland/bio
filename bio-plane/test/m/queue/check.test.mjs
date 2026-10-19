@@ -42,7 +42,7 @@ test("R19, R26, R28, R31: a check request is refused KIND_NOT_PERSONAL by kind a
     assert.deepEqual([r.ok, r.reason, r.kind_class, r.check, r.translation],
       [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27", QUEUE_ACT_CHECKS.KIND_NOT_PERSONAL.translation]);
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-1','check-requested')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, ID, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice', ?, 'OBLIGATION', ?)`, ID, iso(NOW));
   const f = w.feed("alice");
   assert.ok(byId(f)[ID], "rows naming it suppress none");
   assert.equal(f.mute.suppressed.length, 0);

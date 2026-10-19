@@ -20,16 +20,22 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { buildSync } from "esbuild";
+import { build } from "esbuild";
+import { bundleOptions } from "../scripts/build.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 import { planeLimits, reportsBuilds } from "../src/index.mjs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
-import { run, release, armWith, restoreSigners, SIGNER, bump, sha } from "./fixture.mjs";
+import { run, release, armWith, restoreSigners, SIGNER, bump, sha, like } from "./fixture.mjs";
+const unesc = (t) => t.replace(/&#39;/g, "'");
+const UNREAD = like("installer.lag.bytes.unread", { version: /[0-9.]+/ });
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
 const WORKER_MB = 128;
+/* R33 (T51; N1240): the live memory of an install and of an update at the release's real size stays below 112 MB of the 128. */
+const LIVE_MB = 112;
 const here = (f) => fileURLToPath(new URL(f, import.meta.url));
 
 /* The release's real size, with bytes 0x80-0x9F in it as UTF-8 writes U+0080..U+009F, and still stating its limits and
@@ -49,27 +55,27 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT, src: REAL, fleet: false });
   const want = await sha(REAL);
-  const MISMATCH = new RegExp(`is not the ${NEXT.replace(/\./g, "\\.")} release&#39;s own bytes \\(read back, it hashes to [0-9a-f]{16}…; the release hashes to ${want.slice(0, 16)}…\\)`);
+  const MISMATCH = like("installer.lag.bytes.differ", { version: NEXT, got: /[0-9a-f]{16}…/, want: want.slice(0, 16) + "…" });
   for (const readBack of ["multipart", "raw"]) {
     const w = await run({ slug: "rs-repo", rel, readBack });
     assert.equal(w.planePuts.length, 2, readBack);
     assert.equal(w.planePuts[0].source, REAL, `${readBack}: the repository release installed, byte for byte`);
     assert.equal(w.page.status("verify"), "ok", readBack);
-    assert.match(w.page.done, /Your team's Civicsmith is running\./, readBack);
-    assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `${readBack}: no lag named`);
+    assert.ok(w.page.done.includes(RUNNING), readBack);
+    assert.ok(!MISMATCH.test(unesc(w.page.done)) && !UNREAD.test(unesc(w.page.done)), `${readBack}: no lag named`);
   }
   /* The built-in release (no repository answering): the same, at the size Bob's install met. */
   for (const readBack of ["multipart", "raw"]) {
     const w = await run({ slug: "rs-builtin", rel: null, readBack });
     assert.equal(w.planePuts[0].source, RELEASE_SOURCE, `${readBack}: the built-in release installed`);
     assert.equal(w.page.status("verify"), "ok", `built-in, ${readBack}`);
-    assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `built-in, ${readBack}: no lag named`);
+    assert.ok(!MISMATCH.test(unesc(w.page.done)) && !UNREAD.test(unesc(w.page.done)), `built-in, ${readBack}: no lag named`);
   }
   /* A mismatch is named, however the answer is shaped, and no success is claimed. */
   for (const readBack of ["differ", "fail"]) {
     const w = await run({ slug: "rs-bad", rel, readBack });
-    assert.match(w.page.done, readBack === "differ" ? MISMATCH : /could not be read back/, readBack);
-    assert.ok(!w.page.done.includes("Your team's Civicsmith is running."), `${readBack}: no success claimed`);
+    assert.match(unesc(w.page.done), readBack === "differ" ? MISMATCH : UNREAD, readBack);
+    assert.ok(!w.page.done.includes(RUNNING), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
   }
   restoreSigners();
@@ -77,14 +83,17 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
 
 /* ---- the memory bound ---- */
 
+/* The finished panel's headline, by its key, as the panel escapes it. */
+const RUNNING = word("installer.success.running").replace(/'/g, "&#39;");
 const dir = mkdtempSync(join(tmpdir(), "r33-"));
 after(() => rmSync(dir, { recursive: true, force: true }));
 let bundle = null, repo = null, repoFleet = null;
 const real = here("../../release");
 const prepare = async () => {
   if (bundle) return;
-  /* The file a Worker would run: the installer built as `npm run build` builds it (ASCII source, the release as one literal). */
-  buildSync({ entryPoints: [here("../src/index.mjs")], bundle: true, format: "esm", platform: "neutral", outfile: join(dir, "installer.mjs"), logLevel: "silent" });
+  /* The file a Worker would run: the installer built as `npm run build` builds it (ASCII source, the release as one literal, the
+     word rows cut to the installer's own keys, R72). */
+  await build({ ...(await bundleOptions()), outfile: join(dir, "installer.mjs") });
   bundle = join(dir, "installer.mjs");
   /* A signed 21 MB release for the repository to serve: newer than the built-in, naming no fleet. */
   const bytes = Buffer.from(REAL);
@@ -107,11 +116,15 @@ async function child(scenario) {
     ...(scenario.repo ? { repo: scenario.repo === "fleet" ? repoFleet : repo, signer: SIGNER.line } : {}) };
   const out = execFileSync(process.execPath, ["--expose-gc", here("./realsize-child.mjs"), JSON.stringify(cfg)],
     { encoding: "utf8", maxBuffer: 1 << 24, timeout: 300000 });
-  return JSON.parse(out.trim().split("\n").at(-1));
+  const r = JSON.parse(out.trim().split("\n").at(-1));
+  /* What the page said, read from the word table here (the child holds only the installer, so as not to disturb its memory). */
+  const said = unesc(r.done || "");
+  const differ = like("installer.lag.bytes.differ", { version: /[0-9.]+/ });
+  return { ...r, running: like("installer.success.running").test(said), byteLag: differ.test(said), mismatch: differ.test(said), unread: UNREAD.test(said) };
 }
 const within = (r, what) => {
   if (process.env.R33_REPORT) console.log(`R33 peak: ${what}: ${r.peakMB} MB live (baseline ${r.baselineMB}), resident growth ${r.rssGrowthMB} MB; ${JSON.stringify(r.samples)}`);
-  assert.ok(r.peakMB < WORKER_MB, `${what}: live memory peaked at ${r.peakMB} MB (baseline ${r.baselineMB} MB; limit ${WORKER_MB} MB): ${JSON.stringify(r.samples)}`);
+  assert.ok(r.peakMB < LIVE_MB, `${what}: live memory peaked at ${r.peakMB} MB (baseline ${r.baselineMB} MB; limit ${LIVE_MB} MB): ${JSON.stringify(r.samples)}`);
   /* And what the act added to the process's resident high-water mark, which sees what no sample point does. */
   assert.ok(r.rssGrowthMB < WORKER_MB, `${what}: the act took the process ${r.rssGrowthMB} MB above where loading the installer left it (limit ${WORKER_MB} MB)`);
 };

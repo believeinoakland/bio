@@ -11,6 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
+import { reqText, ticked, readRows, asksNotTheAccount } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -22,8 +23,11 @@ const WRITES = { actionreplyquoting: "reversible", updateskip: "reasoned", updat
   updatestart: "reversible", planask: "reversible", stepsource: "reasoned", stepsourcewithdraw: "reasoned",
   lookedsince: "caller-owned" };
 const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned", securitymap: "caller-owned" };
-const READS = ["proceedingdates", "updatenotice", "aiuseovertime", "exploregraph", "standardproposals", "filingread",
-  "pressurefor"];
+const READS = readRows(T48.T48_NON_ACTS);
+const R41_READS = READS.filter((op) => op !== "proceedingdates" && op !== "updatenotice");
+/* the ops R41 names that T48's tables hold */
+const R41_CONTROL = ticked(reqText(41)).filter((op) => Object.hasOwn(T48.T48_RUNGS, op) || Object.hasOwn(T48.T48_RUNG_ABSENT, op)
+  || Object.hasOwn(T48.T48_NON_ACTS, op));
 const UPDATE = "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
   + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
   + "installs, with Cloudflare's consent)";
@@ -126,7 +130,7 @@ test("R40: updateskip `reasoned`, UPDATE_SKIP_NO_REASON joining JUSTIFICATION_RE
 /* ---- R41 ----------------------------------------------------------------------------------------------------------- */
 test("R41: aiuseovertime, exploregraph, standardproposals, filingread and pressurefor are reads, `read: …`, ungraded, no "
    + "machine refusal, phone acts; control: planask is not a read", () => {
-  for (const op of ["aiuseovertime", "exploregraph", "standardproposals", "filingread", "pressurefor"]) {
+  for (const op of R41_READS) {
     assert.ok(isRead(op), op);
     assert.equal(gradeOf(op), null, op);
     assert.equal(phoneOf(op), true, op);
@@ -151,8 +155,7 @@ test("R41 (K3297): planask `reversible` as airunopen; not an ACTS row (its subje
   assert.equal(phoneOf("planask"), true);
   assert.equal(RUNG_ABSENT.optionpropose.ground, "undetermined", "optionpropose keeps its grade");
   /* control: no op of R41 enters MACHINE_REFUSALS */
-  for (const op of ["planask", "stepsource", "stepsourcewithdraw", "lookedsince", "aiuseovertime", "exploregraph", "standardproposals",
-    "filingread", "pressurefor"]) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
+  for (const op of R41_CONTROL) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
 });
 
 test("R41: stepsource `reasoned` as connectionassert, STEP_SOURCE_NO_BASIS joining JUSTIFICATION_REFUSALS once; "
@@ -165,9 +168,10 @@ test("R41: stepsource `reasoned` as connectionassert, STEP_SOURCE_NO_BASIS joini
   assert.equal(NON_ACTS.stepsource, STEP);
   assert.equal(NON_ACTS.stepsourcewithdraw, STEP);
   for (const op of ["stepsource", "stepsourcewithdraw"]) assert.equal(phoneOf(op), true, op);
-  /* controls: the shape-refusals connections R68 lists are not a reason */
-  for (const c of ["STEP_SOURCE_NOT_A_MEMBER", "NO_SUCH_RELATION", "CAPTURE_NOT_HELD", "EXTENT_MALFORMED",
-    "STEP_SOURCE_BASIS_TOO_LONG"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  /* controls: the shape-refusals connections R68 lists are not a reason (R1's rule over a code: none asks an object, an
+     identifier, a choice, a form or a member) */
+  assert.deepEqual(JUSTIFICATION_REFUSALS.filter(asksNotTheAccount), []);
+  assert.ok(asksNotTheAccount("NO_SUCH_RELATION") && asksNotTheAccount("STEP_SOURCE_BASIS_TOO_LONG"));
   assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length, "no code twice");
 });
 

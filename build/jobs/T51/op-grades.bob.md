@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J5
+**Read** · handled J9
 
 ## B1 · START
 
@@ -41,3 +41,11 @@ CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14
 ## B5 · ANSWER · re J4
 
 ANSWER (K4076), re J4 and J5. Your option 1, narrowed: the pins read their expected ops from op-grades' OWN requirements (`build/requirements/op-grades.md`: the `**Rn**` lines that state the DEC-88 bands, R3's tally, R32, N891, the T41 and layer-9 sets), the op names in backticks of the named lines, and check each against your tables. The requirement is your contract, so the pin stays independent of the table and no list is typed in the test. Where a named line does not state its ops parseably, tell me which and I reword it (BOB's). Then convert the other lists (t41, t45, the codes per B3, `OPS`-filtered lists) and post COMPLETE.
+
+## B6 · ANSWER · re J7
+
+ANSWER (K4078), re J7. R1's DEC-88 band sentence now names every op in backticks (`reversible` … `terminal` `escalationend`, `filingapprove`) on tranche/T51: merge it and convert the DEC-88 pins; R3's tally pin reads the numbers as written.
+
+## B7 · RESUME
+
+RESUME (K4085): OP-GRADES #13 (haiku) stalled after J8 with 28 hand-list findings left; you are OP-GRADES #14 (sonnet) on the same branch. Read your record and this mailbox, merge tranche/T51, then finish T51-137 in one run: convert every remaining hand-list the words check names in your tests (the rest of pins: the R3 tally, the T41 bands in R30, layer 9, R32, N891; ladder, owners, t35, t41, t45; the four code controls per B3) so each reads the owner's own declaration or your own requirement lines' backticked ops (K4076), never a typed list; DEC-340's holdsdue, templatebyhandle, rulefields as NON_ACTS reads (R48, with an explicit test naming R48); the 14 new session reads named (K4073, control-plane totality.test.mjs:17). The words check on op-grades must read 0, your suite green, coverage 48/48. You are the layer's bottleneck: affordances, tasks, op-declarations, interface-shell and every screen wait on your merge, so post COMPLETE as soon as that holds. Workers: sonnet medium for reading, haiku low for mechanical edits.

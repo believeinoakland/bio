@@ -8,9 +8,8 @@ import assert from "node:assert/strict";
 import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
 
-/* Each op driven below, by its owner; the last test holds this list to t45.mjs. */
-const DRIVEN = ["scenariosetaside", "scenariorestore", "planpause", "planresume", "actionscope", "projectscopeset",
-  "projectapprovalset", "successrevise", "cureunlink", "ruledraft", "rulewithdraw"];
+/* Each op driven below, by its owner, is recorded as it is driven; the last test holds the set to the ops t45.mjs grades. */
+const DRIVEN = new Set();
 
 const WHYLESS = [undefined, "", "   "];
 const GIVEN = "the member's own account of why";
@@ -22,7 +21,7 @@ const dump = (sql) => JSON.stringify([...sql.exec("SELECT name FROM sqlite_maste
    with `code`, in the family, writing nothing; over a fresh scene, with a reason, accepted. `scene()` answers
    `{ w, act(why) }`, `act` calling the owner's method with `why` in its reason field (absent when `undefined`). */
 async function backed(op, code, scene, { whys = WHYLESS } = {}) {
-  assert.ok(DRIVEN.includes(op), op);
+  DRIVEN.add(op);
   assert.equal(T45_RUNGS[op], "reasoned", op);
   assert.equal(RUNGS[op], "reasoned", op);
   for (const why of whys) {
@@ -146,7 +145,7 @@ test("R19: local-facts' ruledraft and rulewithdraw, graded `reasoned` (op-grades
    + "reason with RULE_NO_REASON (local-facts R10, R13), in JUSTIFICATION_REFUSALS, writing nothing, and accepted with it",
 async () => {
   const { V, sha } = lfFix;
-  const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
+  const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9", effective_from: "2026-09-01" };
   const sourced = () => { const w = lfFix.world();
     return { w, src: { captureSha: w.held("INFO-2026-0001", sha("the bylaw")), extent: { kind: "document" } } }; };
   await backed("ruledraft", "RULE_NO_REASON", () => { const { w, src } = sourced();
@@ -161,5 +160,6 @@ async () => {
 /* ---- the list ---- */
 test("R19: every op op-grades' t45.mjs grades `reasoned` is driven here", () => {
   const graded = Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned").sort();
-  assert.deepEqual([...new Set(DRIVEN)].sort(), graded);
+  assert.ok(graded.length > 0);
+  assert.deepEqual([...DRIVEN].sort(), graded);
 });

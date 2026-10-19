@@ -13,7 +13,9 @@ import { documentOf } from "./dom.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
 
 const styleOf = (html) => /<style>([\s\S]*?)<\/style>/.exec(html)[1];
-const REPLACED = ["cs-menuwrap", "cs-menu", "cs-actwrap", "cs-slot", "cs-rowname", "cs-overlay", "cs-image", "cs-areas-box", "cs-area", "cs-testband"];
+const REPLACED = ["cs-menuwrap", "cs-menu", "cs-actwrap", "cs-slot", "cs-rowname", "cs-overlay", "cs-image", "cs-areas-box", "cs-area"];
+/* R67 retired the test band's own `cs-testband`; R92 draws the newer-version band with the design's `cs-testband` and its hook
+   `mk-updband`, so the class is written in the program for that band alone and no rule of it is carried in STYLE */
 const classesOf = (root) => { const out = new Set(); for (const el of root.querySelectorAll("[class]")) for (const c of el.getAttribute("class").split(/\s+/)) if (c) out.add(c); return out; };
 const fn = (body) => new Function("cs", "view", body);
 const HEX = "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0";
@@ -42,7 +44,7 @@ test("R65 the shell draws its own elements with the design's classes: the member
   const html = interfacePage([...ALL, ELEMENTS]);
   const written = classLiterals(html.slice(html.indexOf("<script")));
   for (const c of REPLACED) assert.ok(!written.has(c), c + " is written in the program");
-  for (const c of REPLACED) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
+  for (const c of [...REPLACED, "cs-testband"]) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
   /* STYLE holds only the page's height settings and the reduced-motion rule */
   const selectors = styleOf(html).replace(/@media[^{]*\{[\s\S]*\}\s*$/, "").split("}").map((r) => r.split("{")[0].trim()).filter(Boolean);
   for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root)/, sel);

@@ -4,7 +4,7 @@
    active member (membership R68) and who the administrators are (its R86) are its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, dayWord } from "./world.mjs";
 import { DOCKET_UNREADABLE } from "../../../src/docket/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -55,15 +55,21 @@ test("R34 (reevaluation R33; DEC-101 (3)): FINDINGs cited-newer-edition and cite
   assert.deepEqual(ne.options, [{ id: "opt", on: ["INQ-1"] }]);
   assert.deepEqual(ne.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "aged from the cause's since");
   assert.equal(all2.age.state, "undetermined");
-  // the detail: group, case, cited edition, edition named, the quoted words
-  for (const [it, words] of [[ne, [/eastbay-watch/, /case CASE-7/, /cites edition 2/, /edition 3/, /"a finding was corrected"/]],
-                             [wd, [/eastbay-watch/, /case CASE-7/, /edition 2/, /withdrew edition 2/, /"a source was retracted"/]]])
-    for (const re of words) assert.match(`${it.summary} ${it.detail}`, re, `${it.id}: ${re}`);
-  assert.doesNotMatch(ne.detail, /signing key/, "a listed key is not remarked on");
-  assert.match(wd.detail, /signing key is not among the keys the imported case file lists/, "key_listed false is said");
-  assert.match(wd.detail, /taken this entry back \(entry 9, dated 2026-08-25\)/, "a move taken back is said");
-  assert.doesNotMatch(ne.detail, /taken this entry back/);
-  assert.match(all2.detail, /withdrew every edition/); assert.match(all2.summary, /another team/, "group withheld: unnamed");
+  // R43: the sentences by key: group, case, cited edition, edition named, the quoted words
+  const both = word("queue.cited-case.both", { case: "CASE-7", group: "eastbay-watch" });
+  const cited2 = word("queue.cited-editions.one", { list: "2" });
+  const tail = word("queue.cited-docket.detail.tail"), dated = word("queue.cited-docket.detail.dated", { date: dayWord("2026-08-20") });
+  assert.equal(ne.summary, word("queue.cited-newer-edition.summary", { name: "Was the contract bid?", cited: cited2, whose: both, edition: 3 }));
+  assert.equal(ne.detail, [word("queue.cited-newer-edition.detail.numbered", { whose: both, edition: 3, cited: cited2 }), dated,
+    word("queue.docket-entry.said.edition", { said: "a finding was corrected" }), tail].join(" "), "a listed key and no take-back are not remarked on");
+  assert.deepEqual([ne.summary_key, ne.detail_key], ["queue.cited-newer-edition.summary", "queue.cited-newer-edition.detail.numbered"]);
+  assert.equal(wd.summary, word("queue.cited-edition-withdrawn.summary", { name: "Was the contract bid?", cited: cited2, whose: both }));
+  assert.equal(wd.detail, [word("queue.cited-edition-withdrawn.detail.numbered", { whose: both, edition: 2, cited: cited2 }), dated,
+    word("queue.docket-entry.said.withdrawal", { said: "a source was retracted" }), word("queue.docket-entry.key-unlisted"),
+    word("queue.docket-entry.taken-back.dated", { seq: 9, date: dayWord("2026-08-25") }), tail].join(" "), "key_listed false and the take-back are said");
+  const none = word("queue.cited-case.none");
+  assert.equal(all2.summary, word("queue.cited-edition-withdrawn.summary", { name: "INQ-2", cited: cited2, whose: none }), "group withheld: unnamed");
+  assert.equal(all2.detail_key, "queue.cited-edition-withdrawn.detail.all");
   assert.equal(ne.basis.source, "reevaluation.citedCaseDependents"); assert.equal(ne.basis.what_changed, "a finding was corrected");
   assert.equal(wd.basis.reason, "a source was retracted"); assert.equal(wd.basis.key_listed, false);
   for (const it of [ne, wd, all2]) for (const s of [it.summary, it.detail, it.basis.detail]) assert.doesNotMatch(s, FORBIDDEN, s);
@@ -101,9 +107,9 @@ test("R35 (case-import R20): the watch's items go to the member who set the watc
       { ...head(IMP, "alice", 3), kind: "withdrawal", edition: "all", date: "2026-08-22", key_listed: true, move: true, reason: "retracted", taken_back: { seq: 4, date: "2026-08-23" } },
       { ...head(IMP2, "ruth", 1), kind: "reaction", edition: 1, date: "2026-08-24", key_listed: true, move: false, taken_back: null }],
     refused: [
-      { ...head(IMP, "alice", 5, iso(NOW - 4 * DAY)), failed: "C-130.15", detail: "the signature does not verify" },
-      { ...head(IMP, "alice", 5, iso(NOW - 6 * DAY)), failed: "C-130.16", detail: "a second copy" },
-      { ...head(IMP, "alice", null), failed: "C-130.14", detail: "no seq" }],
+      { ...head(IMP, "alice", 5, iso(NOW - 4 * DAY)), failed: "digest", detail: "the check failed" },
+      { ...head(IMP, "alice", 5, iso(NOW - 6 * DAY)), failed: "signature", detail: "a second copy" },
+      { ...head(IMP, "alice", null), failed: "form", detail: "no seq" }],
     unreadable: [{ import: IMP, group: "eastbay-watch", case: "CASE-7", set_by: "alice", docket: "https://x.example/?op=docketpublic",
                    sentence: DOCKET_UNREADABLE, reason: "not_json", at: iso(NOW - 3 * DAY) }] };
   const { w, asked } = watchWorld(() => answer);
@@ -127,24 +133,37 @@ test("R35 (case-import R20): the watch's items go to the member who set the watc
     for (const s of [it.summary, it.detail, it.basis.detail, ...it.options.map((o) => o.label)]) assert.doesNotMatch(s, FORBIDDEN, `${it.id}: "${s}"`);
   }
   assert.equal(byId(w.read("ada"))[`FINDING::followed-case-entry::${IMP2}#1`].basis.recipients_rule, "administrators");
-  // followed-case-entry: kind, edition, date, key_listed; a move's words quoted
+  // followed-case-entry (R43): kind, edition, date, key_listed by key; a move's words quoted
   assert.equal(e1.class, "FINDING");
-  for (const re of [/edition 3/, /2026-08-20/, /signing key is among the keys/, /"a finding was corrected"/]) assert.match(e1.detail, re);
-  for (const re of [/kind response/, /edition 3/, /2026-08-21/, /signing key is not among the keys/, /nothing resting on the case is re-evaluated/]) assert.match(e2.detail, re);
-  for (const re of [/withdrawal of every edition/, /"retracted"/, /taken this entry back \(entry 4/]) assert.match(e3.detail, re);
+  const watched = word("queue.cited-case.both", { case: "CASE-7", group: "eastbay-watch" });
+  assert.equal(e1.summary, word("queue.followed-case-entry.summary.edition", { whose: watched, edition: 3 }));
+  assert.equal(e1.detail, [word("queue.followed-case-entry.detail", { seq: 1 }), word("queue.followed-case-entry.detail.date", { date: dayWord("2026-08-20") }),
+    word("queue.followed-case-entry.detail.keyed"), word("queue.docket-entry.said.edition", { said: "a finding was corrected" }),
+    word("queue.followed-case-entry.detail.moves")].join(" "));
+  assert.equal(e2.summary, word("queue.followed-case-entry.summary.other", { whose: watched }));
+  assert.equal(e2.detail, [word("queue.followed-case-entry.detail", { seq: 2 }), word("queue.followed-case-entry.detail.date", { date: dayWord("2026-08-21") }),
+    word("queue.followed-case-entry.detail.unkeyed"), word("queue.followed-case-entry.detail.nomoves")].join(" "));
+  assert.equal(e3.summary, word("queue.followed-case-entry.summary.withdrawal.all", { whose: watched }));
+  assert.equal(e3.detail, [word("queue.followed-case-entry.detail", { seq: 3 }), word("queue.followed-case-entry.detail.date", { date: dayWord("2026-08-22") }),
+    word("queue.followed-case-entry.detail.keyed"), word("queue.docket-entry.said.withdrawal", { said: "retracted" }),
+    word("queue.docket-entry.taken-back.dated", { seq: 4, date: dayWord("2026-08-23") }), word("queue.followed-case-entry.detail.moves")].join(" "));
   assert.deepEqual([e2.basis.entry_kind, e2.basis.move, e2.basis.key_listed], ["response", false, false]);
   // refused: the check failed named, the copies of one seq one item
   const rf = m[`FINDING::cited-docket-entry-refused::${IMP}#5`];
   assert.equal(rf.class, "FINDING");
-  assert.deepEqual(rf.basis.failed, ["C-130.15", "C-130.16"]); assert.match(rf.detail, /C-130\.15, C-130\.16/);
-  assert.match(m[`FINDING::cited-docket-entry-refused::${IMP}#unnumbered`].detail, /C-130\.14/);
+  assert.deepEqual(rf.basis.failed, ["digest", "signature"]);
+  assert.equal(rf.detail, word("queue.cited-docket-entry-refused.detail.other", { seq: 5, checks: `${word("queue.fill.check.digest")}, ${word("queue.fill.check.signature")}` }));
+  assert.equal(rf.summary, word("queue.cited-docket-entry-refused.summary", { whose: watched }));
+  assert.equal(m[`FINDING::cited-docket-entry-refused::${IMP}#unnumbered`].detail,
+    word("queue.cited-docket-entry-refused.detail.unnumbered.one", { checks: word("queue.fill.check.form") }));
   // unreadable: a CONDITION opening with docket's sentence, its reason and instant, aged from the read
   const un = m[`CONDITION::cited-docket-unreadable::${IMP}`];
   assert.equal(un.class, "CONDITION");
-  assert.ok(un.detail.startsWith(DOCKET_UNREADABLE), "its detail opens with DOCKET_UNREADABLE's sentence");
+  assert.equal(un.summary, word("queue.cited-docket-unreadable.summary", { whose: watched }));
+  assert.equal(un.detail, [word("queue.cited-docket-unreadable.detail"), word("queue.cited-docket-unreadable.detail.reason", { reason: word("queue.fill.reason.not_json") }),
+    word("queue.cited-docket-unreadable.detail.at", { date: dayWord("2026-08-29") })].join(" "));
+  assert.equal(un.basis.sentence, DOCKET_UNREADABLE, "docket's own sentence stays on the basis");
   assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
-  assert.match(un.detail, /not_json/); assert.ok(un.detail.includes(iso(NOW - 3 * DAY)));
-  assert.match(un.detail, /never that nothing changed/);
   assert.deepEqual(un.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY });
   assert.deepEqual(un.options.map((o) => o.id), ["importwatch", "importunwatch"], "R12: a member's act changes it");
   assert.deepEqual(e1.options.map((o) => o.id), ["importedcase"]);
@@ -180,12 +199,12 @@ test("R35 (N546; case-import R20's seen_at, K1419): each entry's item ages from 
       { ...head(IMP, "alice", 3, null), kind: "reaction", edition: 3, date: "2026-08-22", key_listed: true, move: false, taken_back: null },
       { ...head(IMP, "alice", 4, "not an instant"), kind: "disclosure", edition: 3, date: "2026-08-23", key_listed: true, move: false, taken_back: null }],
     refused: [
-      { ...head(IMP, "alice", 5, iso(NOW - 3 * DAY)), failed: "C-130.15", detail: "a" },
-      { ...head(IMP, "alice", 5, iso(NOW - 9 * DAY)), failed: "C-130.16", detail: "b" },
-      { ...head(IMP, "alice", 5, null), failed: "C-130.17", detail: "c" },
-      { ...head(IMP, "alice", 6, null), failed: "C-130.15", detail: "d" },
-      { ...head(IMP, "alice", 7, null), failed: "C-130.15", detail: "e" },
-      { ...head(IMP, "alice", 7, iso(NOW - 8 * DAY)), failed: "C-130.16", detail: "f" }],
+      { ...head(IMP, "alice", 5, iso(NOW - 3 * DAY)), failed: "digest", detail: "a" },
+      { ...head(IMP, "alice", 5, iso(NOW - 9 * DAY)), failed: "signature", detail: "b" },
+      { ...head(IMP, "alice", 5, null), failed: "chain", detail: "c" },
+      { ...head(IMP, "alice", 6, null), failed: "digest", detail: "d" },
+      { ...head(IMP, "alice", 7, null), failed: "digest", detail: "e" },
+      { ...head(IMP, "alice", 7, iso(NOW - 8 * DAY)), failed: "signature", detail: "f" }],
     unreadable: [] };
   const { w } = watchWorld(() => answer);
   const m = byId(w.read("alice"));
@@ -199,7 +218,7 @@ test("R35 (N546; case-import R20's seen_at, K1419): each entry's item ages from 
   }
   assert.deepEqual(rf(5).age, { state: "determined", since: iso(NOW - 9 * DAY), ms: 9 * DAY }, "a refused entry's copies: from the first read");
   assert.equal(rf(5).basis.seen_at, iso(NOW - 9 * DAY));
-  assert.deepEqual(rf(5).basis.failed, ["C-130.15", "C-130.16", "C-130.17"]);
+  assert.deepEqual(rf(5).basis.failed, ["digest", "signature", "chain"]);
   assert.deepEqual([rf(6).age.state, rf(6).age.reason], ["undetermined", "no_seen_instant"]);
   assert.deepEqual(rf(7).age, { state: "determined", since: iso(NOW - 8 * DAY), ms: 8 * DAY }, "an undated copy first, a dated one later: the dated one");
   /* the age is the read's instant less seen_at, so a later read is older by exactly the interval, and the item the same */

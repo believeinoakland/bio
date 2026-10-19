@@ -8,6 +8,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          aliased, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
+import { readRows } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -117,8 +118,9 @@ test("R11 R47: wizard-scripts' ops — wizardretire `reasoned` (WIZARD_REASON_RE
     "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes "
     + "this module's rows and moves no bundle", op);
   assert.equal(NON_ACTS.wizardprogress, "tally: unattributed, keyed by a script's version; names no member");
-  for (const op of ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck", "baseupdates"])
-    assert.ok(isRead(op), op);
+  const WIZARD_READS = readRows(NON_ACTS).filter((op) => op.startsWith("wizard") || op === "baseupdates");
+  assert.ok(WIZARD_READS.length >= 7);
+  for (const op of WIZARD_READS) assert.ok(isRead(op), op);
   notMachine(Object.keys(W));
 });
 
@@ -158,18 +160,8 @@ const T33_WRITES = {
   officesseed: "substrate", seatsseed: "substrate", disclosureshown: "caller-owned",
   ask: "caller-owned", askusage: "observational",
 };
-const T33_READS = ["event", "eventforact", "datedfacts", "eventsfor", "timeline", "sequence", "whowassent", "statementsof",
-  "proceedingstatus", "line", "linesof", "structureat", "holderat", "partiesof", "proceedinglinks", "money", "moneyof",
-  "moneysummable", "moneyreconcile", "moneyset", "committedagainstpaid", "authoritychain", "moneyamountchecks",
-  "moneyjunction", "moneycheckparams", "moneydetectors", "moneynoticed", "duty", "dutiesof", "dutyoccurrences",
-  "dutytransitions", "powersof", "dutysetagainst", "identity", "samepersoncandidates", "person", "career",
-  "personcredentials", "personinterests", "personstatements", "staffing", "memberties", "sourcepersonlinks",
-  "interestchecks", "explore", "explorepreset", "exploreverify", "exploretimeline", "hypotheses", "notes", "table",
-  "tablesat", "calculationevaluate", "calculation", "patterns", "workbook", "workbookinputs", "workbooklint",
-  "workbookexport", "rule", "asktallies", "standing", "standinganswers", "follows", "snapshots", "snapshotdiff",
-  "inforceat", "standardsfor", "lawrelations", "lawaddresses", "stillstanding", "citationresolve", "accountreference",
-  "keyedservices", "exportpage", "addresseesuggest", "clocksics", "clocklateness", "aiusage", "capturerequestplatformhosts",
-  "assistantstate", "disclosureof", "standardinforce"];
+/* T33's reads (R13): every row of T33's table that is a read */
+const T33_READS = readRows(T33_NON_ACTS);
 /* `reversible`: the published act of the owner that takes each result back */
 const TAKEN_BACK_BY = {
   eventgovern: "eventgovern", eventrelate: "eventrelationwithdraw", linerecord: "linewithdraw", moneyrecord: "moneywithdraw",
@@ -280,8 +272,7 @@ const T34_WRITES = {
   groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate",
   groupkeynoticeseen: "caller-owned", placewanted: "substrate", memberlanguageset: "caller-owned",
 };
-const T34_READS = ["checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate", "memberlanguage",
-  "startfrom"];
+const T34_READS = readRows(T34_NON_ACTS);
 const T34_PUBLIC = ["websiteinvite", "joinlinkinvite", "groupdescription", "courtnotice"];
 test("R17: every op T34 declares carries the grade read from its owner, each gated op its NON_ACTS reason, the public "
    + "ones none; checkrecord's CHECK_NO_REASON is in the family", () => {
