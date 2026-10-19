@@ -1,6 +1,6 @@
 # hypotheses (T51)
 
-**Status** · session_01EadYoLQpp5GhXS6UWqUpKn · depth 2 · WORKING · handled B1
+**Status** · session_01EadYoLQpp5GhXS6UWqUpKn · depth 2 · WORKING · handled B2
 
 ## J1 · COMPLETE
 
