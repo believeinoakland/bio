@@ -18,3 +18,7 @@
 **Tests and checks.** `node --test bio-plane/test/m/record-core/`: tests 181, pass 181, fail 0. `bio-plane/test/stats-disclosure.test.mjs`: 1 pass. From the process repository: `checks/format.mjs` 0 failures; `checks/architecture.mjs record-core` 0 failures; `checks/coverage.mjs record-core` 84 of 84 live requirement ids named by a test, 0 failures; `checks/ownership.mjs record-core tranche/T51 job/T51/record-core` 0 failures; `checks/run.mjs`: no line names record-core (format 0, architecture 0; other modules' words and coverage reds are theirs); `build.mjs --check`: stale-rows note only, naming my new ids.
 
 Size (session_01P9soEEGVfhdDoZAhdGukho): test runs 6, module lines 2310
+
+## J1 · COMPLETE
+
+T51-177 done: words check reads 0 for record-core (89 conversion findings, 1 plain, 12 code test copies fixed; 4 more uncounted refusal details keyed per R13). Module tests 181/181, coverage 84/84, format/architecture/ownership 0 failures. Notes in my record: rows.mjs stale for 6 new ids (BOB regenerates); requirements R82 still says 'group' (wording-only, rule 7).
