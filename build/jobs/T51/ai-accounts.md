@@ -40,3 +40,12 @@ CHANGE B2 applied (K3974). Tranche/T51 merged first (14905d7049 on the job branc
 - Checks: words 0 failures (testcopy 0); format 0; architecture 0; coverage 34 of 34 ids named, 0 failures; ownership 0 failures; setup-words --check shows the stale-rows note only, expected.
 - Committed and pushed; state COMPLETE.
 Size (session_01UqVXapoj5wpdUoADSpasF2): test runs 3, module lines 2147
+
+## J3 · COMPLETE
+
+CHANGE B3 applied (K3980). Tranche/T51 merged first (no rebase).
+- `seams.test.mjs` R25 arms (was :173, :176, :183, :186): the two sentences are credentials' localize texts (credentials.index.an_asks_grant_is, credentials.index.a_standing_question_runs); the test now builds each with localize(id, en) and compares the detail with that value.
+- Tests: node --test bio-plane/test/m/ai-accounts/ 114 pass, 0 fail.
+- Checks: words 0 failures (testcopy 0); format 0; architecture 0; coverage 34 of 34, 0 failures; ownership 0 failures.
+- Committed and pushed; state COMPLETE.
+Size (session_01UqVXapoj5wpdUoADSpasF2): test runs 4, module lines 2147
