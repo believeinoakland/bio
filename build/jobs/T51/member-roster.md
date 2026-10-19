@@ -1,6 +1,6 @@
 # member-roster (T51)
 
-**Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · COMPLETE · handled B2
+**Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · COMPLETE · handled B3
 
 ## Completion (MEMBER-ROSTER #2) · CHANGE B3 (K4036): act phrases keyed, op details to REPORT
 
