@@ -7,7 +7,7 @@ import { world, sha, V, provDoc, infoMd } from "./fixture.mjs";
 import { ROUTE_MARK_NOTE } from "../../../src/provenance-routes/index.mjs";
 import { registerChecks, PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 /* An information bundle with two documents: one with a fetched route, and one whose route the record lacks. */
 function twoDocs(w, id, { secondRouted = false, state = "collected" } = {}) {
@@ -220,7 +220,8 @@ test("R1, R2, R4 (K2457): the rebuild reconstructs a chainless upload document f
   assert.equal(applied.applied, true, JSON.stringify(applied));
   const doc = JSON.parse(w.record.readFile("INFO-2026-0001-up", "data/provenance.json").text).documents[0];
   assert.deepEqual(doc.provenance_chain.map((h) => [h.via, h.asserts]),
-                   [["upload", `these bytes were received for upload:${sha("held A")} at 2026-10-09T11:00:00Z`]]);
+                   [["upload", localize("provenance-routes.index.these_bytes_were_received_for_2", "these bytes were received for upload:{rsha} at {received}",
+                                        { rsha: sha("held A"), received: "2026-10-09T11:00:00Z" })]]);
   assert.deepEqual(doc.origin_statement, { text: "from the clerk", words_of: "member:ruth", evidence_of_truth: false },
                    "her statement is carried as it was, never moved into the chain");
   /* Negative control: without the receipt, neither reconstructs. */

@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world, V, provDoc } from "./fixture.mjs";
 import { routeFinding, OBSERVATION_MEANS, ROUTE_FINDING_KEY, ROUTE_TALLY_NOTE, ROUTE_TALLY_MARKED_MAX,
          PROVENANCE_ROUTES_MODULE } from "../../../src/provenance-routes/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 /* An information bundle whose route the record cannot show (its one document is "in hand", with no custodian). */
 const unshowable = (w, id) => {
@@ -69,16 +70,13 @@ test("R6: the finding never moves ok, clean, withErrors, tally or offenders, and
     assert.deepEqual(after[k], before[k], k);
   assert.equal(Object.keys(after.tally).some((k) => /route|LOOKED|PRESENT/.test(k)), false, "never inside the tally");
   assert.deepEqual(OBSERVATION_MEANS, {
-    NEVER_LOOKED: "nobody looked at this level for this subject",
-    LOOKED_ABSENT: "we looked and it is positively not there",
-    LOOKED_INDETERMINATE: "we looked and could not tell",
-    PRESENT: "we looked and it is there",
-    partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)" });
+    NEVER_LOOKED: localize("provenance-routes.index.nobody_looked_at_this_level", "nobody looked at this level for this subject"),
+    LOOKED_ABSENT: localize("provenance-routes.index.we_looked_and_it_is_positively", "we looked and it is positively not there"),
+    LOOKED_INDETERMINATE: localize("provenance-routes.index.we_looked_and_could_not", "we looked and could not tell"),
+    PRESENT: localize("provenance-routes.index.we_looked_and_it_is", "we looked and it is there"),
+    partial: localize("provenance-routes.index.we_looked_and_got_part", "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)") });
   assert.equal(Object.isFrozen(OBSERVATION_MEANS), true);
-  assert.equal(ROUTE_TALLY_NOTE, "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in "
-    + "`tally` or `withErrors`: each names a document whose route cannot be shown, standing where "
-    + "the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no "
-    + "assessment has run, not that anything is wrong.");
+  assert.equal(ROUTE_TALLY_NOTE, localize("provenance-routes.index.these_are_stated_doubts_not", "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no assessment has run, not that anything is wrong."));
   for (const f of ["NEVER_LOOKED", "LOOKED_INDETERMINATE", "PRESENT"])
     assert.equal(routeFinding("information", f === "NEVER_LOOKED" ? null : { finding: f }).means, OBSERVATION_MEANS[f]);
 });
