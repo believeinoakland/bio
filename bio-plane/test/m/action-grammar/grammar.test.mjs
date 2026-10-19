@@ -314,10 +314,10 @@ test("R9: every row is held as before the move, number and translation unchanged
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4, .6–.16, .19 and .26–.58 (.17, .18, .20–.25 and .28 retired), each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4, .6–.16, .19 and .26–.60 (.17, .18, .20–.25 and .28 retired), each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", "C-32.21", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 58, [5, 17, 18, 20, 21, 22, 23, 24, 25, 28])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 60, [5, 17, 18, 20, 21, 22, 23, 24, 25, 28])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");

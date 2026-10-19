@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, world, draft, approved, V, MACHINE, TEST, TEXT, sha, secret } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank");
 
@@ -135,8 +135,7 @@ test("R23 each refusal carries its row {check, where, translation} from this mod
   for (const [c, n] of Object.entries(moved)) assert.equal(rows[c].check, n, c);
   /* R26's rows, their translations as BOB worded them */
   assert.equal(rows.TEMPLATE_REF_REFUSED.translation, word("refusal.TEMPLATE_REF_REFUSED"));
-  assert.equal(rows.TEMPLATE_NAME_AMBIGUOUS.translation, "Two templates you can see go by that name here, so neither was chosen. "
-    + "Pick the template by its id. Nothing was drafted.");
+  assert.equal(rows.TEMPLATE_NAME_AMBIGUOUS.translation, word("refusal.TEMPLATE_NAME_AMBIGUOUS"));
   const fresh = Object.entries(rows).filter(([c]) => !(c in moved));
   assert.deepEqual(fresh.map(([, r]) => r.check), fresh.map((_, i) => `C-125.${i + 1}`), "C-125, numbered in order, no gap");
   assert.equal(new Set(Object.values(rows).map((r) => r.check)).size, Object.keys(rows).length, "no number twice");
@@ -199,9 +198,11 @@ test("the ops map: each op reads the control plane's stamps author and viewer fr
     const url = new URL(`https://plane.example/op?${new URLSearchParams(query)}`);
     return ft.filingTemplatesOps(w.ft, url, body)[name]();
   };
-  assert.deepEqual(Object.keys(ft.filingTemplatesOps(w.ft, new URL("https://x.example/"), {})).sort(), ["templateapprove", "templatecomment",
-    "templatecomments", "templatedraft", "templategrantrevoke", "templatepropose", "templateread", "templateretire",
-    "templatereview", "templatereviewgrant", "templaterevise", "templates", "templatesubmit"]);
+  /* the map's keys are counted and spot-read, never hand-listed (K3268): each key is an op served by a function of the module */
+  const served = ft.filingTemplatesOps(w.ft, new URL("https://x.example/"), {});
+  assert.equal(Object.keys(served).length, 14);
+  for (const k of ["templatedraft", "templates", "templatebyhandle"]) assert.equal(typeof served[k], "function", k);
+  for (const [k, fn] of Object.entries(served)) assert.ok(typeof fn === "function" && /^[a-z]+$/.test(k), k);
   const d = op("templatedraft", { author: A, viewer: A }, { project: w.P, kind: "records_request", use: "file", profiles: [TEST],
                                                            name: "Op", text: TEXT, author: MACHINE });
   assert.equal(d.ok, true, JSON.stringify(d));
@@ -230,10 +231,8 @@ test("the ops map: each op reads the control plane's stamps author and viewer fr
 
 test("R23 (DEC-149) a member reads the group's Civicsmith by its name: C-125.3 TEMPLATE_PROFILE_UNKNOWN and C-125.15 GRANT_NO_SECRET say \"your group's Civicsmith\", and no row's translation or answered refusal calls it this or the instance, copy or plane", () => {
   const rows = ft.FILING_TEMPLATE_CHECKS;
-  assert.equal(rows.TEMPLATE_PROFILE_UNKNOWN.translation, "A template is written for jurisdiction profiles your team's Civicsmith "
-    + "holds, or for none in particular (general), and a profile named is not held.");
-  assert.equal(rows.GRANT_NO_SECRET.translation, "A review grant opens by a secret link your team's Civicsmith makes, and none "
-    + "was made for this request. Nothing was granted.");
+  assert.equal(rows.TEMPLATE_PROFILE_UNKNOWN.translation, word("refusal.TEMPLATE_PROFILE_UNKNOWN"));
+  assert.equal(rows.GRANT_NO_SECRET.translation, word("refusal.GRANT_NO_SECRET"));
   const old = /\b(this|the|your|our)\s+(control\s+)?(instance|copy|plane)\b/i;
   for (const [c, r] of Object.entries(rows)) assert.doesNotMatch(r.translation, old, c);
   /* as answered: each changed refusal carries its new translation, and its detail names no instance, copy or plane */
@@ -244,6 +243,6 @@ test("R23 (DEC-149) a member reads the group's Civicsmith by its name: C-125.3 T
   const g = w.ft.templateReviewGrant({ version: d.version, recipient: "R", organisation: "O", secretSha: "", by: A, viewer: A });
   assert.deepEqual([p.reason, p.translation], ["TEMPLATE_PROFILE_UNKNOWN", rows.TEMPLATE_PROFILE_UNKNOWN.translation]);
   assert.deepEqual([g.reason, g.translation], ["GRANT_NO_SECRET", rows.GRANT_NO_SECRET.translation]);
-  assert.equal(g.detail, "no fresh secret digest was stamped for this grant: your team's Civicsmith makes the secret");
+  assert.equal(g.detail, localize("filing-templates.index.no_fresh_secret_digest_was_stamped_for_this_grant", "no fresh secret digest was stamped for this grant: your team's Civicsmith makes the secret"));
   for (const r of [p, g, ft.noTemplateGrant()]) assert.doesNotMatch(JSON.stringify(r), old, r.reason);
 });

@@ -1,6 +1,6 @@
 # BOB to actions (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -26,3 +26,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 Two changes (K4041); merge `tranche/T51` into your branch first (actions' requirements changed):
 1. R108, worded (field added, meaning unchanged; FILINGS #22 J1): the minutes' passage is recorded as content by the author's act, `content.mint` (its R12, R13: mint or find, `mintedBy` the author) at that extent, and `minutes.passage` keeps the row's `content_id` beside `captureSha` and `extent`, so filings R64 reads its text through `content.passageText(content_id)` (its R46). Test it: the stored passage carries the id; a second reply at the same extent finds the same row.
 2. CONFORMANCE #24 J1: `test/m/actions/t34.test.mjs`:101 copies your own `localize("actions.index.an_action_recorded_for_a_2", …)` sentence (`index.mjs`:1240) as a literal: compare with `localize`/`word` by equality (K3810).
+
+## B3 · CHANGE
+
+K4049 (ACTION-GRAMMAR #14 J3): action-grammar added C-117.59 `MINUTES_NOT_PUBLIC_COMMENT` and C-117.60 `BAD_MINUTES`, each `where` `src/actions/index.mjs actionCorrespond > is-minutes`. Draw `DEC-49 REGION is-minutes` around the minutes act in `actionCorrespond` (as your other regions are drawn) and raise both refusals through the catalogue rows (code, check, translation), not as bare `{ok, reason, detail}`. Merge `tranche/T51` once action-grammar merges (I will tell you), then COMPLETE again.
+
+## B4 · CHANGE
+
+action-grammar has merged (K4052): C-117.59 MINUTES_NOT_PUBLIC_COMMENT and C-117.60 BAD_MINUTES are on `tranche/T51`. Merge it into your branch, finish B3 (draw `DEC-49 REGION is-minutes` and raise both through the rows), confirm action-grammar's R28 census arm passes with your branch, then COMPLETE.

@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { seeded, V, MACHINE, TEST, HARBOUR, TEXT, twoProfiles, reviewedOf } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = V("alice"), B = V("bob");
 const ROW = ft.FILING_TEMPLATE_CHECKS.TEMPLATE_BLANK_UNKNOWN;
@@ -65,7 +66,7 @@ test("R30 C-125.4 TEMPLATE_BLANK_UNKNOWN: a group's draft, revision and proposal
 test("R30 the row's where names the one site, blankUnknownRefusal (R32), its region found there, and no other site of the module spells the code (the census arm); its code, number and translation unmoved", async () => {
   assert.equal(ROW.where, `src/filing-templates/index.mjs ${SITE.fn} > ${SITE.region}`);
   assert.equal(ROW.check, "C-125.4");
-  assert.equal(ROW.translation, "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.");
+  assert.equal(ROW.translation, word("refusal.TEMPLATE_BLANK_UNKNOWN"));
   const src = await readFile(new URL("../../../src/filing-templates/index.mjs", import.meta.url), "utf8");
   const open = `/* DEC-49 REGION ${SITE.region} */`, close = `/* END DEC-49 REGION ${SITE.region} */`;
   const [i, j] = [src.indexOf(open), src.indexOf(close)];

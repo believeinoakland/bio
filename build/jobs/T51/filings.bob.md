@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Your reading holds (K4041): actions R108 now says the author's reply mints or finds the passage's content row (`content.mint`, its R12, R13) and `minutes.passage` keeps its `content_id`; ACTIONS #22 builds it (CHANGE). Read `content.passageText(content_id)` after `content.sees`, and throw when the id or text is missing, as you built. Merge `tranche/T51` (actions' requirements changed) and, once BOB says actions has merged, again.
+
+## B3 · CHANGE
+
+filing-templates has merged into `tranche/T51` (K4045): R35 `unofferedFor` is there for your R65; merge `tranche/T51` into your branch. actions has not merged yet; I will tell you when it has.
+
+## B4 · CHANGE
+
+From ACTION-CLOCKS #14 J1 (K4050; complete, merges after actions and action-grammar): `computeDeadline.why`, `proposal.undetermined` and `CLOCK_PROPOSAL_UNDETERMINED.why` now reach you as sentences already rendered (through civil-time's `reasonText`), never `{key, vars}`. Your `packet.test.mjs`:241, :290 reds clear once action-clocks merges if you pass that text on as is; render with `word` only a `{key, vars}` reason you receive from elsewhere. Merge `tranche/T51` when I tell you action-clocks has merged.
