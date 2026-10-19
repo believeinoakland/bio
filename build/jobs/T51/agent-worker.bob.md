@@ -40,3 +40,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B5 · RESUME
+
+RESUME (§5.4): nothing pushed on job/T51/agent-worker for over 75 minutes and your RUNNING time (05:35) has passed. Check whether your control drivers are still alive (a container restart kills them); if they finished, read their results; if they died, re-run only what you still need. Then commit and push what you have, set your state honestly (RUNNING until <time> with the command, or WORKING), apply B2–B4 (the folded words check), and COMPLETE. Never stop the agent-worker test run midway (rulings-active §4: its negative controls mutate the tree; restore from HEAD if one was stopped).
