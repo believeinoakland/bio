@@ -799,6 +799,11 @@ const acts = [
       cs.set("pick:notice-ack", []);
       cs.set("notice", null);
       cs.set("later", Object.assign({}, view.ui.later, { notices: null }));
+    },
+    /* DEC-366 (4c): on NOTICE_SIGNATURE_REFUSED the offer is a reference to `account`, where `signerregisterown` is the act;
+       no act of it is drawn on `project` */
+    refusals: {
+      NOTICE_SIGNATURE_REFUSED: (r, cs) => `${cs.w("refusal.NOTICE_SIGNATURE_REFUSED")} <a class="cs-ref" href="/app/account" data-nav data-notice="registerkey">${cs.w("act.signerregisterown.label.account")}</a>`,
     } },
 ];
 
@@ -860,7 +865,7 @@ const words = Object.freeze([
   "screen.connect.outward", "network-notices.others_working_welcome",
   ...["very_active", "active", "some_work", "quiet", "dormant"].map((k) => "network-notices.level." + k), ...["open", "stopped", "closed", "lapsed"].map((k) => "network-notices.status." + k),
   "network-notices.week_counts_holds", "network-notices.counted_assistant_work", "state.item.published.name", "mark.outward.means",
-  "mark.gap.refused.name", "mark.gap.refused.means", "shell.icon.clock", "shell.cancel", "signing.ceremony.declined", "conformance.rests", "conformance.falsify",
+  "mark.gap.refused.name", "mark.gap.refused.means", "shell.icon.clock", "shell.cancel", "signing.ceremony.declined", "act.signerregisterown.label.account", "conformance.rests", "conformance.falsify",
   ...["NOTICE_ALREADY_OPEN", "NOTICE_NOT_OPEN", "NOTICE_NOT_THE_OWNER", "NOTICE_NO_GROUP_SLUG", "NOTICE_NO_INSTANCE_KEY", "NOTICE_PROJECT_CLOSED",
     "NOTICE_SIGNATURE_REFUSED", "NOTICE_SINCE_BEFORE_PROJECT", "NOTICE_SINCE_EARLIER", "NOTICE_SINCE_IN_FUTURE", "NOTICE_SINCE_MALFORMED",
     "NOTICE_STALE", "NOTICE_UNCHANGED", "NOTICE_WARNING_NOT_ACKNOWLEDGED", "NOTICE_WORDING_MALFORMED", "MACHINE_CANNOT_POST_NOTICE",

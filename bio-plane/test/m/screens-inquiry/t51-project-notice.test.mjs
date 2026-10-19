@@ -232,6 +232,22 @@ test("R76 the signing refusals are drawn by their words: a stale preview (prepar
   }
 });
 
+test("R76 (DEC-366 (4c)) NOTICE_SIGNATURE_REFUSED draws a reference to `account` by the register-key label, and no act of it; no other refusal does", async () => {
+  for (const code of ["NOTICE_SIGNATURE_REFUSED", "NOTICE_STALE", "NOTICE_WARNING_NOT_ACKNOWLEDGED"]) {
+    const p = await previewed({ noticepost: refusedIn(code) }, { idb: (await keptKey()).idb });
+    await tick(p);
+    await pressSigned(p);
+    assert.ok(says(p.root(), "refusal." + code), code);
+    const ref = main(p).querySelector('a[data-notice="registerkey"]');
+    if (code === "NOTICE_SIGNATURE_REFUSED") {
+      assert.ok(ref, "the reference is drawn");
+      assert.equal(ref.getAttribute("href"), "/app/account");
+      assert.equal(ref.textContent, word("act.signerregisterown.label.account"));
+    } else assert.equal(ref, null, code);
+    assert.equal(main(p).querySelectorAll('[data-act="signerregisterown"]').length, 0, "no act drawn on project");
+  }
+});
+
 test("R77 an open notice is drawn to an owner as published: its wording, when, since, openness, the level the team's Civicsmith worked out and when, the next check, the cases published; Change it or stop it with both acts and the note that earlier versions are never deleted", async () => {
   const p = await open(at, { plane: { ...OWNER, notices: notices(NOTICE()) } });
   const s = section(p, TELL);

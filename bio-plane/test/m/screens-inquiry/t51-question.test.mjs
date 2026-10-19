@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { open, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, LEGS, says, section, lead, word, day, P, Q, D } from "./fixtures.mjs";
+import { open, main, actsIn, press, fill, plane, inquiryMd, INQUIRY_REFS, DOCUMENT_MD, provenanceOf, SHA, POLICY, LEGS, says, section, lead, word, day, P, Q, D } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const GROUNDS = [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }];
@@ -150,7 +150,7 @@ const publishedcase = (r) => ok({ caseId: r.query.caseId, edition: Number(r.quer
 const entry = (p, id) => main(p).querySelector(`[data-case-edition="${id}"]`);
 
 test("R72 what each published case froze for the question: one entry for each case edition, its own pair beside today's; the pinned-version check; a withheld edition with no pair; never combined", async () => {
-  const p = await open(at, { ...A, plane: { publishedfrozen: FROZEN(CASES), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }) } });
+  const p = await open(at, { images: { ...A.images, [D]: docAt("2025-01-01T09:00:00Z") }, plane: { publishedfrozen: FROZEN(CASES), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }) } });
   assert.equal(p.byOp("publishedfrozen")[0].query.id, Q);
   const s = section(p, "screen.question.say045");
   assert.ok(s && says(s, "screen.question.say046") && says(s, "screen.question.say047"));
@@ -389,10 +389,18 @@ test("R78 a page the record states counts from zero and is drawn from one: an ex
   assert.ok(p.byOp("basisversions").length > 0 && !p.requests.some((r) => r.body && JSON.stringify(r.body).includes('"page"')));
 });
 
-test("R72 an axis that carries a citation draws screen.question.say054 ({change}, {source}), not screen.question.compare.axis", async () => {
-  const cited = [{ ...CASES[1], strength: { capture: { axis: "capture", grade: "C", cited: "the audit" }, connection: { axis: "connection", grade: "C" } } }];
-  const p = await open(at, { ...A, plane: { publishedfrozen: FROZEN(cited), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }) } });
+const docAt = (when) => ({ "bundle.md": DOCUMENT_MD.replace("retrieved: 2026-10-02T09:00:00Z", "retrieved: " + when), "data/provenance.json": provenanceOf(SHA) });
+const withDoc = (when, extra = {}) => ({ images: { ...A.images, [D]: docAt(when) }, plane: { publishedfrozen: FROZEN([CASES[1]]), publishedcase, backlinks: ok({ ok: true, target: Q, backlinks: [{ from: P, from_type: "project", from_title: "Pothole repairs" }] }), ...extra } });
+
+test("R72 the capture axis with a document the question cited after the edition published draws screen.question.say054 ({change}, {source} the document's title); the other axis, with none, draws screen.question.compare.axis", async () => {
+  const p = await open(at, withDoc("2026-10-02T09:00:00Z"));
   const e = entry(p, "CASE-B:1");
-  assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.say054", { change: word("screen.question.word.stronger"), source: "the audit" }));
+  assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.say054", { change: word("screen.question.word.stronger"), source: POLICY }));
   assert.ok(says(e.querySelector("[data-axis=connection]"), "screen.question.compare.axis", { axis: word("mark.scale.connection.name"), change: word("screen.question.word.same") }));
+});
+
+test("R72 a citation dated before the edition published draws screen.question.compare.axis, never say054", async () => {
+  const p = await open(at, withDoc("2026-03-01T09:00:00Z"));
+  const e = entry(p, "CASE-B:1");
+  assert.ok(says(e.querySelector("[data-axis=capture]"), "screen.question.compare.axis", { axis: word("mark.scale.capture.name"), change: word("screen.question.word.stronger") }));
 });

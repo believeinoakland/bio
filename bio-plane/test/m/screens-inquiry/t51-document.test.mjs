@@ -506,3 +506,16 @@ test("R80 control: a single-page text draws no page bar and no tab, and a text w
   assert.equal(bar(flat), null);
   assert.equal(main(flat).querySelectorAll("blockquote").length, 2);
 });
+
+/* ---- DEC-366: two tabs only; the compare tab and the original-file card are drawn only where a read answers them ---- */
+test("DEC-366 the document draws only the By page tab: no compare tab, no original-file card, no Whole text or Slides tab, and no `versioncompare` is sent (no read names the version a question cites, nor the original's size)", async () => {
+  const units = [unit(1, { kind: "pdf-page", page: 0 }, "First page words."), unit(2, { kind: "pdf-page", page: 1 }, "Second page words.")];
+  const p = await open(at, { plane: { reading: readingOf(units) } });
+  const s = section(p, "document.read.title");
+  assert.ok(says(s, "document.read.tab.page"), "By page");
+  assert.ok(!says(main(p), "document.read.tab.compare"), "the compare tab is not drawn while no read answers it");
+  assert.ok(!says(main(p), "document.read.original.card", { kind: "PDF", size: "" }) && !text(main(p)).includes(word("document.read.original", {})), "the original-file card is not drawn without a size");
+  assert.equal(p.byOp("versioncompare").length, 0, "nothing is read that cannot be asked");
+  assert.equal(bar(p).querySelectorAll('input[type="radio"][name="document-read-tab"]').length, 1, "one tab only");
+  assert.equal(writes(p).length, 0);
+});
