@@ -22,3 +22,13 @@
 6. A29 stays open as the entry says (BOB's, the design's to say whether `document` lists what a captured page lacks).
 
 **Size (session_01XiUV1oniArn1H66oUHgn4p):** test runs 12, module lines 1384
+
+## J1 · BLOCKED
+
+BLOCKED (cause: tests, one red that is another module's to unblock). T51-117's work is done and pushed on `job/T51/screens-intake` (R38, R39, R40, DEC-342, the 4 words findings, the inherited capture.test.mjs:66 red). 122 of 123 module tests pass; `checks/words` shows nothing naming screens-intake (also over the whole tree); format, coverage (40 of 40 ids), `setup-words build --check` and ownership are clean. The one red is `open-file.test.mjs` "R39 altered bytes hand nothing over": the kit on `tranche/T51` ignores `cs.download`'s `verify` (interface-shell R98, T51-113, whose job has not merged), so a mismatch cannot yet be refused. Merge interface-shell into `tranche/T51` and send RESUME or CHANGE: I merge, re-run, and post COMPLETE. My record lists all of it.
+
+REPORTs (details in my record):
+1. No word for A64's "captured by <member>, <date>" (`screen.document.capturedby` needs `{source}`), for "nothing was added", or for the undetermined row's sentence: drawn without them.
+2. "Leave it" needs its own explanation (`screen.capture.leaveit.help`), but `cs.act` takes only `act.<op>.here.<place>` (R90): drawn as a quiet link to the same route (it clears the typed address too). A kit option for a non-op action with an explanation key would fit.
+3. The design's `mk-data` (compared copy's title) is not defined by a served stylesheet; drawn with `rec`.
+4. `heldat` is not in `op-declarations` until T51-107; tests stub it. Also A29 remains BOB's open question.
