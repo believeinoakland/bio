@@ -138,8 +138,7 @@ export function noReviewCopy() {
    nothing the record holds. The code keeps REC-126's name for all three acts (REC-133's choice): exact for ISSUE,
    narrower than the rule for AUTHOR and REVOKE, and renaming it would change an answer callers branch on. */
 const AUTHORITY = Object.freeze({
-  draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: "
-       + "an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
+  draft: localize("review.index.authoring_a_draft_is_editing", "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5)."),
   grant: localize("review.index.handing_the_teams_draft_to", "handing the team's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them."),
   revoke: localize("review.index.withdrawing_a_grant_is_the", "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them."),
 });
@@ -170,11 +169,7 @@ export function caseIdentitySentence(caseId, edition, newCase) {
     return word("review.text.next_edition_draft", { edition: String(edition), case_id: String(caseId) });
   if (caseId) return word("review.text.next_edition", { edition: String(edition), case_id: String(caseId) });
   if (newCase) return word("review.text.new_case_whose");
-  return "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED "
-       + "here: the draft names no case and does not ask for a new one, so publication reads the record at "
-       + "that moment — a further edition of the one case its findings already serve, a refusal to choose "
-       + "if they serve several, and a new case only if they serve none and no prepared, unsigned edition "
-       + "claims them";
+  return localize("review.index.derived_case_identity", "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them");
 }
 
 /* The statement as a case document PRINTS it: the frontmatter-safe normalisation the acknowledgements hash, so two
@@ -228,7 +223,10 @@ function lastChange({ draft, comments, grants, acknowledgements }) {
                                              && (WHOLE.test(c.at) || WHOLE.test(last.at)));
   const tieStated = tied.map((c) => {
     const [a, b] = WHOLE.test(c.at) ? [c, last] : [last, c];
-    return localize("review.index.which_of_who_at_and", " Which of {who} ({at}) and {who_2} ({at_2}) came later is undetermined: {v1}, so the date this copy carries is the instant order's pick and not an order the record holds (BOB #34, 2026-09-25).", { who: String(who(a)), at: String(a.at), who_2: String(who(b)), at_2: String(b.at), v1: String(WHOLE.test(b.at) ? "both were recorded to the second" : `${who(a)} was recorded to the second`) });
+    const v1 = WHOLE.test(b.at)
+      ? localize("review.index.both_were_recorded_to_the_second", "both were recorded to the second")
+      : localize("review.index.who_was_recorded_to_the_second", "{who} was recorded to the second", { who: String(who(a)) });
+    return localize("review.index.which_of_who_at_and", " Which of {who} ({at}) and {who_2} ({at_2}) came later is undetermined: {v1}, so the date this copy carries is the instant order's pick and not an order the record holds (BOB #34, 2026-09-25).", { who: String(who(a)), at: String(a.at), who_2: String(who(b)), at_2: String(b.at), v1 });
   }).join("");
   return {
     at: last ? last.at : null, by: last ? last.by : null,
@@ -543,8 +541,7 @@ export class Review {
     if (end !== null && !(typeof end === "string" && STAMP_INSTANT.test(end) && validInstant(end)
                           && instantOrder(end, when) > 0))
       return refusal("REVIEW_BAD_UNTIL",
-               "a reader's end date is an instant in the record's form, after this act's own: "
-             + "YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.sssZ. Nothing was written.");
+               localize("review.index.a_readers_end_date_is", "a reader's end date is an instant in the record's form, after this act's own: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.sssZ. Nothing was written."));
     /* END DEC-49 REGION is-review-until */
     const ident = this.draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7): a grant is its project owner's alone. */
@@ -560,7 +557,7 @@ export class Review {
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
              edition: statedEdition(ident, newCase),
              recipient: to, issuedBy: who, issuedAt: when, until: end,
-             boundTo: localize("review.index.this_grant_reads_caseidentitysentence_and", "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}", { caseIdentitySentence: String(caseIdentitySentence(ident.caseId, ident.edition, newCase)), v1: String(end ? ` It also ends at ${end}.` : "") }) };
+             boundTo: localize("review.index.this_grant_reads_caseidentitysentence_and", "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}", { caseIdentitySentence: String(caseIdentitySentence(ident.caseId, ident.edition, newCase)), v1: String(end ? localize("review.index.it_also_ends_at", " It also ends at {end}.", { end: String(end) }) : "") }) };
   }
 
   /* R7: withdraw a grant, once; a repeat answers the first revocation. */
@@ -731,8 +728,7 @@ export class Review {
       statement_by: d.statement_by ?? null,
       statement_by_stated: d.statement_by
         ? word("review.statement_by_stated.wrote_exclusion_statement", { statement_by: String(d.statement_by) })
-        : "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor "
-          + "is not evidence of who wrote the statement",
+        : localize("review.index.undetermined_statement_by", "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor is not evidence of who wrote the statement"),
       ...grantPart,
       /* R11 (REC-148): the project's bar AS `op=publish` WOULD FREEZE IT, for the control plane's in-band floors. Read
          now, because a draft is not frozen. */
@@ -855,7 +851,7 @@ export class Review {
   approvalRuleSet({ approvers, by = null } = {}) {
     const who = String(by ?? "").trim();
     if (!who || isMachineIdentity(who) || !this.membership.isAdministrator(who))
-      return notAnAdmin(who || null, "set the team's approval rule");
+      return notAnAdmin(who || null, localize("review.index.set_the_teams_approval_rule", "set the team's approval rule"));
     let list = null;
     if (approvers !== null) {
       const ids = Array.isArray(approvers) ? approvers.map((a) => (typeof a === "string" ? a.trim() : "")) : [];
@@ -887,9 +883,7 @@ export class Review {
     if (!who || isMachineIdentity(who) || !rule || !rule.approvers.includes(who) || !project
         || !this.membership.inSight(project, `member:${who}`))
       return refusal("CASE_NOT_AN_APPROVER",
-               "an approval is given by a member the team's approval rule names, of a case whose project "
-             + "they can see; a case you cannot see is answered exactly as one that does not exist. Nothing "
-             + "was recorded.");
+               localize("review.index.an_approval_is_given_by", "an approval is given by a member the team's approval rule names, of a case whose project they can see; a case you cannot see is answered exactly as one that does not exist. Nothing was recorded."));
     /* END DEC-49 REGION is-not-an-approver */
     const ed = Number(edition);
     const sha = String(docSha ?? "");
