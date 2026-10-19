@@ -87,3 +87,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513).
+
+## B11 · CHANGE
+
+CHANGE (K4139; DEC-371, U402). The design dropped the four act labels from your reads list and kept the four `screen.members.*` removal rows, which your `members.mjs`:228-233 draws (`agree.remove.teo.as.administrator`, `counted.in.the.4.doesn`, `four.administrators.rosa.dev.ana`, `removing.teo.as.an.administrator`; fixed ids, filled from data). Merge tranche/T51 and add the four to `keys.mjs`' `KEYS`, so R39 (`contract.test.mjs`:71) goes green; run your suite and checks; post COMPLETE.
