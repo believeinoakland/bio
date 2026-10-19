@@ -25,3 +25,13 @@ Job T51-63 · agent-harness: COMPLETE. Commit 2ef7b9c6e7 on job/T51/agent-harnes
 - `node checks/ownership.mjs /home/user/bio agent-harness origin/tranche/T51 job/T51/agent-harness`: 3 files changed (two source files and this record), 0 failures.
 
 Size (session_015QhswVAs4DNWLV8CzQhqJP): test runs 1, module lines 1940
+
+## J2 · REPORT
+
+Fifteen words-check findings in agent-harness are left unkeyed on purpose. I judge that no member reads them, so the words rule does not convert them. BOB's decision on each (design `unkeyed` list, K3944). Commit 4196a36825 converts the other 24 of the 39 findings.
+
+1. **Table rows, `harness.mjs`:320, 321, 329, 344, 349, 355** (CONTROL_FLOW `does`/`judged` for compose, dedup, adjust, next-pass, close) and **`harness.mjs`:1042, 1061, 1080, 1085** (PLAN_FLOW gate-mode, compose, adjust, close). Why unkeyed: these are not shown to any member. `agent-model/src/model.mjs`:353 composes them into the model's step prompt ("STEP {step}: {does}. You judge: {judged}"), and the tests read them. They are instructions to a model, not member text. Recommendation: unkeyed.
+2. **`subsession.mjs`:116–119** (REPORT_STATES values: "nobody looked at this level…", "we looked and it is positively not there", "we looked and could not tell", "we looked and it is there"). Why unkeyed: the contract sends only the keys (`returns.states` is `Object.keys`), and nothing in the tree reads the values. Note for the decision: `REPORT_STATES.partial` already reads `word("observation-log.partial.looked_got_part")`, so the five values are inconsistent. Recommendation: unkeyed, or key all five together if the design wants them shown.
+3. **`subsession.mjs`:581** (documentHoldings' `identity` field, "op=versionchain's address_norm … never a title, a text or a byte comparison"). Why unkeyed: a method description in the wire output. No member sentence is composed from it (holdingsNote does not read it). Recommendation: unkeyed.
+
+Also noted, not changed: `"terminal"` (`harness.mjs` close rows) is a one-word log marker, not a sentence. Some test regular expressions still quote fragments of member sentences (R1 "is not a row in this table", R3 "the '…' budget is spent"). The checker does not count regular expressions, so I left them. Say if Bob wants them converted.
