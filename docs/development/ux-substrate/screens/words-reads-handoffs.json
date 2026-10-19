@@ -2530,6 +2530,136 @@
     "text": "Vouched for by the team {}, under this case's own signature.",
     "why": "a signed case-document sentence, pinned per format, so it stays code (B354, CASE-GRAMMAR #18 J3; K1333, K4024)"
    }
+  ],
+  "interface-assets": [
+   {
+    "file": "bio-plane/src/interface-assets/generate.mjs",
+    "line": 114,
+    "text": "   {}'s <style> at {}. Never edited by hand. */\n",
+    "why": "the generated CSS file's header comment; no member reads it (B363, INTERFACE-ASSETS #5)"
+   }
+  ],
+  "store-door": [
+   {
+    "file": "bio-plane/src/store-door/dispatch.mjs",
+    "line": 244,
+    "text": "purge refused: a litigation hold is in place",
+    "why": "the envelope's legacy `error` key, kept byte-identical for civicos-ui (D-278) until T51-126 deletes it; the member reads the localized `detail` (B363, STORE-DOOR #10)"
+   }
+  ],
+  "wizard-scripts": [
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 166,
+    "text": "a step is {screen, act, what, why, draft?, via?}",
+    "why": "only a developer or caller reads it: Argument-shape grammar of a step object (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 168,
+    "text": "a step carries only screen, act, what, why, draft and via, not '{}'",
+    "why": "only a developer or caller reads it: Argument-shape grammar: a step carries only the listed fields (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 177,
+    "text": "a draft is one of {text}, {template} or {machine}",
+    "why": "only a developer or caller reads it: Argument-shape grammar of a draft object (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 317,
+    "text": "a draft is one of {text}, {template} or {machine}",
+    "why": "only a developer or caller reads it: Argument-shape grammar of a draft object (check diagnostic) (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 319,
+    "text": "'{}' is not a registered machine draft",
+    "why": "only a developer or caller reads it: Registration diagnostic: names a machine draft not registered in code (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 453,
+    "text": "'{}' is a machine identity: a machine proposes steps, labelled, and nothing else",
+    "why": "only a developer or caller reads it: Caller-level: a machine identity tried to approve or draft; wire/integration diagnostic naming the identity (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 454,
+    "text": "no member is named as the one acting: this call carries nobody",
+    "why": "only a developer or caller reads it: Caller-level: the call names no acting member; wire/integration diagnostic (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 792,
+    "text": "the registration is made once per construction, and it was",
+    "why": "only a developer or caller reads it: Registration diagnostic: registration is made once per construction (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 864,
+    "text": "a recording is a list of {screen, act}",
+    "why": "only a developer or caller reads it: Argument-shape grammar of a recording (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 869,
+    "text": "a recorded step holds its screen and act, never a typed value",
+    "why": "only a developer or caller reads it: Wire-level usage: a recorded step carries only screen and act (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 919,
+    "text": "a draft starts from one of a recording, a source or a copy",
+    "why": "only a developer or caller reads it: Argument-shape grammar: a draft starts from only one of recording, source or copy (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 1014,
+    "text": "no stamped proposer: a proposal names who made it",
+    "why": "only a developer or caller reads it: Caller-level: a proposal arrives without a stamped proposer (wire/integration diagnostic) (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 1255,
+    "text": "state is offered or one of {}",
+    "why": "only a developer or caller reads it: Wire-level usage: describes the accepted values of a list filter argument (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 1567,
+    "text": "use is counted as start, step or finish: stopping is not an event",
+    "why": "only a developer or caller reads it: Wire-level usage: which progress events a client may report (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 1569,
+    "text": "a step reached is one of the script's, 1 to {}",
+    "why": "only a developer or caller reads it: Wire-level usage: valid range for a reported progress step (B365, WIZARD-SCRIPTS #13 J1)"
+   },
+   {
+    "file": "bio-plane/src/wizard-scripts/index.mjs",
+    "line": 1570,
+    "text": "only a step reached names a step",
+    "why": "only a developer or caller reads it: Wire-level usage: only a step event carries a step number (B365, WIZARD-SCRIPTS #13 J1)"
+   }
+  ],
+  "op-grades": [
+   {
+    "file": "bio-plane/src/op-grades/t36.mjs",
+    "line": 18,
+    "text": "scheduler: the security wakes; name no member and move no bundle",
+    "why": "a grade-table note (NON_ACTS); no screen draws NON_ACTS (B364, L11)"
+   }
+  ],
+  "stewards": [
+   {
+    "file": "stewards/src/ui.mjs",
+    "line": 63,
+    "text": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+    "why": "the Content-Security-Policy header value: wire grammar (B364, L11)"
+   }
   ]
  }
 }
