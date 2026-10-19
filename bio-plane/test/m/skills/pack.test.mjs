@@ -227,7 +227,7 @@ test("R27 measured, the contradiction layer carries contradiction's RECOMMEND_PR
   const unmeasuredVersion = renderWithContradiction({ RECOMMEND_PROMPT_SHA256: null }).rendered.version;
   assert.equal(new Set([measuredVersion, editedVersion, unmeasuredVersion]).size, 3);
   /* The skill holds no gate (R24), and the words it may render carry no control-flow authority (R16). */
-  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "contradiction's recommender prompt");
+  assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "R16: the recommender prompt, read whole");
 });
 
 test("R6 version is packVersion(pack), id is investigative-session, edition the authored edition", () => {

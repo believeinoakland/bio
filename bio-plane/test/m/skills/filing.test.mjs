@@ -57,7 +57,7 @@ test("R30 R5 the filing_drafting layer, in disclosed after action_planning: auth
   for (const r of FILING_RULES) assert.equal(r, ACTION_RULE_TABLE.find((x) => x.rule === r.rule));
   /* The lookup can miss: a changed word is not found, and v0.1's rule 7 is not v0.2's rule 7. */
   assert.ok(!foundIn(ruleText(14), "The instance transmits everything."));
-  assert.ok(!foundIn(ruleText(7), "The instance transmits nothing."));
+  assert.ok(!ruleText(7).includes("transmits nothing"), "v0.1's rule 7 is not v0.2's");
   /* Only canon sentences (K927): the draft's two non-canon clauses are not carried. */
   assert.ok(!/names blanks only|asserts a fact the record does not hold/.test(JSON.stringify(layer)));
 });

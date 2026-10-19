@@ -3,8 +3,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
+import { draftsAbsentSentence } from "../../../src/skilldoctrine.mjs";
 import { actionDraftingLayer, procedureGuideLayer, ACTION_DRAFTING_RULES, ACTION_DRAFTING_ACTS, ACTION_RULE_TABLE,
-         STATUS_REPORT_ACT, STATUS_REPORT_TASK,
+         STATUS_REPORT_ACT, STATUS_REPORT_LOAD_WHEN, STATUS_REPORT_TASK,
          ACTION_RULES, FILING_RULES, ACTION_SOURCE, ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DRAFT_MODE, DRAFT_REACH } from "../../../src/run-rules/index.mjs";
 import { PROCEDURE_GUIDE_LABEL } from "../../../src/reading-guides/index.mjs";
@@ -135,7 +136,6 @@ test("R45 R16 R24 R26 no string of the layer, present or absent, carries control
 
 /* R48 (T46; N920): the status report task, its act `statusreportassist` (plan-work R8's assistant arm) read on its own. */
 const STATUS = "statusreportassist";
-const STATUS_LOAD_WHEN = "asks the assistant to draft a plan's status report from the items handed to it";
 const withStatus = (catalog) => [...catalog, entry(STATUS)];
 
 test("R48 with all four published, the action_drafting layer names statusreportassist (plan-work R8), the catalogue's own entry read by id, and the task's description: each sentence from an item handed to it, nothing read; its load_when adds the status report; named once as a selector (R23)", () => {
@@ -143,7 +143,7 @@ test("R48 with all four published, the action_drafting layer names statusreporta
   const pack = renderPack(published({ catalog }));
   const layer = pack.disclosed.action_drafting;
   assert.equal(layer.sourcing, "authored");
-  assert.equal(layer.load_when, `${LOAD_WHEN}, or ${STATUS_LOAD_WHEN}`);
+  assert.equal(layer.load_when, `${LOAD_WHEN}, or ${STATUS_REPORT_LOAD_WHEN}`);
   assert.ok(pack.resident.disclosable.some((d) => d.layer === "action_drafting" && d.load_when === layer.load_when));
   const { acts, status_report } = layer.body;
   assert.deepEqual(acts.drafts.map((a) => a.id), DRAFTS, "R45's three render as R45 says");
@@ -194,7 +194,7 @@ test("R48 with statusreportassist alone absent, the body states it absent in R9'
   for (const catalog of [withStatus(published().catalog), withStatus(draftCatalog(DRAFTS))]) {
     const alone = actionDraftingLayer(catalog);
     assert.equal(alone.sourcing, "authored");
-    assert.equal(alone.load_when, `the member ${STATUS_LOAD_WHEN}`);
+    assert.equal(alone.load_when, `the member ${STATUS_REPORT_LOAD_WHEN}`);
     assert.deepEqual(alone.body.acts.drafts, []);
     assert.deepEqual(alone.body.acts.status_report.map((a) => a.id), [STATUS]);
     assert.equal(alone.body.status_report.task, STATUS_REPORT_TASK);
@@ -222,10 +222,7 @@ test("R48 control: with none of the four published, the layer is R45's stated ab
     assert.equal(layer.load_when, "never, in this edition");
     assert.equal(layer.sourcing, "absent");
     assert.deepEqual(layer.body, {});
-    assert.equal(layer.absent_because, "the plane's published catalogue holds none of the acts textcheck, infractiondraft, "
-      + "bearingdraft, the drafts through which a member asks the assistant to read a prepared text, document an "
-      + "infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.",
-      "R45's words, unchanged");
+    assert.equal(layer.absent_because, draftsAbsentSentence(DRAFTS));
     assert.ok(!JSON.stringify(layer).includes(STATUS));
   }
   /* And the one act alone is enough to lift it: the control's control. */

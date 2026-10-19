@@ -305,12 +305,7 @@ export const CLAUSES = [
     defers: [],
     enforced_by: [C.hunch_needs_author],
     why:
-      "SWEEP §1.3: a grade asserted rather than earned is forbidden by the ASSISTANT construct, "
-      + "DEC-18 makes an ungraded leg inert and NAMED, and DEC-15 makes a hunch a member act. A "
-      + "machine-composed leg is therefore never a hunch — it either carries a grade the record "
-      + "earned or it is absent-and-named — and a hunch is unreachable to it because a hunch "
-      + "carries the name and the date of the member declaring it, which no automated credential "
-      + "has to give.",
+      localize("skills.skilldoctrine.sweep_1_3_a_grade", "SWEEP §1.3: a grade asserted rather than earned is forbidden by the ASSISTANT construct, DEC-18 makes an ungraded leg inert and NAMED, and DEC-15 makes a hunch a member act. A machine-composed leg is therefore never a hunch — it either carries a grade the record earned or it is absent-and-named — and a hunch is unreachable to it because a hunch carries the name and the date of the member declaring it, which no automated credential has to give."),
   },
   {
     id: "description-to-a-commit-standard",
@@ -671,8 +666,7 @@ export const ACTION_RULE_TABLE = Object.freeze([
   { rule: 1, heading: "Humans decide.",
     sentences: [
       localize("skills.skilldoctrine.a_member_takes_every_act", "A member takes every act that commits the group: declaring a standard, determining, assessing a consequence or a success, choosing an option, approving, sending, advancing or stopping a stage, resolving, closing."),
-      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any "
-      + "of these acts.",
+      localize("skills.skilldoctrine.the_machine_may_find_compare", "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any of these acts."),
     ] },
   { rule: 2, heading: localize("skills.skilldoctrine.the_gate_is_at_the", "The gate is at the outward act, not the reasoning, and a member may pass it openly on stated grounds."),
     sentences: [
@@ -745,10 +739,7 @@ export const ACTION_RULE_TABLE = Object.freeze([
     ] },
   { rule: 16, heading: localize("skills.skilldoctrine.responses_change_the_plan_only", "Responses change the plan only through members."),
     sentences: [
-      "Each recorded response sets off a re-examination of every action taken or planned in the project and in projects "
-      + "linked to it by a response: dates recomputed, phases whose start now holds opened with their options offered, "
-      + "options whose premise or date changed marked with why, the profile's next routes for that reply offered, and, "
-      + "where enabled, the assistant's labelled proposals",
+      localize("skills.skilldoctrine.each_recorded_response_sets_off", "Each recorded response sets off a re-examination of every action taken or planned in the project and in projects linked to it by a response: dates recomputed, phases whose start now holds opened with their options offered, options whose premise or date changed marked with why, the profile's next routes for that reply offered, and, where enabled, the assistant's labelled proposals"),
       localize("skills.skilldoctrine.what_the_group_chose_changes", "What the group chose changes only by a member's act."),
       "a reply that is slow or unwelcome is not by itself an infraction, though a missed date a rule sets may be "
       + "determined noncompliant (rule 6)",
@@ -869,9 +860,7 @@ export function actionPlanningLayer(catalog) {
       /* R28 (T35; K1880; T36: N731): a standard it proposes rests only on captured text, so the run works under R38
          (a)'s and (c)'s clauses, the same objects the resident layer and the law lookup carry. */
       capture: CAPTURE_CLAUSES,
-      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
-        + "it: a proposal is stored apart and labelled as machine work, and the act a member takes on it "
-        + "refuses a machine. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_every_3", "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a proposal is stored apart and labelled as machine work, and the act a member takes on it refuses a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -941,9 +930,7 @@ export function filingDraftingLayer(catalog) {
         proposes: FILING_TEMPLATE_ACTS.proposes.map(read),
         leaves_to_a_member: FILING_TEMPLATE_ACTS.leaves_to_a_member.map(read),
       },
-      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
-        + "it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only "
-        + "by a member's act, which refuses a machine. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_every_4", "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: proposed wording is stored apart and labelled as machine work, and becomes a template's text only by a member's act, which refuses a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1017,9 +1004,7 @@ export function editionStatementLayer(catalog) {
         proposes: EDITION_STATEMENT_ACTS.proposes.map(read),
         leaves_to_a_member: EDITION_STATEMENT_ACTS.leaves_to_a_member.map(read),
       },
-      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
-        + "it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement "
-        + "only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_every_5", "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1101,9 +1086,7 @@ export function wizardAuthoringLayer(catalog) {
         leaves_to_a_member: WIZARD_AUTHORING_ACTS.leaves_to_a_member.map(read),
       },
       judged_not_coded: localize("skills.skilldoctrine.whether_a_steps_words_tell", "whether a step's words tell a member what to conclude is judged by this critique and by the approving member, not by code; the checks refuse what they can read: a screen or act that does not exist, a step with no why, and a draft on an act a machine is refused."),
-      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
-        + "it: a proposed script is stored apart and labelled as machine work, and becomes a script members run "
-        + "only by a member's acts, which refuse a machine. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_every_6", "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a proposed script is stored apart and labelled as machine work, and becomes a script members run only by a member's acts, which refuse a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1136,7 +1119,7 @@ const CLOSED_BOOK = Object.freeze({
   source: LADDERS_SOURCE, section: "§10" });
 
 /* DEC-27's limit, carried unconditionally: it governs wherever the member's suggestions switch is off (R35). */
-const DEC27_LIMIT = Object.freeze({
+export const DEC27_LIMIT = Object.freeze({
   text: localize("skills.skilldoctrine.the_assistant_may_only_structure", "The assistant may only structure what the member SAID"),
   source: ROLES_SOURCE, section: "§3" });
 
@@ -1244,9 +1227,7 @@ export function legalLookupLayer(catalog) {
         requests: LEGAL_LOOKUP_ACTS.requests.map(read),
         leaves_to_a_member: LEGAL_LOOKUP_ACTS.leaves_to_a_member.map(read),
       },
-      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a "
-        + "standard proposal is stored apart and labelled as machine work, one without captured text cannot be "
-        + "adopted, and adopting refuses a machine. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_every_7", "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs it: a standard proposal is stored apart and labelled as machine work, one without captured text cannot be adopted, and adopting refuses a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1264,8 +1245,7 @@ export const ASK_CLAUSES = Object.freeze([
   Object.freeze({ text: localize("skills.skilldoctrine.the_checks_are_strings_and", "The checks are strings and ids and cannot judge meaning, so quotes always sit beside the summary."),
     source: LADDERS_SOURCE, section: "§9.4" }),
   RECORD_CONTENT_IS_DATA,
-  Object.freeze({ text: "The legal-information line (B12 (ii), (iii)): labelled readings of held text, procedural "
-      + "facts from the profile shown as facts, never a member's rights, an outcome or what to file",
+  Object.freeze({ text: localize("skills.skilldoctrine.the_legal_information_line_b12", "The legal-information line (B12 (ii), (iii)): labelled readings of held text, procedural facts from the profile shown as facts, never a member's rights, an outcome or what to file"),
     source: LADDERS_SOURCE, section: "§9.4" }),
   Object.freeze({ text: "A statement of absence names which of the record's four search levels it was found at (what "
       + "lies beyond them is \"outside the record's reach\") and uses the five absence terms",
@@ -1323,10 +1303,7 @@ export function suggestionsLayer() {
     sourcing: "authored",
     body: {
       clauses: SUGGESTION_CLAUSES,
-      note: "this layer is INSTRUCTION, and this pack reads no switch: whether the asking member's own switch is on "
-        + "is read for each call by the assistant's runner, and with it off this layer is not loaded and DEC-27's "
-        + "limit stands alone. A suggestion is labelled as the machine's and becomes the member's only by the "
-        + "member's act.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_and_5", "this layer is INSTRUCTION, and this pack reads no switch: whether the asking member's own switch is on is read for each call by the assistant's runner, and with it off this layer is not loaded and DEC-27's limit stands alone. A suggestion is labelled as the machine's and becomes the member's only by the member's act."),
     },
   };
 }
@@ -1350,10 +1327,7 @@ export function suggestionsLayer() {
 /** The clauses a run drafting in a member's own-words field works under (R36 (a)–(e)). */
 export const WRITING_HELP_CLAUSES = Object.freeze([
   /* (a), (b), (c), (e): the help, what it works from, no new fact, testimony, the label and the keeping. */
-  Object.freeze({ text: "Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me "
-      + "write this\": it works only from what the member tells it and what the group holds, never adds a fact (for an "
-      + "observation it only helps word what the member saw), and its words arrive labelled \"Draft · the assistant's, "
-      + "asked by <handle>\", saved only when the member keeps them.",
+  Object.freeze({ text: localize("skills.skilldoctrine.wherever_a_member_writes_in", "Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me write this\": it works only from what the member tells it and what the group holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labelled \"Draft · the assistant's, asked by <handle>\", saved only when the member keeps them."),
     source: INTERACTION_SOURCE, section: WIZARD_RULING_SECTION }),
   Object.freeze({ text: localize("skills.skilldoctrine.never_on_an_act_the", "Never on an act the assistant is refused or an irreversible one."),
     source: INTERACTION_SOURCE, section: WIZARD_RULING_SECTION }),
@@ -1365,8 +1339,7 @@ export const WRITING_HELP_CLAUSES = Object.freeze([
     source: INTERACTION_SOURCE, section: WIZARD_RULING_SECTION }),
   Object.freeze({ text: localize("skills.skilldoctrine.the_machine_never_writes_the", "the machine never writes the member's reason, and it never hides why it thought there was one."),
     source: ROLES_SOURCE, section: "§3" }),
-  Object.freeze({ text: "when on, suggestions are labelled, drawn only from material the member brought or chose, and "
-      + "each adopted by the member's act.",
+  Object.freeze({ text: localize("skills.skilldoctrine.when_on_suggestions_are_labelled", "when on, suggestions are labelled, drawn only from material the member brought or chose, and each adopted by the member's act."),
     source: ROLES_SOURCE, section: "§3" }),
   Object.freeze({ text: "no generated justification anywhere — a generated one is a fabricated attribution",
     source: ROLES_SOURCE, section: "§3" }),
@@ -1419,10 +1392,7 @@ export function writingHelpLayer(catalog) {
         proposes: WRITING_HELP_ACTS.proposes.map(read),
         leaves_to_a_member: WRITING_HELP_ACTS.leaves_to_a_member.map(read),
       },
-      note: "this layer is INSTRUCTION, and this pack reads no switch and no field: which field takes a member's own "
-        + "words, is firsthand or states a reason is the screen registry's, and whether the member's suggestions switch "
-        + "is on is read for each call by the assistant's runner. A draft is stored apart and labelled as machine work, "
-        + "and becomes the member's words only by the member's act. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_and_2", "this layer is INSTRUCTION, and this pack reads no switch and no field: which field takes a member's own words, is firsthand or states a reason is the screen registry's, and whether the member's suggestions switch is on is read for each call by the assistant's runner. A draft is stored apart and labelled as machine work, and becomes the member's words only by the member's act. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1468,9 +1438,7 @@ export const GROUP_LOCAL_WORDS = Object.freeze({ text: localize("skills.skilldoc
 /** The clauses a run drafting interface words, or reading one back into English, works under (R39 (a)–(e)). */
 export const INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
   /* (a): only the missing words, each a labelled draft, kept or corrected by a granted member. */
-  Object.freeze({ text: "Administrators, or members given the grant, have a translation workspace listing every interface "
-      + "word beside the group's language, gaps marked; the assistant drafts the missing ones as labelled drafts, a member "
-      + "who knows the language checks and adopts each, and without the assistant members type them.",
+  Object.freeze({ text: localize("skills.skilldoctrine.administrators_or_members_given_the", "Administrators, or members given the grant, have a translation workspace listing every interface word beside the group's language, gaps marked; the assistant drafts the missing ones as labelled drafts, a member who knows the language checks and adopts each, and without the assistant members type them."),
     source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
   Object.freeze({ text: "where the translator can reach the assistant, it drafts every missing word (\"Draft · the "
       + "assistant's\"); a granted speaker reads each against the English and keeps or corrects it; without the assistant, "
@@ -1480,7 +1448,7 @@ export const INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
   /* (b): the word list's English under its key, the fixed term's note, no renaming within a language. */
   Object.freeze({ text: localize("skills.skilldoctrine.every_fixed_word_and_phrase", "Every fixed word and phrase the screens use is held with a stable key and its protected mark in `docs/development/ux-substrate/screens/words.json`, built from the mockups' own sources"),
     source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
-  Object.freeze({ text: "a word keeps its key when its English changes; `{name}` marks a placeholder.",
+  Object.freeze({ text: localize("skills.skilldoctrine.a_word_keeps_its_key", "a word keeps its key when its English changes; `{name}` marks a placeholder.", { name: "{name}" }),
     source: DECISIONS_SOURCE, section: "DEC-179" }),
   Object.freeze({ text: localize("skills.skilldoctrine.the_fixed_terms_the_grades", "the fixed terms (the grades, \"Undetermined\", the queue's kinds, the acts' names) each carry a note on what they mean, so every language says the same thing; renaming words within a language stays out (option A), so cases read the same from group to group."),
     source: DECISIONS_SOURCE, section: "DEC-127" }),
@@ -1554,11 +1522,7 @@ export function interfaceTranslationLayer(catalog) {
         leaves_to_a_member: INTERFACE_TRANSLATION_ACTS.leaves_to_a_member.map(read),
       },
       held_by_code: localize("skills.skilldoctrine.what_no_canon_sentence_above", "what no canon sentence above states is held by code, not by this text: a draft whose placeholders changed is dropped when it is recorded, a reading back into English is of exactly one kept word and records nothing, and every draft is recorded under the label above, by the modules that serve and record it."),
-      note: "this layer is INSTRUCTION, and this pack reads no account, grant, keep-away setting or word list: which "
-        + "account serves the member, whether the group keeps the assistant away, which member is granted a language "
-        + "and which words a draft is given are read for each call by the modules that serve it. A draft is recorded "
-        + "apart, labelled as machine work, and becomes the group's wording only by a granted member's act. A run "
-        + "ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_and_3", "this layer is INSTRUCTION, and this pack reads no account, grant, keep-away setting or word list: which account serves the member, whether the group keeps the assistant away, which member is granted a language and which words a draft is given are read for each call by the modules that serve it. A draft is recorded apart, labelled as machine work, and becomes the group's wording only by a granted member's act. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1580,6 +1544,10 @@ export function interfaceTranslationLayer(catalog) {
  * ========================================================================= */
 
 /** The rules of §4 an action draft works under (R45), in §4's order, each the table's own object. */
+/** R45's stated absence of the drafts, named by the acts the catalogue lacks: the one sentence the layer hands on, so a
+ *  test compares the layer's answer with it by equality. */
+export const draftsAbsentSentence = (ids) => localize("skills.skilldoctrine.the_planes_published_catalogue_holds_8", "the plane's published catalogue holds none of the acts {map}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.", { map: String(ids.join(", ")) });
+
 export const ACTION_DRAFTING_RULES = Object.freeze([1, 2, 3, 9, 12, 16, 19, 21].map(actionRule));
 
 /* THE ACTS THE LAYER NAMES (R45), each by the requirement that defines it and named once here as a SELECTOR over the
@@ -1599,15 +1567,11 @@ export const ACTION_DRAFTING_ACTS = Object.freeze({
    this module's own words, not a clause (R21 binds the clauses only); what the draft is handed, and that it reads
    nothing, is held by code (`plan-work` R8's items, `run-rules` R27's reach `none`), never by this text. */
 export const STATUS_REPORT_ACT = Object.freeze({ id: "statusreportassist", defined_by: "plan-work R8" });
-export const STATUS_REPORT_TASK = "the assistant drafts a plan's status report from the items handed to it, the "
-  + "sourced list of where the plan stands that plan-work R8 assembles: each sentence of the report comes from one of "
-  + "those items and says no more than it does, and nothing is read, neither the record nor any document or page "
-  + "(run-rules R27's reach none). The report is a labelled machine draft, and it is a member's report only when she "
-  + "keeps or rewrites it.";
+export const STATUS_REPORT_TASK = localize("skills.skilldoctrine.the_assistant_drafts_a_plans", "the assistant drafts a plan's status report from the items handed to it, the sourced list of where the plan stands that plan-work R8 assembles: each sentence of the report comes from one of those items and says no more than it does, and nothing is read, neither the record nor any document or page (run-rules R27's reach none). The report is a labelled machine draft, and it is a member's report only when she keeps or rewrites it.");
 
 const ACTION_DRAFTING_LOAD_WHEN = "the member asks the assistant to read a prepared text, draft an infraction's "
   + "documentation for an audience, or propose bearings on a reply";
-const STATUS_REPORT_LOAD_WHEN = "asks the assistant to draft a plan's status report from the items handed to it";
+export const STATUS_REPORT_LOAD_WHEN = "asks the assistant to draft a plan's status report from the items handed to it";
 
 /** THE `action_drafting` LAYER over the published catalogue (R45, R48). R45's stated absence (R9's form) only while the
  *  catalogue holds none of the three acts and no `STATUS_REPORT_ACT`. The three: with any of them, every one must be
@@ -1619,7 +1583,7 @@ export function actionDraftingLayer(catalog) {
   const named = ACTION_DRAFTING_ACTS.drafts;
   const drafts = named.some((a) => byId.has(a.id));
   const statusReport = byId.has(STATUS_REPORT_ACT.id);
-  const draftsAbsentBecause = localize("skills.skilldoctrine.the_planes_published_catalogue_holds_8", "the plane's published catalogue holds none of the acts {map}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.", { map: String(named.map((a) => a.id).join(", ")) });
+  const draftsAbsentBecause = draftsAbsentSentence(named.map((a) => a.id));
   if (!drafts && !statusReport) return {
     load_when: "never, in this edition",
     sourcing: "absent",
@@ -1648,10 +1612,7 @@ export function actionDraftingLayer(catalog) {
       status_report: statusReport ? { task: STATUS_REPORT_TASK, reach: DRAFT_REACH.statusreport } : {
         absent_because: localize("skills.skilldoctrine.the_planes_published_catalogue_holds_9", "the plane's published catalogue holds no {id} act, the one act through which a member asks the assistant to draft a plan's status report from the items handed to it, so this layer carries no task for work no draft can do.", { id: String(STATUS_REPORT_ACT.id) }),
       },
-      note: "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, "
-        + "and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that "
-        + "serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every "
-        + "word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_a", "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1676,17 +1637,13 @@ export function actionDraftingLayer(catalog) {
  *  one tap away, never replacing the original, a member's own words staying theirs, signed records staying in the
  *  language they were signed in, and official local names staying as they are. */
 export const READING_TRANSLATION_CLAUSES = Object.freeze([
-  Object.freeze({ text: "The group's own writing (notes, questions, findings, notices) can be read in a member's language "
-      + "on request: the assistant drafts the translation, labelled \"Machine translation · original in English\", with "
-      + "the original one tap away; it never replaces the original.",
+  Object.freeze({ text: localize("skills.skilldoctrine.the_groups_own_writing_notes", "The group's own writing (notes, questions, findings, notices) can be read in a member's language on request: the assistant drafts the translation, labelled \"Machine translation · original in English\", with the original one tap away; it never replaces the original."),
     source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
-  Object.freeze({ text: "the assistant drafts the translation, labelled \"Machine translation · original in English\", the "
-      + "original one tap away; a translation never replaces the original, and a member's own words stay theirs.",
+  Object.freeze({ text: localize("skills.skilldoctrine.the_assistant_drafts_the_translation", "the assistant drafts the translation, labelled \"Machine translation · original in English\", the original one tap away; a translation never replaces the original, and a member's own words stay theirs."),
     source: DECISIONS_SOURCE, section: "DEC-127" }),
   Object.freeze({ text: localize("skills.skilldoctrine.signed_and_published_records_stay", "Signed and published records stay in the language they were signed in."),
     source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
-  Object.freeze({ text: "Signed and published records stay in the language they were signed in; a translation of a "
-      + "published case is labelled unofficial and links the signed original (principle 8.5).",
+  Object.freeze({ text: localize("skills.skilldoctrine.signed_and_published_records_stay_2", "Signed and published records stay in the language they were signed in; a translation of a published case is labelled unofficial and links the signed original (principle 8.5)."),
     source: DECISIONS_SOURCE, section: "DEC-127" }),
   Object.freeze({ text: "official local names stay as they are with an explanation beside them",
     source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
@@ -1726,10 +1683,7 @@ export function readingTranslationLayer(catalog) {
       /* The mode a draft is answered in, run-rules' (its R21), read and never typed, as writing help's. */
       mode: DRAFT_MODE.mode,
       acts: { drafts: [read(READING_TRANSLATION_ACT)] },
-      note: "this layer is INSTRUCTION, and this pack reads no account, language or passage: which account serves the "
-        + "member, the language she reads in and the passage she asked about are read for each call by the modules "
-        + "that serve it. The translation is answered to her alone, labelled as machine work and stored nowhere, and "
-        + "the original is never changed. A run ignoring every word here gets past nothing.",
+      note: localize("skills.skilldoctrine.this_layer_is_instruction_and_4", "this layer is INSTRUCTION, and this pack reads no account, language or passage: which account serves the member, the language she reads in and the passage she asked about are read for each call by the modules that serve it. The translation is answered to her alone, labelled as machine work and stored nowhere, and the original is never changed. A run ignoring every word here gets past nothing."),
     },
   };
 }
@@ -1862,12 +1816,11 @@ export const EXPLORE_CLAUSES = Object.freeze([
   inv("§9", localize("skills.skilldoctrine.the_system_never_explores_a", "The system never explores a person on its own.")),
   inv("§9", localize("skills.skilldoctrine.it_gathers_about_a_person", "It gathers about a person only when a member has tied that person to the question, and only up to a fixed amount per run.")),
   inv("§5", "judges how a find bears on a question, supporting it or contradicting what has been gathered;"),
-  inv("§5", "The system's judgement of a find is a labelled signal (Capability Ladders §10, K1473): shown with how it "
-    + "was worked out and its measured false-alarm rate."),
+  inv("§5", localize("skills.skilldoctrine.the_systems_judgement_of_a", "The system's judgement of a find is a labelled signal (Capability Ladders §10, K1473): shown with how it was worked out and its measured false-alarm rate.")),
   inv("§5", localize("skills.skilldoctrine.it_is_never_a_grade", "It is never a grade, never a stored score, and never used to hide or rank what members see.")),
   inv("§5", localize("skills.skilldoctrine.the_systems_hunches_and_hypotheses", "The system's hunches and hypotheses are kept apart from members', under their own heading on the question.")),
   inv("§5", localize("skills.skilldoctrine.they_are_never_facts", "They are never facts.")),
-  inv("§5", "The system's finds are labelled as the system's work."),
+  inv("§5", localize("skills.skilldoctrine.the_systems_finds_are_labelled", "The system's finds are labelled as the system's work.")),
   inv("§1", localize("skills.skilldoctrine.the_machine_never_concludes_determines", "The machine never concludes, determines or attests (AI Roles §3 rules 1 and 4; Capability Ladders §10).")),
 ]);
 
@@ -1876,21 +1829,19 @@ export const EXPLORE_CLAUSES = Object.freeze([
 export const READING_CLAUSES = Object.freeze([
   inv("§6", localize("skills.skilldoctrine.the_ai_may_read_a", "The AI may read a document the group holds a few pages at a time, within a reading limit, and never one under a \"no AI\" limit.")),
   inv("§6", localize("skills.skilldoctrine.as_it_reads_it_builds", "As it reads, it builds the record: it proposes the passages worth citing that bear on the investigation (figures, policies, decisions, statements and the like) and the connections they make (to bodies, to people in their public roles, to other documents and to the questions).")),
-  inv("§6", "Each proposal is tied to its exact quote, labelled as the system's work, and taken up by a member's act "
-    + "(§5)."),
+  inv("§6", localize("skills.skilldoctrine.each_proposal_is_tied_to", "Each proposal is tied to its exact quote, labelled as the system's work, and taken up by a member's act (§5).")),
   inv("§6", localize("skills.skilldoctrine.a_passage_keeps_the_documents", "A passage keeps the document's capture grade.")),
   inv("§6", localize("skills.skilldoctrine.a_connection_is_graded_by", "A connection is graded by how the link is established, never by the machine's say-so, and the machine never grades one D (AI Roles rule 3).")),
   inv("§5", localize("skills.skilldoctrine.the_machine_only_pointed", "The machine only pointed.")),
   inv("§5", localize("skills.skilldoctrine.what_the_passage_means_is", "What the passage means is read by the member when she accepts it, and recorded as proposed or edited.")),
   inv("§6", localize("skills.skilldoctrine.every_sentence_is_tied_to", "Every sentence is tied to a quote, and any sentence that cannot be tied is left out.")),
   inv("§6", localize("skills.skilldoctrine.it_is_never_shown_in", "It is never shown in place of the source, never stored as the document's content, and never cited as evidence.")),
-  inv("§6", "The text is labelled as the AI's reading and graded \"undetermined\" until its accuracy is measured."),
+  inv("§6", localize("skills.skilldoctrine.the_text_is_labelled_as", "The text is labelled as the AI's reading and graded \"undetermined\" until its accuracy is measured.")),
 ]);
 
 /** The clauses the system drafts a case's account under (R44): §11's account, and no stories. */
 export const CASE_ACCOUNT_CLAUSES = Object.freeze([
-  inv("§11", "The system drafts the case's written account from the evidence, and may offer more than one framing (in "
-    + "time order, by question, by rule), each labelled as the system's."),
+  inv("§11", localize("skills.skilldoctrine.the_system_drafts_the_cases", "The system drafts the case's written account from the evidence, and may offer more than one framing (in time order, by question, by rule), each labelled as the system's.")),
   inv("§11", localize("skills.skilldoctrine.the_member_writes_the_account", "The member writes the account, from a draft or from nothing, and it is published as hers.")),
   inv("§11", localize("skills.skilldoctrine.a_case_carries_no_stories", "A case carries no stories, context or human-interest accounts, however relevant.")),
   inv("§11", localize("skills.skilldoctrine.framing_carried_under_it_is", "Framing carried under it is optional, and is allowed only when marked in the text and tied to a bias statement printed in the case.")),
@@ -1902,15 +1853,12 @@ export const ACCOUNT_CHECK_CLAUSES = Object.freeze([
   inv("§11", localize("skills.skilldoctrine.a_sentence_the_evidence_does", "A sentence the evidence does not support is flagged: she ties it to evidence or removes it.")),
   inv("§11", localize("skills.skilldoctrine.a_sentence_the_record_contradicts", "A sentence the record contradicts is refused outright.")),
   inv("§11", localize("skills.skilldoctrine.only_framing_that_follows_a", "Only framing that follows a documented bias statement may stay, marked as such in the text.")),
-  inv("§11", "An unsupported claim cannot be relabelled as bias."),
+  inv("§11", localize("skills.skilldoctrine.an_unsupported_claim_cannot_be", "An unsupported claim cannot be relabelled as bias.")),
   inv("§11", localize("skills.skilldoctrine.lying_is_not_bias", "Lying is not bias.")),
   inv("§11", localize("skills.skilldoctrine.the_cases_statements_about_itself", "The case's statements about itself (what it says; why this subject; its scope; what was left out, and why; the bias acknowledgement; and, for a new edition, what changed) are held to the same check.")),
 ]);
 
-const INSTRUCTION_NOTE = "this layer is INSTRUCTION, every clause a quotation of the rules Bob approved in plain language "
-  + "(BIO_Investigation_v0_1.md). What a run proposes is stored apart and labelled as the system's work by the module "
-  + "that keeps it, and becomes the record's only by a member's act, which refuses a machine. A run ignoring every word "
-  + "here gets past nothing.";
+const INSTRUCTION_NOTE = localize("skills.skilldoctrine.this_layer_is_instruction_every_8", "this layer is INSTRUCTION, every clause a quotation of the rules Bob approved in plain language (BIO_Investigation_v0_1.md). What a run proposes is stored apart and labelled as the system's work by the module that keeps it, and becomes the record's only by a member's act, which refuses a machine. A run ignoring every word here gets past nothing.");
 
 /** THE `enquire` LAYER (R41): the intake interview and planning, a member's words into proposed questions and steps
  *  and a remembered claim into a "find the record" step. Always rendered: it names no act, and the mode's reach and
@@ -2155,9 +2103,7 @@ export const COMPOSITION = {
    *  inert, so this file names it nowhere. */
   unreachable_to_a_machine: VERSION_STRENGTH_INERT_SOURCES,
   ungraded_leg:
-    "inert, and NAMED. It contributes nothing to the calculation, floors nothing and unrates "
-    + "nothing — and it is named in the description, per axis, with the reason. Inert never means "
-    + "invisible (DEC-18).",
+    localize("skills.skilldoctrine.inert_and_named_it_contributes", "inert, and NAMED. It contributes nothing to the calculation, floors nothing and unrates nothing — and it is named in the description, per axis, with the reason. Inert never means invisible (DEC-18)."),
   where_the_grades_come_from:
     "the resolutions the legs rest on, through the record's earned-basis registry, exactly as "
     + "`op=cite` already fills them",
@@ -2175,14 +2121,13 @@ export const COMPOSITION = {
     unchained_item: Object.freeze({
       in: "the facts' unchained_items",
       carries: Object.freeze(["record_id"]),
-      says: "an item with no chain carries its record id, or null when the record answers none",
+      says: localize("skills.skilldoctrine.an_item_with_no_chain", "an item with no chain carries its record id, or null when the record answers none"),
     }),
     leg: Object.freeze({
       target: "a leg's target is the record_id of the document it rests on",
       extent: "a leg's extent_capture is that document's capture_sha",
     }),
-    when_null: "a document whose record_id is null is not cited as a leg: it is named as held without a record id, "
-      + "and no leg is written against it",
+    when_null: localize("skills.skilldoctrine.a_document_whose_record_id", "a document whose record_id is null is not cited as a leg: it is named as held without a record id, and no leg is written against it"),
   }),
 };
 
