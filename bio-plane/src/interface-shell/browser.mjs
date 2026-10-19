@@ -270,9 +270,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return { words: w("shell.unread") + traceOf(a), own: false };
   }
   const refusalWords = (a, own, inst) => refusalOf(a, own, inst).words;
-  function outcome(spec, a) {
+  function outcome(spec, a, inst) {
     if (a.kind === "ok") return emptyOf(spec, a.value) ? { state: "empty", value: a.value, refusal: null } : { state: "ok", value: a.value, refusal: null };
-    if (a.kind === "refused") { const r = refusalOf(a, spec && spec.refusals, null); return { state: "failed", value: null, refusal: { code: a.code, words: r.words, own: r.own } }; }
+    if (a.kind === "refused") { const r = refusalOf(a, spec && spec.refusals, inst || null); return { state: "failed", value: null, refusal: { code: a.code, words: r.words, own: r.own } }; }
     return { state: "failed", value: null, refusal: { code: null, words: w("shell.unread"), own: false } };
   }
   /* R46: the session as a screen sees it: `none`, `signedout`, `ended`, `locked` or `live`, with the handle */
@@ -283,7 +283,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return { state: "none", handle: null };
   }
   function instance(spec, subject, key, serves) {
-    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {}, words: {}, fresh: {}, refreshT: {}, ro: false };
+    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {}, words: {}, fresh: {}, refreshT: {}, ro: false, sig: {}, typing: {}, typingT: {} };
     inst.view = key === "g"
       /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
       ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
@@ -300,11 +300,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const absent = (inst, code) => ABSENCE.test(code) || (Array.isArray(inst.spec.ABSENT_CODES) && inst.spec.ABSENT_CODES.includes(code));
   /* R61: a screen whose reads name a subject (`subject: true`), opened with none */
   const subjectless = (inst, specs) => (inst.subject === null || inst.subject === undefined || inst.subject === "") && Object.values(specs).some((x) => x && x.subject);
+  /* R90 (K4072): a choice or checks that redraws re-runs the screen's `reads` with the new value in page memory: a read whose
+     request changed is read once more (with the new query); with none changed the redraw sends nothing */
+  function redrawAfter(inst, name, value) {
+    inst.ui[name] = value;
+    let specs = {};
+    try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
+    const changed = Object.entries(specs).filter(([n, sp]) => inst.sig[n] !== undefined && inst.sig[n] !== JSON.stringify([sp.op, sp.query || null, sp.body || null])).map(([n]) => n);
+    if (changed.length && (inst.pub || ME)) readAll(inst, changed); else draw();
+  }
   const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;
   async function readAll(inst, names, background) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
     const gen = ++inst.gen;
+    for (const [n, sp] of Object.entries(specs)) inst.sig[n] = JSON.stringify([sp.op, sp.query || null, sp.body || null]);
     if (inst.key === "m" && subjectless(inst, specs)) { inst.unavail = "nothing"; return draw(); }
     const todo = Object.entries(specs).filter(([n]) => !names || names.includes(n));
     for (const [n] of todo) if (!inst.data[n] || !names) inst.data[n] = { state: "loading", value: null, refusal: null };
@@ -313,7 +323,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     await Promise.all(todo.map(async ([n, spec]) => {
       const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
       if (gen !== inst.gen && !names) return;
-      inst.data[n] = outcome(spec, a);
+      inst.data[n] = outcome(spec, a, inst);
       /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
       if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
       /* R74: a locked act is enabled again once a read started after it has redrawn the screen */
@@ -361,7 +371,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!spec || spec.refresh !== true) return;
     const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background: true });
     if (!live(inst)) return;
-    if (a.kind === "ok") { inst.data[n] = outcome(spec, a); inst.fresh[n] = Date.now(); } else inst.fresh[n] = 0;
+    if (a.kind === "ok") { inst.data[n] = outcome(spec, a, inst); inst.fresh[n] = Date.now(); } else inst.fresh[n] = 0;
     armRefresh(inst, n);
     draw();
   }
@@ -584,7 +594,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       },
       sec(titleKey, inner, o = {}) {
         const help = o.help || (has(titleKey + ".holds") ? titleKey + ".holds" : null);
-        return '<section class="cs-section"' + (o.id ? ' id="' + esc(o.id) + '"' : "") + '><h2 tabindex="0"' + tipAttr(help ? w(help) : "", 2) + ">" + w(titleKey, o.fills) + "</h2>" + inner + "</section>";
+        /* K4073: `help` is one key or a list, each drawn as its own sentence */
+        const helpHtml = Array.isArray(help) ? help.map((k, i) => (i ? '<span class="why">' + w(k) + "</span>" : w(k))).join("") : help ? w(help) : "";
+        return '<section class="cs-section"' + (o.id ? ' id="' + esc(o.id) + '"' : "") + '><h2 tabindex="0"' + tipAttr(helpHtml, 2) + ">" + w(titleKey, o.fills) + "</h2>" + inner + "</section>";
       },
       sheet: (inner) => '<div class="cs-sheet">' + inner + "</div>",
       row: (a, b, c = "", meta = "") => '<div class="cs-row">' + a + "<span>" + b + "</span>" + c + (meta ? '<span class="meta">' + meta + "</span>" : "") + "</div>",
@@ -594,12 +606,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const cls = "cs-input" + (o.rec ? " rec" : "") + (o.draft ? " cs-draft" : "");
         const attrs = (o.type ? ' type="' + esc(o.type) + '"' : o.area ? "" : ' type="text"') + (o.max ? ' maxlength="' + esc(o.max) + '"' : "")
           + (o.accept ? ' accept="' + esc(o.accept) + '"' : "") + (o.capture ? ' capture="' + esc(o.capture) + '"' : "")
-          + (o.help ? ' aria-describedby="' + esc(id) + '-help"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "")
-          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "");
+          + (o.help ? ' aria-describedby="' + (Array.isArray(o.help) ? o.help.map((k, i) => esc(id) + "-help" + (i ? i + 1 : "")).join(" ") : esc(id) + "-help") + '"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "")
+          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "") + (typeof o.typing === "function" ? ' data-typing="1"' : "");
+        if (typeof o.typing === "function") inst.typing[id] = o.typing;
         const input = o.area ? '<textarea id="' + esc(id) + '" class="' + cls + '"' + attrs + ">" + esc(o.value || "") + "</textarea>"
           : "<input id=\"" + esc(id) + '" class="' + cls + '"' + attrs + (o.type === "file" || o.type === "password" ? "" : ' value="' + esc(o.value || "") + '"') + ">";
         return '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey, o.fills) + "</label>"
-          + (o.help ? '<span class="help" id="' + esc(id) + '-help">' + w(o.help) + "</span>" : "") + input
+          + (o.help ? (Array.isArray(o.help) ? o.help : [o.help]).map((k, i) => '<span class="help" id="' + esc(id) + "-help" + (i ? i + 1 : "") + '">' + w(k) + "</span>").join("") : "") + input
           + (o.draft ? '<span class="cs-draftlabel">' + I("machine") + w(o.draft, o.draftFills) + "</span>" : "") + "</div>";
       },
       /* R27 (N986): options are words by key, `[value, key, fills]`, or record data, `{value, text}`, the text drawn as
@@ -654,7 +667,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           const [v, text, on] = Array.isArray(x) ? [x[0], w(x[1]), x[2]] : [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text), x.on];
           return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
         };
-        return '<fieldset class="cs-field" id="' + esc(id) + '"><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
+        const redraw = typeof o.redraw === "string" && o.redraw ? ' data-shell="choice" data-redraw="' + esc(o.redraw) + '"' : "";
+        return '<fieldset class="cs-field" id="' + esc(id) + '"' + redraw + '><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
       },
       /* R74: the Sounds setting's control, drawn as `appearance()` draws R18's, so `screens-settings` draws none of its own */
       sounds() {
@@ -1286,6 +1300,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     for (const t of inst.timers) clearTimeout(t);
     inst.timers = [];
     /* R93: a refreshing read's timers are cancelled with the screen (R27's rule); R91: a selection is page memory only */
+    for (const t of Object.values(inst.typingT)) clearTimeout(t);
+    inst.typingT = {};
     for (const t of Object.values(inst.refreshT)) clearTimeout(t);
     inst.refreshT = {};
     inst.words = {};
@@ -1973,6 +1989,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const tipped = t.closest ? t.closest("[data-tip]") : null;
       if (tipped && !tipped.matches("a,button,input,select,textarea")) openTip(tipped);
     });
+    /* K4076: a field carrying `typing` hands its value to the screen's handler `fn(cs, view, value)` about half a second after
+       the last key, on the page's clock, cancelled with the screen; it is the member's own input, so activity */
+    root.addEventListener("input", (e) => {
+      const el = e.target;
+      if (blocked(el) || !el.getAttribute || el.getAttribute("data-typing") !== "1") return;
+      const inst = ownerOf(el), id = el.id;
+      if (!inst || typeof inst.typing[id] !== "function") return;
+      activity();
+      clearTimeout(inst.typingT[id]);
+      inst.typingT[id] = setTimeout(() => {
+        delete inst.typingT[id];
+        if (!live(inst) || typeof inst.typing[id] !== "function") return;
+        try { inst.typing[id](kit(inst), inst.view, el.value); } catch { /* a screen's own handler never stops the shell */ }
+      }, 500);
+    });
     root.addEventListener("change", (e) => {
       if (blocked(e.target)) return;
       const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null;
@@ -1983,7 +2014,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         /* R90: a choice that redraws sets its value in `view.ui` and redraws; it sends nothing */
         const name = ch.getAttribute("data-redraw");
         const inst = ownerOf(ch);
-        if (inst) { activity(); inst.ui[name] = ch.value; draw(); }
+        if (inst) {
+          activity();
+          const boxes = ch.localName === "fieldset" ? Array.from(ch.querySelectorAll("input")) : null;
+          redrawAfter(inst, name, boxes ? (boxes[0] && boxes[0].type === "radio" ? (boxes.find((i) => i.checked) || { value: "" }).value : boxes.filter((i) => i.checked).map((i) => i.value)) : ch.value);
+        }
         return;
       }
       if (ch) { const inst = [MAIN, DOCKI, GUIDEI].find((i) => i && Object.hasOwn(i.ui, "choice:" + ch.getAttribute("data-choice"))); if (inst) { inst.ui["choice:" + ch.getAttribute("data-choice")] = ch.value; draw(); } }

@@ -674,3 +674,61 @@ test("R103 an explanation opens below what it explains, else to its right, else 
   p.doc.dispatchEvent(new Event("keydown", { key: "Escape", bubbles: true }));
   assert.ok(tip.hidden, "closes on Escape");
 });
+
+/* ---------- K4072, K4073, K4076: the kit details the screens wait on (R90 and the shell's existing services) ---------- */
+
+const SEARCHING = {
+  id: "finder", words: [["screen.finder.t.l", "fx l", false], ["screen.finder.t.a", "fx a", false], ["screen.finder.t.b", "fx b", false], ["screen.finder.t.h1", "fx h1", false], ["screen.finder.t.h2", "fx h2", false]],
+  reads: (view) => ({ list: { op: "search", query: { show: view.ui.show || "a" }, refusals: { BAD: (r, cs) => "<i id=own>" + cs.w("screen.finder.t.h1") + "</i>" } } }),
+  acts: [],
+  render(cs, view) {
+    return cs.choice("c1", "screen.finder.t.l", [["a", "screen.finder.t.a"], ["b", "screen.finder.t.b"]], { redraw: "show" })
+      + cs.choice("c2", "screen.finder.t.l", [["a", "screen.finder.t.a"], ["b", "screen.finder.t.b"]], { redraw: "other" })
+      + cs.checks("ck", { text: "x" }, [["u", "screen.finder.t.a", true], ["v", "screen.finder.t.b", false]], { redraw: "marks" })
+      + '<p id="marks">' + cs.esc(JSON.stringify(view.ui.marks || null)) + "</p>"
+      + cs.field("f1", "screen.finder.t.l", { help: ["screen.finder.t.h1", "screen.finder.t.h2"], typing: (cs2, v2, value) => cs2.set("typed", value) })
+      + '<p id="typed">' + cs.esc(view.ui.typed || "") + "</p>"
+      + cs.sec("screen.finder.t.l", cs.state("list", view, () => "<p>ok</p>"), { help: ["screen.finder.t.h1", "screen.finder.t.h2"] });
+  },
+};
+const pickIn = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await p.settle(); };
+
+test("R90 (K4072) a choice that redraws re-runs the screen's reads with the choice in page memory: a read whose query changed is read once with the new query; a choice that changes no read sends none", async () => {
+  const p = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: ok({ items: [] }) } });
+  assert.equal(p.byOp("search").length, 1);
+  await pickIn(p, "c2", "b");
+  assert.equal(p.byOp("search").length, 1, "no read beyond the redraw's");
+  await pickIn(p, "c1", "b");
+  assert.equal(p.byOp("search").length, 2, "read once more");
+  assert.equal(p.byOp("search")[1].query.show, "b", "with the new query");
+});
+
+test("R90 (K4073) cs.sec and cs.field take help as one key or a list, each its own sentence; a read's own refusal function is handed the kit; cs.checks takes the redraw option", async () => {
+  const p = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: ok({ items: [] }) } });
+  const helps = p.root().querySelectorAll("#f1-help, #f1-help2");
+  assert.deepEqual(helps.map((e) => e.textContent), ["fx h1", "fx h2"]);
+  assert.equal(p.doc.getElementById("f1").getAttribute("aria-describedby"), "f1-help f1-help2");
+  assert.equal(tipOf(p.root().querySelector("section.cs-section h2")), "fx h1" + '<span class="why">fx h2</span>');
+  const one = await boot({ screens: [{ ...SEARCHING, render: (cs) => cs.field("g", "screen.finder.t.l", { help: "screen.finder.t.h1" }) }], path: "/app/finder" });
+  assert.equal(one.doc.getElementById("g-help").textContent, "fx h1");
+  const r = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: { status: 400, json: { ok: false, code: "BAD" } } } });
+  assert.equal(r.doc.getElementById("own").textContent, "fx h1", "the refusal drawn with the screen's own words, by the kit");
+  const box = p.doc.getElementById("ck-1"); box.checked = true; p.fire(box, "change"); await p.settle();
+  assert.deepEqual(JSON.parse(p.doc.getElementById("marks").textContent), ["u", "v"], "checks redraws with the boxes ticked");
+});
+
+test("R90 (K4076) a text field's typed input carries the screen's handler, debounced by the kit to about half a second on the page's clock; leaving the screen cancels it", async () => {
+  const p = await boot({ screens: [SEARCHING], path: "/app/finder", plane: { search: ok({ items: [] }) } });
+  const f = () => p.doc.getElementById("f1");
+  f().value = "ab"; p.fire(f(), "input");
+  await p.clock.tick(300);
+  f().value = "abc"; p.fire(f(), "input");
+  await p.clock.tick(300);
+  assert.equal(p.doc.getElementById("typed").textContent, "", "not yet: the last key restarted the wait");
+  await p.clock.tick(300);
+  assert.equal(p.doc.getElementById("typed").textContent, "abc", "once, with the last value");
+  f().value = "z"; p.fire(f(), "input");
+  await p.back("/app/finder/other");
+  await p.clock.tick(1000);
+  assert.equal(p.doc.getElementById("typed").textContent, "", "cancelled with the screen");
+});
