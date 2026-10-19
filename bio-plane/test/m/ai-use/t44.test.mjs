@@ -29,9 +29,8 @@ test("R13 (T44) AI_USE_WORDS equals words.json for every key it reads: the explo
     assert.equal(typeof WORDS[k], "string", `${k} in words.json`);
     assert.equal(AI_USE_WORDS[k], WORDS[k], `${k} held verbatim`);
   }
-  assert.equal(AI_USE_WORDS["ai.when.month"], "on {month} 1");
-  assert.equal(AI_USE_WORDS["ai.refused.exploreoutofscope"], "The assistant can't explore this question on {whose} account: it "
-    + "lies outside what the account's owners chose to explore.");
+  assert.equal(AI_USE_WORDS["ai.when.month"], WORDS["ai.when.month"]);
+  assert.equal(AI_USE_WORDS["ai.refused.exploreoutofscope"], WORDS["ai.refused.exploreoutofscope"]);
   assert.equal(AI_USE_WORDS["ai.use.account.name"], word("ai.use.account.name"));
   /* ai.use.suggestions names a switch, not a use: not read here */
   assert.equal(Object.keys(AI_USE_WORDS).some((k) => k.startsWith("ai.use.suggestions")), false);

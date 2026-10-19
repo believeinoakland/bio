@@ -1,6 +1,6 @@
 # BOB to skills (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio skills tranche/T51 job/T51/skills`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+Your deferred item 1, settled (K4010): a test never reads another module's source text (P7: behaviour at the interface). R45's absent_because and R25's C-22.7 translation: assert what your module answers, compared by equality with the product's own word/localize call (a code-written sentence needs no row, K3988); drop the check of run-rules' source. Item 2 accepted (an AI-instruction constant, unkeyed). Then COMPLETE again.

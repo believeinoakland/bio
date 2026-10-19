@@ -1,6 +1,6 @@
 # BOB to reading-guides (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio reading-guides tranche/T51 job/T51/reading-guides`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+Your ambiguity, ruled (K4009): an adopted guide (R6) is usable only after this group's R3 review, so it is an approved group guide: it keeps origin 'adopted' (your reading, R13's test) AND answers approved_by and approved_at like a group guide. R15 is worded so on tranche/T51 (BOB's wording edit, K3259): merge tranche/T51, make sure the adopted arm answers both (add a test naming R15 for it if absent), then COMPLETE again. Your unconverted diagnostics go to the design's unkeyed list with R6's batch.

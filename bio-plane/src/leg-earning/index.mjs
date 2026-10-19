@@ -153,7 +153,7 @@ export class LegEarning {
    *  `target_type` is derived here from the target's prefix, never taken from a caller. Asked inside the caller's
    *  transaction (the promotion's); answers the number of legs written. */
   writeBasis(bundleId, legs = []) {
-    if (typeof bundleId !== "string" || !bundleId) return { ok: false, reason: "NO_ID", detail: "writeBasis requires a bundle id" };
+    if (typeof bundleId !== "string" || !bundleId) return { ok: false, reason: "NO_ID", detail: localize("leg-earning.index.write_basis_requires_bundle_id", "writeBasis requires a bundle id") };
     const list = Array.isArray(legs) ? legs : [];
     this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
     let written = 0;
@@ -667,7 +667,7 @@ export class LegEarning {
          immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
          checkEarnedLeg compares this leg against, so the sentence a member reads
          and the refusal that enforces it cannot say different things. */
-      const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+      const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
       /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
          fidelity to bound the bytes by and the answer is the one this record
          has given since REC-18, BYTE FOR BYTE. That identity is not caution: a
@@ -712,7 +712,7 @@ export class LegEarning {
           mode: "ceiling", grade: null, captures: e.n,
           determined: false,
           undetermined_because: "CAPTURE_GRADE_VIA_UNRULED",
-          empty_level: "capture route — the bytes of this document were served by a route no ruling grades",
+          empty_level: localize("leg-earning.index.capture_route_no_ruling", "capture route — the bytes of this document were served by a route no ruling grades"),
           why: word("leg-earning.why.served_route_ruling", { capture_word: String(captureWord) }),
           ceiling };
         continue;
@@ -722,9 +722,7 @@ export class LegEarning {
           mode: "ceiling", grade: null, captures: e.n,
           determined: false,
           undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-          empty_level: "transcription fidelity — this document's text was derived by a machine and no "
-                     + "step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, "
-                     + "per version)",
+          empty_level: localize("leg-earning.index.transcription_fidelity_unmeasured", "transcription fidelity — this document's text was derived by a machine and no step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, per version)"),
           why: localize("leg-earning.index.captureword_but_every_transcription_of", "{captureWord}, but every transcription of its text is UNMEASURED: no step in the provenance of this document's text carries a measured fidelity, so what a leg resting on that text may claim about how it was captured is undetermined. That is a statement, not a permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, so an unmeasured derivation bounds it to nothing rather than to {EARNED_CAPTURE_CEILING}. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter this record cannot support.", { captureWord: String(captureWord), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING) }),
           ceiling };
         continue;
@@ -756,16 +754,11 @@ export class LegEarning {
       out.earned.capture[bundleId] = {
         mode: "ceiling", grade: e.bound, captures: e.n,
         bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
-        why: `${captureWord}, and the bytes as your team's Civicsmith fetched them would be worth `
-           + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
-           + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
-           /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
-              home and are composed from the constant, never typed beside the
-              word "grade" (found by `hygiene.test.mjs` detector (B), deleted in
-              T20, which could not tell the article from the letter). */
-           + `byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest `
-           + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
-           + `grade, and it is not a separate measurement a member can cite instead.`,
+        /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
+           home and are composed from the constant, never typed beside the
+           word "grade" (found by `hygiene.test.mjs` detector (B), deleted in
+           T20, which could not tell the article from the letter). */
+        why: localize("leg-earning.index.fidelity_bound_bytes_fetched", "{captureWord}, and the bytes as your team's Civicsmith fetched them would be worth {EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that derivation is measured at {bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is {bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.", { captureWord: String(captureWord), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), bound: String(e.bound) }),
         ceiling };
     }
     /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
@@ -817,8 +810,7 @@ export class LegEarning {
     const attested = st.transcription && st.transcription.determinant === "attestation";
     if (!attested) {
       st.capture = { ...base, grade: null, determined: false, undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-        empty_level: "a member's check — this passage's text is the AI's reading of the page, graded undetermined "
-                   + "until its accuracy is measured or a member checks it against the page",
+        empty_level: localize("leg-earning.index.passage_ai_reading_member_check", "a member's check — this passage's text is the AI's reading of the page, graded undetermined until its accuracy is measured or a member checks it against the page"),
         why: localize("leg-earning.index.ref_of_bundle_id_was", "{ref} of {bundle_id} was read off the page by an AI, and that reading is graded undetermined until its accuracy is measured, so what a leg resting on this passage may claim about how it was captured is undetermined. A member who checks the passage against the page (op=attesttext) gives it the capture's own grade. A leg may state NO capture grade; it may not state a letter.", { ref: String(ref), bundle_id: String(st.bundle_id) }) };
       return;
     }
@@ -855,7 +847,7 @@ export class LegEarning {
    *  captured text answers undetermined with `STANDARD_NO_TEXT`'s reason; one the record does not hold, undetermined
    *  with `NO_SUCH_STANDARD`. Never throws. */
   #standardCeiling(id) {
-    const ceiling = localize("leg-earning.index.grade_unreachable_capture_grade_is_2", "Grade {UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which your team's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).", { UNREACHABLE_CAPTURE_GRADE: String(UNREACHABLE_CAPTURE_GRADE) });
+    const ceiling = word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) });
     const undetermined = (because, why, extra = {}) => ({ mode: "ceiling", axis: "capture", standard: id, grade: null,
       determined: false, undetermined_because: because, why, ...extra, ceiling });
     let read;
