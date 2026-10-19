@@ -84,3 +84,7 @@ Remaining strings not profile data or catalogue: none on setup but the legends "
 **Checks (CR-25)**: module suite without `journey.test.mjs` 83 pass, 0 fail (`pseudo.test.mjs` 7); format 0, words 0, ownership 0; coverage misses only R19. **Architecture: 8 failures, all `pseudo.test.mjs` imports** that `modules.json` `uses` for journey-check does not declare (interface-shell incl. its harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's fixture, jurisdictions' Oakland profile). R29 requires the proof on the real screens through the interface harness, so the imports are the requirement's own; `uses` is BOB's file. Asked in QUESTION J4.
 
 Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 8, module lines 3358
+
+## J4 · QUESTION
+
+CR-25 is done and pushed (R22 Action block by address; R29 pseudo walk proved on the real screens, pseudo.test.mjs; suite 83/83; format, words, ownership 0; coverage only R19). One red: architecture, 8 failures, all pseudo.test.mjs imports not in journey-check's uses in modules.json (interface-shell + its test harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's test fixture, jurisdictions' Oakland profile). R29 requires drawing the real screens through the interface harness with the real catalogue and Oakland profile, so I need them. Please add them to journey-check's uses (modules.json is yours), then send CHANGE to re-run architecture; my best reading is that this is the only way to meet R29. Nothing else is open.
