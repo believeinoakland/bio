@@ -121,3 +121,24 @@ R38: a fleet member's bundle carries only the word rows its inputs name (vendore
 Tests: 129 pass, 0 fail (bundler, release, thirdparty, bundle, deploybindings, resolveversion; 8 new R38 tests). format 0; coverage bundler 38 of 38; ownership 0.
 For you: (1) architecture shows 1 failure: fleet-bundle.mjs imports setup-words/vendor/acorn.mjs, so `setup-words` must be added to bundler's `uses` in build/modules.json and the Uses part of build/requirements/bundler.md (neither is mine); nothing else fails. (2) Every committed member bundle is stale against a fresh build until your R1-close regeneration (fleetbundles red on the byte arm; some static arms were already stale from merged sources). (3) The container members' node_modules were missing here; I ran `npm ci --ignore-scripts` (untracked). Details and the Size line are in my record.
 Size (session_017VMvhjxUfKRwS5rFeW66NT): test runs 14, module lines 3986
+
+## Record (BUNDLER #23, B7: CR-15)
+
+**Entries applied (CR-15 · bundler, K4011, K4073, K4094)**
+- **K4011, the R38 real-fleet arm.** `bundler.test.mjs` R38: a member whose build records no word table (`words` null: its inputs reach no `setup-words/rows.mjs`, agent-runner today) is no longer asserted to carry one. The control is that no table input is bundled; a member that reads the table and records none still fails by name. Test-only; the bundle is unchanged.
+- **K4073, the stale comment.** `fleet-bundle.mjs` header named `scripts/embed-signpage.mjs`, which is deleted; removed.
+- **K4094, the Worker part states the member's own Durable Objects.** `workerPart` (`fleet-bundle.mjs`) adds `durable_objects: {bindings: [{name, class_name}], migrations: [{tag, classes}]}` when the member owns any: bindings with no `script_name` (agent-worker's `REMOTE` is another script's object and is left out, as `MEMBER_OBJECTS` leaves it out), migrations in order from `new_sqlite_classes`. A migration in any other form, a tag the installer does not read (`^v[0-9]+$`), or a binding with no class is refused by name in `missing`, never dropped. The key is absent when the member owns no object, so the bytes of a member with none are as before. Part `null` only when it has no bucket, cron or object. `release-assemble.mjs`'s WORKER_UNDESCRIBED text names the two new fields. The shape is the one `newgroup/src/steps/containers.mjs` `workerDescriptor` already reads (F10), so the installer's parse accepts it unchanged.
+- **Tests (bundler.test.mjs, each names R25 or R38):** two new R25 tests (K4094): the own-objects descriptor and bytes, the cross-script exclusion, the empty and absent cases, each refusal by name; and over the real fleet, agent-worker (SEGMENTS, CHECKS; v1, v2), agent-runner (AGENT_RUNNER; v1), file-scanner (SCANNER, RENDERER). The existing R25 and release tests (`release.test.mjs` R25 worker.json arms) pass unchanged.
+
+**Deferred:** nothing.
+
+**Found in other modules (REPORT to BOB; not changed here):**
+- Release output changes at the next cut: agent-worker now carries a signed `worker.json` (its Durable Objects), agent-runner's and file-scanner's parts gain `durable_objects`. The fleet signature covers them as it covers every part.
+- installer-steps: `MEMBER_OBJECTS` (`newgroup/src/steps/members.mjs`) can go once the release carries agent-worker's objects (BOB's note 1); its job or a CHANGE to its CR job.
+- `checks/run.mjs` (all modules, not mine): coverage shows 8 live ids named by no test (agent-harness R17; agent-runner R36, R37, R38, R40; credentials R80; extraction R77; installer-steps R26, R31; journey-check R19; screens-inquiry R81, R82; setup-words R19). Words shows 15 inline findings, all in instance-setup (12) and promotion (3). Neither is in bundler's files.
+
+**Checks and tests (from my checkout, dependencies installed with `npm ci --ignore-scripts` for each lockfile directory)**
+- Tests: `bio-plane/test/m/bundler/bundler.test.mjs`, `release.test.mjs`, and `bio-plane/test/system/{bundle,deploybindings,fleetbundles,resolveversion}.test.mjs`: 0 failures after the changes (the R38 real-fleet arm was red before, by name). Layer tests: none named in `build/manifest.md` for layer 1.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio bundler`: 0 failures. `checks/coverage.mjs /home/user/bio bundler`: 38 of 38 live ids named. `checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`: 0 failures.
+
+Size (session_01Gz6er9hUWEo63Fj3mY19bH): test runs 5, module lines 4024
