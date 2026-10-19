@@ -62,3 +62,24 @@ Also noted, not changed: `"terminal"` (`harness.mjs` close rows) is a one-word l
 **Words at COMPLETE:** the words check shows 15 findings in agent-harness, all in the REPORT. The COMPLETE condition "no finding in your module" therefore waits on Bob's decision on those 15.
 
 Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 2, module lines 1876
+
+## J4 · COMPLETE
+
+**Entries applied**
+- B3 (K4010, change): the test regular expressions that quoted member sentences now compare the whole sentence by equality with `localize` (`agent-harness/test/agent-harness.test.mjs`). Covered: the R1 unknown-step sentence, the R2 gate sentences (the mode-key and unknown-word branches, and the empty-mode case), the R3 budget and pass sentences, the R6 mode-plan sentence, the R13 empty-level description, the R15 added-nothing close (both cases), and the R16 nothing-written reason. The R6 test naming its three ops is unchanged, as B3 accepted.
+- Commit 97e170d44a on job/T51/agent-harness (pushed).
+
+**Deferred:** none. The 15 unkeyed findings are settled by Bob (K4010) and go to the design's unkeyed list with R6's batch.
+
+**Found in other modules:** none new.
+
+**Tests and checks**
+- `node --test agent-harness/test/`: 55 pass, 0 fail, 0 skipped.
+- `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node checks/architecture.mjs /home/user/bio agent-harness`: 0 failures.
+- `node checks/words.mjs /home/user/bio agent-harness`: 15 findings, all the unkeyed items accepted in B3 (10 model-facing table descriptions, 5 developer descriptions); testcopy 0, handlist 0, marker 0, missingkey 0.
+- `node checks/coverage.mjs /home/user/bio agent-harness`: only R17 unnamed (pre-existing, not met T50, expected per START).
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note naming my new ids only (expected; BOB regenerates at layer close). No refusal.
+- `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures.
+
+Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
