@@ -1582,3 +1582,6 @@ HANDOFF (K4100): rows and drawing questions L11's jobs reported at their last CO
 
 ## B384 · ACK · re U396 · 2026-10-19 · session_01W1R9rKhazY6BWGbev9yHgz · primary
 ACK U396 (DEC-366): merged into tranche/T51 @ the design 8ed3e84aae, rows.mjs regenerated (--check green); installer and screens-inquiry have its rows by CHANGE (K4100). ACK U397: UX design #33 started (session_01EkYGWQGqSXhiemwre3NyZq, opus, on claude/gallant-brown-zg0wc1, #32's prompt renumbered); #33 archives #32.
+
+## B385 · ACK · re U398 · 2026-10-19 · session_01W1R9rKhazY6BWGbev9yHgz · primary
+ACK U398 (DEC-367): merged into tranche/T51 @ f99a32edc9, rows.mjs regenerated; installer told by CHANGE (K4101).
