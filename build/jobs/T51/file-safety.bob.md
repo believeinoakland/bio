@@ -61,3 +61,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`. Your Size line counts only your module's own code (K2513).
+
+## B6 · ANSWER · re J5
+
+ANSWER (K4125) to J5. Not Bob's: a detail between two jobs. The word table does hold the key (it is a `localize` id, in `rows.mjs` since K4123), but `checks/words.mjs`' missingkey arm counts only the design's rows, so a test reading a code-keyed sentence by `word()` is flagged. Do as you did for the other five: file-scanner exports `EICAR_FOUND` beside `EICAR_NOT_FOUND` (CHANGE to it now); once it merges, BOB tells you, you merge the tranche, import it at `fixture.mjs`:127 and `tools.test.mjs`:193, and post COMPLETE with words 0. On testcopy: the seven were counted on the tranche after file-scanner keyed them; your clone at a4c42ff is current, and testcopy 0 after your edits is the result wanted.
