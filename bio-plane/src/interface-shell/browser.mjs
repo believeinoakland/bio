@@ -387,7 +387,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     scale: { cls: "cs-grade", attr: "data-scale", icon: (v) => v },
   };
   /* R95: the kinds `cs.stateChip` draws; R93: a refreshing read is fresh for 90 seconds, re-read every 45 */
-  const STATE_KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched"];
+  const STATE_KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched",
+    "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned"];
   const FRESH_MS = 90 * 1000, REFRESH_MS = 45 * 1000;
   const wordOrData = (o) => (o && typeof o === "object" ? (typeof o.key === "string" ? w(o.key, o.fills) : esc(o.text)) : typeof o === "string" ? w(o) : "");
   function kit(inst, bg) {

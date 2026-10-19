@@ -326,11 +326,11 @@ test("R94 cs.readonly(noun) draws shell.readonly as a note at the head of a scre
 
 /* ---------- R95 ---------- */
 
-const KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched"];
+const KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned"];
 const CHIPS = {
   id: "home", reads: () => ({}), acts: [],
   words: [["screen.glossary.money.acfr.name", "fx ACFR", false]],
-  render: (cs) => ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "nonesuch"].map((k) => '<p data-kind-of="' + k + '">' + cs.stateChip(k) + "</p>").join("")
+  render: (cs) => ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned", "nonesuch"].map((k) => '<p data-kind-of="' + k + '">' + cs.stateChip(k) + "</p>").join("")
     + '<p id="terms">' + cs.term("money.acfr") + "|" + cs.term("honest.fingerprint") + "</p>",
 };
 
