@@ -40,3 +40,7 @@ T51-186 sources done (K3949, K3962): the 3 words findings and the 2 test copies 
 ## J3 · REPORT
 
 Words round RW (K4015) for sources: the two findings are fixed (commit 6b4b893d7e on job/T51/sources); the words check reads 0 for sources, the module's 38 tests pass, ownership is clean. The R3 wording question (J1) stands; the setup-words rows for the two new ids are stale, as expected until the layer close. One finding outside this module, not changed: checks/run.mjs lists testcopy bio-plane/test/m/screens-investigate/fixtures.mjs:175, "the sources date them no closer" (a screens-investigate fixture sentence). Details in build/jobs/T51/sources.md.
+
+## J4 · COMPLETE
+
+B2 (words round RW, K4015) done: sources' two findings fixed by localize (checks.mjs BAD_DISCLOSURE and NO_SERVICE), commit 6b4b893d7e. Checks: words 0 failures for sources; tests 38/38; format, architecture, coverage clean for sources; setup-words --check shows only the expected stale-rows note; ownership 0 failures. Record: build/jobs/T51/sources.md.
