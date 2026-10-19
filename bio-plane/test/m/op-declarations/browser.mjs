@@ -1,0 +1,17 @@
+/* R76 (T51): how the totality tests of R21 take the class of browser acts. `browserActs(registry)` returns the names of
+   `BROWSER_ACTS` after checking the reading (b): each is exactly one `owed` row of the screen registry, whose text equals
+   the table's `registry` string; the totality tests subtract them from the acts the registry still marks `owed`, and
+   check that what is left is declared or named as before. */
+import assert from "node:assert/strict";
+import { BROWSER_ACTS } from "../../../src/op-declarations/index.mjs";
+
+export const browserActs = (registry) => {
+  const rows = registry.screens.flatMap((s) => s.acts.filter((a) => a.status === "owed").map((a) => ({ screen: s.id, op: a.op })));
+  const names = Object.keys(BROWSER_ACTS).sort();
+  for (const act of names) {
+    const found = rows.filter((r) => r.op === BROWSER_ACTS[act].registry);
+    assert.equal(found.length, 1, `${act}: not exactly one owed row for ${BROWSER_ACTS[act].registry}`);
+    assert.equal(found[0].screen, BROWSER_ACTS[act].screen, `${act}: on another screen`);
+  }
+  return names;
+};

@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T47 from "../../../src/op-grades/t47.mjs";
+import { readRows } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -18,7 +19,7 @@ const R36_WRITES = { drawquestion: "reversible", projectbarset: "reasoned", moni
 const R37_WRITES = { unlock: "credential", reauth: "credential", passwordresetlink: "credential",
   passwordreset: "credential", grouplogoset: "reversible", grouplanguagesset: "reversible", signrequest: "reversible" };
 const WRITES = { ...R36_WRITES, ...R37_WRITES };
-const READS = ["projectlist", "projectquestions", "passwordresetlook", "grouplanguages", "signintrace", "peopledirectory"];
+const READS = readRows(T47.T47_NON_ACTS);
 const ALL = [...Object.keys(WRITES), ...READS];
 /* each `reversible` op and the owner's published act that takes it back (R3) */
 const TAKEN_BACK_BY = { drawquestion: "sever", monitorset: "monitorset", grouplogoset: "grouplogoset",

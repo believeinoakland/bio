@@ -2660,6 +2660,144 @@
     "text": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
     "why": "the Content-Security-Policy header value: wire grammar (B364, L11)"
    }
+  ],
+  "instance-setup": [
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 68,
+    "text": "creation with base null succeeds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 74,
+    "text": "update with correct base succeeds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 79,
+    "text": "the lost-update floor, on real storage",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 89,
+    "text": "live state is the winning revision",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 92,
+    "text": "history holds the superseded revision",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 93,
+    "text": "the verbatim promotion record is projected",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 96,
+    "text": "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 101,
+    "text": "oversize inline refused at the write",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 104,
+    "text": "canary nonce survived the round trip",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 105,
+    "text": "proves the battery actually wrote and read real storage",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 114,
+    "text": "lease returns live sha as edit base",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 116,
+    "text": "second actor denied while lease holds",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 141,
+    "text": "no configured token is a published repository value",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 142,
+    "text": "no configured token is shorter than 16 characters",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/livefire.mjs",
+    "line": 155,
+    "text": "one bucket bound without the other breaks the fence",
+    "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 966,
+    "text": "this module had already started on this storage",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 1012,
+    "text": "no producers to register with",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   },
+   {
+    "file": "bio-plane/src/setup.mjs",
+    "line": 1022,
+    "text": "no public-read to register with",
+    "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+   }
+  ],
+  "screens-investigate": [
+   {
+    "file": "bio-plane/src/screens-investigate/explore.mjs",
+    "line": 81,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   },
+   {
+    "file": "bio-plane/src/screens-investigate/explore.mjs",
+    "line": 114,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   },
+   {
+    "file": "bio-plane/src/screens-investigate/parts.mjs",
+    "line": 139,
+    "text": "declared, not evidenced",
+    "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
+   }
+  ],
+  "interface-shell": [
+   {
+    "file": "bio-plane/src/interface-shell/browser.mjs",
+    "line": 1683,
+    "text": "-----BEGIN SSH SIGNATURE-----\n{}\n-----END SSH SIGNATURE-----\n",
+    "why": "the SSH signature armour: wire grammar (B371 2, INTERFACE-SHELL T51-113)"
+   }
   ]
  }
 }

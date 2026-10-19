@@ -10,6 +10,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { queueOf } from "../../../src/queue/index.mjs";
 import { tasksOf } from "../../../src/tasks/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
 export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -48,6 +49,9 @@ export function world(fakes = {}, { bare = false, notices = null } = {}) {
   /* `credentials` real (K789): the signing keys, the claim and the credentials are its tables since membership's split,
      so a feed that asks for self-registered keys (queue-producers R14) reads them there. */
   const credentials = credentialsOf(host, { record, membership });
+  /* project-roster real (queue-producers R41, R42 read its `projectList`, whose R38 scope read needs its tables): made by its
+     own `migrate()` as the host's boot does. */
+  const projectRoster = projectRosterOf(host, { record, membership });
   const boot = () => {
     db.exec(`CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT, path TEXT, registered TEXT,
                authored INTEGER, bytes INTEGER, author TEXT);
@@ -61,6 +65,7 @@ export function world(fakes = {}, { bare = false, notices = null } = {}) {
     record.migrate();
     membership.migrate();
     credentials.migrate();
+    projectRoster.migrate();
   };
   if (!bare) boot();
   const F = defaultFakes();

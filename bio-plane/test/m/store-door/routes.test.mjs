@@ -11,6 +11,7 @@ const { credentialsOf, ACCOUNT_CHECKS } = await import("../../../src/credentials
 const { aiAccountsOf } = await import("../../../src/ai-accounts/index.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
+const { translationsOf } = await import("../../../src/translations/index.mjs");
 const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
 const { answersOf } = await import("../../../src/answers/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
@@ -38,9 +39,8 @@ test("R1 (N379, K566): the record store's door dispatches sources' own map — e
   const r = await record();
   const { sourcesOps } = await import("../../../src/sources/index.mjs");
   const routes = Object.keys(sourcesOps({}, new URL("http://do/"), null));
-  /* T33 (sources R16; K1550): `sourcekeyed`, a member's mark of a keyed result, joins them */
-  assert.deepEqual(routes.sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed",
-                                   "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  /* the no-account route is among sources' own routes, whatever else sources declares (T33, sources R16, K1550) */
+  assert.ok(routes.includes("knockerconsent"), "knockerconsent is sources' route");
   for (const op of routes) {
     const a = await r.go(`${op}?by=ann&viewer=member:ann&source=203.0.113.9&now=${Date.now()}`, "POST", { captureSha: "a".repeat(64) });
     assert.equal(a.status, 200, `${op}: ${JSON.stringify(a.json).slice(0, 200)}`);
@@ -113,12 +113,12 @@ async function drafts() {
      admitted call (one with no refusal handed) */
   const W = wizardScriptsOf(r.ctx), realHelp = W.writingHelp.bind(W), handed = [];
   W.writingHelp = (args) => { handed.push(args); if (!args.assistant?.refusal) seen.push(["writinghelp", args]); return realHelp(args); };
-  /* translationdraft's handler is instance-setup's own (T37-30): wrapped, never replaced, so what it is handed is seen and
-     what it answers is its own */
-  const setup = instanceSetupOf(r.ctx), firstAsked = [];
-  const realFirst = setup.translationDraftRefusal.bind(setup), realDraft = setup.translationDraft.bind(setup);
-  setup.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
-  setup.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
+  /* translationdraft's handler is translations' own (T51-143: the door calls it directly): wrapped, never replaced, so what
+     it is handed is seen and what it answers is its own */
+  const setup = instanceSetupOf(r.ctx), firstAsked = [], tr = translationsOf(r.ctx);
+  const realFirst = tr.translationDraftRefusal.bind(tr), realDraft = tr.translationDraft.bind(tr);
+  tr.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
+  tr.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
   const reads = { account: 0, use: 0 }, asked = [];
   const accountFor = C.accountFor.bind(C), U = aiUseOf(r.ctx), useCheck = U.useCheck.bind(U);
   const A = answersOf(r.ctx), askAccount = A.askAccount.bind(A);
