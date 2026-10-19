@@ -45,7 +45,7 @@
 
 - **R33** *(not yet met: T51)* (T51; DEC-265 (2), DEC-340, U366; K3916, K3935; audit C127; amends R29; `screens-publish` R30) **A photo answers the day it was taken.** Each entry `photosOf` (R29) answers `dated`: the local day, in the team's zone (`civil-time`), of the instant the attesting capture of the photo was made (the instant `attestation` R8 states for `taken_by`), or `null` when the instant or the zone cannot be read (never a UTC day). The photograph's own camera metadata is not read (DEC-185 (2)). BOB's: the attesting instant is the date the record holds for a photo (the capture's `retrieved` is the same instant for an upload). Test: a photo attested at 2026-10-12T23:30Z in a Pacific zone answers 2026-10-12; control: no zone answers `null`.
 
-## L9 · before L9's START
+## L9 · before L9's START · **folded (K4035)**
 
 **actions** (1; T51-89 runs this)
 
