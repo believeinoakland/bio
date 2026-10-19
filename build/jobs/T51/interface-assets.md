@@ -21,3 +21,7 @@
 **Checks and tests.** `node --test bio-plane/test/m/interface-assets/`: 22 pass, 0 fail. format: 176 modules, 175 requirements files; 0 failures. architecture: 3 product files, 4 relative imports (1 naming no tracked file, not judged); 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 0 failures. `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match words.json and the source. No module uses a service this module provides changed.
 
 Size (session_01R7mgwF3p8Gdc1KqYeCZURA): test runs 6, module lines 170
+
+## J1 · COMPLETE
+
+T51-112 applied; record 'Completion' section is pushed. Design re-taken at 20c8001300; 4 inherited reds cleared; R10/R11 tested (22 pass); format, architecture, coverage, ownership, setup-words --check: 0 failures. REPORT: (1) R10's text is stale against 20c8001300 (icons.svg now holds i-document/i-due/i-sever per the entry; shell.css also has the design's .mk-screenonly print rule, .mk-grp wrap and 44 px phone rules) — please amend R10; (2) site's SITE_COMMIT and wizard-scripts' pin should move to 20c8001300; (3) words: one finding, generate.mjs:114, a CSS header comment no member reads — for you to settle with the design (K3944).
