@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
   vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, MEMBER_OBJECTS, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
   CONTAINER_PART, WORKER_PART } from "../../src/steps/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { session, sink, immediateTimers, account, heldCopy, sequence, release, chosen, sha, armWith, restoreSigners, SIGNER, STRANGER, VERSION,
   RUNNER, SCANNER, DESCRIPTOR, SCANNER_CLASSES, SCANNER_WORKER, IMAGE, VPC_ID, realFetch, jres, cferr, MEMBER_SRC, WASM } from "./world.mjs";
@@ -103,12 +104,13 @@ test("R17: each failing condition installs none and says which; the install is n
 test("R17: an unknown part type leaves that member out alone; a failing member degrades alone and is named; a fleet statement with a member dropped does not verify", async () => {
   let f = await fleet({ rel: { badType: "ocr-worker" } });
   assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
-  assert.ok(f.result.left[0].why.includes("assets/x.wasm"));
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.part"));
   assert.deepEqual([...f.result.done].sort(), ALL.filter((m) => m !== "ocr-worker").sort());
   f.w.restore();
   f = await fleet({ rel: { missing: "pdf-worker" } });
   assert.deepEqual(f.result.left.map((l) => l.member), ["pdf-worker"]);
-  assert.ok(f.result.left[0].why.includes("pdf-worker"));
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.http", { status: 404 }));
+  assert.match(f.emit.last("fleet").label, new RegExp(word("installer.fleet.left.item", { member: "pdf-worker", why: word("installer.fleet.why.http", { status: 404 }) }).replace(/[()]/g, "\\$&")));
   assert.equal(f.result.done.length, ALL.length - 1);
   assert.match(f.emit.last("fleet").label, /pdf-worker/);
   f.w.restore();
@@ -181,7 +183,7 @@ test("R18: the source is asked twice for each bundle and each non-description pa
 test("R18 control: a bundle that changes between the two reads leaves that member out (failed its integrity check) and uploads nothing of it while the others install", async () => {
   const f = await fleet({ acct: { sourceChange: (p, n) => (p === "ocr-worker.bundled.mjs" && n >= 2 ? new Response("changed") : null) } });
   assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
-  assert.match(f.result.left[0].why, /failed its integrity check/);
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.integrity"));
   assert.equal(uploadOf(f.w, "ocr-worker-grp"), undefined);
   assert.equal(f.result.done.length, ALL.length - 1);
   assert.equal(f.emit.last("fleet").k, "ok");
@@ -191,7 +193,7 @@ test("R18 control: a bundle that changes between the two reads leaves that membe
 test("R18 control: a source that fails at the second read leaves that member out, named, and installFleet throws nothing; one that fails at the first still throws SourceUnavailable with nothing created", async () => {
   const f = await fleet({ acct: { sourceChange: (p, n) => (p === "pdf-worker.bundled.mjs" && n >= 2 ? new Response("unavailable", { status: 503 }) : null) } });
   assert.deepEqual(f.result.left.map((l) => l.member), ["pdf-worker"]);
-  assert.match(f.result.left[0].why, /pdf-worker/);
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.refetch"));
   assert.equal(uploadOf(f.w, "pdf-worker-grp"), undefined);
   assert.equal(f.result.done.length, ALL.length - 1);
   f.w.restore();
@@ -245,10 +247,12 @@ test("R20: a release whose container descriptors name ghcr.io images installs ev
   const ghcr = "ghcr.io/civicos/agent-runner@sha256:" + "a".repeat(64);
   const f = await fleet({ rel: { container: true, scanner: true, descriptor: { ...DESCRIPTOR, image: ghcr }, scannerParts: Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, { ...c, image: "ghcr.io/civicos/" + c.class_name.toLowerCase() + "@sha256:" + "d".repeat(64) }])) } });
   assert.deepEqual(f.result.left.map((l) => l.member).sort(), [RUNNER, SCANNER].sort());
-  assert.ok(f.result.left.every((l) => l.out === true && l.why.includes(IMAGE_UNPULLABLE)));
+  assert.ok(f.result.left.every((l) => l.out === true && l.why === word("installer.fleet.why.unpullable")));
   assert.equal(imageWhy(ghcr), IMAGE_UNPULLABLE);
-  assert.ok(f.result.left.find((l) => l.member === SCANNER).why.includes(lacksOf(SCANNER)), "what the copy then lacks is said beside the reason");
-  assert.ok(!f.result.left.find((l) => l.member === RUNNER).why.includes(lacksOf(RUNNER) || "\u0000"));
+  assert.equal(f.result.left.find((l) => l.member === SCANNER).lacks, lacksOf(SCANNER));
+  assert.ok(f.emit.last("fleet").label.includes(lacksOf(SCANNER)), "what the copy then lacks is said beside the reasons");
+  assert.equal(f.result.left.find((l) => l.member === RUNNER).lacks, undefined);
+  assert.equal(lacksOf(RUNNER), "", "the assistant lacks nothing without agent-runner");
   assert.equal(f.result.done.length, ALL.length - 2);
   assert.equal(f.result.imageLags.length, 0);
   f.w.restore();
@@ -270,17 +274,19 @@ test("R20 control: a docker.io descriptor installs; each container class gets an
   f.w.restore();
 });
 
+const FRAGMENT = { nopermission: word("installer.fleet.why.nopermission"), permissionunknown: word("installer.fleet.why.permissionunknown"),
+  freeplan: word("installer.fleet.why.freeplan"), planunknown: word("installer.fleet.why.planunknown") };
 test("R20: each condition in turn leaves the container members out: no Containers scope, an unreadable Containers API, Workers Free, a plan not verified", async () => {
   const cases = [
-    { ctx: { scope: "workers-scripts.write" } },
-    { ctx: { scope: null }, acct: { containers: "read" } },
-    { ctx: { plan: { plan: "free" } } },
-    { ctx: { plan: { plan: "unknown", detail: "no answer" } } },
+    { ctx: { scope: "workers-scripts.write" }, why: "nopermission" },
+    { ctx: { scope: null }, acct: { containers: "read" }, why: "permissionunknown" },
+    { ctx: { plan: { plan: "free" } }, why: "freeplan" },
+    { ctx: { plan: { plan: "unknown", detail: "no answer" } }, why: "planunknown" },
   ];
   for (const c of cases) {
     const f = await fleet({ rel: { container: true, scanner: true }, ctx: c.ctx, acct: c.acct });
     assert.deepEqual(f.result.left.map((l) => l.member).sort(), [RUNNER, SCANNER].sort(), JSON.stringify(c.ctx));
-    assert.ok(f.result.left.every((l) => l.out === true));
+    assert.ok(f.result.left.every((l) => l.out === true && l.why === FRAGMENT[c.why]));
     assert.equal(f.w.apps.length, 0);
     f.w.restore();
   }
@@ -299,19 +305,23 @@ test("R20: a descriptor that does not read, a part not named for its class, or a
   assert.ok(failed && failed.out === undefined, "an upload attempted and failed is a failure of the verdict, not a part left out");
   f.w.restore();
   const enc = (o) => new TextEncoder().encode(JSON.stringify(o));
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, scheduling_policy: "other" })).ok, false);
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, max_instances: 0 })).ok, false);
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, class_name: "1bad" })).ok, false);
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, bind: [{ member: "m", binding: "lower" }] })).ok, false);
-  assert.equal(containerDescriptor(enc([])).ok, false);
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, image: "docker.io/x/y:latest" })).ok, false);
+  const why = (o) => containerDescriptor(enc(o)).why;
+  assert.equal(why({ ...DESCRIPTOR, scheduling_policy: "other" }), word("installer.fleet.why.container.policy"));
+  assert.equal(why({ ...DESCRIPTOR, max_instances: 0 }), word("installer.fleet.why.container.size"));
+  assert.equal(why({ ...DESCRIPTOR, instance_type: "Bad Size" }), word("installer.fleet.why.container.size"));
+  assert.equal(why({ ...DESCRIPTOR, class_name: "1bad" }), word("installer.fleet.why.container.class"));
+  assert.equal(why({ ...DESCRIPTOR, bind: [{ member: "m", binding: "lower" }] }), word("installer.fleet.why.container.bindings"));
+  assert.equal(why([]), word("installer.fleet.why.container.parse"));
+  assert.equal(containerDescriptor(new TextEncoder().encode("{x")).why, word("installer.fleet.why.container.parse"));
+  assert.equal(why({ ...DESCRIPTOR, image: "docker.io/x/y:latest" }), word("installer.fleet.why.unpinned"));
+  assert.equal(why({ ...DESCRIPTOR, image: "ghcr.io/x/y@sha256:" + "a".repeat(64) }), word("installer.fleet.why.unpullable"));
   assert.deepEqual(containerDescriptor(enc(DESCRIPTOR)).d.bind, DESCRIPTOR.bind);
   const parts = SCANNER_CLASSES.map((c) => ({ path: `container/${c.class_name}.json` }));
   const bytes = Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, enc(c)]));
   assert.equal(containerClasses(parts, (p) => bytes[p]).classes.length, 2);
-  assert.equal(containerClasses([{ path: "container/Other.json" }, parts[1]], (p) => bytes[p] ?? bytes["container/FileScanner.json"]).ok, false);
-  assert.equal(containerClasses([{ path: "x.json" }, parts[1]], (p) => bytes[p]).ok, false);
-  assert.equal(containerClasses([parts[0], parts[0]], (p) => bytes[p]).ok, false);
+  assert.equal(containerClasses([{ path: "container/Other.json" }, parts[1]], (p) => bytes[p] ?? bytes["container/FileScanner.json"]).why, word("installer.fleet.why.container.path"));
+  assert.equal(containerClasses([{ path: "x.json" }, parts[1]], (p) => bytes[p]).why, word("installer.fleet.why.container.path"));
+  assert.equal(containerClasses([parts[0], parts[0]], (p) => bytes[p]).why, word("installer.fleet.why.container.duplicate"));
   assert.equal(CONTAINER_PART, "Container"); assert.equal(WORKER_PART, "Worker");
 });
 
@@ -375,27 +385,27 @@ test("R22: a release without the Worker part installs the member without bucket 
   assert.deepEqual(workerDescriptor(enc({})), { ok: true, d: { r2_buckets: [], crons: [] } });
 });
 
-test("R23: a good VPC id binds SECURITY_VPC; a refused one installs the member without it and says REACH_NOT_BOUND; an id with no scanner installed is said; no id, no binding and no note", async () => {
+test("R23: a good VPC id binds SECURITY_VPC; a refused one installs the member without it and says so; an id with no scanner installed is said; no id, no binding and no note", async () => {
   assert.equal(vpcServiceOk(VPC_ID), true);
   assert.equal(vpcServiceOk("01234567-89ab-cdef-0123-456789abcdef"), true);
   for (const bad of [undefined, "", "xyz", VPC_ID + "0", 5]) assert.equal(vpcServiceOk(bad), false);
   assert.equal(VPC_MEMBER, SCANNER);
   let f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID } });
   assert.deepEqual(byName(uploadOf(f.w, "file-scanner-grp").meta, VPC_BINDING), { type: "vpc_service", name: VPC_BINDING, service_id: VPC_ID });
-  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.connected", { member: SCANNER })), "the connection is said");
   f.w.restore();
   f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID }, acct: { refuseVpc: true } });
   assert.ok(f.result.done.includes(SCANNER));
   assert.equal(byName(f.w.puts.filter((p) => p.name === "file-scanner-grp").at(-1).meta, VPC_BINDING), undefined);
   assert.equal(f.w.puts.filter((p) => p.name === "file-scanner-grp").length, 2, "uploaded again without it");
-  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.refused", { member: SCANNER, said: "VPC service not found or not permitted <b>by the fake</b>" })));
   f.w.restore();
   f = await fleet({ rel: { members: ALL.filter((m) => m !== SCANNER) }, ctx: { vpc: VPC_ID } });
-  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"), "an id named when no scanner was installed is said");
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.unused", { member: SCANNER })), "an id named when no scanner was installed is said");
   assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
   f.w.restore();
   f = await fleet({ rel: { scanner: true } });
-  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(!f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.unused", { member: SCANNER })) && !f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.connected", { member: SCANNER })));
   assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
   f.w.restore();
 });

@@ -10,6 +10,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
+import { browserActs } from "./browser.mjs";
 import { T48_SHARES, T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
@@ -40,7 +42,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v))
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* a caller not arriving by a session is judged against machineClasses where given (admission R5) */
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon"].filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 
@@ -203,7 +204,9 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());
+  /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
+  const BROWSER = browserActs(registry);
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
@@ -489,8 +492,8 @@ test("R69, R5 (N1039; K3147, K3200): every table and list is built on first read
   assert.deepEqual(out.frozen, Array(8).fill(true));
   assert.equal(out.wrote, "TypeError");
   assert.equal(out.setWrote, "TypeError");
-  /* the export names and kinds are what they were: 108 names, REAUTH_ACTS and decorateAct beside the tables */
-  assert.equal(out.names.length, 108);
+  /* the export names and kinds are what they were: 109 names (T51 adds BROWSER_ACTS, R76), REAUTH_ACTS and decorateAct beside the tables */
+  assert.equal(out.names.length, 109);
   assert.equal(out.kinds.decorateAct, "function");
   assert.equal(out.kinds.OPS, "object");
   assert.equal(out.kinds.EDGE_ACTIONS, "array");

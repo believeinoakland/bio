@@ -1,4 +1,5 @@
 /* R16, R24: one file of a release fetched and checked against its hash, and one member's upload. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { cf, patiently } from "./api.mjs";
 import { hex, relHeaders } from "./bytes.mjs";
 import { DESCRIPTOR_PARTS } from "./containers.mjs";
@@ -26,12 +27,12 @@ async function fetchVerified(url, wantSha, what, onWait = null) {
       let r;
       try { r = await fetch(url, { redirect: "follow", headers: relHeaders }); }
       catch (e) { throw Object.assign(new Error(what + " " + String(e && e.message || e)), { network: true }); }
-      if (!r.ok) throw Object.assign(new Error(what + " http " + r.status), { status: r.status });
+      if (!r.ok) throw Object.assign(new Error(what + " http " + r.status), { fleetWhy: word("installer.fleet.why.http", { status: r.status }) }, { status: r.status });
       return new Uint8Array(await r.arrayBuffer());
     }, { onWait });
   } catch (e) { if (e && e.lasting) throw new SourceUnavailable(what, e); throw e; }
   const got = hex(await crypto.subtle.digest("SHA-256", bytes));
-  if (got !== wantSha) throw new Error(what + " failed its integrity check");
+  if (got !== wantSha) throw Object.assign(new Error(what + " failed its integrity check"), { fleetWhy: word("installer.fleet.why.integrity") });
   return bytes;
 }
 

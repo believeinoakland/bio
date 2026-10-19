@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_014EVFpcuKfLr1hY4LJt8xfV · depth 2 · COMPLETE · handled B2
+**Status** · session_014EVFpcuKfLr1hY4LJt8xfV · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -33,3 +33,35 @@ Stage 1 (the byte copy, T51-127) is complete. Pushed on job/T51/installer-steps 
 **Deferred.** The keys stage (R36, R20's and R30's T51 paragraphs); R26, R31 (unbuilt); the 74 words findings.
 
 Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 16, module lines 1734
+
+## J3 · COMPLETE
+
+Keys stage (R36, your B3) is complete. Pushed on job/T51/installer-steps (tip ebe991c323, tranche/T51 at B3 merged in).
+
+**Done.** Every member-facing sentence of `newgroup/src/steps/` is read by a literal-key `word(key, vars)` from DEC-329/331's families: `installer.fleet.*` (skip, done, partial, note, why), `installer.image.*` (the five left-out reasons, lacks, lag), `installer.lag.*`, `installer.logs.*`, `installer.connect.*`, `installer.address.prefixtaken`, `installer.probe.leftover`, `installer.step.helpers/connect/connect.address/logs`, `installer.cfsaid`, and `screen.install.approveagain` for the permission-revoked error. `STEP_KEYS` (68 keys, `steps/words.mjs`, exported by the barrel) lists them; a test holds the list to the source's literal calls, each key to a row, and finds a key built at run time. `node checks/words.mjs` over my module with the row filled: inline 0, plain 0, testcopy 0, missingkey 0, marker 0, 0 failures (was 74 inline). R20's and R30's T51 paragraphs are met: the Logpush unreadable-list line is the row `installer.logs.undetermined` ("could not read"), never "undetermined" in a word of ours.
+
+**API changes the keys needed (for installer's job, none breaks an old name):** `IMAGE_UNPINNED`/`IMAGE_UNPULLABLE` are now the reasons' identities (`installer.image.unpinned/.unpullable`), as installer's `images.mjs` already treats them; new `imageSaid(why, part)`; `lacksOf` answers the row text; `CONTAINER_LACKS` is gone (nothing read it); `containerDescriptor(bytes, part)` and `containerClasses(parts, bytesOf, part)` take the member's name (the rows name the part); `containerConditions` answers `{ok:false, code, said}` and `conditionWhy(c, part)` says it per member; `LIMITS_NOT_STATED` maps `none`/`unreadable` to `installer.release.nolimits/.badlimits` (installer says them with its version); `statedLimits`' `detail` is a machine form (`statements=2`, `form="…"`), no English. The fleet line is now one row-built sentence (`fleet.done.one/.other`, `.partial.some/.none`) followed by the notes and the probe note, each a whole sentence of its own row.
+
+**REPORT to UX-DESIGN (rows missing; no inline English written for them):**
+1. A member left out because its bundle or part failed its hash, or the source answered an HTTP error for it: the left-out list still shows `<member> failed its integrity check` / `<member> http 404` (unchanged wire strings from `members.mjs`, which the words check does not count). A row is needed for each (they appear in `installer.fleet.partial.*`'s `{list}`).
+2. A member whose second read fails (R18): it shows the underlying line above; no wrapping sentence exists. One row ("files could not be fetched again for the upload") would say it properly.
+3. Rows to judge: `installer.fleet.why.*` are clause fragments while `installer.image.*` are whole sentences, both end in `{list}`; the list reads "agent-runner (This release's software for agent-runner isn't published yet…, so agent-runner is left out.)". `installer.fleet.why.container` stands for every unreadable-description cause (the old text named which: parse, class, policy, size, bindings, part path, duplicate class); `why.program` likewise for the Worker description. `installer.fleet.skip.manifest` lost the manifest's own reason in parentheses, as the row has none. `ApproveAgain`'s message now reads `screen.install.approveagain` (a diagnostic never shown by the installer).
+4. Not hidden, judged diagnostic: `fetchVerified`'s two wire strings above and `SourceUnavailable`'s message (`<what>: <cause>`), which `installer` replaces with `screen.install.stopped.source`.
+
+**What this breaks in installer's suites (not mine to edit; they assert the old words; behaviour is unchanged in each, checked):** `newgroup/test/requirements.test.mjs` R11 (369), R15 (546), R20 (786), R33 (1714), R38 ×4 (1002, 1105, 1175 and the ghcr arm), R39 (1814), R40 (1868, the fleet step label), R43 (1259), R44 (1301), R45 (1317), R46 (1364); `test/realsize.test.mjs` R33 lines 75 and 179 (the read-back's mismatch line); `test/corpus.test.mjs` R76 (159): its `MOVED`/`MOVED_ROWS` exemption of the moved sentences must go now they are keys; `test/wizard.test.mjs` as a file. Each should read the row with `word(…)` by equality. Inherited, not from my change: at the tranche tip `realsize.test.mjs` "update keeps within 128 MB" and its read-back arm and `requirements.test.mjs` R53 already fail (R53 is the stale bundle; the memory arm may be this container).
+
+**Other for BOB.** The bundle (`newgroup/dist`) and `rows.mjs`/`words-unreviewed.json` are stale until your layer close (setup-words `--check`: "words-unreviewed.json is stale or absent"; expected). `scripts/build.mjs` needs no change: `bundledKeys()` already finds every literal `word("…")` in a bundled input, so my 68 keys are cut in; `STEP_KEYS` is there for the words-reads entry (`docs/development/ux-substrate/screens/words-reads.json` is the design's file, not mine to edit): its `newgroup/src/steps/*.mjs` entry lists those 68 keys.
+
+**Checks** (row filled locally, never committed): words 0 failures for the module; architecture 0 (86 relative imports); format 0; coverage 34 of 36 (R26, R31 unbuilt by design, K3718 (2)); steps tests 78 pass. Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 24, module lines 1760 (+ words.mjs).
+
+## J4 · COMPLETE
+
+B4 (DEC-362) applied; pushed on job/T51/installer-steps (tip 4a9292ef04, tranche/T51 merged in).
+
+The left-out list is drawn with the design's rows: each entry is `installer.fleet.left.item` {member} ({why}), {why} always an `installer.fleet.why.*` fragment: `integrity` (a bundle or part failing its hash, at either read), `http` {status}, `refetch` (any other failure of the second read, R18), `unpinned`/`unpullable` (images), `freeplan`/`planunknown`/`nopermission`/`permissionunknown` (the container conditions), `class`, `part`, `program`, `limits`, and `container.parse|class|policy|size|bindings|path|duplicate` for the container description's causes. The manifest skip carries `installer.fleet.skip.manifest.reason` with `installer.fleet.why.part` as its {reason} (the closest fragment; say if the design wants another). What the copy then lacks is no longer glued to the why: `left[].lacks` (absent when nothing is lacked) and the sentence follows the notes on the fleet line.
+
+STEP_KEYS is now 78 keys. Against the design's `installer-steps` reads entry (68): added `installer.fleet.left.item`, `skip.manifest.reason`, `why.class|integrity|http|refetch|unpinned|unpullable|freeplan|planunknown|nopermission|permissionunknown`, `why.container.bindings|class|duplicate|parse|path|policy|size`; dropped `installer.fleet.skip.manifest`, `installer.fleet.why.container` (the bare row, now unused), `installer.image.freeplan|noclass|nopermission|permissionunknown|planunknown|unpinned|unpullable`. The reads entry needs the same 78 (the design's file; yours to carry).
+
+For installer's job (K4085), what it reads from steps that changed: `left[].why` is a fragment without the lacks sentence (`left[].lacks` holds it); `imageSaid(why)` answers the fragment (one argument); `containerDescriptor(bytes)` and `containerClasses(parts, bytesOf)` lost the part argument; `conditionWhy(c)` takes no part; `withLacks` is now `lacksFor(m)`. Unchanged: `IMAGE_UNPINNED`/`IMAGE_UNPULLABLE` (still the identities `installer.image.unpinned/.unpullable`, which installer's own `images.mjs` says with its `installer.image.*` sentences), `lacksOf`, `imageWhy`, `LIMITS_NOT_STATED`, the fleet/bind/logs/lag lines.
+
+Checks (row filled locally, not committed): words check on the module 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); architecture 0 (87 relative imports); format 0; steps tests 78 pass; coverage as before (R26, R31 unbuilt). Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 30, module lines 1815.

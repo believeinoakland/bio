@@ -5,6 +5,8 @@ import * as steps from "../../src/steps/index.mjs";
 import { establishPlan, ensureBuckets, ensureSubdomain, uploadInstall, uploadUpdate, loadFleet, installFleet, bindMembers, verifyInstall, verifyServing,
   logsStep, readBack, planeInSync, rotateSecrets, namesFor, releaseSha, cf, heldBindings, inventory, apiOf, copyWorkers } from "../../src/steps/index.mjs";
 import { verifySshsig, NS_FLEET, fleetStatement } from "../../../bio-plane/src/sshsig.mjs";
+import { readdirSync, readFileSync } from "node:fs";
+import { word, hasWord } from "../../../bio-plane/src/setup-words/index.mjs";
 import { TOK, session, sink, immediateTimers, account, heldCopy, release, chosen, armWith, restoreSigners, SIGNER, realFetch, VERSION, sha, CAPABLE_SRC } from "./world.mjs";
 
 const NAMES = namesFor("grp");
@@ -123,19 +125,35 @@ test("R35 control: a release object frozen before releaseSha fails only the memo
   w.restore();
 });
 
-test("R36: at the copy every member-facing line it draws or returns is plain English, never a key, and it takes a plain-sentence form for each of its cases", async () => {
+const SRC = new URL("../../src/steps/", import.meta.url);
+const literalKeys = (text) => [...text.matchAll(/\bword\(\s*"([A-Za-z0-9_.-]+)"/g)].map((m) => m[1]);
+const inlineWords = (text) => [...text.matchAll(/\b(?:word|localize)\(\s*[^"\s)]/g)];
+
+test("R36: every sentence is read by key: the keys it reads are the list STEP_KEYS holds, each is a row, and no call reads a key built at run time", async () => {
+  const files = readdirSync(SRC).filter((f) => f.endsWith(".mjs"));
+  const read = new Set(files.flatMap((f) => literalKeys(readFileSync(new URL(f, SRC), "utf8"))));
+  assert.deepEqual([...read].sort(), [...steps.STEP_KEYS].sort(), "the list and the source agree");
+  for (const key of steps.STEP_KEYS) assert.equal(hasWord(key), true, key);
+  for (const f of files) assert.deepEqual(inlineWords(readFileSync(new URL(f, SRC), "utf8")), [], `${f}: a key is a literal at the call`);
+  /* the families the keys stage names, each read */
+  for (const family of ["installer.fleet.", "installer.image.", "installer.lag.", "installer.logs.", "installer.connect.", "installer.address.", "installer.probe.", "installer.release."])
+    assert.ok(steps.STEP_KEYS.some((k) => k.startsWith(family)) || family === "installer.release.", family);
+  /* control: the detectors find a key built at run time and see a literal key */
+  assert.equal(inlineWords('word(`installer.${x}`)').length, 1);
+  assert.deepEqual(literalKeys('word("installer.a.b", { x })'), ["installer.a.b"]);
+});
+
+test("R36: the sentences it draws are the design's: each result is the row's English with its variables filled, and a missing variable is refused by name", async () => {
   const rel = await release({ container: true, scanner: true, scannerWorker: null });
   const w = account({ rel, subdomain: "pfx", pre: { grp: [] } });
   const release_ = await chosen(rel);
   const emit = sink();
   const loaded = await loadFleet(release_);
-  const r = await installFleet(emit, session(), "A1", "grp", release_, loaded, { names: NAMES, scope: "containers.write", plan: { plan: "paid" }, vpc: "0123456789abcdef0123456789abcdef" });
-  const skip = (await loadFleet(await chosen(rel, { man: null }))).skip;
-  const lines = [...emit.events.map((e) => e.label), skip, ...r.left.map((l) => l.why), (await logsStep(sink(), session(), "A1", ["grp"])).lags.join(" ")].filter(Boolean);
-  assert.ok(lines.length >= 3);
-  for (const line of lines) {
-    assert.match(line, /\s/, `a sentence, not an identifier: ${line}`);
-    assert.doesNotMatch(line, /^[a-z]+(\.[a-z0-9-]+)+$/, "not a word key");
-  }
+  const r = await installFleet(emit, session(), "A1", "grp", release_, loaded, { names: NAMES, scope: "containers.write", plan: { plan: "paid" } });
+  assert.equal(emit.events[0].label, word("installer.step.helpers"));
+  assert.ok(emit.last("fleet").label.startsWith(word("installer.fleet.done.other", { n: r.done.length, names: r.done.join(", ") })));
+  assert.ok(emit.last("fleet").label.includes(word("installer.fleet.note.scanner", { member: "file-scanner" })));
+  assert.equal((await loadFleet(await chosen(rel, { man: null }))).skip, word("installer.fleet.skip.unreachable"));
+  assert.throws(() => word("installer.fleet.done.other", { n: 1 }), /WORD_VAR_MISSING/);
   w.restore();
 });

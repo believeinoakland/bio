@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { pageTranscribeOp, pdfStructureOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
@@ -25,7 +26,6 @@ const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
 const machineAdmits = (op) => ["admin", "member", "probe", "daemon"]
   .filter((c) => (OPS[op].machineClasses ?? OPS[op].classes ?? []).includes(c));
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 
 /* A member session's act or read, as R43, R45 and R47 state it. */
 const MEMBER_ACT = { classes: ["admin", "member"], machineClasses: [], mutating: true };

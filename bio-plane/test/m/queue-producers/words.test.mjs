@@ -69,35 +69,42 @@ test("R43 (R2, R9): out-of-inquiry-lead names the question by its title else its
   assert.ok(!it.detail.includes("INQ-T"), "the title, not the id");
 });
 
-test("R43 (R2): export-performed counts its records and files by .one and .other, names its note else says there was none, and leaves {scope} empty (a bare code the list holds no key for)", () => {
+test("R43 (R2): export-performed counts its records and files by .one and .other and names its note else says there was none; a rendering reads its own words with its format through queue.fill.format.<code>", () => {
   const w = busy({ corpusExport: { exportLog: () => ({ ok: true, limit: 200, truncated: false, exports: [
     { seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null },
-    { seq: 2, at: iso(NOW - 3 * DAY), scope: "working-corpus", bundles: 2, files: 5, note: "for the audit" }] }) } });
+    { seq: 2, at: iso(NOW - 3 * DAY), scope: "working-corpus", bundles: 2, files: 5, note: "for the audit" },
+    { seq: 3, at: iso(NOW - DAY), scope: "rendering", bundles: 0, files: 0, note: null, format: "ocel2" },
+    { seq: 4, at: iso(NOW - DAY), scope: "rendering", bundles: 0, files: 0, note: null, format: "novel" }] }) } });
   const m = byId(w.read("alice"));
-  const one = m["FINDING::export-performed::1"], two = m["FINDING::export-performed::2"];
-  assert.equal(one.summary, said(`${K("export-performed")}.summary`, { scope: "", date: dayWord("2026-09-01"),
-    records: word(`${K("export-performed")}.records.one`), files: word(`${K("export-performed")}.files.one`) }));
-  assert.equal(two.summary, said(`${K("export-performed")}.summary`, { scope: "", date: dayWord("2026-08-29"),
-    records: word(`${K("export-performed")}.records.other`, { n: 2 }), files: word(`${K("export-performed")}.files.other`, { n: 5 }) }));
-  assert.equal(one.detail, [said(`${K("export-performed")}.detail`, { scope: "" }), word(`${K("export-performed")}.detail.nonote`)].join(" "));
-  assert.equal(two.detail, [said(`${K("export-performed")}.detail`, { scope: "" }), word(`${K("export-performed")}.detail.note`, { note: "for the audit" })].join(" "));
-  assert.doesNotMatch(`${one.summary} ${one.detail}`, /working-corpus/, "the bare code is not written into the sentence");
+  const E = K("export-performed"), one = m["FINDING::export-performed::1"], two = m["FINDING::export-performed::2"];
+  assert.equal(one.summary, word(`${E}.summary`, { date: dayWord("2026-09-01"), records: word(`${E}.records.one`), files: word(`${E}.files.one`) }));
+  assert.equal(two.summary, word(`${E}.summary`, { date: dayWord("2026-08-29"), records: word(`${E}.records.other`, { n: 2 }), files: word(`${E}.files.other`, { n: 5 }) }));
+  assert.equal(one.detail, [word(`${E}.detail`), word(`${E}.detail.nonote`)].join(" "));
+  assert.equal(two.detail, [word(`${E}.detail`), word(`${E}.detail.note`, { note: "for the audit" })].join(" "));
+  const r = m["FINDING::export-performed::3"];
+  assert.equal(r.summary, word(`${E}.rendering.summary`, { format: word("queue.fill.format.ocel2"), date: dayWord("2026-08-31") }));
+  assert.equal(r.detail, word(`${E}.rendering.detail`, { format: word("queue.fill.format.ocel2") }));
+  assert.deepEqual([r.summary_key, r.detail_key], [`${E}.rendering.summary`, `${E}.rendering.detail`]);
+  assert.equal(m["FINDING::export-performed::4"].summary, said(`${E}.rendering.summary`, { format: "", date: dayWord("2026-08-31") }), "a format the list lacks: empty, never the code");
 });
 
-test("R43 (R2): newer-capture-affects-reference names its target by title and its holder; with the target untitled it reads .summary.untitled; its grade is a bare code the list holds no key for, so left empty, and .detail.affects is left out", () => {
-  const notice = (n, target) => ({ notice: n, holder: "INQ-S", target, grade: "affected", affects: "the passage moved", raised_at: iso(NOW), state: "open" });
-  const w = busy({ reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [notice("RN-T", "INF-T"), notice("RN-U", null)] }),
+test("R43 (R2): newer-capture-affects-reference names its target by title and its holder (untitled when it has none), the grade through queue.fill.grade.<letter> and what it affects through queue.fill.affects.<code> in .detail.affects, and reads .detail.unseen when the viewer cannot see the capture", () => {
+  const notice = (n, target, over = {}) => ({ notice: n, holder: "INQ-S", target, grade: "C", affects: "affected", raised_at: iso(NOW), state: "open", ...over });
+  const w = busy({ reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [notice("RN-T", "INF-T"), notice("RN-U", null),
+      notice("RN-X", "INF-T", { grade: null, affects: null }), notice("RN-Z", "INF-T", { grade: "Z", affects: "novel" })] }),
     docketDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }),
     citedCaseDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }) } });
   w.bundle("INF-T", "information", { title: "Water Quality Report" });
   const m = byId(w.read("alice"));
+  const N = K("newer-capture-affects-reference"), g = (x) => `${N}.${x}`;
   const t = m["FINDING::newer-capture-affects-reference::RN-T"], u = m["FINDING::newer-capture-affects-reference::RN-U"];
-  assert.equal(t.summary, word(`${K("newer-capture-affects-reference")}.summary`, { target: "Water Quality Report", holder: "INQ-S" }));
-  assert.equal(u.summary, word(`${K("newer-capture-affects-reference")}.summary.untitled`, { holder: "INQ-S" }));
-  assert.equal(t.detail, said(`${K("newer-capture-affects-reference")}.detail`, { grade: "" }));
-  assert.doesNotMatch(t.detail, /affected|the passage moved/, "the codes are not written into the sentence");
-  assert.equal(t.summary_key, `${K("newer-capture-affects-reference")}.summary`);
-  assert.equal(u.summary_key, `${K("newer-capture-affects-reference")}.summary.untitled`);
+  assert.equal(t.summary, word(g("summary"), { target: "Water Quality Report", holder: "INQ-S" }));
+  assert.equal(u.summary, word(g("summary.untitled"), { holder: "INQ-S" }));
+  assert.equal(t.detail, [word(g("detail"), { grade: word("queue.fill.grade.c") }), word(g("detail.affects"), { affects: word("queue.fill.affects.affected") })].join(" "));
+  const x = m["FINDING::newer-capture-affects-reference::RN-X"];
+  assert.equal(x.detail, word(g("detail.unseen")));
+  assert.equal(x.detail_key, g("detail.unseen"));
+  assert.equal(m["FINDING::newer-capture-affects-reference::RN-Z"].detail, said(g("detail"), { grade: "" }), "a code the list lacks: empty, and no affects sentence");
 });
 
 test("R43 (R2): objective-gap reads .summary with what the gap says else .summary.gap, and .detail.stages for missing stages else .detail.grade", () => {
@@ -273,8 +280,8 @@ test("R43 (R35): followed-case-entry reads its summary by kind and edition and e
     { ...head(2), kind: "withdrawal", edition: 3, date: null, key_listed: true, move: true, taken_back: { seq: null, date: null } },
     { ...head(3), kind: "withdrawal", edition: null, date: null, key_listed: true, move: true, taken_back: { seq: 8, date: null } },
     { ...head(4), kind: "reaction", edition: null, date: "2026-08-20", key_listed: false, move: false, taken_back: { seq: null, date: "2026-08-22" } }],
-    refused: [{ ...head(5), failed: "C-130.15" }, { ...head(6), failed: "C-130.15" }, { ...head(6), failed: "C-130.16" },
-              { ...head(null), failed: "C-130.14" }, { ...head(7), failed: null }],
+    refused: [{ ...head(5), failed: "digest" }, { ...head(6), failed: "digest" }, { ...head(6), failed: "signature" },
+              { ...head(null), failed: "form" }, { ...head(7), failed: null }],
     unreadable: [{ import: IMP, group: "g2", case: "CASE-I", set_by: "alice", docket: "d", reason: null, at: null }] };
   const w = busy({ caseImport: { watchItems: () => answer } });
   const m = byId(w.read("alice"));
@@ -292,17 +299,17 @@ test("R43 (R35): followed-case-entry reads its summary by kind and edition and e
   const R = (k) => `queue.cited-docket-entry-refused.${k}`;
   const rf = (seq) => m[`FINDING::cited-docket-entry-refused::${IMP}#${seq}`];
   assert.equal(rf(5).summary, word(R("summary"), { whose }));
-  assert.equal(rf(5).detail, word(R("detail.one"), { seq: 5, checks: "C-130.15" }));
-  assert.equal(rf(6).detail, word(R("detail.other"), { seq: 6, checks: "C-130.15, C-130.16" }), "two checks failed: .other");
-  assert.equal(rf("unnumbered").detail, word(R("detail.unnumbered.one"), { checks: "C-130.14" }));
-  assert.equal(rf(7).detail, said(R("detail.one"), { seq: 7, checks: "" }), "named by no code: {checks} empty, the item raised");
+  assert.equal(rf(5).detail, word(R("detail.one"), { seq: 5, checks: word("queue.fill.check.digest") }));
+  assert.equal(rf(6).detail, word(R("detail.other"), { seq: 6, checks: `${word("queue.fill.check.digest")}, ${word("queue.fill.check.signature")}` }), "two checks failed: .other");
+  assert.equal(rf("unnumbered").detail, word(R("detail.unnumbered.one"), { checks: word("queue.fill.check.form") }));
+  assert.equal(rf(7).detail, word(R("detail.one"), { seq: 7, checks: word("queue.fill.check.undetermined") }), "named by no code: the undetermined check");
   assert.deepEqual(rf(7).basis.failed, []);
   const un = m[`CONDITION::cited-docket-unreadable::${IMP}`], U = (k) => `queue.cited-docket-unreadable.${k}`;
   assert.equal(un.summary, word(U("summary"), { whose }));
   assert.equal(un.detail, word(U("detail")), "no reason and no last try: the base sentence alone");
-  w.fakes.caseImport.watchItems = () => ({ entries: [], refused: [], unreadable: [{ ...answer.unreadable[0], reason: "not_json", at: iso(NOW - 2 * DAY) }] });
+  w.fakes.caseImport.watchItems = () => ({ entries: [], refused: [], unreadable: [{ ...answer.unreadable[0], reason: "http_503", at: iso(NOW - 2 * DAY) }] });
   assert.equal(byId(w.read("alice"))[`CONDITION::cited-docket-unreadable::${IMP}`].detail,
-    [word(U("detail")), word(U("detail.reason"), { reason: "not_json" }), word(U("detail.at"), { date: dayWord("2026-08-30") })].join(" "));
+    [word(U("detail")), word(U("detail.reason"), { reason: word("queue.fill.reason.http", { status: "503" }) }), word(U("detail.at"), { date: dayWord("2026-08-30") })].join(" "));
 });
 
 test("R43 (R38): place-profile-arrived reads .unnamed with no place named and .detail.covers only when coverage is stated", () => {
@@ -402,7 +409,8 @@ test("R43 (R2): stance, new-version and concluded items leave their optional sen
   assert.equal(a.detail, word(`${S}.detail`, { question: "the question", n: 3, project: "A", version: "v1" }), "no date and no author: the base sentence");
   assert.equal(b.detail, [word(`${S}.detail`, { question: "the question", n: 3, project: "B", version: "v2" }), word(`${S}.detail.at`, { date: dayWord("2026-09-01") })].join(" "));
   const V = "queue.new-version-arrived-from-another-team";
-  assert.equal(m["FINDING::new-version-arrived-from-another-team::INQ-S::v3"].detail, word(`${V}.detail`, { question: "the question", n: 3, project: "A", version: "v3" }));
+  assert.equal(m["FINDING::new-version-arrived-from-another-team::INQ-S::v3"].detail, [word(`${V}.detail`, { question: "the question", n: 3, project: "A", version: "v3" }),
+    word(`${V}.detail.state`, { state: word("queue.fill.state.suggested") })].join(" "));
   const C = "queue.shared-inquiry-concluded-by-another-project";
   assert.equal(m["FINDING::shared-inquiry-concluded-by-another-project::INQ-S::PRJ-A"].detail, word(`${C}.detail`, { question: "the question", n: 3, project: "A", version: "v1" }));
 });
@@ -446,9 +454,9 @@ test("R43, R11: a title the viewer may not see is never written into a sentence:
 test("R43 (R35, R2): the plural forms are read too: an unnumbered refused entry that failed two checks reads .detail.unnumbered.other, and a cardinality group of two instances under an at-most-one bound reads .detail.atmost.other", () => {
   const IMP = "f".repeat(64);
   const h = { import: IMP, group: "g2", case: "CASE-I", set_by: "alice", seq: null, seen_at: iso(NOW - DAY) };
-  const w = busy({ caseImport: { watchItems: () => ({ entries: [], unreadable: [], refused: [{ ...h, failed: "C-130.14" }, { ...h, failed: "C-130.18" }] }) } });
+  const w = busy({ caseImport: { watchItems: () => ({ entries: [], unreadable: [], refused: [{ ...h, failed: "form" }, { ...h, failed: "chain" }] }) } });
   const rf = byId(w.read("alice"))[`FINDING::cited-docket-entry-refused::${IMP}#unnumbered`];
-  assert.equal(rf.detail, word("queue.cited-docket-entry-refused.detail.unnumbered.other", { checks: "C-130.14, C-130.18" }));
+  assert.equal(rf.detail, word("queue.cited-docket-entry-refused.detail.unnumbered.other", { checks: `${word("queue.fill.check.form")}, ${word("queue.fill.check.chain")}` }));
   assert.equal(rf.detail_key, "queue.cited-docket-entry-refused.detail.unnumbered.other");
   const card = (e) => ({ progression_key: "p", progression_label: "Flow", definition_version: 1, entity_id: e,
     findings: [{ kind: "cardinality_exceeded", stage_key: "c", stage_label: "Cap", cardinality: "0..1", document_count: 3, grade: "B", grade_determined: true }] });

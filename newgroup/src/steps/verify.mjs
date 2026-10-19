@@ -1,4 +1,5 @@
 /* R27, R28, R29, R32: whether the copy answers, what each part of it serves, and the way back. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { cf, approve, sleep, WAIT_BOUND_MINUTES } from "./api.mjs";
 import { ascii, find } from "./bytes.mjs";
 import { BINDING_OF } from "./bindings.mjs";
@@ -57,36 +58,34 @@ export function reportsBuilds(source) {
    place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. A member
    R38 left out (`out`: its upload was never attempted) is named at the fleet step, never a lag here (R15; K3793). */
 const failedLags = (failed = []) => failed.filter((l) => l && !l.out && BINDING_OF.has(l.member))
-  .map((l) => `the capability worker ${l.member} could not be installed, so your team's Civicsmith has no ${BINDING_OF.get(l.member)}`
-    + ` connection to use (${l.why})`);
+  .map((l) => word("installer.lag.member.failed", { name: l.member, why: l.why }));
 
 function servingVerdict(j, want, installed, capable, failed = []) {
   const lags = [];
   if (!j || typeof j !== "object") {
-    lags.push("the address of your team's Civicsmith did not answer", ...failedLags(failed));
+    lags.push(word("installer.lag.address.silent"), ...failedLags(failed));
     return { confirmed: false, lags, capable };
   }
-  if (j.version !== want) lags.push(`the address of your team's Civicsmith answers ${j.version ? j.version : "with no version"}`);
+  if (j.version !== want) lags.push(j.version ? word("installer.lag.address.version", { version: j.version }) : word("installer.lag.address.noversion"));
   lags.push(...failedLags(failed));
   if (!capable) return { confirmed: lags.length === 0, lags, capable };
-  if (!("storeVersion" in j)) lags.push("the record store of your team's Civicsmith has not reported its version, so it is still running a release from before this one");
-  else if (j.storeVersion === null) lags.push("the record store of your team's Civicsmith cannot say which version it runs");
-  else if (j.storeVersion !== want) lags.push(`the record store of your team's Civicsmith still runs ${j.storeVersion}`);
+  if (!("storeVersion" in j)) lags.push(word("installer.lag.store.unreported"));
+  else if (j.storeVersion === null) lags.push(word("installer.lag.store.unknown"));
+  else if (j.storeVersion !== want) lags.push(word("installer.lag.store.version", { version: j.storeVersion }));
   const mv = j.memberVersions;
   if (!mv || typeof mv !== "object") {
-    lags.push("your team's Civicsmith did not report its capability workers");
+    lags.push(word("installer.lag.members.unreported"));
   } else {
     for (const [name, st] of Object.entries(mv)) {
       const s = st && st.state;
-      if (s === "SERVING" && st.version !== want) lags.push(`the capability worker ${name} still runs ${st.version}`);
-      else if (s === "MISNAMED") lags.push(`the connection of your team's Civicsmith to ${name} reaches a different worker (${st.name || "unnamed"})`);
-      else if (s === "SILENT") lags.push(`your team's Civicsmith cannot get an answer from the capability worker ${name}`
-        + (installed.includes(name) ? ", which this step installed" : ""));
+      if (s === "SERVING" && st.version !== want) lags.push(word("installer.lag.member.version", { name, version: st.version }));
+      else if (s === "MISNAMED") lags.push(word("installer.lag.member.misnamed", { name, other: st.name || word("installer.lag.member.unnamed") }));
+      else if (s === "SILENT") lags.push(installed.includes(name) ? word("installer.lag.member.silent.installed", { name }) : word("installer.lag.member.silent", { name }));
       else if (s === "UNBOUND" && installed.includes(name))
-        lags.push(`the capability worker ${name} was installed, but your team's Civicsmith holds no connection to it, so it cannot use it`);
+        lags.push(word("installer.lag.member.unbound", { name }));
     }
     for (const name of installed)
-      if (!(name in mv)) lags.push(`the capability worker ${name} was installed, but your team's Civicsmith does not know it`);
+      if (!(name in mv)) lags.push(word("installer.lag.member.unknown", { name }));
   }
   return { confirmed: lags.length === 0, lags, capable };
 }

@@ -1,0 +1,145 @@
+/* T51's L11 fold (T51-128): R74 what an update stops for as foreign, R78 the installer records the team's short name itself, and
+ * R79's control that the invitation page is the keys' own output. The module at its interface, driven through its routes against
+ * the stateful fake account of `fixture.mjs` (whose copy answers `op=instancegroup` and `op=instancegroupseed` as a plane does);
+ * each requirement is named in its test's title and keeps its control beside it. A sentence is never held here: the stop and the
+ * lines are read with `word`, by key. */
+import { test, after } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
+import { invitePage } from "../scripts/invite-page.mjs";
+import { run, release, armWith, restoreSigners, SIGNER, bump, heldCopy, bindingOf, DESCRIPTOR, RUNNER, IMAGE } from "./fixture.mjs";
+
+after(restoreSigners);
+const NEXT = bump(RELEASE_VERSION);
+const h = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
+  { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
+  { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" }, { type: "service", name: "SELF", service: slug }];
+const told = (w) => w.page.done.includes(h(word("installer.team.unrecorded.head")));
+
+/* ------------------------------------------------------------------------------------------------ R74 */
+
+test("R74 an update stops, changing and deleting nothing, when the copy holds a container application on its own Workers under a name that is not the copy's own; the stop is `installer.update.stopped.foreign`; control: the same application on another copy's Workers stops nothing, and an application under the copy's names for a class the release dropped stops nothing", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, container: true });
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  const slug = "r74-one";
+  const pre = { [slug]: planeBase(slug), [RUNNER]: old, "agent-worker": old, "pdf-worker": old, "ocr-worker": old, "sheet-worker": old, "agent-runner-other": old };
+  const own = { id: "app9", name: RUNNER, durable_objects: { namespace_id: `ns-${RUNNER}-AgentRunner` }, configuration: { image: DESCRIPTOR.image } };
+  const common = { slug, mode: "update", rel, pre, preClasses: { [RUNNER]: ["AgentRunner"], "agent-runner-other": ["AgentRunner"] } };
+  const writes = (w) => w.calls.filter((c) => c.method !== "GET" && c.u.startsWith("https://api.cloudflare.com")).map((c) => `${c.method} ${c.u}`);
+  /* An extra application on a namespace of the copy's own Workers, named as no part of the copy is. */
+  const foreign = await run({ ...common, preApps: [own, { id: "app10", name: "mystery-box", durable_objects: { namespace_id: `ns-${RUNNER}-AgentRunner` }, configuration: { image: IMAGE } }] });
+  assert.equal(foreign.page.failed.said, word("installer.update.stopped.foreign"));
+  assert.equal(foreign.planePuts.length, 0, "nothing uploaded");
+  assert.deepEqual(writes(foreign), [], "nothing created, changed or deleted");
+  assert.deepEqual(foreign.apps.map((a) => a.name), [RUNNER, "mystery-box"], "the application is left where it is");
+  assert.equal(foreign.page.done, null);
+  /* Control: the copy's own applications only, or none, update. */
+  const clean = await run({ ...common, preApps: [own] });
+  assert.equal(clean.page.failed, null);
+  assert.ok(clean.planePuts.length >= 1, "the update ran");
+  const none = await run({ ...common, preApps: [] });
+  assert.equal(none.page.failed, null);
+  /* Control: an application of another copy (its own Workers) is no concern of this update. */
+  const another = await run({ ...common, preApps: [own, { id: "app11", name: "a-name-of-theirs", durable_objects: { namespace_id: "ns-agent-runner-other-AgentRunner" }, configuration: { image: IMAGE } }] });
+  assert.equal(another.page.failed, null);
+  /* Control: an application under the copy's names for a class the chosen release no longer has is a retired part: left, not a stop. */
+  const retired = await run({ ...common, preClasses: { ...common.preClasses, "pdf-worker": ["Retired"] },
+    preApps: [own, { id: "app12", name: "pdf-worker", durable_objects: { namespace_id: "ns-pdf-worker-Retired" }, configuration: { image: IMAGE } }] });
+  assert.equal(retired.page.failed, null);
+  assert.ok(retired.apps.some((a) => a.name === "pdf-worker"), "the retired part stays");
+  assert.ok(retired.page.done.includes(h(word("installer.update.retired", { parts: "pdf-worker" }))), "the retired part is named once in the update's panel");
+  assert.ok(!clean.page.done.includes('id="retired-parts"'), "control: no retired part, nothing named");
+  restoreSigners();
+});
+
+/* ------------------------------------------------------------------------------------------------ R78 */
+
+test("R78 an install, a resumed install and an update's read: an install and a resumed install of a copy that records no team record the run's short name themselves, once, with the ADMIN_TOKEN they generated in an Authorization header and in no address, and draw no telling; a copy that records its team is asked nothing more; an update never seeds", async () => {
+  /* An install: the copy records none until the installer makes the root of trust's act. */
+  const w = await run({ slug: "r78-install", group: null });
+  const boot = bindingOf(w.planePuts[0], "ADMIN_TOKEN").text;
+  assert.deepEqual(w.seeds.map((s) => JSON.parse(s.init.body)), [{ slug: "r78-install" }], "the act is made once, with the run's own slug");
+  assert.equal(w.recorded(), "r78-install", "the group is recorded as the slug");
+  assert.equal(w.seeds[0].init.headers.authorization, "Bearer " + boot, "the credential the run generated, in the header");
+  for (const c of w.calls) assert.equal(c.u.includes(boot), false, `${c.method} ${c.u}: the credential is in no address`);
+  assert.equal(w.page.status("record"), "ok");
+  assert.equal(w.page.label("record"), word("installer.step.record.done", { slug: "r78-install" }));
+  assert.ok(w.page.events.find((e) => e.k === "step" && e.id === "record").label === word("installer.step.record"));
+  assert.ok(!told(w), "recorded: the telling is absent");
+  assert.equal(w.raw.includes(boot), true, "(the one-time password is shown once, in the panel, R16)");
+  assert.equal(w.page.done.split(boot).length - 1, 1, "once");
+  /* A copy that already records its team is asked nothing more, and nothing is said. */
+  const kept = await run({ slug: "r78-kept" });
+  assert.deepEqual(kept.seeds, [], "no act when the group is already recorded");
+  assert.equal(kept.page.steps.includes("record"), false, "no line is drawn for it");
+  assert.ok(!told(kept));
+  /* A resumed install (a copy begun under this short name and not finished) records it too. */
+  const half = heldCopy({ slug: "r78-resume", finished: false, members: [], version: "0.1.0" });
+  const resumed = await run({ slug: "r78-resume", ...half, group: null });
+  assert.equal(resumed.recorded(), "r78-resume");
+  assert.equal(resumed.seeds.length, 1);
+  /* A refused act leaves the copy as it was and draws R18's telling in `installer.team.unrecorded.*`. */
+  const refused = await run({ slug: "r78-refused", group: null, seedRefused: "GROUP_SLUG_MALFORMED" });
+  assert.equal(refused.recorded(), null, "the copy is as it was");
+  assert.equal(refused.page.status("record"), "no");
+  assert.ok(refused.page.label("record").startsWith(word("installer.step.record.refused", { slug: "r78-refused", said: "\u0000" }).split("\u0000")[0]));
+  assert.ok(told(refused));
+  assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.how"))), "run the installer again");
+  assert.ok(refused.page.done.includes(h(word("installer.team.unrecorded.suggest", { slug: "r78-refused" }))));
+  assert.ok(refused.page.done.includes('id="out-boot"'), "the credentials are still handed over");
+  /* A copy that does not answer the read: the same. */
+  const silent = await run({ slug: "r78-silent", group: "silent" });
+  assert.deepEqual(silent.seeds, [], "no act is made on a read that was not answered");
+  assert.equal(silent.page.status("record"), "no");
+  assert.ok(told(silent));
+  /* The update never seeds, whatever the copy answers (it binds no new ADMIN_TOKEN, K3892). */
+  const upd = await run({ slug: "r78-upd", mode: "update", pre: { "r78-upd": planeBase("r78-upd") }, group: null });
+  assert.deepEqual(upd.seeds, []);
+  assert.ok(told(upd), "an update of a copy answering `group: null` draws R18's telling");
+  /* Control: no request the installer makes carries a Claude credential (R36). */
+  for (const c of [...w.calls, ...upd.calls]) assert.ok(!/sk-ant|claude/i.test(JSON.stringify(c.init?.headers || {}) + c.u), `${c.u}`);
+});
+
+/* ------------------------------------------------------------------------------------------------ R79 */
+
+test("R79 the invitation page is built from the keys: its committed file is exactly the output of `scripts/invite-page.mjs` over setup-words' rows, so it holds no sentence the keys do not; control: a page with another sentence is not the output", async () => {
+  const committed = readFileSync(new URL("../../bio-plane/public/newgroup/index.html", import.meta.url), "utf8");
+  assert.equal(committed, invitePage());
+  assert.ok(committed.includes(h(word("installer.invite.title")).replace(/&#39;/g, "'")));
+  assert.notEqual(committed.replace(word("installer.invite.button"), "Click here"), invitePage(), "an inline sentence is not the output");
+});
+
+/* ------------------------------------------------------------------------------------------------ R80 */
+
+const OLD_EXPORTS = ["ARMED_SIGNERS", "ASSISTANT_BINDING", "ASSISTANT_OWN_ACCOUNTS", "BROWSER_BINDING", "CFG", "CONTAINER_PART", "HANDOVER_PATH",
+  "INSTANCE_AI_BINDING", "MEMBER_BINDING", "MEMBER_OBJECTS", "OWN_HOSTS_BINDING", "PER_REQUEST_DATASET", "PROFILES_BINDING", "RETIRED_BINDINGS",
+  "RETIRED_CLAUDE_BINDING", "SEAL_BINDING", "SourceUnavailable", "VPC_BINDING", "VPC_MEMBER", "WORKER_PART", "assetResponse", "containerClasses",
+  "containerDescriptor", "default", "filterExcludes", "instanceAiOk", "memberLimits", "objectMigrations", "planeLimits", "reportsBuilds",
+  "vpcServiceOk", "workerDescriptor"];
+
+test("R80 the installer delegates the account and the fleet to installer-steps and answers as before: `src/index.mjs` exports exactly the names it exported before the split, every moved one being the very value installer-steps exports (no copy); the module's own source and scripts stay under 4,000 lines; control: a name missing, or a copy of a moved name, is found", async () => {
+  const index = await import("../src/index.mjs");
+  const steps = await import("../src/steps/index.mjs");
+  assert.deepEqual(Object.keys(index).sort(), [...OLD_EXPORTS].sort(), "the export names equal the old list");
+  const moved = OLD_EXPORTS.filter((n) => n in steps);
+  assert.ok(moved.length >= 20, `most of the old list moved (${moved.length})`);
+  for (const n of moved) assert.ok(index[n] === steps[n], `${n} is installer-steps' own, not a copy`);
+  /* No other file of the module's source holds a name installer-steps exports, except by re-exporting that same value. */
+  const { readdirSync, readFileSync } = await import("node:fs");
+  for (const f of readdirSync(new URL("../src/", import.meta.url)).filter((x) => /\.mjs$/.test(x) && x !== "release.mjs" && x !== "index.mjs")) {
+    const mod = await import("../src/" + f);
+    for (const [n, v] of Object.entries(mod)) if (n in steps) assert.ok(v === steps[n], `${f}: ${n} is a copy of installer-steps'`);
+  }
+  /* P6: the module's own source (not installer-steps') and its scripts. */
+  const lines = (dir, skip = []) => readdirSync(new URL(dir, import.meta.url)).filter((x) => /\.mjs$/.test(x) && !skip.includes(x))
+    .reduce((n, x) => n + readFileSync(new URL(dir + x, import.meta.url), "utf8").split("\n").length, 0);
+  assert.ok(lines("../src/", ["release.mjs"]) + lines("../scripts/") < 4000, "under P6's size");
+  /* Control: the list notices a name missing and a copy. */
+  assert.notDeepEqual([...Object.keys(index), "extra"].sort(), [...OLD_EXPORTS].sort());
+  const copied = (f) => (...a) => f(...a);
+  assert.ok(copied(index.planeLimits) !== steps.planeLimits, "a copy of a moved function is a different value, which the loop above would name");
+});

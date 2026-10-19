@@ -1,4 +1,5 @@
 /* R10, R21: the limits the signed release states for the plane and for each member, read from the verified bytes. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { ascii, find } from "./bytes.mjs";
 
 /* R20 (DIST-15, N336) — THE PLANE'S LIMITS, AS THE SIGNED RELEASE STATES THEM.
@@ -41,21 +42,21 @@ function statedLimits(source, tag) {
     for (const m of source.matchAll(re)) bodies.add(m[2]);
   }
   if (bodies.size === 0) return { ok: false, why: "none" };
-  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
+  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: `statements=${bodies.size}` };
   const [body] = bodies;
   const limits = {};
   let last = "";
   for (const part of body.slice(1).split(" ")) {
     const kv = /^([a-z][a-z0-9_]*)=([1-9][0-9]{0,8})$/.exec(part);
     if (!kv || kv[1] <= last) return { ok: false, why: "unreadable",
-      detail: `"${tag}${body}" is not one key=number per limit, keys sorted` };
+      detail: `form="${tag}${body}"` };
     limits[(last = kv[1])] = Number(kv[2]);
   }
   return { ok: true, limits: Object.freeze(limits) };
 }
 export const planeLimits = (source) => statedLimits(source, "bio-plane-limits/1");
-const LIMITS_NOT_STATED = { none: "states no limits for your team's Civicsmith to run under",
-  unreadable: "states the limits your team's Civicsmith runs under unreadably" };
+/* The key each `why` of a refused release is said by (the installer, which knows the version, draws the sentence). */
+const LIMITS_NOT_STATED = Object.freeze({ none: "installer.release.nolimits", unreadable: "installer.release.badlimits" });
 
 /* R39 (N621; K1686, K1731; `sheet-worker` R17) — A FLEET MEMBER'S LIMITS, AS ITS SIGNED BUNDLE STATES THEM. A member's
    bundle, fetched and hashed against the fleet statement (R11), may state its own limits as one string
@@ -67,6 +68,6 @@ export function memberLimits(bytes) {
   const lim = statedLimits(source, "bio-member-limits/1");
   if (lim.ok) return lim;
   if (lim.why === "none") return { ok: true, limits: null };
-  return { ok: false, why: "its bundle states its limits unreadably (" + lim.detail + ")" };
+  return { ok: false, why: word("installer.fleet.why.limits") };
 }
 export { LIMITS_NOT_STATED, statedLimits };

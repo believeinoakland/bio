@@ -20,8 +20,8 @@ const SOURCE_DIR = join(HERE, "source");
 const GEN_DIR = fileURLToPath(new URL("../../../src/wizard-scripts/", import.meta.url));
 const src = (f) => readFileSync(join(SOURCE_DIR, f), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_T50 = JSON.parse(src("library-7be06eb4cb.json"));
-const COMMIT = "20c8001300";
-const REG_COMMIT = "20c8001300";   /* the registry's pin, moved by R44 */
+const COMMIT = "2a64c5ae77";
+const REG_COMMIT = "2a64c5ae77";   /* the registry's pin, moved by R44 */
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 const status = (s) => REG_FILE.screens.flatMap((f) => f.acts.filter((a) => a.status === s).map((a) => [f.id, a.op]));
 const OWED_OPS = [...new Set(status("owed").map(([, op]) => OWED.exec(op)[1]))];
@@ -110,7 +110,7 @@ test("R41 (T50; DEC-266, DEC-279, DEC-281) SCREEN_REGISTRY is the registry at th
   assert.deepEqual(wz.SCREEN_REGISTRY.map((s) => s.id), REG_FILE.screens.map((f) => f.id), "the file's order");
   const acts = REG_FILE.screens.flatMap((f) => f.acts);
   assert.deepEqual([acts.length, acts.filter((a) => a.status === "declared").length, acts.filter((a) => a.status === "function").length, acts.filter((a) => a.status === "owed").length],
-                   [441, 286, 132, 23]);
+                   [442, 287, 132, 23]);
   assert.equal(OWED_OPS.length, 22, "twenty-three owed acts name twenty-two ops: updatelater is owed on two screens");
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
