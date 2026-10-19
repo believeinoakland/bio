@@ -134,6 +134,25 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
       kept.set(key, png);
       return png;
     },
+    /* R21: screen `id` as the mock draws it with its own "In this mockup, show" control `control` set to the option whose label
+       matches `option` (a pattern's source), at `width`, as PNG bytes; `{why}` instead when the mock has no such screen,
+       control or option, so a mock missing a state fails by its name */
+    async drawState(id, control, option, width) {
+      const r = await page.evaluate(([id, control, option, dev]) => {
+        if (!REG.some((x) => x.id === id)) return "the mock draws no such screen";
+        const W = window.CS_WALK; Object.assign(W.st, { mode: "screen", id, ai: false, dev, step: 0 }); W.draw();
+        const sel = document.getElementById(control);
+        if (!sel) return `the mock offers no control ${control}`;
+        const o = [...sel.options].find((x) => new RegExp(option, "i").test(x.textContent));
+        if (!o) return `the mock's ${control} offers no state like /${option}/`;
+        sel.value = o.value; sel.dispatchEvent(new Event("change", { bubbles: true }));
+        const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
+        sc.style.transform = "none";
+        Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
+        return "ok";
+      }, [id, control, option, width <= PHONE ? "phone" : "desktop"]);
+      return r === "ok" ? { png: await page.locator("#vscale").screenshot() } : { why: r };
+    },
     /* R18: every step of design journey `journey` as the design's file holds it, in its order, the assistant's and the
        no-assistant's alike: `{s, v, act, only}` (`only` is "ai", "noai" or null) */
     async allSteps(journey) {
@@ -191,7 +210,7 @@ export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURN
   for (const [k, st] of steps.entries()) {
     const name = stepName(journey, k, st);
     const live = liveOf(st, k);
-    if (!live && notWalked && st.only === "ai") { walk.notes.push(localize("journey-check.design.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: String(name) })); continue; }
+    if (!live && notWalked && st.only === "ai") { walk.notWalked(name); continue; }
     const design = await mock.drawStepAt(journey, k, width);
     if (!live) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_no_live_screenshot_of", "{name}: no LIVE screenshot of it, so no pair", { name: String(name) })); continue; }
     if (!design) { walk.fail(FAIL.DESIGN, localize("journey-check.design.name_the_design_mock_at", "{name}: the design mock at {commit} draws no such step", { name: String(name), commit: String(mock.commit) })); continue; }

@@ -1,6 +1,6 @@
 /* journey-check R1 (b), R2: the registry's screens, read from the design stream's registry file (data, never imported),
-   and whether the interface drew one. `site` (civicsmith.org, not built in T47, N1011) and the treatments DEC-214 (4)
-   names are excepted (K3137); `install` and `update` are the installer's own pages, walked in the local arm's journey. */
+   and whether the interface drew one. `site` (civicsmith.org, walked by `walkSite`, not a screen of the copy) alone is excepted (R22: `dash-action` and
+   `dash-project` are drawn and walked; `dash-home` is no longer a registry screen); `install` and `update` are the installer's own pages, walked in the local arm's journey. */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,7 +8,7 @@ import { INTERFACE_MARK } from "./walker.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const REGISTRY_FILE = join(ROOT, "docs", "development", "ux-substrate", "screens", "registry.json");
-export const EXCEPTED = Object.freeze(["site", "dash-home", "dash-action", "dash-project"]);
+export const EXCEPTED = Object.freeze(["site"]);
 export const INSTALLER_SCREENS = Object.freeze(["install", "update"]);
 
 export function registryScreens(file = REGISTRY_FILE) {

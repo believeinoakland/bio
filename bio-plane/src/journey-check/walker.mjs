@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { designRule, groupIn, senseKeys, withoutGroupSense } from "./group-words.mjs";
-import { wordPattern } from "./words.mjs";
+import { wordPattern, pageZero } from "./words.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 /* The interface page's mark: every document the copy serves to a browser is `interfacePage`, which links the shell's own
@@ -26,7 +26,13 @@ export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "s
   /* R7: `admin` drawn as a person's name or handle */
   ADMIN_NAME: "admin-name",
   /* R17: a page that says "group" for a team */
-  GROUP: "group" });
+  GROUP: "group",
+  /* R23: a page numbered 0 drawn */
+  PAGE_ZERO: "page-zero",
+  /* R28: a title, an explanation, a weight mark, a name or a graph the DEC-340 checks (checks.mjs) fail */
+  DEC340: "dec340",
+  /* R27: a sentence that escaped the word list in the pseudo-locale walk */
+  PSEUDO: "pseudo" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -88,6 +94,13 @@ export class Walk {
        screenshot. */
     this.mask = [];
     mkdirSync(out, { recursive: true });
+  }
+
+  /* R20 (K3717, K3747): a step that needs the assistant, which does not work, is reported as not walked, never as failed */
+  notWalked(name) {
+    const note = localize("journey-check.walker.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: String(name) });
+    this.notes.push(note);
+    return note;
   }
 
   keepSecret(v) { if (typeof v === "string" && v.length >= 6) this.secrets.push(v); return v; }
@@ -178,6 +191,13 @@ export class Walk {
     }
   }
 
+  /* R23: no screen draws a page numbered 0, as no screen draws a slug (R6). */
+  async #scanPageZero(page) {
+    let url, text;
+    try { url = new URL(page.url()); text = await page.evaluate(() => (document.body ? document.body.innerText : "")); } catch { return; }
+    for (const f of pageZero(text).slice(0, 5)) this.fail(FAIL.PAGE_ZERO, localize("journey-check.walker.pathname_draws_a_page_numbered_0", "{pathname} draws a page numbered 0: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
+  }
+
   /* A request the walk's router refused: an address outside the walk. */
   foreign(url) {
     const u = new URL(url);
@@ -197,6 +217,7 @@ export class Walk {
     await settle(page);
     await Promise.all(this.pending.splice(0));
     await this.#scanGroup(page);
+    await this.#scanPageZero(page);
     try { await page.screenshot({ path: join(this.out, file), fullPage: true,
       mask: this.mask.map((sel) => page.locator(sel)) }); } catch { /* a closed page has none */ }
     const failed = this.failures.filter((f) => f.step === label && f.journey === this.journey);

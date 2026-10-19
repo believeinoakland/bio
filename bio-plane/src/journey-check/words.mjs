@@ -66,3 +66,10 @@ export async function requireAnyWord(page, keys, { within = "body", timeout = 10
     throw new Error(`the screen draws none of the words ${keys.join(", ")} on ${new URL(page.url()).pathname}`);
   }
 }
+
+/* R23 (K3815; usability review B-11, B-30, B-31): a page numbered 0 ("Page 0", "Pages 0", "Page 0 of 3"): pages are numbered from 1.
+   Answers each place it is drawn, `[{at}]`. */
+export function pageZero(text) {
+  const t = String(text).replace(/\s+/g, " ");
+  return [...t.matchAll(/\bPages? 0(?!\d|[.,]\d)/g)].map((m) => ({ at: t.slice(Math.max(0, m.index - 30), m.index + 40).trim() }));
+}
