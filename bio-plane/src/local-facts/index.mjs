@@ -39,7 +39,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { combine as combineProfiles, get as getProfile, validate as validateProfile } from "../../../jurisdictions/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { BOUNDS } from "../connection-grammar/index.mjs";
-import { linesOf } from "../lines/index.mjs";
+import { linesOf, reasonText } from "../lines/index.mjs";
 import { contentOf, checkContentExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { LOCAL_FACTS_CHECKS, refusal } from "./checks.mjs";
@@ -598,7 +598,7 @@ export class LocalFacts {
       const up = (list) => (Array.isArray(list) ? list : []).filter((l) => isObj(l) && l.kind === "part_of" && l.from === cur);
       const open = up((Array.isArray(r.undetermined) ? r.undetermined : []).map((u) => (isObj(u) && isObj(u.line) ? { ...u.line, why: u.why } : u)));
       if (open.length)
-        return fallback(word("local-facts.part_line_undetermined", { open: String(open.map((l) => l.line_id).join(", ")), cur: String(cur), at: String(at), open_2: String(open[0].why ? ` (${open[0].why})` : "") }), followed);
+        return fallback(word("local-facts.part_line_undetermined", { open: String(open.map((l) => l.line_id).join(", ")), cur: String(cur), at: String(at), open_2: String(open[0].why ? ` (${reasonText(open[0].why)})` : "") }), followed);
       if (r.truncated) return fallback(word("local-facts.structure_truncated_part", { cur: String(cur), at: String(at) }), followed);
       const held = up(r.held);
       if (!held.length) return fallback(word("local-facts.part_entity_profile", { cur: String(cur), at: String(at) }), followed);

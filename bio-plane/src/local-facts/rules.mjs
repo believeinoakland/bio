@@ -436,8 +436,7 @@ export class GroupRules {
 function machineRuleRefusal(by) {
   /* DEC-49 REGION is-rule-member */
   if (str(by) && !isMachineIdentity(str(by))) return null;
-  return refusal("MACHINE_CANNOT_DRAFT_RULE", "drafting or withdrawing a team's rule is a named member's act; an "
-                 + "assistant's draft reaches a member as its run's output. Nothing was written.");
+  return refusal("MACHINE_CANNOT_DRAFT_RULE", word("refusal.MACHINE_CANNOT_DRAFT_RULE"));
   /* END DEC-49 REGION is-rule-member */
 }
 
