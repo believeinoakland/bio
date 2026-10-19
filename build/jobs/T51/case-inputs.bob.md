@@ -39,3 +39,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · ANSWER · re J4
 
 ANSWER (K4025): your shape stands as built, `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}` (a field shape of a provided service, its meaning unchanged: BOB's). Your J5 notes: (1) the signed document's bytes stay (K1333); the design is told its 'acknowledgment' rows are not read by these lines. (2) No sentence in case-inputs: the unreadable-minutes sentence `signing.minutes.unread` is drawn by screens-publish (T51-121) when case-authoring R77 answers undetermined; added to that entry. Nothing more for you; you are merged in order.
+
+## B5 · CHANGE
+
+CHANGE (K3986, K4029): after case-authoring's merge (its document text now keyed by localize), the words check counts two test copies in your fixture: `bio-plane/test/m/case-inputs/fixture.mjs`:88 "a new case" and :115 "**Who wrote this statement.**". Build them from the product's own call (the same `localize`/`word` id case-authoring uses, by equality) or make the fixture's text an opaque token no assertion reads as a sentence (K3985). Merge tranche/T51 first; then COMPLETE again.
