@@ -378,6 +378,14 @@ const NOT_READ = {
      `document`, `heldcaptures` and `held`, `reconcile` and `money`, `transcribe`), acts the other modules' screens draw. */
   "screens-settings": ["act.claim.label.setup", "act.explore.label.document", "act.heldcaptures.label.held", "act.reconcile.label.money",
     "act.transcribe.label.document"],
+  /* DEC-373 (B396, K4154): refusal codes the module meets but draws through each screen's own words (doorbell's
+     screen.doorbell.refused.*, review-copy's until.bad, the ceremony's refused.* and gate.notargets, "Nothing is here"),
+     the dynamic `"screen.action.pressure." + kind` read whole, and the ceremony's abridging line (it lists every line). */
+  "screens-publish": ["refusal.KNOCK_EMPTY", "refusal.KNOCK_PAYLOAD_TOO_LARGE", "refusal.KNOCK_ENVELOPE_TOO_LARGE",
+    "refusal.KNOCKER_SECRET_WEAK", "refusal.RATE_IP", "refusal.RATE_GLOBAL", "refusal.BAD_CONTENT", "refusal.KNOCK_NOT_STORED",
+    "refusal.REQUIRED_ARGUMENT_MISSING", "refusal.REVIEW_BAD_UNTIL", "refusal.NO_ATTESTING_KEY", "refusal.NO_SIGNERS",
+    "refusal.CASE_SIGNER_NOT_AN_OWNER", "refusal.NO_TARGET", "refusal.NOT_PUBLISHED", "refusal.IMPORT_NO_SUCH_EDITION",
+    "screen.action.pressure.kind", "screen.ceremony.signs.lines"],
 };
 /* DEC-253's ten vocabularies, which affordances publishes with its words. */
 const VOCAB_SETS = ["linekinds", "linecapacities", "lineroles", "moneykinds", "moneyphases", "moneystages", "moneybases",

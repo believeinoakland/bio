@@ -579,6 +579,7 @@
    "screen.install.stopped.source",
    "screen.install.stopped.source.do",
    "screen.install.sub",
+   "setup-fleet.hosting_recovery_deployer",
    "setup-fleet.name.replace_time_password",
    "weight.irreversible.name"
   ],

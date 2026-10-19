@@ -5766,3 +5766,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: the label is said in words, meaning unchanged: its words arrive labeled "Draft · the assistant's, asked by" and the asking member's handle, saved only when the member keeps them. A scan of every row's source finds no other wording that lost an angle-bracketed name in the build (the others sit in notes).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`.
 owed: nothing.
+
+### DEC-373 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B396, from SCREENS-PUBLISH #6 J4; K4154, K4072)
+for: design
+question: Eighteen keys the reads list gives screens-publish that it never draws; and whether DEC-259 meant `screen.ceremony.signs.lines` to replace `.count`.
+why it is Bob's: it is not (P17): the design's reads lists and drawing.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: the eighteen join `NOT_READ` for screens-publish and its list loses exactly them: sixteen refusal codes the module meets but draws through each screen's own words (doorbell's `screen.doorbell.refused.*`, review-copy's `until.bad`, the ceremony's `refused.*` and `ceremony.gate.notargets`, absent subjects as "Nothing is here"), `screen.action.pressure.kind` (the generator read the dynamic `"screen.action.pressure." + kind` whole; the four real kinds stay listed), and `screen.ceremony.signs.lines`. `.lines` does not replace `.count`: the drawing uses it only to abridge the signed lines ("5 lines like these, one for each piece of evidence…"), while `.count` is the separate sentence on what one confirmation signs; a ceremony that lists every line signed needs no abridging line, so the module draws `.count` and the full list, and `.lines` stays a row for a drawing that abridges. Regenerated from a fresh extract of `tranche/T51` (also: installer +1, `setup-fleet.hosting_recovery_deployer`; journey-check's unkeyed harness text +2).
+reasoning recorded in: this entry; `screens/words-reads.src.mjs`, `screens/words-reads.json`.
+owed: nothing.
