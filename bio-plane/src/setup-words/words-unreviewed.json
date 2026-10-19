@@ -23000,84 +23000,84 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1377
+      "line": 1381
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1577
+      "line": 1581
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1746
+      "line": 1750
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1286
+      "line": 1290
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1381
+      "line": 1385
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 987
+      "line": 990
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1367
+      "line": 1371
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1572
+      "line": 1576
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
       "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1490
+      "line": 1494
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1583
+      "line": 1587
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1386
+      "line": 1390
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1588
+      "line": 1592
     },
     {
       "id": "file-safety.index.a_safe_view_is_made",
@@ -29685,7 +29685,7 @@
       "en": "The check did not complete ({why}).",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2502
+      "line": 2492
     },
     {
       "id": "instance-setup.setup.choosing_the_jurisdiction_profiles_is",
@@ -29762,7 +29762,7 @@
       "en": "each metric is stated in its own unit. A metric in ms is measured wall time across synchronous compute segments, not billed CPU time; a metric in bytes is a count of the work a run handled, not a time. peak is the run that would die first if a ceiling were near; a mean would hide it.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2839
+      "line": 2821
     },
     {
       "id": "instance-setup.setup.every_answer_is_empty_so",
@@ -29881,14 +29881,14 @@
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2902
+      "line": 2884
     },
     {
       "id": "instance-setup.setup.probe_none_cut_off",
       "en": "a run completed a step {elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. No run has been cut off yet, so the ceiling is above everything tried.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2903
+      "line": 2885
     },
     {
       "id": "instance-setup.setup.profile_made_up_for_testing",
@@ -29923,21 +29923,21 @@
       "en": "No reason was given. A release is skipped with a reason of one line of 1 to {max} characters. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2791
+      "line": 2773
     },
     {
       "id": "instance-setup.setup.skip_reason_many_lines",
       "en": "A reason of {chars} characters over more than one line is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2793
+      "line": 2775
     },
     {
       "id": "instance-setup.setup.skip_reason_too_long",
       "en": "A reason of {chars} characters is not one line of 1 to {max} characters, and a release is skipped with one. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2792
+      "line": 2774
     },
     {
       "id": "instance-setup.setup.slug_none_given",
@@ -30056,7 +30056,7 @@
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3241
+      "line": 3213
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
@@ -30070,21 +30070,21 @@
       "en": "The request names no version, and a release is decided by its version. The release ready to install is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2727
+      "line": 2709
     },
     {
       "id": "instance-setup.setup.update_none_ready",
       "en": "No release is ready to install. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2725
+      "line": 2707
     },
     {
       "id": "instance-setup.setup.update_not_the_ready_one",
       "en": "'{version}' is not the release ready to install, which is {ready}. Nothing was recorded.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2726
+      "line": 2708
     },
     {
       "id": "instance-setup.setup.what_asking_draft",
@@ -30098,7 +30098,7 @@
       "en": "choosing to update your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2742
+      "line": 2724
     },
     {
       "id": "instance-setup.setup.what_declaring_stake",
@@ -30133,7 +30133,7 @@
       "en": "reading the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2657
+      "line": 2639
     },
     {
       "id": "instance-setup.setup.what_seeding_offices",
@@ -30154,7 +30154,7 @@
       "en": "setting aside an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2755
+      "line": 2737
     },
     {
       "id": "instance-setup.setup.what_setting_languages",
@@ -30175,14 +30175,14 @@
       "en": "skipping an update of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2783
+      "line": 2765
     },
     {
       "id": "instance-setup.setup.what_the_updates",
       "en": "the updates of your team's Civicsmith",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 2688
+      "line": 2670
     },
     {
       "id": "instance-setup.setup.whether_this_set_answers_the",
