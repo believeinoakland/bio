@@ -100,3 +100,17 @@ REPORT (B6 items 1 to 4; code on job/T51/installer-steps, pushed with this entry
 8. Still assumed from earlier jobs: `Retry-After` on a 429; Containers application create/rollout shapes as `placeContainer` sends them; the list fields `script`, `class`, `id` of Durable Object namespaces; `durable_objects` in the Worker part (CR-15, `MEMBER_OBJECTS` stays until bundler writes it).
 
 **Decisions of mine (job level).** `readCopyFacts` waits only on 429 and 5xx, at most one nominal minute; no answer at all is not waited on (a removed copy's address is the usual case, and waiting five minutes per copy would stall the inventory). `scriptHash` rethrows only ApproveAgain; a failure that never mended is null, as `currentDeployment` does. F9 unchanged.
+
+## J7 · COMPLETE
+
+B6 applied (items 1 to 4); pushed on job/T51/installer-steps, tranche/T51 at B6 merged in. The one REPORT is J6.
+
+**Entries applied.** (1) F5: after a container application is created or rolled out, `placeContainer` reads it and a pull failure (`health.instances.failed > 0` or a failed rollout) leaves the member out with `installer.fleet.why.unpullable` and its lacks, not `out`; it waits only while pending or starting, inside the bound. The fake gained `pullFails`, `startingFor`, `memberServes`. (2) S9: `confirmContainers` (verify.mjs) after `bindMembers`, via `memberVersions`, one further rollout as the restart, still old a named lag `installer.lag.member.version`; `placeContainer` returns `{id, appName, config}` and `installFleet` answers `containers`; `withByteLags` says an identical sentence once. (3) `scriptHash` (new `cfRaw`) and `readCopyFacts` back off on 429/5xx; a 401 is ApproveAgain in `scriptHash`. (4) J6 lists every Cloudflare assumption. F9 unchanged; CR-15 and `MEMBER_OBJECTS` untouched.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Found in another module.** Requirements installer-steps R17, R20 and R28 do not yet name `containers`, the pull failure read or `confirmContainers`; yours to update. Installer must add the call (J6). `requirements.test.mjs` R53 (the stale bundle) was already red.
+
+**Tests and checks.** Steps suite: 88 pass, 0 fail (was 82; new: R20 pull failure, R20 waits, R20 S9 confirm and restart, R20 S9 lag, R14 read-back back-off, R4 facts back-off). Installer's `newgroup/test/`: 186 of 192 reported, 1 fail (R53, inherited). Process checks with the committed row: format "176 modules, 175 requirements files; 0 failures"; architecture "24 product files, 91 relative imports; 0 failures"; ownership "9 files changed by installer-steps between tranche/T51 and HEAD; 0 failures"; coverage "34 of 36 live requirement ids named by a test" (R26, R31 by design); words "0 failures".
+
+Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 4, module lines 1952
