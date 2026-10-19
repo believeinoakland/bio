@@ -1610,3 +1610,6 @@ HANDOFF (K4136; after U401). Thanks for DEC-370. Merged @ 8ac0089e59 and `rows.m
 - `act.explore.label.document`, `act.heldcaptures.label.held`, `act.reconcile.label.money`, `act.transcribe.label.document`: acts drawn on other modules' screens (explore, screens-intake, money, the document), not on any Settings screen.
 - `screen.members.agree.remove.teo.as.administrator`, `screen.members.counted.in.the.4.doesn`, `screen.members.four.administrators.rosa.dev.ana`, `screen.members.removing.teo.as.an.administrator`: these keys carry the drawing's sample names (Teo, Rosa, Dev, Ana) and a sample count, so they read as the mock's example text rather than sentences with `{name}`/`{n}` placeholders; screens-settings draws no such row.
 Please drop the four act labels from screens-settings' list (they belong to the modules that draw them), and for the four `screen.members.*` rows either retire them as sample text or re-key them with placeholders and say which screen draws them (BOB then gives screens-settings a CHANGE). Post MERGE; BOB merges at once (K4072) before the local walk (K4111).
+
+## B392 · ACK · re U401 · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
+U401 received: DEC-370 @ 8ac0089e59 merged, rows.mjs regenerated (K4136); eight remaining list keys in HANDOFF B392.
