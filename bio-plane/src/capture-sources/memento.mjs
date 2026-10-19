@@ -78,7 +78,7 @@ export function acceptDatetime(at) {
  *  token or a quoted string, entries separated by commas. One malformed entry refuses
  *  the whole text, naming it: a mis-split entry would shift every entry after it. */
 export function parseLinkFormat(text) {
-  if (typeof text !== "string") return { ok: false, reason: "MEMENTO_LINK_MALFORMED", entry: 0, detail: "the link-format text is not a string" };
+  if (typeof text !== "string") return { ok: false, reason: "MEMENTO_LINK_MALFORMED", entry: 0, detail: localize("capture-sources.memento.the_link_format_text_is", "the link-format text is not a string") };
   const links = [];
   let i = 0;
   const n = text.length;
@@ -142,7 +142,7 @@ export function parseTimeMap(text) {
   const p = parseLinkFormat(text);
   if (!p.ok) return p;
   const r = relations(p.links);
-  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: "the TimeMap names no rel=\"original\" link, so it does not say which resource its mementos are of" };
+  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: localize("capture-sources.memento.the_timemap_names_no", "the TimeMap names no rel=\"original\" link, so it does not say which resource its mementos are of") };
   const mementos = [], refused = [];
   for (const l of r.mementos) {
     const t = readHttpDate(l.datetime);
@@ -168,7 +168,7 @@ export function timeMapCandidates(timemap, { notAfter = null } = {}) {
     candidates.push(m);
   }
   if (!candidates.length) {
-    return { ok: false, reason: "NO_USABLE_CAPTURE", detail: "the TimeMap holds no memento at or before the bound", considered };
+    return { ok: false, reason: "NO_USABLE_CAPTURE", detail: localize("capture-sources.memento.the_timemap_holds_no_memento", "the TimeMap holds no memento at or before the bound"), considered };
   }
   return { ok: true, candidates, considered };
 }
@@ -199,7 +199,7 @@ export function readMementoAnswer({ url, status, headers } = {}) {
       const location = header(headers, "location");
       if (!location) return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: localize("capture-sources.memento.the_timegate_answered_st_with", "the TimeGate answered {st} with no Location", { st: String(st) }) };
       let resolved;
-      try { resolved = new URL(location, url).toString(); } catch { return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: "the TimeGate's Location is not an address" }; }
+      try { resolved = new URL(location, url).toString(); } catch { return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: localize("capture-sources.memento.the_timegate_s_location_is", "the TimeGate's Location is not an address") }; }
       const vary = header(headers, "vary");
       return { ok: true, kind: "redirect", status: st, location: resolved,
                vary_accept_datetime: vary != null && /(^|,)\s*accept-datetime\s*(,|$)/i.test(vary),
@@ -209,7 +209,7 @@ export function readMementoAnswer({ url, status, headers } = {}) {
   }
   const t = readHttpDate(md);
   if (!t) return { ok: false, reason: "MEMENTO_BAD_DATETIME", detail: localize("capture-sources.memento.memento_datetime_stringify_is_not", "Memento-Datetime {stringify} is not an RFC 1123 date", { stringify: String(JSON.stringify(md)) }) };
-  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: "the memento's Link header names no rel=\"original\", so it does not say which resource it is a memento of" };
+  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: localize("capture-sources.memento.the_memento_s_link_header", "the memento's Link header names no rel=\"original\", so it does not say which resource it is a memento of") };
   const ct = header(headers, "content-type");
   return { ok: true, kind: "memento", status: Number.isFinite(st) ? st : null, memento_uri: typeof url === "string" ? url : null,
            memento_datetime: md, timestamp: t.timestamp, archived_at: t.archived_at,
@@ -248,7 +248,7 @@ export function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answ
     who: name,
     asserts: localize("capture-sources.memento.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: String(chosen.original), archived_at: String(chosen.archived_at), statuscode: String(chosen.statuscode) }),
     evidence: [
-      a ? `Memento-Datetime: ${a.memento_datetime}` : "no Memento-Datetime was recorded with this hop",
+      a ? `Memento-Datetime: ${a.memento_datetime}` : localize("capture-sources.memento.no_memento_datetime_was_recorded", "no Memento-Datetime was recorded with this hop"),
       `memento ${mementoUri}`,
       `rel="original" ${chosen.original}`,
       a && a.timegate ? `rel="timegate" ${a.timegate}` : null,

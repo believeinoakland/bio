@@ -242,7 +242,7 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
       localize("capture-sources.drive.export_format_format_mimetype", "export format {format} ({mimetype})", { format: String(drive.format), mimetype: String(drive.mimetype) }),
       `producer ${DRIVE_PRODUCER}`,
       localize("capture-sources.drive.the_export_address_was_composed", "the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in {address}, and no part of it was read from the request (D-112)", { address: String(drive.address) }),
-      localize("capture-sources.drive.the_export_endpoint_is_canonicalised", "the export endpoint is canonicalised to {EXPORT_HOST}{v1}", { EXPORT_HOST: String(EXPORT_HOST), v1: String(drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`) }),
+      localize("capture-sources.drive.the_export_endpoint_is_canonicalised", "the export endpoint is canonicalised to {EXPORT_HOST}{v1}", { EXPORT_HOST: String(EXPORT_HOST), v1: String(drive.host === EXPORT_HOST ? "" : localize("capture-sources.drive.though_the_link_named", ", though the link named {host}", { host: String(drive.host) })) }),
       resolved && resolved !== drive.exportAddress ? `redirected to ${resolved}` : null,
       /* BYTES-FIRST, and stated either way. COFF-9's discriminator reads the
          first-and-stored `mimetype` entry, so the flavour is CERTAIN from the
@@ -255,7 +255,7 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
         ? (confirmed
             ? localize("capture-sources.drive.confirmed_from_the_bytes_format", "confirmed from the bytes: {format} ({confidence}) — {signals}", { format: String(detected.format), confidence: String(detected.confidence), signals: String(signals) })
             : localize("capture-sources.drive.not_confirmed_from_the_bytes", "NOT confirmed from the bytes: {format} was asked for and the bytes detect as {format_2} ({confidence}) — {signals}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.", { format: String(drive.format), format_2: String(detected.format), confidence: String(detected.confidence), signals: String(signals) }))
-        : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed",
+        : localize("capture-sources.drive.the_bytes_were_not_sniffed", "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed"),
     ].filter(Boolean).join("; "),
     bound: false,
     unsigned_reason: word("drive.attestation_exists_google"),

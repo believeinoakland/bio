@@ -1,0 +1,42 @@
+# provenance (T51)
+
+**Status** · session_01RpNUgdyt5VkXqp8Ksfx3zR · depth 2 · COMPLETE · handled B0
+
+## J1 · REPORT
+
+Findings in other modules, seen while running `checks/run.mjs` on tranche T51 with my commit c9df90b413 (not fixed here: another module's to change, P9).
+
+- provenance-routes (src and tests; the module is not mine): 14 `plain` findings in `bio-plane/src/provenance-routes/index.mjs` (:56–59, :382, :385, :462, :479, :526, :745, :749, :970). Its test copies of its own `localize` sentence: `bio-plane/test/m/provenance-routes/audit.test.mjs` :78–81 [code], `chain.test.mjs:162` and `rebuild.test.mjs:223` (the sentence "these bytes were received for upload:" from `provenance-routes/index.mjs:178`), `marked.test.mjs` :27–28 [part].
+- strength: `bio-plane/test/m/strength/version.test.mjs:293` testcopy [code].
+- case-carriage: `bio-plane/src/case-carriage/index.mjs:1190` plain. case-checker: `bio-plane/src/case-checker/check.mjs:537` plain.
+- Inherited, not mine: the run's other arms (wizard-scripts, case-grammar, reading-guides and others) and coverage reds in other modules (affordances, installer, screens-*, and others). The `checks/run.mjs` total: 4115 failures, none in provenance.
+
+Provenance's own words findings are all fixed (T51-184): none remains in `checks/words.mjs` for `provenance`.
+
+## J2 · COMPLETE
+
+T51-184 (words) applied. Commit c9df90b413 on job/T51/provenance (tranche/T51 merged at f92ccc779d, plan rules unchanged).
+
+Entries applied:
+- The 9 `testcopy` findings in `build/plan/words-pass/provenance.md`: register-checks.test.mjs (pulled-knock fixture asserts and bytes, the `bytes` in the R42/R51 write test), seam.test.mjs (RECEIPT_MALFORMED and RECEIPT_NO_KEY translations now compared with `word("refusal.…")`), upload.test.mjs (R51/R63 `why` compared whole with `word("provenance.why.bytes_fetched_address", …)`, the authority basis with `word("capture.authority_basis", …)`, the fixture's asserts reworded).
+- The 1 `plain` finding: index.mjs capture-axis `why` is one `localize("provenance.index.capture_axis_authored", …)` with the same English.
+- The 2 `code` test copies (K3962): register-checks and upload fixtures, fixed in this module's own tests.
+- No sentence held in a test's text, no `rows.mjs` or `words-unreviewed.json` edited.
+
+Deferred: none.
+
+Found in another module (REPORT posted, not changed here): provenance-routes plain findings and test copies, plus strength, case-carriage, case-checker and the inherited reds. Details in the REPORT.
+
+Tests:
+- `node --test bio-plane/test/m/provenance/*.test.mjs`: 134 pass, 0 fail.
+- `node --test bio-plane/test/mk6-bundle-names-no-author.test.mjs bio-plane/test/publishingproject.mjs bio-plane/test/adoptable-reading.mjs`: 3 pass, 0 fail.
+
+Checks (from civicos-process):
+- `format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `architecture.mjs /home/user/bio provenance`: 27 product files, 0 failures.
+- `coverage.mjs /home/user/bio provenance`: 48 of 48 live ids named by a test, 0 failures.
+- `ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`: 5 files, 0 failures.
+- `run.mjs /home/user/bio`: format 0 and architecture 0; no words finding in provenance (the 4115 failures are all in other modules).
+- `setup-words/build.mjs --check`: the stale-rows note names `provenance.index.capture_axis_authored` (expected; BOB regenerates rows.mjs at the layer close). No refusal naming provenance.
+
+Size (session_01RpNUgdyt5VkXqp8Ksfx3zR): test runs 2, module lines 2819

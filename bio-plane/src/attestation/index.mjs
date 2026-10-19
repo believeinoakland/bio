@@ -33,7 +33,7 @@ import { provenanceOf, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
 import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { ATTEST_CHECKS } from "./checks.mjs";
 import { migrateAttestation, ATTESTATION_TABLES, ATTESTATION_EXEMPT } from "./schema.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { ATTEST_CHECKS } from "./checks.mjs";
 export { ATTESTATION_SCHEMA, ATTESTATION_TABLES, ATTESTATION_EXEMPT, migrateAttestation } from "./schema.mjs";
@@ -81,7 +81,7 @@ const actRefusal = (code, detail, extra) => {
 export async function attest(body, { head, put, fetch: fetchFn, holds, now = () => new Date().toISOString() } = {}) {
   const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
-    return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
+    return { ok: false, reason: "BAD_SHA", detail: localize("attestation.index.attest_takes_sha", "attest takes the sha256 of a capture already in the store") };
   /* D-530: A MISS ON THE WHOLE-HASH KEY IS NOT ABSENCE. A document over one part
      is stored ONLY as its parts, each under its own hash, and never under the
      whole's (D-469, D-476), so this head misses for every such capture - and the
@@ -105,28 +105,19 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
     try { holdsAnswer = typeof holds === "function" ? await holds(sha) : null; } catch { holdsAnswer = null; }
     if (holdsAnswer && holdsAnswer.acquired === true) {
       held = { form: "parts", on: "acquisition_receipt",
-               detail: "no object is stored under this hash, because the document was captured in parts "
-                     + "and only its parts are stored, each under its own hash. Your team's Civicsmith hashed "
-                     + "the whole document as it arrived and recorded that receipt, which is what this "
-                     + "attestation rests on." };
+               detail: localize("attestation.index.held_in_parts", "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. Your team's Civicsmith hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on.") };
     } else {
       /* DEC-49 REGION is-attest-parts */
       if (holdsAnswer && holdsAnswer.registered === true)
         return { ok: false, reason: "CAPTURE_HELD_IN_PARTS", code: "CAPTURE_HELD_IN_PARTS",
           check: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.check, translation: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation,
           sha256: sha,
-          detail: "the record's register names these bytes, but no object is stored under this hash and "
-                + "your team's Civicsmith holds no receipt of having acquired them, which is the shape of a document "
-                + "kept only in parts. A register row is written from what the promoting caller named, so "
-                + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." };
+          detail: localize("attestation.index.register_names_bytes", "the record's register names these bytes, but no object is stored under this hash and your team's Civicsmith holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing.") };
       /* END DEC-49 REGION is-attest-parts */
       return { ok: false, reason: "NO_SUCH_CAPTURE",
                detail: holdsAnswer
-                 ? "no object is stored under that hash, the register holds no row for it under a "
-                   + "record that exists, and your team's Civicsmith holds no receipt of having acquired it"
-                 : "no object is stored under that hash, and the store could not be asked whether "
-                   + "its register or an acquisition receipt names it, so this is not a finding that "
-                   + "the record lacks the bytes" };
+                 ? localize("attestation.index.no_such_capture", "no object is stored under that hash, the register holds no row for it under a record that exists, and your team's Civicsmith holds no receipt of having acquired it")
+                 : localize("attestation.index.no_such_capture_unasked", "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes") };
     }
   }
 
@@ -238,9 +229,7 @@ export function receiptStatement({ instance, retrieved, retrievalLocator, captur
 }
 
 const noKey = () => actRefusal("RECEIPT_NO_KEY",
-  "your team's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your team's "
-  + "Civicsmith sets one as a secret; "
-  + "nothing is claimed signed until then");
+  localize("attestation.index.no_key_detail", "your team's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your team's Civicsmith sets one as a secret; nothing is claimed signed until then"));
 
 /* ======================================================================= *
  * THE MODULE
@@ -287,7 +276,7 @@ export class Attestation {
   attestationsOf(captureSha) {
     const s = bareSha(captureSha);
     if (!s || !/^[0-9a-f]{64}$/.test(s))
-      return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
+      return { ok: false, reason: "BAD_SHA", detail: localize("attestation.index.takes_sha_of_capture", "attestationsOf takes the sha256 of a capture: 64 hex characters") };
     const own = this.#recordedFor(s);
     const out = [...own.attestations];
     const why = own.why ? [own.why] : [];
@@ -309,8 +298,7 @@ export class Attestation {
         }
         const path = [index, ...through];
         if (depth >= ARCHIVE_DEPTH_MAX) {
-          why.push(`the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX (${ARCHIVE_DEPTH_MAX}): the `
-                 + `archive ${archive} (through entries ${path.join(", ")}) was not read, so its attestations are not here`);
+          why.push(localize("attestation.index.nest_deeper", "the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX ({max}): the archive {archive} (through entries {path}) was not read, so its attestations are not here", { max: String(ARCHIVE_DEPTH_MAX), archive, path: path.join(", ") }));
           continue;
         }
         const above = this.#recordedFor(archive);
@@ -320,9 +308,7 @@ export class Attestation {
       }
     };
     climb(own.entries, [], 0);
-    const note = word("attestation.note.read_record_holds", { value: String(unpacked ? ". This capture was cut out of a captured archive: an attestation marked inherited is "
-                   + "the archive's, recorded for the archive named in `from`, and its token proves the archive existed "
-                   + "at its instant, and so every byte cut out of it" : "") });
+    const note = word("attestation.note.read_record_holds", { value: unpacked ? word("attestation.capture_cut_captured") : "" });
     return { ok: true, sha256: s, registered: own.registered, attestations: out,
              ...(why.length ? { undetermined: why.join("; ") } : {}), note };
   }
@@ -334,8 +320,7 @@ export class Attestation {
     const home = this.#provenance.homeOf(s);
     const none = (why) => ({ registered: !!home, entries: [], attestations: [], why });
     if (!home)
-      return none("no register row names this capture under a record that exists, so the record states no "
-                + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+      return none(word("attestation.register_row_names"));
     const PATH = "data/provenance.json";
     const f = this.#record.readFile(home.bundleId, PATH);
     if (!f) return none(word("attestation.home_carries", { bundle_id: String(home.bundleId), path: String(PATH) }));
@@ -415,7 +400,7 @@ export class Attestation {
     if (!s || !/^[0-9a-f]{64}$/.test(s) || typeof retrievalLocator !== "string" || !retrievalLocator
         || typeof retrieved !== "string" || !retrieved)
       return actRefusal("RECEIPT_MALFORMED",
-        "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched");
+        localize("attestation.index.receipt_names", "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched"));
     const statement = receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
     const signed = await this.#signWith(statement);
     if (!signed) return noKey();

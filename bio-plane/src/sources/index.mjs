@@ -801,6 +801,9 @@ export function sourcesOf(ctx, deps = {}) {
 /* The Durable Object routes this module answers (the control plane routes and stamps them, layer 11). `url` carries
    the stamps (`by`, `viewer`, and for `knockerconsent` the connecting `source` and `now`), read after the body is
    spread so a caller's own copy never wins (D-136). */
+export const SOURCES_OP_NAMES = Object.freeze(["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose",
+  "sourcekeyed", "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+
 export function sourcesOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = isObj(body) ? body : {};

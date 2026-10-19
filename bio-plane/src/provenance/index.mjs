@@ -1646,8 +1646,8 @@ class Provenance {
       author: who, observed_at: obs, recorded_at: recorded,
       axes: {
         capture: { grade: null, determined: false, undetermined_because: "CAPTURE_AXIS_AUTHORED",
-                   why: "the capture axis measures the act of reading a document in, and a member's own "
-                      + "words were not read in from anywhere, so it earns no letter here" },
+                   why: localize("provenance.index.capture_axis_authored",
+                     "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here") },
         connection: { grade: null, determined: false,
                       why: word("provenance.why.reader_ran_words") },
         /* MK-2 / IC-142: the letter is the registry's own constant, so this answer and a leg's refusal cannot
