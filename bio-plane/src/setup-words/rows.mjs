@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15361 design words, 933 protected; SHA-256
-   49abc41b6601ac73b3dd3dd22232f314a77ea103b04e2d31ec720f62d973a829) followed by 6489 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15373 design words, 933 protected; SHA-256
+   29849c5fc11f57d78da9e80aef97258d7d07c85d55c89356c99a9b917f6a5190) followed by 6489 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "49abc41b66";
+export const WORDS_COMMIT = "29849c5fc1";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8310,6 +8310,18 @@ export const WORD_ROWS = Object.freeze([
   ["local-facts.rules.effective_from_is_a_day","effective_from is the day the rule takes effect, as YYYY-MM-DD","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["local-facts.rules.the_rule_is_state_only","the rule is {state}; only a confirmed rule the team still applies is offered.","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
   ["local-facts.rules.the_team_holds_no_rule","the team holds no rule of its own by that id.","DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.",null,false,"design"],
+  ["screen.home.rd.document","document","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular",null,false,"design"],
+  ["screen.home.rd.documents","documents","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural",null,false,"design"],
+  ["screen.home.rd.case","case","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular",null,false,"design"],
+  ["screen.home.rd.cases","cases","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural",null,false,"design"],
+  ["screen.home.rd.followed.one","person followed","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular: a person or office the team follows",null,false,"design"],
+  ["screen.home.rd.followed.other","people followed","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural: people and offices the team follows",null,false,"design"],
+  ["screen.home.rd.clock","clock running","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: singular: a deadline clock the team is running on an action",null,false,"design"],
+  ["screen.home.rd.clocks","clocks running","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: plural",null,false,"design"],
+  ["screen.home.rd.security","security level","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the label after the level word, which is one of screen.home.rd.level.*",null,false,"design"],
+  ["screen.home.rd.level.ordinary","ordinary","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, the word of screen.security.level.ordinary in lower case",null,false,"design"],
+  ["screen.home.rd.level.raised","raised","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, as screen.security.level.raised",null,false,"design"],
+  ["screen.home.rd.level.high","high","DEC-354: B360, home's readings (screens-daily R64; DEC-218, DEC-219): a reading's label after its number, as the other screen.home.rd.* rows; a reading at zero is never shown; translator: the security level as a reading, as screen.security.level.high",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],

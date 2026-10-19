@@ -677,280 +677,280 @@
       "en": "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1035
+      "line": 1061
     },
     {
       "id": "action-clocks.index.a_deadline_is_put_on_2",
       "en": "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1113
+      "line": 1139
     },
     {
       "id": "action-clocks.index.a_reminder_is_a_member",
       "en": "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 841
+      "line": 867
     },
     {
       "id": "action-clocks.index.action_id",
       "en": "Action: {id}",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1245
+      "line": 1271
     },
     {
       "id": "action-clocks.index.another_member_is_writing",
       "en": "another member is writing to this action right now. Nothing was written; try again shortly.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1178
+      "line": 1204
     },
     {
       "id": "action-clocks.index.basis_kind_is_one_of",
       "en": "basis_kind is one of {BASIS_KINDS}: every deadline names its basis. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1127
+      "line": 1153
     },
     {
       "id": "action-clocks.index.because_why",
       "en": ", because {why}",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1424
+      "line": 1450
     },
     {
       "id": "action-clocks.index.before_is_a_date",
       "en": "before= is a date, YYYY-MM-DD",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 432
+      "line": 434
     },
     {
       "id": "action-clocks.index.by_who",
       "en": " by {who}",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1423
+      "line": 1449
     },
     {
       "id": "action-clocks.index.computed_fact",
       "en": "computed fact",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1349
+      "line": 1375
     },
     {
       "id": "action-clocks.index.date_is_not_a_calendar_day",
       "en": "date '{date}' is not a calendar day written YYYY-MM-DD. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1059
+      "line": 1085
     },
     {
       "id": "action-clocks.index.deadline",
       "en": "Deadline",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1245
+      "line": 1271
     },
     {
       "id": "action-clocks.index.due_at_is_a_time_on",
       "en": "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1146
+      "line": 1172
     },
     {
       "id": "action-clocks.index.due_zone_is_a_time_zone",
       "en": "due_zone is a time zone's name (Area/Location). Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1150
+      "line": 1176
     },
     {
       "id": "action-clocks.index.due_zone_is_stated_with_a_due_at",
       "en": "due_zone is stated with a due_at. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1154
+      "line": 1180
     },
     {
       "id": "action-clocks.index.entry_names_no_clock_entry",
       "en": "entry {entry} names no clock entry of this action with a YYYY-MM-DD date: a reminder is set on a dated deadline. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 873
+      "line": 899
     },
     {
       "id": "action-clocks.index.field_belongs_to_another_basis_kind",
       "en": "{field} belongs to another basis kind than '{kind}'. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1142
+      "line": 1168
     },
     {
       "id": "action-clocks.index.field_is_at_most",
       "en": "{field} is at most {max} characters. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1121
+      "line": 1147
     },
     {
       "id": "action-clocks.index.field_is_required",
       "en": "{field} is required: 1 to {max} characters. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1120
+      "line": 1146
     },
     {
       "id": "action-clocks.index.from_and_to_are_calendar_days",
       "en": "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 520
+      "line": 522
     },
     {
       "id": "action-clocks.index.from_names_no_reminder_of_yours",
       "en": "from {from} names no reminder of yours on this entry: you change or remove only a reminder you set. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 886
+      "line": 912
     },
     {
       "id": "action-clocks.index.held_in_place",
       "en": ", held in {place}",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1426
+      "line": 1452
     },
     {
       "id": "action-clocks.index.it_is_undetermined",
       "en": "it is undetermined",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1050
+      "line": 1076
     },
     {
       "id": "action-clocks.index.lead_lead",
       "en": " (lead {lead})",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1424
+      "line": 1450
     },
     {
       "id": "action-clocks.index.name_one_to_max_actions",
       "en": "name one to {max} actions (actions=<id>,<id>). Nothing was read.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1232
+      "line": 1258
     },
     {
       "id": "action-clocks.index.no_active_profile_states",
       "en": "no active profile states a deadline '{rule}' for an action of kind '{kind}'",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 696
+      "line": 722
     },
     {
       "id": "action-clocks.index.no_reminder_of_yours_on",
       "en": "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 998
+      "line": 1024
     },
     {
       "id": "action-clocks.index.no_rule_was_named",
       "en": "no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '{kind}'",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 697
+      "line": 723
     },
     {
       "id": "action-clocks.index.no_standing_proposal_key",
       "en": "no standing proposal '{key}' on this action: name the key op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1045
+      "line": 1071
     },
     {
       "id": "action-clocks.index.none",
       "en": "(none)",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 873
+      "line": 899
     },
     {
       "id": "action-clocks.index.not_stated",
       "en": ": not stated",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1427
+      "line": 1453
     },
     {
       "id": "action-clocks.index.on_day_is_not_a_date",
       "en": "on '{day}' is not a date written YYYY-MM-DD. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 880
+      "line": 906
     },
     {
       "id": "action-clocks.index.on_day_is_not_a_date_after_today",
       "en": "on '{day}' is not a date written YYYY-MM-DD after today ({today}): a further reminder is for a later day. Nothing was answered.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1002
+      "line": 1028
     },
     {
       "id": "action-clocks.index.on_is_the_day_to",
       "en": "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder to remove as from=. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 878
+      "line": 904
     },
     {
       "id": "action-clocks.index.one_action_at_a_time",
       "en": "one action at a time: pass target=<action id>",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 685
+      "line": 711
     },
     {
       "id": "action-clocks.index.owed_by_is_one_of",
       "en": "owed_by is one of {CLOCK_OWED_BY}. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1129
+      "line": 1155
     },
     {
       "id": "action-clocks.index.owed_by_value_is_one_of",
       "en": "owed_by '{value}' is one of {CLOCK_OWED_BY}. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1065
+      "line": 1091
     },
     {
       "id": "action-clocks.index.standard_id_state",
       "en": " (standard {id}, {state})",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1422
+      "line": 1448
     },
     {
       "id": "action-clocks.index.the_other_side",
       "en": "the other side",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1426
+      "line": 1452
     },
     {
       "id": "action-clocks.index.the_proposed_deadline_has_no_date",
       "en": "the proposed deadline has no date: {why}. A member states such an entry by their own revision of the action, with its basis. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1050
+      "line": 1076
     },
     {
       "id": "action-clocks.index.the_rule_is_not_held",
@@ -964,49 +964,49 @@
       "en": "this action has no readable bundle.md. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1182
+      "line": 1208
     },
     {
       "id": "action-clocks.index.this_action_holds_max_reminders_answered",
       "en": "this action holds {max} reminders, the most it holds. Nothing was answered.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1009
+      "line": 1035
     },
     {
       "id": "action-clocks.index.this_action_holds_max_reminders_changed",
       "en": "this action holds {max} reminders, the most it holds. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 891
+      "line": 917
     },
     {
       "id": "action-clocks.index.this_actions_clock_block_is_not",
       "en": "this action's clock block is not in a shape this grammar can extend in place; appending never rewrites the rest of the document, so nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1191
+      "line": 1217
     },
     {
       "id": "action-clocks.index.this_call_carries_nobody",
       "en": "this call carries nobody: the proposer is stamped from the credential that asked.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 684
+      "line": 710
     },
     {
       "id": "action-clocks.index.this_clock_entry_is_proposed",
       "en": "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) or states a clock entry by a revision of the action.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 731
+      "line": 757
     },
     {
       "id": "action-clocks.index.you_already_hold_a_reminder",
       "en": "you already hold a reminder on this entry for {day}. Nothing was changed.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 888
+      "line": 914
     },
     {
       "id": "action-grammar.checks.a_records_law_in_the",
