@@ -46,10 +46,12 @@ import { biasOf } from "../bias/index.mjs";
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
 import { acceptedWorkOf, ACCEPTED_WORK_CHECKS } from "../accepted-work/index.mjs";
+/* the version grammar is `basis-version-grammar`'s (T51, CR-9; K624, K3946): imported, and re-exported whole below so
+   every reader of this module's names keeps them (K3268) */
 import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
-         isImportedRef, isDerivedKindRef } from "./grammar.mjs";
-import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
-         versionNeedsReason, VERSION_NAME_RE, isBoilerplate, SUFFICIENCY_UNCLAIMED } from "./checks.mjs";
+         isImportedRef, isDerivedKindRef, VERSION_KIND_CHECKS, VERSION_MACHINE, versionNeedsReason,
+         VERSION_NAME_RE } from "../basis-version-grammar/index.mjs";
+import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
          appendConclusionEntry } from "./text.mjs";
 import { BASIS_VERSIONS_TABLES, migrateBasisVersions } from "./schema.mjs";
@@ -58,7 +60,9 @@ import { VERSION_REASON_MAX, drawsOn, EXTENT_FIELDS, LEG_COPY_KEYS } from "./sha
 
 export { READING_MIN, CONCLUSION_BIAS_EFFECTS, VERSION_REASON_MAX };
 
-export * from "./grammar.mjs";
+export * from "../basis-version-grammar/index.mjs";
+export { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, BOILERPLATE_FORMS, isBoilerplate }
+  from "./checks.mjs";
 export { BASIS_VERSIONS_SCHEMA, BASIS_VERSIONS_TABLES } from "./schema.mjs";
 
 /** R9: versions per read (default and ceiling), and legs per version returned. */
