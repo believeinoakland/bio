@@ -68,3 +68,10 @@ R81, now, in this job: the compare tab ("Beside the version your question cites"
 R82 (the original-file card) is NOT yours now: it waits on extraction's `reading` gaining `bytes` (CR-18) and the design's kind words (asked, B386), and is CR-19 in the completion round. Keep your control (no card).
 The connection axis drawing `screen.question.compare.axis` (4a) is as DEC-366 draws it when no date says when a leg was cited: accepted, nothing owed.
 Tests by key, never text. Post COMPLETE.
+
+## B12 · CHANGE
+
+CHANGE (K4105): you are merged (J5, J6; 229 pass). journey-check's local arm (R1 (a), at L11's close on the tranche with every artifact regenerated) fails on two of your screens; both are yours to diagnose and fix with a test, merging tranche/T51 first:
+(1) `document`: "the screen does not draw the word screen.document.passages.head on /app/document/INFO-2026-0002-2026-118" (and INFO-2026-0004-2026-131), at journey-check `investigation.mjs`:178 (`requireWord(p, "screen.document.passages.head", { within: "#cs-main" })`), step "open the document, see its words, and Find-in a passage". `document.mjs`:855 lists the key among its words but the page as walked does not draw the passages heading; likely since R80's "Read it" tabs. Draw it where the design draws it (the passages a question cites / Find-in), or, if the design no longer draws that heading there, REPORT with the drawing's id and journey-check's step changes instead.
+(2) `dash-project`, opened from Home's door: draws "Nothing is here" (R22, R79) on a project the walk has just created and worked. Find why the dashboard reads nothing for it (a read, a parameter, the path's project id) and fix it.
+Run your suite; post COMPLETE.
