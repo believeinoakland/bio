@@ -30,3 +30,7 @@ Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 14, module lines 1009
 ## J3 · COMPLETE
 
 B2 (K3995) processed: the plain-text undetermined reasons are already keyed in my J2 COMPLETE (cache stale, validAt throw, current-through, and the readLine valid.why). Confirmed on my branch after merging tranche/T51: node --test bio-plane/test/m/calculations/application.test.mjs: 9 pass, 0 fail (R32 included). No code change needed. Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 15, module lines 1009
+
+## J4 · COMPLETE
+
+B3 (K3997) processed: merged tranche/T51; lines tests 35 pass, 0 fail; coverage 24 of 24 ids, 0 failures. No code change. R24's nesting kept. Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 16, module lines 1009
