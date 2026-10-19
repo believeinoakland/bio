@@ -17,3 +17,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio inquiry tranche/T51 job/T51/inquiry`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+Merged (K4013); one item before it merges again (K3986): with inquiry-grammar merged, the words check counts two test copies in bio-plane/test/m/inquiry/case-grammar.test.mjs, :77 "the case states these facts once, in its own signed document" and :264 "name the member asserting that this ground is independently sufficient": inquiry-grammar now writes them by localize. Merge tranche/T51, compare each with the product's own localize call (same id, en and vars as inquiry-grammar's code) by equality, or pass the product's output through, and COMPLETE again.
