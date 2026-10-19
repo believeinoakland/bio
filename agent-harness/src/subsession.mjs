@@ -360,7 +360,7 @@ export function checkReport(report) {
   const unknown = Object.keys(report).filter((k) => !(k in REPORT_KEYS));
   if (unknown.length)
     return refusal("REPORT_UNKNOWN_FIELD",
-      localize("agent-harness.subsession.a_report_carries_exactly_keys", "a REPORT carries exactly {keys} — {unknown} {v1}. §14b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.", { keys: String(Object.keys(REPORT_KEYS).join(", ")), unknown: String(unknown.join(", ")), v1: String(unknown.length === 1 ? "is not one of them" : "are not among them") }),
+      localize("agent-harness.subsession.a_report_carries_exactly_keys", "a REPORT carries exactly {keys} — {unknown} {v1}. §14b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.", { keys: String(Object.keys(REPORT_KEYS).join(", ")), unknown: String(unknown.join(", ")), v1: unknown.length === 1 ? localize("agent-harness.subsession.is_not_one_of_them", "is not one of them") : localize("agent-harness.subsession.are_not_among_them", "are not among them") }),
       { fields: unknown });
 
   const missing = Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k]
@@ -546,7 +546,7 @@ export function documentHoldings(resolved) {
     const held = chain ? Number(chain.total) || 0 : 0;
     if (!key || held < 1) {
       unchained.push({ citation: r.citation ?? null, address: r.address ?? null,
-                       reason: r.reason ?? "the record holds no captured version at this address" });
+                       reason: r.reason ?? localize("agent-harness.subsession.the_record_holds_no_captured", "the record holds no captured version at this address") });
       continue;
     }
     const versions = Array.isArray(chain.versions) ? chain.versions : [];
@@ -588,8 +588,7 @@ export function documentHoldings(resolved) {
 export function holdingsNote(h) {
   if (!h) return "";
   let s = localize("agent-harness.subsession.documents_document_s_held_across", "{documents} document(s) held across {citations} citation(s), each counted ONCE with its versions ({versions_cited} of {versions_held} held version(s) cited, read through op=versionchain)", { documents: String(h.documents), citations: String(h.citations), versions_cited: String(h.versions_cited), versions_held: String(h.versions_held) });
-  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
-  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED — the plane refused `
-                         + `a read, so they are counted as neither a document nor an item`;
+  if (h.unchained) s += localize("agent-harness.subsession.unchained_cited_items_each_counted", "; {unchained} cited item(s) in no version chain, each counted as itself", { unchained: String(h.unchained) });
+  if (h.undetermined) s += localize("agent-harness.subsession.undetermined_citations_the_plane_refused", "; {undetermined} citation(s) whose document is UNDETERMINED — the plane refused a read, so they are counted as neither a document nor an item", { undetermined: String(h.undetermined) });
   return s;
 }
