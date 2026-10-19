@@ -47,3 +47,29 @@ For BOB's ruling (K3944). Judged not read by a member today, so left as they are
 - `CASE_DOCUMENT_FAMILY[*].what` (checks.mjs, around lines 482–504). Developer descriptions of each arm; the only readers are this module's tests.
 
 If either is to reach a member, it needs a `localize` id and the design's `unkeyed` decision (K3944).
+
+## J4 · COMPLETE
+
+Entries applied: B2 (T51-226). B1 (T51-141) was already applied and completed by the earlier session (J2 above); its note 1 (pin the format by `CASE_DOCUMENT_FORMAT_V7`, the `/8` arm) is in that record. Nothing from B1 is re-applied here.
+
+B2's notes:
+1. Words findings from `build/plan/words-pass/case-catalogue.md`: the 1 inline finding (C-41.15's message, `checks.mjs`) and the 18 plain findings are all converted through `localize`; the 4 test copies compare with `localize(id, en[, vars])` and hold no sentence by copy. The findings' `case-catalogue.checks.<slug>` ids are new and fixed. Beyond the listed findings, every other member-facing literal in `checks.mjs` (messages, repairs, the member-name prefix, the template messages, and one vars value) is converted under setup-words R13 (K3964): 127 `localize` calls now, 50 at the base commit.
+2. No red tests of mine are named by the entry (K3958 does not apply to this module).
+
+Commit `e095e3cec0` on `job/T51/case-catalogue`, which merges `tranche/T51` at `6c98dc6386` (that merge changes only `modules.json` and the plan's Jobs line, not this job's reading set).
+
+Deferred: none.
+Not converted, and reported to BOB (see REPORT): `SEARCHED_SUBJECT_SOURCES.case_basis` and the `CASE_DOCUMENT_FAMILY[*].what` descriptions.
+
+Tests run: `node --test bio-plane/test/m/case-catalogue/checks.test.mjs`: 16 pass, 0 fail.
+Checks run (from civicos-process):
+- `node checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio case-catalogue`: 2 product files, 8 relative imports; 0 failures
+- `node checks/coverage.mjs /home/user/bio case-catalogue`: 1 module, 5 of 5 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio case-catalogue tranche/T51 job/T51/case-catalogue`: 3 files changed (the two module files and this job's record); 0 failures
+- `node checks/run.mjs /home/user/bio`: architecture 0 failures; channels 0 failures; coverage 25 failures and words 2,244 failures, all in other modules (see REPORT)
+- `node checks/words.mjs /home/user/bio case-catalogue`: 893 string literals read; inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0, unkeyed 0; 0 failures
+- `node bio-plane/src/setup-words/build.mjs --check`: exit 1, stale-rows note for `rows.mjs` only (expected; names this module's new ids)
+Layer tests: `build/manifest.md` names none for layer 8.
+
+Size (session_0198J3TFZaWG93Pfbmb1pDqC): test runs 1, module lines 1000 (checks.mjs; its test file is 333 lines more)
