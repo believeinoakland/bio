@@ -5661,3 +5661,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: `installer.team.unrecorded.how.finished` for a finished copy (what stays refused; only the hosting account's holder can set it; no instruction that loops back); `screen.install.stopped.plan.done` "Check again"; `installer.fleet.why.pullfailed` for an image placed but not started. journey-check's 27 step labels, state names and run diagnostics filed unkeyed (ADMIN_READING is not counted by the check, so it needs no entry, DEC-351).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-366 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B383, L11's last COMPLETEs; K4100)
+for: design
+question: Rows and drawing questions L11's jobs left at their last COMPLETE (installer-steps, installer, screens-daily, screens-inquiry).
+why it is Bob's: it is not (P17): the design's words, drawings and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: installer-steps' reads entry carries `installer.fleet.why.pullfailed` (79 keys, from its job branch). installer: `installer.address.offer` for the free prefix offered before anything is created; `installer.install.stopped.foreign` for an install that continues an unfinished team's Civicsmith; `installer.team.unrecorded.how.finished` says "a team's Civicsmith", not "a copy". screens-daily: `act.queuemute.here.queue_project` is retired (no muted entry is a whole project). screens-inquiry: say054's {source} is the newest document cited in the question, on that axis, after the edition published (the question's citations with their dates against the edition's published date); with no such read, the axis draws `screen.question.compare.axis`; `document` draws two tabs only, "By page" and "Beside the version your question cites" (`document.read.tab.compare`, reading `versioncompare`), and the original-file card (`document.read.original.card`, {kind}, {size}); no Whole text or Slides tab; on `NOTICE_SIGNATURE_REFUSED` the offer is a reference to `account`, where a member registers their signing key (no registry row on `project`). A new control-plane detail (`draft.mjs`, beside ASSISTANT_DRAFT_UNAVAILABLE) is triaged as wire text in the reads lists.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads.src.mjs`, `screens/words-reads.json`.
+owed: nothing.
