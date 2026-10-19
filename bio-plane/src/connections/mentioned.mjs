@@ -14,7 +14,7 @@ import { localize, word } from "../setup-words/index.mjs";
 /** R62: the owner, its one kind, the members' word (K1486) and its class. */
 export const MENTIONED_OWNER = "connections";
 export const MENTIONED_KIND = "mentioned_together";
-export const MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: "mentioned together", class: "derived" })]);
+export const MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: localize("connections.mentioned.kind_word", "mentioned together"), class: "derived" })]);
 /** R62 (N560; K1563 (2); connection-grammar R9): what this owner declares to its conformance battery. Co-mention
  *  states no dates (R63), so R6's `at` rule cannot be shown and is answered inapplicable. It is not group-wide: a
  *  co-mention with a document the viewer may not see is fenced (R33), so R7's sight check runs whole. */

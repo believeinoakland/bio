@@ -13,6 +13,7 @@ import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, M
          CONNECTIONS_TABLES, THEME_ID_RE, THEME_REF_RE, themeLegFindings, mentionedMethod, registeredNeighbours }
   from "../../../src/connections/index.mjs";
 import { MENTIONED_UNDATED } from "../../../src/connections/mentioned.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const E = "ENT-2026-0001", F = "ENT-2026-0002";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", H = "INFO-2026-0050-h";
@@ -37,10 +38,12 @@ const ids = (r) => r.items.map((i) => i.id).sort();
 test("R62, R69: registered once at load through connection-grammar.registerOwner, owner connections, the derived kind mentioned_together and (R69) the evidentiary kind step_source, each with its members' word, and its neighbours read", () => {
   assert.deepEqual(MENTIONED_REGISTRATION, { ok: true, owner: "connections" });
   const held = defaultRegistry.owners().find((o) => o.owner === MENTIONED_OWNER);
-  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" },
-                                                         { kind: "step_source", word: "stated in a source", class: "evidentiary" }] });
-  assert.deepEqual(defaultRegistry.kindOf("step_source"), { owner: "connections", word: "stated in a source", class: "evidentiary" });
-  assert.deepEqual(defaultRegistry.kindOf(MENTIONED_KIND), { owner: "connections", word: "mentioned together", class: "derived" });
+  const mentionedWord = localize("connections.mentioned.kind_word", "mentioned together");
+  const stepWord = localize("connections.stepsources.kind_word", "stated in a source");
+  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: mentionedWord, class: "derived" },
+                                                         { kind: "step_source", word: stepWord, class: "evidentiary" }] });
+  assert.deepEqual(defaultRegistry.kindOf("step_source"), { owner: "connections", word: stepWord, class: "evidentiary" });
+  assert.deepEqual(defaultRegistry.kindOf(MENTIONED_KIND), { owner: "connections", word: mentionedWord, class: "derived" });
   assert.equal(defaultRegistry.registerOwner({ owner: "connections", kinds: [...MENTIONED_KINDS], neighbours: registeredNeighbours }).refused,
                "OWNER_DUPLICATE", "once");
   /* Through the registry: the read reaches this module by the caller's host (R19 passes it through), conforming. */
