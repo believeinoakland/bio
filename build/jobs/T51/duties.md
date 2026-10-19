@@ -31,3 +31,37 @@ Tests: `node --test bio-plane/test/m/duties/*.test.mjs`: 74 pass, 0 fail.
 Checks (process repo, product `/home/user/bio`): format 0 failures (174 modules); architecture `duties` 0 failures; coverage `duties` 33 of 33 live ids named by a test, 0 failures; ownership `tranche/T51` `job/T51/duties` 0 failures; `run.mjs` exits 1 on other modules only (see REPORT).
 
 Size (session_01Ws4NENFkwXyb87BcFTppXf): test runs 2, module lines 2242.
+
+## J3 · COMPLETE
+
+T51-194 · duties (words, the pass's 15 findings) applied; no requirement changed; commit 3f3ec4a099.
+
+Applied, by the words rule (K3949, K3957, K3962):
+- `index.mjs`: 12 inline sentences and 15 plain findings through `localize('duties.index.<slug>', en, vars)`, every value a `String(...)`, so the text is what it was. Five that equal a row read it by key: the precision-held, stated-review-date, read-names-member and undetermined-date-asked reasons, as `word(...)`.
+- `vocab.mjs`: the two connection words `is owed to` and `holds the power` are copies of rows. It stays a leaf (inquiry-grammar imports it, K1799), so it holds `wordKey`; `index.mjs` resolves them with `word` and exports the resolved `CONNECTION_KINDS`. Ruling K3990.
+- Tests: `t46-words` drops T45's three old sentences and the copied refusal sentence (its translation is pinned by the existing hash of the kept rows); `acts` uses a stated reason of its own in place of the copied one; `occurrences` compares the trigger-source error with `localize`.
+- Keyed civil-time reasons (CR-1): `t48-reasons` and `occurrences` (R10, R33) now assert `why.key` and read text through `reasonText`. These were the four reds named by R18 and R33; they are green now.
+
+Deferred: none.
+
+Found in other modules (not changed here, P9):
+- notice-producers `test/m/notice-producers/duties.test.mjs`:256, 410, 423, 427 copy sentences of civil-time and of its own (`possibly overdue: undetermined, because ...`, `What starts the clock ...`). The full run lists them as testcopy; they need the same key treatment in that module's job.
+- Other modules' hand-lists of duties' ops (affordances `t33.test.mjs`:63, answers `scope.test.mjs`:23, op-grades `t45.test.mjs`:68) are the handlist arm's failures. Those modules own the lists.
+- setup-words `rows.mjs` is stale for the new `duties.index.*` ids: expected; BOB regenerates it at the layer close.
+
+Tests and checks:
+- `node --test bio-plane/test/m/duties/*.test.mjs`: 74 pass, 0 fail.
+- `checks/words.mjs /home/user/bio duties`: 0 failures (inline 0, plain 0, testcopy 0).
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio duties`: 0 failures.
+- `checks/coverage.mjs /home/user/bio duties`: 33 of 33 live ids named by a test.
+- `checks/ownership.mjs /home/user/bio duties tranche/T51 job/T51/duties`: 0 failures.
+- `setup-words/build.mjs --check`: the stale-rows note only, naming duties ids (expected); no refusal.
+- `checks/run.mjs /home/user/bio`: exits 1 on other modules; duties has no failure in it.
+
+Size (session_015fij5CNkGX79gtEuBYtYeY): test runs 3, module lines 2208.
+
+Ruling for BOB to record (this job's ownership does not include build/rulings.md):
+- vocab.mjs stays a leaf (inquiry-grammar imports it, K1799), so the two connection words it holds are `wordKey`s, resolved in index.mjs with `word` (duties.word.owed, duties.word.holds_power); keyed civil-time reasons are relayed as {key, vars}, and duties' tests assert the key (reasonText for text). Proposed as K3990.
+
+Commits on job/T51/duties: 3f3ec4a099 (the words pass), then the revert of build/rulings.md to tranche/T51's (ownership).
