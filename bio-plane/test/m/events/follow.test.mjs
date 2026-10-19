@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, testView, sha, MEMBER } from "./fixture.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { parse as legistarParse } from "../../../../legistar-reader/index.mjs";
 import { courtlistenerDocket } from "../../../../court-doctypes/index.mjs";
 
@@ -48,7 +49,7 @@ test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGIS
   const mine = rows.filter((e) => e.EventBodyId === 197);
   assert.equal(r.written.length, mine.length, "every meeting of the followed body, and no other");
   assert.equal(r.outside + r.unresolved.length, rows.length - mine.length);
-  assert.ok(r.unresolved.every((u) => Number.isInteger(u.row) && /BodyId/.test(u.why)));
+  assert.ok(r.unresolved.every((u) => Number.isInteger(u.row) && u.why === word("events.why.bodyid_resolves_registered")));
   const one = w.ev.readEvent({ eventId: r.written[0].event_id, viewer: MEMBER }).event;
   assert.equal(one.by, "class:daemon");
   assert.ok(one.attestations.every((a) => a.capture_sha === ev && a.by === "class:daemon" && Number.isInteger(a.source_row)));
@@ -160,7 +161,7 @@ test("R24 a posting time is a publication event within its meeting, when an uppe
   /* an earlier value observed moves it earlier */
   w.ev.followedImport({ captureSha: legistar(w, "9451-c", { body: { ...base, EventAgendaLastPublishedUTC: "2025-12-29T08:00:00.000" }, locator: loc }), body, period: ALL });
   assert.equal(pub().when.end, "2025-12-29T08:00:01Z");
-  assert.ok(pub().attestations.every((a) => /an upper bound/.test(w.one(`SELECT method FROM dated_facts WHERE dated_fact_id=?`, a.dated_fact_id).method)));
+  assert.ok(pub().attestations.every((a) => ["Agenda", "Minutes"].map((v1) => localize("events.follow.legistar_reader_event_v1_lastpublishedutc", "legistar-reader: Event{v1}LastPublishedUTC, the last publication, an upper bound", { v1 })).includes(w.one(`SELECT method FROM dated_facts WHERE dated_fact_id=?`, a.dated_fact_id).method)));
 });
 
 test("R25 an import is idempotent by source id: a held row changes only with a changed source value, the change recorded and R15/R16 told; a new row is added", async () => {

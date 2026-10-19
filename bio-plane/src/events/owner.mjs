@@ -9,18 +9,42 @@
 import { validAt } from "../civil-time/index.mjs";
 import { BOUNDS, LOWEST_GRADE, hubBoundOf } from "../connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
-import { word, localize } from "../setup-words/index.mjs";
+import { word, hasWord, localize } from "../setup-words/index.mjs";
 
-const ROLE_WORDS = { actor: "acted in", organizer: "organised", mover: "moved", seconder: "seconded", voted: "voted in",
-  present: word("events.present"), speaker: "spoke at", sender: "sent", recipient: "was sent", copied: word("events.copied"),
-  signatory: "signed", decider: "decided", author: "wrote", implementer: "carried out", party: word("events.party"),
-  subject: word("events.subject.subject") };
-const LINK_WORDS = { authorises: "authorises", answers: "answers", amends: "amends", reverses: "reverses",
-  stated_cause: word("events.stated_cause"), within: word("events.within"), precedes: word("events.precedes") };
+/* R54 (2): a kind's word is the design's by key, `label.connectionkinds.<kind>` (DEC-253) where the list holds one; else this
+   module's own row of the list. It holds no English of its own. */
+const kindWord = (kind, own) => (hasWord(`label.connectionkinds.${kind}`) ? word(`label.connectionkinds.${kind}`) : own);
+const ROLE_WORDS = {
+  actor: kindWord("event_actor", word("events.actor")),
+  organizer: kindWord("event_organizer", word("events.organizer")),
+  mover: kindWord("event_mover", word("events.mover")),
+  seconder: kindWord("event_seconder", word("events.seconder")),
+  voted: kindWord("event_voted", word("events.voted")),
+  present: kindWord("event_present", word("events.present")),
+  speaker: kindWord("event_speaker", word("events.speaker")),
+  sender: kindWord("event_sender", word("events.sender")),
+  recipient: kindWord("event_recipient", word("events.recipient")),
+  copied: kindWord("event_copied", word("events.copied")),
+  signatory: kindWord("event_signatory", word("events.signatory")),
+  decider: kindWord("event_decider", word("events.decider")),
+  author: kindWord("event_author", word("events.author")),
+  implementer: kindWord("event_implementer", word("events.implementer")),
+  party: kindWord("event_party", word("events.party")),
+  subject: kindWord("event_subject", word("events.subject.subject")),
+};
+const LINK_WORDS = {
+  authorises: kindWord("event_authorises", word("events.authorises")),
+  answers: kindWord("event_answers", word("events.answers")),
+  amends: kindWord("event_amends", word("events.amends")),
+  reverses: kindWord("event_reverses", word("events.reverses")),
+  stated_cause: kindWord("event_stated_cause", word("events.stated_cause")),
+  within: kindWord("event_within", word("events.within")),
+  precedes: kindWord("event_precedes", word("events.precedes")),
+};
 
 export const OWNER_KINDS = Object.freeze([
   ...Object.entries(ROLE_WORDS).map(([role, text]) => ({ kind: `event_${role}`, word: text, class: "evidentiary" })),
-  { kind: "event_concerns", word: "concerns", class: "evidentiary" },
+  { kind: "event_concerns", word: kindWord("event_concerns", word("events.concerns")), class: "evidentiary" },
   ...Object.entries(LINK_WORDS).map(([k, text]) => ({ kind: `event_${k}`, word: text, class: "evidentiary" })),
 ]);
 const ALL = OWNER_KINDS.map((k) => k.kind);
