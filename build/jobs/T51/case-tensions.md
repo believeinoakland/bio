@@ -34,3 +34,14 @@ Two test assertions in bio-plane/test/m/case-tensions/relation.test.mjs cannot b
 1. R1, undetermined reason: NO_PROVIDER, "no module has registered the publication provider, so this module reads no case". It is localize text (case-tensions.index.no_module_has_registered) with no words.json row.
 2. R2/R3 flag doctrine: "a revision flag is SET AND NEVER CLEARED ...", localize text (case-tensions.index.a_revision_flag_is_set), no words.json row.
 A test may not copy the en of a localize call (the testcopy check, tag code), so the wording check needs a words.json row for each id. That file is the design stream's. Bob, please decide: add rows for the two ids (then this job, or a later one, compares them with word()), or accept presence-only here. The rows are not added by this job.
+
+## J2 · COMPLETE
+
+T51-229 (case-tensions, words) is done on job/T51/case-tensions at b991d71be9.
+- Words check on case-tensions: 0 failures (was 5). Module tests 23/23. format, architecture, coverage (11 of 11), ownership: 0 failures.
+- Product: every member-read sentence in index.mjs goes through localize('case-tensions.index.<slug>'), including the ones the check does not count (K3964): NO_PROVIDER, the no-level template, the reason details, the name-without-handle detail.
+- Tests compare by key (word) where a words row exists: the C-92.13 translation, the why/says rows, the publication stand-in's "signed" reason.
+- Deferred, see REPORT: two localize-only texts in relation.test.mjs (R1 reason, R2/R3 doctrine) assert presence only until the design stream adds words rows.
+- Other modules: none found in my reads. checks/run.mjs from the process repo exits 1 on other modules (2,260 words failures, 25 coverage failures); none is in case-tensions.
+- setup-words --check: stale-rows note only (expected; BOB regenerates rows.mjs at the layer close).
+Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972.
