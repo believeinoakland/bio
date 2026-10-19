@@ -80,3 +80,7 @@ Size (session_017qPsKctYDpHHE9UBkwHN19): test runs 6, module lines 4212
 **Tests run**: `membership` suites 171 pass, 0 fail (`test/m/membership/*.test.mjs`) and `test/members.test.mjs` 98 pass; users: `project-roster` 87, `credentials` 160, `promotion` 147, `answer-envelope` 41, `plane` 260, `ai-accounts` 114, `conformance` 119, `standards` 104, `case-carriage` 88, `control-plane` 302, all pass; `connections` 124 pass, 5 fail (red on the tranche too).
 
 Size (session_018652bxpkEPx4gMoCSpbHne): test runs 14, module lines 1626
+
+## J4 · REPORT
+
+**Addendum.** `bio-plane/test/system/` after CR-4: `fleetbundles` fails (bundles stale from deleting `membership/order.mjs`, red on the tranche before this job too), and `row-census` fails with "CENSUS MOVED: changed with no record" for the moved rows (C-102.11 and the others whose `where` now names `src/member-roster/index.mjs`), plus its `newgroup/dist/newgroup.bundled.mjs` file note. Both are the stamp and regeneration BOB/promotion's CR-5 owns; nothing further in membership.
