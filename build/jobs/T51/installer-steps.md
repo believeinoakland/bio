@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01VEWBEJY1ZxJS6YBjqLUfxF · depth 2 · COMPLETE · handled B8
+**Status** · session_01VEWBEJY1ZxJS6YBjqLUfxF · depth 2 · COMPLETE · handled B9
 
 ## J1 · QUESTION
 
@@ -152,3 +152,24 @@ CR-22 (R37) applied; pushed on `job/T51/installer-steps` at 81120b052d. The find
 - `checks/run.mjs`: no finding in installer-steps; the inline words findings it lists are in `bio-plane/src/setup-fleet.mjs` (instance-setup).
 
 Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 4, module lines 1946
+
+## J11 · COMPLETE
+
+CHANGE B9 applied (K4132); pushed on `job/T51/installer-steps` at 2b0d3e3e2b, `tranche/T51` merged in (CR-23 present).
+
+**Entries applied.** The empty frozen `MEMBER_OBJECTS` export in `steps/members.mjs` and its one test reference (`fleet.test.mjs`) are removed. Installer's `index.mjs` no longer names it, so nothing else needed changing.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Found in another module.** None. The t50 R59 and R69 reds from J10 are cleared by the CR-23 merge.
+
+**Tests and checks.**
+- Steps suite: 89 pass, 0 fail.
+- Installer's `newgroup/test`: 200 run, 195 pass, 0 fail.
+- Format: 175 modules, 175 requirements files; 0 failures.
+- Architecture: 24 product files, 91 relative imports; 0 failures.
+- Words: 0 failures (inline 0, missingkey 0).
+- Ownership (`tranche/T51` to `job/T51/installer-steps`, committed): 3 files changed; 0 failures.
+- Coverage: 35 of 37 live ids named by a test; R26 and R31 uncovered by design.
+
+Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 2, module lines 1944

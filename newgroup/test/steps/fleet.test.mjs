@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
-  vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, MEMBER_OBJECTS, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
+  vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
   CONTAINER_PART, WORKER_PART, confirmContainers, withByteLags } from "../../src/steps/index.mjs";
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
@@ -439,7 +439,6 @@ test("R37: a member's Durable Objects are those its signed Worker part states an
   assert.equal(meta.bindings.some((b) => b.type === "durable_object_namespace"), false, "control: a part stating none binds none");
   assert.equal(meta.migrations, undefined, "control: and migrates none, never a remembered one");
   f.w.restore();
-  assert.deepEqual(MEMBER_OBJECTS, {}, "the installer's own table is gone");
 });
 
 test("R25: an instance_type in container.json is passed to the create call and to a rollout; none is created without the field; an unreadable one leaves the member out", async () => {
