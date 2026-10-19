@@ -7,13 +7,12 @@ import assert from "node:assert/strict";
 import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { T41_RUNGS } from "../../../src/op-grades/t41.mjs";
 
-/* Each op driven below, by its owner; the last test holds this list to t41.mjs. */
-const DRIVEN = ["projectaikeepaway", "milestoneremove", "milestoneitemremove", "projectclosewithgaps", "hypothesissetaside",
-  "guidereview", "guideretire", "stepaccept"];
+/* Each op driven below, by its owner, is recorded as it is driven; the last test holds the set to t41.mjs. */
+const DRIVEN = new Set();
 
 /* The backing of one op: graded `reasoned`; without its reason refused with `code`, in the family; with it accepted. */
 function backed(op, code, refused, accepted) {
-  assert.ok(DRIVEN.includes(op), op);
+  DRIVEN.add(op);
   assert.equal(RUNGS[op], "reasoned", op);
   const got = refused?.code ?? refused?.reason;
   assert.notEqual(refused?.ok, true, `${op}: accepted without its reason: ${JSON.stringify(refused).slice(0, 300)}`);
@@ -112,5 +111,6 @@ test("R19: steps' stepaccept, graded `reasoned` (op-grades R30), is refused when
 /* ---- the list ---- */
 test("R19: every op op-grades' t41.mjs grades `reasoned` is driven here", () => {
   const graded = Object.keys(T41_RUNGS).filter((op) => T41_RUNGS[op] === "reasoned").sort();
-  assert.deepEqual([...new Set(DRIVEN)].sort(), graded);
+  assert.ok(graded.length > 0);
+  assert.deepEqual([...DRIVEN].sort(), graded);
 });

@@ -8,6 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
+import { browserActs } from "./browser.mjs";
 import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
@@ -39,7 +41,6 @@ const machineAdmits = (op) => ["admin", "member", "probe", "daemon"].filter((c) 
 const agentReaches = (op) => OPS[op].classes?.includes("member") && !Array.isArray(OPS[op].machineClasses)
   && !GOVERNANCE_ACTIONS.includes(op) && !IDENTITY_ACTIONS.includes(op);
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 
 /* every condition the ops of R50 and R51 share: both session sets, the act gate's session mode, in neither bearer fence,
    not on a grant's list, no `ai` class, never unattended, no alias, frozen */
@@ -328,9 +329,11 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());   // T48 (R65, R66): DEC-226's three, declared by R66
+  /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
+  const BROWSER = browserActs(registry);
+  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());   // T48 (R65, R66): DEC-226's three, declared by R66
   for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
-  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o)))
+  for (const op of [...OWED, ...owed].filter((o) => !OWED_T49.includes(o) && !LEFT_OUT.includes(o) && !BROWSER.includes(o)))
     assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
@@ -341,7 +344,7 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   for (const op of ["setpassword", "memberlanguageset"])
     assert.ok(account.acts.some((a) => a.op === op && a.status === "declared") && Object.hasOwn(OPS, op), op);
   /* negative control */
-  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op)), ["nosuchowedact"]);
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op) && !BROWSER.includes(op)), ["nosuchowedact"]);
 });
 
 test("R52 (wizard-scripts R30): R27 read against the library as PR #28 merged it — its owed acts are four, actionscope, itemtakeup, escalationstoppursuing and subscriptionsignin, each declared under its own name in both session sets with no alias; (R54, R60, T47) at PR #33's head none owed, the four named by their ops (negative control: an undeclared act is in no table)", () => {

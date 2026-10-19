@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -39,3 +39,18 @@ CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 a
 ## B6 · CHANGE
 
 CHANGE (K4085): installer-steps' keys stage (R36) is merged into tranche/T51 and rows.mjs regenerated: every sentence of newgroup/src/steps/ is now read by key (STEP_KEYS, 68 keys; steps/words.mjs, exported by the barrel). Behaviour is unchanged, but 21 of your tests assert the moved sentences' old words and are red on the tranche (accepted by name until you merge again): requirements.test.mjs R11 (369), R15 (546), R20 (786), R33 (1714), R38 x4 (1002, 1105, 1175 and the ghcr arm), R39 (1814), R40 (1868, the fleet step label), R43 (1259), R44 (1301), R45 (1317), R46 (1364), R68; realsize.test.mjs R33 (lines 75 and 179, the read-back mismatch line); corpus.test.mjs R76 (159): its MOVED/MOVED_ROWS exemptions go now they are keys; wizard.test.mjs as a file. Merge tranche/T51; each reads the row with word(…) by equality (K3810), never copies it. installer-steps' API notes for you: IMAGE_UNPINNED/IMAGE_UNPULLABLE are the reasons' identities; imageSaid(why, part); lacksOf answers the row text; CONTAINER_LACKS is gone; containerDescriptor(bytes, part), containerClasses(parts, bytesOf, part); containerConditions answers {ok:false, code, said}, conditionWhy(c, part); LIMITS_NOT_STATED maps none/unreadable to installer.release.nolimits/.badlimits (you say them with your version); statedLimits' detail is a machine form. Your fixture.mjs may now import steps' world.mjs where it covers you (your J4 deferral (1)) if that is now simple; else it stays as recorded. Then COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4089): installer-steps is merged again (DEC-362's left-out rows; STEP_KEYS 78): merge tranche/T51. What you read from steps changed: left[].why is a fragment without the lacks sentence (left[].lacks holds it, absent when nothing is lacked); imageSaid(why) takes one argument and answers the fragment; containerDescriptor(bytes) and containerClasses(parts, bytesOf) lost the part argument; conditionWhy(c) takes no part; withLacks is now lacksFor(m). Unchanged: IMAGE_UNPINNED/IMAGE_UNPULLABLE (installer.image.unpinned/.unpullable, which your images.mjs says with its installer.image.* sentences), lacksOf, imageWhy, LIMITS_NOT_STATED, the fleet/bind/logs/lag lines. Fold this into your B6 work; then COMPLETE.
+
+## B8 · CHANGE
+
+CHANGE (K4092): a code review of every install situation (build/plan/install-situations.md, S1–S13, F1–F13; Bob asked whether the code handles them) found these gaps in YOUR files (src/index.mjs, ui.mjs, held.mjs, images.mjs). Each is a requirement you already hold that the code meets only in part; fix each, with a test against the fake account and a control, in this job (P10):
+1. S2 (R33, R69): a progress stream that ends with neither "done" nor "fail" (a platform kill, a dropped stream) is today a silent stop: progressShell detects it and draws a named stop with the way on (reopen continues, R69), never nothing.
+2. F2 (R70): CONTAINERS_OFF guesses Cloudflare's message, so an unknown message reads as "on": decide Containers' state positively (an answer that shows it on), an unknown answer reading "could not tell" with the plain step, never "on". And the install stop for Workers Paid / Containers offers a "Check again" that re-runs the pre-checks without starting over (R70: "say exactly what to turn on … and wait for it"); today installs pass retry=null.
+3. F3 (R70): the update path checks the account limits too when the release adds members, classes, buckets or containers; and the limits are read from the account where Cloudflare states them, the defaults only as a fallback, said so.
+4. F4, F6 (R66, R71): exchange, scriptHash and readCopyFacts use plain fetch: route them through the same bounded retry (patiently/cfCall), so a 429/5xx backs off and a 401 becomes ApproveAgain, never "unread".
+5. F11 (R74): foreignContainers looks only at container applications: also examine the Workers on the copy's names (a foreign Worker stops the update, named; a retired one is named once and left), and run the same check on an install that continues an unfinished copy.
+6. F12 (R18, R78): a FINISHED copy whose team is unrecorded is told to run the installer again, which lands on the "already holds a copy" page and never records it: a loop. The installer may seed only in a run that generated the install credential (K3868, K3892). Make the telling honest and the path real: propose in a QUESTION the smallest correct route (your reading of the code first), and do not ship the loop; I answer at once.
+Merge tranche/T51 first (installer-steps gets its own list). Then COMPLETE.

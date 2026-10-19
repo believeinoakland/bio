@@ -391,8 +391,8 @@ test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (a
 
 test("R49 cs.choice with {acts: {<value>: op}} drives the act it governs: one button whose label and act follow the choice (control: without acts, no button)", async () => {
   const s = { id: "ceremony", reads: () => ({}), acts: [{ op: "caseratify" }, { op: "publishat" }],
-    render: (cs, view) => cs.choice("when", "shell.reason", [{ value: "now", text: "Now" }, { value: "at", text: "At a set time" }], { acts: { now: "caseratify", at: "publishat" } })
-      + "<p id=chosen>" + cs.esc(view.ui["choice:when"] || "") + "</p>" + cs.choice("plain", "shell.reason", [{ value: "x", text: "X" }]) };
+    render: (cs, view) => cs.choice("when", "shell.reason", [{ value: "now", text: "Record datum one" }, { value: "at", text: "Record datum two" }], { acts: { now: "caseratify", at: "publishat" } })
+      + "<p id=chosen>" + cs.esc(view.ui["choice:when"] || "") + "</p>" + cs.choice("plain", "shell.reason", [{ value: "x", text: "Record datum three" }]) };
   const p = await boot({ screens: [s], path: "/app/ceremony/c1", plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "publish"] }) } });
   const acts = () => p.root().querySelectorAll("button[data-act], [data-phone-act]").map((b) => b.getAttribute("data-act") || b.getAttribute("data-phone-act"));
   assert.deepEqual(acts(), ["caseratify"]);

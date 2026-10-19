@@ -7,7 +7,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
+import { browserActs } from "./browser.mjs";
 import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "../../../src/op-declarations/t47.mjs";
+import { T51_SHARES } from "../../../src/op-declarations/t51.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { peopleOps } from "../../../src/people/index.mjs";
@@ -30,7 +33,6 @@ const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
 const listsOf = (op) => LISTS.filter(([, l]) => l.includes(op)).map(([n]) => n)
   .filter((n) => !["FAMILY_OPS", "FAMILY_SESSION_OPS"].includes(n)).sort();
 const ground = (op) => Object.entries(ACT_HELP_ABSENT).filter(([, g]) => g.ops.includes(op)).map(([k]) => k);
-const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
 /* the conditions R55's, R57's and R59's ops share (none in a bearer fence or on a grant's list, no `ai` class, never
    unattended, no alias, frozen) */
 const shared = (op) => {
@@ -259,7 +261,8 @@ test("R55, R57, R59, R61, R5, R7: t47.mjs is frozen data — each share names an
   }
   for (const f of T47_FAMILIES) {
     assert.ok(Object.isFrozen(f) && Object.isFrozen(f.ops), f.owner);
-    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds), plain(f.ops), f.owner);
+    /* T51 (R77): a family T47 gave an owner also holds that owner's T51 share (`t51.mjs`: basis-versions' `versioncompare`) */
+    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds), plain({ ...f.ops, ...(T51_SHARES[f.owner]?.ops ?? {}) }), f.owner);
   }
   assert.ok(!readFileSync(new URL("bio-plane/src/op-declarations/t47.mjs", ROOT), "utf8").match(/\bimport\b/));
   /* negative control */
@@ -305,7 +308,9 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
   const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());
+  /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
+  const BROWSER = browserActs(registry);
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT, ...BROWSER].sort());
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
   for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
@@ -359,7 +364,9 @@ test("R54, R34 (T47; affordances R54, R56): every member op T47 declares is expl
 
 test("R62, R63, R6 (K3143, K3144): the store-internal routes T47 adds — store-door's reauthdue (its R15), signin-door's five (signintokenhold, signintokenrefused, signindisclosuredue, signintracekeep, signintraceread; plane R49) and instance-setup's grouplogo (its R86) — have no spec and are in no table; publishedlist is public (classes null), in no session set, stamped nothing, no NEEDS row (negative control: a declared op is in a table, and publishedlist's neighbour index stays the working corpus's)", () => {
   const INTERNAL = ["reauthdue", "signintokenhold", "signintokenrefused", "signindisclosuredue", "signintracekeep",
-                    "signintraceread", "grouplogo"];
+                    "signintraceread", "grouplogo",
+                    /* T51 (K4076): instance-setup's store-internal route for the install facts, no spec, as grouplogo */
+                    "bootstrapfacts"];
   const inNoTable = (op) => !Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && neither(op) && !Object.hasOwn(OP_STAMPS, op)
     && !LISTS.some(([, l]) => l.includes(op)) && !Object.hasOwn(UNATTENDED_BY_DECISION, op) && !Object.hasOwn(REAUTH_ACTS, op);
   for (const op of INTERNAL) assert.ok(inNoTable(op), `${op} is in a table`);

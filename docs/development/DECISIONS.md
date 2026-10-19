@@ -5631,3 +5631,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`.
 owed: nothing.
+
+### DEC-364 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B379, screens-inquiry T51-119 and installer-steps; K4089)
+for: design
+question: screens-inquiry's key gaps after DEC-360, and installer-steps' reads entry after its STEP_KEYS grew.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: question: "Change your decision" for the fold's summary; an axis without a citation reads `screen.question.compare.axis` "{axis}: {change}", with one `say054` carries the "since … was cited" tail. dash-project: `next.vouch.one`; its borrowed rows (`shell.reason`, `.help`, `screen.home.area.meetbar`, `screen.projects.owner`, `.lastchange`, `screen.project.stage.*`) mean the same thing there and are confirmed. project: `…dev.is.standing.down.as` reworded with {member}; the table's "(now)" and its three-owner cells "{votes} of {owners}", "{voters} of {owners} may vote"; `network-notices.level.very_active` and `.some_work` complete the level family. document: the decided row's no-reason forms; `revisions.truncated` reworded to the count held ("Not every revision is shown here: {n} are, and this copy has more."); "Fingerprint: {digest}" for the compare panel. installer-steps' reads entry is STEP_KEYS' 78 keys (read from its job branch until it merges).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads.json`.
+owed: nothing.

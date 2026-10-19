@@ -32,7 +32,7 @@ async function loadFleet(release, onWait = null) {
       plane: { sha256: man.sha256, bytes: man.bytes, asset: man.asset || "bio-plane.bundled.mjs" },
       members: man.fleet });
   } catch (e) {
-    return { skip: word("installer.fleet.skip.manifest") };
+    return { skip: word("installer.fleet.skip.manifest.reason", { reason: word("installer.fleet.why.part") }) };
   }
   const v = await verifySshsig(man.fleetSig, new TextEncoder().encode(payload), NS_FLEET, ARMED_SIGNERS);
   if (!v.ok) return { skip: word("installer.fleet.skip.signature", { reason: v.reason || "invalid" }) };
@@ -68,7 +68,7 @@ async function loadFleet(release, onWait = null) {
       }
       let classes = null;
       if (box.length) {
-        const read = containerClasses(box, (path) => partBytes[path], m.member);
+        const read = containerClasses(box, (path) => partBytes[path]);
         if (!read.ok) throw new Error(read.why);
         classes = read.classes;
       }
@@ -82,7 +82,7 @@ async function loadFleet(release, onWait = null) {
       members.push({ m, box, limits: stated.limits, own, classes, workerPart: workerParts.length > 0, bytes });
     } catch (e) {
       if (e && (e.source || e.approveAgain)) throw e;
-      members.push({ m, error: String(e && e.message || e) });
+      members.push({ m, error: String(e && e.fleetWhy ? e.fleetWhy : e && e.message || e) });
     }
   }
   return { members, fleet: new Set(man.fleet.map((x) => x.member)) };

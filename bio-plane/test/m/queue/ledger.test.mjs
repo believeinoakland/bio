@@ -17,7 +17,7 @@ function seeded() {
   w.task("TASK-2026-0001-a", "INF-1"); w.task("TASK-2026-0002-b", "PRJ-H"); w.task("TASK-2026-0003-c", "PRJ-A");
   w.run(`INSERT INTO finding_dispositions VALUES ('PRJ-H','F1','k','dismissed','r','bob',?), ('PRJ-A','F1','k','deferred','r','alice',?)`, iso(NOW), iso(NOW));
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('bob','PRJ-H','x'), ('alice','PRJ-A','x'), ('alice','INQ-9','x')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','FINDING::x','FINDING',?), ('bob','CONDITION::y','CONDITION',?)`, iso(NOW), iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','FINDING::x','FINDING',?), ('bob','CONDITION::y','CONDITION',?)`, iso(NOW), iso(NOW));
   return w;
 }
 const direct = (w, t) => w.all(`SELECT count(*) c FROM ${t}`)[0].c;
