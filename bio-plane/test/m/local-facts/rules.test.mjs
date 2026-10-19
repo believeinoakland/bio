@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, sha, TP } from "./fixture.mjs";
 import { LOCAL_FACTS_CHECKS, RULE_SECTIONS, RULE_STATES, GROUP_PROFILE, localFactsOps }
   from "../../../src/local-facts/index.mjs";
-import { combine } from "../../../../jurisdictions/index.mjs";
+import { combine, validate, LEGAL_FACT_TRIGGERS, STARTS, COUNTS, UNITS, DIRECTIONS, OWED_BY } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (r, code) => {
   assert.equal(r.ok, false, JSON.stringify(r));
@@ -16,10 +17,12 @@ const row = (r, code) => {
   assert.equal(r.translation, LOCAL_FACTS_CHECKS[code].translation);
 };
 /* Tier 2 (records_request), Tier 1 (bylaw_complaint) and a claim (undetermined) deadline; a legal fact. */
-const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
-const DL1 = { rule: "group_notice", applies_to: "bylaw_complaint", units: "days", amount: 3, starts: "act", citation: "Test Bylaw § 10" };
-const DLC = { rule: "group_claim", applies_to: "claim", units: "days", amount: 30, starts: "known", citation: "Test Bylaw § 11" };
-const LF = { key: "group_recording", trigger: "recording", statement: "Recording a sitting needs the chair's leave.", citation: "Test Bylaw § 12" };
+const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9", effective_from: "2026-09-01" };
+const DL1 = { rule: "group_notice", applies_to: "bylaw_complaint", units: "days", amount: 3, starts: "act", citation: "Test Bylaw § 10", effective_from: "2026-09-01" };
+const DLC = { rule: "group_claim", applies_to: "claim", units: "days", amount: 30, starts: "known", citation: "Test Bylaw § 11", effective_from: "2026-09-01" };
+const LF = { key: "group_recording", trigger: "recording", statement: "Recording a sitting needs the chair's leave.", citation: "Test Bylaw § 12", effective_from: "2026-09-01" };
+/* a rule's entry as a profile holds it: a profile's entry carries no effective_from (R18) */
+const profileEntry = ({ effective_from: _from, ...e }) => e;
 const QUAL = "Zephyrine counsel of twelve years, practising in local government law";   // a word no profile holds
 
 function setup(opts) {
@@ -201,7 +204,8 @@ test("R12 governingView: combine's view with each confirmed, unwithdrawn group r
   assert.equal(gv.ok, true);
   assert.deepEqual(gv.view.deadlines.slice(0, -1), base.view.deadlines, "the profiles' entries unchanged, the rule added last");
   const added = gv.view.deadlines.at(-1);
-  assert.deepEqual(added, { ...DL, status: "researched", basis: `2026-11-01 ${r}`, profile: GROUP_PROFILE,
+  const { effective_from: _from, ...DLP } = DL;
+  assert.deepEqual(added, { ...DLP, status: "researched", basis: `2026-11-01 ${r}`, profile: GROUP_PROFILE,
                             bases: [{ profile: GROUP_PROFILE, basis: `2026-11-01 ${r}` }] });
   assert.equal(gv.view.legal_facts.at(-1).key, LF.key);
   assert.equal(gv.view.legal_facts.at(-1).profile, "group");
@@ -225,7 +229,7 @@ test("R12 governingView: combine's view with each confirmed, unwithdrawn group r
 test("R12 governingView keeps one value per key: a confirmed rule whose key a profile activated later holds is not added, the profile's entry standing, and is reported in conflicts", () => {
   const later = { id: "test-later", name: "Later", covers: ["Later"], test: true,
     action_kinds: [{ kind: "records_request", label: "Records request", tier: 2, basis: "TEST" }],
-    deadlines: [{ ...DL, status: "researched", basis: "TEST" }] };
+    deadlines: [{ ...profileEntry(DL), status: "researched", basis: "TEST" }] };
   const { w, draft, confirm } = setup({ profiles: [TP], own: [later] });
   const r = draft().rule;
   confirm(r, { statement: QUAL });
@@ -234,7 +238,7 @@ test("R12 governingView keeps one value per key: a confirmed rule whose key a pr
   const gv = w.lf.governingView();
   const same = gv.view.deadlines.filter((e) => e.rule === DL.rule && e.applies_to === DL.applies_to);
   assert.deepEqual(same.map((e) => e.profile), ["test-later"]);
-  assert.match(gv.conflicts.at(-1).says, new RegExp(`${r} holds a key the view already holds`));
+  assert.equal(gv.conflicts.at(-1).says, word("local-facts.says.group_rule_holds", { rule: r }));
   /* the negative control: a second confirmed rule of its own key is added beside it */
   const r2 = draft({ ...DL, rule: "another_answer" }).rule;
   confirm(r2, { statement: QUAL });

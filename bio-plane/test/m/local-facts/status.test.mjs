@@ -40,7 +40,7 @@ test("R2 each status: confirmed with the latest act's member, date and how; corr
   assert.equal(s.governs.value, "America/Moncton", "the correction still governs until a later act changes it");
   /* absent: no active profile, and a fact withheld as a conflict */
   const none = world({ profiles: [] });
-  assert.equal(none.status(P.tz).reason, "NO_SUCH_FACT", "no active profile names it");
+  assert.equal(none.status(P.tz).reason, "NO_SUCH_FACT", "with no active profile the path names nothing");
   const two = written("test-two", { time_zone: { value: "Europe/Lisbon", status: "researched", basis: "TEST" } });
   const c = world({ profiles: [TP, "test-two"], own: [two] });
   c.act(P.tz, "confirm");
