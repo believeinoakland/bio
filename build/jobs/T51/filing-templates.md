@@ -36,3 +36,11 @@ Tests and checks:
 - `checks/run.mjs` whole tree: format 0, architecture 0; words and coverage failures all in other modules.
 
 Size (session_01PbeBP85c4YmXfKoksHMFk4): test runs 8, module lines 1939
+
+## J3 · COMPLETE
+
+B2 applied at `8cb92802bf` (merged `tranche/T51`): C-125.34 TEMPLATE_COURT_PETITION reads `word("refusal.TEMPLATE_COURT_PETITION")`; my id `filing-templates.checks.this_kind_is_filed_with` is retired; t46's test compares with `word` and asserts the row verbatim from words.json. R35 `second_approval` and R34 `label` stand as built.
+
+Tests and checks: filing-templates tests 84, pass 84, fail 0; words 0 failures; format 0; architecture 0 (18 files, 65 imports); coverage 35 of 35; ownership 0 failures. Everything else in J2 unchanged.
+
+Size (session_01PbeBP85c4YmXfKoksHMFk4): test runs 10, module lines 1939
