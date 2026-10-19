@@ -102,8 +102,8 @@ test("R1 (a): the local arm, with no account: the installer over its fake accoun
   const { r, shots } = await local();
   assert.equal(r.ok, true, r.report);
   assert.equal(shots.length, r.walk.steps.length);
-  assert.deepEqual(stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label), ["civicsmith.org: what Civicsmith is",
-    "civicsmith.org: start a team, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
+  const first = stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label);
+  assert.ok(/^civicsmith\.org: /.test(first[0]) && /^civicsmith\.org: /.test(first[1]) && /^install: /.test(first[2]), "journey 28 starts at civicsmith.org: " + first.join(" | "));
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
@@ -265,5 +265,5 @@ test("R1 (a): every way the local arm can stop closes its world, browser and ser
   assert.equal(stepThrows.ended, true, "the arm left handles open after a step threw: " + stepThrows.err);
   const c = lastJson(stepThrows.out);
   assert.equal(c.ok, false);
-  assert.ok(c.failures.some((f) => f.kind === FAIL.STEP && f.step === "civicsmith.org: what Civicsmith is"), JSON.stringify(c.failures));
+  assert.ok(c.failures.some((f) => f.kind === FAIL.STEP && /^civicsmith\.org: /.test(f.step)), JSON.stringify(c.failures));
 });

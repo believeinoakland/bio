@@ -129,9 +129,12 @@ export class Walk {
       ? e.at.test(r.at) && matches(e.code, r.code) : matches(e, r.code)));
     const unexcused = refusals.filter((r) => !expected(r));
     const why = (r) => (r.check || r.said ? ` [${[r.check, r.said].filter(Boolean).join(": ")}]` : "");
-    for (const r of unexcused)
-      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
-        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`) + why(r));
+    for (const r of unexcused) {
+      const vars = { where: String(where), code: String(r.code), status: String(res.status()), how: String(r.how), at: String(r.at || "its top") };
+      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false"
+        ? localize("journey-check.walker.where_answered_ok_false_code", "{where} answered ok: false ({code}, HTTP {status})", vars)
+        : localize("journey-check.walker.where_answered_how_at_code", "{where} answered {how} at {at} ({code}, HTTP {status})", vars)) + why(r));
+    }
     /* JOURNEY_DEBUG=bodies prints each answer that carries a refusal, JOURNEY_DEBUG_OP=<op> every answer of that op,
        redacted, to diagnose them; never into the report */
     if (process.env.JOURNEY_DEBUG_OP && url.searchParams.get("op") === process.env.JOURNEY_DEBUG_OP)
@@ -169,9 +172,9 @@ export class Walk {
       this.group ||= { rule: designRule() };
       this.group.patterns ||= senseKeys({ rule: this.group.rule }).flatMap((k) => { try { return [wordPattern(k)]; } catch { return []; } });
       const found = groupIn(withoutGroupSense(text, this.group.patterns), { rule: this.group.rule });
-      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, localize("journey-check.walker.pathname_says_group_for_a", "{pathname} says group for a team: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
+      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, localize("journey-check.walker.pathname_uses_the_retired_word", "{pathname} uses the retired word for a team: …{at}…", { pathname: String(url.pathname), at: String(f.at) }));
     } catch (e) {
-      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, localize("journey-check.walker.the_designs_rule_for_group", "the design's rule for \"group\" could not be read: {v1}", { v1: String(e.message.split("\n")[0]) })); }
+      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, localize("journey-check.walker.the_designs_rule_for_the_retired", "the design's rule for the retired word could not be read: {v1}", { v1: String(e.message.split("\n")[0]) })); }
     }
   }
 

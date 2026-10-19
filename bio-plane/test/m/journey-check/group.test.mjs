@@ -31,8 +31,8 @@ test("R17 control: a row in GROUP_SENSE is allowed; a row saying \"your group's 
   const rule = designRule();
   const kept = senseKeys({ rule })[0];
   assert.deepEqual(rowsSayingGroup([{ key: kept, en: "A community group, a block club or a neighborhood team" }], { rule }), []);
-  assert.deepEqual(rowsSayingGroup([{ key: "fixture.not.kept", en: tableWord("queue.capture-completed-unattended.who") }], { rule }).map((r) => r.key), ["fixture.not.kept"]);
-  assert.equal(rowsSayingGroup([{ key: "fixture.plural", en: tableWord("screen.site.nav.groups") }], { rule }).length, 1);
+  assert.deepEqual(rowsSayingGroup([{ key: "fixture.not.kept", en: "Your group's Civicsmith" }], { rule }).map((r) => r.key), ["fixture.not.kept"]);
+  assert.equal(rowsSayingGroup([{ key: "fixture.plural", en: "Your groups" }], { rule }).length, 1);
   assert.equal(rowsSayingGroup([{ key: "fixture.upper", en: "YOUR GROUP" }], { rule }).length, 1);
   /* identifiers are not text: a placeholder and a hyphenated name are left alone */
   assert.deepEqual(rowsSayingGroup([{ key: "fixture.ident", en: "Opens {group} at group-identity" }], { rule }), []);
@@ -68,7 +68,7 @@ async function stepOn(html, { within = "body" } = {}) {
 test("R17: a page the walk serves that says \"group\" for a team fails the step that drew it, naming where; control: a page saying team passes", { timeout: 120000 }, async () => {
   const bad = await stepOn(`<!doctype html><title>Home</title><main id="cs-main"><h1>Welcome</h1><p>This is your group's Civicsmith.</p></main>`);
   assert.deepEqual(bad.failures.map((f) => f.kind), [FAIL.GROUP]);
-  assert.match(bad.failures[0].detail, /says group for a team: …?.*your team's Civicsmith/);
+  assert.match(bad.failures[0].detail, /uses the retired word for a team: …?.*your group's Civicsmith/);
   assert.equal(bad.failures[0].step, "a fixture page");
   /* the title, the labels a screen reader reads and a hidden disclosure's words are drawn words too */
   const hidden = await stepOn(`<!doctype html><title>Your group</title><main><button aria-label="Leave the group">x</button><details><summary>More</summary>Groups at work</details></main>`);

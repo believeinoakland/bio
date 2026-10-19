@@ -16,6 +16,7 @@ import { FAIL } from "../../../src/journey-check/walker.mjs";
 import { sweepScreens } from "../../../src/journey-check/screens.mjs";
 import { developerWords, assetsCommit, designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
 import { fakePlane } from "./fake-plane.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
@@ -52,7 +53,7 @@ test("R5 control and R6 control: correct roles pass; each role walks every worki
     }
   }
   assert.equal(r.walk.pairs.length, WORKING.length * WIDTHS.length * 2);
-  assert.match(r.report, new RegExp(`${r.walk.pairs.length} pairs, LIVE beside DESIGN`), "the pairs are listed for BOB");
+  assert.ok(r.report.includes(localize("journey-check.walker.length_pairs_live_beside_design", "{length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):", { length: String(r.walk.pairs.length) })), "the pairs are listed for BOB");
   /* the walk keeps secret what is six characters or more (walker.keepSecret): a password; "mai" is a handle, and a word of a screen id */
   for (const v of Object.values(ENV).filter((x) => x.length >= 6)) assert.equal(r.report.includes(v), false, "a credential printed");
 });
