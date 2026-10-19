@@ -34,3 +34,7 @@ Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 16, module lines 3318
 ## J3 · REPORT
 
 B4 needs no change: the six ops left ACT_HELP_ABSENT at J2 (f5a2b3ec9f), and R34's partition tests run over ops only. Tested on a scratch merge of job/T51/affordances into my branch: op-declarations 230 tests, 230 pass, 0 fail (the partition holds with ACT_HELP holding the six and R69's seven browser acts, which are no ops, R76). Nothing pushed.
+
+## J4 · COMPLETE
+
+B4 and B5 applied (pushed). B5: op-declarations now uses promotion and basis-versions; t51.test.mjs drives bundlehistory (promotion's map) and versioncompare (basis-versions') like the other owners, 12 ops driven. B4: the six ops already left ACT_HELP_ABSENT; the partition runs over ops only, the seven browser acts their own class (R76); tested earlier on a scratch merge with job/T51/affordances: pass. Results: op-declarations tests 230, pass 230, fail 0; format 0 failures; architecture 0 failures; coverage 78 of 78, 0 failures; ownership 0 failures; words 0 failures. Findings in other modules unchanged from J2. Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 19, module lines 3318
