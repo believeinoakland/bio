@@ -9,6 +9,7 @@ import { world, serve, sha, infoMd, DAEMON, NOW_MS, stubCaseImport, watchOf } fr
 import { MONITOR_CADENCE_DELAY_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_MS, SLATE_FRAMING_OPEN, DOCKET_READ_INTERVAL_MS,
          DOCKET_READ_MAX_BYTES, DOCKET_PURPOSE, DOCKET_UNREADABLE } from "../../../src/monitoring/index.mjs";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 const ADMIN = "class:admin";
@@ -125,7 +126,7 @@ test("R67 a governed refusal records nothing, counts as governed and leaves the 
 });
 
 test("R67 a recordDocketRead that refuses or throws is failed with its reason, and the epoch stays open (R21): the retry skips the claimed watch until the epoch is spent", async () => {
-  for (const [how, set, reason] of [["refuses", (ci) => { ci.refuse = { ok: false, reason: "IMPORT_NOT_WATCHED", detail: "no watch of this import is in force" }; }, "IMPORT_NOT_WATCHED"],
+  for (const [how, set, reason] of [["refuses", (ci) => { ci.refuse = { ok: false, reason: "IMPORT_NOT_WATCHED", detail: localize("case-import.index.no_watch_in_force", "no watch of this import is in force") }; }, "IMPORT_NOT_WATCHED"],
                                     ["throws", (ci) => { ci.fail = new Error("case-import broke"); }, "case-import broke"]]) {
     const { w, ci } = watching([watchOf(IMP(1), D(1))]);
     w.net.routes[D(1)] = json(docketAnswer());

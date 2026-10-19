@@ -42,7 +42,7 @@ function watchWorld() {
   };
   w.intent.gaps = ({ project }) => ({ ok: true, project, gaps: [] });
   w.intent.progress = ({ project }) => ({ ok: true, project, objective: "Know whether the award was proper", condition: null,
-    computable: false, why: "the objective states no condition" });
+    computable: false, why: word("intent.objective_states_condition") });
   w.inv = investigationOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, intent: w.intent, steps,
     basisVersions: { projectQuestions: () => ({ items: [], cursor: null }), conclusionRecordOf: () => ({ history: [], stance: null }) },
     inquiry: { questionWaits: () => ({ ok: true, waits: [] }), documentWaits: () => ({ ok: true, questions: [] }) },
