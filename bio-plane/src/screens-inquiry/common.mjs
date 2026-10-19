@@ -156,5 +156,8 @@ export function progress(cs, entries, o) {
     + (answered ? "" : `<p class="mk-small" data-hold="1">${cs.w("ai.progress.hold")}</p>`) + "</div>" : "", answered, none };
 }
 
+/** R82 (CR-19; DEC-368): the format ids the registry names, each with its `document.kind.<id>` word; any other id draws `document.kind.undetermined`. */
+export const KIND_IDS = Object.freeze(["csv", "docx", "html", "jpeg", "odp", "ods", "odt", "pdf", "png", "pptx", "text", "undetermined", "xlsx", "zip"]);
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, kinds: KIND_IDS });

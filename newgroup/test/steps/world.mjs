@@ -82,15 +82,20 @@ export const SCANNER_CLASSES = Object.freeze([
   Object.freeze({ class_name: "SafeViewRenderer", image: RENDER_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "RENDERER" }] }),
 ]);
 export const SCANNER_WORKER = Object.freeze({ r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"] });
+/* agent-worker's own Durable Objects as its configuration states them, and its `Worker` part (`worker.json`) carrying them. */
+export const AGENT_OBJECTS = Object.freeze({ bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }],
+  migrations: [{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }] });
+export const AGENT_WORKER = Object.freeze({ r2_buckets: [], crons: [], durable_objects: AGENT_OBJECTS });
 export const VPC_ID = "0123456789abcdef0123456789abcdef";
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it over
    another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. `container` adds
-   agent-runner with `descriptor` as its `Container` part; `scanner` adds file-scanner; `memberSrc` gives a member its own text. */
+   agent-runner with `descriptor` as its `Container` part; `scanner` adds file-scanner; `memberSrc` gives a member its own text;
+   `agentWorker` is agent-worker's `Worker` part (default: its own Durable Objects, as the bundler states them; null: no part). */
 export async function release({ version = VERSION, src = CAPABLE_SRC, members = FLEET_BINDINGS.map(([m]) => m), sig = "good",
   fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null,
   container = false, descriptor = DESCRIPTOR, memberSrc = {},
-  scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER, signWith = SIGNER } = {}) {
+  scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER, agentWorker = AGENT_WORKER, signWith = SIGNER } = {}) {
   const planeSha = await sha(src);
   const boxText = typeof descriptor === "string" ? descriptor : JSON.stringify(descriptor);
   const text = (x) => typeof x === "string" ? x : JSON.stringify(x);
@@ -99,6 +104,11 @@ export async function release({ version = VERSION, src = CAPABLE_SRC, members = 
   if (scannerWorker !== null) scannerTexts["worker.json"] = text(scannerWorker);
   for (const [path, t] of Object.entries(scannerParts)) { if (t === null) delete scannerTexts[path]; else scannerTexts[path] = text(t); }
   const partTexts = {};
+  const workerPart = async (member, worker) => {
+    const t = text(worker);
+    partTexts[`${member}/worker.json`] = t;
+    return [{ path: "worker.json", type: "Worker", sha256: await sha(t), bytes: t.length }];
+  };
   const srcOf = (member) => memberSrc[member] ?? MEMBER_SRC;
   const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(srcOf(member)),
     bytes: srcOf(member).length, compat: { date: "2026-07-01", flags: [] },
@@ -109,6 +119,7 @@ export async function release({ version = VERSION, src = CAPABLE_SRC, members = 
       : member === SCANNER && scanner ? await Promise.all(Object.entries(scannerTexts).map(async ([path, t]) => {
         partTexts[`${member}/${path}`] = t;
         return { path, type: path === "worker.json" ? "Worker" : "Container", sha256: await sha(t), bytes: t.length }; }))
+      : member === "agent-worker" && agentWorker !== null ? await workerPart(member, agentWorker)
       : [] });
   if (container && !members.includes(RUNNER)) members = [...members, RUNNER];
   if (scanner && !members.includes(SCANNER)) members = [...members, SCANNER];

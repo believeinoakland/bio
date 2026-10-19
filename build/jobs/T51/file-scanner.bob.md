@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -64,3 +64,7 @@ Before any test run: every directory with a tracked `package-lock.json` has its 
 ## B7 · CHANGE
 
 CHANGE (K4120), re-opening CR-17 for one addition before your merge: your REPORT (1) is placed as your R33, written on the tranche (merge it first): `handling.on_own`, a boolean each descriptor states (true for the self-run tools whose recipient is the organization's own server or service), never derived from `recipient`'s words; `validateDescriptor` refuses a `handling` without a boolean `on_own` (`DESCRIPTOR_MALFORMED`, field `handling.on_own`). Test it as R33 says, with its control. screens-settings reads it in CR-20 after you merge; file-safety's test copies (your REPORT) are CR-21's. Then post COMPLETE again.
+
+## B8 · CHANGE
+
+CHANGE (K4125; FILE-SAFETY #12 J5). file-safety's tests now read your sentences from your exports (CR-21) instead of copying them; one is missing: the positive probe's detail, `localize("file-scanner.routes.the_eicar_test_file_answered", …)` ("the EICAR test file answered found"). Export it beside `EICAR_NOT_FOUND` in `file-scanner/src/providers/routes.mjs` as `EICAR_FOUND`, the same way (a test naming it; behaviour unchanged). Then post COMPLETE again.

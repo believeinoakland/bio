@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · COMPLETE · handled B7
+**Status** · session_01VEWBEJY1ZxJS6YBjqLUfxF · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -122,3 +122,33 @@ B7 applied; pushed on job/T51/installer-steps, tranche/T51 merged in (DEC-365's 
 Checks: steps suite 88 pass, 0 fail; format 0 failures; architecture "24 product files, 91 relative imports; 0 failures"; words 0 failures (inline 0, missingkey 0); coverage 34 of 36 (R26, R31 unbuilt by design); ownership as above. The `words-reads.json` entry for `installer-steps` needs `installer.fleet.why.pullfailed` added (the design's file, yours to carry).
 
 Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 6, module lines 1953
+
+## J9 · REPORT
+
+Found in other modules, for CR-23 and the release (none of these is mine to edit).
+
+1. installer's `newgroup/test/t50.test.mjs` fails two tests after R37: R59 (line 72, the install's upload carries SEGMENTS and CHECKS with both migrations) and R69 (line 408, the update's migration read). Cause: installer's test release gives agent-worker no `Worker` part, so the upload now carries no Durable Objects, as R37 requires. Fix for CR-23: its release fixture states agent-worker's objects in `worker.json` (`durable_objects` with the SEGMENTS/CHECKS bindings and the v1/v2 migrations), as the bundler now writes them. The steps suite's fixture (`newgroup/test/steps/world.mjs`, `AGENT_WORKER`) is the model.
+2. `newgroup/src/index.mjs`:86 re-exports `MEMBER_OBJECTS`. I kept it as an empty frozen export in `steps/members.mjs` so installer's build still links; CR-23 removes it and the export-list name in `t51.test.mjs`:191.
+3. `objectMigrations` now takes `(heldTag, objects)` and no longer a member name. `t50.test.mjs`:103 calls `installer.objectMigrations("pdf-worker", null)`; it still returns null, but CR-23 should drop the stale first argument.
+4. `newgroup/dist/newgroup.bundled.mjs` (tracked generated artifact) is stale against this change. Not regenerated; BOB regenerates it.
+5. `build/requirements/installer-steps.md` R37 still reads "(not yet met: T51)". The test named R37 now meets it; the marker is BOB's to change.
+
+## J10 · COMPLETE
+
+CR-22 (R37) applied; pushed on `job/T51/installer-steps` at 81120b052d. The findings for other modules are in the REPORT above (installer's t50 R59 and R69).
+
+**Entries applied.** R37: the `MEMBER_OBJECTS` table in `steps/members.mjs` and its fallbacks are removed. `objectBindings` and `objectMigrations` (now `(heldTag, objects)`) take the member's own statement only, from its signed `Worker` part; a part that states none deploys none. `MEMBER_OBJECTS` stays as an empty frozen export only so installer's re-export still links until CR-23. Test fixture: `world.mjs` gives agent-worker its `Worker` part stating its objects, as the bundler writes them. New test R37 (a part stating fewer deploys fewer; a part stating none binds and migrates none). R24 and R24 (F10) updated to the statement; R35's request count moves from 3 to 4 for agent-worker's `worker.json`.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Tests and checks.**
+- Steps suite: 89 pass, 0 fail.
+- Installer's `newgroup/test`: 199 run, 192 pass, 2 fail, both in `t50.test.mjs` (R59, R69), caused by installer's fixture as the REPORT says; not edited (not my module).
+- Format: 175 modules, 175 requirements files; 0 failures.
+- Architecture: 24 product files, 91 relative imports; 0 failures.
+- Words: 0 failures (inline 0, missingkey 0).
+- Ownership (`tranche/T51` to `job/T51/installer-steps`, committed): 6 files changed; 0 failures.
+- Coverage: 35 of 37 live ids named by a test; R26 and R31 uncovered by design.
+- `checks/run.mjs`: no finding in installer-steps; the inline words findings it lists are in `bio-plane/src/setup-fleet.mjs` (instance-setup).
+
+Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 4, module lines 1946
