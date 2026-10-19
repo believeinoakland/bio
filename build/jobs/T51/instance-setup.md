@@ -47,3 +47,12 @@ C. The leaf imports `setup-words/index.mjs` like the installer's `words.mjs` doe
 My recommendation: A now. C is one import and would clear the twelve, but it reverses K405, so it is your call, not mine.
 
 Until you answer, the leaf keeps its texts as R97 has them. Everything else in B3 is done and reported in the COMPLETE.
+
+## J5 · REPORT · re B3
+
+REPORT (re B3): what I found in other modules while doing CR-12. None of it is changed by me.
+
+1. `plane/src/ask.mjs`:369 calls `instanceSetupOf(ctx, env).readingLanguage(...)`. It is the one delegate caller left, so I kept `readingLanguage` (the other ten are gone). Plane's job re-points that call to `translationsOf(ctx).readingLanguage`; then I delete the last delegate and `#translations()` in my next job. Please sequence it.
+2. `test/m/plane/door.test.mjs`:142 (the R1, R5 test "instance-setup's forty-five routes") is now red: instance-setup's map holds 36 routes, not 45, because the nine translation route lines left (CR-12). The test's drive list still counts the nine. Plane's job sets the count to 36 and drops the translation drives from the instance-setup comparison, since `translationsOps` answers them through `store.mjs`. This is the one failure I cause outside my module; I did not edit the test.
+3. Reds in the whole-tree `checks/run.mjs`, not mine: coverage: agent-harness R17; agent-runner R36, R37, R38, R40; extraction R77; installer-steps R26, R31; journey-check R19; screens-inquiry R81, R82; setup-words R19. Words: `promotion/index.mjs`:194, 1151, 1184 (inline).
+4. Test note for my own tests (no action for you): the fixture's default `credentials` stub is `{}`, so a `last_used_at` read through `boot()` answers null. The R95 test now hands a real `credentials` reader over the same store; the fixture is unchanged.
