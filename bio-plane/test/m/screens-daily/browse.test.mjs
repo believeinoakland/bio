@@ -2,9 +2,10 @@
    Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open as openRaw, ok, refused, text, ops, button, press as pressRaw, beside, last, main, word, settle, withScreens } from "./page.mjs";
+import { open as openRaw, ok, refused, text, ops, button, press as pressRaw, beside, last, main, word, hasWord, settle, withScreens, dmy } from "./page.mjs";
 
 const R = "looking";
+const NOTE = "check the dates twice";
 const open = (path, plane, o = {}) => openRaw(path, plane, { screens: withScreens("document", "question", "person", "action", "plan", "project"), ...o });
 // Until op-grades names the marks, the shell weighs them as reasoned: the reason is answered where it is asked.
 const press = (p, op, o = {}) => pressRaw(p, op, { reason: R, ...o });
@@ -24,19 +25,21 @@ const browseReqs = (p) => p.byOp("browse");
 test("R44: with no words Find is the browse: Show and Only choices, newest first, each result its kind, screen and marks; the words box says to leave it empty", async () => {
   const p = await open("/app/finder", PLANE);
   assert.ok(text(p).includes(word("find.browse.says")));
-  assert.ok(text(p).includes(word("find.query.placeholder")), "the words box says to leave it empty to browse");
-  const shows = main(p).querySelectorAll("nav.mk-sortrow")[0];
-  assert.deepEqual(shows.textContent.split(" · ").map((s) => s.replace(word("find.kind.label"), "").trim()),
-    ["find.kind.all", "find.kind.document", "find.kind.question", "find.kind.action", "find.kind.entity", "find.kind.plan"].map((k) => word(k)));
-  const onlys = main(p).querySelectorAll("nav.mk-sortrow")[1];
-  assert.ok(onlys.textContent.includes(word("find.state.new")) && onlys.textContent.includes(word("find.state.watched")) && onlys.textContent.includes(word("find.state.secondlook")));
+  assert.ok(text(p).includes(word("find.query.help")), "the words box says, beneath it, to leave it empty to browse");
+  assert.equal(p.doc.getElementById("finder-q").getAttribute("placeholder"), word("find.query.placeholder"), "R54: the kit's placeholder (interface-shell R90)");
+  // R54: "Show" and "Only" are the design's choices, not chips; the values the route seeds are the first chosen.
+  const optionsOf = (id) => main(p).querySelectorAll(`#${id} option`).map((o) => o.textContent);
+  assert.deepEqual(optionsOf("finder-kind"), ["find.kind.all", "find.kind.document", "find.kind.question", "find.kind.action", "find.kind.entity", "find.kind.plan"].map((k) => word(k)));
+  const onlys = optionsOf("finder-state");
+  assert.ok(onlys.includes(word("find.state.new")) && onlys.includes(word("find.state.watched")) && onlys.includes(word("find.state.secondlook")));
+  assert.equal(main(p).querySelectorAll("nav.mk-sortrow").length, 0, "control: no chips");
   assert.equal(last(p, "browse").query.kinds, undefined);
   assert.equal(last(p, "browse").query.limit, "50");
   const rows = main(p).querySelectorAll(".cs-row");
   assert.equal(rows.length, 3);
   const t = rows.map((r) => text(p, r));
   assert.ok(t[0].includes("Work orders FY2025") && t[0].includes(word("find.row.kind.document")) && t[0].includes(word("find.row.new")) && t[0].includes(word("find.row.watched")));
-  assert.ok(t[1].includes(word("find.row.kind.question")) && t[1].includes(word("find.row.secondlook", { who: "rosa", date: "10 October 2026", note: "check the dates" })));
+  assert.ok(t[1].includes(word("find.row.kind.question")) && t[1].includes(word("find.row.secondlook", { who: "rosa", date: dmy("2026-10-10"), note: "check the dates" })));
   assert.ok(t[2].includes(word("find.row.kind.person")));
   // Each result opens its own kind's screen.
   assert.deepEqual(rows.map((r) => (r.querySelector("a.cs-ref") || { getAttribute: () => null }).getAttribute("href")), ["/app/document/INF-1", "/app/question/INQ-1", "/app/person/ENT-1"]);
@@ -54,7 +57,7 @@ test("R44: with no words Find is the browse: Show and Only choices, newest first
 
 test("R44: a lookedat of null offers no \"new\" choice and says why; a browse not truncated draws no \"Show more\"; one that is pages by next and adds below", async () => {
   const none = await open("/app/finder", { ...PLANE, lookedat: ok({ since: null }) });
-  const onlys = main(none).querySelectorAll("nav.mk-sortrow")[1].textContent;
+  const onlys = main(none).querySelectorAll("#finder-state option").map((o) => o.textContent);
   assert.ok(!onlys.includes(word("find.state.new")));
   assert.ok(text(none).includes(word("find.browse.nosince")));
   assert.ok(!ops(none).includes("search") === false);
@@ -72,8 +75,8 @@ test("R44: a lookedat of null offers no \"new\" choice and says why; a browse no
   assert.equal(main(p).querySelectorAll(".cs-row").length, 4, "the next page is added below");
   assert.ok(!text(p).includes(word("find.browse.showmore")), "the last page draws no more");
   // A browse answered undetermined for the marks draws them as unread, never as none.
-  const u = await open("/app/finder", { ...PLANE, browse: BROWSE(ITEMS, { undetermined: { why: "the marks could not be read" } }) });
-  assert.ok(text(u).includes(word("state.undetermined", { reason: "the marks could not be read" })));
+  const u = await open("/app/finder", { ...PLANE, browse: BROWSE(ITEMS, { undetermined: { why: "marks_unread" } }) });
+  assert.ok(text(u).includes(word("state.undetermined", { reason: "marks_unread" })));
 });
 
 const pick = (ids) => Object.fromEntries(ids.map((id) => [`finder-pick-${id}`, true]));
@@ -122,8 +125,8 @@ test("R45: Flag for a second look… opens its note in place and sends secondloo
   await press(p, "secondlook", { values: { "finder-note": "x".repeat(501) } });
   await press(p, "secondlook", { values: { "finder-note": "a\nb" } });
   assert.equal(p.byOp("secondlook").length, 0);
-  await press(p, "secondlook", { values: { "finder-note": "Why look again", ...pick(["INF-1", "ENT-1"]) } });
-  assert.deepEqual(p.byOp("secondlook").map((r) => ({ item: r.body.item, note: r.body.note })), [{ item: "INF-1", note: "Why look again" }, { item: "ENT-1", note: "Why look again" }]);
+  await press(p, "secondlook", { values: { "finder-note": NOTE, ...pick(["INF-1", "ENT-1"]) } });
+  assert.deepEqual(p.byOp("secondlook").map((r) => ({ item: r.body.item, note: r.body.note })), [{ item: "INF-1", note: NOTE }, { item: "ENT-1", note: NOTE }]);
   // Clear: no reason asked; the row leaves the flagged list.
   const clear = main(p).querySelectorAll('button[data-act="secondlookclear"]');
   assert.ok(clear.length >= 1 && clear[0].textContent.startsWith(word("act.secondlookclear.label.finder")));
@@ -151,4 +154,48 @@ test("R46: a search result is a reference of its own kind with its title and a p
   assert.ok(!rows[1].querySelector("em") && !rows[1].querySelector(".meta span:not(.cs-origin)") || true);
   assert.doesNotMatch(text(p, rows[1]).replace("The Coliseum lease", ""), /[a-z]{3,}.*:/i, "control: nothing but the title and its marks");
   assert.doesNotMatch(text(p), /object_type|bundle_id|snippet|current_state|\b[0-9a-f]{12}\b/, "no field name, record id or digest");
+});
+
+const choose = async (p, id, value) => { const el = p.doc.getElementById(id); el.value = value; p.fire(el, "change"); await settle(); };
+
+test("R54: choosing Documents re-reads browse at once with kinds set and sends no other request; choosing a theme re-reads themeread; a link route seeds the choice", async () => {
+  const themes = ok({ ok: true, themes: [{ theme_id: "TH-1", name: "Street repair" }] });
+  const p = await open("/app/finder", { ...PLANE, themeread: (req) => (req.query.id ? ok({ ok: true, members: [{ target: "INF-1", target_kind: "information", title: "Work orders FY2025" }], hunches: [] }) : themes) });
+  const before = p.requests.length;
+  await choose(p, "finder-kind", "document");
+  const sent = p.requests.slice(before);
+  assert.deepEqual(sent.map((r) => r.op), ["browse"], "no other request");
+  assert.equal(sent[0].query.kinds, "document");
+  await choose(p, "finder-state", "watched");
+  assert.equal(last(p, "browse").query.only, "watched");
+  await choose(p, "finder-theme", "TH-1");
+  assert.equal(last(p, "themeread").query.id, "TH-1");
+  assert.ok(text(p).includes("Work orders FY2025"));
+  // Control: a link route seeds the first values, so the browse that opens is that one.
+  const seeded = await open("/app/finder/~document~new_since", PLANE);
+  assert.equal(seeded.doc.getElementById("finder-kind").value, "document");
+  assert.deepEqual([last(seeded, "browse").query.kinds, last(seeded, "browse").query.only], ["document", "new_since"]);
+  assert.ok(hasWord("find.query.help") && hasWord("screen.finder.showas"));
+});
+
+test("R54, R93 (interface-shell R93): Find's browse re-reads itself every 45 seconds with the picked rows kept, says so while the list is fresh, and a choice changes the request", async () => {
+  let items = ITEMS.slice();
+  const p = await open("/app/finder", { ...PLANE, browse: () => BROWSE(items) });
+  const reads = () => browseReqs(p).length;
+  assert.equal(reads(), 1);
+  assert.ok(text(p).includes(word("list.fresh")), "the first answer is fresh");
+  p.doc.getElementById("finder-pick-INF-1").checked = true;
+  items = [{ kind: "document", id: "INF-9", title: "Newest filing", last_changed: "2026-10-13T10:00:00Z", new: true, watched: false, flagged: null }, ...ITEMS];
+  await p.clock.tick(45000); await settle();
+  assert.equal(reads(), 2, "read again at 45 seconds");
+  assert.ok(text(p).includes("Newest filing"), "the list shows the new row");
+  assert.equal(p.doc.getElementById("finder-pick-INF-1").checked, true, "the picked row stays picked");
+  await p.clock.tick(120000); await settle();
+  const t = text(p);
+  assert.ok(t.includes("Newest filing"));
+  await choose(p, "finder-kind", "document");
+  assert.equal(last(p, "browse").query.kinds, "document", "a choice changes the request");
+  const quiet = await open("/app/finder/pothole", { ...PLANE, search: ok({ total: 0, hits: [] }) });
+  await quiet.clock.tick(120000); await settle();
+  assert.equal(browseReqs(quiet).length, 0, "control: a search is not a browse and is never re-read");
 });

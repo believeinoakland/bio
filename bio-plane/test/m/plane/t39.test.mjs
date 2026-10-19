@@ -95,7 +95,7 @@ test("R18 (T39): with `CAPTURES` bound and a member PDF queued, one onAlarm answ
     assert.equal(obscuredKey(ns, d.copy), `${ns}/obscured/${d.copy}`);
     assert.equal(sha(held.bytes), d.copy);
     assert.equal(held.opts.customMetadata.original, original, "labelled derived, naming its original");
-    assert.ok(CAPTURES.held.get(`${ns}/captures/${original}`).bytes.equals(bytes), "the original is unchanged");
+    assert.ok(CAPTURES.held.get(`${ns}/captures/${original}`).bytes.equals(bytes), "the stored original keeps its bytes");
     assert.deepEqual(queued(x), [], "nothing left queued");
   }
   /* negative control (K2380; rule 4 (18)): no evidence bucket bound, case-carriage's copyWake answers null with work

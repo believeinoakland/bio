@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { storage, Store, disclosed } from "./fixture.mjs";
-import { SCREENS } from "../../../src/plane/screens.mjs";
+import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { screenFailures } from "../../../src/plane/wizards.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { assistantGateOf } from "../../../src/plane/ask.mjs";
@@ -43,26 +43,24 @@ function ihdr(png) {
 
 /* ===== R24 ===== */
 
-const NEW_ACTS = ["reading", "pagetranscribe", "transcribe"];
+/* (T51; K3807) the registry is the design's (`wizard-scripts`' `SCREEN_REGISTRY`): the `document` screen carries what the
+   old `bundle` screen did, and lists the acts itself. `reading` is no act of that screen in the registry. */
+const NEW_ACTS = ["pagetranscribe", "transcribe"];
 const missingFrom = (screens) => {
-  const bundle = screens.find((s) => s.id === "bundle");
-  return bundle ? NEW_ACTS.filter((a) => !bundle.acts.includes(a)) : NEW_ACTS;
+  const doc = screens.find((s) => s.id === "document");
+  return doc ? NEW_ACTS.filter((a) => !doc.acts.includes(a)) : NEW_ACTS;
 };
 
-test("R24 (T43; N862; DEC-190 (1)): the `bundle` screen's acts hold `reading`, `pagetranscribe` and `transcribe`, each an op op-declarations declares, and the registry still passes the release suite's check", () => {
-  assert.deepEqual(missingFrom(SCREENS), []);
-  for (const a of NEW_ACTS) assert.ok(Object.hasOwn(OPS, a), `${a} is declared`);
-  assert.deepEqual(screenFailures(SCREENS, OPS), []);
-  /* the screen's earlier acts are kept, in their order, the three appended after them */
-  const acts = SCREENS.find((s) => s.id === "bundle").acts;
-  assert.deepEqual(acts.slice(-3), NEW_ACTS);
-  assert.deepEqual(acts.slice(0, 3), ["image", "projection", "links"]);
+test("R24 (T43; N862; DEC-190 (1); T51): the registry's `document` screen's acts hold `pagetranscribe` and `transcribe`, each an op op-declarations declares, and the registry still passes the release suite's check", () => {
+  assert.deepEqual(missingFrom(SCREEN_REGISTRY), []);
+  for (const a of [...NEW_ACTS, "reading"]) assert.ok(Object.hasOwn(OPS, a), `${a} is declared`);
+  assert.deepEqual(screenFailures(SCREEN_REGISTRY, OPS), []);
   /* negative controls: the screen without them is caught, and an op spec missing for one fails the suite */
-  const without = SCREENS.map((s) => (s.id === "bundle" ? { ...s, acts: s.acts.filter((a) => !NEW_ACTS.includes(a)) } : s));
+  const without = SCREEN_REGISTRY.map((s) => (s.id === "document" ? { ...s, acts: s.acts.filter((a) => !NEW_ACTS.includes(a)) } : s));
   assert.deepEqual(missingFrom(without), NEW_ACTS);
   const { transcribe, ...lacking } = OPS;
   assert.ok(transcribe);
-  assert.deepEqual(screenFailures(SCREENS, lacking), [{ screen: "bundle", problem: "no op spec", act: "transcribe" }]);
+  assert.deepEqual(screenFailures(SCREEN_REGISTRY, lacking), [{ screen: "document", problem: "no op spec", act: "transcribe" }]);
 });
 
 /* ===== R36: the picture route ===== */

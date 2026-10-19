@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { store, deployed, GATE_FLAGS, GATE_SET, GATE_PARTS, disclosed } from "./fixture.mjs";
-import { MODULE_MAPS, ownMaps } from "./maps.mjs";
+import { MODULE_MAPS, ownMaps, servedThroughDoor } from "./maps.mjs";
 import { assistantGateOf, draftOnObject, DRAFT_KIND_OF } from "../../../src/plane/ask.mjs";
 import { transcriberOf } from "../../../src/plane/transcribe.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
@@ -381,25 +381,17 @@ test("R39 (T46; N935; case-account R15, local-facts R15): case-account's and loc
   assert.equal(keys.includes("advocacyzz"), false);
 });
 
-/* T46's new ops served through owners' maps (op-declarations R50, R51), each to be reached through the door. */
-const T46_OPS = ["escalationstoppursuing", "escalationreopen", "statusreportassist", "joindoors", "clockproposals", "infolevelset", "infolevel"];
+/* T46's new ops are served by these owners' maps (op-declarations R50, R51): the ops are read from the owners' own maps
+   (K3268), never listed here. */
+const T46_OWNERS = ["escalation", "plan-work", "action-clocks", "instance-setup", "membership"];
 
 test("R5 (T46): the route map is re-pinned to T46's new ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; `textcheck` is the draft door's (R41); an op no map serves is no route", async () => {
   const u = new URL("http://do/");
   const x = await store(), twin = await store();
   const keys = Object.keys(x.s.routes(u, null));
-  for (const op of T46_OPS) {
-    const owner = ownMaps(x.ctx, u, null).find(([, m]) => Object.hasOwn(m, op));
-    assert.ok(owner, `no module's map serves ${op}`);
-    assert.ok(keys.includes(op), `the route map lacks ${op}`);
-    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&plan=PLAN-2026-none&id=ESC-2026-none`;
-    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
-    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
-    let direct;
-    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
-    assert.equal(res.status, 200, `${op} (${owner[0]})`);
-    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
-  }
+  const { served, failed } = await servedThroughDoor(x, twin, T46_OWNERS);
+  assert.deepEqual(failed, []);
+  for (const op of ["escalationstoppursuing", "escalationreopen"]) assert.ok(served.some(([o]) => o === op), `${op} is escalation's`);
   assert.equal(DRAFT_KIND_OF.textcheck, "textcheck");
   assert.equal(keys.includes("zzprobe46"), false);
 });

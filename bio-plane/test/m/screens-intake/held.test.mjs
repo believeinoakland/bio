@@ -2,22 +2,27 @@
  * acts and the restore. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
+import { open as openPage, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+
+/* B6: a row names its project by the project's name (`projectlist`), never by its record id */
+const PROJECTS = ok({ projects: [{ id: "PROJ-2026-0001-pothole-repairs-at", name: "Pothole repairs" }, { id: "PROJ-2026-0002-sewer-fund-transfers", name: "Sewer" },
+                                  { id: "PROJ-2026-0003-coliseum-lease-terms", name: "Coliseum" }] });
+const open = (path, o = {}) => openPage(path, { ...o, plane: { projectlist: PROJECTS, ...(o.plane || {}) } });
 
 /* cs.date's form (interface-shell R6), by its keys */
 const day = (d, m, y) => word("date.daymonthyear", { day: String(d), month: word(`date.month.${m}`), year: String(y) });
 
 const ROWS = [
-  { bundle_id: "INFO-2026-0001-photo", title: "Photo · Seminary Ave", project: "Pothole repairs", age_days: 2, eligible: true,
+  { bundle_id: "INFO-2026-0001-photo", title: "Photo · Seminary Ave", project: "PROJ-2026-0001-pothole-repairs-at", age_days: 2, eligible: true,
     source: { address: "upload:aa" }, captured_for: { questions: [], withheld: null } },
   { bundle_id: "INFO-2026-0002-budget", title: "City budget", project: null, age_days: 1, eligible: true,
     captured_for: { questions: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }], withheld: null } },
-  { bundle_id: "INFO-2026-0003-minutes", title: "Council minutes", project: "Sewer", age_days: 3, eligible: true,
-    captured_for: { questions: [], withheld: "Captured for a question you may not see" } },
-  { bundle_id: "INFO-2026-0004-lease", title: "Lease amendment", project: "Coliseum", age_days: 0, eligible: false, class: "CRUCIAL_IN_BATCH", reason: "crucial-criticality material is never batch-released (the catalogue's sentence).",
+  { bundle_id: "INFO-2026-0003-minutes", title: "Council minutes", project: "PROJ-2026-0002-sewer-fund-transfers", age_days: 3, eligible: true,
+    captured_for: { questions: [], withheld: "withheld" } },
+  { bundle_id: "INFO-2026-0004-lease", title: "Lease amendment", project: "PROJ-2026-0003-coliseum-lease-terms", age_days: 0, eligible: false, class: "CRUCIAL_IN_BATCH", reason: "crucial-criticality material is never batch-released (the catalogue's sentence).",
     captured_for: { questions: [], withheld: null } },
-  { bundle_id: "INFO-2026-0005-packet", title: "Agenda packet (ZIP)", project: "Sewer", age_days: 1, eligible: null, captured_for: null,
+  { bundle_id: "INFO-2026-0005-packet", title: "Agenda packet (ZIP)", project: "PROJ-2026-0002-sewer-fund-transfers", age_days: 1, eligible: null, captured_for: null,
     captured_for_basis: "no reader answered",
     archive: { sha256: "d".repeat(64), entries: 41, filed: 36, already_held: 1, not_filed: 2, waiting: 0 },
     files: [{ document: "INFO-2026-0006-agenda", sha256: "e".repeat(64), index: 1, name: "01_Agenda.pdf", grade: "B", eligible: true }],
@@ -274,37 +279,52 @@ test("R26 every key the held screen reads is a word of the list, and its rows dr
   assert.ok(says(p, "screen.held.noproject"));
 });
 
-/* ---- T50 (T50-30): R35, R37 ---- */
-const UP = (more = {}) => ({ bundle_id: "INFO-2026-0020-up", title: "Pothole photo", project: null, age_days: 2, eligible: true, collected_since: "2026-10-04T10:00:00Z",
+/* ---- T50 (T50-30): R35, R37; T51 (T51-117): R40 ---- */
+/* capture R77 (T51): a row answers `actor`, `retrieved` and `bytes` of its own; `memberlist` gives the uploader's handle */
+const UP = (more = {}) => ({ bundle_id: "INFO-2026-0020-up", title: "Pothole photo", project: null, age_days: 2, eligible: true, collected_since: "2026-10-02T10:00:00Z",
   source: { address: `upload:${"a".repeat(64)}`, via: "upload", retrieved: "2026-10-04T10:00:00Z" }, captured_for: { questions: [], withheld: null },
-  capture: { sha256: "a".repeat(64), grade: null, actor: "member:mai", bytes: 2300 }, ...more });
-const heldOf = (rows) => open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows, truncated: false })) } });
+  capture: { sha256: "a".repeat(64), grade: null }, actor: "member:mai", retrieved: "2026-10-04T10:00:00Z", bytes: 2300, ...more });
+const ROSTER = ok({ members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] });
+const heldOf = (rows, roster = ROSTER) => open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows, truncated: false })), memberlist: roster } });
 
-test("R35 a held upload reads uploaded by its member and the day, then its size, never upload:<hex>", async () => {
+test("R35 R40 a held upload reads uploaded by its member's handle and the day of retrieved, then its size, never upload:<hex>", async () => {
   const p = await heldOf([UP()]);
   const t = text(p);
-  const by = word("document.uploaded.by", { member: "mai", date: day(4, "october", 2026) });
+  const by = word("document.uploaded.by", { member: "mai-h", date: day(4, "october", 2026) });
   assert.ok(t.includes(`${by} · ${word("size.kb", { n: "2" })}`), "the uploader, then the size, in the same row");
   assert.ok(!t.includes("upload:") && !t.includes("a".repeat(16)), "no raw fingerprint, no upload:<hex>");
+  assert.ok(!t.includes(day(2, "october", 2026)), "the row's own collected_since is not the upload's date");
+  assert.ok(!t.includes("member:mai") && !/\bmai\b(?!-)/.test(t), "the handle, never the stamp's id");
   /* the size words: below 1 KB, KB, MB */
   for (const [bytes, expected] of [[200, word("size.small")], [3 * 1048576, word("size.mb", { n: "3.0" })]]) {
-    const q = await heldOf([UP({ capture: { sha256: "a".repeat(64), grade: null, actor: "member:mai", bytes } })]);
+    const q = await heldOf([UP({ bytes })]);
     assert.ok(text(q).includes(expected), String(bytes));
     assert.ok(!/\b\d+ B\b/.test(text(q)), "never a byte count");
   }
+  assert.ok(p.byOp("memberlist").length >= 1, "the roster is read for the handle");
 });
 
-test("R35 controls: a fetched row still names its address; an upload row answering no uploader draws no raw source and no sentence with a blank", async () => {
-  const fetched = UP({ source: { address: "https://city.example/notice.pdf", via: "fetch" }, capture: { sha256: "b".repeat(64), grade: null } });
+test("R35 R40 controls: a fetched row still names its address; an upload row answering none of the three draws no raw source and no sentence with a blank; an archive's row draws the archive's size", async () => {
+  const fetched = UP({ source: { address: "https://city.example/notice.pdf", via: "fetch" }, actor: null, retrieved: null, bytes: null });
   const p = await heldOf([fetched]);
   assert.ok(text(p).includes(word("screen.held.from", { address: "https://city.example/notice.pdf" })));
   assert.ok(!text(p).includes(word("document.uploaded.by", { member: "x", date: "y" }).split("x")[0].trim()));
-  const q = await heldOf([UP({ capture: { sha256: "a".repeat(64), grade: null } })]);
+  const q = await heldOf([UP({ actor: null, retrieved: null, bytes: null })]);
   assert.ok(!text(q).includes("upload:") && !text(q).includes("a".repeat(16)));
   assert.ok(!text(q).includes(word("document.uploaded.by", { member: "x", date: "y" }).split("x")[0].trim()));
+  assert.ok(!text(q).includes(word("size.small")) && !text(q).includes(word("size.kb", { n: "2" })), "no size where the row answers none");
+  /* an uploader the roster does not name is not named by an id; the size and nothing else is drawn */
+  const stranger = await heldOf([UP({ actor: "member:nobody" })]);
+  assert.ok(!text(stranger).includes("nobody") && !text(stranger).includes(word("document.uploaded.by", { member: "x", date: "y" }).split("x")[0].trim()));
+  assert.ok(text(stranger).includes(word("size.kb", { n: "2" })));
+  /* an archive's row draws the archive's size */
+  const zip = await heldOf([UP({ bytes: 5 * 1048576, archive: { sha256: "d".repeat(64), entries: 3, filed: 3, already_held: 0, not_filed: 0, waiting: 0 }, files: [], files_total: 3, files_truncated: false })]);
+  assert.ok(text(zip).includes(word("size.mb", { n: "5.0" })));
+  /* held's own two lists stay held and set_aside: it lists no vouched row */
+  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.state ?? null), [null, "set_aside"]);
 });
 
-const ZIP = (more = {}) => ({ bundle_id: "INFO-2026-0030-packet", title: "Agenda packet (ZIP)", project: "Sewer", age_days: 1, eligible: true, captured_for: { questions: [], withheld: null },
+const ZIP = (more = {}) => ({ bundle_id: "INFO-2026-0030-packet", title: "Agenda packet (ZIP)", project: "PROJ-2026-0002-sewer-fund-transfers", age_days: 1, eligible: true, captured_for: { questions: [], withheld: null },
   archive: { sha256: "d".repeat(64), entries: 38, filed: 36, already_held: 0, not_filed: 2, waiting: 0 },
   files: [{ document: "INFO-2026-0031-agenda", sha256: "e".repeat(64), index: 1, name: "01_Agenda.pdf", grade: "B", eligible: true }], files_total: 36, files_truncated: false, ...more });
 
@@ -343,4 +363,19 @@ test("R37 controls: no not-filed part at zero, no summary at all at zero both; t
 test("R37 control: an ordinary row, and a file cut out of an archive (archive: {sha256} alone), draw no door", async () => {
   const p = await heldOf([UP(), { bundle_id: "INFO-2026-0032-cut", title: "A file from a ZIP", project: null, age_days: 1, eligible: true, captured_for: { questions: [], withheld: null }, archive: { sha256: "d".repeat(64) } }]);
   assert.ok(!text(p).includes(word("screen.held.archivefiles")));
+});
+
+test("B6 a row names its project by its name, never its record id; a project the list does not name is not named at all; no project says so", async () => {
+  const id = "PROJ-2026-0001-pothole-repairs-at";
+  const p = await heldOf([UP({ project: id })]);
+  assert.ok(text(p).includes(word("screen.held.project", { project: "Pothole repairs" })));
+  assert.ok(!text(p).includes(id) && !text(p).includes("pothole-repairs-at"), "no slug, no id");
+  const unnamed = await heldOf([UP({ project: "PROJ-2026-0099-roof-repairs-at-city-hall" })]);
+  assert.ok(!text(unnamed).includes("roof-repairs") && !text(unnamed).includes("PROJ-"), "an unnamed project is not drawn as its id");
+  assert.ok(!text(unnamed).includes(word("screen.held.noproject")), "and is not said to be no project");
+  const none = await heldOf([UP({ project: null })]);
+  assert.ok(text(none).includes(word("screen.held.noproject")));
+  /* an archive's listed file with no name is not drawn as its record id */
+  const zip = await heldOf([UP({ archive: { sha256: "d".repeat(64), entries: 1, filed: 1, already_held: 0, not_filed: 0, waiting: 0 }, files: [{ document: "INFO-2026-0031-roof-repairs-at", sha256: "e".repeat(64), index: 1, name: null, grade: "B", eligible: true }], files_total: 1, files_truncated: false })]);
+  assert.ok(!text(zip).includes("INFO-2026-0031") && !text(zip).includes("roof-repairs-at"));
 });

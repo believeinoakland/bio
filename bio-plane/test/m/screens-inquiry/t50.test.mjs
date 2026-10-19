@@ -51,7 +51,7 @@ test("R51 the three steps: each state draws its step as current; the new questio
   assert.deepEqual(steps(stands), [["source", "done"], ["mark", "done"], ["conclude", "current"]]);
   const more = main(stands).querySelector('details[data-fold="more"]');
   assert.ok(says(more.querySelector("summary"), "question.more"));
-  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "narrow", "planopen", "search"]);
+  assert.deepEqual(actsIn(more).sort(), ["checkrequest", "narrow", "planopen", "proposedispose", "search"], "R71: set aside for the project is among them");
   const done = await open(at, { ...A, plane: { basisversions: ok(BASIS({ conclusion: { claim: { text: "x" }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" })) } });
   assert.deepEqual(steps(done), [["source", "done"], ["mark", "done"], ["conclude", "done"]]);
 });

@@ -30,10 +30,14 @@ const VALUES = {
   opencaptures: { ok: true, captures: [{ session: "S-1", locator: "https://x.example/a", primary_sha: SHA, started: "2026-10-01T00:00:00Z", outstanding: 2 }], truncated: false },
   search: { hits: [{ bundle_id: "INQ-2026-0001-q", title: "Q?" }] },
   captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
+  projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
+  memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
 };
 const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
                 archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
 const READS = Object.keys(VALUES);
+/* the ops a screen declares: its reads' and its acts' */
+const declared = (id) => { const s = SCREENS.find((x) => x.id === id); return [s, Object.values(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).map((r) => r.op), s.acts.map((a) => a.op)]; };
 
 test("R8 R15 SCREENS meets interface-shell R21: five registry screens, archive among them, served by interfacePage without a throw", () => {
   assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox"]);
@@ -122,10 +126,14 @@ test("R9 no act or read records which member opened which file: every request is
   /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
      the shell's declaration of them (N1073) */
   const FRAME = new Set(SHELL_OPS);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image"]);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];
+  /* the ops that name only the capture are open-file's own: the reads it asks for a capture, and its five acts (R5) */
+  const [OF, ofReads, ofActs] = declared("open-file");
+  const OF_OPS = new Set([...Object.values(OF.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).filter((r) => r.query && r.query.capture).map((r) => r.op), ...ofActs]);
+  assert.ok(OF_OPS.size >= 9 && ofReads.length >= 5);
   /* open-file, every act pressed */
   const f = await open(`/app/open-file/${SHA}`, { plane: { ...plane, threatof: ok({ ok: true, threat: "high", reasons: [], scan_hold: null }) } });
   fill(f, { "co-device": true, "co-macros": true });
@@ -146,8 +154,7 @@ test("R9 no act or read records which member opened which file: every request is
       assert.ok(ours.has(r.op), `request ${r.op} is one of the screens' ops`);
       for (const k of [...Object.keys(r.query).filter((x) => x !== "op"), ...Object.keys(r.body && typeof r.body === "object" ? r.body : {})])
         assert.ok(!["member", "viewer", "by", "author", "who", "opened_by", "session", "token"].includes(k), `${r.op} names ${k}`);
-      if (["threatof", "originalstate", "verdictnotes", "captureaccounts", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold"].includes(r.op))
-        assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
+      if (OF_OPS.has(r.op)) assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
     }
     /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
        its level, theme and width; nothing of these screens */

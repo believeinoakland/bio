@@ -1,10 +1,9 @@
 /* plane R19 (N528; DEC-120, DEC-121 (5); K1396): the registration the plane makes with `wizard-scripts` at start (its
    R13), held apart from the class so the release suite reads the same parts without the Durable Object runtime; and
-   R24's check of the plane's own `SCREENS`, the registry `answers`' explain read is handed. */
+   R24's check of the one registry (`wizard-scripts`' `SCREEN_REGISTRY`), the registry `answers`' explain read is handed. */
 import { CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { MACHINE_REFUSALS, RUNGS } from "../op-grades/index.mjs";
 import { OPS } from "../op-declarations/index.mjs";
-import { SCREENS } from "./screens.mjs";
 import { ADMIN_ACTS, ADMIN_SCREENS } from "../interface-shell/index.mjs";
 
 /* R19 (N528; K1396): the labelled machine drafts the canon allows on a member's act, `case-authoring` R39's
@@ -37,15 +36,16 @@ export const wizardRegistration = ({ door = null } = {}) => ({ screens: SCREEN_R
      composition (`wiring.mjs`' `frontDoorFinder`); absent, `matches` is [] and the pointer null. */
   ...(door ? { door } : {}) });
 
-/** R24 (Q1-7): what the release suite holds empty: each screen of the registry whose shape is not `{id, title, acts,
- *  purpose}` (an id or title or purpose that is not a non-empty string, an id repeated, acts not a list of names, or a
- *  name repeated), and each act no spec in `ops` holds, as `{screen, problem, act?}`. */
-export function screenFailures(screens = SCREENS, ops = OPS) {
+/** R24 (T51): what the release suite holds empty: each screen of the registry whose shape is not `{id, name, purpose,
+ *  acts}` (an id or name or purpose that is not a non-empty string, an id repeated, acts not a list of names, or a name
+ *  repeated), and each act no spec in `ops` holds, as `{screen, problem, act?}`. A screen's `owed` acts are named apart and
+ *  are not acts: an owed act with no op, a browser act among them, is no failure. */
+export function screenFailures(screens = SCREEN_REGISTRY, ops = OPS) {
   const out = [], seen = new Set();
   const said = (v) => typeof v === "string" && v.trim() !== "";
   for (const s of Array.isArray(screens) ? screens : []) {
     const id = s && s.id;
-    for (const f of ["id", "title", "purpose"]) if (!said(s && s[f])) out.push({ screen: id ?? null, problem: `no ${f}` });
+    for (const f of ["id", "name", "purpose"]) if (!said(s && s[f])) out.push({ screen: id ?? null, problem: `no ${f}` });
     if (said(id) && seen.has(id)) out.push({ screen: id, problem: "id repeated" });
     seen.add(id);
     const acts = s && s.acts;

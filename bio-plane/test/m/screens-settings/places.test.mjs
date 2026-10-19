@@ -15,7 +15,8 @@ test("R19 places: the places whose rules apply, chosen with profilesset, its war
   assert.ok(t.indexOf(said("screen.places.profiles.warning")) >= 0 && t.indexOf(said("screen.places.profiles.warning")) < t.indexOf(said("act.profilesset.label.places")), "the warning before the act");
   assert.deepEqual((await a.press("profilesset", { values: { "pl-p-us-ca-oakland": true, "pl-p-us-ca": true } })).sent[0].body, { profiles: ["us-ca-oakland", "us-ca"] });
   assert.deepEqual((await a.press("profilesset", { values: { "pl-p-us-ca-oakland": false, "pl-p-us-ca": false } })).sent[0].body, { profiles: [] }, "none allowed");
-  const none = await open("places", { me: ADMIN, table: placesTable({ profiles: env({ ok: true, profiles: [], conflicts: [], choices: [] }) }) });
+  // no place chosen and none named: the places' own sentence (R60 is for a place named)
+  const none = await open("places", { me: ADMIN, table: placesTable({ profiles: env({ ok: true, profiles: [], conflicts: [], choices: [] }), placewantedstate: env({ ok: true, name: null, set_by: null, set_at: null, matches: [] }) }) });
   has(none, "screen.places.profiles.none");
 });
 
@@ -126,4 +127,43 @@ test("R46 control: a member who does not administer is drawn no Courts section a
   assert.equal(courtsSection(m), undefined);
   assert.deepEqual(ops(m), []);
   assert.ok(!m.p.requests.some((r) => r.op === "entitieskind" && r.query.kind === "body"));
+});
+
+/* R60 (T51; N858 D8; DEC-340, U366): a place named and no profile held for it; R61's reference to the team's own rules */
+const NOPROFILE = (over = {}) => placesTable({ profiles: env({ ok: true, profiles: [], conflicts: [], choices: [], view: "main" }), placewantedstate: env({ ok: true, name: "Nevada", set_by: "rosa", set_at: "2026-10-04T00:00:00Z", matches: [] }), ...over });
+const rulesRef = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "grouprules");
+
+test("R60 a place named and no active profile: the six sentences and the field, the reference to the team's own rules, and none of R19's sections", async () => {
+  const a = await open("places", { me: ADMIN, table: NOPROFILE() });
+  has(a, "screen.places.noprofile.heading", { state: "Nevada" });
+  has(a, "screen.places.noprofile.says", { state: "Nevada" });
+  for (const k of ["screen.places.noprofile.offers", "screen.places.noprofile.still", "screen.places.noprofile.asks", "screen.places.noprofile.want", "screen.places.noprofile.want.help"]) has(a, k);
+  assert.equal(a.b.doc.getElementById("pl-want").value, "Nevada", "the place named, to name again");
+  assert.deepEqual((await a.press("placewanted", { values: { "pl-want": " Reno, Nevada " } })).sent[0].body, { name: "Reno, Nevada" });
+  assert.equal(rulesRef(a).length, 1, "the reference");
+  assert.equal(textOf(rulesRef(a)[0]), said("screen.grouprules.name"));
+  assert.equal(rulesRef(a)[0].attrs.href, "/app/grouprules");
+  has(a, "screen.places.rules.note");
+  // none of R19's sections, and nothing filled from another profile
+  for (const k of ["screen.places.profiles.heading", "screen.places.offices.heading", "screen.places.courts", "screen.places.add.heading", "places.elsewhere.head", "screen.places.wanted.heading"]) lacks(a, k);
+  assert.ok(!all(a.tree, (e) => e.tag === "ul" && ["offices", "courts", "profiles"].includes(e.attrs["data-list"])).length);
+  assert.deepEqual(ops(a), ["placewanted"], "only the place can be named again");
+});
+
+test("R60 control: with a profile active none of the six sentences is drawn, R19 as before, and the same reference beneath it; a profile offered to choose is still offered", async () => {
+  const a = await open("places", { me: ADMIN, table: placesTable() });
+  for (const k of ["screen.places.noprofile.offers", "screen.places.noprofile.still", "screen.places.noprofile.asks", "screen.places.noprofile.want"]) lacks(a, k);
+  has(a, "screen.places.profiles.heading");
+  assert.equal(rulesRef(a).length, 1);
+  assert.ok(a.html.lastIndexOf('data-screen="grouprules"') > a.html.indexOf(said("screen.places.add.heading").slice(0, 12)), "beneath the rest");
+  // a profile that could be chosen is offered even when none is active yet
+  const choose = await open("places", { me: ADMIN, table: NOPROFILE({ profiles: env({ ok: true, profiles: [], conflicts: [], choices: [{ id: "us-nv", name: "Nevada", covers: ["Nevada"] }], view: "main" }) }) });
+  assert.deepEqual((await choose.press("profilesset", { values: { "pl-p-us-nv": true } })).sent[0].body, { profiles: ["us-nv"] });
+  // a test profile is no profile
+  const test = await open("places", { me: ADMIN, table: NOPROFILE({ profiles: env({ ok: true, profiles: [{ id: "t", name: "Test", covers: [], test: true }], conflicts: [], choices: [], view: "main" }) }) });
+  has(test, "screen.places.noprofile.says", { state: "Nevada" });
+  // a member who does not administer reads no place named and is not drawn the notice; they are given the way to the rules
+  const m = await open("places", { me: MEMBER, table: NOPROFILE() });
+  lacks(m, "screen.places.noprofile.says", { state: "Nevada" });
+  assert.equal(rulesRef(m).length, 1);
 });

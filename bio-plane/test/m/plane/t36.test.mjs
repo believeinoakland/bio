@@ -17,6 +17,9 @@ import { fileSafetyOf, fileSafetyOps, FILE_SAFETY_TABLES, FILE_SAFETY_MODULE } f
 import { credentialsOf as captureCredentialsOf } from "../../../src/capture-sources/credentials.mjs";
 import { ARCHIVE_UNPACK, UNPACK_RETRY_LIMIT, UNPACK_PAGE, archiveUnpackConsumer } from "../../../src/plane/unpack.mjs";
 import { ownHostsOf, bareHost } from "../../../src/plane/wiring.mjs";
+import { CAPTURE_CREDENTIAL_CHECKS } from "../../../src/capture-sources/credentials.mjs";
+/* the refusal for a credential on the group's own host: capture-sources' check C-105.12, named by its declaration (K3962) */
+const OWN_HOST = Object.keys(CAPTURE_CREDENTIAL_CHECKS).find((c) => CAPTURE_CREDENTIAL_CHECKS[c].check === "C-105.12");
 
 const TABLES = FILE_SAFETY_TABLES.map((t) => t.name);
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -262,7 +265,7 @@ test("R28 (capture R73, capture-sources R65): a store with OWN_HOSTS bound and n
   x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                           VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   const own = await captureCredentialsOf(x.ctx).credentialSupply({ kind: "other", host: "pdf-worker.acct.workers.dev", secret: "s", scope: "member", by: "ann" });
-  assert.equal(own.reason ?? own.code, "CAPTURE_CREDENTIAL_OWN_HOST", JSON.stringify(own).slice(0, 300));
+  assert.equal(own.reason ?? own.code, OWN_HOST, JSON.stringify(own).slice(0, 300));
   const bare = await store();
   assert.deepEqual([...captureOf(bare.ctx).ownHosts], []);
 });

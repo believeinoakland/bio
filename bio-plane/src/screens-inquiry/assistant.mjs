@@ -48,6 +48,16 @@ export const REFUSALS = Object.freeze({
   CREDENTIAL_RECORD_SILENT: "dock.withheld.CREDENTIAL_RECORD_SILENT", AI_RUN_BOUND_NO_ALLOWANCE: "refusal.AI_RUN_BOUND_NO_ALLOWANCE",
 });
 
+/** R13 (DEC-342): a refusal's words, as the shell draws one (interface-shell R13, R83): the screen's own key for its code, else
+ *  `refusal.<CODE>` when `words.json` holds it, else the answer's own translation, else `refusal.uncatalogued` with the code
+ *  as the act gave it; an answer with no code at all is `shell.unread`. The answer's builder `detail` is never drawn. */
+function refusalWords(cs, code, translation, own, fills) {
+  const key = typeof own === "string" && own ? own : "refusal." + code;
+  if (code && cs.w(key) !== cs.esc(key)) return cs.w(key, fills || {});
+  if (translation) return cs.esc(translation);
+  return code ? cs.w("refusal.uncatalogued") + " <code>" + cs.esc(code) + "</code>" : cs.w("shell.unread");
+}
+
 /** R4: who serves this member (interface-shell R20's three reads), her use today, the pack the run names, and (R42)
  *  whether the group keeps its material away from AI. */
 function reads(view) {
@@ -79,7 +89,7 @@ function render(cs, view) {
           {
           const f = r && r.ok === false ? r : a || {};
           const code = String(f.code || f.reason || "");
-          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+          settle({ state: "failed", refusal: { code, words: f.translation ? cs.esc(f.translation) : "" } });
         }
         else if (r && r.found === false) settle({ state: "empty" });
         else settle({ state: "ok", value: r });
@@ -265,11 +275,10 @@ const acts = [
         const fills = { whose: r.whose || "", period: r.period || "", use: r.use || "", Use: r.use || "", when: r.when || "",
                         who: r.who || "", for_uses: r.for_uses || "", member: r.member || kept.set_by || "",
                         date: r.date || (kept.set_at ? { html: cs.date(String(kept.set_at), { year: true }) } : ""),
-                        reason: kept.reason || r.why || r.detail || code };
+                        reason: kept.reason || r.why || "" };
         const html = r.withheld && withheldKeys.includes(code) ? cs.w("dock.withheld." + code)
-          : words[code] ? cs.w(words[code], fills)
-          : r.withheld ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>`
-          : r.translation ? cs.esc(r.translation) : cs.w("screen.assistant.dispatch.unknown", { reason: code });
+          : r.withheld && !words[code] ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>`
+          : P.refusalWords(cs, code, r.translation, words[code], fills);
         cs.set("said", { op, code, html });
       };
       /* the segment started through the member-run door, `run` alone, under her session (R13) */
@@ -314,14 +323,14 @@ const acts = [
         .then((a) => {
           const r = a && a.result !== undefined ? a.result : a;
           if (!a || a.ok === false || !r || r.ok === false) {
-            cs.set("said", { op: "suggest", html: r && r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: (r && (r.code || r.reason)) || "" }) });
+            cs.set("said", { op: "suggest", html: view.parts.refusalWords(cs, String((r && (r.code || r.reason)) || ""), r && r.translation, null) });
             return;
           }
           const rec = r.record || r;
           cs.set("suggestions", (Array.isArray(view.ui.suggestions) ? view.ui.suggestions : []).concat([String(rec.description || rec.name || name)]));
           /* the run read again: a run that ended since is seen ended */
           cs.set("seq", (view.ui.seq || 0) + 1);
-        }, () => cs.set("said", { op: "suggest", html: cs.w("state.failed", { reason: "" }) }));
+        }, () => cs.set("said", { op: "suggest", html: view.parts.refusalWords(cs, "", null, null) }));
       return null;
     } },
   { op: "airunclose", label: "act.airunclose.label.assistant",
@@ -345,12 +354,12 @@ const words = Object.freeze([
   "ai.account.own.inline", "ai.account.group.inline", "ai.account.project.inline",
   ...new Set(Object.values(REFUSALS)), "dock.withheld.NAMESPACE_UNDETERMINED", "dock.withheld.other", "dock.run.yours",
   "question.ai.other", "question.ai.whose",
-  "ai.label.untested", "mark.origin.machine.name", "mark.origin.machine.means", "state.failed",
+  "ai.label.untested", "mark.origin.machine.name", "mark.origin.machine.means", "state.failed", "refusal.uncatalogued", "shell.unread",
   "screen.assistant.says", "screen.assistant.serves", "screen.assistant.serves.unknown", "screen.assistant.use",
   "screen.assistant.run.head", "screen.assistant.run.running", "screen.assistant.run.ended", "screen.assistant.run.none",
   "screen.assistant.run.notready", "screen.assistant.run.nocontext", "screen.assistant.productions.head",
   "screen.assistant.production", "screen.assistant.notevidence", "screen.assistant.suggest.name",
-  "screen.assistant.suggest.description", "screen.assistant.dispatch.unknown",
+  "screen.assistant.suggest.description",
   /* T50 (R57–R59) */
   "dock.use.head", "dock.ifnot", "screen.question.stopped.kept", "refusal.ACCOUNT_MEMBER_NOT_ACTIVE", "refusal.AI_RUN_NOT_PRINCIPAL",
   "refusal.AI_RUN_NOT_RUNNING", "refusal.AI_RUN_BOUND_NO_ALLOWANCE", "screen.assistant.run.cost.sofar", "screen.assistant.run.cost.final",
@@ -364,4 +373,4 @@ const words = Object.freeze([
 /** The assistant dock (interface-shell R20, R21), with the screens-settings bars and R33's tables as its parts. */
 export const ASSISTANT_SCREEN = Object.freeze({ id: "assistant", reads, render, acts, words,
   parts: Object.freeze({ ...(settingsPanel.aiUsageBars ? { aiUsageBars: settingsPanel.aiUsageBars } : {}),
-    bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD, ending: COMMON.ending, costLine: COMMON.costLine, progress: COMMON.progress }) });
+    bounds: MODE_BOUNDS, refusals: REFUSALS, withheld: WITHHELD, ending: COMMON.ending, costLine: COMMON.costLine, progress: COMMON.progress, refusalWords }) });

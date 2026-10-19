@@ -4,10 +4,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, SCREENS, P } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, day, SCREENS, P } from "./fixtures.mjs";
 
 const at = "/app/projectai/" + P;
 const OWNER = "project:" + P;
+/* the notice as the plane answers it: the words row it is made from, read by `word` */
+const NOTICE = word("ai.disclosure.projectkey", { project: "Pothole repairs" });
 const KEY = "sk-ant-api03-" + "7".repeat(40);
 /* mai is the project's owner here; `sole` leaves her its only participant */
 const parts = (sole) => ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true },
@@ -16,7 +18,7 @@ function ai(o = {}) {
   return {
     projectparticipants: parts(o.sole),
     projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, set_at: "2026-10-05T09:00:00Z", by: "mai", uses: {}, serving: "project", ...(o.state || {}) }),
-    projectkeynotice: ok({ ok: true, due: o.due !== false, text: "Your questions in Pothole repairs, and the material read to answer them, go to Anthropic under the project's API account." }),
+    projectkeynotice: ok({ ok: true, due: o.due !== false, text: NOTICE }),
     projectaikeepawaystate: ok({ ok: true, on: false, uses: null, reason: null, set_by: null, set_at: null, ...(o.keep || {}) }),
     subscriptionsignin: ok({ ok: true, connected: o.connected !== false }),
     accountuses: ok({ owner: OWNER, held: true, uses: { ask: true, draft: true, run: false, standing: true, enquire: true, read: true, transcribe: true, account: true, suggestions: true }, keptAway: [] }),
@@ -45,7 +47,7 @@ test("R14 drawn to an owner: what pays, the panel over the project's account (sc
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
   assert.ok(says(m.querySelector('[data-account="apikey"]'), "screen.projectai.account.key"));
-  assert.ok(says(m, "screen.projectai.account.since", { who: "mai", date: "5 October 2026" }));
+  assert.ok(says(m, "screen.projectai.account.since", { who: "mai", date: day("2026-10-05T09:00:00Z", { year: true }) }));
   /* the panel: its four sections, its use summed naming no member */
   assert.ok(m.querySelectorAll("section").length >= 4, "the panel's sections, drawn by screens-settings");
   assert.ok(m.textContent.includes("$1.20"));
@@ -95,7 +97,7 @@ test("R14 switch, remove, the notice, the panel's two acts and keep-away send wh
   await press(p, "projectaccountremove");
   assert.deepEqual(p.byOp("projectaccountremove")[0].body, { project: P });
   /* the notice drawn before the first use, as it leaves the group */
-  assert.ok(main(p).querySelector('[data-notice="projectkey"]').textContent.includes("go to Anthropic under the project's API account"), "the notice as the plane answers it");
+  assert.ok(main(p).querySelector('[data-notice="projectkey"]').textContent.includes(NOTICE), "the notice as the plane answers it");
   await press(p, "projectkeynoticeseen");
   assert.deepEqual(p.byOp("projectkeynoticeseen")[0].body, { project: P });
   await press(p, "accountusesset");
@@ -121,7 +123,7 @@ test("R14 switch, remove, the notice, the panel's two acts and keep-away send wh
 
 test("R14 keep-away on is drawn with who, when and the reason, and an owner may turn it off with a reason", async () => {
   const p = await openAi({ keep: { on: true, reason: "the case is sealed", set_by: "dev", set_at: "2026-10-03T09:00:00Z" } }, { projectaikeepaway: ok({ ok: true }) });
-  assert.ok(says(main(p).querySelector('[data-keepaway="on"]'), "screen.projectai.keepaway.on", { who: "dev", date: "3 October 2026", reason: "the case is sealed" }));
+  assert.ok(says(main(p).querySelector('[data-keepaway="on"]'), "screen.projectai.keepaway.on", { who: "dev", date: day("2026-10-03T09:00:00Z", { year: true }), reason: "the case is sealed" }));
   assert.ok(says(button(p, "projectaikeepaway"), "screen.projectai.keepaway.turnoff"));
   fill(p, { "pa-why": "unsealed today" });
   await press(p, "projectaikeepaway");

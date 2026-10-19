@@ -1,12 +1,16 @@
-/* Find (registry screen `finder`; screens-daily R4, R7, R12, R21). Search with the member's words; each result with its grade and
-   where it matched; hold picked results together (retrieval's selection, a handle that lives while it is used), let the
-   set go, open "Find in these" over it, see where nobody looked, and count over the held set. The words searched are the
-   route's subject (`/app/finder/<words>`) or the member's last search on this page; the held set's handle is kept in the
-   screen's page memory (`view.ui`). A search that finds nothing says what search covers and offers "Capture it" (R12).
-   Every function is self-contained (interface-shell R21 (1)). */
+/* Find (registry screen `finder`; screens-daily R4, R7, R12, R21, R43 to R46, R54 to R57). Search with the member's words; each result
+   with its grade and where it matched; hold picked results together (retrieval's selection, a handle that lives while it is used), let
+   the set go, open "Find in these" over it, cite the whole held set (R57), see where nobody looked, and count over the held set. The
+   words searched are the route's subject (`/app/finder/<words>`) or the member's last search on this page. With words the three routes
+   are read apart and counted apart, under a scope, with what the search covered (R56); with none Find is the browse (R44, R54): the
+   choices "Show", "Only", "Show as" and "Theme" are choices that redraw and send nothing, and the whole record is one sortable table
+   (R55). A search that finds nothing says what search covers and offers "Capture it" (R12). Every function is self-contained
+   (interface-shell R21 (1)); the state parts it draws are `view.parts.finderStates`. */
+import { finderStates } from "./finder-states.mjs";
 
 export const finder = Object.freeze({
   id: "finder",
+  parts: { finderStates },
 
   reads: function (view) {
     const ui = view.ui || {};
@@ -16,20 +20,33 @@ export const finder = Object.freeze({
     const q = typeof ui.q === "string" ? ui.q : (subject.charAt(0) === "~" ? "" : subject);
     const out = {};
     if (q.trim()) {
-      // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
-      const w = q.trim().split(/\s+/);
-      const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
-      const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
-      out.search = {
-        op: "search", query: { q: asked, limit: "50", snippet: "160" },
-        empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
-      };
+      // R56: the scopes `searchfields` answers (retrieval R87); the three routes are read in the screen (`render`), each apart.
+      out.scopes = { op: "searchfields" };
     } else {
       // R44: with no words, the browse; the member's last look (`lookedat`, which moves nothing) is what "new" counts from, and
       // the team's themes fill the Theme choice (R43). The browse itself is called from `render` once `since` is known.
       out.lookedat = { op: "lookedat" };
       out.themes = { op: "themeread", empty: function (v) { return !v || !Array.isArray(v.themes) || v.themes.length === 0; } };
-      if (ui.theme) out.theme = { op: "themeread", query: { id: String(ui.theme) } };
+      // R54, R93: the browse is a list that re-reads itself; its choices (page memory, `choice:<id>`) and the member's last look fix its request.
+      // A "new" browse waits for that look, and is read in `render` until then.
+      const KINDS = ["all", "document", "question", "action", "entity", "plan"];
+      const ONLY = ["any", "new_since", "watched", "flagged"];
+      const parts = subject.charAt(0) === "~" ? subject.slice(1).split("~") : [];
+      const chosen = function (id, list, seed) { const v = ui["choice:" + id]; return list.indexOf(v) >= 0 ? v : seed; };
+      const lk = view.data && view.data.lookedat && view.data.lookedat.state === "ok" ? view.data.lookedat.value : null;
+      const since = lk && typeof lk.since === "string" ? lk.since : null;
+      const asTable = chosen("finder-view", ["list", "table"], "list") === "table";
+      const kind = asTable ? "all" : chosen("finder-kind", KINDS, KINDS.indexOf(parts[0]) >= 0 ? parts[0] : "all");
+      const only = asTable ? "any" : chosen("finder-state", ONLY, ONLY.indexOf(parts[1]) >= 0 ? parts[1] : "any");
+      if (only !== "new_since" || since) {
+        const query = { limit: "50" };
+        if (!asTable) {
+          if (kind !== "all") query.kinds = kind;
+          if (only !== "any") query.only = only;
+          if (only === "new_since") query.since = since;
+        }
+        out.browse = { op: "browse", query: query, refresh: true, empty: function () { return false; } };
+      }
     }
     if (ui.handle) out.selection = { op: "selection", query: { handle: String(ui.handle) } };
     if (ui.frontier) {
@@ -46,10 +63,7 @@ export const finder = Object.freeze({
     const subject = view.subject ? String(view.subject) : "";
     const q = typeof ui.q === "string" ? ui.q : (subject.charAt(0) === "~" ? "" : subject);
     const ok = function (r) { return r && r.state === "ok" ? r.value : null; };
-    const hitsOf = function () {
-      const s = view.data.search;
-      return s && s.state === "ok" && s.value && Array.isArray(s.value.hits) ? s.value.hits : [];
-    };
+    const st = view.parts.finderStates();
     // The screen each kind of thing opens, by what the hit or browse row says it is.
     const SCREEN_OF = { information: "document", document: "document", inquiry: "question", question: "question", project: "project",
       action: "action", action_plan: "plan", plan: "plan", person: "person", organization: "person" };
@@ -58,71 +72,106 @@ export const finder = Object.freeze({
       if (t) return t;
       return /^PROJ-/.test(id) ? "project" : /^INQ-/.test(id) ? "question" : "document";
     };
-    // R46: the excerpt as its words are, the match brackets drawn as emphasis, never as raw brackets.
-    const excerpt = function (text) {
-      return String(text).split(/(\[[^\]]*\])/).map(function (part) {
-        const m = /^\[([^\]]*)\]$/.exec(part);
-        return m ? "<em>" + cs.esc(m[1]) + "</em>" : cs.esc(part);
-      }).join("");
-    };
     const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.finder.sub") + "</p>";
     const browsing = !q.trim();
-    const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q, help: "find.query.placeholder" })
+    // R54: the words field carries the kit's placeholder and its help beneath (the label stays the words), not the placeholder as help.
+    const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q, placeholder: "find.query.placeholder", help: "find.query.help" })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>";
 
-    // R44: the browse's filters are the route's: "Show" (kinds) and "Only" are chips that are links, the Theme choice is R43's.
+    // R54: "Show", "Only", "Show as" and "Theme" are choices that redraw and send nothing; their values are page memory (`choice:<id>`);
+    // the route's `~kind~only` seeds the first values, so a link to `/app/finder/~document~new_since` still opens that browse.
     const KINDS = ["all", "document", "question", "action", "entity", "plan"];
     const ONLY = ["any", "new_since", "watched", "flagged"];
     const ONLY_KEY = { any: "find.state.any", new_since: "find.state.new", watched: "find.state.watched", flagged: "find.state.secondlook" };
     const parts = subject.charAt(0) === "~" ? subject.slice(1).split("~") : [];
-    const kind = KINDS.indexOf(parts[0]) >= 0 ? parts[0] : "all";
-    const only = ONLY.indexOf(parts[1]) >= 0 ? parts[1] : "any";
+    const chosen = function (id, list, seed) { const v = ui["choice:" + id]; return list.indexOf(v) >= 0 ? v : seed; };
     const lk = view.data.lookedat;
     const since = ok(lk) && typeof ok(lk).since === "string" ? ok(lk).since : null;
-    const href = function (k, o) { return "/app/finder/~" + k + "~" + o; };
-    const chips = function (labelKey, list, current, make, key) {
-      return '<nav class="mk-sortrow" aria-label="' + cs.w(labelKey) + '"><span>' + cs.w(labelKey) + "</span> "
-        + list.map(function (x) {
-          return x === current ? '<b aria-current="true">' + cs.w(key(x)) + "</b>" : '<a data-nav href="' + make(x) + '">' + cs.w(key(x)) + "</a>";
-        }).join(" · ") + "</nav>";
-    };
-    // "New since you last looked" is offered once she has visited Home (`since` is not null).
-    const onlyList = ONLY.filter(function (o) { return o !== "new_since" || since; });
+    const asTable = chosen("finder-view", ["list", "table"], "list") === "table";
+    const kind = asTable ? "all" : chosen("finder-kind", KINDS, KINDS.indexOf(parts[0]) >= 0 ? parts[0] : "all");
+    const only = asTable ? "any" : chosen("finder-state", ONLY, ONLY.indexOf(parts[1]) >= 0 ? parts[1] : "any");
     const themes = ok(view.data.themes);
     const themeList = themes && Array.isArray(themes.themes) ? themes.themes : [];
-    const filters = !browsing ? "" : chips("find.kind.label", KINDS, kind, function (k) { return href(k, only); }, function (k) { return "find.kind." + k; })
-      + chips("find.state.label", onlyList, only, function (o) { return href(kind, o); }, function (o) { return ONLY_KEY[o]; })
-      + (lk && lk.state === "ok" && !since ? '<p class="mk-small muted"><b>' + cs.w("find.browse.nosince.summary") + "</b> " + cs.w("find.browse.nosince") + "</p>"
-        : since ? '<p class="mk-small muted">' + cs.w("find.browse.new.means") + "</p>" : "")
-      + (themeList.length ? cs.choice("finder-theme", "theme.filter", [["", "theme.filter.any"]].concat(themeList.map(function (t) {
+    const themeId = asTable ? "" : String(ui["choice:finder-theme"] || "");
+    const onlyList = ONLY.filter(function (o) { return o !== "new_since" || since || o === only; });
+    const filters = !browsing ? "" : '<div class="mk-grid2">'
+      + (asTable ? "" : cs.choice("finder-kind", "find.kind.label", KINDS.map(function (k) { return [k, "find.kind." + k]; }), { value: kind, redraw: "choice:finder-kind" })
+        + cs.choice("finder-state", "find.state.label", onlyList.map(function (o) { return [o, ONLY_KEY[o]]; }), { value: only, redraw: "choice:finder-state" }))
+      + cs.choice("finder-view", "screen.finder.showas", [["list", "screen.finder.showas.list"], ["table", "screen.finder.showas.table"]], { value: "list", redraw: "choice:finder-view" })
+      + (!asTable && themeList.length ? cs.choice("finder-theme", "theme.filter", [["", "theme.filter.any"]].concat(themeList.map(function (t) {
           return { value: String(t.theme_id), text: String(t.name || t.theme_id) };
-        })), { value: ui.theme || "" }) + '<p class="mk-small muted">' + cs.w("theme.filter.help") + "</p>"
-        + '<span class="mk-acts">' + cs.act("themeread", { label: "act.themeread.label.finder" }) + "</span>" : "");
+        })), { value: "", redraw: "choice:finder-theme" }) : "")
+      + "</div>"
+      + '<p class="mk-small muted">' + cs.w("screen.finder.table.view.help") + "</p>"
+      + (asTable ? "" : (!asTable && themeList.length ? '<p class="mk-small muted">' + cs.w("theme.filter.help") + "</p>" : "")
+        + (lk && lk.state === "ok" && !since ? '<p class="mk-small muted"><b>' + cs.w("find.browse.nosince.summary") + "</b> " + cs.w("find.browse.nosince") + "</p>"
+          : since && !asTable ? '<p class="mk-small muted">' + cs.w("find.browse.new.means") + "</p>" : ""));
 
-    // R44: the browse's pages, read once per (kind, only, since) and kept in the screen's page memory: "Show more" adds the next.
-    const call = function (extra, merge) {
+    // R44, R55: the browse's pages, read once per (view, kind, only, since) and kept in the screen's page memory: "Show more" adds the next.
+    const key = (asTable ? "table" : kind + "|" + only) + "|" + (only === "new_since" ? since : "");
+    const base = function () {
       const query = { limit: "50" };
-      if (kind !== "all") query.kinds = kind;
-      if (only !== "any") query.only = only;
-      if (only === "new_since" && since) query.since = since;
-      if (extra) query.after = extra;
+      if (!asTable) {
+        if (kind !== "all") query.kinds = kind;
+        if (only !== "any") query.only = only;
+        if (only === "new_since" && since) query.since = since;
+      }
+      return query;
+    };
+    const getBrowse = function (query, merge) {
       return cs.call("browse", { query: query }).then(function (a) {
         const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
         if (!v || v.ok === false || !Array.isArray(v.items)) return { state: "failed", key: key };
-        return { state: "ok", key: key, since: since, items: (merge ? merge.items : []).concat(v.items), next: v.truncated && v.next ? String(v.next) : null,
-          truncated: !!v.truncated, undetermined: v.undetermined || (merge && merge.undetermined) || null };
+        return { state: "ok", key: key, since: since, base: base(), items: (merge ? merge.items : []).concat(v.items), next: v.truncated && v.next ? String(v.next) : null,
+          truncated: !!v.truncated, undetermined: v.undetermined || (merge && merge.undetermined) || null,
+          total: merge && typeof merge.total === "number" ? merge.total : (typeof v.total === "number" ? v.total : null),
+          awaiting: merge && typeof merge.awaiting === "number" ? merge.awaiting : (typeof v.awaiting_review === "number" ? v.awaiting_review : null) };
       }, function () { return { state: "failed", key: key }; });
     };
-    const key = kind + "|" + only + "|" + (only === "new_since" ? since : "");
-    let browse = ui.browse && typeof ui.browse === "object" && ui.browse.key === key ? ui.browse : null;
-    if (browsing && !ui.theme && !browse && (only !== "new_since" || (lk && lk.state !== "loading"))) {
-      if (only === "new_since" && !since) {
-        browse = { state: "failed", key: key };
-      } else {
-        ui.browse = browse = { state: "loading", key: key };
-        call(null, null).then(function (r) { cs.set("browse", r); });
+    // The first page: the shell's read of `browse` (a list that re-reads itself, R93) when the request was fixed at load, else read here (a
+    // "new" browse opened by its link waits for the member's last look, and so does one reached from a search or a theme).
+    const feed = view.data.browse;
+    let browse = null;
+    if (browsing && !themeId && feed && feed.state !== "empty") {
+      const v = ok(feed);
+      browse = feed.state === "loading" ? { state: "loading", key: key }
+        : v && Array.isArray(v.items) ? { state: "ok", key: key, since: since, base: base(), items: v.items.slice(), next: v.truncated && v.next ? String(v.next) : null,
+          truncated: !!v.truncated, undetermined: v.undetermined || null, total: typeof v.total === "number" ? v.total : null,
+          awaiting: typeof v.awaiting_review === "number" ? v.awaiting_review : null }
+        : { state: "failed", key: key };
+    } else {
+      let page = ui.page1 && typeof ui.page1 === "object" && ui.page1.key === key ? ui.page1 : null;
+      if (browsing && !themeId && !page && Object.keys(view.data).length && (only !== "new_since" || (lk && lk.state !== "loading"))) {
+        if (only === "new_since" && !since) {
+          page = { state: "failed", key: key };
+        } else {
+          ui.page1 = page = { state: "loading", key: key };
+          getBrowse(base(), null).then(function (r) { cs.set("page1", r); });
+        }
       }
+      browse = page ? Object.assign({}, page) : null;
     }
+    // "Show more": the pages after the first, kept by the request they follow.
+    const more = ui.more && typeof ui.more === "object" && ui.more.key === key ? ui.more : null;
+    if (browse && browse.state === "ok" && more) {
+      browse.items = browse.items.concat(more.items);
+      browse.next = more.next;
+      browse.truncated = more.truncated;
+    }
+    ui.browse = browse;
+    // R43, R54: a theme chosen is read at once, what was placed in it and its hunches apart; kept by the theme chosen.
+    let theme = ui.themeRead && ui.themeRead.id === themeId ? ui.themeRead : null;
+    if (browsing && themeId && !theme) {
+      ui.themeRead = theme = { id: themeId, state: "loading", value: null };
+      cs.call("themeread", { query: { id: themeId } }).then(function (a) {
+        const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+        cs.set("themeRead", !v || v.ok === false ? { id: themeId, state: "failed", value: null } : { id: themeId, state: "ok", value: v });
+      }, function () { cs.set("themeRead", { id: themeId, state: "failed", value: null }); });
+    }
+
+    const pickBox = function (id, title) {
+      return '<input type="checkbox" id="finder-pick-' + cs.esc(id) + '" aria-label="' + cs.w("screen.finder.pick", { title: title }) + '">';
+    };
     const mark = function (it) {
       const bits = [];
       if (it.new === true) bits.push(cs.w("find.row.new"));
@@ -132,28 +181,27 @@ export const finder = Object.freeze({
       }
       return bits;
     };
-    const pickBox = function (id, title) {
-      return '<input type="checkbox" id="finder-pick-' + cs.esc(id) + '" aria-label="' + cs.w("screen.finder.pick", { title: title }) + '">';
+    const kindWord = function (it, sc) {
+      return cs.w("find.row.kind." + (it.kind === "organization" || it.kind === "person" ? it.kind : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "document"));
     };
     let results = "";
-    if (browsing && ui.theme) {
+    if (browsing && themeId) {
       // R43: with a theme chosen, what was placed in it, then its hunches apart; a hunch is never drawn as membership.
-      const th = view.data.theme;
-      results = cs.state("theme", function (v) {
-        const row = function (p) {
-          const id = String(p.target || "");
-          const t = p.document && typeof p.document === "object" && p.document.title ? String(p.document.title) : (typeof p.title === "string" && p.title ? p.title : id);
-          return cs.row("", cs.ref(screenOf(p.target_kind, id), id, t, []), "", "");
-        };
+      const row = function (p) {
+        const id = String(p.target || "");
+        const t = p.document && typeof p.document === "object" && p.document.title ? String(p.document.title) : (typeof p.title === "string" && p.title ? p.title : id);
+        return cs.row("", cs.ref(screenOf(p.target_kind, id), id, t, []), "", "");
+      };
+      results = cs.state(theme && theme.state === "ok" ? { state: "ok", value: theme.value } : theme && theme.state === "failed" ? { state: "failed", refusal: null } : { state: "loading" }, function (v) {
         const members = Array.isArray(v.members) ? v.members : [];
         const hunches = Array.isArray(v.hunches) ? v.hunches : [];
         return (members.length ? cs.sec("theme.placed", cs.sheet(members.map(row).join(""))) : "")
           + (hunches.length ? cs.sec("theme.hunches", '<p class="mk-small muted">' + cs.w("theme.hunch.note") + "</p>" + cs.sheet(hunches.map(row).join(""))) : "");
       }, { empty: "state.empty" }) || "";
-      if (!th) results = "";
     } else if (browsing) {
       if (!browse || browse.state === "loading") results = cs.state({ state: "loading" }, null);
       else if (browse.state === "failed") results = cs.state({ state: "failed", refusal: null }, null);
+      else if (asTable) results = st.table(cs, ui, browse, screenOf, kindWord);
       else {
         const items = browse.items || [];
         const unread = browse.undetermined && typeof browse.undetermined === "object";
@@ -164,36 +212,15 @@ export const finder = Object.freeze({
           const bits = mark(it);
           const acts = (it.watched === true ? cs.act("watchitem", { label: "find.row.unwatch", data: { item: id, off: "1" } }) : "")
             + (it.flagged ? cs.act("secondlookclear", { label: "act.secondlookclear.label.finder", data: { item: id } }) : "");
-          return cs.row(pickBox(id, title), cs.ref(sc, id, title, []) + '<span class="meta"><span>' + cs.w("find.row.kind." + (it.kind === "organization" || it.kind === "person" ? it.kind : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "document")) + "</span>"
+          return cs.row(pickBox(id, title), cs.ref(sc, id, title, []) + '<span class="meta"><span>' + kindWord(it, sc) + "</span>"
             + (bits.length ? " · " + bits.join(" · ") : "") + (unread ? ' · <span class="muted">' + cs.w("state.undetermined", { reason: String(browse.undetermined.why || "") }) + "</span>" : "") + "</span>", acts, "");
         }).join("")) : cs.state({ state: "empty" }, null))
           + (browse.truncated && browse.next ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">'
             + cs.act("search", { label: "find.browse.showmore", data: { more: String(browse.next) } }) + "</span>" : "");
       }
     } else {
-      // R12 (DEC-201 (13)): no result: the words searched, what search covers, and "Capture it" (the capture screen).
-      const sr = view.data.search;
-      const none = sr && sr.state === "empty"
-        ? '<div class="mk-note" data-state="empty"><p><b>' + cs.w("screen.finder.noresult", { q: q }) + "</b> " + cs.w("screen.finder.covers") + "</p>"
-          + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        : "";
-      results = view.data.search ? (none || cs.state("search", function (s) {
-        const hits = Array.isArray(s.hits) ? s.hits : [];
-        const total = typeof s.total === "number" ? s.total : hits.length;
-        return '<p class="mk-sub">' + (total === 1 ? cs.w("screen.finder.total.one") : cs.w("screen.finder.total.many", { n: String(total) })) + "</p>"
-          + cs.sheet(hits.map(function (h) {
-            // R46: a row is a reference of its own kind, its title and a plain excerpt (a passage's words when found through one).
-            const id = String(h.bundle_id);
-            const title = String(h.title || "");
-            const grade = h.grade ? cs.grade("capture", String(h.grade)) + " " : "";
-            const where = h.snippet ? excerpt(h.snippet) : "";
-            return cs.row(pickBox(id, title), cs.ref(screenOf(h.object_type, id), id, title, []) + '<span class="meta">' + grade + cs.mark("origin", "search") + (where ? " <span>" + where + "</span>" : "") + "</span>", "", "");
-          }).join(""));
-      })) + (function () {
-        const w = sr && (sr.state === "ok" || sr.state === "empty") && sr.value && sr.value.widen;
-        return w && typeof w.total === "number" && w.total > 0 && (!sr.value.hits || !sr.value.hits.length)
-          ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(w.total) }) + "</p>" : "";
-      })() : "";
+      // R56: with words, the three routes read apart (once per words and scope), each counted apart, with what the search covered.
+      results = st.routes(cs, view, q, screenOf, pickBox);
     }
 
     const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", function (f) {
@@ -209,9 +236,12 @@ export const finder = Object.freeze({
       + '<span class="mk-acts">' + cs.act("frontier", { label: "act.frontier.label.finder" }) + "</span>";
 
     // The hold strip (interface-shell R19's): how many are held together and until when, from `selection`; R45's Watch and
-    // Flag for what is picked. Drawn only with results to pick or a set held (R21: no empty hold tray).
+    // Flag for what is picked; R57's cite. Drawn only with results to pick or a set held (R21: no empty hold tray).
     const sel = view.data.selection;
-    const rows = hitsOf().length || (browsing && !ui.theme && browse && browse.state === "ok" && (browse.items || []).length);
+    const hitsOf = st.hits(view);
+    const rows = hitsOf.length || (browsing && !themeId && !asTable && browse && browse.state === "ok" && (browse.items || []).length);
+    // R57: the cite state replaces the results while the held set is being cited; the strip stays, so the set can be let go.
+    if (ui.cite && ui.handle) results = st.cite(cs, view, sel);
     const strip = !rows && !ui.handle ? "" : '<div class="cs-hold mk-hold">'
       + (ui.handle && sel ? cs.state("selection", function (v) {
         const n = typeof v.n === "number" ? v.n : (v.members || []).length;
@@ -232,6 +262,7 @@ export const finder = Object.freeze({
           + cs.field("finder-note", "find.secondlook.note", { help: "find.secondlook.note.help" }) + button + "</details>" : "";
       })() : "")
       + (ui.handle ? cs.act("findin", { label: "act.findin.label.finder", data: { handle: String(ui.handle) } })
+        + cs.act("cite", { label: "act.cite.label.finder", data: { handle: String(ui.handle) } })
         + (function () {
           // "Count" asks what is counted and over which period, in place, with the act (read by its `send`).
           const button = cs.act("calculationcreate", { label: "act.calculationcreate.label.finder", data: { handle: String(ui.handle), f: "fc" } });
@@ -243,27 +274,25 @@ export const finder = Object.freeze({
       + "</span></div>";
     const counted = ui.counted ? '<p class="mk-note">' + cs.w("screen.finder.counted", { result: String(ui.counted) }) + "</p>" : "";
     const says = browsing ? '<p class="mk-small muted">' + cs.w("find.browse.says") + "</p>" : "";
+    const fresh = browsing && browse && browse.state === "ok" && typeof cs.fresh === "function" ? cs.fresh() : "";
 
-    return head + box + says + filters + results + strip + counted + nobody;
+    return head + box + says + filters + fresh + results + strip + counted + (browsing ? "" : st.covered(cs, view, nobody)) + (browsing ? nobody : "");
   },
 
   acts: [
-    { op: "search", label: "act.search.label.finder", rereads: ["search"],
+    { op: "search", label: "act.search.label.finder", rereads: [],
       send: function (view, el, cs) {
         const ui = view.ui || {};
         // R44: "Show more" asks the browse's next page (`after` its `next`) and adds it below.
         if (el.dataset.more) {
           const b = ui.browse;
-          const subject = view.subject ? String(view.subject) : "";
-          const parts = subject.charAt(0) === "~" ? subject.slice(1).split("~") : [];
-          const query = { limit: "50", after: el.dataset.more };
-          if (parts[0] && parts[0] !== "all") query.kinds = parts[0];
-          if (parts[1] && parts[1] !== "any") query.only = parts[1];
-          if (parts[1] === "new_since" && b && b.since) query.since = b.since;
+          if (!b || b.state !== "ok") return null;
+          const query = Object.assign({}, b.base || { limit: "50" }, { after: el.dataset.more });
           return cs.call("browse", { query: query }).then(function (a) {
             const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
-            if (b && v && v.ok !== false && Array.isArray(v.items)) {
-              cs.set("browse", Object.assign({}, b, { items: (b.items || []).concat(v.items), next: v.truncated && v.next ? String(v.next) : null, truncated: !!v.truncated }));
+            if (v && v.ok !== false && Array.isArray(v.items)) {
+              const had = ui.more && ui.more.key === b.key ? ui.more.items : [];
+              cs.set("more", { key: b.key, items: had.concat(v.items), next: v.truncated && v.next ? String(v.next) : null, truncated: !!v.truncated });
               return null;
             }
             return { refuse: "state.failed", fills: { reason: "" } };
@@ -272,27 +301,29 @@ export const finder = Object.freeze({
         const q = String(cs.value("finder-q") || "").trim();
         // R44: with no words the browse; leaving the words empty returns to it.
         if (!q) { cs.set("q", ""); return null; }
+        // R56: a new search reads its three routes again; nothing is sent by the act itself.
+        cs.set("routes", null);
         cs.set("q", q);
-        // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
-        const w = q.split(/\s+/);
-        const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
-        const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
-        return { query: { q: asked, limit: "50", snippet: "160" } };
+        return null;
       } },
-    // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
+    // Holds the picked results together: an enumerated selection over their ids (retrieval R18). The title of each is kept for R57.
     { op: "select", label: "act.select.label.finder", rereads: ["selection"],
       send: function (view, el, cs) {
-        const s = view.data.search;
-        const b = (view.ui || {}).browse;
-        const hits = s && s.state === "ok" && s.value && Array.isArray(s.value.hits) ? s.value.hits
-          : b && b.state === "ok" && Array.isArray(b.items) ? b.items.filter(function (x) { return x.kind === "document"; }).map(function (x) { return { bundle_id: x.id }; }) : [];
-        const ids = hits.map(function (h) { return String(h.bundle_id); }).filter(function (id) {
-          const v = cs.value("finder-pick-" + id);
+        const ui = view.ui || {};
+        const hits = view.parts.finderStates().hits(view);
+        const b = ui.browse;
+        const list = hits.length ? hits.map(function (h) { return { id: String(h.bundle_id), title: String(h.title || "") }; })
+          : b && b.state === "ok" && Array.isArray(b.items) ? b.items.filter(function (x) { return x.kind === "document"; }).map(function (x) { return { id: String(x.id), title: String(x.title || "") }; }) : [];
+        const picked = list.filter(function (h) {
+          const v = cs.value("finder-pick-" + h.id);
           return v === true || v === "on" || v === "true";
         });
-        if (!ids.length) return { refuse: "screen.finder.pickfirst" };
-        const q = typeof (view.ui || {}).q === "string" ? view.ui.q : (String(view.subject || "").charAt(0) === "~" ? "" : String(view.subject || ""));
-        return { query: { kind: "enumerated", q: q }, body: { ids: ids } };
+        if (!picked.length) return { refuse: "screen.finder.pickfirst" };
+        const titles = Object.assign({}, ui.titles || {});
+        picked.forEach(function (h) { if (h.title) titles[h.id] = h.title; });
+        ui.titles = titles;
+        const q = typeof ui.q === "string" ? ui.q : (String(view.subject || "").charAt(0) === "~" ? "" : String(view.subject || ""));
+        return { query: { kind: "enumerated", q: q }, body: { ids: picked.map(function (h) { return h.id; }) } };
       },
       done: function (view, answer, cs) {
         const a = answer && answer.handle ? answer : (answer && answer.result) || {};
@@ -300,13 +331,29 @@ export const finder = Object.freeze({
       } },
     { op: "selectionrelease", label: "act.selectionrelease.label.finder", rereads: [],
       send: function (view, el) { return { query: { handle: el.dataset.handle } }; },
-      done: function (view, answer, cs) { cs.set("handle", null); } },
+      done: function (view, answer, cs) { cs.set("handle", null); cs.set("cite", false); } },
     // "Find in these" opens `find-in` over the held set; it sends nothing itself (find-in's own act asks).
     { op: "findin", label: "act.findin.label.finder",
       send: function (view, el, cs) {
         if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
         cs.go("find-in", el.dataset.handle);
         return null;
+      } },
+    // R57: "Cite these together" opens the cite state over the held set; the citing itself is the state's own act.
+    { op: "cite", label: "act.cite.label.finder",
+      send: function (view, el, cs) {
+        if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
+        if (el.dataset.cite) return view.parts.finderStates().citeSend(view, el, cs);
+        cs.set("citeDone", null);
+        const held = view.data.selection;
+        cs.set("citeHeld", held && held.state === "ok" && held.value && Array.isArray(held.value.members) ? held.value.members.map(String) : null);
+        cs.set("cite", true);
+        return null;
+      },
+      done: function (view, answer, cs) {
+        const a = answer && (answer.cited || answer.alreadyCited) ? answer : (answer && answer.result) || {};
+        const chosen = cs.value("finder-cite-role");
+        cs.set("citeDone", { role: Array.isArray(chosen) && chosen[0] === "against" ? "cuts_against" : "supports", cited: Array.isArray(a.cited) ? a.cited : [], alreadyCited: Array.isArray(a.alreadyCited) ? a.alreadyCited : [] });
       } },
     { op: "frontier", label: "act.frontier.label.finder", rereads: ["frontier"],
       send: function (view, el, cs) { cs.set("frontier", true); return { query: { level: "document" } }; } },
@@ -329,23 +376,18 @@ export const finder = Object.freeze({
         const r = a.results && typeof a.results === "object" ? a.results[a.result_key] : undefined;
         cs.set("counted", r !== undefined && r !== null && typeof r !== "object" ? String(r) : String(a.calc_id || ""));
       } },
-  
-    // R43: the Theme choice applied; the theme's placements and hunches are read by `themeread` with its id.
-    { op: "themeread", label: "act.themeread.label.finder", rereads: ["theme"],
-      send: function (view, el, cs) {
-        const id = String(cs.value("finder-theme") || "");
-        cs.set("theme", id);
-        return id ? { query: { id: id } } : null;
-      } },
+    // R43: the Theme choice is read where it is chosen (R54: at once, no second press); the act stays registered on Find.
+    { op: "themeread", label: "act.themeread.label.finder", rereads: ["themes"],
+      send: function (view) { return { query: {} }; } },
     // R45: Watch, for what is picked, one `watchitem` for each picked item in order; one row's "Take off my watch list" is the
     // same act with `on: false`. A refusal stops the rest and is drawn.
-    { op: "watchitem", label: "act.owed_watchitem.label.finder", rereads: [],
+    { op: "watchitem", label: "act.owed_watchitem.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_ITEM: "refusal.MARK_NO_ITEM", MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK" },
       send: function (view, el, cs) {
         if (el.dataset.item) return { body: { item: el.dataset.item, on: el.dataset.off ? false : true } };
         const ui = view.ui || {};
-        const s = view.data.search;
-        const list = s && s.state === "ok" && s.value && Array.isArray(s.value.hits) ? s.value.hits.map(function (h) { return String(h.bundle_id); })
+        const hits = view.parts.finderStates().hits(view);
+        const list = hits.length ? hits.map(function (h) { return String(h.bundle_id); })
           : ui.browse && ui.browse.state === "ok" ? (ui.browse.items || []).map(function (x) { return String(x.id); }) : [];
         const ids = list.filter(function (id) { const v = cs.value("finder-pick-" + id); return v === true || v === "on" || v === "true"; });
         if (!ids.length) return { refuse: "screen.finder.pickfirst" };
@@ -360,17 +402,17 @@ export const finder = Object.freeze({
         };
         return run(0);
       },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
     // R45: Flag for a second look…, one note for each picked item (the first refusal stops the rest and is drawn).
-    { op: "secondlook", label: "act.owed_secondlook.label.finder", rereads: [],
+    { op: "secondlook", label: "act.owed_secondlook.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_ITEM: "refusal.MARK_NO_ITEM", MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK",
         SECOND_LOOK_NO_NOTE: "refusal.SECOND_LOOK_NO_NOTE", SECOND_LOOK_NOT_OPEN: "refusal.SECOND_LOOK_NOT_OPEN" },
       send: function (view, el, cs) {
         const note = String(cs.value("finder-note") || "").trim();
         if (!note || note.length > 500 || /[\r\n]/.test(note)) return { refuse: "refusal.SECOND_LOOK_NO_NOTE" };
         const ui = view.ui || {};
-        const s = view.data.search;
-        const list = s && s.state === "ok" && s.value && Array.isArray(s.value.hits) ? s.value.hits.map(function (h) { return String(h.bundle_id); })
+        const hits = view.parts.finderStates().hits(view);
+        const list = hits.length ? hits.map(function (h) { return String(h.bundle_id); })
           : ui.browse && ui.browse.state === "ok" ? (ui.browse.items || []).map(function (x) { return String(x.id); }) : [];
         const ids = list.filter(function (id) { const v = cs.value("finder-pick-" + id); return v === true || v === "on" || v === "true"; });
         if (!ids.length) return { refuse: "screen.finder.pickfirst" };
@@ -385,11 +427,11 @@ export const finder = Object.freeze({
         };
         return run(0);
       },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
     // R45: Clear, on a flagged row: any member who may see the item, no reason asked; the row leaves.
-    { op: "secondlookclear", label: "act.secondlookclear.label.finder", rereads: [],
+    { op: "secondlookclear", label: "act.secondlookclear.label.finder", rereads: ["browse"],
       refusals: { MARK_NO_SUCH_ITEM: "refusal.MARK_NO_SUCH_ITEM", MACHINE_CANNOT_MARK: "refusal.MACHINE_CANNOT_MARK", SECOND_LOOK_NOT_OPEN: "refusal.SECOND_LOOK_NOT_OPEN" },
       send: function (view, el) { return el.dataset.item ? { body: { item: el.dataset.item } } : null; },
-      done: function (view, answer, cs) { cs.set("browse", null); } },
+      done: function (view, answer, cs) { cs.set("page1", null); cs.set("more", null); } },
   ],
 });

@@ -5,8 +5,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { wizardRegistration, screenFailures } from "../../../src/plane/wizards.mjs";
-import { SCREENS } from "../../../src/plane/screens.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { Store, storage } from "./fixture.mjs";
+import { answersOf } from "../../../src/answers/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { requiredFailures, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 
@@ -31,27 +34,50 @@ test("R19: the suite fails when a required script fails, and only a required one
   assert.deepEqual(requiredFailures({ ...reg, screens, library: [...reg.library, ...fixed] }), []);
 });
 
-test("R24 (Q1-7): every screen of the registry the plane carries is {id, title, acts, purpose}, and every act it names is an op op-declarations declares", () => {
-  assert.ok(SCREENS.length >= 20, `${SCREENS.length} screens`);
-  for (const s of SCREENS) assert.deepEqual(Object.keys(s).sort(), ["acts", "id", "purpose", "title"], s.id);
-  assert.deepEqual(screenFailures(SCREENS, OPS), [], "a screen naming an op no spec holds fails the release");
-  /* the plane's own registry is answers' explain read's (store.mjs); wizard-scripts is registered with its own
-     `SCREEN_REGISTRY` (K1869 (2)), so a required flow walks the registry's screens */
-  assert.notEqual(wizardRegistration().screens, SCREENS);
+const registryFile = new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url);
+const OLD_IDS = ["queue", "record", "finder", "subjects", "progressions", "themes", "projects", "review", "members", "add", "bundle",
+                 "inquiry", "project", "action", "published", "review-copy", "published-case", "basis-versions", "accept-ceremony",
+                 "inquiry-stance", "ai-session"];
+
+test("R24 (T51; K3807): the one registry is wizard-scripts' `SCREEN_REGISTRY`, every screen `{id, name, purpose, acts, owed}`, its count read from the design's file, and the release suite's `screenFailures` is empty for it", () => {
+  const file = JSON.parse(readFileSync(fileURLToPath(registryFile), "utf8"));
+  const listed = Array.isArray(file) ? file : file.screens;
+  assert.ok(SCREEN_REGISTRY.length >= 71 && SCREEN_REGISTRY.length <= listed.length, `${SCREEN_REGISTRY.length} screens of the file's ${listed.length}`);
+  for (const s of SCREEN_REGISTRY) assert.deepEqual(Object.keys(s).sort(), ["acts", "id", "name", "owed", "purpose"], s.id);
+  assert.deepEqual(screenFailures(SCREEN_REGISTRY, OPS), [], "a screen naming an op no spec holds fails the release");
+  assert.deepEqual(screenFailures(), [], "the default is the registry itself");
 });
 
-test("R24 negative control: an entry naming an op no spec holds, a repeated id, or a missing purpose fails the suite", () => {
-  const bad = [...SCREENS, { id: "zz", title: "Zz", acts: ["zz-no-such-op"], purpose: "x" }, { id: "queue", title: "Q", acts: [], purpose: "" }];
+test("R24 (T51): the plane carries no registry of its own: `plane/screens.mjs` is gone, `wizardRegistration().screens` is the registry itself, and answers' explain read is handed that same object", () => {
+  const dir = fileURLToPath(new URL("../../../src/plane/", import.meta.url));
+  assert.equal(existsSync(`${dir}screens.mjs`), false);
+  assert.equal(readdirSync(dir).some((f) => f.startsWith("screens")), false);
+  assert.equal(wizardRegistration().screens, SCREEN_REGISTRY);
+  const { ctx } = storage();
+  new Store(ctx, {});
+  assert.equal(answersOf(ctx).deps.screens, SCREEN_REGISTRY, "the composition hands answers the registry, no copy");
+});
+
+test("R24 negative control: an entry naming an op no spec holds, a repeated id, or a missing purpose or name fails the suite; an owed act with no op is no failure; none of the 21 old screens that the registry lacks is invented", () => {
+  const bad = [...SCREEN_REGISTRY, { id: "zz", name: "Zz", acts: ["zz-no-such-op"], owed: [], purpose: "x" },
+               { id: "queue", name: "", acts: [], owed: [], purpose: "" }];
   assert.deepEqual(screenFailures(bad, OPS), [{ screen: "zz", problem: "no op spec", act: "zz-no-such-op" },
-                                              { screen: "queue", problem: "no purpose" }, { screen: "queue", problem: "id repeated" }]);
+                                              { screen: "queue", problem: "no name" }, { screen: "queue", problem: "no purpose" },
+                                              { screen: "queue", problem: "id repeated" }]);
+  const owed = [{ id: "zz", name: "Zz", purpose: "x", acts: [], owed: [{ op: "zz-owed-act", dec: "K0", at: 0 }] }];
+  assert.deepEqual(screenFailures(owed, OPS), [], "an owed act is named apart and is not an act");
+  const ids = new Set(SCREEN_REGISTRY.map((s) => s.id));
+  for (const id of OLD_IDS) if (!ids.has(id)) assert.equal(SCREEN_REGISTRY.some((s) => s.id === id), false, id);
+  assert.equal(OLD_IDS.filter((id) => !ids.has(id)).length > 0, true, "some old ids are not the design's, and none is found");
 });
 
-test("R24 (DEC-149; T34-87, K1784): the screen purposes a member reads through the explain read call the group's Civicsmith \"your group's Civicsmith\", never \"this instance\", \"the instance\", \"this copy\", \"this plane\" or \"server\"", () => {
-  const purpose = (id) => SCREENS.find((s) => s.id === id).purpose;
-  assert.equal(purpose("record"), "The whole record as rows: every bundle your team's Civicsmith holds, with its type and its state.");
-  assert.equal(purpose("members"), word("screen.members.purpose"), "keyed (R56): read through setup-words, never held here");
-  assert.equal(purpose("published"), "The cases your team's Civicsmith has published, readable by somebody holding no credential at all.");
-  for (const s of SCREENS)
-    for (const f of ["title", "purpose"])
-      assert.doesNotMatch(s[f], /\b(?:this|the) (?:instance|copy|plane)\b|\bserver\b/i, `${s.id}.${f}`);
+test("R24 (DEC-149; T34-87, K1784; T51): a title or purpose a surface draws is the screen's own key, `screen.<id>.name` and `screen.<id>.purpose`, and the words call the group's Civicsmith \"your group's Civicsmith\", never \"this instance\", \"the instance\", \"this copy\", \"this plane\" or \"server\"", () => {
+  for (const s of SCREEN_REGISTRY) {
+    for (const f of ["name", "purpose"]) {
+      const key = `screen.${s.id}.${f}`;
+      assert.equal(hasWord(key), true, `${key} is held by the words list`);
+      assert.doesNotMatch(word(key), /\b(?:this|the) (?:instance|plane)\b|\bthis copy\b|\bserver\b/i, key);
+    }
+    assert.equal(s.name, word(`screen.${s.id}.name`), `${s.id}.name`);
+  }
 });

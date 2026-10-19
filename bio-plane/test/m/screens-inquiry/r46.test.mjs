@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, word, inquiryMd, INQUIRY_REFS, P, Q } from "./fixtures.mjs";
+import { open, main, word, day, inquiryMd, INQUIRY_REFS, P, Q } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 /* the opener: the first promotion's author is the founder's credential */
@@ -17,10 +17,10 @@ const parts = (handle) => ok({ ok: true, projectId: P, participants: [{ founder:
 test("R46 the founder's credential as the opener is drawn by her handle the members name; the unnamed word only when none does", async () => {
   const p = await open(at, { images, plane: { projectparticipants: parts("sparky") } });
   const sub = main(p).querySelector(".mk-sub");
-  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "sparky", date: "3 October 2026", project: "" }).trim()), "the founder by her handle");
+  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "sparky", date: day("2026-10-03"), project: "" }).trim()), "the founder by her handle");
   assert.doesNotMatch(main(p).textContent, /\badmin\b/, "never the credential");
   /* control: with no handle held, the unnamed founder */
   const none = await open(at, { images, plane: { projectparticipants: parts(null) } });
-  const unnamed = word("screen.question.opened", { name: word("member.founder.unnamed").trim(), date: "3 October 2026", project: "" }).trim();
+  const unnamed = word("screen.question.opened", { name: word("member.founder.unnamed").trim(), date: day("2026-10-03"), project: "" }).trim();
   assert.ok(main(none).querySelector(".mk-sub").textContent.includes(unnamed), "the unnamed founder when none is named");
 });

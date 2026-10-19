@@ -11,6 +11,7 @@ import { Miniflare } from "miniflare";
 const PLANE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const SRC = join(PLANE, "src");
 const ENTRY = join(SRC, "plane", "index.mjs");
+const { BOOTSTRAP_FACT_KEYS } = await import("../../../src/setup.mjs");
 const entry = await import(ENTRY);   /* after the fixture, which answers `cloudflare:workers` */
 const { PLANE_LIMITS } = await import(join(SRC, "control-plane", "index.mjs"));
 
@@ -40,7 +41,7 @@ test("R6: the Worker's module exports `default { fetch }` and `Store`, and nothi
   assert.equal(entry.default.fetch.limits, PLANE_LIMITS, "the fetch is control-plane's door (`makeFetch`)");
 });
 
-test("R6: in the runtime, the door answers through the hooks: the version, the setup page, a public read bound to the plane, the bootstrap report and an admitted op's handler", async () => {
+test("R6: in the runtime, the door answers through the hooks: the version, the interface page at the root, a public read bound to the plane, the bootstrap report and an admitted op's handler", async () => {
   const v = await mf.dispatchFetch("http://x/version");
   assert.equal(await v.text(), "9.9.9\n");
   const page = await mf.dispatchFetch("http://x/");
@@ -95,12 +96,32 @@ test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names th
   assert.deepEqual(cfg.compatibility_flags, ["nodejs_compat"]);
 });
 
-test("R7: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry", () => {
+/* instance-setup R95 (T51; K4076): `op=bootstrap` states its seven facts only to a credentialed caller, handed by the plane's
+   public hook as the control plane resolves it. The key set is read from instance-setup's own declaration. */
+const FACTS = BOOTSTRAP_FACT_KEYS;
+
+test("R6 (T51; instance-setup R95, K4076): the public hook hands `op=bootstrap` the caller as the control plane resolved it: an admin-class token is told the seven facts; control: no credential, a member's token or an unknown one is answered the key set without them", async () => {
+  const admin = await get("op=bootstrap", "adm-plane");
+  assert.equal(admin.status, 200, JSON.stringify(admin.body));
+  for (const k of FACTS) assert.ok(Object.hasOwn(admin.body, k), `${k} stated to an administrator`);
+  for (const [who, token] of [["no credential", null], ["a member token", "mem-plane"], ["an unknown token", "zz-unknown"]]) {
+    const r = await get("op=bootstrap", token);
+    assert.equal(r.status, 200, who);
+    assert.equal(r.body.ok, true, who);
+    for (const k of FACTS) assert.equal(Object.hasOwn(r.body, k), false, `${k} withheld from ${who}`);
+  }
+});
+
+test("R7, R64: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry; the build holds no render step", () => {
   const pkg = JSON.parse(readFileSync(join(PLANE, "package.json"), "utf8"));
   assert.equal(pkg.scripts.test, 'node --test "test/m/**/*.test.mjs"');
   assert.equal(pkg.scripts["test:system"], 'node --test "test/system/**/*.test.mjs"');
   assert.deepEqual(Object.keys(pkg.scripts).filter((k) => k.startsWith("test")), ["test", "test:system"]);
-  for (const k of ["build", "deploy", "dev", "embed:sign"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
+  /* R64 (T51-125; K3832): the build holds no render step: `build` is the bundle alone and `embed:sign` is gone; the others stay */
+  assert.equal(pkg.scripts.build, "node scripts/build-plane.mjs");
+  assert.equal(Object.hasOwn(pkg.scripts, "embed:sign"), false);
+  assert.equal(Object.values(pkg.scripts).some((v) => /embed:sign|embed-signpage/.test(v)), false);
+  for (const k of ["deploy", "dev"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
 });
 
 test("R7 (T39; N810, K2346): `devDependencies` hold `pdfjs-dist` at an exact version, with its lock, so doc-clean's R5 pdf.js oracle runs wherever the module tests run", () => {

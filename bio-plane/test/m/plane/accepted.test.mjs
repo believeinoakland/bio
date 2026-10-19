@@ -4,6 +4,7 @@
    started so that it fills accepted-work's registration, and its ops map spread into the route map, each op reaching its
    handler through control-plane's door. */
 import { test } from "node:test";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { store, storage, Store, STEP_ORDER } from "./fixture.mjs";
@@ -151,8 +152,7 @@ const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, 
 test("R17, R5: every op of case-import's map is in the route map and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = Object.keys(caseImportOps(null, u, null));
-  assert.deepEqual(ops, ["caseimport", "importedcases", "importedcase", "caseimportdocument", "importaccept",
-                         "importacceptwithdraw", "importflag", "importflagclear", "importwatch", "importunwatch"]);
+  assert.ok(ops.length > 0 && ops.every((op) => Object.hasOwn(OPS, op)), "case-import's map holds only ops op-declarations declares");
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);

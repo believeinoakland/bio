@@ -17,8 +17,7 @@ export const PARTS = Object.freeze({
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false)) {
           const f = r && r.ok === false ? r : a || {};
-          const code = String(f.code || f.reason || "");
-          settle({ state: "failed", refusal: { code: code, words: cs.esc(f.translation || f.detail || code) } });
+          settle({ state: "failed", fields: f, refusal: { code: String(f.code || f.reason || ""), words: view.parts.refusalText(cs, f) || cs.w("shell.unread") } });
         } else if (typeof isEmpty === "function" && isEmpty(r)) settle({ state: "empty", value: r });
         else settle({ state: "ok", value: r });
       }, function () { settle({ state: "failed", refusal: null }); });
@@ -59,10 +58,16 @@ export const PARTS = Object.freeze({
     return t || String(fallback || "");
   },
 
-  /* A refusal the plane answered inside a read's value (`blockers`, `first`): its words as the plane gave them. */
+  /* A refusal the plane answered (a read that failed, or one inside a read's value: `blockers`, `first`), in the words the shell
+     gives it (interface-shell R13, R61, R83; DEC-342): `refusal.<CODE>` when the list holds it, else the answer's translation,
+     else `refusal.uncatalogued` with the code as the act gave it; never the builder's `detail`. "" when it names no code and
+     carries no translation. */
   refusalText: function (cs, f) {
     if (!f || typeof f !== "object") return "";
-    return cs.esc(f.translation || f.detail || f.code || f.reason || "");
+    const code = String(f.code || f.reason || "");
+    if (code) { const held = cs.w("refusal." + code, f); if (held !== "refusal." + code) return held; }
+    if (typeof f.translation === "string" && f.translation) return cs.esc(f.translation);
+    return code ? cs.w("refusal.uncatalogued") + " <code>" + cs.esc(code) + "</code>" : "";
   },
 
   /* What an act said once it was answered, beside the screen's own section: `{key, html, ok}` in `view.ui.said`. */
@@ -121,15 +126,13 @@ export const PARTS = Object.freeze({
     return String(html).split(cs.esc(cs.w(was))).join(cs.esc(cs.w(now)));
   },
 
-  /* R27 (`review` R35): the team's time zone as the copy answer carries it: its own `zone`, else the first roster row's;
-     `known` says whether the answer carried one at all (a member's first share has no row yet); `zone` is "" when none is
-     held, never UTC in its place. */
+  /* R27, R41 (`review` R35): the team's time zone as the member door's copy answer carries it: its own top-level `zone`, else
+     the first roster row's; "" when none is held, never UTC in its place. */
   copyZone: function (copy) {
     const rows = copy && Array.isArray(copy.grants) ? copy.grants : [];
     const own = copy && typeof copy.zone === "string" && copy.zone ? copy.zone : null;
     const held = own || (rows.find(function (g) { return g && typeof g.zone === "string" && g.zone; }) || {}).zone || "";
-    const said = copy && Object.hasOwn(copy, "zone") || rows.some(function (g) { return g && Object.hasOwn(g, "zone"); });
-    return { zone: typeof held === "string" ? held : "", known: !!said };
+    return { zone: typeof held === "string" ? held : "" };
   },
 
   /* R27: the zone drawn as the browser names it: its generic name and its city (a zone with no key of its own). */
@@ -153,12 +156,21 @@ export const PARTS = Object.freeze({
     } catch (e) { return ""; }
   },
 
+  /* R41 (DEC-299): a wall-clock time `HH:MM` on the 12-hour clock, as `time.clock` writes it (midnight 12:00 AM, noon 12:00 PM);
+     "" when it is no time of day. */
+  clock: function (cs, hhmm) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ""));
+    if (!m || +m[1] > 23 || +m[2] > 59) return "";
+    const h = +m[1];
+    return cs.w("time.clock", { hour: String(h % 12 || 12), minute: m[2], ampm: cs.w(h < 12 ? "time.am" : "time.pm") });
+  },
+
   /* R27: the end of a review link as `screen.review-outside.until.zone` says it (date, time and zone in the team's zone);
      "" when the zone or the instant is not held (no UTC is drawn in its place). */
   untilIn: function (cs, view, until, zone) {
     const P = view.parts, day = P.localDay(until, zone), time = P.localTime(until, zone);
     if (!day || !time) return "";
-    return cs.w("screen.review-outside.until.zone", { date: { html: cs.date(day) }, time: time, zone: P.zoneName(zone) });
+    return cs.w("screen.review-outside.until.zone", { date: { html: cs.date(day) }, time: { html: P.clock(cs, time) }, zone: P.zoneName(zone) });
   },
 
   /* A date and time the member typed, `YYYY-MM-DD` and `HH:MM`, as `publishat` and `publishatmove` take them; null when
@@ -167,6 +179,9 @@ export const PARTS = Object.freeze({
     const d = String(date || "").trim(), t = String(time || "").trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(d) && /^\d{2}:\d{2}$/.test(t) ? { date: d, time: t } : null;
   },
+
+  /* A section whose heading is explained by several sentences, each its own key, in order (R37, R38, R43). */
+  secTips: function (cs, key, inner, helpKeys) { return cs.sec(key, inner, { help: helpKeys }); },
 
   /* R20: a section that holds nothing is not drawn. */
   sec: function (cs, key, inner, o) { return inner ? cs.sec(key, inner, o) : ""; },
@@ -207,14 +222,6 @@ export const PARTS = Object.freeze({
         .formatToParts(new Date(t)).forEach(function (x) { p[x.type] = x.value; });
       return p.year + "-" + p.month + "-" + p.day;
     } catch (e) { return ""; }
-  },
-
-  /* The group's IANA zone from `publishpreflight`'s answer (`case-authoring` R75's `publish_at.zone`); "" when none. */
-  zoneOf: function (pre) {
-    const steps = pre && Array.isArray(pre.steps) ? pre.steps : [];
-    const s = steps.find(function (x) { return x && typeof x === "object" && x.publish_at; });
-    const z = s && s.publish_at ? s.publish_at.zone || s.publish_at.time_zone : "";
-    return typeof z === "string" ? z : "";
   },
 
   /* The members, project and case `publish` and `publishpreflight` take for a draft, from its review copy's answer

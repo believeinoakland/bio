@@ -154,7 +154,7 @@ test("R18 (T37; K2226; case-carriage R11): publication is built with the `CAPTUR
     const copy = decodePng(held.bytes), orig = decodePng(x.png);
     assert.deepEqual(copy.at(3, 3), [0, 0, 0], "inside the area: covered");
     assert.deepEqual(copy.at(20, 12), orig.at(20, 12), "outside it: the original's pixel");
-    assert.equal(x.CAPTURES.held.get(`${ns}/captures/${x.p}`).bytes.equals(x.png), true, "the original is unchanged");
+    assert.equal(x.CAPTURES.held.get(`${ns}/captures/${x.p}`).bytes.equals(x.png), true, "the stored original keeps its bytes");
     /* the route's read answers that copy */
     assert.equal((await x.call(`/photomarks?capture=${x.p}&viewer=${OLIVE}`)).copy.sha256, r.copy.sha256);
   }

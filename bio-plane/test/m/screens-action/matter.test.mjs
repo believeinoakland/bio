@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { open, main, text, ops, press, last, ok, button, W, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, button, W, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES, COMPLIANCE_SAYS } from "./page.mjs";
 
 /* N1073 (K3268): the acts the screen draws are read against the declarations that own them, never a list of them written here:
    the design's registry for this screen and `op-declarations`' `OPS`; a state's acts are then checked one by one. (Reading
@@ -47,7 +47,7 @@ test("R6: the escalation: the seven stages, the proposed next stage and its trig
   const t = text(p);
   for (const s of [1, 2, 3, 4, 5, 6, 7].map((n) => W(`screen.matter.stage.${n}`)).concat([
     `${W("screen.matter.proposed", { stage: W("screen.matter.stage.3") })} · its trigger was met 5 days ago`, W("screen.matter.endswhen"),
-    `${W("screen.matter.exit.compliance")} · no live compliant determination`, `${W("screen.matter.exit.consequences")} · not every part addressed`,
+    `${W("screen.matter.exit.compliance")} · ${COMPLIANCE_SAYS}`, `${W("screen.matter.exit.consequences")} · not every part addressed`,
     W("screen.matter.atstage", { stage: W("screen.matter.stage.2") })])) assert.ok(t.includes(s), s);
   assert.equal(main(p).querySelector('[aria-current="step"]').textContent, W("screen.matter.stage.2"));
   assert.ok(main(p).querySelector('a[href^="/app/action/ACTN-"]'));

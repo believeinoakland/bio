@@ -26,7 +26,8 @@ function renderOpenFile(cs, view) {
   const head = `<div class="mk-h">${cs.title()}</div>`;
   const U = view.ui || {}, D = view.data || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
-  const refused = U.refused ? `<p class="cs-state" data-state="failed" role="alert">${cs.esc(U.refused)}</p>` : "";
+  /* R6, R39: a refusal beside the act: a code's word by key, the answer's own words as data, or the shell's "could not be read" */
+  const refused = U.refused ? `<p class="cs-state" data-state="failed" role="alert">${U.refused.key ? cs.w(U.refused.key) : U.refused.text ? cs.esc(U.refused.text) : cs.w("shell.unread")}</p>` : "";
   /* R36 (DEC-289 (1); file-safety R6): a file the viewer added (her member id is among the capture's actors) and which the
      team's Civicsmith did not fetch; its checks are said in words and the original never opens before a check */
   const actors = D.accounts && D.accounts.state === "ok" && D.accounts.value && Array.isArray(D.accounts.value.actors) ? D.accounts.value.actors : [];
@@ -94,7 +95,8 @@ function renderOpenFile(cs, view) {
           + (t.scan_hold ? `<div class="mk-acts">${cs.act("releasescanhold", { tone: "primary" })}</div>` : ""))
         + cs.sec("screen.open-file.checks", notes);
     }
-    if (U.opened) out += said("screen.open-file.opened");
+    /* R39: the original was checked against the record's fingerprint before it was handed over, and the sentence says so */
+    if (U.opened) out += said("screen.open-file.digest.checked") + said("screen.open-file.opened");
     if (U.release) out += said(U.release === "released" ? "screen.open-file.release.done" : "screen.open-file.release.pending");
     return out;
   }), {});
@@ -105,28 +107,40 @@ function renderOpenFile(cs, view) {
   return head + body + status;
 }
 
-/* R6: an original's bytes, fetched with the session header and handed to the browser as a file (`cs.download`: a `Blob`
- * behind an object address released once the download starts, setup-page R26's form); no link written carries a token.
- * A refusal is drawn beside the act with the owner's words. */
-async function sendOpenOriginal(view, el, cs) {
-  const sha = String(view.subject || "").toLowerCase();
-  const override = el && el.dataset && el.dataset.override === "1";
-  const got = await cs.download("openoriginal", { query: { capture: sha, ...(override ? { override: "1" } : {}) }, name: sha.slice(0, 12) });
+/* R39: what one attempt to open the original came to: `cs.download` hashes the bytes in the browser against the capture's
+ * fingerprint (`verify`, the screen's subject: the plane answers the capture's bytes with a digest header equal to it, file-safety
+ * R8) before any file is made. A match hands the original over and the screen says it was checked. A difference hands nothing over:
+ * `refusal.DIGEST_MISMATCH`, or `.unheld` where the team holds no file under that fingerprint (`heldat` by digest, a read), beside
+ * the act, which stays usable. Any other refusal is drawn in its own words. Nothing records which member tried (R9). */
+async function openedAs(cs, got, sha) {
   const no = got && got.answer && typeof got.answer === "object" ? (got.answer.result && typeof got.answer.result === "object" ? got.answer.result : got.answer) : {};
-  cs.set("refused", got && got.ok ? null : (no.translation || no.reason || no.code || ""));
-  cs.set("opened", !!(got && got.ok));
+  if (got && got.ok) { cs.set("refused", null); cs.set("opened", true); return null; }
+  cs.set("opened", false);
+  if (no.code === "DIGEST_MISMATCH") {
+    const h = await cs.call("heldat", { query: { sha256: sha } });
+    const r = h && h.result && typeof h.result === "object" ? h.result : h;
+    cs.set("refused", { key: r && r.held === false ? "refusal.DIGEST_MISMATCH.unheld" : "refusal.DIGEST_MISMATCH" });
+  } else {
+    const code = String(no.code || no.reason || "");
+    cs.set("refused", code && cs.w("refusal." + code) !== "refusal." + code ? { key: "refusal." + code } : { text: no.translation || "" });
+  }
   return null;
 }
 
-/* R5, R6: the warned path (DEC-173): sent only once both confirmations are ticked; nothing keeps that they were. */
+/* R6, R39: an original's bytes, fetched with the session header, checked against the capture's fingerprint, and handed to the
+ * browser as a file (`cs.download`: a `Blob` behind an object address released once the download starts, setup-page R26's form);
+ * no link written carries a token. A refusal is drawn beside the act. */
+async function sendOpenOriginal(view, el, cs) {
+  const sha = String(view.subject || "").toLowerCase();
+  const override = el && el.dataset && el.dataset.override === "1";
+  return view.parts.openedAs(cs, await cs.download("openoriginal", { query: { capture: sha, ...(override ? { override: "1" } : {}) }, name: sha.slice(0, 12), verify: sha }), sha);
+}
+
+/* R5, R6, R39: the warned path (DEC-173): sent only once both confirmations are ticked; nothing keeps that they were. */
 async function sendOpenWithWarning(view, el, cs) {
   if (cs.value("co-device") !== true || cs.value("co-macros") !== true) return { refuse: "screen.open-file.warn.both" };
   const sha = String(view.subject || "").toLowerCase();
-  const got = await cs.download("openwithwarning", { query: { capture: sha }, body: { warned: { own_device: true, no_macros: true } }, name: sha.slice(0, 12) });
-  const no = got && got.answer && typeof got.answer === "object" ? (got.answer.result && typeof got.answer.result === "object" ? got.answer.result : got.answer) : {};
-  cs.set("refused", got && got.ok ? null : (no.translation || no.reason || no.code || ""));
-  cs.set("opened", !!(got && got.ok));
-  return null;
+  return view.parts.openedAs(cs, await cs.download("openwithwarning", { query: { capture: sha }, body: { warned: { own_device: true, no_macros: true } }, name: sha.slice(0, 12), verify: sha }), sha);
 }
 
 /* R5: the safe view (`op=safeview`): a spreadsheet's figures drawn as data; a page view handed over as a file, marked a
@@ -175,6 +189,7 @@ export const OPEN_FILE_SCREEN = Object.freeze({
   id: "open-file",
   reads: openFileReads,
   render: renderOpenFile,
+  parts: Object.freeze({ openedAs }),
   acts: Object.freeze([
     Object.freeze({ op: "openoriginal", label: "act.openoriginal.label.open-file", send: sendOpenOriginal }),
     Object.freeze({ op: "openwithwarning", label: "act.openwithwarning.label.open-file", send: sendOpenWithWarning }),

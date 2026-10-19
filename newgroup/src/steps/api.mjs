@@ -47,13 +47,26 @@ export async function patiently(fn, { onWait = null, minutes = WAIT_BOUND_MINUTE
       if (!transient(e)) throw e;
       if (waited >= bound) throw new Lasting(e);
       if (onWait) await onWait(waited, bound);
-      await sleep(delay * 1000);
-      waited += delay; delay = Math.min(delay * 2, BACKOFF_CAP_S);
+      const wait = Math.max(delay, Math.min(Number.isFinite(e.retryAfter) ? e.retryAfter : 0, bound));
+      await sleep(wait * 1000);
+      waited += wait; delay = Math.min(delay * 2, BACKOFF_CAP_S);
     }
   }
 }
 
 const IDEMPOTENT = new Set(["GET", "PUT", "DELETE", "HEAD"]);
+
+/* What a reply that is not a success says, as the error every caller sees: the API's first message (else `HTTP <status>`), its
+   code and status; a 429's Retry-After (F4); a 401 as ApproveAgain, never retried. */
+function failureOf(r, j = {}) {
+  const e = new Error(j.errors?.[0]?.message || `HTTP ${r.status}`);
+  e.code = j.errors?.[0]?.code;
+  e.status = r.status;
+  if (r.status === 429) { const after = Number(r.headers.get("retry-after")); if (Number.isFinite(after) && after > 0) e.retryAfter = after; }
+  if (r.status === 401) return Object.assign(new ApproveAgain(), { status: 401, apiMessage: e.message });
+  return e;
+}
+const networkError = (e) => Object.assign(new Error(String(e && e.message || e)), { network: true });
 
 /* One Cloudflare API call; `init.idem` marks a POST that is safe to repeat. */
 export async function cfCall(session, path, init = {}, base) {
@@ -66,15 +79,9 @@ export async function cfCall(session, path, init = {}, base) {
         authorization: session.bearer,
         ...(rest.body instanceof FormData ? {} : { "content-type": "application/json" }),
         ...(rest.headers || {}) } });
-    } catch (e) { const err = new Error(String(e && e.message || e)); err.network = true; throw err; }
+    } catch (e) { throw networkError(e); }
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || j.success === false) {
-      const e = new Error(j.errors?.[0]?.message || `HTTP ${r.status}`);
-      e.code = j.errors?.[0]?.code;
-      e.status = r.status;
-      if (r.status === 401) throw Object.assign(new ApproveAgain(), { status: 401, apiMessage: e.message });
-      throw e;
-    }
+    if (!r.ok || j.success === false) throw failureOf(r, j);
     return j.result;
   };
   const retryable = IDEMPOTENT.has(method) || idem;
@@ -86,6 +93,22 @@ export async function cfCall(session, path, init = {}, base) {
       throw e;
     }
   }, { onWait: session.onWait });
+}
+
+/* A read whose answer is not JSON (a script's bytes): one GET to the management API, waited on as `cfCall` waits (429, 5xx and no
+   answer back off; a 401 is ApproveAgain), answering the Response when it is ok. Any other refusal answers null. */
+export async function cfRaw(session, path, init = {}, base = CF_API) {
+  try {
+    return await patiently(async () => {
+      let r;
+      try { r = await fetch(base + path, { ...init, headers: { authorization: session.bearer, ...(init.headers || {}) } }); }
+      catch (e) { throw networkError(e); }
+      if (r.ok) return r;
+      const e = failureOf(r);
+      if (e.approveAgain || r.status === 429 || r.status >= 500) throw e;
+      return null;
+    }, { onWait: session.onWait });
+  } catch (e) { if (e && e.approveAgain) throw e; return null; }
 }
 
 /* Where the management API is, and where a release is kept (the installer's `CFG` reads these back). */

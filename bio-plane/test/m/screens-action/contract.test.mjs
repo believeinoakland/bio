@@ -12,13 +12,13 @@ import { WORD_ROWS, hasWord, word } from "../../../src/setup-words/index.mjs";
 import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
-  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft } from "./page.mjs";
+  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE, ADMIN, STAKE, FUTURE_ACTION, PROFILES_WITH_HELP, draft, COMPLIANCE_SAYS } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens;
 const WORD_KEYS = new Set(WORD_ROWS.map((r) => r[0]));
 const EN = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-const IDS = ["plan", "start-send", "request", "action", "matter", "help-records"];
+const IDS = ["plan", "start-send", "request", "action", "matter", "help-records", "actionnew", "hold", "holdnotice", "counsel", "dash-action"];
 
 test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, start-send, request, action, matter, help-records, each {id, reads, render, acts, words}", () => {
   assert.deepEqual(SCREENS.map((s) => s.id), IDS);
@@ -124,10 +124,12 @@ const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's c
   "fourteen more days", "Gov. Code § 7922.535", "Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230", "Gov. Code § 7922.535(b); Gov. Code § 7922.535(c); Mun. Code § 2.20.230",
   "The 2024 rent adjustment", "City Administrator, City", "a council vote", "adjusted without a vote", "notice within 30 days", "noticed on day 21",
   "Tenants of the district", "class", "38000 USD", "from the rent schedules", "The repair program", "program", "its trigger was met 5 days ago",
-  "no live compliant determination", "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
+  COMPLIANCE_SAYS, W("filings.why.record_holds_value"), "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
   "12 October 2026", "26 October 2099", "2 October 2026", "3 October 2026", "4 October 2026", "20 October 2026", "30 November 2026", "20 December 2026", "24 October 2026", "1 March 2024",
   QUESTION_TITLE, "Who signed the closure memo?", "Gov. Code § 7922.535(b)", "Open meetings law", "agent:claude", "claude", "asha", "the office has fought requests before",
-  "Some members rent from landlords the city licenses.", "Two members live in buildings on the city's list of slow repairs.", "dev", "9 October 2026", "Testville", "Director of Public Works, Public Works"];
+  "Some members rent from landlords the city licenses.", "Two members live in buildings on the city's list of slow repairs.", "dev", "9 October 2026", "Testville", "Director of Public Works, Public Works", "Hearing statement", "Ask in writing, naming the records", "the office says within 10 days whether it will release them", "Call the clerk's desk first", "a name for the file",
+  "Records request, with our follow-up questions", "@records-request", "A special motion to strike generally must be filed within 60 days of being served with the complaint.",
+  "Code Civ. Proc. § 425.16", "a notice of claim", "a letter from the owner's lawyer", "The rent dispute", "Closed means repaired", "ana", "30 September 2026", "1 October 2026", "9 October 2026"];
 
 test("R1–R6, R9 (interface-shell R8, R21): the shell serves the six screens: each route draws its screen under its path, from its own source", async () => {
   assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);

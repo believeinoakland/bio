@@ -1,6 +1,7 @@
 /* R27, R28, R29, R32: whether the copy answers, what each part of it serves, and the way back. */
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
-import { cf, approve, sleep, WAIT_BOUND_MINUTES } from "./api.mjs";
+import { cf, approve, special, sleep, WAIT_BOUND_MINUTES } from "./api.mjs";
+import { rolloutApp } from "./containers.mjs";
 import { ascii, find } from "./bytes.mjs";
 import { BINDING_OF } from "./bindings.mjs";
 
@@ -103,6 +104,54 @@ async function verifyServing(base, want, installed, capable, failed = [], onWait
   }
 }
 
+/* S9: after placement a container member's running instance has to serve the new build, and a rollout the platform answered "no
+   changes" to leaves the old one running. The plane cannot report a member before step 3 binds it, so this runs after
+   `bindMembers`, beside `verifyServing`: for each container member `fleetResult.done` names, it reads `memberVersions` from
+   `<base>/api/?op=bootstrap&members=1` until the member is SERVING at `release.version`; one still on another build after
+   CONTAINER_WAIT_S is restarted, by a further full rollout of each of its applications (`fleetResult.containers`), and read
+   again within the rest of the bound; one still old after that is a lag, `installer.lag.member.version`, never success.
+   A member the plane does not report (unbound, silent, not listed) is no reading and is left to the verdict.
+   Answers `{confirmed, restarted, lags}`; `lags` are for `withByteLags`. */
+const CONTAINER_WAIT_S = 30, POLL_S = 2.5;
+async function confirmContainers(token, acct, base, release, fleetResult, onWait = null) {
+  const placed = (fleetResult?.containers || []).filter((c) => (fleetResult.done || []).includes(c.member));
+  const members = [...new Set(placed.map((c) => c.member))];
+  if (!members.length) return { confirmed: [], restarted: [], lags: [] };
+  const want = String(release.version), bound = WAIT_BOUND_MINUTES * 60;
+  let waited = 0;
+  /* Each member read as old: `{name, version}`; nothing read, nothing old. */
+  const old = async () => {
+    let j = null;
+    try { j = await (await fetch(`${base}/api/?op=bootstrap&members=1`)).json(); } catch {}
+    const mv = j && typeof j === "object" && j.memberVersions && typeof j.memberVersions === "object" ? j.memberVersions : {};
+    return members.filter((n) => mv[n] && mv[n].state === "SERVING" && mv[n].version !== want).map((n) => ({ name: n, version: mv[n].version }));
+  };
+  const settle = async (limit) => {
+    for (;;) {
+      const still = await old();
+      if (!still.length || waited >= limit) return still;
+      if (onWait && waited % 30 === 0) await onWait(waited === 0 ? 0 : 1, bound);
+      await sleep(POLL_S * 1000);
+      waited += POLL_S;
+    }
+  };
+  let still = await settle(CONTAINER_WAIT_S);
+  const restarted = [];
+  if (still.length) {
+    for (const { name } of still) {
+      for (const c of placed.filter((x) => x.member === name)) {
+        try { await rolloutApp(token, acct, c.id, c.appName, c.config); }
+        catch (e) { if (special(e)) throw e; continue; }
+        if (!restarted.includes(name)) restarted.push(name);
+      }
+    }
+    still = await settle(bound);
+  }
+  const names = new Set(still.map((x) => x.name));
+  return { confirmed: members.filter((n) => !names.has(n)), restarted,
+    lags: still.map(({ name, version }) => word("installer.lag.member.version", { name, version })) };
+}
+
 /* R67 (S9): the new version has to answer at all. Waits within the stated bound; answers the reply or null. */
 async function waitForAnswer(base, onWait = null) {
   const bound = WAIT_BOUND_MINUTES * 60, every = 2.5;
@@ -135,6 +184,6 @@ async function rollBack(token, acct, slug, versionId) {
 function withByteLags(verdict, byteLags, capable) {
   if (!byteLags.length) return verdict;
   if (!verdict) return { confirmed: false, lags: [...byteLags], capable };
-  return { ...verdict, confirmed: false, lags: [...byteLags, ...verdict.lags] };
+  return { ...verdict, confirmed: false, lags: [...byteLags, ...verdict.lags.filter((l) => !byteLags.includes(l))] };
 }
-export { WAKE_EVERY_S, verifyInstall, failedLags, servingVerdict, verifyServing, waitForAnswer, currentDeployment, rollBack, withByteLags };
+export { WAKE_EVERY_S, verifyInstall, failedLags, servingVerdict, verifyServing, confirmContainers, waitForAnswer, currentDeployment, rollBack, withByteLags };

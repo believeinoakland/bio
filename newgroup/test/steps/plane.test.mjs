@@ -7,6 +7,7 @@ import { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, ensureSubdomain
   planeInSync, putSecret, rotateSecrets, namesFor, hex, multipartPart, ascii, find, rand } from "../../src/steps/index.mjs";
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
+import { ApproveAgain } from "../../src/steps/index.mjs";
 import { TOK, session, immediateTimers, account, heldCopy, sequence, release, chosen, sha, VERSION, LIMITS, CAPABLE_SRC, realFetch, cfok, cferr } from "./world.mjs";
 
 let restoreTimers;
@@ -376,4 +377,40 @@ test("R21: a member's limits, in the shape R10 reads; none stated is null; an un
   const bad = memberLimits(`"bio-member-limits/1 Z=1"`);
   assert.equal(bad.ok, false); assert.ok(typeof bad.why === "string");
   assert.equal(memberLimits(`"bio-plane-limits/1 cpu_ms=1"`).limits, null, "the plane's statement is not a member's");
+});
+
+test("R9 (F7): the address is offered before the copy is created, nothing registered; ensureSubdomain then tries exactly the names offered", async () => {
+  const { offerSubdomain } = await import("../../src/steps/index.mjs");
+  let w = account({ subdomain: "held" });
+  assert.deepEqual(await offerSubdomain(session(), "A1", "grp"), { sub: "held", candidates: [] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  const offer = await offerSubdomain(session(), "A1", "grp");
+  assert.equal(offer.sub, null);
+  assert.equal(offer.candidates[0], "grp");
+  assert.match(offer.candidates[1], /^grp-[a-z0-9]{1,4}$/);
+  assert.equal(w.prefix(), "", "nothing is registered by the offer");
+  assert.ok(w.calls.every((c) => c.method === "GET"));
+  const r = await ensureSubdomain(session(), "A1", "grp", offer);
+  assert.deepEqual(r, { sub: offer.candidates[1], registered: offer.candidates[1] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp", { sub: null, candidates: ["grp"] }), /./, "control: only the names offered are tried");
+  w.restore();
+});
+
+test("R14 (R1): the read-back waits out a 429 and a 503 as every call does, and a 401 asks for approval again", async () => {
+  const rel = { version: VERSION, blob: new Blob([BYTES]) };
+  const waits = [];
+  const calls = sequence([cferr("slow down", 429), cferr("trouble", 503), new Response(BYTES)]);
+  assert.equal(await readBack(session((w, b) => waits.push([w, b])), "A1", "grp", rel), null);
+  assert.equal(calls.length, 3);
+  assert.equal(waits.length, 2, "each wait announced");
+  sequence([cferr("Invalid access token", 401, 9109)]);
+  await assert.rejects(scriptHash(session(), "A1", "grp"), (e) => e instanceof ApproveAgain && e.approveAgain === true);
+  const one = sequence([cferr("nope", 404)]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), null);
+  assert.equal(one.length, 1, "a refusal that waiting cannot mend is not repeated");
+  sequence([cferr("trouble", 503)]);
+  assert.equal(await scriptHash(session(), "A1", "grp"), null, "a failure that never mended reads as nothing readable");
 });

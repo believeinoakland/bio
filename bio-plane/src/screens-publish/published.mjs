@@ -4,17 +4,21 @@
  * work it is and how to read it; "Check the signature"; "Check a file you hold" (R22). Nothing here needs an account. Every function is
  * self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
+import { PUBLISHED_PARTS } from "./published-parts.mjs";
+import { PUBLISHED_PAGES } from "./published-pages.mjs";
 
 export const PUBLISHED = Object.freeze({
   id: "published",
-  parts: PARTS,
+  parts: Object.freeze({ ...PARTS, ...PUBLISHED_PARTS, ...PUBLISHED_PAGES }),
 
   reads: function (view) {
     if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const s = String(view.subject || "").split("/");
+    // R37: one finding's page is `publishedcase` asked by the finding's id, which `render` reads once, asynchronously (R36), so that a
+    // finding several cases pin can be answered by the cases it names (the shell gives a read's refusal no kit to draw them with).
     const query = { id: s[0], caseId: s[0] };
     if (s[1]) query.edition = s[1];
-    return {
+    return s[2] ? { group: { op: "groupidentity" } } : {
       group: { op: "groupidentity" },
       edition: { op: "publishedcase", query: query, subject: true },
     };
@@ -22,18 +26,43 @@ export const PUBLISHED = Object.freeze({
 
   render: function (cs, view) {
     if (!view.parts.subject(view, 1)) return view.parts.nothing(cs, "public"); // R21: the way an outsider can go, never "Go to Home"
-    const P = view.parts;
+    const P = view.parts, ui = view.ui;
     const g = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const group = g ? g.display_name || g.group || "" : "";
-    const e = view.data.edition && view.data.edition.state === "ok" ? view.data.edition.value : null;
+    const sub = String(view.subject || "").split("/");
+    // R37: one finding's own page, from the read asked by its id (public-read R39), at the case and edition the address names
+    const L = sub[2] ? P.later(cs, view, "finding", "publishedcase", { query: Object.assign({ id: sub[2], caseId: sub[0] }, sub[1] ? { edition: sub[1] } : {}) }) : null;
+    const e = L ? (L.state === "ok" ? L.value : null) : P.answer(view);
     const out = [cs.title(e ? e.scope || e.project_reference || e.caseId || null : null, { thing: "case" })];
-    if (!e) { out.push(cs.state("edition", function () { return ""; })); return out.join(""); }
-    const caseId = String(e.caseId || String(view.subject || "").split("/")[0]);
+    if (L && L.state === "failed" && L.refusal) {
+      const code = L.refusal.code, f = L.fields || {};
+      // a finding nothing published answers is "Nothing is here"; one several cases pin is answered by the cases it names
+      if (code === "NOT_PUBLISHED" || /^NO_SUCH_/.test(code)) return P.nothing(cs, "public");
+      if (code === "FINDING_IN_SEVERAL_CASES") {
+        const m = Array.isArray(f.memberships) ? f.memberships : [];
+        return out.join("") + '<p class="cs-state" data-state="failed" role="alert">' + L.refusal.words + " " + m.map(function (x) {
+          return '<a href="' + P.hrefOf(x.case_id, x.edition, f.target || sub[2]) + '" data-nav>' + cs.esc(x.case_id) + "</a>";
+        }).join(" · ") + "</p>";
+      }
+    }
+    if (!e) { out.push(L ? cs.state(L, function () { return ""; }) : cs.state("edition", function () { return ""; })); return out.join(""); }
+    const caseId = String(e.caseId || sub[0]);
+
+    // R37: one finding's own page; a finding the edition does not hold is "Nothing is here"
+    if (sub[2]) {
+      const f = (Array.isArray(e.findings) ? e.findings : []).find(function (x) { return String(x.bundle_id || x.id || "") === sub[2]; });
+      return f ? P.finding(cs, view, e, caseId, f) : P.nothing(cs, "public");
+    }
 
     // When it was signed and published, and its other editions.
     const editions = Array.isArray(e.editions) ? e.editions : [];
-    out.push('<p class="mk-sub">' + cs.w("screen.published.dated", { edition: String(e.edition || ""),
-      signed: { html: e.signed_at ? cs.date(e.signed_at) : "" }, published: { html: e.published_at ? cs.date(e.published_at) : "" } })
+    const dated = '<p class="mk-sub">' + cs.w("screen.published.dated", { edition: String(e.edition || ""),
+      signed: { html: e.signed_at ? cs.date(e.signed_at) : "" }, published: { html: e.published_at ? cs.date(e.published_at) : "" } });
+    const head = cs.title(e.scope || e.project_reference || e.caseId || null, { thing: "case" }) + dated + "</p>";
+    // R39: the print layout, drawn for the printout and put back by `printed`; R38: the reader's own filtered view
+    if (ui.print) return P.printLayout(cs, view, e, caseId, head, group);
+    if (P.floorOf(view)) return P.filtered(cs, view, e, caseId, head);
+    out.push(dated
       + editions.filter(function (x) { return String(x.edition !== undefined ? x.edition : x) !== String(e.edition); }).map(function (x) {
         const n = String(x.edition !== undefined ? x.edition : x);
         return ' · <a href="/app/published/' + encodeURIComponent(caseId + "/" + n) + '" data-nav>' + cs.w("screen.published.edition", { n: n }) + "</a>";
@@ -45,19 +74,8 @@ export const PUBLISHED = Object.freeze({
 
     // The findings: each with its two strengths and whether it meets the project's bar.
     const findings = Array.isArray(e.findings) ? e.findings : [];
-    out.push(P.sec(cs, "screen.published.findings", findings.length ? findings.map(function (f, i) {
-      const body = f.body || {};
-      const st = Array.isArray(f.strength) ? f.strength : [];
-      const axis = function (a) { const x = st.find(function (y) { return y.axis === a; }); return x && x.grade ? cs.grade(a, String(x.grade)) : ""; };
-      // `standing` is the plane's reading of the finding against the project's bar (`case-grammar` R15): `meets` is true
-      // or false when the bar was asked of it, else "not_asked" or "no_bar", for which nothing is said.
-      const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
-      const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null;
-      const bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
-      return '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id || f.id || String(i)) + '"><span class="eyebrow">' + cs.w("screen.published.finding", { n: String(i + 1) }) + "</span>"
-        + '<p class="rec">' + cs.esc(body.conclusion || body.question || f.title || "") + "</p><p>" + axis("capture") + " " + axis("connection")
-        + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "") + "</p></article>";
-    }).join("") : ""));
+    // R37: each finding is the way to its own page; R38 and R39 come after the case's acts
+    out.push(P.sec(cs, "screen.published.findings", findings.map(function (f, i) { return P.card(cs, view, f, i + 1, e, caseId, { link: true }); }).join("")));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
     const timeline = e.method && Array.isArray(e.method.timeline) ? e.method.timeline : Array.isArray(e.timeline) ? e.timeline : [];
@@ -92,7 +110,10 @@ export const PUBLISHED = Object.freeze({
     }).join("")) : ""));
 
     out.push('<div class="mk-acts">' + cs.act("verify", { data: { sha: String(e.manifest_sha || "") } }) + cs.act("publishedcase")
-      + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "") + "</div>" + P.said(view, "verify") + P.said(view, "download"));
+      + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "")
+      + (findings.length ? cs.act("pubprint") : "") + "</div>" + P.said(view, "verify") + P.said(view, "download"));
+    // R38: a minimum strength to read it at, when there is a finding to hold to one
+    if (findings.length) out.push(P.minimum(cs, view));
 
     // R22 (N1094; DEC-240 (P1)): "Check a file you hold": the member of the public pastes the file's SHA-256 (the file itself
     // never reaches the page); `verify` answers whether this case rests on it, as a public op with no credential.
@@ -101,7 +122,39 @@ export const PUBLISHED = Object.freeze({
     return out.join("");
   },
 
+  // R99 (interface-shell): after printing ends, or is cancelled, the page is drawn as it was
+  printed: function (cs, view) { view.ui.print = false; cs.set("print", false); },
+
   acts: [
+    {
+      // R38 (A77): the browser act "Show only findings this strong": the minimum on each axis the reader chose, kept in page memory
+      // only (R11): nothing is sent, stored or put in an address; with no minimum chosen the whole case is drawn.
+      op: "pubfloorset", label: "act.owed_pubfloorset.label.published",
+      send: function (view, el, cs) {
+        const grade = function (id) { const v = String(cs.value(id) || "").toUpperCase(); return /^[A-C]$/.test(v) ? v : ""; };
+        const floor = { capture: grade("pb-fl-capture"), connection: grade("pb-fl-connection") };
+        cs.set("floor", floor.capture || floor.connection ? floor : null);
+        return null;
+      },
+    },
+    {
+      // R38 (A77): the browser act "Back to the whole case": the reader's minimum is taken away.
+      op: "pubfloorclear", label: "act.owed_pubfloorclear.label.published",
+      send: function (view, el, cs) { cs.set("floor", null); return null; },
+    },
+    {
+      // R39 (A79): the browser act "Print the case": the page is drawn in its print layout (every finding open with its sources,
+      // the signature line at the foot, the filtered view saying so), then printed; `printed` puts the page back. The key's
+      // fingerprint is read from the key `publishedcase` states for the signer. Nothing is sent or stored.
+      op: "pubprint", label: "act.owed_pubprint.label.published",
+      send: async function (view, el, cs) {
+        const P = view.parts, e = P.answer(view), who = e ? P.signerOf(e) : { fingerprint: "", key: "" };
+        view.ui.printFacts = { fingerprint: who.fingerprint || (await P.fingerprintOf(who.key)) };
+        cs.set("print", true);
+        cs.print();
+        return null;
+      },
+    },
     {
       // R6: "Check the signature": the edition's manifest checked against what the group published, without the group.
       op: "verify", label: "act.verify.label.published",

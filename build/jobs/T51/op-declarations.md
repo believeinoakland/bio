@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01T6nKNiTXDaZwbSfpynQUSn · depth 2 · COMPLETE · handled B7
+**Status** · session_01T6nKNiTXDaZwbSfpynQUSn · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -46,3 +46,11 @@ B6 applied (pushed 1b1edc7c1c; tranche/T51 merged in): bootstrapfacts is named a
 ## J6 · COMPLETE
 
 B7 applied (pushed; tranche/T51 merged in at the design 2a64c5ae77). Two of my tests changed, no table did: t51 (R78) no longer pins the exact acts of hold, holdnotice, counsel and grouprules (the registry now adds actionholdrelease on hold: declared, asserted), and t50 (R73/R21) takes the seven browser acts as their own class (R76) in wizard-scripts' registryActGaps, which now lists them as owed gaps. op-declarations tests 230, pass 230, fail 0; architecture, coverage (78 of 78), words, ownership: 0 failures. Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 23, module lines 3318
+
+## J7 · COMPLETE
+
+B8 (K4098) applied (pushed 3b7144066b; tranche/T51 merged in).
+(1) `actionholdrelease` leaves ACT_HELP_ABSENT's unexplained group; t36, t42 and t50 are green.
+(2) affordances R12: `publishedfrozen` was `stale` because op-grades names it a non-act and the door's table gated = has a NEEDS row. It is declared kind `publicread` (classes null, not mutating, nothing stamped, in no session set, a present null NEEDS row, as `handlecheck`): control-plane `totality.test.mjs`:17 is green.
+(3) `heldat` is a new kind `readfenced`: classes admin, member, probe, machineClasses ["admin", "probe"], so admission refuses an `ai` credential. I did not put `member` in machineClasses: R2 says no machineClasses names `member` (no member bearer exists, and a test over OPS finds none); the operator's admin and probe bearers reach it, capture refuses `check` without a member session. Tell me if you meant otherwise.
+Results: op-declarations tests 230, pass 230, fail 0; control-plane, admission and op-grades suites 508 pass, 0 fail; format, architecture, coverage (78 of 78), words (module and all modules), ownership: 0 failures. NEEDS counts in t49 now 530 family rows, 880 keys. Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 26, module lines 3324

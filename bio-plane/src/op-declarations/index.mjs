@@ -196,6 +196,10 @@ const OP_KINDS = Object.freeze({
      no other set (`SESSION_OPS.member` holds an enrolled member, an administrator among them, D-136), no bearer, no
      working capability (`founderhandleset`). */
   founder:     Object.freeze({ spec: { classes: ["admin"], machineClasses: [], mutating: true }, needs: null, founderOnly: true }),
+  /* T51 (R77; K4098; control-plane R110): a read whose machine classes are named, so admission refuses an `ai` credential
+     (and a daemon) there rather than leaving its refusal to the owner's own arm: the operator's bearers (`admin`, `probe`)
+     reach it, a session reaches it as any read (`heldat`: only its `check` arm needs a member's session, capture R86). */
+  readfenced:  Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: ["admin", "probe"], mutating: false }, needs: null }),
 });
 const QUERY = (key) => Object.freeze({ key, at: "query" });
 const BODY = (key) => Object.freeze({ key, at: "body" });
@@ -2660,7 +2664,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "airuntick", "allocid", "answercheck", "capture", "lease", "wizardprogress"]) }),
   unexplained: Object.freeze({ ground: localize("op-declarations.index.an_act_or_a_draft", "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3))."),
     ops: frozenList([
-      "accountpropose", "actalias", "actionholdrelease", "actionriskpropose", "actionseekspropose", "addressedrecord",
+      "accountpropose", "actalias", "actionriskpropose", "actionseekspropose", "addressedrecord",
       "addressfrequencyset", "adminresign", "aicredentialmint", "aicredentialrevoke", "aigrantmint", "airunverify",
       "approvalruleset", "aspirationdeadend", "aspirationdeclare", "aspirationdepart",
       "aspirationretire", "assessmentrecord", "attesttext", "bearingnote", "biasadopt", "biasdebtresolve",

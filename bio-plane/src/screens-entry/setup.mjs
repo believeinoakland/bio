@@ -160,6 +160,10 @@ export const setup = {
     const host = ok(data.hosting) || {};
     const tools = ok(data.tools) && Array.isArray(data.tools.value.tools) ? data.tools.value.tools : [];
     const members = ok(data.members) && Array.isArray(data.members.value.members) ? data.members.value.members : null;
+    // a tool is named by its provider's display name (vendor and product, from the catalogue read), never by its id
+    const cat = ok(data.catalogue) || {};
+    const providers = [].concat(cat.offered || [], cat.held || [], cat.refused || []).filter((x) => x && x.provider_id);
+    const nameOf = (x) => { const c = x && (x.vendor || x.product ? x : providers.find((k) => k.provider_id === x.provider_id)); return c && (c.vendor || c.product) ? [c.vendor, c.product].filter(Boolean).join(" · ") : ""; };
     // R22: each part's state from its own read; a read that does not answer leaves it optional, never done
     const answered = (r) => !!r && (r.state === "ok" || r.state === "empty");
     const done = (r, test) => (answered(r) && test() ? "done" : "optional");
@@ -266,10 +270,10 @@ export const setup = {
     out.push(part(7, "security", S + "security", S + "part.security.why", states.security,
       (boot.part_scanner === true ? `<p class="mk-note">${W(S + "security.scanner")}</p>` : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
       + (ui.tool ? `<p data-state="tool">${W(ui.tool.passed ? S + "security.passed" : S + "security.failed", { tool: ui.tool.name })}</p>` : "")
-      + tools.map((t) => `<p>${W(S + "security.held", { tool: t.name || t.label || t.provider_id || t.tool_id || "" })}</p>`).join("")
+      + tools.map((t) => nameOf(t)).filter(Boolean).map((n) => `<p>${W(S + "security.held", { tool: n })}</p>`).join("")
       // R12: an empty catalogue draws nothing (a failed read is still drawn as failed)
       + (data.catalogue && data.catalogue.state === "empty" ? "" : cs.state(data.catalogue, (c) => (Array.isArray(c.offered) ? c.offered : []).map((t, i) => {
-        const name = t.name || t.label || t.provider_id || "";
+        const name = nameOf(t);
         const cfg = Array.isArray(t.config) ? t.config : [];
         const creds = Array.isArray(t.credentials) ? t.credentials : [];
         // each of the tool's own fields by the kit's field, its name the entry's (R12)
@@ -487,7 +491,7 @@ export const setup = {
           if (!v) return { refuse: "screen.setup.security.missing", fills: { field: names[k] } };
           credentials[names[k]] = v;
         }
-        view.ui.toolName = t.name || t.label || t.provider_id || "";
+        view.ui.toolName = [t.vendor, t.product].filter(Boolean).join(" · ");
         return { body: { providerId: t.provider_id, config, credentials, handlingDigest: t.handling_digest, confirmRetention: cs.value("su-st-" + i + "-keep") === true, use: "on_request" } };
       },
       async done(view, answer, cs) {

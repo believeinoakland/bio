@@ -172,7 +172,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     /* T46 (R51): the member-run door's act, a member's session or her own agent credential */
     "memberrun",
     /* T49 (R71): the founder's own act, the founder's session alone */
-    "founder"].sort());
+    "founder",
+    /* T51 (R77; K4098): a read whose machine classes are named, so an `ai` credential is refused at admission */
+    "readfenced"].sort());
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -220,6 +222,7 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     publishact: [{ classes: MP, machineClasses: [], mutating: true }, "publish"],
     sessionact: [{ classes: MP, machineClasses: [], mutating: true }, null],
     sessionread: [{ classes: MP, machineClasses: [], mutating: false }, null],
+    readfenced: [{ classes: MP, machineClasses: ["admin", "probe"], mutating: false }, null],
     door: [{ classes: null, mutating: true }, undefined],
     public: [{ classes: null, mutating: false }, undefined],
     plainread: [{ classes: MP, mutating: false }, undefined],

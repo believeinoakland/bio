@@ -5,10 +5,9 @@
   "scripts": {
     "test": "node --test \"test/m/**/*.test.mjs\"",
     "test:system": "node --test \"test/system/**/*.test.mjs\"",
-    "build": "npm run embed:sign && node scripts/build-plane.mjs",
+    "build": "node scripts/build-plane.mjs",
     "deploy": "node scripts/deploy.mjs",
-    "dev": "wrangler dev",
-    "embed:sign": "node scripts/embed-signpage.mjs"
+    "dev": "wrangler dev"
   },
   "devDependencies": {
     "miniflare": "^4.20260722.0",

@@ -7,7 +7,9 @@ import { open as openPage, html, text, main, btn, fill, press, ok, refused, refu
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 /* a document named on the page is a link only where the `document` screen is served: the stand-in serves it */
-const open = (path, o = {}) => openPage(path, { ...o, screens: [...SCREENS, DOCUMENT_STUB] });
+/* R38: pressing the capture act asks `heldat` first; unless a test scripts it, the address is not held */
+const NOT_HELD = ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } });
+const open = (path, o = {}) => openPage(path, { ...o, plane: { heldat: NOT_HELD, ...(o.plane || {}) }, screens: [...SCREENS, DOCUMENT_STUB] });
 const failed = (p) => main(p).querySelector('[data-state="failed"][role="alert"]');
 
 const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
@@ -65,21 +67,27 @@ test("R1 R25 acquire sends the address as the locator; an empty address sends no
 
 test("R1 R25 each of acquire's five refusals is drawn by its key beside the address; any other code is the shell's (R13)", async () => {
   const seen = new Set();
-  for (const code of ["BAD_LOCATOR", "SOURCE_REFUSED", "FETCH_FAILED", "EMPTY", "TOO_LARGE"]) {
-    assert.ok(hasWord(`refusal.${code}`), code);
+  /* the five are the ones the screen declares by key (BAD_FOR is a function of its own, R29) */
+  const own = SCREENS.find((x) => x.id === "capture").acts.find((a) => a.op === "acquire").refusals;
+  const codes = Object.keys(own).filter((c) => typeof own[c] === "string");
+  assert.equal(codes.length, 5);
+  for (const code of codes) {
+    assert.ok(hasWord(own[code]), code);
     const p = await open("/app/capture", { plane: { acquire: refused(code, "the owner's words") } });
     fill(p, { "ci-address": ADDRESS });
     const r = await press(p, "acquire");
-    assert.ok(saysIn(r.slot(), `refusal.${code}`), code);
+    assert.ok(saysIn(r.slot(), own[code]), code);
     assert.ok(!r.slot().textContent.includes("the owner's words"), code);
     seen.add(r.slot().textContent);
   }
   assert.equal(seen.size, 5, "five distinct sentences");
-  /* control: a code outside the five is drawn by the shell's rule: the answer's translation */
-  const p = await open("/app/capture", { plane: { acquire: refused("HOST_COOLING_OFF", "The site asked us to wait.") } });
+  /* control: a code outside the five is drawn by the shell's rule: the table's word for it (K3810: compared with the row by key) */
+  const p = await open("/app/capture", { plane: { acquire: refused("HOST_COOLING_OFF", "builder detail that is never drawn") } });
   fill(p, { "ci-address": ADDRESS });
   const r = await press(p, "acquire");
-  assert.match(r.slot().textContent, /The site asked us to wait\./);
+  assert.ok(hasWord("refusal.HOST_COOLING_OFF"));
+  assert.ok(saysIn(r.slot(), "refusal.HOST_COOLING_OFF"));
+  assert.doesNotMatch(r.slot().textContent, /builder detail/);
 });
 
 test("R1 (N747) an answer carrying promoted is not promoted again by the screen", async () => {
@@ -131,13 +139,30 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   assert.ok(main(p).querySelector(`a[href*="${b.bundleId}"]`), "R24: the result links the document");
   /* control: a refused promote is drawn on the tab with the owner's words, says nothing waits, and links nothing */
   const q = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0008" }),
-    promote: refused("GATE_REFUSED", "The checks refused it.") } });
+    promote: refused("UNWORDED_PROMOTE_CODE", "The checks refused it.") } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
   await q.settle();
   assert.match(text(q), /The checks refused it\./);
   assert.ok(!says(q, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }));
   assert.equal(main(q).querySelector('a[href*="INFO-2026-0008"]'), null, "R24 control: a refused promotion draws no link");
+  /* DEC-342: a code the table holds is drawn by its word, never by the builder's detail; a coded refusal with neither is the shell's uncatalogued path */
+  assert.ok(hasWord("refusal.GATE_REFUSED"));
+  const g = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0010" }),
+    promote: refused("GATE_REFUSED", "builder detail that is never drawn") } });
+  fill(g, { "ci-address": ADDRESS });
+  await press(g, "acquire");
+  await g.settle();
+  assert.ok(says(g, "refusal.GATE_REFUSED"));
+  assert.doesNotMatch(text(g), /builder detail/);
+  const bare = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0010" }),
+    promote: { status: 409, json: { ok: false, reason: "NO_WORD_NO_TRANSLATION", detail: "builder detail that is never drawn" } } } });
+  fill(bare, { "ci-address": ADDRESS });
+  await press(bare, "acquire");
+  await bare.settle();
+  assert.ok(says(bare, "refusal.uncatalogued"));
+  assert.ok(text(bare).includes("NO_WORD_NO_TRANSLATION"), "the code, as the act gave it");
+  assert.doesNotMatch(text(bare), /builder detail/);
   /* control: a refusal with no words of its own is the shell's own failure word, never a silent tab */
   const r = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0009" }),
     promote: ok({ ok: false }) } });
@@ -379,7 +404,7 @@ test("R2 R21 R24 the answer: existed says the record already held the bytes and 
   assert.match(md, new RegExp(`^content_hash: sha256:${sha256(ds.text)}$`, "m"));
   assert.ok(main(q).querySelector(`a[href*="${b.bundleId}"]`), "R24: the result links the document");
   /* control: a refused promotion draws its refusal, not "It waits", and no link */
-  const r = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, promote: refused("GATE_REFUSED", "The checks refused it.") } });
+  const r = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, promote: refused("UNWORDED_PROMOTE_CODE", "The checks refused it.") } });
   fill(r, filled);
   await press(r, "captureupload");
   await r.settle();
@@ -558,7 +583,7 @@ test("R26 what the capture screen draws for a sample of its keys equals word(key
 });
 
 /* ---- T50 (T50-30): R29, R31, R33, R34, R35, R36 ---- */
-import { silent } from "../interface-shell/harness.mjs";
+import { silent, pending } from "../interface-shell/harness.mjs";
 
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 const dayOf = (iso) => { const d = new Date(iso); return word("date.daymonthyear", { day: String(d.getUTCDate()), month: word(`date.month.${MONTHS[d.getUTCMonth()]}`), year: String(d.getUTCFullYear()) }); };
@@ -755,4 +780,153 @@ test("R36 Add opened from a question says what it files under first; a project o
     await q.settle();
     assert.ok(!text(q).includes(word("screen.capture.forq", { project: "Pothole repairs", question: "x" }).split("x")[0].slice(0, 20)), path);
   }
+});
+
+/* ---- T51 (T51-117): R38, R40 ---- */
+const COPY_DOC = "INFO-2026-0002-street-maintenance";
+const COPY = { sha256: SHA, document: COPY_DOC, project: null, retrieved: "2026-09-14T10:30:00Z", actor: "member:mai", grade: null, address: ADDRESS };
+const HELD_AT = (state, more = {}) => ok({ ok: true, held: true, copy: COPY, versions: 1, truncated: false,
+  changed: { state, basis: "x", as_of: "2026-09-14T10:30:00Z", earlier_differs: false, ...(state === "undetermined" ? {} : { looked_at: "2026-10-19T09:00:00Z" }) }, ...more });
+const VOUCHED = ok({ ok: true, held: [{ bundle_id: COPY_DOC, title: "Street maintenance report 2026", standing: "verified", source: { address: ADDRESS }, capture: { sha256: SHA, grade: null } }] });
+const ROSTER = ok({ members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }, { member_id: "rosa", handle: "rosa-h", role: "member", status: "active" }] });
+const A64 = { opencaptures: OPEN0, heldcaptures: VOUCHED, memberlist: ROSTER };
+const newCopy = (p) => btn(p, "acquire", '[data-again="1"]');
+const leaveIt = (p) => main(p).querySelectorAll("a.cs-btn").find((a) => a.textContent === word("screen.capture.leaveit"));
+const nothingCaptured = (p) => p.byOp("acquire").length === 0 && p.byOp("allocid").length === 0 && p.byOp("promote").length === 0 && p.byOp("capturerequest").length === 0;
+
+test("R38 an address already held and unchanged: heldat is asked with check and the address, nothing is captured, and the copy is drawn with Open it beside the member and the day", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: HELD_AT("unchanged") } });
+  assert.equal(p.byOp("heldat").length, 0, "check is sent from no place but the press");
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  assert.deepEqual(p.byOp("heldat").map((r) => r.query), [{ op: "heldat", address: ADDRESS, check: "true" }]);
+  assert.ok(nothingCaptured(p), "no acquire, nothing filed");
+  assert.ok(says(p, "screen.capture.a64.already_in_the_record_as"));
+  assert.ok(text(p).includes("Street maintenance report 2026"), "the compared copy's title, read from the vouched list (R40)");
+  const open_ = main(p).querySelector(`a.cs-ref[href="/app/document/${COPY_DOC}"]`);
+  assert.ok(open_ && open_.textContent === word("screen.capture.openit"), "Open it: a reference to document at copy.document");
+  assert.ok(open_.getAttribute("data-tip").includes(word("screen.capture.openit.help")), "its help");
+  assert.ok(says(p, "screen.capture.a64.captured_by", { name: "mai-h", date: dayOf("2026-09-14T10:30:00Z") }), "who captured it, by the handle memberlist gives, and the day");
+  assert.ok(says(p, "screen.capture.a64.nothing_added"));
+  assert.ok(!text(p).includes("member:mai") && !/\bmai\b(?!-)/.test(text(p).replace(/mai-h/g, "")), "never the id");
+  assert.ok(text(p).includes(dayOf("2026-09-14T10:30:00Z")), "the day, by cs.date");
+  assert.ok(says(p, "screen.capture.a64.the_site_still_gives_the_same_document"));
+  assert.ok(!says(p, "screen.capture.a64.the_site_has_changed_since"));
+  assert.equal(newCopy(p), null, "an unchanged copy offers no new capture");
+  assert.equal(main(p).querySelector("[data-grade], .cs-grade"), null, "the drawing draws no grade on this row");
+  assert.deepEqual(rawKeys(p), []);
+});
+
+test("R38 an address whose site has changed: nothing is captured until Capture the new copy, which sends acquire once; Leave it clears the row and sends nothing", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: HELD_AT("changed", { }), acquire: ok({ ok: true, existed: false, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0012" }),
+    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  assert.ok(nothingCaptured(p));
+  assert.ok(says(p, "screen.capture.a64.the_site_has_changed_since"));
+  assert.ok(says(p, "screen.capture.a64.your_team_holds_a_capture_from_14_septem", { date: dayOf("2026-09-14T10:30:00Z") }));
+  assert.ok(says(p, "screen.capture.a64.capturing_it_again_keeps_the_new_copy_be"));
+  assert.ok(says(p, "screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un"));
+  assert.ok(!says(p, "screen.capture.a64.the_site_still_gives_the_same_document"));
+  assert.ok(newCopy(p).textContent.includes(word("screen.capture.a64.capture_the_new_copy")));
+  assert.ok(leaveIt(p), "Leave it, explained");
+  assert.equal(leaveIt(p).getAttribute("data-tip"), word("screen.capture.leaveit.help").replace(/&#39;/g, "'"));
+  /* Leave it: no op, the row is cleared */
+  await p.click(leaveIt(p));
+  await p.settle();
+  assert.ok(nothingCaptured(p));
+  assert.ok(!says(p, "screen.capture.a64.the_site_has_changed_since"), "the row is cleared");
+  /* Capture the new copy sends acquire, once, with no second look */
+  const q = await open("/app/capture/address", { plane: { ...A64, heldat: HELD_AT("changed"), acquire: ok({ ok: true, existed: false, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0012" }),
+    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  await press(q, "acquire", { sel: '[data-again="1"]' });
+  assert.deepEqual(q.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS }]);
+  assert.equal(q.byOp("heldat").length, 1, "check is sent from the first press alone");
+  assert.equal(q.byOp("promote").length, 1, "the new copy is filed as R1 files it");
+  assert.ok(!says(q, "screen.capture.a64.the_site_has_changed_since"), "the row leaves once it is captured");
+});
+
+test("R38 an address held whose change could not be looked at: the copy is named and no claim of unchanged or changed is made; the same two acts are offered", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: HELD_AT("undetermined") } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  assert.ok(nothingCaptured(p));
+  assert.ok(says(p, "screen.capture.a64.already_in_the_record_as"));
+  assert.ok(main(p).querySelector(`a.cs-ref[href="/app/document/${COPY_DOC}"]`));
+  /* the undetermined sentence itself contains the unchanged one's words, so the unchanged line is told apart by its separator */
+  assert.ok(!says(p, "screen.capture.a64.the_site_has_changed_since"));
+  assert.ok(!text(p).includes(` · ${word("screen.capture.a64.the_site_still_gives_the_same_document")}`), "no claim that it is unchanged");
+  assert.ok(says(p, "screen.capture.a64.undetermined"));
+  assert.ok(!says(p, "screen.capture.a64.nothing_added"));
+  assert.ok(newCopy(p) && leaveIt(p), "the same two acts");
+});
+
+test("R38 control: an address not held sends acquire once as R1 says, after the one look; a copy under an unknown title is Untitled, never an id", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: NOT_HELD, ...CAPTURED } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS }]);
+  assert.equal(p.byOp("heldat").length, 1);
+  assert.ok(!says(p, "screen.capture.a64.already_in_the_record_as"));
+  const q = await open("/app/capture/address", { plane: { opencaptures: OPEN0, heldcaptures: ok({ ok: true, held: [] }), memberlist: ROSTER, heldat: HELD_AT("unchanged") } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  assert.ok(text(q).includes(word("screen.held.untitled")));
+  assert.ok(!text(q).includes(COPY_DOC), "never the record id as a title");
+});
+
+test("R38 a heldat that is refused, unanswered or answers held: null is drawn failed beside the address and acquire is not sent; the act stays usable", async () => {
+  for (const [name, answer, words] of [["refused", refused("MEMBER_SESSION_REQUIRED", "x"), "refusal.MEMBER_SESSION_REQUIRED"],
+                                       ["unanswered", silent, "shell.unread"],
+                                       ["unreadable", ok({ ok: true, held: null, copy: null, versions: null, truncated: false, changed: { state: "undetermined", basis: "x", as_of: null, earlier_differs: false } }), "shell.unread"]]) {
+    const p = await open("/app/capture/address", { plane: { ...A64, heldat: answer, ...CAPTURED } });
+    fill(p, { "ci-address": ADDRESS });
+    await press(p, "acquire");
+    assert.equal(p.byOp("acquire").length, 0, name);
+    assert.ok(failed(p), `${name}: drawn failed`);
+    if (hasWord(words)) assert.ok(says(p, words), name);
+    const b = btn(p, "acquire");
+    assert.ok(!b.hasAttribute("disabled") && b.getAttribute("aria-busy") !== "true", `${name}: the act is usable again`);
+    assert.equal(p.byOp("allocid").length, 0, name);
+  }
+});
+
+test("R38 'Finish it' and an empty address send no heldat; the address tab alone reads the roster", async () => {
+  const OPEN = ok({ ok: true, truncated: false, captures: [{ session: "S-1", locator: "https://city.example/notice", primary_sha: SHA, started: "2026-10-01T10:00:00Z", updated: "2026-10-01T10:00:00Z", outstanding: 3 }] });
+  const p = await open("/app/capture/address", { plane: { ...A64, opencaptures: OPEN, acquire: ok({ ok: true, existed: true, continued: { session: "S-1" } }) } });
+  const finish = main(p).querySelectorAll('button[data-act="acquire"]').find((b) => b.textContent.includes(word("capture.finish")));
+  await p.click(finish);
+  for (let i = 0; i < 8; i++) await p.settle(20);
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ continue: "S-1" }]);
+  assert.equal(p.byOp("heldat").length, 0);
+  const e = await open("/app/capture/address", { plane: A64 });
+  await press(e, "acquire");
+  assert.equal(e.byOp("heldat").length, 0, "an empty address looks at nothing");
+  for (const tab of ["file", "saw"]) assert.equal((await open(`/app/capture/${tab}`)).byOp("memberlist").length, 0, tab);
+});
+
+test("R40 the document Watch and Check act on is found among the held and the vouched: heldcaptures is asked with state held_and_vouched", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: NOT_HELD, acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "monitorset", { reason: "r" });
+  assert.equal(p.byOp("monitorset")[0].body.bundleId, COPY_DOC, "a document the team has vouched for is found beside the collected ones");
+  assert.ok(p.byOp("heldcaptures").length >= 2);
+  assert.ok(p.byOp("heldcaptures").every((r) => r.query.state === "held_and_vouched"), "every look for a document at an address asks the vouched list too");
+});
+
+test("R38 while heldat is out the screen says it is loading, and once an address is not held the line is gone", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: pending, ...CAPTURED } });
+  fill(p, { "ci-address": ADDRESS });
+  await p.click(btn(p, "acquire"));
+  await p.settle(20);
+  assert.ok(main(p).querySelector('[data-state="loading"]'), "the look is under way");
+  assert.equal(p.byOp("acquire").length, 0);
+  const q = await open("/app/capture/address", { plane: { ...A64, ...CAPTURED } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  assert.equal(main(q).querySelector('[data-state="loading"]'), null, "nothing is left saying it is loading");
 });

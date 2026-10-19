@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_014EVFpcuKfLr1hY4LJt8xfV · depth 2 · COMPLETE · handled B4
+**Status** · session_01Qx72VGHw5GbtYV5ejL6hfD · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -65,3 +65,52 @@ STEP_KEYS is now 78 keys. Against the design's `installer-steps` reads entry (68
 For installer's job (K4085), what it reads from steps that changed: `left[].why` is a fragment without the lacks sentence (`left[].lacks` holds it); `imageSaid(why)` answers the fragment (one argument); `containerDescriptor(bytes)` and `containerClasses(parts, bytesOf)` lost the part argument; `conditionWhy(c)` takes no part; `withLacks` is now `lacksFor(m)`. Unchanged: `IMAGE_UNPINNED`/`IMAGE_UNPULLABLE` (still the identities `installer.image.unpinned/.unpullable`, which installer's own `images.mjs` says with its `installer.image.*` sentences), `lacksOf`, `imageWhy`, `LIMITS_NOT_STATED`, the fleet/bind/logs/lag lines.
 
 Checks (row filled locally, not committed): words check on the module 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); architecture 0 (87 relative imports); format 0; steps tests 78 pass; coverage as before (R26, R31 unbuilt). Size (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 30, module lines 1815.
+
+## J5 · BLOCKED
+
+BLOCKED (cause: context). My window is at half (about 500 of 1,000 K tokens); per the job rules I stop at the end of a step and ask for a restart. Pushed on job/T51/installer-steps (tip after this entry's commit), tranche/T51 at B5 merged in. Steps 1 to 6 of B5, state:
+
+**Done, with tests (steps suite 82 pass):**
+- Item 4 (F4): `cfCall` reads `Retry-After` on a 429 (`e.retryAfter`); `patiently` waits `max(back-off, retryAfter)`, never past the bound, announced and counted in nominal seconds. Test R1 (with the no-header control).
+- Item 5 (F7): new `offerSubdomain(session, account, slug)` answers `{sub, candidates}` (the held prefix, else the two names that would be tried, the second fixed); registers nothing; `ensureSubdomain(session, account, slug, offer)` tries exactly the names offered. `installer` must call the offer before it creates anything and show the names (its job). Cloudflare offers no availability check, so a name taken is still found only when registered. Test R9.
+- Item 3 (F10): `installFleet` applies a class migration to an EXISTING container member: the classes the descriptors name that the script's Durable Object namespaces do not yet hold, from the tag it holds (`old_tag`, next `v<n+1>`), in one `new_sqlite_classes` step (none when it holds all). And a member's Durable Objects (bindings and ordered migrations) are read from its signed `Worker` part when it carries `durable_objects: {bindings:[{name,class_name}], migrations:[{tag, classes}]}`, else from the installer's `MEMBER_OBJECTS` table; a malformed statement leaves the member out (`why.program`). **REPORT: the release must carry it**: `bundler` must write `durable_objects` into agent-worker's `worker.json` (the signed `Worker` part), from its configuration's bindings and migration tags, and then `MEMBER_OBJECTS` can go; until then the table stays. Tests R20, R24.
+- Item 6 (F9, note): Workers script upload is a PUT that replaces; Cloudflare's script API has no create-if-absent for it that I know of, so the lock stays read-then-write (`takeLock` reads `bindingsOf`, then touches). No change; if BOB knows of an atomic create on the account, tell me.
+
+**Not done (next job continues from here):**
+- Item 2 (F5), design: after `placeContainer` creates or rolls out an application, read `GET containers/applications/<id>` and decide a pull failure from `health.instances.failed > 0` or the latest rollout `status === "failed"`, waiting (nominal seconds, `sleep`, inside `WAIT_BOUND_MINUTES`) only while the rollout is pending or `health.instances.starting > 0`; no wait when nothing is pending (an `instances: 0` application starts nothing). A failure: `installFleet` leaves the member out (`why.unpullable`... or a new fragment: the pull failure has no design row, so a REPORT to BOB for a row; use `installer.fleet.why.refetch`'s family only after the design answers), `out: true` false (the upload was attempted), with its `lacks`. These field names are my reading of Cloudflare's Containers API, to be shown in a REPORT; the fake (`world.mjs`, the `/containers/applications` rule) needs `health` and rollout status options (`pullFails`).
+- Item 1 (S9): after placement the running instance must serve the new image. The plane cannot report it before step 3 binds the member, so this is a new function after `bindMembers`: `confirmContainers(session, account, base, release, fleetResult, onWait)` in `verify.mjs`: for each container member in `fleetResult.done`, poll `<base>/api/?op=bootstrap&members=1` for `memberVersions[member]` `SERVING` at `release.version`; if still old after a short bound, restart (a further full rollout of that application, `placeContainer` returns the application id; I know no Containers restart call) and re-poll within the bound; still old: a named lag (a new key `installer.lag.member.version` already says "still runs {version}"), never done. `placeContainer` must also return `{id, appName}` and `installFleet` collect them in `containers`. Needs the fake to serve `memberVersions` that follow an option (`rolloutKeepsRunning`). The installer then calls it where it calls `verifyServing`.
+- Both need REPORTs of the API assumptions (field names, restart by rollout) to BOB.
+
+Size so far (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 33, module lines about 1,850.
+
+## J6 · REPORT
+
+REPORT (B6 items 1 to 4; code on job/T51/installer-steps, pushed with this entry). Two parts: what installer must add, and every Cloudflare assumption for your live walk.
+
+**For installer's job (the call it must add).** After `bindMembers` and beside `verifyServing`, call `confirmContainers(session, account, base, release, fleetResult, onWait)` with the result `installFleet` returned. It answers `{confirmed, restarted, lags}`. Pass `lags` as `byteLags` to `withByteLags` (it now drops a verdict lag whose sentence is identical, so a member still old is said once). Also new in `installFleet`'s answer: `containers`, each placed application `{member, id, appName, config}`; `placeContainer` returns `{action, lag, id, appName, config}`. The R17/R20/R28 text should say so (the requirements are yours; the tests assert `containers`). `readCopyFacts(address, onWait = null)` takes an optional second argument to draw its waits.
+
+**Cloudflare API assumptions to check live (none confirmed by a real account).**
+1. Application read: `GET /accounts/<id>/containers/applications/<id>` answers `configuration.image` and `health.instances.{failed, starting}` (counts). A pull failure is `failed > 0`; "still starting" is `starting > 0`.
+2. Rollout read: `GET …/applications/<id>/rollouts/<rolloutId>` answers `status`, one of `pending`, `in_progress` or `progressing` (waited on) or `failed` (a pull failure). The rollout id is the `id` of the answer to the rollout POST; an application just created has no rollout id, so only health decides. If the app read carries `rollout.status` it is used when the rollout read gives none (a guess; the walk should say whether it exists).
+3. Waiting: only while pending or starting, every 5 nominal seconds, inside the 5-minute bound; an application created with `instances: 0` shows none starting and is not waited on. A start still pending at the bound is not a pull failure (the image read-back and the version check decide).
+4. Restart: there is no restart call I know of; `confirmContainers` restarts by a further full rollout (`POST …/rollouts`, same body as the first: `strategy: rolling`, `kind: full_auto`, `step_percentage: 100`, `target_configuration` = the image and instance_type). The walk must show a second rollout to the same configuration actually restarts the instance (the first "no changes" rollout is the case S9 found).
+5. Version check: `memberVersions[member].state === "SERVING"` and `.version` from `op=bootstrap&members=1`, as `servingVerdict` already reads it. A member the plane does not list, or not SERVING, is no reading: it is not restarted and is left to the verdict.
+6. Read-back: `GET /accounts/<id>/workers/scripts/<slug>` (`accept: application/javascript+module`) now waits out 429/5xx/no answer (Retry-After honoured) and a 401 throws ApproveAgain; any other refusal reads as nothing readable, as before.
+7. Pull failure's row: left out with `installer.fleet.why.unpullable` (exists); the member's Worker was uploaded, so it is not `out`, and it is not in `done`, so its class is not bound into agent-worker. Its half-made application stays in the account for the next update.
+8. Still assumed from earlier jobs: `Retry-After` on a 429; Containers application create/rollout shapes as `placeContainer` sends them; the list fields `script`, `class`, `id` of Durable Object namespaces; `durable_objects` in the Worker part (CR-15, `MEMBER_OBJECTS` stays until bundler writes it).
+
+**Decisions of mine (job level).** `readCopyFacts` waits only on 429 and 5xx, at most one nominal minute; no answer at all is not waited on (a removed copy's address is the usual case, and waiting five minutes per copy would stall the inventory). `scriptHash` rethrows only ApproveAgain; a failure that never mended is null, as `currentDeployment` does. F9 unchanged.
+
+## J7 · COMPLETE
+
+B6 applied (items 1 to 4); pushed on job/T51/installer-steps, tranche/T51 at B6 merged in. The one REPORT is J6.
+
+**Entries applied.** (1) F5: after a container application is created or rolled out, `placeContainer` reads it and a pull failure (`health.instances.failed > 0` or a failed rollout) leaves the member out with `installer.fleet.why.unpullable` and its lacks, not `out`; it waits only while pending or starting, inside the bound. The fake gained `pullFails`, `startingFor`, `memberServes`. (2) S9: `confirmContainers` (verify.mjs) after `bindMembers`, via `memberVersions`, one further rollout as the restart, still old a named lag `installer.lag.member.version`; `placeContainer` returns `{id, appName, config}` and `installFleet` answers `containers`; `withByteLags` says an identical sentence once. (3) `scriptHash` (new `cfRaw`) and `readCopyFacts` back off on 429/5xx; a 401 is ApproveAgain in `scriptHash`. (4) J6 lists every Cloudflare assumption. F9 unchanged; CR-15 and `MEMBER_OBJECTS` untouched.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Found in another module.** Requirements installer-steps R17, R20 and R28 do not yet name `containers`, the pull failure read or `confirmContainers`; yours to update. Installer must add the call (J6). `requirements.test.mjs` R53 (the stale bundle) was already red.
+
+**Tests and checks.** Steps suite: 88 pass, 0 fail (was 82; new: R20 pull failure, R20 waits, R20 S9 confirm and restart, R20 S9 lag, R14 read-back back-off, R4 facts back-off). Installer's `newgroup/test/`: 186 of 192 reported, 1 fail (R53, inherited). Process checks with the committed row: format "176 modules, 175 requirements files; 0 failures"; architecture "24 product files, 91 relative imports; 0 failures"; ownership "9 files changed by installer-steps between tranche/T51 and HEAD; 0 failures"; coverage "34 of 36 live requirement ids named by a test" (R26, R31 by design); words "0 failures".
+
+Size (session_01Qx72VGHw5GbtYV5ejL6hfD): test runs 4, module lines 1952

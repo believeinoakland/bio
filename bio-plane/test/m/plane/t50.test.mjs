@@ -320,15 +320,15 @@ test("R63 (T50; V3 B-24; M-T50-7; K3664; admission R27; amends R5): a burst of t
 
 /* ===== R61: the plane composes translations ===== */
 
-const NINE = ["translationdraft", "translationdraftrecord", "translationgrant", "translationadopt", "translationconfirm",
-              "translationrevert", "translationmark", "translations", "interfacewords"];
+/* K3268 (T51): translations' routes are read from its own map (`translationsOps`), never listed here */
 
 test("R61 (T50; N1084; translations R12; amends R2, R5): the plane builds translations on the object's storage, one instance, migrated once; its nine routes reach its handlers from its own map, each key once, and answer through the door what that map answers; control: instance-setup's copy of them is not the one that answers", async () => {
   const { translationsOf, translationsOps } = await import("../../../src/translations/index.mjs");
   const x = await store(), twin = await store();
   const u = new URL("http://do/");
   assert.equal(translationsOf(x.ctx), translationsOf(x.ctx), "one instance per storage");
-  assert.deepEqual(Object.keys(translationsOps(translationsOf(x.ctx), u, null)), NINE, "the nine routes");
+  const NINE = Object.keys(translationsOps(translationsOf(x.ctx), u, null));
+  assert.equal(NINE.length, 9, "the nine routes");
   const keys = Object.keys(x.s.routes(u, null));
   for (const op of NINE) assert.equal(keys.filter((k) => k === op).length, 1, `${op} once`);
   /* each is translations' handler: replaced on the instance, the route map reaches the replacement */

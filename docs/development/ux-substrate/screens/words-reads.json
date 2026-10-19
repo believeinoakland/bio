@@ -14140,6 +14140,162 @@
      "line": 17,
      "text": "Your accountability record",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "bio-plane/src/journey-check/investigation.mjs",
+     "line": 155,
+     "text": "document: its first page reads Page 1",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/investigation.mjs",
+     "line": 167,
+     "text": "document: the capture states no page, so none is drawn",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/investigation.mjs",
+     "line": 335,
+     "text": "assistant not ready: the connect screen",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/investigation.mjs",
+     "line": 344,
+     "text": "assistant not ready: the question's dock",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/investigation.mjs",
+     "line": 345,
+     "text": "assistant not ready: the Ask screen",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/journeys.mjs",
+     "line": 197,
+     "text": "setup: claim; she is the team's first administrator",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/journeys.mjs",
+     "line": 212,
+     "text": "setup: her ten recovery codes, shown once",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/journeys.mjs",
+     "line": 328,
+     "text": "capture: her first testimony, labelled as hers",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/journeys.mjs",
+     "line": 472,
+     "text": "sign: /sign answers the nothing-is-here page",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/published.mjs",
+     "line": 21,
+     "text": "published: no case on this instance",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/published.mjs",
+     "line": 46,
+     "text": "published: a minimum strength, the filtered view and the way back",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/published.mjs",
+     "line": 61,
+     "text": "published: a finding's page, and back",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/published.mjs",
+     "line": 68,
+     "text": "published: Print the case, the browser's print stubbed",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/run.mjs",
+     "line": 127,
+     "text": "assistant not ready: her connect screen",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/run.mjs",
+     "line": 283,
+     "text": "the live arm needs the test instance's address (--live <address>)",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/run.mjs",
+     "line": 365,
+     "text": "no screen draws the administrator an act it does not draw the member: the administrator's walk did not administer",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/runner.mjs",
+     "line": 94,
+     "text": "no token was handed down",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/runner.mjs",
+     "line": 99,
+     "text": "the token is not one this sign-in minted",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/runner.mjs",
+     "line": 100,
+     "text": "the local arm's runner has no fake model bound",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 16,
+     "text": "an owner preparing a notice",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 17,
+     "text": "an owner whose notice is published",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 18,
+     "text": "a project the member is not in",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 23,
+     "text": "concluded on a member's own reading",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 27,
+     "text": "the date passed with no reply",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 29,
+     "text": "a member who may read and not act",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
+    },
+    {
+     "file": "bio-plane/src/journey-check/states.mjs",
+     "line": 30,
+     "text": "other things the record follows",
+     "why": "journey-check's harness text: a walk step's label, a state's name or a run diagnostic, read by whoever runs the walk, never by a member (B381 4, K3944)"
     }
    ]
   },
@@ -45904,6 +46060,7 @@
     "installer.fleet.why.permissionunknown",
     "installer.fleet.why.planunknown",
     "installer.fleet.why.program",
+    "installer.fleet.why.pullfailed",
     "installer.fleet.why.refetch",
     "installer.fleet.why.unpinned",
     "installer.fleet.why.unpullable",
@@ -46141,6 +46298,7 @@
     "installer.team.unrecorded.effect",
     "installer.team.unrecorded.head",
     "installer.team.unrecorded.how",
+    "installer.team.unrecorded.how.finished",
     "installer.team.unrecorded.suggest",
     "installer.team.unrecorded.unknown",
     "installer.update.address.found",
@@ -46364,7 +46522,7 @@
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 563,
+    "reads": 565,
     "unkeyed": 0
    },
    "unkeyed": [],
