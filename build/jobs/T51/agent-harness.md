@@ -1,6 +1,6 @@
 # agent-harness (T51)
 
-**Status** · session_01LXuoKmQchoNDZXN6e4RHh5 · depth 2 · COMPLETE · handled B4
+**Status** · session_01B5kn9HGEJ81tbGNe3gu4RP · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -109,3 +109,35 @@ Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
 - `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 0 failures.
 
 Size (session_01LXuoKmQchoNDZXN6e4RHh5): test runs 3, module lines 1876
+
+## J6 · REPORT
+
+The RW item "`harness.control`'s F4 anchor" is not in this module, and I have not changed it.
+
+- The F4 arm is in `agent-worker/test/harness.control.mjs` (lines 478–500), under agent-worker's tests path. It is not in `agent-harness/test/`, and my job writes only `agent-harness/src/` and `agent-harness/test/`, so the fix belongs to agent-worker's job (or whoever owns that control file).
+- Its `file` is `bio-plane/src/run-rules/rules.mjs`, not an ai-runs file (RW says "ai-runs"). The run-rules module is the one that owns `RUN_ENDINGS`.
+- Its `find` string, `  cancelled:  "a member stopped it",`, no longer exists in any source. The sentence is now `word("run-rules.member_stopped")` at `bio-plane/src/run-rules/rules.mjs:261`, so the arm's find cannot match. The arm also quotes the old sentence in its own prose (line 481), and `agent-worker/test/harness.test.mjs` at lines 1223 and 1229 quotes it too.
+- Recommendation (K4018: anchor on the call or the key, never a copied sentence): anchor on `cancelled:  word("run-rules.member_stopped"),`, and state the replacement as a different word key in the same table. The owner of `harness.control` decides the exact replacement.
+
+Nothing else in agent-harness is anchored on an ai-runs sentence. `agent-harness/test/agent-harness.test.mjs` has no `ai-runs` or `F4` reference.
+
+## J7 · COMPLETE
+
+**Entries applied**
+- RW (K4015, K4018): `agent-harness/src/harness.mjs` header (lines 4–6) corrected. `PLANE_OPS` and `NAMESPACES` are stated as agent-worker's, declared in `agent-worker/src/ops.mjs`. `MEANING_ARM` is stated as agent-steps', declared in `agent-steps/src/names.mjs`. The move has landed, so the "pending" note is removed. Commit 9857624f5a on job/T51/agent-harness, pushed.
+- The F4 anchor is not applied: it is in agent-worker's test path (see the REPORT above).
+
+**Deferred:** none in my module.
+
+**Found in other modules:** the F4 anchor in `agent-worker/test/harness.control.mjs` (REPORT above, with its owner, its file and the anchor to use).
+
+**Tests and checks**
+- `node --test agent-harness/test/`: 55 pass, 0 fail, 0 skipped.
+- `node checks/format.mjs /home/user/bio`: 176 modules, 0 failures.
+- `node checks/architecture.mjs /home/user/bio agent-harness`: 3 product files, 0 failures.
+- `node checks/coverage.mjs /home/user/bio agent-harness`: 18 of 19 live ids named; R17 unnamed (pre-existing, not met T50, expected per START).
+- `node checks/words.mjs /home/user/bio agent-harness`: 0 failures (1537 literals, 15438 words; unkeyed 0). The 14 unkeyed items BOB accepted in K4010 are not reported now.
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note (`words-unreviewed.json` stale or absent), expected; BOB regenerates at layer close. No refusal naming this module.
+- `node checks/ownership.mjs /home/user/bio agent-harness tranche/T51 job/T51/agent-harness`: 1 file changed, 0 failures.
+
+Size (session_01B5kn9HGEJ81tbGNe3gu4RP): test runs 1, module lines 1875
