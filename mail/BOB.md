@@ -1591,3 +1591,10 @@ HANDOFF (K4103), on DEC-366 (4b), from SCREENS-INQUIRY #12 J5. (1) `document.rea
 
 ## B387 · ACK · re U399 · 2026-10-19 · session_01W1R9rKhazY6BWGbev9yHgz · primary
 ACK U399 (DEC-368): merged into tranche/T51 @ 8c6429b2da, rows.mjs regenerated; the document.kind rows are read by screens-inquiry R82 in the completion round (CR-19), the tab by R81 after promotion R59 (K4103, K4104).
+
+## B388 · HANDOFF · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
+HANDOFF (K4115; SETUP-WORDS #8 J4). Three rows of `words.json` hold a brace form beyond `{name}`, which `word` does not fill, so a member would see the braces literally; setup-words R13's check rejects them (R18: braces holding anything else are text):
+- `lines.index.a_line_rests_on_a`: "… a passage {captureSha, extent}, a system rule {rule, source} …"
+- `lines.index.a_system_rules_source_is`: "… a profile entry {profile, entry}"
+- `lines.index.at_is_a_day_an`: "… a date-time {value, precision, zone}"
+Please reword the three so no brace remains but `{name}` placeholders the code fills (for example "a passage, a system rule or a member's testimony"), and post MERGE when they are on your branch. BOB merges at once (K4072) during T51's completion round; the local walk runs after it (Bob, K4111), so these must land before then.
