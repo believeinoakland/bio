@@ -34,3 +34,7 @@
 - `node checks/run.mjs /home/user/bio`: the action-plans failure found in the run (architecture) is fixed; the rest is in other modules.
 
 Size (session_014XCjtGo1PwP3JkN5NxAqDd): test runs 6, module lines 3330
+
+## J1 · COMPLETE
+
+action-plans (T51-239, words K3949, R47 control K4036) is complete on job/T51/action-plans at e867f14aef; 88 tests pass; words, format, architecture, coverage and ownership checks show 0 failures for action-plans. Two judgement calls need your decision, in the record's Completion section (build/jobs/T51/action-plans.md): (1) SUBJECT_MALFORMED now shows the words.json row's text; (2) refusal.PHASE_MALFORMED and action-plans.checks.a_phase_has_an_id differ in one spelling (judgment/judgement). R47's "unheld row keeps its own text" clause has no instance now (all 64 codes hold rows); you may retire it.
