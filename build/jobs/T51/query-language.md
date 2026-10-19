@@ -75,3 +75,20 @@ NEEDS BOB (the one open item): three findings the checker raises in my test file
 
 Deferred: none. Found in other modules: none from this job.
 Size (session_01ViKHjERep3ZC62ov1p3v8e): test runs 1, module lines 3000
+
+## J5 · COMPLETE
+
+T51-202 · query-language · words pass (B4), COMPLETE on job/T51/query-language (pushed; tranche/T51 merged in).
+
+Applied (B4 findings, per B5):
+- Plain (K3957): CACHED_FIELDS whys in query.mjs now localize: capture → new id `query-language.query.capture_letter_bounded`; connection, due, overdue → existing `query.why.leg_raised_anywhere`, `query.why.clock_next_date`, `query.why.flag_computed_local`.
+- Test copies (K3962): content:chain/cap query strings built from CHAIN_/CAP_DOES_NOT_APPLY and a local UNDETERMINED; NEAR warnings compare with word(key, vars) and hasWord; relevance warning with word(); t33's three code-written warnings with localize(id, en, vars) per B5.
+
+Tests and checks:
+- node --test test/m/query-language/ (bio-plane): 57 pass, 0 fail.
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: no finding naming query-language (missingkey 0 tree-wide); coverage and words failures present only in other modules.
+- setup-words build.mjs --check: stale-rows note only (expected); no refusal naming query-language.
+- checks/ownership.mjs query-language tranche/T51 job/T51/query-language: 0 failures.
+
+Deferred: none. Found in other modules: none from this job.
+Size (session_01ViKHjERep3ZC62ov1p3v8e): test runs 2, module lines 3000
