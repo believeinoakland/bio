@@ -1,6 +1,6 @@
 # BOB to leg-earning (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio leg-earning tranche/T51 job/T51/leg-earning`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+Your REPORT J1, settled (K4010): where a words.json row holds the same sentence in other words, the list wins (K3930, K3984, K3994). Both ceiling sites read word('leg-earning.ceiling.grade_reachable_capture', { unreachable_capture_grade: ... }) and the two localize ids go; your words test follows (equality with word). Then COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4015): merged; re-opened by the words check now folding `+` chains (civicos-process d424c32, pull it): `leg-earning/index.mjs`:100 is a [copy] of a words.json row ("what this document's capture can support is undetermined, so this l..."): read it by `word`. Run the check on your module, fix what the rule covers, merge tranche/T51, COMPLETE again.

@@ -10,6 +10,7 @@ import { LEAD_CHECKS as OBSERVATION_LEAD_CHECKS, LEAD_ID_RE } from "../../../src
 import { BUNDLE_CASES, LEG_CASES, REGISTRY_VARIANTS, GROUND_CASES, SUPERSEDE_CASES, LEAD_LEG_CASES, legFm,
          INFO, INFO2, INFO3, SELF, PUBLISHED, EARNED, IMPORTED_BUNDLE_CASES } from "./corpus.mjs";
 import { GOLDEN, run, plain, judge } from "./fixture.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
         divisionDisclosureFindings, leadLegFindings, checkSupersession, INQUIRY_GRAMMARS, LEAD_CHECKS,
@@ -135,7 +136,8 @@ test("R4 negative controls by hand: a lead or a theme is refused by name before 
   assert.deepEqual(legs([{ target: "LEAD-2026-0101-abc", role: "supports" }]).map((x) => [x.check, x.code]), [["C-54.1", "LEAD_NOT_EVIDENCE"]]);
   assert.deepEqual(legs([{ target: "THEME-2026-0101-abc", role: "supports" }]).map((x) => x.check), ["C-81.1"]);
   assert.deepEqual(legs([{ target: INFO2, role: "supports" }]).map((x) => [x.check, x.repairs]),
-                   [["C-6.3", [`add a references[] entry for '${INFO2}'`, "remove the basis leg"]]]);
+                   [["C-6.3", [localize("inquiry-grammar.grammar.add_a_references_entry_for", "add a references[] entry for '{t}'", { t: INFO2 }),
+                              localize("inquiry-grammar.grammar.remove_the_basis_leg", "remove the basis leg")]]]);
   assert.match(legs([{ target: "INQ-2026-0003-c", role: "supports", grade: "B", grade_axis: "capture", grade_source: "hunch", author: "a", date: "2026-07-01" }],
                     { references: [{ target: "INQ-2026-0003-c" }] })[0].message, /capture-axis grade on an inquiry leg/);
   assert.deepEqual(legs([{ target: "INQ-2026-0004-pub", role: "supports", grade: "C", grade_axis: "connection", grade_source: "inherited" }],
@@ -219,19 +221,15 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
 
 test("R7 R16 R18 INQUIRY_GRAMMAR_CHECKS: the twelve rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); IMPORTED_LEG_MALFORMED (C-21.3) is new, its translation BOB's draft; the three T33 leg rows, T34's derived-connection row and T41's bias-application row (C-2.8) follow (R16, R18; t33, t34 and t41 tests); the table has one name", async () => {
   assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
-  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
-                   ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND",
-                    "IMPORTED_LEG_MALFORMED", "STANDARD_LEG_AXIS", "CALCULATION_LEG_MALFORMED", "OCCURRENCE_LEG_MALFORMED",
-                    "DERIVED_LEG_MALFORMED", "BIAS_APPLICATION_MALFORMED"]);
   const numbers = { LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
                     MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3",
                     STANDARD_LEG_AXIS: "C-2.8", CALCULATION_LEG_MALFORMED: "C-2.8", OCCURRENCE_LEG_MALFORMED: "C-2.8",
                     DERIVED_LEG_MALFORMED: "C-2.8", BIAS_APPLICATION_MALFORMED: "C-2.8" };
+  assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS), Object.keys(numbers), "the twelve rows, in R7's order");
   const imported = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED;
   assert.deepEqual(Object.keys(imported), ["check", "where", "translation"]);
   assert.equal(imported.check, "C-21.3");
-  assert.equal(imported.translation, "A leg on another team's finding names that finding and one edition, and nothing else: "
-    + "its grades are that edition's. Correct the leg. Nothing was written.");
+  assert.equal(imported.translation, word("refusal.IMPORTED_LEG_MALFORMED"));
   assert.equal(imported.where, "src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form");
   for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {
     assert.deepEqual(Object.keys(row), ["check", "where", "translation"], k);

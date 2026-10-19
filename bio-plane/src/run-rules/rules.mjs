@@ -198,7 +198,7 @@ export const RUN_BOUNDS = {
      chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
      allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
      in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
-  surfaces:    "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface",
+  surfaces:    localize("run-rules.rules.bound_surfaces", "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface"),
   /* R13 (K660 (2); BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN'S BOUND, on `mints`' and `surfaces`' rule. The number
      of proposals a planning run may make, consumed by `action-plans` (its R31) through `ai-runs.consumeBound` as each
      proposal lands, so it is COUNTED BY THE PLANE (PLANE_COUNTED_BOUNDS below). Its allowance is the one the member
@@ -260,11 +260,9 @@ export const RUN_ENDINGS = {
   completed:  word("run-rules.run_finished_work"),
   cancelled:  word("run-rules.member_stopped"),
   "nothing-written":
-    "the run composed a candidate and wrote none, so it closed with nothing to show for its work; "
-  + "no member stopped it and no budget ran out",
+    localize("run-rules.rules.ending_nothing_written", "the run composed a candidate and wrote none, so it closed with nothing to show for its work; no member stopped it and no budget ran out"),
   "mode-not-deployed":
-    "the deployment gate refused this launch before it spent anything: the mode it asked for "
-  + "is not deployed yet, so no member stopped this run and no budget ran out",
+    localize("run-rules.rules.ending_mode_not_deployed", "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"),
 };
 
 /* WHAT BECAME OF A RUN — the third of this file's three run vocabularies, and
@@ -410,7 +408,7 @@ export const STANDARD_BASIS = {
   recorded:
     word("run-rules.run_formed_bar"),
   "none-recorded":
-    "no bar was recorded when this run was formed, and none is filled in afterwards",
+    localize("run-rules.rules.basis_none_recorded", "no bar was recorded when this run was formed, and none is filled in afterwards"),
   "context-has-no-project":
     word("run-rules.run_works_question"),
   "names-no-axis":
@@ -571,10 +569,11 @@ export function checkConsume(entries, opts) {
     if (entries == null) return null;
     if (typeof entries !== "object" || Array.isArray(entries))
       return refusal("AI_RUN_BOUND_UNKNOWN",
-        `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} `
-        + `(${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure `
-        + "spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (§14b.6). "
-        + "Nothing was written", { bound: null });
+        localize("run-rules.rules.consume_not_a_map", "`consume` was {what} ({value}): it is a map from a bound's name to the figure spent on it, e.g. {example}, and an array's keys are positions, which name no bound (§14b.6). Nothing was written", {
+          what: Array.isArray(entries) ? "an array" : `a ${typeof entries}`,
+          value: (JSON.stringify(entries) ?? String(entries)).slice(0, 80),
+          example: "{ fetches: 1 }",
+        }), { bound: null });
     entries = Object.entries(entries);
   }
   for (const [k, v] of Array.isArray(entries) ? entries : []) {

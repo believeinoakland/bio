@@ -154,9 +154,9 @@ function precheck(reference, runner) {
     + "{kind: \"signin\", member, secret}, the member's own, or a project's or the team's API key {kind: \"apikey\", level: "
     + "\"project\" or \"group\", key}") };
   if (ref.kind === "signin" && !held(ref.secret)) return { refusal: refused(null, "SIGNIN_NOT_HELD",
-    "this member's Claude sign-in is not held: they connect their Claude account again") };
+    localize("agent-model.model.this_members_claude_sign_in", "this member's Claude sign-in is not held: they connect their Claude account again")) };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
-    "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed") };
+    localize("agent-model.model.a_sign_in_runs_in", "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed")) };
   return { ref };
 }
 
@@ -178,7 +178,7 @@ export async function modelCall(reference, request, { runner, trace, memberRef }
     }
     return await signinTurn(signinAccount(ref, { trace, memberRef }), runner, request);
   } catch (e) {
-    return { silent: { detail: "the model call failed before it was sent" } };
+    return { silent: { detail: localize("agent-model.model.the_model_call_failed_before", "the model call failed before it was sent") } };
   }
 }
 
@@ -242,13 +242,13 @@ async function converseRun({ reference, runner, mode, role, meter, system, messa
     if (refusedFinal) {
       handedBack = true;
       messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id,
-        content: u === final ? refusedFinal : "not performed: the answer was handed back", is_error: true })) });
+        content: u === final ? refusedFinal : localize("agent-model.model.not_performed_the_answer_was", "not performed: the answer was handed back"), is_error: true })) });
       continue;
     }
     if (final) {
       /* Every tool call gets its result, so the transcript stays one the API accepts when the next row is asked. */
       messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id,
-        content: u === final ? "received" : "not performed: the answer ended this step" })) });
+        content: u === final ? "received" : localize("agent-model.model.not_performed_the_answer_ended", "not performed: the answer ended this step") })) });
       return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage, calls };
     }
     if (!uses.length) {
@@ -279,8 +279,8 @@ const STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial
  * handed it stays a free string. This module lists none by hand. */
 const conditionField = (conditions) => (Array.isArray(conditions) && conditions.length ? { type: "string", enum: conditions } : { type: "string" });
 const LOOK_FIELDS = (levels, conditions) => ({
-  level: { type: "string", enum: levels, description: "the level a look at this step was made at, if any" },
-  observed: { type: "string", enum: STATE_ENUM, description: "what a look at this step established; omit when nothing was looked at" },
+  level: { type: "string", enum: levels, description: localize("agent-model.model.the_level_a_look_at", "the level a look at this step was made at, if any") },
+  observed: { type: "string", enum: STATE_ENUM, description: localize("agent-model.model.what_a_look_at_this", "what a look at this step established; omit when nothing was looked at") },
   governed: { type: "boolean" },
   condition: conditionField(conditions),
 });
@@ -308,9 +308,9 @@ export function judgeTools(levels, conditions) {
           ...LOOK_FIELDS(levels, conditions), disagreements: disagreementsField(levels) },
         localize("agent-model.model.compose_what_the_reports_mean", "compose: what the reports mean, and what each version says."), "judge_compose"),
     obj({ candidates: { type: "array", items: { type: "object" },
-                        description: "the candidates that differ in substance from what the record holds" } },
+                        description: localize("agent-model.model.the_candidates_that_differ_in", "the candidates that differ in substance from what the record holds") } },
         localize("agent-model.model.dedup_whether_each_reading_differs", "dedup: whether each reading differs in substance."), "judge_dedup"),
-    obj({ submission: { type: "object", description: "the changed submission; the refused one unchanged drops it" } },
+    obj({ submission: { type: "object", description: localize("agent-model.model.the_changed_submission_the_refused", "the changed submission; the refused one unchanged drops it") } },
         localize("agent-model.model.adjust_how_to_answer_the", "adjust: how to answer the plane's refusal."), "judge_adjust"),
     READ_FACTS,
   ];
@@ -327,10 +327,9 @@ export function planJudgeTools(optionKeys) {
   });
   return [
     obj({ candidates: { type: "array", items: option,
-                        description: "the proposals, STRONGEST FIRST: their order is the only sign of strength; each "
-                                   + "carries only optionPropose's fields, with why (at most 500 characters) and sources" } },
+                        description: localize("agent-model.model.the_proposals_strongest_first_their", "the proposals, STRONGEST FIRST: their order is the only sign of strength; each carries only optionPropose's fields, with why (at most 500 characters) and sources") } },
         localize("agent-model.model.compose_which_options_to_propose", "compose: which options to propose to the plan, in order of strength, and why."), "judge_compose"),
-    obj({ submission: { ...option, description: "the changed proposal; the refused one unchanged drops it" } },
+    obj({ submission: { ...option, description: localize("agent-model.model.the_changed_proposal_the_refused", "the changed proposal; the refused one unchanged drops it") } },
         localize("agent-model.model.adjust_how_to_answer_the_2", "adjust: how to answer the plane's refusal of a proposal."), "judge_adjust"),
     READ_FACTS,
   ];
@@ -338,7 +337,7 @@ export function planJudgeTools(optionKeys) {
 
 export const LOAD_LAYER = (disclosable) => ({
   name: "load_layer",
-  description: "load one of the skill pack's disclosed layers when the work needs it",
+  description: localize("agent-model.model.load_one_of_the_skill", "load one of the skill pack's disclosed layers when the work needs it"),
   input_schema: { type: "object", properties: { name: { type: "string", enum: disclosable } },
                   required: ["name"], additionalProperties: false },
 });
@@ -432,20 +431,18 @@ export function subsessionTools(contract) {
   const citationsMax = r.citations_max || 20;
   const addressMax = r.address_max || 200;
   /* R17 — the bounds where the model reads them, not only as schema limits. */
-  const bounds = localize("agent-model.model.the_summary_is_at_most", " The summary is at most {summaryMax} characters; give at most {citationsMax} citations, each address at most {addressMax} characters.{v1}", { summaryMax: String(summaryMax), citationsMax: String(citationsMax), addressMax: String(addressMax), v1: String(conditions ? ` condition is one of: ${conditions.join(", ")}.` : "") });
+  const conditionClause = conditions ? localize("agent-model.model.condition_is_one_of", " condition is one of: {list}.", { list: String(conditions.join(", ")) }) : "";
+  const bounds = localize("agent-model.model.the_summary_is_at_most", " The summary is at most {summaryMax} characters; give at most {citationsMax} citations, each address at most {addressMax} characters.{v1}", { summaryMax: String(summaryMax), citationsMax: String(citationsMax), addressMax: String(addressMax), v1: conditionClause });
   const arms = Array.isArray(contract.arms) && contract.arms.length ? contract.arms : null;
   return [
     { name: "meaningrows",
-      description: "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the "
-        + "records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. "
-        + "`ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that "
-        + "document's passages; a passage comes back as a snippet of about a sentence (up to " + PASSAGE_SNIPPET + " tokens). Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
+      description: localize("agent-model.model.query_the_record_at_meaning", "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. `ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that document's passages; a passage comes back as a snippet of about a sentence (up to {PASSAGE_SNIPPET} tokens). Read the contract's subjects (the result of {name}) first.", { PASSAGE_SNIPPET: String(PASSAGE_SNIPPET), name: String(READ_FACTS.name) }),
       input_schema: { type: "object", properties: {
         q: { type: "string" },
         rows: { type: "string", ...(arms ? { enum: arms } : {}), description: "the meaning arm, e.g. leg" },
-        ids: { type: "array", maxItems: 20, items: { type: "string" }, description: "record ids that limit the read" },
+        ids: { type: "array", maxItems: 20, items: { type: "string" }, description: localize("agent-model.model.record_ids_that_limit_the", "record ids that limit the read") },
         limit: { type: "integer", minimum: 1, maximum: 50 },
-        snippet: { type: "integer", minimum: 4, maximum: PASSAGE_SNIPPET, description: "tokens of each passage snippet; passage reads send 64" } }, required: ["rows"], additionalProperties: false } },
+        snippet: { type: "integer", minimum: 4, maximum: PASSAGE_SNIPPET, description: localize("agent-model.model.tokens_of_each_passage_snippet", "tokens of each passage snippet; passage reads send 64") } }, required: ["rows"], additionalProperties: false } },
     { name: "report",
       description: String(r.rule || "return a REPORT with a citation, never documents") + bounds,
       input_schema: { type: "object", properties: {
