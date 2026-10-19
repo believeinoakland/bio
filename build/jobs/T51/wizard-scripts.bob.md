@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -28,3 +28,17 @@ The design merged into tranche/T51 is now at `20c8001300` (DEC-353, DEC-354, mer
 ## B3 · ANSWER · re J1
 
 Your reading stands: a drawn module reads rows. The 64 sentences in your J1 go to UX-DESIGN now as one HANDOFF (keys `wizard-scripts.<area>.<slug>`, named placeholders); BOB sends a CHANGE with the rows when merged. Meanwhile set WAITING ON BOB. Also confirm your pin moved to `20c8001300` (B2), not `8c5e692e19`.
+
+## B4 · CHANGE
+
+CHANGE (K4072). The design @ `c02f3f4add` (DEC-355 to DEC-358, U384 to U387) is merged into tranche/T51 and `rows.mjs` regenerated (`--check` green). Merge tranche/T51 into your branch first.
+
+1. Your J1 (1): the design's answer (U387, DEC-358), verbatim:
+
+of its 64 sentences, 48 have rows (site, then key): data.mjs:55 `wizard-scripts.names.comment_for_team`; data.mjs:59 `wizard-scripts.names.update_team_civicsmith`; index.mjs:1030 `wizard-scripts.refusal.proposal_why_length`; index.mjs:1058 `wizard-scripts.refusal.submit_author_only`; index.mjs:1090 `wizard-scripts.refusal.widen_not_approved`; index.mjs:1092 `wizard-scripts.refusal.widen_admin_only`; index.mjs:1100 `wizard-scripts.refusal.approve_not_submitted`; index.mjs:1102 `wizard-scripts.refusal.approve_team_wide_admin_only`; index.mjs:1102 `wizard-scripts.refusal.approve_owner_only`; index.mjs:1106 `wizard-scripts.refusal.approve_not_own_work`; index.mjs:1131 `wizard-scripts.refusal.grant_admin_action`; index.mjs:1135 `wizard-scripts.refusal.grant_no_such_member`; index.mjs:1154 `wizard-scripts.refusal.revoke_admin_action`; index.mjs:1157 `wizard-scripts.refusal.revoke_no_such_grant`; index.mjs:1182 `wizard-scripts.refusal.retire_reason_length`; index.mjs:1187 `wizard-scripts.refusal.retire_team_wide_admin_only`; index.mjs:1187 `wizard-scripts.refusal.retire_owner_only`; index.mjs:1201 `wizard-scripts.refusal.withdraw_author_only`; index.mjs:1528 `wizard-scripts.refusal.assistant_no_help_field`; index.mjs:1532 `wizard-scripts.refusal.assistant_tell_length`; index.mjs:1537 `wizard-scripts.refusal.assistant_draft_unavailable`; index.mjs:1586 `wizard-scripts.refusal.use_owners_authors_only`; index.mjs:1613 `wizard-scripts.refusal.candidates_owners_admins_only`; index.mjs:163 `wizard-scripts.refusal.steps_at_most`; index.mjs:174 `wizard-scripts.refusal.step_text_length`; index.mjs:178 `wizard-scripts.refusal.draft_text_length`; index.mjs:266 `wizard-scripts.refusal.side_trip_not_offered`; index.mjs:276 `wizard-scripts.refusal.side_trip_loops_back`; index.mjs:299 `wizard-scripts.refusal.needs_one_step`; index.mjs:306 `wizard-scripts.refusal.screen_unknown`; index.mjs:309 `wizard-scripts.refusal.act_unknown`; index.mjs:311 `wizard-scripts.refusal.step_needs_what_why`; index.mjs:318 `wizard-scripts.refusal.template_not_offered`; index.mjs:319 `wizard-scripts.refusal.draft_text_length_check`; index.mjs:330 `wizard-scripts.refusal.assistant_never_helps_act`; index.mjs:332 `wizard-scripts.refusal.act_refused_to_machine`; index.mjs:335 `wizard-scripts.warning.single_step`; index.mjs:339 `wizard-scripts.warning.duplicate_script`; index.mjs:463 `wizard-scripts.refusal.no_such_script`; index.mjs:479 `wizard-scripts.refusal.not_a_draft`; index.mjs:489 `wizard-scripts.refusal.civicsmith_read_only`; index.mjs:495 `wizard-scripts.refusal.script_already_retired`; index.mjs:495 `wizard-scripts.refusal.version_already_withdrawn`; index.mjs:865 `wizard-scripts.refusal.steps_at_most_recording`; index.mjs:915 `wizard-scripts.refusal.draft_joined_only`; index.mjs:926 `wizard-scripts.refusal.name_length`; index.mjs:968 `wizard-scripts.refusal.revise_author_only`; start.mjs:86 `wizard-scripts.refusal.rumor_as_lead`. The other 16 (index.mjs 166, 168, 177, 317, 319's first string, 453, 454, 792, 864, 869, 919, 1014, 1255, 1567, 1569, 1570: argument shapes, registration and wire diagnostics) are on wizard-scripts' unkeyed list; with these lists the words check on job/T51/wizard-scripts reads inline 48 (exactly the rows to convert), unkeyed 0 failures otherwise. Rows win over the code's text (several reworded for a member; named placeholders in the code's {} order). index.mjs 1131/1154 are lowercase phrases for membership's frame sentence.
+
+Convert those 48 to `word(key[, vars])` (the row wins over the code's text; fills by the row's named placeholders). The 16 on your unkeyed list stay as they are, uncounted.
+
+2. Your J1 (2): ruled (BOB's, P17): `project-roster` is in your `uses` (modules.json; your requirements' Uses line says tests only). Architecture over your fixture is clean.
+
+Then run your suite and the checks of your START, and post COMPLETE.
