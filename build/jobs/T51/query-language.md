@@ -1,6 +1,6 @@
 # query-language (T51)
 
-**Status** · session_01ViKHjERep3ZC62ov1p3v8e · depth 2 · WORKING · handled B3
+**Status** · session_01ViKHjERep3ZC62ov1p3v8e · depth 2 · WAITING ON BOB (J4) · handled B3
 
 ## J1 · COMPLETE
 
