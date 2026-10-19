@@ -183,7 +183,7 @@ test("R42–R46: the arms still run at the gate and in the audit, so moving them
    `knocker_note`). Copied, not imported: `capture` is later in the order than this module, so its tests cannot load it
    (P4); control-plane's end-to-end filing runs this module and capture together (its R36). `profile` is capture's own
    and the register arms read only its `digests` (C-18.3), so it carries what an undetermined profile carries. */
-function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "handed in at the doorbell", by = "member:ruth",
+function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "knock bytes", by = "member:ruth",
                        at = "2026-09-30T12:00:00Z", received = "2026-09-30T11:00:00Z" } = {}) {
   const locator = `knock:${knockId}`;
   return {
@@ -193,8 +193,7 @@ function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "handed in a
     authority_basis: word("doorbell.authority_basis", { at: String(at) }),
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
-      asserts: `these bytes were received at the doorbell of your team's Civicsmith as knock ${knockId} at ${received}, `
-             + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
+      asserts: `knock ${knockId} was received at ${received} and filed by ${by} at ${at}`,
       evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
       bound: false, via: "doorbell",
     }],
@@ -251,7 +250,7 @@ test("R42, R51 (N381): C-18.1 admits capture R65's pulled-knock document: no let
 
 test("R42, R51 (N381): at the write, a pulled knock's bundle is filed with its register row; a letter on it is refused", () => {
   const w = world();
-  const bytes = "handed in at the doorbell";
+  const bytes = "knock bytes";
   const id = "INFO-2026-0001-doorbell-knock";
   const file = (doc) => ({
     bundleId: id, base: null, snapKey: `k${Math.random().toString(16).slice(2)}`, author: "member:ruth",
