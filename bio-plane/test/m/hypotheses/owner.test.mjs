@@ -29,7 +29,7 @@ test("R4 the module registers as the owner of the kind hunch, class hunch, in th
   for (const at of [AT, "1990-01-01T00:00:00Z", { value: "2026-10-01", precision: "day", zone: "UTC" }]) {
     const a = w.registry.neighbours({ owner: "hypotheses", node: E1, at, viewer: ANN, scope: inq });
     assert.deepEqual(a.items.map((i) => i.id), [hunch]);
-    assert.ok(a.items.every((i) => typeof i.undetermined.why === "string"));
+    assert.ok(a.items.every((i) => i.undetermined.why.key === "hypotheses.hunch_states_period" && i.undetermined.why.vars !== undefined));
   }
   assert.deepEqual(w.registry.neighbours({ owner: "hypotheses", node: E1, at: AT, viewer: OUTSIDER, scope: inq }), { items: [] });
 });

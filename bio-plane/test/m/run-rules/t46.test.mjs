@@ -11,6 +11,7 @@ import { partAdmittedOn, partAdmitted, untestedLabel, partRefusal, UNTESTED_WORD
          AI_RUN_PLAN_CHECKS, RUN_RULES_WORDS, RETIRED_CHECKS, translationOf } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 import { WORD } from "./words.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const EMPTY = Object.freeze({ id: "fixture", version: 2, matters: Object.freeze([]) });
 const FULL = Object.freeze({ id: "fixture", version: 2, matters: Object.freeze([{ id: "M1" }]) });
@@ -121,8 +122,7 @@ test("R30: partRefusal(part) is AI_PART_NOT_DEPLOYED (C-22.29, the next free C-2
   assert.equal(row.check, "C-22.29");
   assert.equal(AI_RUN_CHECKS.AI_PART_NOT_DEPLOYED, row);
   assert.match(row.where, /^src\/run-rules\/test-bar\.mjs partRefusal, /);
-  assert.equal(row.translation, "This part of the assistant has not yet passed Civicsmith's tests, so it is not switched on "
-    + "in your team's Civicsmith. Everything else works without it.");
+  assert.equal(row.translation, WORD("refusal.AI_PART_NOT_DEPLOYED"));
   assert.equal(translationOf("AI_PART_NOT_DEPLOYED"), row.translation);
   for (const p of ["ask", "draft:own_words", "draft:statusreport", "plan"]) {
     const r = refusal(partRefusal(p), "AI_PART_NOT_DEPLOYED");
@@ -215,8 +215,7 @@ test("R31: C-109.13 and C-109.14 take their translations from words.json's refus
   /* AI_RUN_ORIGIN_UNKNOWN: not read by key in T46 — its row keeps the sentence that is true in every mode */
   const origin = AI_RUN_OWN_CHECKS.AI_RUN_ORIGIN_UNKNOWN;
   assert.equal(origin.check, "C-22.25");
-  assert.equal(origin.translation, "Nothing was started, because this investigation did not say where it came from in a way "
-    + "the record knows: an investigation is started by a member or by exploring a question, and nothing else.");
+  assert.equal(origin.translation, localize("run-rules.checks.nothing_was_started_because_this", "Nothing was started, because this investigation did not say where it came from in a way the record knows: an investigation is started by a member or by exploring a question, and nothing else."));
   assert.notEqual(origin.translation, WORD("refusal.AI_RUN_ORIGIN_UNKNOWN"));
   assert.match(WORD("refusal.AI_RUN_ORIGIN_UNKNOWN"), /planning run/, "the list's sentence is a planning run's alone");
   assert.equal(Object.prototype.hasOwnProperty.call(RUN_RULES_WORDS, "refusal.AI_RUN_ORIGIN_UNKNOWN"), false);

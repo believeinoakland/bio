@@ -156,8 +156,8 @@ test("R13 each refusal's member-facing sentence is read by key from words.json, 
   w.count("member:ann", "ann", "ask", { cost: 0.5 });
   const r = w.u.useCheck({ owner: "member:ann", member: "ann", use: "ask", at: AT });
   assert.equal(r.word, "ai.refused.limit");
-  assert.equal(r.translation, "The assistant stopped here: your own daily limit for asking is reached. It works again tomorrow. "
-    + "Everything else works as usual.");
+  assert.equal(r.translation, word("ai.refused.limit", { whose: word("ai.whose.own"), period: word("ai.period.day"),
+    use: word("ai.use.ask.inline"), when: word("ai.when.day") }));
   assert.doesNotMatch(r.translation, /0\.5|\$|cent|dollar/i, "never a cost");
   /* negative control: a different scope reads a different key */
   assert.equal(w.u.useCheck({ owner: "member:ann", member: "ann", use: "draft", at: AT }).word, "ai.refused.limit.overall");
@@ -217,7 +217,8 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   assert.deepEqual(invalid.map((r) => r.field), ["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"]);
   for (const r of invalid) {
     assert.equal(r.code, "AI_LIMIT_INVALID");
-    assert.ok(r.translation.startsWith("That limit can't be set: ") && !PLACEHOLDER.test(r.translation), r.translation);
+    assert.equal(r.translation, word("ai.refused.limitinvalid", { field: word(`ai.limitfield.${r.field}`) }), r.translation);
+    assert.ok(!PLACEHOLDER.test(r.translation), r.translation);
   }
   assert.equal(new Set(invalid.map((r) => r.translation)).size, invalid.length, "each field fills its own words");
 });

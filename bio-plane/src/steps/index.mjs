@@ -556,12 +556,12 @@ export class Steps {
 
   /* R1: the place read, with its refusal, for the acting viewer: `{kind, questions?, project?}`. */
   #place(place, by, act) {
-    if (!isObj(place)) return { refusal: refuse("STEP_BAD_PLACE", "a step names its place: {questions}, {project} or {group: true}") };
+    if (!isObj(place)) return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.place_names_its_place", "a step names its place: {questions}, {project} or {group: true}", { questions: "{questions}", project: "{project}" })) };
     const kinds = ["questions", "project", "group"].filter((k) => place[k] !== undefined && place[k] !== null && place[k] !== false);
     if (kinds.length !== 1 || Object.keys(place).some((k) => !["questions", "project", "group"].includes(k)))
-      return { refusal: refuse("STEP_BAD_PLACE", "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)") };
+      return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.place_exactly_one_kind", "a step's place is exactly one of {questions}, {project} or {group: true}, and never a step (R21)", { questions: "{questions}", project: "{project}" })) };
     if (kinds[0] === "group") {
-      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", "a team step's place is {group: true}") };
+      if (place.group !== true) return { refusal: refuse("STEP_BAD_PLACE", localize("steps.index.team_place_is_group", "a team step's place is {group: true}")) };
       return { kind: "group" };
     }
     if (kinds[0] === "project") {
@@ -582,7 +582,7 @@ export class Steps {
     if (b === undefined || b === null) return { value: null };
     if (!isObj(b) || !filled(b.date) || !isCalendarDate(b.date) || !BASES.includes(b.basis)
         || (b.source !== undefined && b.source !== null && (!filled(b.source) || chars(b.source) > SOURCE_MAX)))
-      return { refusal: refuse("STEP_BAD_BY_WHEN", `a date is {date: YYYY-MM-DD, basis: ${BASES.join(" | ")}, source?}`) };
+      return { refusal: refuse("STEP_BAD_BY_WHEN", localize("steps.index.by_when_shape", "a date is {date: YYYY-MM-DD, basis: {bases}, source?}", { bases: BASES.join(" | ") })) };
     return { value: { date: b.date, basis: b.basis, ...(filled(b.source) ? { source: b.source.trim() } : {}) } };
   }
 
@@ -700,7 +700,7 @@ export class Steps {
       const o = isObj(outcomes) ? outcomes.outcome : outcomes;
       return OUTCOMES.includes(o) ? { list: [["", o]] } : { refusal: refuse("STEP_BAD_OUTCOME", `an outcome is one of ${OUTCOMES.join(", ")}`) };
     }
-    if (!isObj(outcomes)) return { refusal: refuse("STEP_BAD_OUTCOME", "a step on questions records an outcome per question: {<question>: outcome}") };
+    if (!isObj(outcomes)) return { refusal: refuse("STEP_BAD_OUTCOME", localize("steps.index.outcome_per_question", "a step on questions records an outcome per question: {<question>: outcome}")) };
     const refs = this.#refs(row.step_id).filter((q) => this.#membership.inSight(q, viewer));
     const list = [];
     for (const [q, o] of Object.entries(outcomes)) {
@@ -734,7 +734,7 @@ export class Steps {
       return refuse("STEP_BAD_TEXT", `a reason is 1–${REASON_MAX} characters`);
     if (actor.machine) {
       if (o.list.some(([, v]) => v !== "undetermined") || (learned !== null && learned !== undefined))
-        return refuse("STEP_MACHINE_NO_OUTCOME", "the system records neither an outcome nor a learned line (D33)", { step: row.step_id });
+        return refuse("STEP_MACHINE_NO_OUTCOME", localize("steps.index.machine_no_outcome", "the system records neither an outcome nor a learned line (D33)"), { step: row.step_id });
       if (end === "set_aside" && !filled(reason))
         return refuse("STEP_MACHINE_NO_OUTCOME", "the system sets its step aside only with its reason (a limit reached, a refusal)", { step: row.step_id });
     }
@@ -843,7 +843,7 @@ export class Steps {
       return refuse("NO_SUCH_BUNDLE", "no question by that id is held, or it is not one you may see", { question: filled(question) ? question : null });
     if (row.place_kind === "project")
       return refuse("STEP_NARROWER_THAN_QUESTION", "a project's step is seen only in its project; a question's use would widen it", { step: row.step_id });
-    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", "a team step is the team's, and its place is fixed at creation", { step: row.step_id });
+    if (row.place_kind === "group") return refuse("STEP_BAD_PLACE", localize("steps.index.team_place_fixed", "a team step is the team's, and its place is fixed at creation"), { step: row.step_id });
     if (this.#refs(row.step_id).includes(question)) return { ok: true, step: row.step_id, question, already: true };
     const at = this.#at();
     return this.#record.transact(() => {
@@ -992,7 +992,7 @@ export class Steps {
     const viewer = actor.viewer;
     const keys = isObj(on) ? Object.keys(on) : [];
     if (keys.length !== 1 || !["step", "arrival", "date"].includes(keys[0]))
-      return refuse("STEP_BAD_WAIT", "a wait is on one of {step}, {arrival: {kind, id}} or {date}");
+      return refuse("STEP_BAD_WAIT", localize("steps.index.wait_shape", "a wait is on one of {step}, {arrival: {kind, id}} or {date}", { step: "{step}", date: "{date}" }));
     let cols;
     if (keys[0] === "step") {
       const t = this.#held(on.step);
@@ -1113,7 +1113,7 @@ export class Steps {
     const amt = typeof amount === "string" ? amount.trim() : "";
     if (!COST_KINDS.includes(kind) || !AMOUNT.test(amt) || !dec(amt) || typeof currency !== "string" || !CURRENCY.test(currency)
         || !filled(what) || chars(what) > WHAT_MAX)
-      return refuse("STEP_BAD_COST", `a cost is {kind: ${COST_KINDS.join(" | ")}, amount: an exact decimal string, currency: a three-letter code, what}`);
+      return refuse("STEP_BAD_COST", localize("steps.index.cost_shape", "a cost is {kind: {kinds}, amount: an exact decimal string, currency: a three-letter code, what}", { kinds: COST_KINDS.join(" | ") }));
     const at = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`INSERT INTO step_costs (step_id, kind, amount, currency, what, by_actor, at) VALUES (?,?,?,?,?,?,?)`,

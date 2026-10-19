@@ -9,6 +9,7 @@ import * as IG from "../../../src/inquiry-grammar/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/index.mjs";
 import { INFO, INQ, PUBLISHED, EARNED, REF, IMPORT, IMPORTED_BUNDLE_CASES, REGISTRY_VARIANTS } from "./corpus.mjs";
 import { run, plain, judge } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const { IMPORTED_FINDING_RE, importedFindingRef, parseImportedFindingRef, importedLegFindings, checkInquiryBasis,
         checkInquiryExtension, INQUIRY_GRAMMARS, INQUIRY_GRAMMAR_CHECKS } = IG;
@@ -125,7 +126,7 @@ test("R11 in checkInquiryBasis the arm replaces the target arm for a leg on a re
   assert.deepEqual(basis([leg({ theme: "x" })]).map((x) => x.check), ["C-81.1"]);
   /* negative control: a malformed ref is no ref, and the target arm answers as before */
   assert.deepEqual(basis([{ target: `imported:${HEX}/bad`, role: "supports" }]).map((x) => [x.check, x.message]),
-    [["C-2.8", `basis[0].target 'imported:${HEX.slice(0, 31)}' is not a canonical record id`]]);
+    [["C-2.8", localize("inquiry-grammar.grammar.basis_i_target_string_is", "basis[{i}].target '{String}' is not a canonical record id", { i: "0", String: `imported:${HEX.slice(0, 31)}` })]]);
   /* negative control: a local leg missing from references[] is still C-6.3 */
   assert.deepEqual(basis([leg(), { target: INQ, role: "supports" }]).map((x) => x.check), ["C-6.3"]);
 });

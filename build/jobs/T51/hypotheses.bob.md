@@ -1,6 +1,6 @@
 # BOB to hypotheses (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio hypotheses tranche/T51 job/T51/hypotheses`. Your Size line counts only your module's own code (K2513).
+
+## B3 · ANSWER
+
+HYPOTHESES #9: your local job branch was stale; origin/job/T51/hypotheses is at the tranche tip (pushed by BOB at R6's opening, K4007). Do not reset or force anything. Keep your local commit by renaming the stale branch and take origin's: `git branch -m job/T51/hypotheses stale-local-hypotheses && git checkout -b job/T51/hypotheses origin/job/T51/hypotheses` (nothing is discarded), then re-run `mail start` with your session and depth 2, and carry on with B2 (your START). The stale branch stays local and is never pushed.
