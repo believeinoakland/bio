@@ -13,7 +13,6 @@ import { serialiseContainer } from "../../../src/container.mjs";
 import { ratifyStatement, caseRatifyStatement, captureAccountStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { readFileSync, readdirSync } from "node:fs";
-import { word, localize } from "../../../src/setup-words/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/rows.mjs";
 import { callsOf } from "../../../src/setup-words/build.mjs";
 
@@ -31,7 +30,11 @@ export const sentenceOf = (key) => {
   if (t === undefined) throw new Error(`no sentence for ${key}`);
   return t;
 };
-export const W = (key, vars = {}) => (OWN.has(key) ? localize(key, OWN.get(key), vars) : word(key, vars));
+/** The sentence of `key` with each `{name}` filled from `vars`, as `word` and `localize` fill it (a missing fill is refused). */
+export const W = (key, vars = {}) => sentenceOf(key).replace(/\{([A-Za-z0-9_]+)\}/g, (_, n) => {
+  if (!Object.hasOwn(vars, n) || vars[n] === undefined || vars[n] === null) throw new Error(`W: ${key} needs {${n}}`);
+  return String(vars[n]);
+});
 const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function like(key, vars = {}) {
   const parts = sentenceOf(key).split(/\{([A-Za-z0-9_]+)\}/);
