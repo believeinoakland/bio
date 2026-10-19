@@ -36,16 +36,16 @@ export function provisionKey(p) {
   return { standard: p.standard, portion: given(p.portion) ? p.portion : null };
 }
 const malformed = (what) => refuse("PROVISION_MALFORMED",
-  `${what} is a provision key {standard, portion?}: each a non-blank string of at most ${PROVISION_MAX} characters`);
+  localize("events.uses.what_is_a_provision_key", "{what} is a provision key: a standard and, optionally, a portion of it, each a non-blank text of at most {max} characters", { what: String(what), max: String(PROVISION_MAX) }));
 
 /* A cited passage `{captureSha, extent}` (a found match's own `capture_sha` taken alike, K1941), refused as R1 refuses an
    extent; the citation held is `{capture_sha, bundle_id, extent}`, the extent canonical. */
 function citation(k, c, by, what) {
-  if (!isObj(c)) return refuse("NO_EXTENT", `${what} is a passage of a captured document: {captureSha, extent}`);
+  if (!isObj(c)) return refuse("NO_EXTENT", localize("events.uses.what_is_a_passage_of", "{what} is a passage of a captured document, given by the document's capture sha256 and the extent within it", { what: String(what) }));
   const sha = c.captureSha ?? c.capture_sha;
-  if (!said(sha)) return noSha(`${what} names the captured document that states it, by its capture sha256`);
+  if (!said(sha)) return noSha(localize("events.uses.what_names_the_captured_document", "{what} names the captured document that states it, by its capture sha256", { what: String(what) }));
   const held = k.heldCapture(sha, by);
-  if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
+  if (!held) return refuse("CAPTURE_NOT_HELD", localize("events.uses.the_record_holds_no_such", "the record holds no such capture you can see"));
   if (!isObj(c.extent)) return refuse("NO_EXTENT", localize("events.uses.what_names_the_extent_of", "{what} names the extent of the capture that states it", { what: String(what) }));
   const bad = k.extentRefusal(held.sha, c.extent);
   if (bad) return bad;
@@ -66,40 +66,40 @@ function stored(k, cite, by) {
 function questionOf(k, q, by) {
   if (!given(q)) return { ok: true, id: null };
   if (said(q) && k.questionSeen(q.trim(), by)) return { ok: true, id: q.trim() };
-  return refuse("QUESTION_NOT_HELD", "no question with that id is held where you can see it; a question is an inquiry the record holds");
+  return refuse("QUESTION_NOT_HELD", localize("events.uses.no_question_with_that_id", "no question with that id is held where you can see it; a question is an inquiry the record holds"));
 }
 
 const member = (by) => said(by) && !isMachineIdentity(by);
-const memberOnly = () => refuse("MEMBER_ACT_ONLY", "only a member records a use of a power; the machine proposes one, never records it (K1443)");
+const memberOnly = () => refuse("MEMBER_ACT_ONLY", localize("events.uses.only_a_member_records_a", "only a member records a use of a power; the machine proposes one, never records it (K1443)"));
 
 /* ---- R43: an act of discretion or a waiver ---- */
 
 export function recordDiscretion(k, { kind, provision, statedReason, outcome, attestations, participants, scope, conditions,
                                       expiry, question, by = null } = {}) {
   if (kind !== "discretion" && kind !== "waiver")
-    return refuse("KIND_NOT_DISCRETION", "recordDiscretion holds an act of discretion (discretion) or a waiver (waiver)", { kinds: ["discretion", "waiver"] });
+    return refuse("KIND_NOT_DISCRETION", localize("events.uses.recorddiscretion_holds_an_act_of", "recordDiscretion holds an act of discretion (discretion) or a waiver (waiver)"), { kinds: ["discretion", "waiver"] });
   if (!member(by)) return memberOnly();
   const c = k.checkCreate({ kind, attestations, participants, by });
   if (!c.ok) return c;
   let prov = null;
-  if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed("the provision"); }
+  if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed(localize("events.uses.the_provision", "the provision")); }
   if (!given(statedReason) || (typeof statedReason === "string" && statedReason !== "none"))
-    return refuse("STATED_REASON_MISSING", "the stated reason is a passage of a captured document that states it, or \"none\" when the record states none");
+    return refuse("STATED_REASON_MISSING", localize("events.uses.the_stated_reason_is_a", "the stated reason is a passage of a captured document that states it, or \"none\" when the record states none"));
   let reason = null;
-  if (statedReason !== "none") { reason = citation(k, statedReason, by, "the stated reason"); if (!reason.ok) return reason; }
+  if (statedReason !== "none") { reason = citation(k, statedReason, by, localize("events.uses.the_stated_reason", "the stated reason")); if (!reason.ok) return reason; }
   if (!isObj(outcome) || !OUTCOMES.includes(outcome.value))
     return refuse("OUTCOME_UNKNOWN", localize("events.uses.an_outcome_is_one_of", "an outcome is one of {OUTCOMES}, with the passage stating it", { OUTCOMES: String(OUTCOMES.join(", ")) }), { outcomes: [...OUTCOMES] });
-  const out = citation(k, passageOf(outcome), by, "the outcome");
+  const out = citation(k, passageOf(outcome), by, localize("events.uses.the_outcome", "the outcome"));
   if (!out.ok) return out;
   const q = questionOf(k, question, by);
   if (!q.ok) return q;
   let sc = null, conds = [], exp = null;
   if (kind === "waiver") {
-    if (!given(scope)) return refuse("WAIVER_NO_SCOPE", "a waiver names the passage stating what is waived and for whom");
-    sc = citation(k, scope, by, "the waiver's scope");
+    if (!given(scope)) return refuse("WAIVER_NO_SCOPE", localize("events.uses.a_waiver_names_the_passage", "a waiver names the passage stating what is waived and for whom"));
+    sc = citation(k, scope, by, localize("events.uses.the_waiver_s_scope", "the waiver's scope"));
     if (!sc.ok) return sc;
-    if (given(conditions) && !Array.isArray(conditions)) return refuse("NO_EXTENT", "a waiver's conditions are a list of cited passages, empty for none");
-    for (const x of conditions || []) { const r = citation(k, x, by, "a condition"); if (!r.ok) return r; conds.push(r); }
+    if (given(conditions) && !Array.isArray(conditions)) return refuse("NO_EXTENT", localize("events.uses.a_waiver_s_conditions_are", "a waiver's conditions are a list of cited passages, empty for none"));
+    for (const x of conditions || []) { const r = citation(k, x, by, localize("events.uses.a_condition", "a condition")); if (!r.ok) return r; conds.push(r); }
     if (given(expiry)) { const d = readDate(expiry, k.zone()); if (d.bad) return refuse("BAD_DATE", d.bad); exp = d; }
   } else {
     for (const [field, v] of [["scope", scope], ["conditions", conditions], ["expiry", expiry]])
@@ -120,19 +120,19 @@ export function recordAssessment(k, { provision, unmet, attestations, participan
   const c = k.checkCreate({ kind: "assessment", attestations, participants, by });
   if (!c.ok) return c;
   const prov = provisionKey(provision);
-  if (!prov) return malformed("the standard assessed against");
-  if (given(unmet) && !Array.isArray(unmet)) return malformed("each unmet item's provision (unmet is a list)");
+  if (!prov) return malformed(localize("events.uses.the_standard_assessed_against", "the standard assessed against"));
+  if (given(unmet) && !Array.isArray(unmet)) return malformed(localize("events.uses.each_unmet_item_s_provision", "each unmet item's provision (unmet is a list)"));
   const attesting = new Set(c.rows.map((r) => r.capture_sha).filter(Boolean));
   const items = [];
   for (const u of unmet || []) {
     const p = isObj(u) ? provisionKey(u.provision) : null;
-    if (!p) return malformed("an unmet item's provision");
+    if (!p) return malformed(localize("events.uses.an_unmet_item_s_provision", "an unmet item's provision"));
     const at = passageOf(u);
-    if (!given(at.extent) && !given(at.captureSha)) return refuse("UNMET_NOT_CITED", "each unmet item cites the passage of an attesting capture stating it unmet", { provision: p });
-    const r = citation(k, at, by, "an unmet item");
+    if (!given(at.extent) && !given(at.captureSha)) return refuse("UNMET_NOT_CITED", localize("events.uses.each_unmet_item_cites_the", "each unmet item cites the passage of an attesting capture stating it unmet"), { provision: p });
+    const r = citation(k, at, by, localize("events.uses.an_unmet_item", "an unmet item"));
     if (!r.ok) return r;
     if (!attesting.has(r.cite.capture_sha))
-      return refuse("EXTENT_NOT_IN_CAPTURE", "an unmet item is cited in a capture that attests the assessment", { provision: p });
+      return refuse("EXTENT_NOT_IN_CAPTURE", localize("events.uses.an_unmet_item_is_cited", "an unmet item is cited in a capture that attests the assessment"), { provision: p });
     items.push({ p, cite: r.cite });
   }
   const q = questionOf(k, question, by);
@@ -149,11 +149,11 @@ export function recordAssessment(k, { provision, unmet, attestations, participan
 /* ---- R45: withdrawal, never an edit ---- */
 
 export function withdrawUse(k, { eventId, reason, by = null } = {}) {
-  if (!said(reason)) return refuse("NO_REASON", "a withdrawal says why the use was recorded wrongly; it is kept beside it");
+  if (!said(reason)) return refuse("NO_REASON", localize("events.uses.a_withdrawal_says_why_the", "a withdrawal says why the use was recorded wrongly; it is kept beside it"));
   const id = k.resolve(eventId);
   if (!id) return k.noSuchEvent(eventId ?? null);
   const u = k.one(`SELECT * FROM event_uses WHERE event_id=?`, id);
-  if (!u) return refuse("KIND_NOT_DISCRETION", "only a use of a power (discretion, waiver, assessment) is withdrawn this way", { event_id: id });
+  if (!u) return refuse("KIND_NOT_DISCRETION", localize("events.uses.only_a_use_of_a", "only a use of a power (discretion, waiver, assessment) is withdrawn this way"), { event_id: id });
   if (u.withdrawn) return { ok: true, already: true, event_id: id, withdrawn: { by: u.withdrawn_actor, at: u.withdrawn_at, reason: u.withdrawn_why } };
   const at = k.now(), why = reason.trim().slice(0, 2000);
   k.rows(`UPDATE event_uses SET withdrawn=1, withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE event_id=?`, k.stamp(by), at, why, id);
@@ -163,7 +163,7 @@ export function withdrawUse(k, { eventId, reason, by = null } = {}) {
 /* ---- R45, R48: the facet as read ---- */
 
 const cut = (s) => (s.length <= WORDS_MAX ? s : `${s.slice(0, WORDS_MAX).replace(/\s+\S*$/, "")}…`);
-const OUTCOME_WORDS = { granted: "granted", denied: "denied", partly_granted: "partly granted", other: "decided" };
+const OUTCOME_WORDS = { granted: word("events.outcome.granted"), denied: word("events.outcome.denied"), partly_granted: word("events.outcome.partly_granted"), other: word("events.outcome.other") };
 
 /** The facet of a use event for a viewer, or null for an event that is no use. `view` is the event as read (its `when`
  *  and participants), so the facet says only what that reader may see. */
@@ -193,19 +193,19 @@ export function facetOf(k, eventId, viewer, view) {
       provision: { standard: r.provision_standard, ...(r.provision_portion ? { portion: r.provision_portion } : {}) }, extent: cite(r.cite) }));
     const list = unmet.map((x) => `${x.provision.standard}${x.provision.portion ? ` ${x.provision.portion}` : ""}`);
     Object.assign(facet, { unmet, says: word("events.says.assessment_against", { subject: subject || word("events.says.subject_recorded"), by, date,
-      standard: provWords, result: unmet.length ? `found unmet: ${list.join("; ")}` : word("events.says.standard_found_unmet") }) });
+      standard: provWords, result: unmet.length ? word("events.text.found_unmet", { standards: list.join("; ") }) : word("events.says.standard_found_unmet") }) });
   } else {
     const reason = u.reason_stated ? cite(u.reason) : "none";
     const outcome = { value: u.outcome, extent: cite(u.outcome_cite) };
-    const why = reason === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted(reason)}`;
+    const why = reason === "none" ? word("events.text.reason_stated") : word("events.text.reason_given", { reason: quoted(reason) });
     Object.assign(facet, { stated_reason: reason, outcome });
     if (u.kind === "discretion") facet.says = word("events.says.discretion_used", { by, date, why });
     else {
       const scope = cite(u.scope), conditions = (json(u.conditions) || []).map(cite), expiry = json(u.expiry);
       Object.assign(facet, { scope, conditions, expiry });
-      facet.says = word("events.says.waiver_waived", { outcome: OUTCOME_WORDS[u.outcome] || "decided", by, date, why, scope: quoted(scope),
-        conditions: conditions.length ? `conditions: ${conditions.map(quoted).join("; ")}` : word("events.text.conditions_stated"),
-        expiry: expiry ? `expires ${expiry.value}` : word("events.text.expiry_stated") });
+      facet.says = word("events.says.waiver_waived", { outcome: OUTCOME_WORDS[u.outcome] || OUTCOME_WORDS.other, by, date, why, scope: quoted(scope),
+        conditions: conditions.length ? word("events.text.conditions_listed", { conditions: conditions.map(quoted).join("; ") }) : word("events.text.conditions_stated"),
+        expiry: expiry ? word("events.text.expires_on", { date: String(expiry.value) }) : word("events.text.expiry_stated") });
     }
   }
   facet.withdrawn = u.withdrawn ? { by: u.withdrawn_actor, at: u.withdrawn_at, reason: u.withdrawn_why } : null;
@@ -224,7 +224,7 @@ export function usesOf(k, { provision = null, decider = null, subject = null, ki
     const off = ks.find((x) => !USE_KINDS.includes(x));
     if (off !== undefined) return refuse("KIND_NOT_DISCRETION", localize("events.uses.a_use_is_one_of", "a use is one of {USE_KINDS}", { USE_KINDS: String(USE_KINDS.join(", ")) }), { kinds: [...USE_KINDS] });
     let prov = null;
-    if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed("the provision asked for"); }
+    if (given(provision)) { prov = provisionKey(provision); if (!prov) return malformed(localize("events.uses.the_provision_asked_for", "the provision asked for")); }
     const where = [`e.alias_of IS NULL`, `u.withdrawn = 0`, `u.kind IN (${ks.map(() => "?").join(",")})`], args = [...ks];
     if (prov) { where.push(`u.provision_standard = ?`); args.push(prov.standard); if (prov.portion) { where.push(`u.provision_portion = ?`); args.push(prov.portion); } }
     for (const [role, id] of [["decider", decider], ["subject", subject]]) if (said(id)) {

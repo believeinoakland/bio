@@ -3,14 +3,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, ANN, MACHINE } from "./fixture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { reasonText } from "../../../src/lines/index.mjs";
 
 test("R21 an open-ended holds line is in at a date no later than its held current_through and undetermined after it; with none held it is undetermined after its start", () => {
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master");
   const id = w.say("holds", p, o, { capacity: "elected", valid: { from: "2023-01-09" } });
   /* none held: undetermined after the start, out before it */
-  assert.deepEqual(w.l.holderAt({ office: o, at: "2024-03-01", viewer: ANN }).lines, [{ line_id: id, why: word("civil-time.end_stated"), state: "undetermined" }]);
-  assert.equal(w.l.holderAt({ office: o, at: "2022-12-31", viewer: ANN }).undetermined, word("lines.undetermined.line_covers_date"));
+  assert.deepEqual(w.l.holderAt({ office: o, at: "2024-03-01", viewer: ANN }).lines, [{ line_id: id, why: { key: "civil-time.end_stated", vars: {} }, state: "undetermined" }]);
+  assert.deepEqual(w.l.holderAt({ office: o, at: "2022-12-31", viewer: ANN }).why, { key: "lines.why.no_line_covers", vars: {} });
   /* a source's own "current as of" statement, cited, with its day */
   const s = w.held("INFO-2026-0001", sha("roster as of June"));
   assert.equal(w.l.recordCurrentThrough({ lineId: id, day: "2025-06-30", basis: { captureSha: s, extent: { kind: "document" } }, by: ANN }).ok, true);
@@ -19,7 +20,8 @@ test("R21 an open-ended holds line is in at a date no later than its held curren
   assert.equal(w.l.holderAt({ office: o, at: "2025-06-30", viewer: ANN }).holder, p, "no later than the day: through its end");
   const after = w.l.holderAt({ office: o, at: "2025-07-01", viewer: ANN });
   assert.equal(after.holder, null);
-  assert.match(after.lines[0].why, /current through 2025-06-30/);
+  assert.deepEqual(after.lines[0].why, { key: "lines.why.stated_current_through", vars: { why: { key: "civil-time.end_stated", vars: {} }, day: "2025-06-30" } });
+  assert.match(reasonText(after.lines[0].why), /2025-06-30/, "the day is filled");
   assert.equal(after.lines[0].state, "undetermined", "after it, undetermined, never out");
   assert.equal(w.l.holderAt({ office: o, at: "2022-12-31", viewer: ANN }).holder, null, "before the start, still out");
   assert.equal(w.l.structureAt({ entity: o, at: "2024-03-01", viewer: ANN }).held[0].line_id, id);

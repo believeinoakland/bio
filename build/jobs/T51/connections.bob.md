@@ -1,6 +1,6 @@
 # BOB to connections (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio connections tranche/T51 job/T51/connections`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3993 (EXPLORE #7 J2): src/connections/stepsources.mjs:179 and src/connections/mentioned.mjs:131 answer `undetermined: { why: UNDATED }`, a plain string; connection-grammar's neighbours contract judges a reason as {key, vars} (K3958), so explore refuses connections OWNER_NONCONFORMING and explore's real-connections.test.mjs (R24) is red. Key both reasons in this job (your entry's own undetermined-reasons item covers them), and confirm with explore's real-connections test (`node --test bio-plane/test/m/explore/real-connections.test.mjs`) green on your branch.

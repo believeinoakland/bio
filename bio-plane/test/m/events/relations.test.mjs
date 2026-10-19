@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, MEMBER, MACHINE } from "./fixture.mjs";
 import { RELATION_KINDS } from "../../../src/events/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -37,7 +38,7 @@ test("R18 stated_cause is held only as a named source's claim: testimony refused
   const r = w.ev.relate({ from: a, to: b, kind: "stated_cause", attestation: { captureSha: s, extent: doc }, by: MEMBER });
   assert.equal(r.ok, true);
   for (const v of [r.relation, w.ev.readEvent({ eventId: a, viewer: MEMBER }).event.relations[0]]) {
-    assert.match(v.says, /^the document [0-9a-f]{12}… states that one caused the other$/);
+    assert.equal(v.says, word("events.says.states_caused", { source: word("events.text.document_sha", { sha: s.slice(0, 12) }) }));
     assert.equal(v.asserted_by_record, false);
   }
 });
