@@ -47,3 +47,7 @@ Right: neither has merged yet; both were started with you at R6's opening (K4007
 ## B5 · CHANGE
 
 basis-version-grammar (T51-148) and inquiry-grammar (CR-8) have both merged (K4015). Merge tranche/T51 into your branch and do the rest of CR-9: delegate to basis-version-grammar by import and re-export (registration swapped to its `registerBasisVersionGrammar`, one code one site, K231), delete grammar.mjs and the grammar half of checks.mjs it took, and the standard-leg judgment now lives in its R10 (your R56 is retired "moved to basis-version-grammar R10"). Re-run your tests and those of your users you can reach, then COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
