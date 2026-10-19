@@ -30,11 +30,12 @@ test("R53 NOT_A_PROCEEDING's one row is this module's C-91.9, its where naming n
 
 test("R53 notAProceeding answers the one refusal: reason and code NOT_A_PROCEEDING, its row's check and translation, the caller's detail named, else a fixed default", () => {
   const row = ENTITY_CHECKS.NOT_A_PROCEEDING;
-  const a = notAProceeding("status as of a date is read of an entity of kind proceeding");
+  /* the caller's own sentence is passed through unchanged; this test holds no sentence a caller draws (K3986) */
+  const callerDetail = "the first caller's detail, passed through unchanged";
+  const a = notAProceeding(callerDetail);
   assert.deepEqual(Object.keys(a).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);
   assert.deepEqual([a.ok, a.reason, a.code, a.check, a.translation, a.detail],
-                   [false, "NOT_A_PROCEEDING", "NOT_A_PROCEEDING", "C-91.9", row.translation,
-                    "status as of a date is read of an entity of kind proceeding"]);
+                   [false, "NOT_A_PROCEEDING", "NOT_A_PROCEEDING", "C-91.9", row.translation, callerDetail]);
   /* each caller names its own sentence: two callers, two details, one code, row and translation */
   const b = notAProceeding("this read is asked of an entity of kind proceeding");
   assert.deepEqual({ ...b, detail: null }, { ...a, detail: null });

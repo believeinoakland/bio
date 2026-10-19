@@ -1,6 +1,6 @@
 # BOB to duties (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -42,3 +42,7 @@ Lines and events are merged into tranche/T51 (K3998); local-facts is not yet. Me
 ## B5 · CHANGE
 
 local-facts is merged into tranche/T51 (K3999): merge it now for effective_from (K3997 (2)), then COMPLETE again.
+
+## B6 · ANSWER · re J4
+
+K4000: lines and local-facts are merged, and setup-words' rows.mjs is regenerated on tranche/T51 (it holds lines.why.no_line_covers). Merge tranche/T51, re-run duties' tests and checks, post COMPLETE.
