@@ -28,3 +28,7 @@ Tests and checks:
 - `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 24 failures, all in other modules, none in strength.
 
 Size (session_01VzUCjGbAYLcqyufLSZVAQD): test runs 3, module lines 2934.
+
+## J3 · QUESTION
+
+T51-221, pinned method words (method.mjs V1_LINES / V2_LEGS, the findings at method.mjs:281-329, about 15 of the 213). These are the plain-words text of the three PUBLISHED grading methods (bio-grading/1, /2, /3). gradingMethodText returns them, a case's signed method text is verified by SHA-256, and method.test.mjs pins each version's bytes. If they go through localize, the list always wins (setup-words R14): a design row edit would silently change a published, signed method without a new version (K1333). My best reading: leave these three texts as code, not keyed, and list them in a REPORT as 'signed/pinned versions, not hidden' for the design's unkeyed list (K3944); convert everything else in the module (arithmetic details, refusal rows, details, whys, the bar's note, filter sentence, the per-leg whys in method.mjs, the not-yet-pinned strings). Alternative: key them too (byte-identical en) and accept the drift risk. I carry on with everything else on my best reading and will convert them only if you say so.
