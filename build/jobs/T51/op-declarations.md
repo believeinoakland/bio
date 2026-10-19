@@ -30,3 +30,7 @@ T51-107 applied (job branch pushed at f5a2b3ec9f; tranche/T51 merged in at 00220
 **Tests and checks.** `node --test test/m/op-declarations/`: tests 230, pass 230, fail 0 (12 new in t51.test.mjs naming R76 to R79). format: 176 modules, 175 requirements files; 0 failures. architecture (op-declarations): 33 product files, 249 relative imports; 0 failures. coverage: 78 of 78 live requirement ids named by a test; 0 failures. ownership (tranche/T51 to job/T51/op-declarations): 20 files changed by op-declarations; 0 failures. words (module and all modules): 0 failures. setup-words build --check: the stale-rows note only, no refusal naming my module.
 
 Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 16, module lines 3318
+
+## J3 · REPORT
+
+B4 needs no change: the six ops left ACT_HELP_ABSENT at J2 (f5a2b3ec9f), and R34's partition tests run over ops only. Tested on a scratch merge of job/T51/affordances into my branch: op-declarations 230 tests, 230 pass, 0 fail (the partition holds with ACT_HELP holding the six and R69's seven browser acts, which are no ops, R76). Nothing pushed.
