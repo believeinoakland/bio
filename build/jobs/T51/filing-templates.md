@@ -9,3 +9,30 @@ Two readings I built on, neither blocks (my best reading is applied; tell me onl
 1. R35 `lacks` vocabulary. R35 and filings R65 name `second_approval`; R15's refusal (pinned by offer.test.mjs, answered to members today) names the same part `approver`. I left R15's `lacks` as it is and made `unofferedFor` answer `second_approval` for it. If you want R15's refusal to say `second_approval` too, that is a R15 amendment.
 2. R34 `label`: "the template's kind of draft". I answer the kind's `label` from the first profile (the template's own, or the active view's for a general one) that holds the kind, else the kind itself.
 Also: `templatebyhandle` is in `filingTemplatesOps` (control-plane R111 and plane R66 route it through the owner's map). affordances' test "the op maps of filing-templates and local-facts hold exactly their ops" was already red at the START and stays red; its job (L11) declares the op.
+
+## J2 · COMPLETE
+
+T51-163 (filing-templates) applied on `job/T51/filing-templates` at `ed5a28ffac`, pushed. No PR opened (JOB step 1). Merged `tranche/T51` before starting (up to date at the START).
+
+Entries applied:
+- R34 `templateByHandle({name, project?, version?, viewer})` (`op=templatebyhandle`): resolves through `offeredVersion` (R26, R25), answers `{template, version, sha, name, origin, default, text, blanks, label}`; every refusal is R26's/R25's, with no `text`; no secret is read, so no grant's door reaches it. Also in `filingTemplatesOps` as `templatebyhandle` (control-plane R111, plane R66 route through the owner's map); op-declarations (T51-107) and control-plane (T51-123) are theirs.
+- R35 `unofferedFor({kind, viewer})`: `[{handle, name, lacks}]` of the kind's visible profile templates R15 does not offer for want of attribution; `[]` for a court kind (R28), an unknown kind, no view or no member.
+- Words (K3949, K3957, K3962, K3964): all 52 findings fixed. `localize('filing-templates.index.<slug>', en)` for the refusal `detail` sentences (including the ones the check does not count: `from` refusals, `tier N`, `of a retired template`, the notes and unknown-blank details); rows read by key where a words.json row exists (`counterparty_organisation`, `TEMPLATE_BLANK_UNKNOWN`, `NO_REVIEWERS`, `TEMPLATE_KIND_REFUSED`, `GRANT_RECIPIENT_REFUSED`, `TEMPLATE_NOT_REVIEWED` with `{missing}` left for the screen). `blankUnknownRefusal`'s third argument is now a flag (`notOffered`), not a sentence fragment; `filings` calls it with two arguments.
+- Tests: new `r34.test.mjs` (R34, R35, each refusal with a control). Test copies replaced by `word`/`localize` equality (invariants, t46-words, r30, r32, draft). The ops-map hand list is a count and spot reads. t46's all-rows hash now pins each row's check and where only (translations are read by key).
+
+Readings (QUESTION J1 above): R35 `second_approval` for R15's `approver`; R34 `label` = the kind's label.
+
+Changed text, by the list winning (K3930): the `counterparty_organisation` blank, TEMPLATE_BLANK_UNKNOWN, TEMPLATE_KIND_REFUSED and GRANT_RECIPIENT_REFUSED translations now read the list's wording (US spelling; TEMPLATE_BLANK_UNKNOWN without literal braces, DEC-263). TEMPLATE_COURT_PETITION stays as R29 keeps it (`localize('filing-templates.checks.this_kind_is_filed_with', ...)`); words.json's row for it is "Civicsmith offers no templates for filing with a court. Talk to a lawyer." now, so R29's reason (bare "Civicsmith") may be stale: BOB's call.
+
+Nothing hidden as "no member reads it" (no `unkeyed` proposal).
+
+Deferred: none. Found in other modules: none new. Inherited reds, same set at the START and now (checked with my change stashed): filings R9, R30; action-producers R23; affordances R1 R12 R24 (the op-maps test; its job declares `templatebyhandle`), R48..R62, R62 R65, R19.
+
+Tests and checks:
+- `node --test bio-plane/test/m/filing-templates/`: tests 84, pass 84, fail 0. Users: wizard-scripts 105/105, skills 130/130.
+- `checks/words.mjs /home/user/bio filing-templates`: inline 0, plain 0, testcopy 0, handlist 0; 0 failures. The 14-module joint run: no line names filing-templates.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs ... filing-templates`: 17 product files, 62 imports; 0 failures. `checks/coverage.mjs ... filing-templates`: 35 of 35 live ids named; 0 failures. `checks/ownership.mjs ... filing-templates tranche/T51 job/T51/filing-templates`: 0 failures.
+- `setup-words/build.mjs --check`: the stale-rows note only (the rows hold the old ids; BOB regenerates at the layer close).
+- `checks/run.mjs` whole tree: format 0, architecture 0; words and coverage failures all in other modules.
+
+Size (session_01PbeBP85c4YmXfKoksHMFk4): test runs 8, module lines 1939
