@@ -135,7 +135,7 @@ export function tableEntry(sql, decl, record) {
     const from = Array.isArray(decl.from) ? [...decl.from] : null;
     return { ...head, carried: "rule", rows: null, pages: [],
              rule: { owner: decl.module, key: Array.isArray(decl.key) ? [...decl.key] : null, from,
-                     rebuild: localize("corpus-export.tables.rebuilt_by_module_from_v1", "rebuilt by {module} from {v1} (record-core R77); its rows never travel", { module: String(decl.module), v1: String(from ? from.join(", ") : "stored tables its declaration did not state") }) } };
+                     rebuild: localize("corpus-export.tables.rebuilt_by_module_from_v1", "rebuilt by {module} from {v1} (record-core R77); its rows never travel", { module: String(decl.module), v1: String(from ? from.join(", ") : localize("corpus-export.tables.stored_tables_not_stated", "stored tables its declaration did not state")) }) } };
   }
   const pager = new TablePager(sql, decl);
   const { rows, pages } = pager.survey();
