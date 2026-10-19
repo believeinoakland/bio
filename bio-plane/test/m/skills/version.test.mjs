@@ -4,7 +4,7 @@ import { checkSkillVersion, parseSkillVersion, renderPack, SKILL_CHECKS, SKILL_C
   from "../../../src/skillpack.mjs";
 import { CLAUSES } from "../../../src/skilldoctrine.mjs";
 import * as runRules from "../../../src/run-rules/index.mjs";
-import { published } from "./fixture.mjs";
+import { published, read, foundIn } from "./fixture.mjs";
 
 /* C-22.7's row, read through run-rules (its AI_RUN_CHECKS, R11), never from the catalogue: the row this module names
    is run-rules' (R25, N289, K617), and the catalogue's interim copy left in T12 (N299, K381). */
@@ -71,9 +71,7 @@ test("R25 C-22.7 is named here by key through run-rules, never copied: its code,
   assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "run-rules' row, never a copy");
   assert.equal(ROW.check, "C-22.7");
   assert.equal(runRules.translationOf("AI_RUN_SKILL_VERSION_UNNAMED"), ROW.translation, "run-rules resolves the code to this row");
-  assert.equal(ROW.translation, "This run did not say which version of its instructions it was working under. "
-    + "What a run found can only be read against the instructions it was given, so the record "
-    + "asks for that version before the run starts rather than guessing at it afterwards.");
+  assert.ok(foundIn(read("bio-plane/src/run-rules/checks.mjs"), ROW.translation), "run-rules' own words, verbatim");
   const r = checkSkillVersion("");
   assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_SKILL_VERSION_UNNAMED", ROW.check, ROW.translation]);
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");

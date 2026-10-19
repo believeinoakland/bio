@@ -34,7 +34,7 @@ test("R37 R2 the resident research_boundary carries §9.4's record-content-as-da
   assert.equal(ASK_CLAUSES.find((c) => /prompt injection/.test(c.text)), RECORD_CONTENT_IS_DATA, "never a second copy");
   /* The gloss is a note, not a quoted clause (it is not a canon sentence). */
   assert.match(RESEARCH_BOUNDARY_NOTE, /material to report on, never an instruction to follow/);
-  assert.ok(!foundIn(read(LADDERS_SOURCE), "material to report on, never an instruction to follow"));
+  assert.ok(!foundIn(read(LADDERS_SOURCE), RESEARCH_BOUNDARY_NOTE), "the gloss is not a canon sentence");
   assert.equal(renderPack(published()).resident.research_boundary.note, RESEARCH_BOUNDARY_NOTE);
 });
 
@@ -86,7 +86,7 @@ test("R38 (c) the research_boundary carries Roles §3 rule 12's clause (N731, K1
                     /names it to the member and never asks for its capture/])
     assert.match(HELD_ADDRESS_ONLY.text, re);
   /* The lookup can miss: the opposite rule is not found. */
-  assert.ok(!foundIn(r12, HELD_ADDRESS_ONLY.text.replace("never asks for its capture", "asks for its capture")));
+  assert.ok(!foundIn(r12, HELD_ADDRESS_ONLY.text.replace(/never (?=asks for its capture)/, "")));
   for (const pub of [published(), published({ answer_checks: CHECKS }), published({ catalog: planningCatalog() })]) {
     const { resident } = renderPack(pub);
     assert.equal(resident.research_boundary.clauses[4], HELD_ADDRESS_ONLY, "resident, in every pack");

@@ -20,3 +20,33 @@ T51-135: no clause re-spanned. Canon sources (Action v0.2 §4, Publication §5A,
 ## J2 · COMPLETE
 
 T51-135 complete, no code change; details in my record. Checks: format, architecture, coverage (skills 51/51), ownership 0 failures. Tests 130/130.
+
+## Completion (T51-219)
+
+- **Entry applied: the words pass.** The live words check (`checks/words.mjs` at civicos-process 4ec1c4c) reads 23 failures for `skills`: 6 inline, 2 plain, 15 test copies. The job's words-pass file lists 38; each site it lists that is still a literal is converted too. Every one is fixed, and the words check now reports 0 failures for `skills` in every arm.
+  - **Inline and plain sentences** (`bio-plane/src/skilldoctrine.mjs`): each sentence written as a `+`-joined chain of literals is one `localize("skills.skilldoctrine.<slug>", "<en>")` call, where the slug is the sentence's first five words, as the module's existing ids are. 29 chains converted; each `en` is byte-identical to the text it replaces. A section label such as `"§5"` is not a sentence and is left alone. The one sentence with a literal `{name}` (the word-list placeholder rule) passes `{ name: "{name}" }`, so the placeholder comes back as written.
+  - **Test copies** (`bio-plane/test/m/skills/`, 15 sites): no test holds a product sentence now. Each refers to the product's value instead:
+    - `action`: the status-report load-when is imported as `STATUS_REPORT_LOAD_WHEN` (now exported); R45's stated absence is checked for the three act ids it names (see deferred).
+    - `ask`: `DEC27` is `DEC27_LIMIT.text`, the product's own clause (now exported).
+    - `boundary`: the gloss is checked against `RESEARCH_BOUNDARY_NOTE`; the changed-word control is a regex.
+    - `edition`: the test's own copy of R31's two clauses is removed; the count, the order and the §5A lookup use `EDITION_STATEMENT_CLAUSES`.
+    - `filing`: the v0.1 rule 7 control checks `ruleText(7)` for the phrase `transmits nothing`, not the sentence.
+    - `pack`: the assertion message no longer copies the en of a `localize` call.
+    - `readtranslation`: the relabelled test act carries a sentinel label, not the product's label.
+    - `version`: R25's C-22.7 translation is checked as verbatim text in run-rules' own source (`foundIn` on `bio-plane/src/run-rules/checks.mjs`), not as a copy in the test.
+- **Exports** (`skilldoctrine.mjs`): `STATUS_REPORT_LOAD_WHEN` and `DEC27_LIMIT` are exported; nothing else changed in the export surface. Before and after the edit, both modules' exports were dumped as JSON: every existing export is identical, and the two additions are the only difference.
+- **Deferred, and why** (for BOB):
+  1. R45's stated absence (`action_drafting`'s `absent_because`) is no longer compared verbatim with a copy of the sentence. Its wording is a `localize` en with no `words.json` row, so no key can name it; a verbatim check would copy it. A keyed row for this sentence would let the test assert the key.
+  2. R25's C-22.7 translation has no `words.json` row either (run-rules' `localize`). The test checks it verbatim in run-rules' source instead; the same keyed row would replace that check.
+  3. `STATUS_REPORT_LOAD_WHEN` is an instruction read by AI runs, not by a member, and was not flagged; it stays a plain constant, now exported. Listed for BOB to settle with the design stream (K3944).
+- **Found in other modules:** none.
+- **Checks:**
+  - `checks/format.mjs` (full run): 0 failures.
+  - `checks/architecture.mjs bio skills`: 19 product files, 0 failures.
+  - `checks/coverage.mjs bio skills`: 51 of 51 live ids named by a test, 0 failures. The full run shows coverage failures in other modules only, none in `skills`.
+  - `checks/ownership.mjs bio skills tranche/T51 job/T51/skills`: 0 failures.
+  - `checks/run.mjs bio` (full run): architecture 0 failures; channels 0 failures; words 3,346 failures across the tree, none in `skills`.
+  - `bio-plane/src/setup-words/build.mjs --check`: `rows.mjs` is stale, as expected; the stale-row note names a `skills` row, which is not a refusal. BOB regenerates it at the layer close.
+- **Tests:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail (130 pass before the change).
+
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 3, module lines 2919
