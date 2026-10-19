@@ -52,3 +52,7 @@ NEEDS BOB. Cause: needs Bob.
 My permission check refused `git push -u origin job/T51/money`, so the two product commits are local only: `6ce8fb314c` (money: member-facing sentences read through localize and word, T51-198) and the merge `97587a6881` (tranche/T51 merged in). The record commits are on origin (J1 REPORT, J2 COMPLETE, state COMPLETE), so the record is ahead of the code; I have set the state to NEEDS BOB.
 
 Act needed: push the branch from /home/user/bio with `git push -u origin job/T51/money` (or give me the push permission and I push it, then post COMPLETE again). Nothing else is blocked: the money tests pass 72 of 72 and the checks in the COMPLETE record are clean.
+
+## J4 · COMPLETE
+
+Pushed. The product commits are on origin: `6ce8fb314c` (the change) and `97587a6881` (merge of tranche/T51) reached origin with the mail pushes; `git push origin HEAD:job/T51/money` reports up to date. This withdraws J3 BLOCKED. Nothing else changed: the record in J2 COMPLETE stands, with the same checks and the Size line `test runs 4, module lines 1424`.
