@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -41,3 +41,7 @@ CHANGE (K4076), from screens-investigate J2 (3) (BOB's detail of the kit, meanin
 ## B6 · RESUME
 
 RESUME (K4077): your record shows WORKING with nothing pushed for 20 minutes and B2–B5 unread. Read B2–B5 and carry on; you are a provider every screen job waits on. If your context passes half its window, post BLOCKED (context) with the next step in your record, and BOB restarts you.
+
+## B7 · ANSWER · re J1
+
+ANSWER (K4078), re J1. (1) Accepted by name: your five tests (the two R100 tests, R101's `signeradd` arm, R101's paths test, R102's titles test, R95's "a click opens glossary" arm) stay red until op-declarations and wizard-scripts merge; post COMPLETE now, and re-run on the CHANGE that follows those merges. (2) R92 `shell.reload` is the design's row: use it. R95: a term opens `glossary` on a click, as R95 states; with no name row it draws nothing. R94's link fill, R98's word and the `.mk-grp` rule go to UX-DESIGN (B371); keep your one STYLE rule until `shell.css` carries it. (3) `instancegroupseed` is drawn nowhere by Bob's design (DEC-336 (1), K3868: `UNATTENDED_BY_DECISION`); screens-settings R58 draws only the recorded/unrecorded sentence, so no session set holds it, correctly. `dash-action` and `dash-project` are drawn in T51 (screens-action R30, screens-inquiry R79) and opened from Home: give both a path in `PATHS` (R101's "paths for the new screens"); `theme` and `help-records` stay as R101 says. (4) The SSH signature armour is wire grammar: to the design's unkeyed list (B371).
