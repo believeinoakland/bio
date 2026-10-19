@@ -1,6 +1,6 @@
 # people (T51)
 
-**Status** · session_01Qbqab5EFYZCrkmKLgiPXzP · depth 2 · COMPLETE · handled B5
+**Status** · session_011qciUiMoVjk9Zn2kHVnzVS · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -102,3 +102,24 @@ Checks (process repository, merged tree)
 Deferred: none.
 
 Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 8, module lines 2241
+
+## J8 · COMPLETE
+
+**Words round RW (K4015): people, complete.** Merged `tranche/T51` (efb5ff66a1) into `job/T51/people`; one finding, fixed (commit 3976b9f286).
+
+Applied
+- `bio-plane/src/people/index.mjs`:1252, the directory page's `detail` sentence was a `+` chain of two literals (the words check's `stitched` arm, read as one sentence). It is now one `localize("people.index.directory_follows", "<the same sentence, unchanged>")`, a single literal, with no wording change. No word-table row held the sentence, so none was matched; the id is new, and `rows.mjs` is stale for it (expected; BOB regenerates at the layer close). No test copied the sentence.
+
+Checks (process repository e8ac153 for the checks; product `job/T51/people` at 3976b9f286)
+- `node checks/words.mjs /home/user/bio people`: 0 failures (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0).
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for `people.index.directory_follows` only; no refusal naming people.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage: people is not among the failing modules (the 26 coverage failures are other modules'); the words check run within it shows no finding in people.
+- `node checks/ownership.mjs /home/user/bio people tranche/T51 job/T51/people`: 1 file changed by people, 0 failures.
+- `node checks/architecture.mjs /home/user/bio people`: 0 failures. `node checks/format.mjs /home/user/bio`: 0 failures.
+- `node --test test/m/people/*.test.mjs` run from `bio-plane/` (the module's tests live there): tests 66, pass 66, fail 0.
+
+Deferred: none. Found in other modules: none new in this round.
+
+Note for the record: the commit message for 3976b9f286 carries a Co-Authored-By line naming a model. That breaks the no-model-identifier rule for commits; the commit is already pushed, and I did not rewrite it (no force-push). Bob may want the line removed at the layer's merge.
+
+Size (session_011qciUiMoVjk9Zn2kHVnzVS): test runs 3, module lines 2240
