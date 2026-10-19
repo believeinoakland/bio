@@ -238,18 +238,18 @@ export class Finder {
       else for (const c of captures) {
         const d = data.get(c.capture_sha);
         if (kind === "events") { this.#events(c, d, add, skip); continue; }
-        if (!d.reading && !d.units.length && !d.cells) { skip(c, "not extracted: no reading of this capture is held"); continue; }
-        if (!d.units.length && !d.cells) { skip(c, "no text: this capture's reading holds no text to search"); continue; }
+        if (!d.reading && !d.units.length && !d.cells) { skip(c, localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held")); continue; }
+        if (!d.units.length && !d.cells) { skip(c, localize("retrieval-browse.findin.no_text", "no text: this capture's reading holds no text to search")); continue; }
         const lang = d.language || language;
         const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
         if (!set) {
           skip(c, lang ? localize("retrieval-browse.findin.no_matcher_for_lang_yet", "no matcher for {lang} yet", { lang: String(lang) })
-            : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
+            : localize("retrieval-browse.findin.no_matcher_unstated", "no matcher for this capture's language yet: neither its reading nor the active profiles state a language"));
           continue;
         }
         if (kind === "requirements") {
           /* Its words are read from the text units alone: a reading holding only typed cells is not read for it. */
-          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
+          if (!d.units.length) skip(c, localize("retrieval-browse.findin.no_text_typed_cells", "no text: this capture's reading holds typed cells but no text unit to read sentences from"));
           else this.#requirements(c, d, set, add);
         }
         else this.#figures(kind, c, d, set, add);
@@ -456,8 +456,8 @@ export class Finder {
 
   /* `events`: the items, motions and votes the minutes and agenda readers read, as `extraction` holds the reading. */
   #events(c, d, add, skip) {
-    if (!d.reading) { skip(c, "not extracted: no reading of this capture is held"); return; }
-    if (!FIND_EVENT_TYPES.includes(d.reading.content_type)) { skip(c, "not minutes or an agenda"); return; }
+    if (!d.reading) { skip(c, localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held")); return; }
+    if (!FIND_EVENT_TYPES.includes(d.reading.content_type)) { skip(c, localize("retrieval-browse.findin.not_minutes_or_agenda", "not minutes or an agenda")); return; }
     const list = d.reading.value && Array.isArray(d.reading.value.entities) ? d.reading.value.entities : [];
     for (const e of list) {
       if (!e || typeof e !== "object") continue;
@@ -476,7 +476,7 @@ export class Finder {
     const read = [];
     for (const c of captures) {
       if (data.get(c.capture_sha).reading) read.push(c.capture_sha);
-      else skip(c, "not extracted: no reading of this capture is held");
+      else skip(c, localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held"));
     }
     if (!read.length) return;
     /* DEC-98: a page whose names could not be read is in `not_read`, never "Nothing here". */
@@ -547,7 +547,7 @@ export class Finder {
     for (const c of captures) {
       if (!read.includes(c.capture_sha)) continue;
       const d = data.get(c.capture_sha);
-      if (!d.units.length) { skip(c, "no text: this capture's reading holds no text unit to find a held name in"); continue; }
+      if (!d.units.length) { skip(c, localize("retrieval-browse.findin.no_text_unit_for_name", "no text: this capture's reading holds no text unit to find a held name in")); continue; }
       if (!phrases.length) continue;
       for (const u of d.units) {
         const tokens = foldTokens(u.text);
@@ -595,8 +595,8 @@ export class Finder {
     const shas = new Set();
     for (const c of captures) {
       const d = data.get(c.capture_sha);
-      if (!d.reading && !d.units.length) skip(c, "not extracted: no reading of this capture is held");
-      else if (!d.units.length) skip(c, "no text: this capture's reading holds no text to search");
+      if (!d.reading && !d.units.length) skip(c, localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held"));
+      else if (!d.units.length) skip(c, localize("retrieval-browse.findin.no_text", "no text: this capture's reading holds no text to search"));
       else shas.add(c.capture_sha);
     }
     const bundles = [...new Set(captures.filter((c) => shas.has(c.capture_sha)).map((c) => c.bundle_id))].sort();
@@ -643,8 +643,8 @@ export class Finder {
 export const FIND_ROW_CELLS_MAX = 50;
 const SHEET_EXTENTS = Object.freeze(["sheet-cell", "sheet-range"]);
 /* Why a sheet match names no cells: the reading holds none for the sheet (over its reader's size guard), or the words it
-   found run across more than one cell. A diagnostic beside `cells: null`, as every `why` of this file is. */
-const NO_CELLS_WHY = "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named";
+   found run across more than one cell. A member reads it beside `cells: null`, as every `why` of this file is (localize,
+   at its one use in `placed`). */
 
 /* A sheet's typed cells by row: `row → [{col, n, at, cell}]` in column order, or null where the reading holds none. */
 function gridOf(d, sheet) {
@@ -695,7 +695,7 @@ function placed(item, d) {
   const m = e.kind === "sheet-cell" && typeof e.cell === "string" ? A1.exec(e.cell) : null;
   const row = m && d ? rowOf(d, e.sheet, Number(m[2])) : null;
   return row ? { ...out, cells: row.cells, cells_truncated: row.cells_truncated, not_calculated: row.not_calculated, row: Number(m[2]) }
-             : { ...out, cells: null, cells_why: NO_CELLS_WHY, row: null };
+             : { ...out, cells: null, cells_why: localize("retrieval-browse.findin.no_cells_named", "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named"), row: null };
 }
 
 /* R8: the row a `sheet-cell` address, or a row's `sheet-range` (`A<r>:<last column><r>`), lies in; null for a range of several rows. */
@@ -755,7 +755,7 @@ function callRead(read, captureSha, viewer) {
     return { why: say("retrieval.why.read_refused", { given: String(a.code ?? a.reason ?? say("monitoring.reason_given")).slice(0, 200) }) };
   if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items)
       || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
-    return { why: "the read answered another shape than events R49's" };
+    return { why: localize("retrieval-browse.findin.read_another_shape", "the read answered another shape than events R49's") };
   return { items: a.items, truncated: a.truncated === true };
 }
 

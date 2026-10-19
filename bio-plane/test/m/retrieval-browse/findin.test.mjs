@@ -11,6 +11,7 @@ import { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_I
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { labelTerms } from "../../../src/extraction/index.mjs";
 import { parseFigure } from "../../../src/calc-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const EN = FIND_MATCHERS.en;
 
@@ -161,9 +162,9 @@ test("R1, R2 (DEC-98): a kind with nothing says Nothing here only when every cap
   const ans = run(w, { scope: { ids: ["INFO-R", "INFO-U"] }, kinds: ["money", "events"] });
   const money = kindOf(ans, "money"), events = kindOf(ans, "events");
   assert.deepEqual([money.count, money.nothing, money.says], [0, false, undefined]);
-  assert.deepEqual(money.not_read, [{ capture_sha: unread.sha, why: "not extracted: no reading of this capture is held" }]);
+  assert.deepEqual(money.not_read, [{ capture_sha: unread.sha, why: localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held") }]);
   assert.deepEqual(events.not_read.map((n) => [n.capture_sha, n.why]).sort(),
-    [[read.sha, "not minutes or an agenda"], [unread.sha, "not extracted: no reading of this capture is held"]].sort());
+    [[read.sha, localize("retrieval-browse.findin.not_minutes_or_agenda", "not minutes or an agenda")], [unread.sha, localize("retrieval-browse.findin.not_extracted", "not extracted: no reading of this capture is held")]].sort());
   const alone = run(w, { scope: { capture: read.sha }, kinds: ["money", "requirements"] });
   for (const k of ["money", "requirements"]) {
     const x = kindOf(alone, k);
@@ -174,7 +175,7 @@ test("R1, R2 (DEC-98): a kind with nothing says Nothing here only when every cap
   w.doc("INFO-BLANK", {}, { captures: [blank] });
   w.read(blank, "INFO-BLANK");
   const x = kindOf(run(w, { scope: { capture: blank.sha }, kinds: ["dates"] }), "dates");
-  assert.deepEqual([x.nothing, x.not_read[0].why], [false, "no text: this capture's reading holds no text to search"]);
+  assert.deepEqual([x.nothing, x.not_read[0].why], [false, localize("retrieval-browse.findin.no_text", "no text: this capture's reading holds no text to search")]);
 });
 
 test("R2 people, R2 term (DEC-164 (7)): a followed person or office is found by its held name, with the entity and how it corresponded, nothing resolved; a name no registered entity holds is found only as a word, under term", () => {
@@ -331,7 +332,7 @@ test("R2 events: the items, motions and votes the minutes and agenda readers rea
     [["Resolution on paving", "26-0844", facts, { kind: "pdf-page", page: 2, rect: null }, m.sha, "search"],
      ["Item two", "26-0845", {}, null, m.sha, "search"]]);
   assert.equal(typeof ans.items[1].extent_why, "string");
-  assert.deepEqual(ans.not_read, [{ capture_sha: g.sha, why: "not minutes or an agenda" }]);
+  assert.deepEqual(ans.not_read, [{ capture_sha: g.sha, why: localize("retrieval-browse.findin.not_minutes_or_agenda", "not minutes or an agenda") }]);
   assert.equal(ans.nothing, false);
 });
 
