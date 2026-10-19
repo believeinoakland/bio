@@ -4,6 +4,7 @@
    imported: what affordances read from an owner's op map or checks table is named here as the requirements name it. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
@@ -28,17 +29,18 @@ const bandsOf = (rungs) => {
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
 
 /* ---- R1, R3: RUNGS as a closed partition ---------------------------------------------------------------------------- */
+/* DEC-88's three bands, as op-grades R1 states them (the backticked ops of its sentence, read from the requirement) */
+const R1_TEXT = readFileSync(new URL("../../../../build/requirements/op-grades.md", import.meta.url), "utf8");
+const DEC88_TEXT = R1_TEXT.split("\n").find((line) => line.includes("DEC-88's three bands"));
+const DEC88_BAND = (from, to) => {
+  const a = DEC88_TEXT.indexOf(from);
+  const b = to ? DEC88_TEXT.indexOf(to, a + from.length) : DEC88_TEXT.length;
+  return [...DEC88_TEXT.slice(a, b).matchAll(/`([a-z0-9]+)`/g)].map((m) => m[1]);
+};
 const DEC88 = {
-  reversible: ["suggest", "extractpropose", "contradictionpropose", "themepropose", "standardpropose", "comparisonpropose",
-    "theorypropose", "actionriskpropose", "actionlawspropose", "filingprepare", "contentmint", "casedraft", "reviewcomment",
-    "taskforward", "taskresolve", "thread", "connectionchoose", "themedeclare", "themeplace", "entityalias", "goallink",
-    "versionkeep", "airunopen", "airunclose", "projectfork"],
-  reasoned: ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext", "resolve",
-    "resolvetestify", "entitycreate", "versionadopt", "progressiondefine", "goaldeclare", "aspirationdeclare",
-    "aspirationdeadend", "objectivecondition", "biasadopt", "strengthbar", "standarddeclare", "standardadopt",
-    "consequencerecord", "actioncorrespond", "filingsent", "escalationopen", "escalationattach", "counselpacket",
-    "attribute", "statementack", "workobjective", "inboxresolve"],
-  terminal: ["escalationend", "filingapprove"],
+  reversible: DEC88_BAND("reversible `", "; reasoned `"),
+  reasoned: DEC88_BAND("reasoned `", " (DEC-88 banded"),
+  terminal: DEC88_BAND("terminal `"),
 };
 const T41_REASONED = ["projectaikeepaway", "milestoneremove", "milestoneitemremove", "projectclosewithgaps",
   "hypothesissetaside", "guidereview", "guideretire", "stepaccept"];
