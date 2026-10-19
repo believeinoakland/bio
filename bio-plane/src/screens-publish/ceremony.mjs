@@ -55,7 +55,7 @@ export const CEREMONY = Object.freeze({
     ui.draftId = draft;
     const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
-    const out = [cs.title(c.identity ? cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") }) : null, { thing: "case" }),
+    const out = [cs.title(c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" }),
       '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"];
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }
     const args = P.caseArgs(copy, draft);
@@ -128,8 +128,9 @@ export const CEREMONY = Object.freeze({
       + (photos.map(function (ph, i) {
         const sha = ph.sha || ph.capture || "";
         const marks = P.later(cs, view, "marks:" + sha, "photomarks", { query: { capture: sha } });
-        // The sentence of facts: with the day the photo was taken when the Photos step carries one (`taken_at`), else without it.
-        const when = ph.taken_at || "";
+        // The sentence of facts: with the local day the photo was taken when the Photos step answers one (`photosOf`'s `dated`,
+        // case-disclosures R33), else without it.
+        const when = typeof ph.dated === "string" ? ph.dated : "";
         const relied = (ph.relied_on_by || []).map(function (r) { return r && (r.target || r.member) || ""; }).filter(Boolean).join(", ");
         const facts = when ? cs.w("screen.ceremony.photo.facts.dated", { by: ph.taken_by || "", date: { html: cs.date(when) }, findings: relied })
           : cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", findings: relied });
@@ -162,6 +163,31 @@ export const CEREMONY = Object.freeze({
     out.push(cs.sec("screen.ceremony.ties", cs.checks("ce-tie", "screen.ceremony.ties.legend", [["yes", "screen.ceremony.ties.confirm", false]])
       + '<div class="mk-acts">' + P.explained(cs, cs.act("publish", { tone: "primary" }), "act.publish.does", "act.publish.here.ceremony") + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
       + P.said(view, "publish") + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
+
+    // R42 (N880; DEC-340; case-authoring R34, R77; case-inputs R8, R19): beside "When it becomes public", the open requests for
+    // comment and the minutes beside the team's public comment, each drawn once from the sign step, by the keys its rows carry
+    // and the dates in the design's words; no reason asked, no gate, nothing sent. A section that holds nothing is not drawn (R20).
+    if (!published && !waiting && !(ui.signed && ui.signed.at)) {
+      const asked = signStep.open_requests;
+      const rows = Array.isArray(asked) ? asked : asked && Array.isArray(asked.lines) ? asked.lines : [];
+      const day = function (d) { return { html: d ? cs.date(d) : "" }; };
+      if (rows.length) out.push(cs.sec("screen.ceremony.openrequests.heading", cs.sheet(rows.map(function (r) {
+        const key = String(r && r.key || "");
+        if (key.indexOf("signing.openrequest.") !== 0) return "";
+        const a = r.answers && typeof r.answers === "object" ? r.answers : {};
+        return cs.row("", cs.w(key, { whom: r.whom || "", asked_at: day(r.asked_at), window_closes: day(r.window_closes),
+          answered: String(a.answered === undefined ? "" : a.answered), claims: String(a.claims === undefined ? "" : a.claims) }), "",
+        r.quotable === false ? cs.w("signing.openrequest.noquote", { whom: r.whom || "" }) : "");
+      }).join("")), { help: "screen.ceremony.openrequests.says" }));
+      else if (asked && !Array.isArray(asked) && asked.undetermined) out.push(cs.sec("screen.ceremony.openrequests.heading", '<p class="mk-note" data-open-unread>' + cs.w("signing.openrequest.unread") + "</p>"));
+      const mins = signStep.minutes;
+      if (Array.isArray(mins) && mins.length) out.push(cs.sec("screen.ceremony.minutes.heading", mins.map(function (r) {
+        return '<p class="mk-note">' + cs.w("signing.minutes.line", { meeting: r.meeting || "", date: day(r.date) }) + '</p><div class="mk-grid2"><div><b>' + cs.w("signing.minutes.left")
+          + '</b><p class="rec">' + cs.esc(r.minutes || "") + "</p></div><div><b>" + cs.w("signing.minutes.right") + '</b><p class="rec">' + cs.esc(r.filed || "")
+          + '</p></div></div><p class="mk-note">' + cs.w(r.same === true ? "signing.minutes.same" : "signing.minutes.differs") + "</p>";
+      }).join(""), { help: "screen.ceremony.minutes.says" }));
+      else if (mins && !Array.isArray(mins) && mins.undetermined) out.push(cs.sec("screen.ceremony.minutes.heading", '<p class="mk-note" data-minutes-unread>' + cs.w("signing.minutes.unread") + "</p>", { help: "screen.ceremony.minutes.says" }));
+    }
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
     // signing finishes (R15; DEC-181), the kit drawing a signed act there as what it does, never sent.
@@ -202,7 +228,7 @@ export const CEREMONY = Object.freeze({
       const w = waiting || {};
       const at = w.at || ui.signed.at || {};
       out.push(cs.sec("screen.ceremony.signed", '<p role="status" data-signed="at">' + cs.w("signing.ceremony.signedat", {
-        edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: at.time || "", zone: at.zone || "" }) + "</p>"
+        edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: { html: P.clock(cs, at.time) }, zone: at.zone || "" }) + "</p>"
         + cs.field("ce-move-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-move-time", "screen.ceremony.when.time", { type: "time" })
         + '<div class="mk-acts">' + cs.act("publishatmove", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } })
         + cs.act("publishatcancel", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } }) + "</div>"
