@@ -12,7 +12,7 @@ test("R8 reads the standard (its words as written, its source passage, its issue
   assert.equal(p.byOp("standard")[0].query.id, STD);
   assert.equal(p.byOp("lawrelations")[0].query.id, STD);
   const m = main(p);
-  assert.equal(m.querySelector("h1").textContent, "Administrative Instruction 4.12, §3");
+  assert.equal(m.querySelector("h1").textContent, "Administrative Instruction 9.1, §2");
   drew(m, "screen.standard.sub", { kind: word("screen.standard.kind.policy"), issuer: "Public Works" });
   drew(m, "screen.standard.inforce.since", { from: dayOf("2023-01-01") });
   assert.match(m.querySelector("blockquote").textContent, /within seven calendar days of the report/);

@@ -6,7 +6,7 @@
 
    `html(s)` reads an HTML string into a small tree, so the tests can find what a screen drew. `w`/`said` give a word's
    expected text. */
-import { wordsOf } from "../../../src/interface-shell/index.mjs";
+import { wordsOf, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
 import { SCREENS, GUIDE } from "../../../src/screens-wizards/index.mjs";
@@ -111,7 +111,7 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
-  const SHELL = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel"]);
+  const SHELL = new Set(SHELL_OPS);
   const reqs = () => b.requests.map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
   const out = { b, s: screen(id) || screens.find((x) => x.id === id), refused: null, cs: { w } };
   out.p = { get requests() { return reqs().filter((r) => !SHELL.has(r.op)); }, get all() { return reqs(); } };

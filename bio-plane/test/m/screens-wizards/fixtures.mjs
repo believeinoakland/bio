@@ -20,7 +20,7 @@ export const CIV = { id: GET_RECORD.id, origin: "civicsmith", name: GET_RECORD.n
   versions: [{ id: `${GET_RECORD.id}@1`, version: 1, state: "approved", author: { name: "civicsmith" }, contributors: [],
     approved: { by: { name: "Bob" }, at: "2026-10-06" }, created_at: "2026-10-06", broken: false, use: { start: 20, finish: 14 } }] };
 export const COPY = { id: "WIZ-0000000000000aaa", origin: "group", name: "Get a record, Oakland style", scope: { project: "P1" }, required: false,
-  based_on: { version: `${GET_RECORD.id}@1`, name: "Get a record" },
+  based_on: { version: `${GET_RECORD.id}@1`, name: GET_RECORD.name },
   versions: [
     { id: "WIZ-0000000000000aaa@2", version: 2, state: "draft", author: { id: "mai", name: "mai" }, contributors: [], approved: null, created_at: "2026-10-12", broken: false, use: { start: 0, finish: 0 } },
     { id: "WIZ-0000000000000aaa@1", version: 1, state: "approved", author: { id: "dev", name: "dev" }, contributors: [], approved: { by: { id: "rosa", name: "rosa" }, at: "2026-10-10" }, created_at: "2026-10-09", broken: false, use: { start: 5, finish: 3 } },

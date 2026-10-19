@@ -50,8 +50,10 @@ export const TIMELINE_PARTS = Object.freeze({
       const findingRow = (f) => {
         const n = stages.findIndex((s) => s.stage_key === f.stage_key) + 1;
         const d = f.disposition && f.disposition.applies ? f.disposition : null;
+        /* R45: a finding's state (`progressions` R46) is read by key; one with no decision is Open */
+        const state = ["open", "dismissed", "deferred"].includes(f.state) ? f.state : "open";
         return cs.row(cs.mark("gap", "undetermined", { reason: d ? String(d.reason || "") : "" }),
-          `<b>${n || ""} · ${cs.esc(f.stage_label || f.stage_key || "")}</b> <span class="mk-small">${f.says && f.says.key ? cs.w(f.says.key, f.says.vars || {}) : cs.w("progression.nodoc")}</span>`
+          `<b>${n || ""} · ${cs.esc(f.stage_label || f.stage_key || "")}</b> <span class="mk-small" data-finding-state="${state}" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("progression.finding.state.help"))}">${cs.w("progression.finding.state." + state)}</span> <span class="mk-small">${f.says && f.says.key ? cs.w(f.says.key, f.says.vars || {}) : cs.w("progression.nodoc")}</span>`
           + (d ? ` <span class="rec">${cs.esc(String(d.reason || ""))}</span>` : ""));
       };
       const fold = (summary, inner) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>${inner}</details>`;
@@ -89,14 +91,16 @@ export const TIMELINE_PARTS = Object.freeze({
       const basisOf = (b) => (b && b.statement ? `<span class="rec">${cs.esc(b.statement)}</span>${b.citation ? ` <span class="mk-small">${cs.esc(b.citation)}</span>` : ""}` : "");
       const stepsText = stages.map((st) => [st.stage_key, st.label || "", st.after_stage || "", st.within_interval || "", st.required, st.cardinality].join(" | ")).join("\n");
       const fold = (summary, inner) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>${inner}</details>`;
+      /* R45: the six parts of a step's line, in order, each by its label */
+      const columns = `<p class="mk-small" data-columns="steps">${["key", "label", "after", "within", "required", "cardinality"].map((c) => cs.w("progression.steps.label." + c)).join(" | ")}</p>`;
       return `<p class="mk-sub"><b>${cs.esc(v.label || "")}</b> · ${sub(v.version, v.declared_by, v.at)}</p>`
         + cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.stepsdef" })
         + cs.sec("progression.basis", `<p>${basisOf(v.basis)}</p>` + cs.sheet(versions.map((x) => cs.row("", `<span class="mk-small">${sub(x.version, x.declared_by, x.at)}</span> ${basisOf(x.basis)}`)).join("")), { help: S + "tip.basis" })
-        + fold("progression.revise", cs.field("pd-rv-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" }) + cs.field("pd-rv-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
-          + cs.field("pd-rv-steps", "progression.steps", { area: true, rec: true, value: stepsText, help: S + "progression.steps.note" })
+        + fold("progression.revise", `<p class="mk-small">${cs.w("progression.revise.help")}</p>` + cs.field("pd-rv-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" }) + cs.field("pd-rv-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
+          + columns + cs.field("pd-rv-steps", "progression.steps", { area: true, rec: true, value: stepsText, help: "progression.steps.help" })
           + cs.act("progressiondefine", { label: "progression.revise", data: { mode: "revise", key: String(key || "") } }))
         + fold("progression.define", cs.field("pd-name", "theme.name.label", { help: "theme.name.help" }) + cs.field("pd-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" })
-          + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: S + "progression.steps.note" })
+          + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + `<p class="mk-small">${cs.w(S + "progression.steps.note")}</p>` + columns + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: "progression.steps.help" })
           + cs.act("progressiondefine", { label: "progression.define.go", tone: "primary", data: { mode: "define" } }));
     });
   },

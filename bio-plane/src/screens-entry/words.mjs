@@ -4,8 +4,7 @@
    lists are `words-reads.json`'s `reads` for this module with every key a requirement here names (R16–R20); a sentence
    no key holds is a REPORT to BOB, never English here. DEC-256 retired `screen.forgot.handle.help` and
    `screen.setup.taken`, and DEC-230 withdrew `signin.founderhint`: none is read. R24: the lists below are this module's
-   own declared keys, every one held by `hasWord`, and every key a screen draws is one of them; `words-reads.json`,
-   generated from T49's code, lists neither the act labels these screens read nor T50's setup keys (DEC-279). */
+   own declared keys, every one held by `hasWord`, and every key a screen draws is one of them. */
 
 export const STATES = Object.freeze(["state.loading", "state.empty", "state.failed"]);
 
@@ -44,7 +43,7 @@ export const READS = Object.freeze({
     ...PASSWORDS, "screen.entry.signin", "screen.entry.backtofront", "refusal.PASSWORD_TOO_SHORT", ...labels("reset", ["passwordreset"])]),
   setup: Object.freeze([...STATES, "screen.setup.name", "screen.setup.purpose", "shell.mark",
     /* R22: the parts as the design draws them, each its name, what it is for and its state */
-    ...["lede", "coming", "after", "state.needed", "state.done", "state.optional", "state.off",
+    ...["lede", "coming", "after", "state.needed", "state.done", "state.optional", "state.off", "state.skipped", "state.skipped.help",
       "claim", "part.claim.why", "claim.intro", "claim.button", "otp", "otp.help", "otp.tip", "handle", "handle.help", "handle.tip", "own",
       "own.help", "again.help", "nootp", "claimed", "claimed.nosignin", "unarmed", "codes.intro",
       "part.group", "part.group.why", "name.field", "name.help", "name.tip", "name.now", "name.empty", "site.q", "site.no", "site.yes",
