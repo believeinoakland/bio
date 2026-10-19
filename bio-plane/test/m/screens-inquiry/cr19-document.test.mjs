@@ -86,3 +86,21 @@ test("R82 control: no bytes, no card, and no size guessed", async () => {
   assert.equal(main(p).querySelector('[data-card="original"]'), null, "no bytes, no card");
   assert.ok(!says(main(p), "size.small") && !says(main(p), "document.read.original.card", { kind: word("document.kind.pdf"), size: word("size.small") }), "no size is drawn");
 });
+
+/* ---- R83: the card's kind from the format the extraction states (K4127), the reading's `text_container` only when none is stated ---- */
+
+test("R83 the card names the kind from the stated format: a reading stating format pdf draws the PDF kind, and a stated format wins over its text_container", async () => {
+  const p = await open(at, { plane: { reading: readingWith({ bytes: 48000, format: "pdf", reading: { found: true, text_container: "docx" } }) } });
+  const card = main(p).querySelector('[data-card="original"]');
+  assert.equal(card.textContent.trim(), word("document.read.original.card", { kind: word("document.kind.pdf"), size: word("size.kb", { n: "47" }) }),
+    "the kind of the stated format, the size in KB; text_container is not read when a format is stated");
+});
+
+test("R83 control: a stated id with no row draws the undetermined kind, exactly; a reading stating no format falls back to its text_container", async () => {
+  const unknown = await open(at, { plane: { reading: readingWith({ bytes: 48000, format: "zzz-unregistered", reading: { found: true } }) } });
+  assert.equal(main(unknown).querySelector('[data-card="original"]').textContent.trim(),
+    word("document.read.original.card", { kind: word("document.kind.undetermined"), size: word("size.kb", { n: "47" }) }), "an id with no row");
+  const fallback = await open(at, { plane: { reading: readingWith({ bytes: 48000, reading: { found: true, text_container: "pdf" } }) } });
+  assert.equal(main(fallback).querySelector('[data-card="original"]').textContent.trim(),
+    word("document.read.original.card", { kind: word("document.kind.pdf"), size: word("size.kb", { n: "47" }) }), "no format stated: text_container");
+});
