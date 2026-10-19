@@ -33,3 +33,7 @@ CHANGE (K4072), from screens-daily (SCREENS-DAILY #8 J1 (b), confirmed; BOB's de
 ## B4 · CHANGE
 
 CHANGE (K4073), from screens-action J2 and screens-publish J2 (confirmed; BOB's details of the kit, meaning unchanged, R90 and the shell's existing services): (1) `cs.sec` and `cs.field` take `help` as one key or a list of keys, each drawn as its own sentence (the design's `.help1/.help2`, `.tip1/.tip2`); (2) `refusalOf(a, own, kit)`: a read's own refusal function is handed the kit (today `outcome` passes null), so a screen draws a read's refusal with its own words; (3) `cs.checks` takes R90's redraw-on-change, as the choice control does. Each with a test and a control. Screens-action, screens-publish, screens-daily and screens-settings wait on your merge.
+
+## B5 · CHANGE
+
+CHANGE (K4076), from screens-investigate J2 (3) (BOB's detail of the kit, meaning unchanged): a text field's typed input (`input` event) can carry a screen's handler, debounced by the kit (about half a second), so a screen asks a read "as she types" without polling with `cs.later`. Test and control. Also: `t50.test.mjs`:444 (R83) is already in your entry (a code no row holds).
