@@ -33,3 +33,13 @@ Started on T51-234. One edge for BOB (a uses edge is BOB's): publication's code 
 ## J3 · BLOCKED
 
 BLOCKED (cause: needs BOB, one act): add "setup-words" to publication's uses in build/modules.json (K3911, as for case-carriage; a uses edge is BOB's). The words conversion is done and pushed on job/T51/publication (commit 5d679fdcca): words check 0 failures (inline 0, plain 0, testcopy 0); publication tests 151 (150 pass, 0 fail, the 1 todo was there); format 0 failures; coverage 48 of 48; ownership 0 failures. The only open check is architecture: 8 failures, every one 'imports setup-words, which publication does not declare in uses' (src: deliverer, checks, index, door; tests: fixture, t28, t35, t45). Once the edge is on tranche/T51 I merge it, re-run architecture and post COMPLETE. No refusal text was judged unread: all 14 plain findings were member-facing and converted.
+
+## T51-234 · completion (PUBLICATION #34, session_01W7ArLV5djt9odo9CqsoN5L)
+
+**Entry applied.** T51-234 (words, K3949, K3957): all 73 findings and 14 plain findings fixed; every one was member-facing, none listed as unread. Sentences read through `word` where `words.json` holds the row (refusal.* rows, standard labels, access words, publication.why.*), else `localize('publication.<file>.<slug>', en, vars)` with the English unchanged. Also converted five short refusal `detail`s the check does not count (R13). The counsel-matter `detail` is built from whole localized sentences, verified equal to the old output for every project/findings case. Tests hold no sentence: they compare with `word`, or use neutral stand-ins. `setup-words` edge added to `uses` by BOB (B3, K4024). No inherited reds named; K3958 reds not in my entry.
+
+**Deferred.** None. **Found in another module.** Words findings in other modules still show in `checks/run.mjs` (case-check, case-checker, case-disclosures, case-grammar, public-read's `worker.mjs:338`); none is publication's.
+
+**Checks.** words 0 failures; tests `tests 151, pass 150, fail 0` (1 todo, pre-existing); `format: 0 failures`; `architecture: 32 product files … 0 failures`; `coverage: 48 of 48 … 0 failures`; `ownership: 13 files changed by publication … 0 failures`; `setup-words build --check`: stale-rows note only (expected).
+
+**Size (session_01W7ArLV5djt9odo9CqsoN5L): test runs 6, module lines 2020**
