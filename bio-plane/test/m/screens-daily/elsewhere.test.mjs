@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, ok, refused, text, ops, main, screen, word, hasWord, dmy, inOrder } from "./page.mjs";
+import { SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 
 const P = (kind, name, extra = {}) => ({ kind, name, does: `What ${name} does.`, contacts: [{ how: "phone", value: "(510) 555-0100" }, { how: "web", value: "help.example.org/" + kind }],
   source: `${name}'s website`, status: "researched", basis: "2026-10-02", ...extra });
@@ -72,7 +73,7 @@ test("R15: the record's data is drawn as data, HTML-escaped", async () => {
 
 test("R16: opening elsewhere records nothing and tells nobody: its only read is startfrom, beside the shell's own, and it sends no act and no wizardprogress", async () => {
   const p = await open("/app/elsewhere", { startfrom: door({ places: ["River Town"], pointers: EVERY }) });
-  const SHELL = new Set(["whoami", "bootstrap", "interfacewords", "infolevel", "groupidentity", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "queue"]);
+  const SHELL = new Set(SHELL_OPS);
   const mine = [...new Set(p.requests.map((r) => r.op).filter((op) => !SHELL.has(op)))];
   assert.deepEqual(mine, ["startfrom"]);
   // The shell's own reachability read (`subscriptionsignin` `{step: "state"}`, interface-shell R20) aside, nothing but reads.

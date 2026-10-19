@@ -11,7 +11,7 @@ import { SCREENS } from "./page.mjs";
 
 const HITS = ok({ total: 3, hits: [
   { bundle_id: "INF-1", title: "Public Works work orders, FY2025", grade: "B", snippet: "pothole [work orders]" },
-  { bundle_id: "INF-2", title: "Administrative Instruction 4.12", snippet: "within seven calendar days" },
+  { bundle_id: "INF-2", title: "Memo 88-31 on stormwater", snippet: "within seven calendar days" },
   { bundle_id: "INF-3", title: "Report to council", grade: "C" },
 ] });
 const SEL = ok({ ok: true, handle: "sel-abc", n: 2, members: ["INF-1", "INF-3"], expires: "2026-10-12T16:40:00Z" });
@@ -68,7 +68,7 @@ test("R4: each result with its grade and where it matched (Found by search), a r
   assert.match(text(p), /pothole work orders/);
   assert.ok(!text(p).includes("[work orders]"));
   assert.deepEqual(main(p).querySelectorAll("em").map((e) => e.textContent), ["work orders"]);
-  assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Administrative Instruction 4.12"));
+  assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Memo 88-31 on stormwater"));
   assert.equal(p.doc.getElementById("finder-pick-INF-1").getAttribute("aria-label"), word("screen.finder.pick", { title: "Public Works work orders, FY2025" }));
   const none = await open("/app/finder/zz", { search: ok({ total: 0, hits: [], widen: { total: 4 } }) });
   assert.ok(text(none).includes(word("screen.finder.noresult", { q: "zz" })));

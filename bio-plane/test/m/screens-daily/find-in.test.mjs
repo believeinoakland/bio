@@ -16,7 +16,7 @@ const KINDS = [
   { kind: "dates", items: [{ kind: "dates", words: "within seven calendar days", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, date: "2023-01-01", recorded: [] },
     { kind: "dates", words: "Reported", capture_sha: "c2", title: "Work orders", extent: {}, table: true, content_id: "CNT-4", recorded: [] }], count: 2, nothing: false, not_read: [] },
   { kind: "requirements", items: [{ kind: "requirements", words: "shall repair each reported pothole", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, content_id: "CNT-1", recorded: [{ by: "Mai", at: "2026-10-03" }] }], count: 1, nothing: false, not_read: [] },
-  { kind: "events", items: [], count: 0, nothing: false, not_read: [{ capture: "c7", why: "not read yet" }] },
+  { kind: "events", items: [], count: 0, nothing: false, not_read: [{ capture: "c7", why: "scan queued" }] },
   { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [] }], count: 37, truncated: true, nothing: false, not_read: [] },
 ];
 const FOUND = ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 14 }, kinds: KINDS });

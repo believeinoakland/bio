@@ -298,11 +298,11 @@ test("R1 (interface-shell R12): \"Start a project\" is drawn only to a session t
 
 
 // The front doors as startfrom answers them (wizard-scripts R23, R33, R37): "Follow the money" not offered, so `money` names
-// only "Get a record"; `person` and `read` left out (no script offered); the sixth door last, whatever else is offered.
+// only "Pull the file"; `person` and `read` left out (no script offered); the sixth door last, whatever else is offered.
 const DOORS = ok({ ok: true,
   scripts: [
-    { id: "WIZ-cb0ad18a17a04233", version: 2, name: "Get a record", start: "request" },
-    { id: "WIZ-33b5887790b7561b", version: 1, name: "Check a claim", start: "finder" },
+    { id: "WIZ-cb0ad18a17a04233", version: 2, name: "Pull the file", start: "request" },
+    { id: "WIZ-33b5887790b7561b", version: 1, name: "Trace the deed", start: "finder" },
   ],
   doors: [
     { door: "problem", scripts: ["WIZ-33b5887790b7561b", "WIZ-cb0ad18a17a04233"] },
@@ -332,7 +332,7 @@ test("R9, R14, R40: \"What happened?\" draws each door startfrom answers as a bu
 test("R40: pressing a door sends startfrom for it and opens its offer in place; no script name is drawn before that", async () => {
   const p = await open("/app", { ...PLANE, startfrom: DOORS });
   assert.equal(main(p).querySelectorAll("button[data-script]").length, 0, "no script name before a press");
-  assert.doesNotMatch(text(p), /Check a claim|Get a record/);
+  assert.doesNotMatch(text(p), /Trace the deed|Pull the file/);
   await press(p, "startfrom", { nth: 0 });
   assert.ok(p.byOp("startfrom").some((r) => r.query.door === "problem"), "startfrom is sent for the door");
   assert.deepEqual(doorOps(p, "problem"), [["WIZ-33b5887790b7561b", "1"], ["WIZ-cb0ad18a17a04233", "2"]]);

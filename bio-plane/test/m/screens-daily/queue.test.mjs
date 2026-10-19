@@ -14,7 +14,7 @@ const ITEMS = [
     summary: "Ana asked you to check a calculation", detail: "812 of 903 reports", due: day(-1),
     options: [{ id: "cite", label: "Cite" }], disposition: { available: false, instead: "taskresolve" } },
   { id: "FINDING::tension::PROJ-2::x", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"),
-    subject: { kind: "bundle", id: "INF-8" }, summary: "Two documents give different dates",
+    subject: { kind: "bundle", id: "INF-8" }, summary: "Two filings disagree about the date",
     hint: { matched: "Form 700 against votes", how: "the check matched names", false_alarm_rate: 0.12, false: 3, looked: 25, reason: "a name shared by two people" },
     options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "FINDING::tension::PROJ-2::x", projects: ["PROJ-2"] } },
   { id: "FINDING::newer::1", class: "FINDING", kind: "newer-capture-affects-reference", case: PROJ("PROJ-2", "The Coliseum lease"),

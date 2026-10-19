@@ -93,20 +93,20 @@ test("R34: every key the module's requirements name is a word of the list and is
 // Each screen drawn with data, as the harness's plane answers its reads.
 const DATA_PLANE = {
   groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents." }),
-  queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "Vouch for photos", options: [], disposition: { instead: "taskresolve" },
+  queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "Sign the lease amendment", options: [], disposition: { instead: "taskresolve" },
     case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
   search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
   projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming", members: [{ member: "M-1", handle: "mai" }], activity: [0, 1, 0, 2, 0, 1, 3, 1], lastChange: "2026-10-20T10:00:00Z" }] }),
   projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1", title: "Is it fixed?" }], cursor: null }),
   projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
-  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Check a claim" }],
+  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Trace the deed" }],
     doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }],
     routes: [{ route: "elsewhere", pointer: { places: ["River Town"], pointers: [{ kind: "service", name: "Town service line", does: "Fixes one thing for you.",
       contacts: [{ how: "phone", value: "311" }], source: "the town's website", status: "researched", basis: "2026-10-02" }] } }] }),
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
 const ROUTES = { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
-const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Is it fixed?", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
+const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Sign the lease amendment", "Pothole repairs", "Is it fixed?", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Trace the deed"];
 
 test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens and serves them: each route draws its screen under its path", async () => {
   assert.equal(checkScreens(SCREENS), true);

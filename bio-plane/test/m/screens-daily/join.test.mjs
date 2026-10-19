@@ -13,7 +13,7 @@ const CREATE = { whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_pr
 const ROSTER = ok({ members: [{ member_id: "admin", handle: null, founder: true, role: "admin", status: "active" },
   { member_id: "rosa", handle: "rosa", role: "admin", status: "active" }, { member_id: "mai", handle: "mai", role: "member", status: "active" }] });
 const BASE = { groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
-  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-1", version: 1, name: "Check a claim" }], doors: [{ door: "problem", scripts: ["WIZ-1"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
+  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-1", version: 1, name: "Trace the deed" }], doors: [{ door: "problem", scripts: ["WIZ-1"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
   memberlist: ROSTER };
 const INVITED = ok({ ok: true, projects: [{ id: "PROJ-7", name: "Library hours", stage: "forming", participation: "invited" }] });
 const DIRECTORY = ok({ ok: true, projects: [{ id: "PROJ-9", name: "Pothole repairs", request: null }, { id: "PROJ-8", name: "Bus stops", request: { state: "open", asked: "2026-10-10T10:00:00Z" } }] });
