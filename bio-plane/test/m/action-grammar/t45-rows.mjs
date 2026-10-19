@@ -151,6 +151,15 @@ export const T45_ROWS = {
     check: "C-117.58",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-copied",
     translation: word("refusal.MACHINE_CANNOT_SET_COPIED"),
+  },  MINUTES_NOT_PUBLIC_COMMENT: {
+    check: "C-117.59",
+    where: "src/actions/index.mjs actionCorrespond > is-minutes",
+    translation: localize("action-grammar.checks.minutes_are_kept_only_on", 'Minutes can be kept only on a received reply to a public comment. This entry is not one, so remove the minutes, or record the reply on the public comment it answers. Nothing was written.'),
+  },
+  BAD_MINUTES: {
+    check: "C-117.60",
+    where: "src/actions/index.mjs actionCorrespond > is-minutes",
+    translation: localize("action-grammar.checks.the_minutes_are_malformed_the", 'The minutes are malformed: the meeting is not one line of 1 to 200 characters, or the passage is not an extent of a capture. Correct each part to that form, then record the minutes again. Nothing was written.'),
   },
 };
 
