@@ -286,6 +286,7 @@ export async function assistantControls(page) {
    that would have used it, each reported as not walked. */
 export async function notReady(walk, page, base, { label, path, screen, names }) {
   for (const n of names) walk.notWalked(n);
+  /* a screen that fails its assertion has said so by name; the journey goes on, as the assistant is not part of it */
   await walk.step(page, label, async (p) => {
     await open(walk, p, base, path, screen);
     const drawn = await assistantControls(p);
@@ -295,7 +296,7 @@ export async function notReady(walk, page, base, { label, path, screen, names })
       const code = developerWords(t).find((w) => w.what === "a refusal code");
       if (code) throw new Error(`${screen} says why the assistant cannot work in a code, ${code.word}, not in the words of ${NOT_READY_KEYS.join(" or ")}`);
     }
-  });
+  }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
 }
 
 /* The conclusion on the member's own reading (R16, `screens-inquiry` R50): the choice "Write the reading yourself" beside
