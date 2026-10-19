@@ -46,3 +46,7 @@ Then run your suite and the checks of your START, and post COMPLETE.
 ## B5 · ANSWER · re J4
 
 ANSWER (K4076), re J4: (b), as you recommend. Match the two library entries by their script ids (`WIZ-f06504b9133b8d61`, `WIZ-7de505135a9ecd4f`), so no name literal remains; then post COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4081): the design merged into tranche/T51 is now at `2a64c5ae77` (DEC-359, K4080): it adds `.tw{overflow-x:auto}` to `shell.css` and the registry act `actionholdrelease` on `hold`. Merge tranche/T51 and re-take the design at `2a64c5ae77`: the pin in `build-data.mjs` and `data.mjs` (R41, R44), `screen-registry.mjs` and the doors and library regenerated, `--check` green, the counts re-pinned. Run your suite and checks, post COMPLETE.
