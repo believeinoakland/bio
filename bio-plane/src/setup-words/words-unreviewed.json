@@ -8597,6 +8597,13 @@
       "line": 734
     },
     {
+      "id": "case-authoring.checks.a_published_case_has_to_say",
+      "en": "A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/checks.mjs",
+      "line": 35
+    },
+    {
       "id": "case-authoring.checks.publishing_puts_the_teams_name",
       "en": "Publishing puts the team's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgements, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it.",
       "module": "case-authoring",
@@ -8608,7 +8615,35 @@
       "en": "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone (INVESTIGATIVE-SESSION.md §7.1): an inquiry can be shared, and one team concluding it does not move another team's stance. Each member below is named with the relationship whose conclusion this case rests on, and with the claim that relationship adopted, frozen as it stood at publication.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 303
+      "line": 302
+    },
+    {
+      "id": "case-authoring.document.a_question_which_has_no_bytes",
+      "en": "a question, which has no bytes (DEC-21)",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 47
+    },
+    {
+      "id": "case-authoring.document.an_unrecorded_state",
+      "en": "an unrecorded state",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 412
+    },
+    {
+      "id": "case-authoring.document.axis_group_ground_state",
+      "en": "  - {axis}, group '{ground}': {state}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 388
+    },
+    {
+      "id": "case-authoring.document.axis_state_weakest_detail",
+      "en": "  - {axis}: {state}{weakest}. {detail}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 383
     },
     {
       "id": "case-authoring.document.bundle_id_scope_at_revision",
@@ -8618,347 +8653,781 @@
       "line": 398
     },
     {
+      "id": "case-authoring.document.concluded_in_the_questions_own_bytes",
+      "en": "concluded in the question's own bytes, naming no project — read as the NO-PROJECT relationship's conclusion, which is not this project's (§7.1 item 5)",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 309
+    },
+    {
+      "id": "case-authoring.document.count_adoptions",
+      "en": "{count} adoptions",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 410
+    },
+    {
+      "id": "case-authoring.document.disclosed_by_the_team",
+      "en": " Disclosed by the team: {disclosed}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 482
+    },
+    {
+      "id": "case-authoring.document.each_row_is_an_adoption",
+      "en": "each row is an adoption in this scope whose pinned revision the team had proposed and not accepted when this case was signed; that revision was not in force at signing",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 97
+    },
+    {
+      "id": "case-authoring.document.excluded_count_items",
+      "en": "Excluded: {count} item(s).",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 447
+    },
+    {
+      "id": "case-authoring.document.grade_grade",
+      "en": "grade {grade}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 379
+    },
+    {
+      "id": "case-authoring.document.its_edition",
+      "en": ", its edition {edition}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 449
+    },
+    {
+      "id": "case-authoring.document.load_bearing_list",
+      "en": "Load-bearing: {list}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 445
+    },
+    {
+      "id": "case-authoring.document.m_its_edition",
+      "en": "- **{m}** (its edition {edition}):",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 380
+    },
+    {
       "id": "case-authoring.document.m_no_frozen_strength_was",
       "en": "- **{m}** — NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 381
+      "line": 377
+    },
+    {
+      "id": "case-authoring.document.named_above",
+      "en": "(named above)",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 344
+    },
+    {
+      "id": "case-authoring.document.no_conclusion_was_recorded_for",
+      "en": "NO CONCLUSION WAS RECORDED FOR THIS MEMBER",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 306
     },
     {
       "id": "case-authoring.document.no_falsifier_is_recorded_for",
       "en": " NO FALSIFIER IS RECORDED for this conclusion.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 321
+      "line": 318
     },
     {
       "id": "case-authoring.document.no_falsifier_stated_recorded_by",
       "en": " NO FALSIFIER STATED — recorded by {by} at {at}.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 320
+      "line": 317
+    },
+    {
+      "id": "case-authoring.document.no_stronger_than",
+      "en": ", no stronger than {target}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 385
+    },
+    {
+      "id": "case-authoring.document.none",
+      "en": "none",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 446
+    },
+    {
+      "id": "case-authoring.document.one_adoption",
+      "en": "one adoption",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 410
     },
     {
       "id": "case-authoring.document.ord_when_v1_ref_source",
       "en": "{ord}. {when} — {v1} ({ref}; source {source})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 500
+      "line": 498
     },
     {
       "id": "case-authoring.document.published_by_project_this_case",
       "en": "Published by: {project} (this case is that project's production, DEC-72)",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 445
+      "line": 443
+    },
+    {
+      "id": "case-authoring.document.recomputed_at_publication_and_the",
+      "en": "recomputed at publication, and the result DIFFERS from the one stored",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 462
+    },
+    {
+      "id": "case-authoring.document.referents_this_case_rests_on",
+      "en": ", {unidentified} referent(s) this case rests on that could not be resolved to a subject at all",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 364
+    },
+    {
+      "id": "case-authoring.document.session_at_case_published_author",
+      "en": "### Session {at} | Case published | {author}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 441
+    },
+    {
+      "id": "case-authoring.document.supporting_list",
+      "en": "Supporting: {list}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 446
     },
     {
       "id": "case-authoring.document.the_claim_adopted_text",
       "en": " The claim adopted: {text}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 313
+      "line": 311
     },
     {
       "id": "case-authoring.document.the_claim_is_undetermined_v1",
       "en": " The claim is UNDETERMINED: {v1}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 314
+      "line": 312
     },
     {
-      "id": "case-authoring.document.weighs_each_findings_own_frozen",
-      "en": "weighs each finding's own frozen strength on its own. {v1}",
+      "id": "case-authoring.document.this_case_is_project_production",
+      "en": "This case is {project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. An absent bar is not a bar of zero: this case claims no cleared standard, and a reader weighs each finding's own frozen strength on its own. {detail}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 439
+      "line": 437
+    },
+    {
+      "id": "case-authoring.document.this_conclusion_names_no_reading",
+      "en": "this conclusion names no reading, so which claim was concluded cannot be established from the record. It is stated rather than filled in.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 313
+    },
+    {
+      "id": "case-authoring.document.trigger_op_publish_case",
+      "en": "Trigger: op=publish, case {caseId} edition {edition}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 442
     },
     {
       "id": "case-authoring.document.what_would_falsify_it_falsifier",
       "en": " What would falsify it: {falsifier}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/document.mjs",
-      "line": 318
+      "line": 315
+    },
+    {
+      "id": "case-authoring.document.who_wrote_this_statement",
+      "en": "**Who wrote this statement.** {stated}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/document.mjs",
+      "line": 351
+    },
+    {
+      "id": "case-authoring.index.a_case_is_a_production_of_a_project",
+      "en": "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment — so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1281
     },
     {
       "id": "case-authoring.index.a_case_rests_on_at",
       "en": "a case rests on at least one LOAD-BEARING finding (DEC-72). Every member here is supporting, so the case asserts nothing conclusively — while its completeness assertion claims coverage of a question no member answers. Designate the finding the case actually rests on, or do not publish this as a case yet.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1428
+      "line": 1403
     },
     {
       "id": "case-authoring.index.a_declared_position_with_no",
       "en": "a declared position with no reasoning behind it is the checkbox this gate exists to refuse. Say why — including why the team chose not to give notice — and a reader weighs it exactly as they weigh any other declared bias.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 621
+      "line": 627
+    },
+    {
+      "id": "case-authoring.index.a_finding_already_in_a_published_case",
+      "en": "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72).",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1342
     },
     {
       "id": "case-authoring.index.a_finding_is_an_inquiry",
       "en": "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1319
+      "line": 1312
+    },
+    {
+      "id": "case-authoring.index.a_new_case",
+      "en": "a new case",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 840
     },
     {
       "id": "case-authoring.index.a_published_case_carries_the",
       "en": "a published case carries the bias it was produced under, as a fact the reader weighs. Acknowledge it here, in the ceremony, fresh for this edition — a pre-flight checkbox would be the checkbox this gate exists to refuse (DEC-46). This is a DISCLOSURE and never a bar: declaring a bias does not stop a case being published, and nothing here reads WHICH bias you name (DEC-20). The only bias that disqualifies is an uncleared HUNCH, and that is refused by name before any signature exists.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 631
+      "line": 637
+    },
+    {
+      "id": "case-authoring.index.a_published_case_is_a_container",
+      "en": "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 598
     },
     {
       "id": "case-authoring.index.a_published_case_states_its",
       "en": "a published case states its own SCOPE — what brought these findings together and what question the case as a whole answers. It is authored by the team and never derived from the findings' titles: a scope your team's Civicsmith wrote is not a scope the team made (DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 628
+      "line": 634
     },
     {
       "id": "case-authoring.index.a_published_case_states_what",
       "en": "a published case states what it does NOT cover. A case silent about its own limits is claiming to cover everything, which is the overclaim this record exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 614
+      "line": 620
     },
     {
       "id": "case-authoring.index.case_thecase_is_claimedproject_s",
       "en": "case {theCase} is {claimedProject}'s production, and a case does not change hands between editions (DEC-72). The bar a case is held to is read from its publishing project at the moment of publication, so letting edition 2 name a different project would change this case's standard of evidence with nobody authoring the change. Publish the new edition as {claimedProject_2}, or publish this material as a new case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 870
+      "line": 876
+    },
+    {
+      "id": "case-authoring.index.count_other_projects_this_viewer_can_see",
+      "en": "{count} other project(s) this viewer can see HAVE concluded it ({projects}) — information, never this project's stance (§7.1 item 8). ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1339
     },
     {
       "id": "case-authoring.index.declare_the_teams_position_on",
       "en": "declare the team's position on putting this case to its subject. The gate is that the position is DECLARED — never that contact happened, and never that the answer was favourable (DEC-13). Deciding not to give notice is a legitimate position and is declared like any other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 618
+      "line": 624
     },
     {
       "id": "case-authoring.index.draft_draftnamed_is_prepared_for",
       "en": "draft {draftNamed} is prepared for {caseIdentitySentence}, and this act publishes {v1}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names {v2}, or name the draft of this one.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 834
+      "line": 840
     },
     {
       "id": "case-authoring.index.draft_draftnamed_was_already_named",
       "en": "draft {draftNamed} was already named as the draft of edition {edition} of {case_id}, and its readings bound to that case at that act. One draft produces one case: binding its readings to a second would list the same readers under two productions.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 843
+      "line": 849
     },
     {
       "id": "case-authoring.index.edition_edition_of_thecase_is",
       "en": "edition {edition} of {theCase} is signed and waiting to be published{v1}. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 790
+      "line": 796
+    },
+    {
+      "id": "case-authoring.index.edition_of_caseid_must_say_what_changed",
+      "en": "edition {edition} of {caseId} must say what changed in it since the edition before, and why (whatChanged: {text}): a reader of a later edition is owed the difference in the team's own words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was written.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1255
+    },
+    {
+      "id": "case-authoring.index.edition_predicted_of_thecase",
+      "en": "edition {predicted} of {theCase}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 840
     },
     {
       "id": "case-authoring.index.excluded_i_carries_no_reason",
       "en": "excluded[{i}] carries no reason. WHAT was left out and WHY are two statements and one does not stand in for the other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 647
+      "line": 653
     },
     {
       "id": "case-authoring.index.excluded_i_is_not_an",
       "en": "excluded[{i}] is not an object",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 636
+      "line": 642
     },
     {
       "id": "case-authoring.index.excluded_i_names_neither_a",
       "en": "excluded[{i}] names neither a target nor a description. Every exclusion row carries a target id OR prose, never neither — otherwise the row asserts nothing and the index cannot answer \"which published cases excluded this document\".",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 644
+      "line": 650
+    },
+    {
+      "id": "case-authoring.index.field_is_a_list_of",
+      "en": "{field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its words, when given, are at most {COMPLETENESS_MAX} characters with no quote, backslash or line break",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 422
     },
     {
       "id": "case-authoring.index.id_carries_no_authored_designation",
       "en": "{id} carries no authored designation. Every member of a case is declared load_bearing or supporting BY THE PUBLISHER (DEC-72): a load-bearing finding is one the case rests on and must meet the project's standard of evidence, and a supporting one travels with the case without being presented as carrying it. There is no default, because a member designated by omission was designated by nobody.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1417
+      "line": 1392
     },
     {
       "id": "case-authoring.index.id_is_designated_r_which",
       "en": "{id} is designated '{r}', which is not one of: {MEMBER_ROLES}. The two terms are the record's own and are spelled as the schema spells them.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1420
+      "line": 1395
+    },
+    {
+      "id": "case-authoring.index.its_arguments",
+      "en": "its arguments",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 205
+    },
+    {
+      "id": "case-authoring.index.listed_a_load_bearing_finding_rests",
+      "en": "{listed}: a load-bearing finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, with your own words if you choose, and the published case states it. A disclosed one never blocks (DEC-76 item 4). Nothing was written.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 480
     },
     {
       "id": "case-authoring.index.m_appears_twice_in_this",
       "en": "{m} appears twice in this case. A finding is in a case once — listing it twice would give the container two copies of one document and the ordinal no meaning.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 598
+      "line": 604
     },
     {
       "id": "case-authoring.index.map_a_counsel_matter_is",
       "en": "{map}: a counsel matter is never published, and this case would rest on one. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1395
+      "line": 1372
     },
     {
       "id": "case-authoring.index.map_a_published_case_carries",
       "en": "{map} A published case carries a standard that is not free to read only as the passages a finding relies on, and a finding that rests only on benchmarks says \"slower than\" or \"below\", never \"violated\" or \"nonconforming\" (K1723, K1739). Change the case and prepare it again. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1117
+      "line": 1123
     },
     {
       "id": "case-authoring.index.missing_the_team_requires_their",
       "en": "{missing}: the team requires their approval of this version of the case before it is signed, and it is not given. Ask them to approve it, then prepare it again so the document carries the approvals. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1626
+      "line": 1601
     },
     {
       "id": "case-authoring.index.name_is_at_most_completeness",
       "en": "{name} is at most {COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 658
+      "line": 664
+    },
+    {
+      "id": "case-authoring.index.no_answer",
+      "en": "no answer",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1637
+    },
+    {
+      "id": "case-authoring.index.no_draft_of_caseid_statement",
+      "en": "no draft of {caseId}'s statement of what changed answers to {named} (op=whatchangeddrafts&case={caseId} lists them). Name one of them, or write the statement in your own words (whatChanged: {text}) and publish again. Nothing was written.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1266
     },
     {
       "id": "case-authoring.index.no_draft_of_proj_that",
       "en": "no draft of {proj} that you can read answers to {draftNamed}. A draft you cannot read is answered exactly as one that does not exist. Name the draft this case was prepared in, or publish without draft= and its readings are stated as undetermined.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 826
+      "line": 832
     },
     {
       "id": "case-authoring.index.no_published_case_answers_to",
       "en": "no published case answers to {theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 775
+      "line": 781
+    },
+    {
+      "id": "case-authoring.index.not_reached_op_publish_refuses_before",
+      "en": "not reached: op=publish refuses before the case and its pins are known",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 296
+    },
+    {
+      "id": "case-authoring.index.not_reached_op_publish_refuses_first",
+      "en": "not reached: op=publish refuses first ({reason})",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1637
     },
     {
       "id": "case-authoring.index.notallowed_a_case_carries_no",
       "en": "{notAllowed}: a case carries no field of that name. What a publisher authors is exactly the four statements (statement, subjectJustification, excluded with its reasons, whatChanged), the scope, the bias acknowledgement and the account, each sentence of which rests on what it cites (D57, D63). A story, context or human-interest passage has no place in a case. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 667
+      "line": 673
+    },
+    {
+      "id": "case-authoring.index.on_date_at_time",
+      "en": " on {date} at {time}",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 796
+    },
+    {
+      "id": "case-authoring.index.only_a_concluded_finding_may_be",
+      "en": "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1330
+    },
+    {
+      "id": "case-authoring.index.op_caseratify_over_op_publish_document",
+      "en": "op=caseratify over op=publish's document (case {caseId}, edition {edition})",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1725
+    },
+    {
+      "id": "case-authoring.index.op_publish_first",
+      "en": "op=publish first",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1726
     },
     {
       "id": "case-authoring.index.pass_excluded_an_empty_list",
       "en": "pass excluded[]. An EMPTY list is a claim — this case left nothing material out — and is legal; an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 624
+      "line": 630
+    },
+    {
+      "id": "case-authoring.index.proj_concluded_this_question_and_withdrew",
+      "en": "{proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project={proj}). ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1334
+    },
+    {
+      "id": "case-authoring.index.proj_has_not_concluded_this_question",
+      "en": "{proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (§7.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project={proj}&version=<reading>). ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1337
     },
     {
       "id": "case-authoring.index.proj_is_a_object_type",
       "en": "{proj} is a {object_type}, and only a PROJECT has a standard of evidence to hold a case to (DEC-72). Publication is wielded at the top of a project's roster.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1297
+      "line": 1290
+    },
+    {
+      "id": "case-authoring.index.proj_latest_entry_names_an_act",
+      "en": "{proj}'s latest entry about this question names an act your team's Civicsmith does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1336
+    },
+    {
+      "id": "case-authoring.index.project_holding_members",
+      "en": "{project} (holding {members})",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1373
+    },
+    {
+      "id": "case-authoring.index.project_the_publishing_project",
+      "en": "{project} (the publishing project)",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1372
     },
     {
       "id": "case-authoring.index.publishing_discloses_each_of_these",
       "en": "publishing discloses each of these, and is never blocked by a conflict (DEC-76 item 4): list each in tensionsDisclosed at op=publish, with your own words if you choose. A highlighted one rests on a side in conflict with a record you cannot see; the published case will not name that record or who holds it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1489
+      "line": 1464
     },
     {
       "id": "case-authoring.index.publishing_is_proj_s_own",
       "en": "publishing is {proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1302
+      "line": 1295
     },
     {
       "id": "case-authoring.index.publishing_puts_the_teams_name",
       "en": "publishing puts the team's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 573
+      "line": 581
+    },
+    {
+      "id": "case-authoring.index.ratification_pre_flight_gave_no_answer",
+      "en": "ratification's pre-flight gave no answer",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1628
+    },
+    {
+      "id": "case-authoring.index.ratification_pre_flight_reads_the_document",
+      "en": "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1510
+    },
+    {
+      "id": "case-authoring.index.review_the_case_document_and_ratify_it",
+      "en": "review the CASE DOCUMENT (op=casedocument&case={caseId}&edition={edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it — and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md §3 rule 12). ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1198
+    },
+    {
+      "id": "case-authoring.index.roles_is_a_map_from_finding_id",
+      "en": "roles is a map from finding id to designation — {\"INQ-…\": \"load_bearing\"} — one entry per member of this case. It is not a list: a list would be positional against the roster, and a partition that can silently reorder is not one anybody authored.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1386
+    },
+    {
+      "id": "case-authoring.index.signing_publishes_this_case_edition",
+      "en": "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1642
+    },
+    {
+      "id": "case-authoring.index.state_no_grade",
+      "en": "{state} (no grade)",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1429
     },
     {
       "id": "case-authoring.index.target_is_load_bearing_in",
       "en": "{target} is LOAD-BEARING in this case and reaches {axis} {v1}, against {proj}'s declared standard of '{want}'. A case rests on its load-bearing findings, so those are what the project's bar is asked of. A finding below the bar may still travel with this case — designate it SUPPORTING and it is published, marked as not carrying the case (DEC-72). That is the honest move and never severing the citation.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1454
+      "line": 1429
     },
     {
       "id": "case-authoring.index.the_approvals_the_teams_rule",
       "en": "the approvals the team's rule requires could not be read, so whether every one is given is not known. Signing is refused until they can be. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1623
+      "line": 1598
     },
     {
       "id": "case-authoring.index.the_bias_acknowledgement_is_byte",
       "en": "the bias acknowledgement is byte-identical to edition {edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. The lens itself may well be unchanged — what must be fresh is what it means for THIS edition's findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 917
+      "line": 923
     },
     {
       "id": "case-authoring.index.the_case_documents_searched_section",
       "en": "the case document's searched section could not be computed: {why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 995
+      "line": 1001
     },
     {
       "id": "case-authoring.index.the_team_requires_no_approval",
       "en": "The team requires no approval before a case is signed.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1733
+      "line": 1707
+    },
+    {
+      "id": "case-authoring.index.then_ratify_each_of_these_findings",
+      "en": "Then ratify EACH of these {count} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1202
+    },
+    {
+      "id": "case-authoring.index.then_ratify_the_finding_itself",
+      "en": "Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1201
     },
     {
       "id": "case-authoring.index.these_findings_already_serve_length",
       "en": "these findings already serve {length} published cases ({sort}), and this act did not say which case it is publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer says which case this is: name the case to publish a further edition of it, or say so and a new case is minted. The record will not choose for you.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 767
+      "line": 773
     },
     {
       "id": "case-authoring.index.this_act_both_names_case",
       "en": "this act both NAMES case {str} and asks for a new case to be minted. Those are opposite instructions and the record will not choose between them: name the case to publish a further edition of it, or ask for a new one, not both.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 762
+      "line": 768
     },
     {
       "id": "case-authoring.index.this_act_was_asked_without",
       "en": "this act was asked without the calculations its findings rest on having been recomputed and read, so whether one differs or rests on an unbound input is not known here. Publish through op=publish, which recomputes them first. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 429
+      "line": 440
     },
     {
       "id": "case-authoring.index.this_finding_is_already_a",
       "en": "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim — INVESTIGATIVE-SESSION.md §7.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published — the route DEC-12 built.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 810
+      "line": 816
+    },
+    {
+      "id": "case-authoring.index.this_inquiry_has_no_readable_bundle",
+      "en": "this inquiry has no readable bundle.md, so its state cannot be moved",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1316
+    },
+    {
+      "id": "case-authoring.index.this_question_is_state",
+      "en": "This question is {state}, and a case cannot be asserted over one the team has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/index.mjs",
+      "line": 1332
     },
     {
       "id": "case-authoring.index.v1_is_byte_identical_to",
       "en": "{v1} is byte-identical to edition {edition}'s. A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 913
+      "line": 919
     },
     {
       "id": "case-authoring.index.what_changed_in_this_edition",
       "en": "what changed in this edition is at most {WHAT_CHANGED_MAX} characters, and this statement is {length}. Say it shorter. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1263
+      "line": 1260
+    },
+    {
+      "id": "case-authoring.searched.a_searched_section_requires_a",
+      "en": "a searched section requires a subject source this vocabulary names (got '{got}'; known: {known}). THE SUBJECT SET IS THE FENCE: a section computed over the observation log's own subjects is 100% searched by construction and is a statement about the log rather than about the case",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 47
+    },
+    {
+      "id": "case-authoring.searched.coerced_subjects_not_reported",
+      "en": ". {coerced} subject(s) could not be reported as never-looked-at because at this level and subject kind the evidence of a look exists only where the answer was YES: a look that found nothing leaves no trace, so *nobody looked* and *somebody looked and found nothing* are indistinguishable over the window before the log carried this level. They are reported as undetermined",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 114
+    },
+    {
+      "id": "case-authoring.searched.every_subject_this_case_names",
+      "en": "every subject this case names at this level has an observation: the record can say what was looked for and what came of it",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 26
+    },
+    {
+      "id": "case-authoring.searched.no_subject_has_an_observation",
+      "en": "no subject this case names at this level has an observation, and the pre-log or purge cause cannot be excluded -- so whether anybody looked is not knowable from this record, and that is stated rather than resolved in either direction",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 29
+    },
+    {
+      "id": "case-authoring.searched.no_subject_this_case_names",
+      "en": "no subject this case names at this level has ever been looked at, and cause (3) of section 5.1 is ESTABLISHED for every one of them. This is the one outcome that licenses a positive statement about the absence",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 28
+    },
+    {
+      "id": "case-authoring.searched.some_of_this_cases_subjects",
+      "en": "some of this case's subjects at this level have an observation and some do not, or some could not be identified at all -- the coverage is stated and is not complete",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 27
+    },
+    {
+      "id": "case-authoring.searched.this_case_names_no_subject",
+      "en": "this case names no subject this level could be computed over. This is NOT coverage: zero of zero is not 100%, and a level that reports it is saying the question was not askable here rather than that it was answered",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 30
+    },
+    {
+      "id": "case-authoring.searched.unidentified_referents_not_resolved",
+      "en": ". {unidentified} referent(s) this case rests on could not be resolved to a subject at this level at all, so nothing is claimed about them either way",
+      "module": "case-authoring",
+      "file": "bio-plane/src/case-authoring/searched.mjs",
+      "line": 117
     },
     {
       "id": "case-carriage.checks.an_area_of_this_mark",
@@ -9917,7 +10386,7 @@
       "en": "a finding's id is required; nothing was read.",
       "module": "case-check",
       "file": "bio-plane/src/case-check/index.mjs",
-      "line": 288
+      "line": 289
     },
     {
       "id": "case-check.index.no_case_by_that_name",
@@ -9925,6 +10394,20 @@
       "module": "case-check",
       "file": "bio-plane/src/case-check/index.mjs",
       "line": 69
+    },
+    {
+      "id": "case-check.index.the_pre_flight_gave_no_answer",
+      "en": "the pre-flight gave no answer",
+      "module": "case-check",
+      "file": "bio-plane/src/case-check/index.mjs",
+      "line": 124
+    },
+    {
+      "id": "case-check.index.the_preparation_was_not_found_where_publication_stores_it",
+      "en": "the preparation was not found where publication stores it, so no check was recorded",
+      "module": "case-check",
+      "file": "bio-plane/src/case-check/index.mjs",
+      "line": 147
     },
     {
       "id": "case-checker.account.are",
@@ -37630,70 +38113,112 @@
       "en": "a comment says something: at least one character and at most {REVIEW_TEXT_MAX}.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 772
+      "line": 768
+    },
+    {
+      "id": "review.index.a_readers_end_date_is",
+      "en": "a reader's end date is an instant in the record's form, after this act's own: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.sssZ. Nothing was written.",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 544
     },
     {
       "id": "review.index.a_review_copy_is_an",
       "en": "a review copy is an addressed act: somebody in this team hands a draft to a named person and the record says who. A machine credential may prepare the material and may not put the team's draft in front of anyone. Sign in as a member.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 438
+      "line": 436
     },
     {
       "id": "review.index.act_tiestated_this_is_the",
       "en": "{act}.{tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere — each finding's text, the publish gates' verdict, and the project's declared floors — any of which can move the hash without moving this date.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 237
+      "line": 235
+    },
+    {
+      "id": "review.index.an_approval_is_given_by",
+      "en": "an approval is given by a member the team's approval rule names, of a case whose project they can see; a case you cannot see is answered exactly as one that does not exist. Nothing was recorded.",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 886
     },
     {
       "id": "review.index.an_approval_rule_names_one",
       "en": "an approval rule names one or more active members of the team by member id, at most {APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 867
+      "line": 863
     },
     {
       "id": "review.index.an_approvals_reason_is_at",
       "en": "an approval's reason is at most {APPROVAL_REASON_MAX} characters. Nothing was recorded.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 910
+      "line": 904
+    },
+    {
+      "id": "review.index.authoring_a_draft_is_editing",
+      "en": "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 141
+    },
+    {
+      "id": "review.index.both_were_recorded_to_the_second",
+      "en": "both were recorded to the second",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 227
+    },
+    {
+      "id": "review.index.derived_case_identity",
+      "en": "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 172
     },
     {
       "id": "review.index.handing_the_teams_draft_to",
       "en": "handing the team's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 143
+      "line": 142
+    },
+    {
+      "id": "review.index.it_also_ends_at",
+      "en": " It also ends at {end}.",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 560
     },
     {
       "id": "review.index.its_author_has_chosen_no",
       "en": "its author has chosen no level for {caseId} edition {edition}; the edition cannot be signed until they do (op=attribute)",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 753
+      "line": 749
     },
     {
       "id": "review.index.name_the_person_or_team",
       "en": "name the person or team this copy is addressed to, in one line of at most {REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 529
+      "line": 527
     },
     {
       "id": "review.index.no_case_of_owning_s",
       "en": "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 477
+      "line": 475
     },
     {
       "id": "review.index.no_document_of_cid_edition",
       "en": "no document of {cid} edition {v1} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 904
+      "line": 898
     },
     {
       "id": "review.index.no_review_copy_answers_to",
@@ -37703,60 +38228,81 @@
       "line": 133
     },
     {
+      "id": "review.index.set_the_teams_approval_rule",
+      "en": "set the team's approval rule",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 854
+    },
+    {
       "id": "review.index.the_read_secrets_fingerprint_is",
       "en": "the read secret's fingerprint is set by the control plane and was absent.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 535
+      "line": 533
     },
     {
       "id": "review.index.the_review_copys_authoring_acts",
       "en": "the review copy's authoring acts are draft, grant and revoke.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 445
+      "line": 443
     },
     {
       "id": "review.index.this_draft_is_project_id",
       "en": "this draft is {project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 467
+      "line": 465
     },
     {
       "id": "review.index.this_draft_names_a_finding",
       "en": "this draft names a finding its editor cannot read, or one that does not exist.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 324
+      "line": 322
     },
     {
       "id": "review.index.this_grant_reads_caseidentitysentence_and",
       "en": "this grant reads {caseIdentitySentence} and nothing else. It ends when it is revoked, and when that edition is published and signed.{v1}",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 563
+      "line": 560
+    },
+    {
+      "id": "review.index.undetermined_statement_by",
+      "en": "UNDETERMINED: this draft predates the recording of the statement's author, and its last editor is not evidence of who wrote the statement",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 731
     },
     {
       "id": "review.index.v1_a_project_draft_or",
       "en": "{v1} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 149
+      "line": 148
     },
     {
       "id": "review.index.which_of_who_at_and",
       "en": " Which of {who} ({at}) and {who_2} ({at_2}) came later is undetermined: {v1}, so the date this copy carries is the instant order's pick and not an order the record holds (BOB #34, 2026-09-25).",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 231
+      "line": 229
+    },
+    {
+      "id": "review.index.who_was_recorded_to_the_second",
+      "en": "{who} was recorded to the second",
+      "module": "review",
+      "file": "bio-plane/src/review/index.mjs",
+      "line": 228
     },
     {
       "id": "review.index.withdrawing_a_grant_is_the",
       "en": "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
       "module": "review",
       "file": "bio-plane/src/review/index.mjs",
-      "line": 144
+      "line": 143
     },
     {
       "id": "roster-reader.columns.its_header_matches_the_views",
