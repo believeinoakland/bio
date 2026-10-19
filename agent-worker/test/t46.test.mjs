@@ -12,7 +12,7 @@ import { MODES } from "../../agent-harness/src/harness.mjs";
 import { MEMBER } from "./account.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 import { remoteBindings } from "./remote.mjs";
-import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { word, localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -397,7 +397,7 @@ section("R72 (T46) · a sign-in transcribes: the picture relayed to the member's
      rn.opened.some((o) => JSON.stringify(o).includes(PNG)), rn.results.filter((x) => x.id !== "p1" && JSON.stringify(x).includes(PNG)).length],
     [1, false, 0]);
   t("R72, R75: no plane call, and the answer carries no picture", [r.plane.length, r.text.includes(PNG)], [0, false]);
-  t("R72, R74: the answer is labelled the AI's reading", r.out?.label, { kind: "machine", says: "the AI's reading" });
+  t("R72, R74: the answer is labelled the AI's reading", r.out?.label, { kind: "machine", says: localize("agent-worker.transcribe.the_ais_reading", "the AI's reading") });
   const old = pictureRunner({ capable: false });
   const o = await transcribeOn(old, SIGNIN(MEMBER, false));
   t("R72 (control): a runner that does not relay pictures: the picture is never sent, the page refused, not dropped",

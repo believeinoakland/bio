@@ -27,7 +27,7 @@ import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 /** R72 — the one picture kind the plane sends: a PNG it rendered itself (R63). */
 export const TRANSCRIBE_MEDIA_TYPE = "image/png";
 /** R74 — the label a transcription carries; this member's, never the model's. */
-export const TRANSCRIBE_LABEL = Object.freeze({ kind: "machine", says: "the AI's reading" });
+export const TRANSCRIBE_LABEL = Object.freeze({ kind: "machine", says: localize("agent-worker.transcribe.the_ais_reading", "the AI's reading") });
 /** R74 — the endings of a page that came back with no words: its own two, and `agent-model` R6's four. */
 export const TRANSCRIBE_ENDINGS = Object.freeze(["blank", "unformed", "stopped", "exhausted", "silent", "refused"]);
 

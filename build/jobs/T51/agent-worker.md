@@ -63,3 +63,9 @@ Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 14, module lines 2598
 ## J3 · COMPLETE
 
 Words pass applied (T51-209, B3, B4): all 84 findings keyed or compared by localize, text unchanged; 4 ops.mjs why strings left for the design's unkeyed list. npm test: only R45 (stale bundle). Controls re-pointed and green but harness F4 (anchor in ai-runs, not mine). Checks: format 0, architecture 0, ownership 0. Details and 5 items for you in my record.
+
+### Completion again (B6 CHANGE, K4018)
+
+Merged `tranche/T51`. The 7 test copies of sentences other modules now localize are compared with the product's own call (same id, en): `agent-harness.harness.the_one_question_the_runs` and `.the_runs_context_question` (`agent-worker.test`, `harness.test`, `requirements.test`), `agent-steps.work.the_cited_record_names_no_source` (`requirements.test`), and the label `the AI's reading`, which `transcribe.mjs` now writes by `localize("agent-worker.transcribe.the_ais_reading", …)` and `t42.test`, `t46.test` compare by the same call. `t42.control` arm 16 mutates the route sentence under an unlisted id (the list wins over `en` since R6's rows). Words check over agent-worker, agent-harness, agent-steps: no agent-worker finding but the four accepted `ops.mjs` strings. `npm test`: 21 of 22, the red R45 (stale bundle); `t42.control` 17/0, `t46.control` 13/0.
+
+Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 17, module lines 2598

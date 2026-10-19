@@ -258,7 +258,7 @@ section("R74 · the answer");
   t("R74: 200 {ok, engine, version, pages, not_transcribed, label, usage, calls}", [r.status, Object.keys(r.out ?? {})],
     [200, ["ok", "engine", "version", "pages", "not_transcribed", "label", "usage", "calls"]]);
   t("R74: engine is MODEL_FOR_MODE.transcribe, version null, labelled the AI's reading",
-    [r.out?.engine, typeof MODEL_FOR_MODE.transcribe, r.out?.version, r.out?.label], [MODEL_FOR_MODE.transcribe, "string", null, { kind: "machine", says: "the AI's reading" }]);
+    [r.out?.engine, typeof MODEL_FOR_MODE.transcribe, r.out?.version, r.out?.label], [MODEL_FOR_MODE.transcribe, "string", null, { kind: "machine", says: localize("agent-worker.transcribe.the_ais_reading", "the AI's reading") }]);
   t("R74: a page whose answer holds a glyph is in pages; a blank page in not_transcribed, ending blank",
     [r.out?.pages, r.out?.not_transcribed], [[{ page: 1, text: "Page 1 minutes of the meeting" }], [{ page: 2, ending: "blank" }]]);
   t("R74: usage and calls summed over the conversations", [r.out?.usage?.input_tokens, r.out?.usage?.output_tokens, r.out?.calls], [10, 4, 2]);
