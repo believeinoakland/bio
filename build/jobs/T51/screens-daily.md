@@ -45,3 +45,13 @@ Done with tests: R58, R59, R60, R61 (queue), R62, R63, R55, R56, R57, and R54's 
 Needs from other modules before I can finish: (1) wizard-scripts' `screen-registry.mjs` regenerated at a design commit that lists `cite` on `finder` (until then every finder test fails at boot; I tested with a local patch I did not commit); (2) interface-shell R90 (placeholder, here, says), R93 (refresh, cs.fresh), R95 (cs.stateChip). Restart me after those two merge into tranche/T51 (merge it into my branch first).
 
 Questions for you: (a) R63's "Search projects" act is in no registry row (the shell refuses it); I drew a plain button and a field that redraws on change; UX-DESIGN to say an act or a kit field. (b) R93 re-reads only a read of `reads`, and `reads` does not run again after a choice, so Find's browse cannot carry `refresh: true`; the shell needs to re-run `reads` after a redraw choice, or give a screen another way. Words the design does not hold, and my stand-ins, are listed in the record (R57, R58, R59, R60).
+
+## J2 · REPORT
+
+REPORT (SCREENS-DAILY #9). Done and pushed (job/T51/screens-daily): R64 (Home's remaining readings, new part `home-readings.mjs`, three tests) and all 14 remaining words findings (`words.mjs` is 0 for screens-daily, alone and over all L11 modules together). The screens-daily suite is green except `browse.test.mjs` R44, which waits on interface-shell R90 (`placeholder`); the suite runs with the uncommitted `cite` patch on wizard-scripts' registry, as before.
+
+Left, all behind other modules: R54's `says`/`here`/`placeholder` (R90), `refresh`/`cs.fresh` (R93), `cs.stateChip` (R95). I need a CHANGE when interface-shell merges, and wizard-scripts' registry regenerated.
+
+For BOB (other modules, per R64):
+1. op-declarations: `clocksrunning` is not in OPS (action-clocks R24 serves it; no op-declarations row). Home reads it for every member; until the row exists the gate refuses it and Action draws the clock readings failed.
+2. Words: `screen.home.area.ourmove` ("Our move: {what}, due {date}") and `.theirmove` ("{reply}, ... {reply2}") are sentences about named items; `clocksrunning` answers counts and a next date, so Action draws "our move" and "their move" as readings (`home.move.ours`, `home.move.theirs`) and the two sentences are not drawn. The design's expertise line ("Ana, CPA (confirmed)") has no per-person row; I draw handle + `screen.members.expertise.confirmed|declared`. `screen.home.area.edition` always says "no comment to answer", so the line is drawn only for a draft with a live, ended grant on a published case that no recipient has commented on; an edition line with no draft has no row. Ask UX-DESIGN if the sentences should change.
