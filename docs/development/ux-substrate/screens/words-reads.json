@@ -5508,7 +5508,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 22456
+    "generatedRows": 22457
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -11972,25 +11972,9 @@
     "refusal.BAD_ACCOUNT",
     "refusal.BAD_ACCOUNT_DRAFT",
     "refusal.BAD_ACCOUNT_FRAMING",
-    "refusal.BAD_CONTENT",
-    "refusal.CASE_SIGNER_NOT_AN_OWNER",
     "refusal.FINDING_IN_SEVERAL_CASES",
-    "refusal.IMPORT_NO_SUCH_EDITION",
-    "refusal.KNOCKER_SECRET_WEAK",
-    "refusal.KNOCK_EMPTY",
-    "refusal.KNOCK_ENVELOPE_TOO_LARGE",
-    "refusal.KNOCK_NOT_STORED",
-    "refusal.KNOCK_PAYLOAD_TOO_LARGE",
-    "refusal.NOT_PUBLISHED",
-    "refusal.NO_ATTESTING_KEY",
     "refusal.NO_REVIEW_COPY",
-    "refusal.NO_SIGNERS",
     "refusal.NO_SUCH_ACCOUNT_DRAFT",
-    "refusal.NO_TARGET",
-    "refusal.RATE_GLOBAL",
-    "refusal.RATE_IP",
-    "refusal.REQUIRED_ARGUMENT_MISSING",
-    "refusal.REVIEW_BAD_UNTIL",
     "refusal.STATEMENT_ACK_NO_REASON",
     "refusal.uncatalogued",
     "review.statement.ack",
@@ -12000,7 +11984,6 @@
     "review.statement.title",
     "screen.action.hold.link",
     "screen.action.pressure.discrediting",
-    "screen.action.pressure.kind",
     "screen.action.pressure.legal",
     "screen.action.pressure.other",
     "screen.action.pressure.retaliation",
@@ -12111,7 +12094,6 @@
     "screen.ceremony.signs.evidence",
     "screen.ceremony.signs.exactly",
     "screen.ceremony.signs.finding",
-    "screen.ceremony.signs.lines",
     "screen.ceremony.step.bias",
     "screen.ceremony.step.disclosures",
     "screen.ceremony.step.leavesout",
@@ -12418,7 +12400,7 @@
     "time.pm"
    ],
    "counts": {
-    "reads": 562,
+    "reads": 544,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 544,
@@ -14061,11 +14043,11 @@
     "reads": 1625,
     "minted": 1,
     "keyedRows": 0,
-    "literalKeys": 1621,
+    "literalKeys": 1625,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 9
+    "computedKeys": 5
    },
    "unkeyed": []
   },
@@ -14207,91 +14189,91 @@
    "unkeyed": [
     {
      "file": "plane/ask.mjs",
-     "line": 58,
+     "line": 59,
      "text": "an ask is a POST",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 60,
+     "line": 61,
      "text": "the ask's body is not JSON",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 84,
+     "line": 85,
      "text": "a draft is a POST",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 86,
+     "line": 87,
      "text": "the draft's body is not JSON",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 366,
+     "line": 367,
      "text": "a reading is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 386,
+     "line": 387,
      "text": "a status report's draft names its plan and hands the items its report is drawn from",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 387,
+     "line": 388,
      "text": "the plan this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 467,
+     "line": 468,
      "text": "a reading names its subject as {kind, id}, kind one of ${…}",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 500,
+     "line": 501,
      "text": "${…}. Nothing was drafted.",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 519,
+     "line": 520,
      "text": "the records this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 520,
+     "line": 521,
      "text": "a draft that reads records is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 524,
+     "line": 525,
      "text": "a bearing draft names the action the reply was received on",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 529,
+     "line": 530,
      "text": "the reply named is not an entry received on this action",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 533,
+     "line": 534,
      "text": "the reply's text is not held in a reading this member may read",
      "why": "a `why` in the records handed to the assistant, not drawn for a member"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 538,
+     "line": 539,
      "text": "an infraction draft names the matter's plan or its actions",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
@@ -14480,9 +14462,9 @@
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 42,
-    "inline": 274,
+    "inline": 276,
     "inlineKeyed": 0,
-    "inlineUnkeyed": 274,
+    "inlineUnkeyed": 276,
     "computedKeys": 77
    },
    "unkeyed": [
@@ -15611,12 +15593,18 @@
     {
      "file": "journey-check/journeys.mjs",
      "line": 455,
+     "text": "Action block: not drawn, the team holds no action",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 458,
      "text": "dashboard {id}: opened from the door on Home",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 472,
+     "line": 484,
      "text": "sign: /sign answers the nothing-is-here page",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
@@ -15642,6 +15630,12 @@
      "file": "journey-check/local.mjs",
      "line": 148,
      "text": "import site from {stringify}; export default site;",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/pseudo.mjs",
+     "line": 65,
+     "text": "p, li, dd, dt, td, th, label, legend, summary, h1, h2, h3, h4, button, div, section, span.meta, span.help, span.why",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
@@ -48414,11 +48408,12 @@
     "screen.install.stopped.source",
     "screen.install.stopped.source.do",
     "screen.install.sub",
+    "setup-fleet.hosting_recovery_deployer",
     "setup-fleet.name.replace_time_password",
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 580,
+    "reads": 581,
     "unkeyed": 0
    },
    "unkeyed": [],
