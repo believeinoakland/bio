@@ -26,3 +26,7 @@ B2 handled: both reasons are keyed on the job branch already (mentioned.mjs MENT
 - `checks/run.mjs /home/user/bio`: format and architecture 0 failures; the words check reports the other 173 modules' findings, none in connections; coverage shows 30 failures across the tree, none in connections (the accepted reds of rule 5, not this module's).
 
 **Size (session_01B18LY8jj8WugArr9aZjMRC): test runs 20, module lines 2347.** The module-lines count is the non-blank, non-comment lines of `bio-plane/src/connections/*.mjs`; the test-run count is approximate, from the runs of this session.
+
+## J2 · COMPLETE
+
+T51-193 done on job/T51/connections (head b2b0bd99cf). 129 connections tests pass; explore real-connections passes; words check 0 failures for connections; format, architecture, coverage (69 of 69) and ownership pass; setup-words check shows only the expected stale-rows note. Refusal details, composed sentences and test sentence checks are keyed (R13). Two judgements for BOB: the viewer refusal reuses duties.why.read_names_member; some test checks take a reference from the output they check, weaker than full equality. Full record and Size line in build/jobs/T51/connections.md.
