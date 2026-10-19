@@ -14,7 +14,7 @@
   "queue": 474,
   "transcribe": 19,
   "capture": 71,
-  "document": 62,
+  "document": 76,
   "question": 79,
   "connection": 34,
   "guide": 7,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15753,
+  "total": 15767,
   "protected": 934
  },
  "words": [
@@ -60365,6 +60365,104 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's"
+  },
+  {
+   "key": "document.kind.pdf",
+   "en": "PDF",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pdf`"
+  },
+  {
+   "key": "document.kind.docx",
+   "en": "Word document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `docx`"
+  },
+  {
+   "key": "document.kind.xlsx",
+   "en": "Excel spreadsheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `xlsx`"
+  },
+  {
+   "key": "document.kind.pptx",
+   "en": "PowerPoint slide deck",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pptx`"
+  },
+  {
+   "key": "document.kind.odt",
+   "en": "OpenDocument text document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odt`"
+  },
+  {
+   "key": "document.kind.ods",
+   "en": "OpenDocument spreadsheet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `ods`"
+  },
+  {
+   "key": "document.kind.odp",
+   "en": "OpenDocument slide deck",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odp`"
+  },
+  {
+   "key": "document.kind.csv",
+   "en": "CSV table",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `csv`"
+  },
+  {
+   "key": "document.kind.jpeg",
+   "en": "JPEG image",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `jpeg`"
+  },
+  {
+   "key": "document.kind.png",
+   "en": "PNG image",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `png`"
+  },
+  {
+   "key": "document.kind.html",
+   "en": "web page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `html`"
+  },
+  {
+   "key": "document.kind.zip",
+   "en": "ZIP archive",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `zip`"
+  },
+  {
+   "key": "document.kind.text",
+   "en": "plain-text file",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; a text/plain capture, which the registry leaves undetermined"
+  },
+  {
+   "key": "document.kind.undetermined",
+   "en": "file",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the fallback for a format the registry does not name (\"the file exactly as captured\")"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
