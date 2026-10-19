@@ -15,9 +15,7 @@ export const SOURCES_CHECKS = Object.freeze({
   }),
   BAD_DISCLOSURE: Object.freeze({
     check: 'C-121.2', where: at("badDisclosure", "is-disclosure-well-formed"),
-    translation: 'A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, '
-      + 'and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing '
-      + 'was written.',
+    translation: localize('sources.checks.a_disclosure_names_what_was_revealed', 'A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written.'),
   }),
   NO_EVIDENCE: Object.freeze({
     check: 'C-121.3', where: at("noEvidence", "is-evidence-named"),
@@ -50,8 +48,7 @@ export const SOURCES_CHECKS = Object.freeze({
   }),
   NO_SERVICE: Object.freeze({
     check: 'C-121.10', where: at("noService", "is-service-named"),
-    translation: 'A result from a paid or account-gated service names the service it came from. Name it. Nothing was '
-      + 'written.',
+    translation: localize('sources.checks.a_result_names_the_service', 'A result from a paid or account-gated service names the service it came from. Name it. Nothing was written.'),
   }),
 });
 
