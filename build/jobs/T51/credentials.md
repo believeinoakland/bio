@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01MVQ8cwXNydHkeU6mxmzKQs · depth 2 · COMPLETE · handled B2
+**Status** · session_01MVQ8cwXNydHkeU6mxmzKQs · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -54,3 +54,27 @@ Tests and checks:
 - `node bio-plane/src/setup-words/build.mjs --check`: stale rows note only (above); no refusal naming this module.
 
 Size (session_01MVQ8cwXNydHkeU6mxmzKQs): test runs 3, module lines 2679
+
+## J3 · COMPLETE
+
+Applied B3 (CHANGE: every member-read sentence by key, K3974), commit b7cb012a79 on `job/T51/credentials`, after merging `tranche/T51` (3416b54f25). Keys are `credentials.index.<slug>`; the DEC-49 region markers are kept; text unchanged.
+
+Converted by `localize`:
+- `LOGIN_REFUSAL_DETAIL` (R4's refusal detail, `sign_in_refused`).
+- DEC-49 regions: `passwordChange` (two details), `#notSignedIn`, `#paused`, `#signerMemberBar` (NOT_ACTIVE), `signerAdd` (BAD_KEY), `signerRegisterOwn` (machine, held, revoked and the two success details), `aiCredentialMint` (not-a-member, principal-not-the-minter, principal-unstated, identity, expiry, digest), `aiCredentialRevoke` (not-a-member), `aiRunCredentialMint` (shape, the three arms), standing grant, `grantHeld`, `aiGrantAdmit` (op), `securityCount` (kind), the period refusal and its faults, `securityTotals` (counts unreadable), `recoveryCodesIssue`, `recover` (RECOVERY_REFUSED), reset link dead, keyed service off and no key, `reauthDue`, `sessionLockedRefusal`.
+- Outside the regions, the same kind: the `accountMemberNotActive` and `notYourAccount` details in `aiRunCredentialMint`, `aiGrantMint` and `aiGrantMintStanding`.
+
+Deferred: nothing of the CHANGE.
+
+Found in other modules, not changed here: `reevaluation` `checks.test.mjs`:110 (testcopy, part, "the record's own machine credentials may say a newer version exists..."). `setup-words --check` reports `rows.mjs` stale, now naming ids in `ai-accounts` as well as this module's (expected until BOB regenerates at the layer close).
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 160, pass 160, fail 0.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures (inline 0, plain 0, testcopy 0, handlist 0, unkeyed 0).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 174 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 28 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 55 of 55 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: the only finding naming credentials is the `reevaluation` test copy above, not this module's.
+
+Size (session_01MVQ8cwXNydHkeU6mxmzKQs): test runs 6, module lines 2639

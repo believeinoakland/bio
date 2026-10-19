@@ -390,8 +390,7 @@ export class Credentials {
       const row = SIGN_IN_CHECKS.MACHINE_CANNOT_SET_PASSWORD;
       return { ok: false, reason: "MACHINE_CANNOT_SET_PASSWORD", code: "MACHINE_CANNOT_SET_PASSWORD", check: row.check,
                translation: row.translation, by: by || null,
-               detail: "a member changes their own password from their own signed-in session. A machine credential, "
-                     + "the operator's bearer and an unstamped call have no member behind them. Nothing was changed." };
+               detail: localize("credentials.index.a_member_changes_their_own", "a member changes their own password from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them. Nothing was changed.") };
     }
     /* END DEC-49 REGION is-password-change-own */
     const s = this.#liveSession(session, { locked: true });
@@ -409,8 +408,7 @@ export class Credentials {
       const row = SIGN_IN_CHECKS.CURRENT_PASSWORD_WRONG;
       return { ok: false, reason: "CURRENT_PASSWORD_WRONG", code: "CURRENT_PASSWORD_WRONG", check: row.check,
                translation: row.translation,
-               detail: "the current password given does not derive the hash stored for this account, so the password "
-                     + "was not changed. Nothing was changed." };
+               detail: localize("credentials.index.the_current_password_given", "the current password given does not derive the hash stored for this account, so the password was not changed. Nothing was changed.") };
     }
     /* END DEC-49 REGION is-current-password */
     const hashed = await Credentials.#hashFor(password);
@@ -453,13 +451,8 @@ export class Credentials {
      reader to assume it does. Reversing it costs two lines (the arms are still separate below); the honest way back is
      a rate limit plus an authenticated diagnostic, not a louder anonymous refusal. */
   static LOGIN_REFUSAL_DETAIL = {
-    SIGN_IN_REFUSED:
-      "no session was issued and nothing was written. Either no active credential is held "
-      + "under that role — a role that was never registered and one whose membership is no longer active "
-      + "are the same answer here — or a credential is stored and the password supplied does not derive "
-      + "its stored hash. The password itself is never kept, only a salted derivation of it, so that is "
-      + "the only comparison there is to make. Which of those happened, the record does not say: it is one "
-      + "answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",
+    SIGN_IN_REFUSED: localize("credentials.index.sign_in_refused",
+      "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."),
   };
 
   static #refused() {
@@ -580,8 +573,7 @@ export class Credentials {
      `unlock` and sign-out. An in-plane answer `admission` relays (its T47-77), and this module's own acts answer. */
   static sessionLockedRefusal() {
     /* DEC-49 REGION is-session-unlocked */
-    return Credentials.#row(ACCOUNT_CHECKS, "SESSION_LOCKED", "this session is locked after a while without use: only "
-      + "unlocking it with the password, or signing out, is served. Nothing was changed.");
+    return Credentials.#row(ACCOUNT_CHECKS, "SESSION_LOCKED", localize("credentials.index.this_session_is_locked", "this session is locked after a while without use: only unlocking it with the password, or signing out, is served. Nothing was changed."));
     /* END DEC-49 REGION is-session-unlocked */
   }
 
@@ -629,8 +621,7 @@ export class Credentials {
       if (s && Number(s.reauth_until) > Date.now()) return null;
     } catch { /* due */ }
     /* DEC-49 REGION is-reauth-window */
-    return Credentials.#row(ACCOUNT_CHECKS, "REAUTH_DUE", "this act asks for the password again, and it was not given "
-      + `in the last ${REAUTH_WINDOW_MS / 60e3} minutes. Nothing was changed.`);
+    return Credentials.#row(ACCOUNT_CHECKS, "REAUTH_DUE", localize("credentials.index.this_act_asks_for", "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.", { minutes: String(REAUTH_WINDOW_MS / 60e3) }));
     /* END DEC-49 REGION is-reauth-window */
   }
 
@@ -638,8 +629,7 @@ export class Credentials {
     /* DEC-49 REGION is-session-live */
     const row = SIGN_IN_CHECKS.NOT_SIGNED_IN;
     return { ok: false, reason: "NOT_SIGNED_IN", code: "NOT_SIGNED_IN", check: row.check, translation: row.translation,
-             detail: "no live session answers to this token: it ended, it expired, or it never existed. Nothing was "
-                   + "ended." };
+             detail: localize("credentials.index.no_live_session_answers", "no live session answers to this token: it ended, it expired, or it never existed. Nothing was ended.") };
     /* END DEC-49 REGION is-session-live */
   }
 
@@ -717,8 +707,7 @@ export class Credentials {
     /* DEC-49 REGION is-sign-in-window */
     const row = SIGN_IN_CHECKS.SIGN_IN_PAUSED;
     return { ok: false, reason: "SIGN_IN_PAUSED", code: "SIGN_IN_PAUSED", check: row.check, translation: row.translation,
-             detail: "too many attempts were refused recently, so this one was not judged: no password, code or claim "
-                   + "was checked and nothing changed. Try again later.",
+             detail: localize("credentials.index.too_many_attempts_were", "too many attempts were refused recently, so this one was not judged: no password, code or claim was checked and nothing changed. Try again later."),
              stated: SIGN_IN_STATED };
     /* END DEC-49 REGION is-sign-in-window */
   }
@@ -834,8 +823,7 @@ export class Credentials {
       return refusal("SIGNER_MEMBER_NOT_ENROLLED",
         localize("credentials.index.memberid_has_not_enrolled_status", "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.", { memberId: String(memberId), status: String(m.status) }));
     return refusal("SIGNER_MEMBER_NOT_ACTIVE",
-      `${memberId} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a `
-    + `signature against the member's own standing and would refuse this one. Nothing was written.`);
+      localize("credentials.index.memberid_is_on_the", "{memberId} is on the roster with status '{status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.", { memberId: String(memberId), status: String(m.status) }));
     /* END DEC-49 REGION is-signer-member-attesting */
   }
 
@@ -854,7 +842,7 @@ export class Credentials {
     /* DEC-49 REGION is-signer-key-shape */
     if (!Credentials.#keyShaped(keyB64))
       return { ok: false, reason: "BAD_KEY", code: "BAD_KEY", check: row.check, translation: row.translation,
-               detail: "expected the base64 field of an ssh-ed25519 public key" };
+               detail: localize("credentials.index.expected_the_base64_field", "expected the base64 field of an ssh-ed25519 public key") };
     /* END DEC-49 REGION is-signer-key-shape */
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
@@ -890,9 +878,7 @@ export class Credentials {
       const row = CREDENTIALS_CHECKS.MACHINE_CANNOT_REGISTER_KEY;
       return { ok: false, reason: "MACHINE_CANNOT_REGISTER_KEY", code: "MACHINE_CANNOT_REGISTER_KEY", check: row.check,
                translation: row.translation, by: by || null,
-               detail: "a member registers their own signing key from their own signed-in session. A machine "
-                     + "credential, the operator's bearer and an unstamped call have no member behind them to hold "
-                     + "one; an administrator registers a key for a member with op=signeradd. Nothing was written." };
+               detail: localize("credentials.index.a_member_registers_their", "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.") };
     }
     /* END DEC-49 REGION is-machine-register-key */
     if (!Credentials.#keyShaped(keyB64)) return this.signerAdd({ keyB64 });   /* R6's BAD_KEY, from its one site */
@@ -904,8 +890,7 @@ export class Credentials {
       const row = CREDENTIALS_CHECKS.SIGNER_KEY_HELD_BY_ANOTHER;
       return { ok: false, reason: "SIGNER_KEY_HELD_BY_ANOTHER", code: "SIGNER_KEY_HELD_BY_ANOTHER", check: row.check,
                translation: row.translation,
-               detail: "this key is registered to another member of this team, and a registered key is never "
-                     + "rebound by its own member's act. Nothing was written." };
+               detail: localize("credentials.index.this_key_is_registered", "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.") };
     }
     /* END DEC-49 REGION is-signer-key-held */
     /* DEC-49 REGION is-signer-key-revoked */
@@ -913,8 +898,7 @@ export class Credentials {
       const row = CREDENTIALS_CHECKS.SIGNER_KEY_REVOKED;
       return { ok: false, reason: "SIGNER_KEY_REVOKED", code: "SIGNER_KEY_REVOKED", check: row.check,
                translation: row.translation,
-               detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator "
-                     + "(op=signerset), so that a revocation stands. Nothing was written." };
+               detail: localize("credentials.index.this_key_of_yours", "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.") };
     }
     /* END DEC-49 REGION is-signer-key-revoked */
     if (!held) {
@@ -927,10 +911,8 @@ export class Credentials {
              origin: held ? (held.origin === "self" ? "self" : "admin") : "self",
              registered_by: held ? Credentials.#statusBy(held.registered_by) : by, existed: !!held,
              notified: this.membership.activeAdmins(),
-             detail: held ? "this key is already registered to you and active; nothing was written. Every administrator "
-                          + "is told of the registration, and any of them can revoke the key."
-                          : "registered to you, and it attests as any registered key does. Every administrator is told "
-                          + "of the registration, and any of them can revoke the key." };
+             detail: held ? localize("credentials.index.this_key_is_already", "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.")
+                          : localize("credentials.index.registered_to_you_and", "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.") };
   }
 
   /* R10: a member revokes their own key, never refused for a key they hold, whatever its state or theirs (revoking
@@ -1045,8 +1027,7 @@ export class Credentials {
     if (!who || isMachineIdentity(who))
       return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",
         who ? localize("credentials.index.string_is_a_machine_identity", "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.", { String: String(String(who).slice(0, 60)) })
-            : "no member is named on this act. An authority granted by nobody is an authority nobody "
-              + "can be asked about afterwards.",
+            : localize("credentials.index.no_member_is_named", "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards."),
         { who: who || null });
 
     /* R14 (C-29.11): a member-scoped credential acts for the member who minted it, and for nobody else. */
@@ -1054,9 +1035,7 @@ export class Credentials {
     if (kind === "member" && principalMember !== null && principalMember !== undefined
         && String(principalMember).trim() !== "" && String(principalMember).trim() !== minter)
       return refusal("AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER",
-        `a member-scoped credential acts for the member who mints it, and '${String(principalMember).slice(0, 60)}' `
-        + `is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing `
-        + `was written.`, { principalMember: String(principalMember).slice(0, 60) });
+        localize("credentials.index.a_member_scoped_credential", "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.", { principalMember: String(principalMember).slice(0, 60), minter: minter.slice(0, 60) }), { principalMember: String(principalMember).slice(0, 60) });
     /* R13 (Bob, 2026-09-26): an ORGANISATION-scoped credential acts for the whole group, so only an active
        administrator (the founder included; membership R64) mints one; anyone else is answered through membership's
        R84, its remedy the member-scoped credential open to every member (DEC-83). */
@@ -1068,16 +1047,13 @@ export class Credentials {
                     : null;
     if (!principal || principal === "member:")
       return refusal("AI_CREDENTIAL_PRINCIPAL_UNSTATED",
-        `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for `
-        + `the team, nobody individual behind it) or 'member' (attributable to that member). They `
-        + `carry different accountability and the record states which, never the token's value.`,
+        localize("credentials.index.principalkind_was", "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.", { kind: kind.slice(0, 40) || "(none)" }),
         { principalKind: kind || null });
 
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
       return refusal("AI_CREDENTIAL_IDENTITY_TAKEN",
         id ? localize("credentials.index.id_already_names_a_credential", "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.", { id: String(id.slice(0, 60)) })
-           : "pass an identity for this credential: it is the name acts will cite, and a credential "
-             + "nothing can name is one nothing can revoke either.",
+           : localize("credentials.index.pass_an_identity", "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either."),
         { tokenId: id || null });
     /* END DEC-49 REGION is-ai-credential-mint */
 
@@ -1087,8 +1063,7 @@ export class Credentials {
     /* DEC-49 REGION is-ai-credential-expiry */
     if (!Number.isInteger(days) || days < AI_CREDENTIAL_EXPIRY_DAYS.min || days > AI_CREDENTIAL_EXPIRY_DAYS.max)
       return refusal("AI_CREDENTIAL_BAD_EXPIRY",
-        `expiresInDays is a whole number of days from ${AI_CREDENTIAL_EXPIRY_DAYS.min} to ${AI_CREDENTIAL_EXPIRY_DAYS.max}, `
-        + `${AI_CREDENTIAL_EXPIRY_DAYS.default} when it is left out, and this was not one. Nothing was written.`,
+        localize("credentials.index.expiresindays_is_a", "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.", { min: String(AI_CREDENTIAL_EXPIRY_DAYS.min), max: String(AI_CREDENTIAL_EXPIRY_DAYS.max), default: String(AI_CREDENTIAL_EXPIRY_DAYS.default) }),
         { expiresInDays: typeof expiresInDays === "number" ? expiresInDays : null });
     /* END DEC-49 REGION is-ai-credential-expiry */
     /* R53 (N761; K2129): the digest the control plane hands in the body, 64 lowercase hexadecimal characters, or no
@@ -1096,9 +1071,7 @@ export class Credentials {
     /* DEC-49 REGION is-ai-credential-digest */
     if (typeof secretSha !== "string" || !/^[0-9a-f]{64}$/.test(secretSha))
       return refusal("AI_CREDENTIAL_NO_SECRET",
-        "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value "
-        + "generated when the credential was asked for), so there is nothing a lookup could ever find this credential "
-        + "by. Nothing was written.");
+        localize("credentials.index.no_digest_of_the", "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written."));
     /* END DEC-49 REGION is-ai-credential-digest */
     const base = Date.parse(now);
     const expiresAt = stampSecond((Number.isFinite(base) ? base : Date.now()) + days * DAY_MS);
@@ -1131,7 +1104,7 @@ export class Credentials {
     if (!who || isMachineIdentity(who))
       return refusal("AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
         who ? localize("credentials.index.string_is_a_machine_identity_2", "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.", { String: String(String(who).slice(0, 60)) })
-            : "no member is named on this act, and a withdrawal nobody authored is not one.",
+            : localize("credentials.index.no_member_is_named_2", "no member is named on this act, and a withdrawal nobody authored is not one."),
         { who: who || null });
 
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
@@ -1228,8 +1201,7 @@ export class Credentials {
        her (`#isFounder`, R76's one test) is admitted as an active member, for her own run only. */
     if (id === null || isMachineIdentity(member) || isMachineIdentity(id)
         || (id === ROOT ? !this.#isFounder(ROOT) : this.#memberFacts(id)?.status !== "active"))
-      return this.accounts.accountMemberNotActive("a run's credential is minted only for an active member's own run. "
-        + "Nothing was minted.", { member: id });
+      return this.accounts.accountMemberNotActive(localize("credentials.index.a_runs_credential_is", "a run's credential is minted only for an active member's own run. Nothing was minted."), { member: id });
     const malformed = Credentials.#runCredentialFault(run, writes, project);
     if (malformed) return malformed;
     /* R79 (T50; N1186): a project the run was opened in, one the member sees and has joined, asked after R63's shape and
@@ -1271,11 +1243,10 @@ export class Credentials {
     if (what === null) return null;
     /* DEC-49 REGION is-ai-run-credential-shape */
     return Credentials.#row(AI_CREDENTIAL_CHECKS, "AI_RUN_CREDENTIAL_MALFORMED", what === "run"
-      ? "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted."
+      ? localize("credentials.index.a_runs_credential_names", "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.")
       : what === "project"
         ? localize("credentials.index.a_runs_credential_names_the", "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.")
-      : `a run's credential holds a non-empty list of the runner's writes, each one of ${AI_RUN_WRITES.join(", ")}, and `
-        + "this was not one. Nothing was minted.", { what });
+      : localize("credentials.index.a_runs_credential_holds", "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.", { writes: AI_RUN_WRITES.join(", ") }), { what });
     /* END DEC-49 REGION is-ai-run-credential-shape */
   }
 
@@ -1395,8 +1366,7 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     const s = this.#liveSession(session, { locked: true });
     if (!s || !this.#ownSession(s.role, id))
-      return this.accounts.notYourAccount("an ask's grant is minted only under the member's own "
-        + "live session. Nothing was minted.");
+      return this.accounts.notYourAccount(localize("credentials.index.an_asks_grant_is", "an ask's grant is minted only under the member's own live session. Nothing was minted."));
     if (s.state === "locked") return Credentials.sessionLockedRefusal();   /* R65 */
     const sessionSha = s.token_sha;
     const served = this.accounts.accountServing({ member: id, use: "ask", project: project === undefined ? null : project });
@@ -1418,19 +1388,17 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
-      return this.accounts.accountMemberNotActive("a standing question runs only for an active member. Nothing was "
-        + "minted.", { member: id });
+      return this.accounts.accountMemberNotActive(localize("credentials.index.a_standing_question_runs", "a standing question runs only for an active member. Nothing was minted."), { member: id });
     const away = this.accounts.aiKeptAway({ use: "standing" });   /* R32 mints only for a member an account serves: none while kept away (DEC-172) */
     if (away) return away;
     const serving = this.accounts.servingAccountOf({ member: id });
     if (!serving) return this.accounts.noAccount(id);
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
-      return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
-        ? "team's key" : serving.signin ? "member's own sign-in" : "member's own account"}, `
-        + "which would serve this one. Nothing was minted.");
+      return refuse("STANDING_SWITCH_OFF", localize("credentials.index.standing_questions_are_off", "standing questions are off for the {who}, which would serve this one. Nothing was minted.", { who: serving.level === "group"
+        ? "team's key" : serving.signin ? "member's own sign-in" : "member's own account" }));
     if (typeof question !== "string" || question.trim() === "")
-      return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
+      return refuse("NO_QUESTION", localize("credentials.index.no_standing_question_was", "no standing question was named. Nothing was minted."));
     /* END DEC-49 REGION is-standing-grant */
     return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1000, "standing");
   }
@@ -1471,8 +1439,7 @@ export class Credentials {
 
   static #grantNotHeld() {
     /* DEC-49 REGION is-grant-held */
-    return Credentials.#row(ACCOUNT_CHECKS, "GRANT_NOT_HELD", "no live grant answers to this token: it expired, its "
-      + "session ended, or it never existed. Nothing was read.");
+    return Credentials.#row(ACCOUNT_CHECKS, "GRANT_NOT_HELD", localize("credentials.index.no_live_grant_answers", "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read."));
     /* END DEC-49 REGION is-grant-held */
   }
 
@@ -1485,8 +1452,7 @@ export class Credentials {
     if (!g) return Credentials.#grantNotHeld();
     /* DEC-49 REGION is-grant-op */
     if (write !== false || typeof op !== "string" || !AI_GRANT_OPS.includes(op))
-      return Credentials.#row(ACCOUNT_CHECKS, "GRANT_OP_REFUSED", `an ask's grant admits only the reads on its list, `
-        + `and '${String(op ?? "").slice(0, 40)}'${write !== false ? " as a write" : ""} is not one. Nothing was read.`,
+      return Credentials.#row(ACCOUNT_CHECKS, "GRANT_OP_REFUSED", localize("credentials.index.an_asks_grant_admits", "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.", { op: String(op ?? "").slice(0, 40), write: write !== false ? " as a write" : "" }),
         { op: typeof op === "string" ? op.slice(0, 40) : null });
     /* END DEC-49 REGION is-grant-op */
     return Credentials.#held(g);
@@ -1570,7 +1536,7 @@ export class Credentials {
       const row = SIGN_IN_CHECKS.SECURITY_KIND_UNKNOWN;
       return { ok: false, reason: "SECURITY_KIND_UNKNOWN", code: "SECURITY_KIND_UNKNOWN", check: row.check,
                translation: row.translation, kind: typeof kind === "string" ? kind.slice(0, 40) : null,
-               detail: `the kinds counted are ${SECURITY_KINDS.join(", ")}. Nothing was counted.` };
+               detail: localize("credentials.index.the_kinds_counted_are", "the kinds counted are {kinds}. Nothing was counted.", { kinds: SECURITY_KINDS.join(", ") }) };
     }
     /* END DEC-49 REGION is-security-kind */
     try {
@@ -1595,13 +1561,14 @@ export class Credentials {
 
   /* R45: the period asked, or what is wrong with it. */
   static #periodFault(fromMs, toMs, now) {
-    if (!Number.isFinite(fromMs)) return "from is not an instant";
-    if (!Number.isFinite(toMs)) return "to is not an instant";
-    if (fromMs >= toMs) return "from is not before to";
-    if (toMs - fromMs > SECURITY_DAYS * DAY_MS) return `the period is longer than ${SECURITY_DAYS} days`;
+    if (!Number.isFinite(fromMs)) return localize("credentials.index.from_is_not_an", "from is not an instant");
+    if (!Number.isFinite(toMs)) return localize("credentials.index.to_is_not_an", "to is not an instant");
+    if (fromMs >= toMs) return localize("credentials.index.from_is_not_before", "from is not before to");
+    if (toMs - fromMs > SECURITY_DAYS * DAY_MS)
+      return localize("credentials.index.the_period_is_longer", "the period is longer than {days} days", { days: SECURITY_DAYS });
     if (Math.floor(fromMs / HOUR_MS) < Math.floor(now / HOUR_MS) - SECURITY_DAYS * 24)
-      return `from is before the counts kept, which go back ${SECURITY_DAYS} days`;
-    if (toMs > (Math.floor(now / HOUR_MS) + 1) * HOUR_MS) return "to is after the present hour";
+      return localize("credentials.index.from_is_before_the", "from is before the counts kept, which go back {days} days", { days: SECURITY_DAYS });
+    if (toMs > (Math.floor(now / HOUR_MS) + 1) * HOUR_MS) return localize("credentials.index.to_is_after_the", "to is after the present hour");
     return null;
   }
 
@@ -1610,7 +1577,7 @@ export class Credentials {
     /* DEC-49 REGION is-security-period */
     const row = SIGN_IN_CHECKS.SECURITY_PERIOD_INVALID;
     return { ok: false, reason: "SECURITY_PERIOD_INVALID", code: "SECURITY_PERIOD_INVALID", check: row.check,
-             translation: row.translation, what, detail: `${what}. ${rule} Nothing was read.` };
+             translation: row.translation, what, detail: localize("credentials.index.period_refused_detail", "{what}. {rule} Nothing was read.", { what, rule }) };
     /* END DEC-49 REGION is-security-period */
   }
 
@@ -1661,8 +1628,7 @@ export class Credentials {
     const now = Date.now();
     const fromMs = Credentials.#instantOf(from), toMs = Credentials.#instantOf(to);
     const fault = Credentials.#periodFault(fromMs, toMs, now);
-    if (fault) return Credentials.#periodRefusal(fault, `The period is from an earlier instant to a later one, at most `
-      + `${SECURITY_DAYS} days long and inside the last ${SECURITY_DAYS} days.`);
+    if (fault) return Credentials.#periodRefusal(fault, localize("credentials.index.the_period_is_from", "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.", { days: SECURITY_DAYS }));
     const f = this.#figures(fromMs, toMs, now);
     const span = toMs - fromMs;
     const [step, stepH] = span <= 48 * HOUR_MS ? ["hour", 1] : span <= 14 * DAY_MS ? ["six-hours", 6] : ["day", 24];
@@ -1715,9 +1681,10 @@ export class Credentials {
      cannot be read are a refusal naming the failure, never zeros, so the forwarding sends them as absent. */
   securityTotals({ from = null, to = null } = {}) {
     const fromMs = Credentials.#instantOf(from), toMs = Credentials.#instantOf(to);
-    const fault = !Number.isFinite(fromMs) ? "from is not an instant" : !Number.isFinite(toMs) ? "to is not an instant"
-      : fromMs >= toMs ? "from is not before to" : null;
-    if (fault) return Credentials.#periodRefusal(fault, "The period is from an earlier instant to a later one.");
+    const fault = !Number.isFinite(fromMs) ? localize("credentials.index.from_is_not_an", "from is not an instant")
+      : !Number.isFinite(toMs) ? localize("credentials.index.to_is_not_an", "to is not an instant")
+      : fromMs >= toMs ? localize("credentials.index.from_is_not_before", "from is not before to") : null;
+    if (fault) return Credentials.#periodRefusal(fault, localize("credentials.index.the_period_is_from_2", "The period is from an earlier instant to a later one."));
     try {
       const counts = Object.fromEntries(SECURITY_KINDS.map((k) => [k, 0]));
       /* the hours h with h·H in [from, to) */
@@ -1730,8 +1697,7 @@ export class Credentials {
       const row = SIGN_IN_CHECKS.SECURITY_COUNTS_UNREADABLE;
       return { ok: false, reason: "SECURITY_COUNTS_UNREADABLE", code: "SECURITY_COUNTS_UNREADABLE", check: row.check,
                translation: row.translation, failure: String(e?.message ?? e).slice(0, 200),
-               detail: "the security counts could not be read, so no figure is given: they are absent, never zero. "
-                     + "Nothing was read." };
+               detail: localize("credentials.index.the_security_counts_could", "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.") };
       /* END DEC-49 REGION is-security-counts-read */
     }
   }
@@ -1770,8 +1736,7 @@ export class Credentials {
     const who = Credentials.#memberOf(by);
     /* DEC-49 REGION is-recovery-codes-member */
     if (who === null || isMachineIdentity(by) || isMachineIdentity(who) || !this.#holderActive(who))
-      return Credentials.#row(SIGN_IN_CHECKS, "RECOVERY_CODES_NOT_A_MEMBER", "recovery codes are issued to an active "
-        + "member for their own account, from their own signed-in session. Nothing was issued.", { by: by ?? null });
+      return Credentials.#row(SIGN_IN_CHECKS, "RECOVERY_CODES_NOT_A_MEMBER", localize("credentials.index.recovery_codes_are_issued", "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued."), { by: by ?? null });
     /* END DEC-49 REGION is-recovery-codes-member */
     const role = Credentials.#roleFor(who);
     const issuedAt = stampSecond();
@@ -1799,10 +1764,7 @@ export class Credentials {
     /* DEC-49 REGION is-recovery-code */
     const row = SIGN_IN_CHECKS.RECOVERY_REFUSED;
     return { ok: false, reason: "RECOVERY_REFUSED", code: "RECOVERY_REFUSED", check: row.check, translation: row.translation,
-             detail: "no password was set and nothing was written. Either that role holds no recovery code, or the code "
-                   + "given is not one of its unspent codes, or the role is not an active member's now. Which of "
-                   + "those happened is not said: it is one answer deliberately, so that a refusal cannot be used to "
-                   + "find out which roles hold codes." };
+             detail: localize("credentials.index.no_password_was_set", "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.") };
     /* END DEC-49 REGION is-recovery-code */
   }
 
@@ -1866,8 +1828,7 @@ export class Credentials {
 
   static #resetLinkDead() {
     /* DEC-49 REGION is-reset-link-live */
-    return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_DEAD", "this reset link does not work: it was used, it expired, "
-      + "a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.");
+    return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_DEAD", localize("credentials.index.this_reset_link_does", "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed."));
     /* END DEC-49 REGION is-reset-link-live */
   }
 
@@ -1977,7 +1938,7 @@ export class Credentials {
     const k = Credentials.#keyForm(key);
     /* DEC-49 REGION is-keyed-service-key */
     if (k.empty)
-      return Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY", `${k.empty}. Nothing was changed.`);
+      return Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY", localize("credentials.index.empty_nothing_was", "{empty}. Nothing was changed.", { empty: k.empty }));
     /* END DEC-49 REGION is-keyed-service-key */
     /* (T48; K3101) sealed through `ai-accounts` R24, byte-identical to the seal held here before, so every key opens */
     const s = await this.accounts.sealText({ owner: `group:${service}`, kind: k.form, text: k.text });
@@ -2020,8 +1981,7 @@ export class Credentials {
   async keyedServiceFor({ service = null } = {}) {
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
-    const off = () => Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF", "the team's key for this service is "
-      + "off or not held; the caller goes on without it.", { service });
+    const off = () => Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF", localize("credentials.index.the_teams_key_for", "the team's key for this service is off or not held; the caller goes on without it."), { service });
     /* DEC-49 REGION is-keyed-service-on */
     if (!this.#keyedState(service).on) return off();
     /* END DEC-49 REGION is-keyed-service-on */

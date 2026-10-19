@@ -218,8 +218,9 @@ test("R49 securityTotals answers R44's counts for the hours that start at or aft
 test("R49 a period that is not from an earlier instant to a later one is refused SECURITY_PERIOD_INVALID (R45's row) naming what; counts that cannot be read are a refusal naming the failure (SECURITY_COUNTS_UNREADABLE, C-96.44), never zeros; it never throws", async () => {
   const w = await world().group();
   const now = Date.now();
-  for (const [from, to, what] of [[null, now, "from is not an instant"], ["soon", now, "from is not an instant"], [now - H, undefined, "to is not an instant"],
-                                  [now, now, "from is not before to"], [now, now - H, "from is not before to"], [{}, [], "from is not an instant"]]) {
+  const notInstant = localize("credentials.index.from_is_not_an", "from is not an instant");
+  for (const [from, to, what] of [[null, now, notInstant], ["soon", now, notInstant], [now - H, undefined, localize("credentials.index.to_is_not_an", "to is not an instant")],
+                                  [now, now, localize("credentials.index.from_is_not_before", "from is not before to")], [now, now - H, localize("credentials.index.from_is_not_before", "from is not before to")], [{}, [], notInstant]]) {
     const r = w.c.securityTotals({ from, to });
     assert.deepEqual([shape(r), r.what], [row(SIGN_IN_CHECKS, "SECURITY_PERIOD_INVALID"), what], what);
     assert.match(r.detail, new RegExp(`^${what}\\.`));
