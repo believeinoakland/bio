@@ -10,7 +10,7 @@ import { readDriveAddress, driveHop, classifyDriveBaseline } from "../../../src/
 import { keepRenderBodies, renderBlock } from "../../../src/render.mjs";
 import { mementoHop, readMementoAnswer, mementoRow } from "../../../src/capture-sources/memento.mjs";
 import { selectCapture } from "../../../src/cdx.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const OLD = /\b(?:the|this) (?:plane|instance)\b/i;
 const CIVICSMITH = word("queue.capture-completed-unattended.who");
@@ -26,15 +26,14 @@ const html = { format: { format: "html" } }, odt = { format: { format: "odt" } }
 test("R40 (DEC-149, drive.mjs:216): an unread Drive shape is not a document your group's Civicsmith can promise to have captured", () => {
   const v = readDriveAddress("https://drive.google.com/some/new/shape");
   assert.equal(v.shape, "unknown");
-  assert.ok(v.why.endsWith(`A Drive address whose shape is unread is not a document ${CIVICSMITH} can promise to have captured.`), v.why);
+  assert.equal(v.why, localize("capture-sources.drive.this_is_a_drive_host", "this is a Drive host ({host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your team's Civicsmith can promise to have captured.", { host: v.host }));
   assert.doesNotMatch(v.why, OLD);
 });
 
 test("R42 (DEC-149, drive.mjs:254): the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH", () => {
   const h = driveHop(drive, { retrieved: "2026-09-27T01:00:00Z" });
-  const line = h.evidence.split("; ").find((p) => p.startsWith("the export address was COMPOSED BY"));
-  assert.equal(line, `the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in ${DOC}, `
-    + "and no part of it was read from the request (D-112)");
+  const composed = localize("capture-sources.drive.the_export_address_was_composed", "the export address was COMPOSED BY YOUR TEAM'S CIVICSMITH from the file id and the kind carried in {address}, and no part of it was read from the request (D-112)", { address: DOC });
+  assert.ok(h.evidence.split("; ").includes(composed), h.evidence);
   assert.doesNotMatch(h.evidence, OLD);
 });
 
@@ -42,18 +41,18 @@ test("R46 (DEC-149, drive.mjs:444, :445, :448, :449, :451, :454, :456, :458): ev
   const said = { html: word("drive.register_profile_says"), odt: "the register's profile says odt", none: word("drive.register_profile_names") };
   const cases = [
     [":444", [row(EXPORT, html)], fromExport,
-      `${CIVICSMITH} recorded fetching the export address, but ${said.html}; the two disagree and neither is taken over the other`],
-    [":445", [row(EXPORT, odt)], fromExport, `${CIVICSMITH} recorded fetching the export address ${EXPORT} (CAP-8), and ${said.odt}`],
+      word("drive.why.group_civicsmith_recorded", { said: said.html })],
+    [":445", [row(EXPORT, odt)], fromExport, localize("capture-sources.drive.your_teams_civicsmith_recorded_fetching", "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}", { exportAddress: EXPORT, said: said.odt })],
     [":448", [row(DOC, odt)], fromPage,
-      `${CIVICSMITH} recorded fetching ${DOC}, not the export, but ${said.odt}; the two disagree and neither is taken over the other`],
+      word("drive.why.group_civicsmith_recorded_fetching", { fetched_address: DOC, said: said.odt })],
     [":449", [row(DOC)], fromPage,
-      `${CIVICSMITH} recorded fetching ${DOC}, not the export address — Google serves the application there, not the document — and ${said.none}`],
+      word("drive.why.group_civicsmith_recorded_fetching_export", { fetched_address: DOC, said: said.none })],
     [":451", [row(DOC)], [...fromExport, { address: DOC, via: "direct", retrieval_locator: DOC }],
-      `${CIVICSMITH} recorded these bytes from BOTH the export and ${EXPORT}; which one the baseline is cannot be told`],
-    [":454", [row(EXPORT, odt)], [], `the register row names the export address and ${said.odt}; ${CIVICSMITH} holds no retrieval record for these bytes`],
+      word("drive.why.group_civicsmith_recorded_bytes", { fetched_address: EXPORT })],
+    [":454", [row(EXPORT, odt)], [], word("drive.why.register_row_names", { said: said.odt })],
     [":456", [row(DOC, html)], [],
-      `${said.html} for a row at the document address; ${CIVICSMITH} holds no retrieval record for these bytes, so this rests on the register alone`],
-    [":458", [row(DOC)], [], `${CIVICSMITH} holds no direct retrieval record for these bytes and ${said.none}`],
+      word("drive.why.row_document_address", { said: said.html })],
+    [":458", [row(DOC)], [], word("drive.why.group_civicsmith_holds", { said: said.none })],
   ];
   for (const [line, rows, retrievals, basis] of cases) {
     const v = classifyDriveBaseline({ drive, locator: DOC, rows, retrievals });
@@ -76,7 +75,7 @@ test("R9 (DEC-149, render.mjs:343): bytes that could not be kept say your group'
 test("R12 (DEC-149, render.mjs:384): with no digests passed, your group's Civicsmith did not keep this render's subresource bytes", () => {
   const b = renderBlock(ANSWER, { pageUrl: "https://portal.example.gov/a", shellSha: "0".repeat(64), at: "2026-10-07T00:00:00Z" });
   assert.equal(b.render.subresources[0].sha256, "undetermined");
-  assert.equal(b.render.subresources[0].digest_reason, `${CIVICSMITH} did not keep this render's subresource bytes`);
+  assert.equal(b.render.subresources[0].digest_reason, word("render.group_civicsmith_keep_render"));
   assert.doesNotMatch(JSON.stringify(b.render), OLD);
 });
 
@@ -96,6 +95,6 @@ test("R37 (DEC-149, memento.mjs:256): the memento's digest is computed by your g
     headers: { "Memento-Datetime": "Tue, 03 Mar 2026 12:00:00 GMT", Link: `<${ORIG}>; rel="original"` } });
   const chosen = selectCapture([mementoRow(answer, { sha256: SHA, bytes: 10 })]).chosen;
   const h = mementoHop(chosen, answer.memento_uri, { answer });
-  assert.ok(h.evidence.includes(`SHA-256 ${SHA}, computed by ${CIVICSMITH} over the bytes it received, not a digest the archive stated`), h.evidence);
+  assert.ok(h.evidence.includes(localize("capture-sources.memento.sha_256_digest_computed_by", "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated", { digest: SHA })), h.evidence);
   assert.doesNotMatch(h.evidence, OLD);
 });

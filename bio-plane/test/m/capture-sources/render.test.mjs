@@ -13,7 +13,7 @@ import {
   renderBlock, renderedAuthority, rendererFor,
 } from "../../../src/render.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "../../../src/subresources.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const HOST = "portal.example.gov";
 const PAGE = `https://${HOST}/agenda`;
@@ -185,7 +185,7 @@ test("R9: a completed load not kept reads undetermined with its reason; a report
   assert.match(out[0].digest_reason, /did not deliver this response's bytes \(evicted by the browser\)/);
   assert.equal(out[0].renderer_sha256, claim);
   assert.match(out[1].digest_reason, /not valid base64/);
-  assert.match(out[2].digest_reason, new RegExp(`over the ${SUBRESOURCE_MAX}-byte per-subresource ceiling`));
+  assert.equal(out[2].digest_reason, word("render.body_bytes_byte", { bytes: String(Math.ceil((SUBRESOURCE_MAX + 3) / 3) * 3), subresource_max: String(SUBRESOURCE_MAX) }));
   assert.deepEqual([out[3].sha256, out[3].renderer_sha256], ["undetermined", claim]);
   assert.ok(out.every((o) => o.kept !== true && !("bytes" in o)));
   /* A hex digest a renderer reported beside kept bytes is its claim, never the digest. */
@@ -196,12 +196,12 @@ test("R9: a completed load not kept reads undetermined with its reason; a report
   const many = Array.from({ length: SUBRESOURCE_CAP + 2 }, (_, i) => ({ url: `https://x.example/n${i}`, outcome: "completed", body_text: `n${i}` }));
   const capped = await keepRenderBodies({ requests: many }, store());
   assert.equal(capped.filter((o) => o.kept).length, SUBRESOURCE_CAP);
-  assert.match(capped.at(-1).digest_reason, new RegExp(`past the ${SUBRESOURCE_CAP}-body per-capture ceiling`));
+  assert.equal(capped.at(-1).digest_reason, word("render.past_body_per", { subresource_cap: String(SUBRESOURCE_CAP) }));
   const body = (i) => "B".repeat(SUBRESOURCE_MAX - 4) + String(i).padStart(4, "0");
   const n = Math.floor(SUBRESOURCE_BUDGET / SUBRESOURCE_MAX) + 1;
   const budget = await keepRenderBodies({ requests: Array.from({ length: n }, (_, i) => ({ url: `https://x.example/b${i}`, outcome: "completed", body_text: body(i) })) }, store());
   assert.equal(budget.filter((o) => o.kept).length, n - 1);
-  assert.match(budget.at(-1).digest_reason, new RegExp(`${SUBRESOURCE_BUDGET}-byte subresource budget was spent`));
+  assert.equal(budget.at(-1).digest_reason, word("render.capture_byte_subresource", { subresource_budget: String(SUBRESOURCE_BUDGET) }));
 
   /* A failing put or sha256 becomes the entry; it never throws. */
   for (const s of [store({ failPut: true }), store({ failHash: true })]) {
@@ -356,11 +356,11 @@ test("R17: otherwise undetermined, the dated basis naming every reason and the o
   const a = renderedAuthority({ asserted: null, render: r, at: AT });
   assert.equal(a.authority_state, "undetermined");
   assert.ok(!("authority" in a));
-  for (const part of [`rendered capture, ${AT}`, "no assertion was supplied",
+  for (const part of [`rendered capture, ${AT}`, word("render.served_shell_authority"),
     "https://data.example.gov supplied data (same_site, which approximates and is not the host)",
-    "https://api.vendor.net supplied data (third_party)", "https://cdn.vendor.net ran code",
-    "A person resolves this by an assertion carrying its basis"])
+    "https://api.vendor.net supplied data (third_party)", "https://cdn.vendor.net ran code"])
     assert.ok(a.authority_basis.includes(part), part);
+  assert.equal(a.authority_basis, localize("capture-sources.render.rendered_capture_at_reasons_a", "rendered capture, {at}: {reasons}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).", { at: AT, reasons: [word("render.served_shell_authority"), "https://api.vendor.net supplied data (third_party)", "https://data.example.gov supplied data (same_site, which approximates and is not the host)", "https://cdn.vendor.net ran code"].join("; ") }));
   assert.deepEqual(a.authority_other_origins, ["https://api.vendor.net", "https://cdn.vendor.net", "https://data.example.gov"]);
 
   /* Neither list known: the origins are undetermined, and both unknowns are named. */

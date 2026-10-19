@@ -42,7 +42,7 @@ export function parseCdx(text) {
   if (raw.length === 0) return { ok: true, rows: [] };
   const header = raw[0];
   if (!Array.isArray(header) || !header.includes("timestamp") || !header.includes("original")) {
-    return { ok: false, reason: "CDX_NO_HEADER", detail: "the first row does not name timestamp and original" };
+    return { ok: false, reason: "CDX_NO_HEADER", detail: localize("capture-sources.cdx.the_first_row_does_not", "the first row does not name timestamp and original") };
   }
   const rows = [];
   for (let i = 1; i < raw.length; i++) {
@@ -79,8 +79,8 @@ export function rowRefusal(row) {
      of the document. */
   if (String(row.statuscode) !== "200") return `statuscode ${row.statuscode}, not 200`;
   /* MEASURED (2): the empty-body digest. */
-  if (!row.digest) return "no digest";
-  if (String(row.digest) === EMPTY_BODY_DIGEST) return "digest is the empty-body digest: the capture holds nothing";
+  if (!row.digest) return localize("capture-sources.cdx.no_digest", "no digest");
+  if (String(row.digest) === EMPTY_BODY_DIGEST) return localize("capture-sources.cdx.digest_is_the_empty_body", "digest is the empty-body digest: the capture holds nothing");
   return null;
 }
 
@@ -106,7 +106,7 @@ export function selectCapture(rows, { notAfter = null } = {}) {
   }
   if (!usable.length) {
     return { ok: false, reason: "NO_USABLE_CAPTURE",
-             detail: "the index holds no 200 response with a non-empty body for this address",
+             detail: localize("capture-sources.cdx.the_index_holds_no_200", "the index holds no 200 response with a non-empty body for this address"),
              considered };
   }
   usable.sort((a, b) => (String(a.timestamp) < String(b.timestamp) ? 1 : -1));
@@ -173,7 +173,7 @@ export function archiveHop(chosen, replay, { mementoDatetime = null, warcSource 
     who: word("capture-sources.name.internet_archive_wayback"),
     asserts: localize("capture-sources.cdx.these_bytes_were_served_for", "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}", { original: String(chosen.original), archived_at: String(chosen.archived_at), statuscode: String(chosen.statuscode) }),
     evidence: [
-      chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : "the CDX record carried no urlkey",
+      chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : localize("capture-sources.cdx.the_cdx_record_carried_no", "the CDX record carried no urlkey"),
       localize("capture-sources.cdx.cdx_record_timestamp_timestamp_digest", "CDX record: timestamp {timestamp}, digest {digest} (base32 SHA-1, over the body as they stored it)", { timestamp: String(chosen.timestamp), digest: String(chosen.digest) }),
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
       chosen.warc_record_length ? localize("capture-sources.cdx.warc_record_length_warc_record", "WARC record length {warc_record_length}, which is THEIR compressed record size and not the length of what we received", { warc_record_length: String(chosen.warc_record_length) }) : null,

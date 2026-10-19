@@ -223,13 +223,13 @@ export class CaptureCredentials {
     if (row === null) {
       /* `member`: the supplier's own; `group`: any active member (R55 asked it first); `project`: its editors. */
       if (scope === "project" && !this.#members.isProjectEditor(project, by))
-        return refusal("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
+        return refusal("CAPTURE_CREDENTIAL_NOT_PERMITTED", localize("capture-sources.credentials.only_an_editor_of_the_project", "only an editor of the project may supply a credential for it"));
       return null;
     }
     if (row.supplied_by === by) return null;
     if (row.scope === "project")
       return this.#members.isProjectOwner(row.project, by) ? null
-        : refusal("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
+        : refusal("CAPTURE_CREDENTIAL_NOT_PERMITTED", localize("capture-sources.credentials.only_its_supplier_or_an_owner", "only its supplier or an owner of its project may withdraw a project credential"));
     return this.#members.isAdministrator(by) ? null
       : refusal("CAPTURE_CREDENTIAL_NOT_PERMITTED", localize("capture-sources.credentials.only_its_supplier_or_an", "only its supplier or an administrator may withdraw a {scope} credential", { scope: String(row.scope) }));
     /* END DEC-49 REGION is-credential-permitted */
@@ -282,7 +282,7 @@ export class CaptureCredentials {
     try {
       /* DEC-49 REGION is-credential-supplier-member */
       if (!this.#active(by))
-        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of your team");
+        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", localize("capture-sources.credentials.the_supplier_named_is_not", "the supplier named is not an active member of your team"));
       /* END DEC-49 REGION is-credential-supplier-member */
       /* DEC-49 REGION is-credential-kind */
       if (!CREDENTIAL_KINDS.includes(kind))
@@ -292,14 +292,14 @@ export class CaptureCredentials {
       /* DEC-49 REGION is-credential-host */
       if (!h)
         return refusal("CAPTURE_CREDENTIAL_BAD_HOST",
-          "the host given is not a bare host name (a credential is for the one host the source that refused is served from)");
+          localize("capture-sources.credentials.the_host_given_is_not_a", "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"));
       /* END DEC-49 REGION is-credential-host */
       /* DEC-49 REGION is-credential-host-foreign */
       /* F16 (R55, R65): a credential for one of the group's own hosts would be handed to the group's own Civicsmith
          or a fleet member by a capture; refused, nothing written. */
       if (isOwnHost(h, this.#ownHosts))
         return refusal("CAPTURE_CREDENTIAL_OWN_HOST",
-          "the host given is one of your team's own (where your team's Civicsmith or its fleet is reached), and a credential is never for one of them");
+          localize("capture-sources.credentials.the_host_given_is_one", "the host given is one of your team's own (where your team's Civicsmith or its fleet is reached), and a credential is never for one of them"));
       /* END DEC-49 REGION is-credential-host-foreign */
       const given = project !== undefined && project !== null;
       /* DEC-49 REGION is-credential-scope */
@@ -311,19 +311,19 @@ export class CaptureCredentials {
         const b = typeof project === "string" && project !== "" ? this.#core.bundleInfo(project) : null;
         /* DEC-49 REGION is-credential-project */
         if (!b || b.type !== "project")
-          return refusal("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
+          return refusal("CAPTURE_CREDENTIAL_NO_PROJECT", localize("capture-sources.credentials.the_project_named_is_not", "the project named is not a project this record holds"));
         /* END DEC-49 REGION is-credential-project */
       }
       /* DEC-49 REGION is-credential-secret */
       if (typeof secret !== "string" || secret === "")
-        return refusal("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
+        return refusal("CAPTURE_CREDENTIAL_NO_SECRET", localize("capture-sources.credentials.no_secret_was_given", "no secret was given"));
       /* END DEC-49 REGION is-credential-secret */
       const denied = this.#r63Refusal(by, { scope, project });
       if (denied) return denied;
       const key = await this.#aesKey();
       /* DEC-49 REGION is-credential-key-bound */
       if (!key)
-        return refusal("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear");
+        return refusal("CAPTURE_CREDENTIAL_NO_KEY", localize("capture-sources.credentials.no_encryption_key_is_set", "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear"));
       /* END DEC-49 REGION is-credential-key-bound */
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
@@ -331,7 +331,7 @@ export class CaptureCredentials {
       /* Every check passed and the encryption or the write failed (`#store`): the transaction left nothing written.
          Never the error's own words, which could carry what was passed. */
       return refusal("CAPTURE_CREDENTIAL_SUPPLY_FAILED",
-        "the credential could not be encrypted and stored, so nothing was written");
+        localize("capture-sources.credentials.the_credential_could_not_be", "the credential could not be encrypted and stored, so nothing was written"));
       /* END DEC-49 REGION is-credential-stored */
     }
   }
@@ -363,7 +363,7 @@ export class CaptureCredentials {
     const none = (reason) => ({ credentials: [], reason });
     try {
       const h = hostNameOf(host);
-      if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
+      if (!h) return none(localize("capture-sources.credentials.the_fetch_names_no_host", "the fetch names no host a credential can be for, so it goes without credentials"));
       /* F16 (R56, R65): never answered for one of the group's own hosts, one supplied before R55 refused them included. */
       if (isOwnHost(h, this.#ownHosts))
         return none(localize("capture-sources.credentials.capture_credential_own_host_h", "CAPTURE_CREDENTIAL_OWN_HOST: {h} is one of your team's own hosts, so no credential is used for it and the fetch goes without credentials", { h: String(h) }));
@@ -384,7 +384,7 @@ export class CaptureCredentials {
         return none(word("capture-sources.none.credential_supplied_admitted", { h: String(h) }));
       const key = await this.#aesKey();
       if (!key)
-        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands");
+        return none(localize("capture-sources.credentials.capture_credential_no_key_no", "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands"));
       let secret;
       try {
         const pt = await crypto.subtle.decrypt(
@@ -413,7 +413,7 @@ export class CaptureCredentials {
       /* An unknown id and one `by` may not see are one condition, answered alike (R57, R58). */
       /* DEC-49 REGION is-credential-seen */
       if (!found || !this.#sees(by, found))
-        return refusal("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
+        return refusal("CAPTURE_CREDENTIAL_NO_SUCH", localize("capture-sources.credentials.no_credential_by_that_id", "no credential by that id is visible to this member"));
       /* END DEC-49 REGION is-credential-seen */
       const [row] = this.#sweep([found]);
       const denied = this.#r63Refusal(by, { row });
@@ -425,7 +425,7 @@ export class CaptureCredentials {
       /* DEC-49 REGION is-credential-withdrawn */
       /* The read or the withdrawal's write failed: the transaction changed nothing. Never the error's own words. */
       return refusal("CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
-        "the credential could not be read or withdrawn, so nothing was changed");
+        localize("capture-sources.credentials.the_credential_could_not_be_read", "the credential could not be read or withdrawn, so nothing was changed"));
       /* END DEC-49 REGION is-credential-withdrawn */
     }
   }
