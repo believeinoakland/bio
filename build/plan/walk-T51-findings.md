@@ -1,6 +1,6 @@
 # T51 local walk: findings traced to fixes (K4111)
 
-**Status** · Every row closed at K4144 (BOB #228); the walk runs once now. Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
+**Status** · Run at K4145 (BOB #228): 120 failures, groups A–C below, open; the walk runs again only once each is closed by a fix whose test exercises the live page's path. Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
 
 | # | group (last run) | owner | fix | covering test | state |
 | --- | --- | --- | --- | --- | --- |
@@ -31,3 +31,11 @@
 
 - `held`'s project slug "roof-repairs-at": screens-intake drew the project's name since K4094 (`held.test.mjs`:373–380).
 - `elsewhere`'s link slugs ("Report-an-Issue-OAK", "get-legal-help"): screens-daily draws the label or the site since B9 (`elsewhere.test.mjs`:41–51).
+
+## The run at K4145 (`walk-T51-run.txt`): open
+
+| # | group | owner | fix | covering test | state |
+| --- | --- | --- | --- | --- | --- |
+| A | R22: Home draws no door to `dash-action` (R20's control fails only as its echo) | (diagnosis) | | | open |
+| B | R27 on `setup`: catalogue labels, hints, legends, vendor names escape (the pseudo route rewrites only the document's word pairs) | (diagnosis) | | | open |
+| C | R27 on `places`, `elsewhere`: profile values outside `DATA`'s `li` selectors | (diagnosis) | | | open |
