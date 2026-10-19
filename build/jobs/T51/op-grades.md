@@ -53,3 +53,21 @@ Until you rule, I am converting the other lists (t41 `R30_READS`, which passes w
 ## J8 · REPORT
 
 **REPORT (B6, K4078).** Merged `tranche/T51` (at `d0c1389d9d`). The DEC-88 pins in `pins.test.mjs` now read their three bands from the backticked ops of R1's sentence on the requirement line, not from a typed list; the pins pass (10 of 10). Pushed. The words check shows 28 hand-list findings, down from 30; the plain finding is gone. Still open: the rest of the `pins` lists (the R3 tally, the T41 bands, layer 9, R32, N891), `ladder`, `owners`, `t35`, `t41`, `t45`, and the four code controls per B3. Next: the T41 bands in R30 (backticked) are the next pin to convert, then the rest in the order of the checker's list. I have not posted COMPLETE.
+
+## J9 · COMPLETE
+
+**COMPLETE (B7, K4085; T51-137).** Pushed `6a96a6cba1` on `job/T51/op-grades`, with `tranche/T51` merged (at `9c3b02a2b9`).
+
+**Entries applied.**
+- Words: `checks/words.mjs … op-grades` reads **0** (handlist 0). The 28 hand-lists are gone from `test/m/op-grades/`: `pins` (T41 bands, R3 tally, layer 9, terminal set, codes, reads), `ladder`, `owners`, `t35`, `t41`, `t45`, `t48`; `t36`, `t47`, `t50` were re-derived too (see the finding below). Run over every L11 module together: no line names op-grades (K3986).
+- Where each list now comes from: the DEC-88 bands, R3's 21, R30's T41 bands and ACTS_NOW read the backticked ops (or R1's plain words) of op-grades' OWN requirement lines through `test/m/op-grades/declared.mjs` (K4076); read lists are the read rows of the module's own tables; refusal-code controls are restated as one rule over a code (`asksNotTheAccount`: no code in `JUSTIFICATION_REFUSALS` asks an object, identifier, choice, form, member or a machine) plus the codes R-lines say join the family (`joinedCodes`), with negative controls (your B3 option b). No other module's op or code is typed in a test.
+- R48 and the 14 session reads (B4): in `t51.mjs` since J6; `t51.test.mjs` names R48 explicitly. `holdsdue`, `templatebyhandle`, `rulefields` are `NON_ACTS` reads with no grade.
+- Inherited reds t48:219 (R42) and t50:106 (R46): both green. All 126 op-grades tests pass.
+
+**Finding for BOB (a ruling of yours could not be followed as written).** B2 and B3 had `declared.mjs` read `OP_FAMILIES`/`OPS` from op-declarations. `checks/architecture.mjs` rejects that: op-declarations is later in the order than op-grades (P4), and cannot be earlier (it imports `affordances`, which uses op-grades). J3's version of the helper already carried the import. I removed it: tests import nothing outside this module. What this costs: a read list is now the module's own read rows, not "the reads the owner declares", so a read the owner declares and op-grades omits is no longer seen by an op-grades test; that is `affordances` R12's totality (and `control-plane`'s `totality.test.mjs`), which already runs over the declarations. Three pins lost their owner-derived form: layer 9's exact 41-count and its ungated-reads list (now the stated absences R2 names, with their ground and reasons), and the sources'/capture's read pin (now every read row writes nothing, with the public and grant-door rows apart). If you want those pins back at their owner, they belong in a later module's tests (affordances or op-declarations), which may import both.
+
+**Deferred / found elsewhere.** None in op-grades. Not mine: `architecture.mjs` over the whole product shows one failure, `answer-envelope/page-policy.test.mjs` importing `signpage.mjs` of control-plane.
+
+**Checks (from the process repository, pulled).** `checks/format.mjs`: 176 modules, 0 failures. `checks/architecture.mjs … op-grades`: 35 product files, 73 imports, 0 failures. `checks/coverage.mjs … op-grades`: 48 of 48 live requirement ids named, 0 failures. `checks/ownership.mjs … op-grades tranche/T51 job/T51/op-grades`: 16 files, 0 failures. `checks/words.mjs … op-grades`: 0 failures. `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match. `node --test bio-plane/test/m/op-grades/`: 126 pass, 0 fail.
+
+Size (session_01Wn3Nkryhpm6zQHj9uJJzg4): test runs 45, module lines 3427
