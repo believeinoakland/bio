@@ -5,6 +5,7 @@ import { compile, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, MEANING, PROV
          LIMIT_DEFAULT, LIMIT_MAX, IDS_MAX, MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX, MEANING_AXIS_CAP,
          RANK_ATOMS_MAX } from "../../../src/query.mjs";
 import * as membership from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const V = "class:member";
 const sorted = (a) => [...a].sort();
@@ -137,7 +138,7 @@ test("R11 relevance is over the rows the viewer may see, only the order is publi
   }
   assert.ok(!w.run(ann).rows.some((r) => r.bundle_id === "P1"), "a member who is no administrator: unchanged");
   const many = compile({ q: "a b c d e f g h i", viewer: V });
-  assert.ok(many.warnings.includes(`relevance weighs these 9 terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`));
+  assert.ok(many.warnings.includes(word("query.relevance_weighs_terms", { all_terms: 9, rank_atoms_max: RANK_ATOMS_MAX })));
   assert.deepEqual(compile({ q: "a b c d e f g h", viewer: V }).warnings, []);
   assert.equal(RANK_ATOMS_MAX, 8);
   w.bundle("M", { body: "a b c d e f g h i" });

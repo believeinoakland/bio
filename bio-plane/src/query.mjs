@@ -94,15 +94,11 @@ export const FIELDS = {
   capture:        { col: "inquiry_capture_strength",    type: "text", upper: true,
                     asOf: "each question's LAST PROMOTION",
                     authority: "op=inquirystrength",
-                    why: "a capture letter is bounded by the fidelity of the text the leg rests on"
-                       + " (DEC-4, framework Appendix A.1), and a DOCUMENT being re-read moves that"
-                       + " bound without re-promoting the question — so this column can name a letter"
-                       + " STRONGER than the record now earns, and never a weaker one" },
+                    why: localize("query-language.query.capture_letter_bounded", "a capture letter is bounded by the fidelity of the text the leg rests on (DEC-4, framework Appendix A.1), and a DOCUMENT being re-read moves that bound without re-promoting the question — so this column can name a letter STRONGER than the record now earns, and never a weaker one") },
   connection:     { col: "inquiry_connection_strength", type: "text", upper: true,
                     asOf: "each question's LAST PROMOTION",
                     authority: "op=inquirystrength",
-                    why: "a leg raised anywhere BENEATH this question does not re-promote it,"
-                       + " so this column can name a letter the walk no longer derives" },
+                    why: localize("query.why.leg_raised_anywhere", "a leg raised anywhere BENEATH this question does not re-promote it, so this column can name a letter the walk no longer derives") },
   legs:           { col: "inquiry_basis_count",         type: "number" },
   /* REC-24 (e): the ACTION's six, and they are what makes the Actions rail
      (P-52) a filter rather than a list. `overdue:true` is the one to be careful
@@ -124,13 +120,11 @@ export const FIELDS = {
   due:            { col: "action_clock_next",           type: "time", day: true, proj: true,
                     asOf: "each action's LAST WRITE",
                     authority: "the action's own read (actions R25)",
-                    why: "the clock's next date is projected when the action is written, and an entry met, waived"
-                       + " or added since is not in it until the next write" },
+                    why: localize("query.why.clock_next_date", "the clock's next date is projected when the action is written, and an entry met, waived or added since is not in it until the next write") },
   overdue:        { col: "action_clock_overdue",        type: "bool", proj: true,
                     asOf: "each action's LAST WRITE",
                     authority: "the action's own read (actions R25)",
-                    why: "the flag was computed on the local day of that write, so an action whose date has passed"
-                       + " since reads not overdue here; the action's own read derives it on today's local day" },
+                    why: localize("query.why.flag_computed_local", "the flag was computed on the local day of that write, so an action whose date has passed since reads not overdue here; the action's own read derives it on today's local day") },
   /* R28 (T33-39): the T33 fields. Each is held by its OWNER in a relation of its own and is read ONLY through the
      relation the caller names for it (`rel`, R29): never off `bundles`, so with none named the term is dropped and
      says so. A bundle can hold MANY values of each (it cites several standards, concerns several people), so they
