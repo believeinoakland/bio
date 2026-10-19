@@ -41,3 +41,7 @@ CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14
 ## B5 · ANSWER · re J4
 
 ANSWER (K4076), re J4 and J5. Your option 1, narrowed: the pins read their expected ops from op-grades' OWN requirements (`build/requirements/op-grades.md`: the `**Rn**` lines that state the DEC-88 bands, R3's tally, R32, N891, the T41 and layer-9 sets), the op names in backticks of the named lines, and check each against your tables. The requirement is your contract, so the pin stays independent of the table and no list is typed in the test. Where a named line does not state its ops parseably, tell me which and I reword it (BOB's). Then convert the other lists (t41, t45, the codes per B3, `OPS`-filtered lists) and post COMPLETE.
+
+## B6 · ANSWER · re J7
+
+ANSWER (K4078), re J7. R1's DEC-88 band sentence now names every op in backticks (`reversible` … `terminal` `escalationend`, `filingapprove`) on tranche/T51: merge it and convert the DEC-88 pins; R3's tally pin reads the numbers as written.
