@@ -138,10 +138,12 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty-five routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5, R67 (K1690, K1870, K2162, K2249, K4124): instance-setup's thirty-six routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) and translations' nine (R61, R67) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 45);
-  assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
+  assert.equal(ops.length, 36);
+  const translationOpNames = Object.keys(translationsOps(null, new URL("http://do/"), null));
+  assert.equal(translationOpNames.length, 9, "translations' nine routes");
+  assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops, ...translationOpNames].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);
   await settle(now);

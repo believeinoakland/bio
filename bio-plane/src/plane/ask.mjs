@@ -11,6 +11,7 @@
 import { credentialsOf, AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
 import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
+import { translationsOf } from "../translations/index.mjs";
 import { TRACE_HEADER, MEMBER_REF_HEADER } from "../signin-door/index.mjs";
 import { hypothesesOf } from "../hypotheses/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
@@ -359,14 +360,14 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   const c = credentialsOf(ctx), acc = aiAccountsOf(ctx);   /* R53: the grant is credentials'; the account reads are ai-accounts' */
   /* R50 (T48; N670; DEC-127 (3)): a member's reading of a passage of the group's writing in her language, read as she may,
      before any account: the subject (her own note, a question or finding or a notice as she sees it), the language
-     (`instance-setup.readingLanguage`, its R87, whose refusals pass through), the passage's length, then the keep-away of
+     (`translations.readingLanguage`, its R10, whose refusals pass through), the passage's length, then the keep-away of
      the subject's project. It mints no grant, sends no `told`, and writes nothing. */
   let reading = null;
   if (kind === "reading") {
     if (!said(who)) return out(400, badTask("a reading is a member's own act"));
     const got = readSubject(ctx, who, subject);
     if (!got.ok) return out(got.status, got.answer);
-    const lang = instanceSetupOf(ctx, env).readingLanguage({ member: who, ...(said(language) ? { language } : {}) });
+    const lang = translationsOf(ctx).readingLanguage({ member: who, ...(said(language) ? { language } : {}) });
     if (!lang || lang.ok === false || !said(lang.language)) return out(409, lang || { ok: false, reason: "UNDETERMINED",
       detail: word("translate.undetermined.language") });
     const original = { kind: subject.kind, id: subject.id, text: got.text };
