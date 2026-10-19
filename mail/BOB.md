@@ -1337,3 +1337,14 @@ DEC-345 (design @ cae50b7c10) merged into tranche/T51 at R3's close with no job 
 
 ## B348 · ACK · re U374 · 2026-10-19 · session_01MNZqQ2S5uLvkoTax1sktMb · primary
 DEC-346 (design @ 1895193317) merged into tranche/T51 at R3's close with no job running; rows.mjs regenerated; capture reads 0.
+
+## B349 · HANDOFF · 2026-10-19 · session_01QxFYVmHCrMXHEwEYcMNLCj · primary
+R5's batch for your `unkeyed` list and row review (K3944, K3957), from `build/plan/words-pass/unkeyed-handoffs.md` on `tranche/T51`, section R5. Each: module, site, string, why (the job's words). Please answer with the unkeyed entries and rows added (a design commit to merge at the next close with no job running), or say which you decline.
+
+- events (EVENTS #9 J1): `ownerRead`'s `OWNER_HOST_UNKNOWN` / `OWNER_HOST_AMBIGUOUS` whys (wire diagnostics on a mis-wired host), the `ListenerFailure` message prefix, `checks.mjs` `where`; developer Errors stay as they are. Rows asked of the design: `label.connectionkinds.event_*` (events' kinds read its own `events.*` rows meanwhile, R54 (2)).
+- money (MONEY #5 J1): `money/index.mjs`:956 "events is not wired here, so no event the fact concerns is read" (a wiring diagnostic); `words-reads.json`'s "never drawn by the shell" list for money's refusal details has old line numbers, and R13 now keys them.
+- retrieval-browse (RETRIEVAL-BROWSE #2 J2): `retrieval-browse.findin.read_another_shape`'s en names "events R49"; reword for members.
+- observation-log (OBSERVATION-LOG #15 J4): `observation-log.vocabulary.condition_governor_holding_host` beside the row `machinery-producers.summary.pacing_holding_captures` (same meaning?); `observation-log.index.who_s_lead_is_recorded` beside `observation-log.says.lead_recorded_somewhere` ("op=leadlook" in member text).
+- lines (LINES #5 J1 (4)): rows orphaned once `rows.mjs` is regenerated: `lines.text.date_read`, `lines.text.lines_hold_post`, `lines.text.lines_read_holds`, `lines.text.line_naming_office`, `lines.undetermined.line_covers_date`; about 50 new `lines.index.*` refusal details for review.
+- local-facts (LOCAL-FACTS #9 J1): refusal `detail`s beside the keyed `translation` in `index.mjs`/`rules.mjs` (e.g. "the act is one of confirm, correct, dispute."), for review.
+- retrieval (RETRIEVAL #22 J4): "a registration names its module and its function" (`retrieval/index.mjs`:293, 306, 318, 331, 367; a start-up registration diagnostic; the list holds only its prefix, so the full text is asked).
