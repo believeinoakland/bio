@@ -1555,30 +1555,53 @@ var SIGNIN_HOLD_MS = CODE_WAIT_MS + OUTCOME_WAIT_MS + 3e4;
 var WAITING_HEADER = "x-signin-waiting";
 var TRACE_HEADER = "x-civicsmith-trace";
 
-// ../bio-plane/src/setup-words/rows.mjs
-var WORD_ROWS = Object.freeze([
-  ["agent-runner.worker.failed_to_reach_the_container", "Failed to reach the container: {v1}", null, null, false, "code"],
-  ["agent-runner.worker.your_teams_civicsmith_could_not", "Your team's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.", null, null, false, "code"]
-]);
+// src/says-words.mjs
+var SAYS_WORDS = Object.freeze({
+  "agent-runner.signin.claude_answered_the_code_but": "Claude answered the code, but not with a token your team's Civicsmith can use. Start connecting Claude again.",
+  "agent-runner.signin.claude_did_not_accept_the": "Claude did not accept the code{v1}. Start connecting Claude again and paste the new code.",
+  "agent-runner.signin.claude_gave_no_answer_within": "Claude gave no answer within 60 seconds of the code. Start connecting Claude again and paste the new code.",
+  "agent-runner.signin.claudes_sign_in_gave_no": "Claude's sign-in gave no address within 30 seconds. Wait a minute, then try connecting Claude again.",
+  "agent-runner.signin.claudes_sign_in_stopped_before": "Claude's sign-in stopped before it gave an address. Wait a minute, then try connecting Claude again.",
+  "agent-runner.signin.this_claude_sign_in_was": "This Claude sign-in was ended before it gave an address. Start connecting Claude again.",
+  "agent-runner.signin.your_teams_civicsmith_cannot_start": "Your team's Civicsmith cannot start Claude's sign-in: Claude Code is missing from it. Tell your team's steward.",
+  "agent-runner.signin.your_teams_civicsmith_could_not_2": "Your team's Civicsmith could not tell which member this is for. Sign in to Civicsmith again, then connect Claude.",
+  "agent-runner.signin.your_teams_civicsmith_could_not_3": "Your team's Civicsmith could not run Claude's sign-in just now. Wait a minute, then try again.",
+  "agent-runner.worker.your_teams_civicsmith_could_not": "Your team's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.",
+  "refusal.NO_SIGNIN_WAITING": "No sign-in was waiting for that code: it timed out, or was started on another page. Open Anthropic's sign-in page again and paste the new code it gives you.",
+  "refusal.SIGNIN_ADDRESS_UNEXPECTED": "The sign-in answered with an address that isn't Anthropic's, so your team's Civicsmith didn't open it. Nothing was sent. Tell whoever installed your team's Civicsmith.",
+  "screen.connect.refused.ATTEMPT_SUPERSEDED": "A newer sign-in was started, so this code belongs to an older one. Paste the code from the page you opened last.",
+  "screen.connect.refused.BAD_CODE": "That doesn't look like the code from Anthropic's page. Copy the whole code and paste it again. Nothing was sent to Anthropic.",
+  "screen.connect.refused.BAD_REQUEST": "The sign-in couldn't read what was sent. Open Anthropic's sign-in page again and start over.",
+  "screen.connect.refused.NOT_THIS_MEMBER": "That sign-in was started by someone else's session, so it can't connect yours. Open Anthropic's sign-in page again yourself."
+});
 
-// ../bio-plane/src/setup-words/index.mjs
-var table;
-var rowsByKey = () => table ??= new Map(WORD_ROWS.map((r) => [r[0], r]));
-var fail = (code, message) => Object.assign(new Error(`${code}: ${message}`), { code });
-var PLACEHOLDER = /\{([A-Za-z0-9_]+)\}/g;
-var ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/;
-function fill(key, text, vars) {
-  return text.replace(PLACEHOLDER, (_, name) => {
-    const v = vars?.[name];
-    if (!Object.hasOwn(vars ?? {}, name) || v === void 0 || v === null) throw fail("WORD_VAR_MISSING", `${key} needs {${name}}`);
-    return String(v);
+// src/says.mjs
+var SAYS_KEYS = Object.freeze({
+  BAD_REQUEST: "screen.connect.refused.BAD_REQUEST",
+  BAD_MEMBER: "agent-runner.signin.your_teams_civicsmith_could_not_2",
+  NOT_THIS_MEMBER: "screen.connect.refused.NOT_THIS_MEMBER",
+  NO_SIGNIN_WAITING: "refusal.NO_SIGNIN_WAITING",
+  BAD_CODE: "screen.connect.refused.BAD_CODE",
+  ATTEMPT_SUPERSEDED: "screen.connect.refused.ATTEMPT_SUPERSEDED",
+  NO_BINARY: "agent-runner.signin.your_teams_civicsmith_cannot_start",
+  NO_ADDRESS: "agent-runner.signin.claudes_sign_in_gave_no",
+  EXITED: "agent-runner.signin.claudes_sign_in_stopped_before",
+  ENDED: "agent-runner.signin.this_claude_sign_in_was",
+  NOT_RUN: "agent-runner.signin.your_teams_civicsmith_could_not_3",
+  SIGNIN_ADDRESS_UNEXPECTED: "refusal.SIGNIN_ADDRESS_UNEXPECTED",
+  NO_OUTCOME: "agent-runner.signin.claude_gave_no_answer_within",
+  TOKEN_SHAPE: "agent-runner.signin.claude_answered_the_code_but",
+  REFUSED: "agent-runner.signin.claude_did_not_accept_the",
+  RUNNER_NOT_STARTED: "agent-runner.worker.your_teams_civicsmith_could_not"
+});
+function says(code, vars = {}) {
+  const key = SAYS_KEYS[code];
+  const row = key === void 0 ? void 0 : SAYS_WORDS[key];
+  if (typeof row !== "string") throw new Error(`no carried row for ${code}`);
+  return row.replace(/\{([A-Za-z0-9_]+)\}/g, (_, name) => {
+    if (!Object.hasOwn(vars, name)) throw new Error(`${key} needs {${name}}`);
+    return String(vars[name]);
   });
-}
-function localize(id, en, vars = {}) {
-  if (typeof id !== "string" || !ID.test(id)) throw fail("BAD_WORD_ID", `${typeof id === "string" ? id : String(id)} is not a word id`);
-  const row = rowsByKey().get(id);
-  if (!row && typeof en !== "string") throw fail("BAD_WORD_EN", `${id} has no row and no sentence`);
-  return fill(id, row ? row[1] : en, vars);
 }
 
 // src/worker.mjs
@@ -1586,7 +1609,7 @@ var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
 var DISABLED = JSON.stringify({ ok: false, code: "LOCAL_RUNNER_DISABLED" });
 var HOLD_KEY = "signin_hold_until";
 var LIBRARY_DETAIL_MAX = 120;
-var STARTED_WORDS = localize("agent-runner.worker.your_teams_civicsmith_could_not", "Your team's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.");
+var STARTED_WORDS = says("RUNNER_NOT_STARTED");
 var log = (line) => console.log(JSON.stringify(line));
 var instanceRef = (id) => String(id ?? "").replace(/[^0-9a-f]/gi, "").slice(0, 12).toLowerCase();
 var pathTemplate = (url) => {
@@ -1692,7 +1715,7 @@ var AgentRunner = class extends Container {
     try {
       res = await this.containerFetch(request, this.defaultPort);
     } catch (e) {
-      res = new Response(localize("agent-runner.worker.failed_to_reach_the_container", "Failed to reach the container: {v1}", { v1: String(e && e.message ? e.message : e) }), { status: 500 });
+      res = new Response(`Failed to reach the container: ${e && e.message ? e.message : e}`, { status: 500 });
     }
     if (res.status !== 101 && !/^application\/json\b/i.test(res.headers.get("content-type") || "")) {
       const said = libraryWords(await res.text().catch(() => ""));
