@@ -108,3 +108,7 @@ session_01UjdYc5ECwMjd18DbJT7WbE,job,provenance-routes,10155690,191551,120,66882
 session_01RpNUgdyt5VkXqp8Ksfx3zR,job,provenance,7680545,128495,112,35263,,6,2819
 session_014Mxhs1WG5npAbZAfSdGnLi,job,sources,5069580,118580,78,28974,,1,1080
 session_01GJErmRTWWrhmqcKEnHY1X6,job,reading-pipeline,2120753,88626,42,20407,,0,
+session_01PxHWJheiSaeECCE8B1sywP,job,calibration,9272475,178298,106,55827,,6,1048
+session_01JPMzjtaiYQhhvavJECf8NY,job,content,17576241,305196,156,105058,,3,3531
+session_01AMS17zW7T6NQQhJwzerr6u,job,extraction,13536197,169646,659,61383,,14,3303
+session_01Lok5rc1LRdKaFhnhJxw8j2,job,reading-pipeline,8737204,148805,7038,25445,,15,1800
