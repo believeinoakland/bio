@@ -34,6 +34,16 @@ export function servedClasses() {
   return new Set(parts.flatMap((t) => [...css(t).matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])));
 }
 export const screen = (id) => SCREENS.find((s) => s.id === id);
+/** A change to a choice that drives its screen (`cs.choice` with `acts`): the select takes the value and the page redraws. */
+export async function choose(p, id, value) {
+  const el = p.doc.getElementById(id);
+  if (!el) throw new Error(`no choice ${id}`);
+  el.value = value;
+  p.fire(el, "change");
+  await settle();
+}
+/** The member who may read and not act: no capability. */
+export const READER = { ...MEMBER, capabilities: [] };
 
 export const open = (path, plane = {}, o = {}) => boot({ screens: SCREENS, plane, path, ...o });
 /** The path's steps, as the kit draws them (a link or span per earlier step, the current page last). */

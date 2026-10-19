@@ -413,14 +413,10 @@ export const action = Object.freeze({
       done: function (view, answer, cs) { if (answer && answer.inquiry) cs.set("asked", { inquiry: answer.inquiry }); return { stay: true }; },
     }),
     {
-      // R31 (1): "Show the routes": the procedure guides for this kind of action, read again; legal information, not advice.
+      // R31 (1): "Show the routes": the procedure guides for this kind of action, read again by the page's own read; legal
+      // information, not advice. Nothing is written.
       op: "procedureguides",
-      send: function (view) {
-        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
-        return { query: { kind: a.kind || "other" } };
-      },
-      rereads: [],
-      done: function (view, answer, cs) { cs.set("guideN", (view.ui.guideN || 0) + 1); },
+      send: function (view, el, cs) { cs.set("guideN", (view.ui.guideN || 0) + 1); return null; },
     },
     WRITE_HELP,
     {
