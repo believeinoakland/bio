@@ -13,11 +13,28 @@ const NG = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROWS = path.resolve(NG, "../bio-plane/src/setup-words/rows.mjs");
 const READS = path.resolve(NG, "../docs/development/ux-substrate/screens/words-reads.json");
 
-/* The keys the bundle's rows are cut to, sorted: the installer's own (src/words.mjs) and what `setup-fleet.mjs` reads. */
+/* Every module the bundle holds, by its file: one esbuild pass with the rows and the generated release stubbed out. */
+async function bundledInputs() {
+  const esbuild = await import("esbuild");
+  const stub = { name: "stub-big-inputs", setup(build) {
+    build.onLoad({ filter: /setup-words[\\/]rows\.mjs$/ }, () => ({ loader: "js", contents: "export const WORDS_COMMIT = ''; export const WORD_ROWS = [];" }));
+    build.onLoad({ filter: /newgroup[\\/]src[\\/]release\.mjs$/ }, () => ({ loader: "js",
+      contents: "export const RELEASE_BINARY = '', RELEASE_VERSION = '', RELEASE_MANIFEST = null, RELEASE_CONTAINERS = [];" }));
+  } };
+  const built = await esbuild.build({ absWorkingDir: NG, entryPoints: ["src/index.mjs"], bundle: true, format: "esm", platform: "neutral",
+    write: false, metafile: true, plugins: [stub], logLevel: "silent" });
+  return Object.keys(built.metafile.inputs).map((f) => path.resolve(NG, f));
+}
+
+/* The keys the bundle's rows are cut to, sorted: the installer's own (src/words.mjs), what `setup-fleet.mjs` reads, and the keys any
+   other module the bundle holds names in a `word("…")` call (a module such as record-grammar's `document.mjs` reads some when it is
+   loaded, and a row the bundle lacks would stop the installer at load, R72). */
 export async function bundledKeys() {
   const { KEYS } = await import(path.join(NG, "src/words.mjs"));
   const fleet = JSON.parse(readFileSync(READS, "utf8")).modules["setup-fleet.mjs"]?.reads ?? [];
-  return [...new Set([...KEYS, ...fleet])].sort();
+  const named = [];
+  for (const f of await bundledInputs()) if (/\.mjs$/.test(f)) for (const m of readFileSync(f, "utf8").matchAll(/\bword\(\s*(["'])([A-Za-z0-9_.-]+)\1/g)) named.push(m[2]);
+  return [...new Set([...KEYS, ...fleet, ...named])].sort();
 }
 
 export async function bundleOptions() {

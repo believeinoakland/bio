@@ -54,7 +54,7 @@ export async function patiently(fn, { onWait = null, minutes = WAIT_BOUND_MINUTE
 const IDEMPOTENT = new Set(["GET", "PUT", "DELETE", "HEAD"]);
 
 /* One Cloudflare API call; `init.idem` marks a POST that is safe to repeat. */
-export async function cf(session, path, init = {}, base) {
+export async function cfCall(session, path, init = {}, base) {
   const { idem = false, ...rest } = init;
   const method = (rest.method || "GET").toUpperCase();
   const attempt = async () => {
@@ -85,3 +85,22 @@ export async function cf(session, path, init = {}, base) {
     }
   }, { onWait: session.onWait });
 }
+
+/* Where the management API is, and where a release is kept (the installer's `CFG` reads these back). */
+export const CF_API = "https://api.cloudflare.com/client/v4";
+/* Public releases: two committed files in the repo's release/ folder on main, readable without any API token or rate limit. */
+export const RELEASE_LATEST = "https://raw.githubusercontent.com/believeinoakland/bio/main/release";
+/* R61: where the parts of a release other than the newest are kept, the release's own tag. */
+export const RELEASE_TAGGED = (version) => `https://raw.githubusercontent.com/believeinoakland/bio/v${version}/release`;
+
+/* R66 (F4), R71 (F6): a slow, rate-limited or transiently failed answer is waited out within the stated bound; a permission
+   that has expired ends the run asking for approval again. `token` is the run's Session (cfx.mjs). */
+const cf = (token, path, init = {}) => cfCall(token, path, init, CF_API);
+/* The call bound to one account, the form account.mjs takes. */
+const apiOf = (token, acct) => (path, init) => cf(token, `/accounts/${acct}${path}`, init);
+/* What waiting could not mend, and what asks for approval again, pass the catches of a step untouched. */
+const special = (e) => !!e && (e.approveAgain === true || e.lasting === true);
+/* A read the run can do without (the deployment to put back, a worker's presence for one binding): only a permission that has
+   expired stops it; a failure that never mended is "not known". */
+const approve = (e) => !!e && e.approveAgain === true;
+export { cf, apiOf, special, approve };

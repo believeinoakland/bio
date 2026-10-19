@@ -1,6 +1,6 @@
 # interface-assets (T51)
 
-**Status** · session_01R7mgwF3p8Gdc1KqYeCZURA · depth 2 · COMPLETE · handled B1
+**Status** · session_01R7mgwF3p8Gdc1KqYeCZURA · depth 2 · COMPLETE · handled B2
 
 ## Completion (T51-112)
 
@@ -25,3 +25,11 @@ Size (session_01R7mgwF3p8Gdc1KqYeCZURA): test runs 6, module lines 170
 ## J1 · COMPLETE
 
 T51-112 applied; record 'Completion' section is pushed. Design re-taken at 20c8001300; 4 inherited reds cleared; R10/R11 tested (22 pass); format, architecture, coverage, ownership, setup-words --check: 0 failures. REPORT: (1) R10's text is stale against 20c8001300 (icons.svg now holds i-document/i-due/i-sever per the entry; shell.css also has the design's .mk-screenonly print rule, .mk-grp wrap and 44 px phone rules) — please amend R10; (2) site's SITE_COMMIT and wizard-scripts' pin should move to 20c8001300; (3) words: one finding, generate.mjs:114, a CSS header comment no member reads — for you to settle with the design (K3944).
+
+## Change B2 (K4081, DEC-359)
+
+Merged `tranche/T51`; `ASSETS_COMMIT` re-taken at `2a64c5ae77`, `index.mjs` regenerated. Findings: (1) the commit's only change to the page's `<style>` since `20c8001300` is the phone rule `fieldset.mk-checks input:is([type="checkbox"],[type="radio"])`; the `.tw { overflow-x: auto }` rule was already in the page and was NOT carried, because `tw` is no `mk-`/`cs-` class and not in R7's product list; 12 screens draw `class="tw"` (table wrappers), so the generator's `PRODUCT` list now names `tw` and `shell.css` carries it (R7 lists the named product classes: its text should add `.tw`). (2) My test's selector splitter split `:is(a,b)` at the comma; it now splits at top-level commas only. Suite 22 pass, 0 fail; format, architecture, coverage, setup-words --check 0 failures; words: same single finding as above (`generate.mjs` header comment).
+
+## J2 · COMPLETE · re B2
+
+CHANGE B2 applied: ASSETS_COMMIT 2a64c5ae77, shell.css regenerated. Note: .tw was already in the page and not carried (not mk-/cs-); 12 screens draw class=tw, so generate.mjs PRODUCT now names tw and shell.css carries it — R7's named product-class list should add .tw. Suite 22 pass; format/architecture/coverage/setup-words 0 failures. Earlier REPORT items (R10 stale text, words finding at generate.mjs:114) stand.

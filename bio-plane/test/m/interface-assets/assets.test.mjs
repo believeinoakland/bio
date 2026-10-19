@@ -17,7 +17,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const MODULE = join(ROOT, "bio-plane/src/interface-assets/index.mjs");
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
-const COMMIT = "20c8001300"; // R10 (T51): the design commit the START names; R9 named 7be06eb4cb and R8 f498560a37 before it
+const COMMIT = "2a64c5ae77"; // R10 (T51): the design commit the START names; R9 named 7be06eb4cb and R8 f498560a37 before it
 const R9_COMMIT = "7be06eb4cb";
 const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
 const atCommit = (path) => git(["show", `${ASSETS_COMMIT}:${DIR}/${path}`]);
@@ -140,7 +140,7 @@ function r4Failures(loaded) {
   return out;
 }
 
-test("R1, R5, R8, R9, R10: ASSETS_COMMIT is 20c8001300 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
+test("R1, R5, R8, R9, R10: ASSETS_COMMIT is 2a64c5ae77 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
   const { faces } = expected();
   assert.equal(faces.length, 15);
   assert.equal(Object.keys(ASSET_FILES).length, 21);
@@ -243,7 +243,16 @@ function rules(css) {
   }
   return out;
 }
-const sels = (r) => r.sel.split(",").map((s) => s.trim());
+/* A selector list split at its top-level commas only (never inside parentheses or brackets, as :is([type="a"],[type="b"])). */
+const sels = (r) => {
+  const out = []; let depth = 0, cur = "";
+  for (const c of r.sel) {
+    if (c === "(" || c === "[") depth++; else if (c === ")" || c === "]") depth--;
+    if (c === "," && !depth) { out.push(cur.trim()); cur = ""; } else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+};
 const KINDS = ["--c-kind-money", "--c-kind-part", "--c-kind-mention"];
 function r5Failures(css) {
   const out = [];
@@ -258,7 +267,7 @@ function r5Failures(css) {
   return out;
 }
 
-test("R5, R8, R9, R10: civicsmith.css at 20c8001300 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
+test("R5, R8, R9, R10: civicsmith.css at 2a64c5ae77 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
   assert.equal(ASSETS_COMMIT, COMMIT);
   const css = ASSET_FILES["civicsmith.css"].body;
   assert.deepEqual(r5Failures(css), []);
@@ -319,8 +328,8 @@ test("R6 control: a module holding its faces as base64 literals in the global sc
 /* R7: shell.css is the generator's transform of the page's <style> at ASSETS_COMMIT. */
 const PHONE_QUERY = "@media (max-width: 760px)";
 const PHONE_WEIGHT = ":root:root "; // K3295: the design's phone prefix keeps its weight
-/* K3295: the unprefixed product classes R7 carries by name: .e, .e-*, .gchip, .cell, .st (with its .st-a…), .row. */
-const PRODUCT = /\.(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)(?![\w-])/;
+/* K3295: the unprefixed product classes R7 carries by name: .e, .e-*, .gchip, .cell, .st (with its .st-a…), .row, .tw. */
+const PRODUCT = /\.(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row|tw)(?![\w-])/;
 /* The selectors the page's own @media (max-width: 760px) block holds at the commit, as R7 carries them: those rules are
    not phone rules, so they keep their own query and need no prefix's weight. */
 function sourceQuerySels() {
@@ -347,7 +356,7 @@ test("R7: shell.css equals the generator's transform of page.src.html's <style> 
     assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
   assert.ok(all.some((r) => r.media === PHONE_QUERY && sels(r).includes(PHONE_WEIGHT + ".cs-tabs")), ".cs-tabs inside the 760 px query, weighted");
   // K3295: the named product classes the carried components draw, each carried.
-  for (const c of [".e", ".e-pos", ".e-part", ".e-money", ".e-money-in", ".e-ment", ".e-lead", ".e-same", ".gchip rect", ".gchip.subject text", ".cell", ".cell h4", ".cell ul", ".st", ".cs-frame .row"])
+  for (const c of [".e", ".e-pos", ".e-part", ".e-money", ".e-money-in", ".e-ment", ".e-lead", ".e-same", ".gchip rect", ".gchip.subject text", ".cell", ".cell h4", ".cell ul", ".st", ".cs-frame .row", ".tw"])
     assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
   assert.ok(all.some((r) => !r.media && sels(r).includes("main[data-st=\"b\"] .st-b")), ".st's states carried");
   // The weight keeps the design's cascade: the phone tab bar beats the frame's desktop hiding of it.
@@ -435,7 +444,7 @@ function r9Failures(civicsmith) {
   return R9_CLASSES.filter((c) => !namedBy(named, c)).map((c) => `civicsmith.css: no rule for ${c}`);
 }
 
-test("R9, R10: ASSETS_COMMIT is 20c8001300, the design commit the START names; civicsmith.css names each class DEC-280, DEC-249 and DEC-279 added; each served file is R1's bytes and R7's transform", () => {
+test("R9, R10: ASSETS_COMMIT is 2a64c5ae77, the design commit the START names; civicsmith.css names each class DEC-280, DEC-249 and DEC-279 added; each served file is R1's bytes and R7's transform", () => {
   assert.equal(ASSETS_COMMIT, COMMIT);
   const civ = ASSET_FILES["civicsmith.css"].body;
   assert.deepEqual(r9Failures(civ), []);

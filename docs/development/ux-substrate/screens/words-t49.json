@@ -1520,13 +1520,13 @@
   },
   {
    "key": "screen.home.area.ourmove",
-   "en": "Our move: {what}, due {date}",
+   "en": "Our move: {n}, the earliest due {date}",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.home.area.theirmove",
-   "en": "Their move: {reply}, none recorded by {date}; {reply2}, due {due}",
+   "en": "Their move: {n}, the earliest due {date}",
    "protected": false,
    "note": "DEC-257"
   },
