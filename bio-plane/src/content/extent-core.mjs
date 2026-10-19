@@ -278,12 +278,10 @@ export function checkContentExtent(extent, ctx = {}) {
   const e = extent && typeof extent === 'object' ? extent : null;
   if (!e)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `no extent was supplied and none could be read from the leg`);
+      localize('content.extent-core.no_extent_was_supplied', 'no extent was supplied and none could be read from the leg'));
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
     return refusal("CONTENT_EXTENT_NO_PRODUCER",
-      `extent kind 'dom' names a region of an HTML document. Nothing produces a dom address `
-      + `yet (CONTENT-HTML), so a row minted against one would be an address into a `
-      + `grammar no producer writes and no reader can evaluate`);
+      localize('content.extent-core.dom_names_a_region', 'extent kind \'dom\' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate'));
   const row = CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
     return refusal("CONTENT_EXTENT_UNREADABLE",
@@ -294,14 +292,12 @@ export function checkContentExtent(extent, ctx = {}) {
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a pdf-page extent names which page, as a 0-based integer. This one names `
-        + `'${String(e.page).slice(0, 40)}'`);
+        localize('content.extent-core.pdf_page_names_which_page', 'a pdf-page extent names which page, as a 0-based integer. This one names \'{page}\'', { page: String(String(e.page).slice(0, 40)) }));
     if (e.rect !== undefined && e.rect !== null
         && !(Array.isArray(e.rect) && e.rect.length === 4
              && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and `
-        + `unreadable is worse than none, because it looks like a region somebody chose`);
+        localize('content.extent-core.pdf_page_rect_unreadable', 'a pdf-page extent\'s rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose'));
     /* THE PAGE SET. Checked only where the record HOLDS one — an absent page
        count is undetermined and stated on the row, never a refusal, because a
        gate that refused every page citation on a document whose page set this
@@ -390,24 +386,20 @@ export function checkContentExtent(extent, ctx = {}) {
   if (e.kind === 'sheet-cell') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-cell extent names which sheet, as the workbook spells it. This one names `
-        + `'${String(e.sheet).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_cell_names_which_sheet', 'a sheet-cell extent names which sheet, as the workbook spells it. This one names \'{sheet}\'', { sheet: String(String(e.sheet).slice(0, 40)) }));
     if (typeof e.cell !== 'string' || !CONTENT_EXTENT_A1_RE.test(e.cell.trim()))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names `
-        + `'${String(e.cell).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_cell_names_which_cell', 'a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names \'{cell}\'', { cell: String(String(e.cell).slice(0, 40)) }));
     const outside = coversSheetCell(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === 'doc-para') {
     if (!Number.isInteger(e.para) || e.para < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-para extent names which paragraph, as a 0-based integer. This one names `
-        + `'${String(e.para).slice(0, 40)}'`);
+        localize('content.extent-core.doc_para_names_which_paragraph', 'a doc-para extent names which paragraph, as a 0-based integer. This one names \'{para}\'', { para: String(String(e.para).slice(0, 40)) }));
     if (e.run !== undefined && e.run !== null && !(Number.isInteger(e.run) && e.run >= 0))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-para extent's run is a 0-based integer or absent. A run that is present and `
-        + `unreadable is worse than none, because it looks like a span somebody chose`);
+        localize('content.extent-core.doc_para_run_unreadable', 'a doc-para extent\'s run is a 0-based integer or absent. A run that is present and unreadable is worse than none, because it looks like a span somebody chose'));
     const outside = coversDocPara(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -421,8 +413,7 @@ export function checkContentExtent(extent, ctx = {}) {
         localize('content.extent-core.a_slide_shape_extent_names', 'a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names \'{String}\'', { String: String(String(e.slide).slice(0, 40)) }));
     if (e.shape !== undefined && e.shape !== null && !(Number.isInteger(e.shape) && e.shape >= 0))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a slide-shape extent's shape is a 0-based integer or absent. A shape that is present `
-        + `and unreadable is worse than none, because it looks like an element somebody chose`);
+        localize('content.extent-core.slide_shape_unreadable', 'a slide-shape extent\'s shape is a 0-based integer or absent. A shape that is present and unreadable is worse than none, because it looks like an element somebody chose'));
     const outside = coversSlideShape(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -447,25 +438,21 @@ export function checkContentExtent(extent, ctx = {}) {
   if (e.kind === 'sheet-range') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-range extent names which sheet, as the workbook spells it. This one names `
-        + `'${String(e.sheet).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_range_names_which_sheet', 'a sheet-range extent names which sheet, as the workbook spells it. This one names \'{sheet}\'', { sheet: String(String(e.sheet).slice(0, 40)) }));
     if (typeof e.range !== 'string' || !rangeCorners(e.range))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one `
-        + `names '${String(e.range).slice(0, 40)}'`);
+        localize('content.extent-core.sheet_range_names_which_cells', 'a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names \'{range}\'', { range: String(String(e.range).slice(0, 40)) }));
     const outside = coversSheetRange(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === 'doc-table') {
     if (!Number.isInteger(e.table) || e.table < 0)
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-table extent names which table, as a 0-based ordinal in document order. This one `
-        + `names '${String(e.table).slice(0, 40)}'`);
+        localize('content.extent-core.doc_table_names_which_table', 'a doc-table extent names which table, as a 0-based ordinal in document order. This one names \'{table}\'', { table: String(String(e.table).slice(0, 40)) }));
     if (e.cell !== undefined && e.cell !== null
         && !(typeof e.cell === 'string' && CONTENT_EXTENT_A1_RE.test(e.cell.trim())))
       return refusal("CONTENT_EXTENT_UNREADABLE",
-        `a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell `
-        + `that is present and unreadable is worse than none, because it looks like one somebody chose`);
+        localize('content.extent-core.doc_table_cell_unreadable', 'a doc-table extent\'s cell is A1 notation over the table\'s grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose'));
     const outside = coversDocTable(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
@@ -479,10 +466,8 @@ export function checkContentExtent(extent, ctx = {}) {
     if (hasPart === hasPage)
       return refusal("CONTENT_EXTENT_UNREADABLE",
         hasPart
-          ? `an image extent names EITHER the embedded part's content hash OR a page and rectangle, `
-            + `and this one names both — one image stated twice, where the two can disagree`
-          : `an image extent names the embedded part's content hash (in a container) or the page `
-            + `it is on (in a PDF), and this one names neither`);
+          ? localize('content.extent-core.image_names_both_part_and_page', 'an image extent names EITHER the embedded part\'s content hash OR a page and rectangle, and this one names both — one image stated twice, where the two can disagree')
+          : localize('content.extent-core.image_names_neither_part_nor_page', 'an image extent names the embedded part\'s content hash (in a container) or the page it is on (in a PDF), and this one names neither'));
     if (hasPart && !(typeof e.part === 'string' && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
       return refusal("CONTENT_EXTENT_UNREADABLE",
         localize('content.extent-core.an_images_part_is_the', 'an image\'s part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names \'{String}\'', { String: String(String(e.part).slice(0, 40)) }));
@@ -494,8 +479,7 @@ export function checkContentExtent(extent, ctx = {}) {
           && !(Array.isArray(e.rect) && e.rect.length === 4
                && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
         return refusal("CONTENT_EXTENT_UNREADABLE",
-          `an image extent's rect is four finite numbers or absent. A rect that is present and `
-          + `unreadable is worse than none, because it looks like a region somebody chose`);
+          localize('content.extent-core.image_rect_unreadable', 'an image extent\'s rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose'));
       if (ctx.known !== false
           && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
         return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
@@ -528,10 +512,7 @@ export function checkContentExtent(extent, ctx = {}) {
        different: a PDF page's chain (layer or OCR) covers what is on the page. */
     if (hasPart && citedAs === 'text')
       return refusal("CONTENT_EXTENT_NO_CHAIN",
-        `this citation asks for the TEXT of an embedded image, and nothing in this record has read `
-        + `text off an embedded image — the container's transcription covers its text parts and `
-        + `never its media. Cite the image as itself (cited_as: bytes), or cite the passage that `
-        + `quotes it`);
+        localize('content.extent-core.embedded_image_text_has_no', 'this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image — the container\'s transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it'));
   }
   /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
      A content row is an address into TEXT somebody or something produced, and a
@@ -720,11 +701,7 @@ function coversImage(e, container) {
 function partOutsideAnyContainer(container) {
   if (!container || container.office !== false) return null;
   const fmt = typeof container.format === 'string' && container.format ? container.format : null;
-  return `this capture is ${fmt ? `a ${fmt.slice(0, 20)} document` : 'a document'}, not an office `
-    + `container, so its own bytes hold no embedded media part and a {part} names bytes this document `
-    + `does not contain. An image served beside a page is its OWN document: acquire it at its own `
-    + `address and cite that document whole`
-    + (fmt === 'pdf' ? `. An image painted on a PDF page is addressed by its page and rect, not a part` : '');
+  return localize('content.extent-core.capture_is_not_an_office', 'this capture is {kind}, not an office container, so its own bytes hold no embedded media part and a part reference names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole{pdf}', { kind: fmt ? `a ${fmt.slice(0, 20)} document` : 'a document', pdf: fmt === 'pdf' ? word('content.text.image_painted_pdf') : '' });
 }
 
 /** D-440 — WHAT AN ADMITTED `{part}` COULD NOT BE CHECKED AGAINST, stated, or
@@ -741,14 +718,10 @@ export function imagePartUndetermined(extent, ctx = {}) {
   const c = ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
   if (!c || c.office == null)
     return { level: 'container_kind',
-             why: `${c && typeof c.kind_why === 'string' ? c.kind_why : 'this record does not hold which kind of document this capture is'}`
-               + ` — so whether this part is a member of the document's own bytes is UNDETERMINED, `
-               + `admitted and stated rather than guessed either way` };
+             why: localize('content.extent-core.kind_unheld_part_undetermined', '{kind_why} — so whether this part is a member of the document\'s own bytes is UNDETERMINED, admitted and stated rather than guessed either way', { kind_why: c && typeof c.kind_why === 'string' ? c.kind_why : localize('content.extent-core.kind_not_held', 'this record does not hold which kind of document this capture is') }) };
   if (c.office === true && !Array.isArray(c.images))
     return { level: 'image_list',
-             why: `this capture is an office container and this record holds no list of its embedded `
-               + `images (it was acquired before the wire carried one, or no entry itemised it), so whether `
-               + `the part is among them is UNDETERMINED, admitted and stated rather than guessed` };
+             why: localize('content.extent-core.office_container_no_image_list', 'this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed') };
   return null;
 }
 

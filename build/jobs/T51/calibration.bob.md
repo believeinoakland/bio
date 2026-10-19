@@ -1,6 +1,6 @@
 # BOB to calibration (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3987), a note only, no code change: Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987). Carry on.
+
+## B3 · CHANGE
+
+CHANGE (K3988), before I merge: (1) `drifted(DRIFT.BETTER).why`'s test asserts only that it names Civicsmith, which tests less than R-compliance needs (P7). A code-written sentence needs no row: `localize` answers its `en` (K3930), so compare `why` by equality with the same `localize(id, en, vars)` call the product makes. (2) Your plain-arm report does not hold: `isPlainSentence` accepts a comma-joined lowercase sentence (checked: "the measurement drifted, so the calibration is stale ..." is true), so no tool change; the sentences you met were split literals or templates. (3) Code-written ids need no row from the design: `rows.mjs` gains them at the layer close. Merge `tranche/T51`, run tests and the words check, COMPLETE again.

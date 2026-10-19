@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -36,3 +36,7 @@ ANSWER (K3987), for the restarted job (READING-PIPELINE #18, claude-sonnet-5-5, 
 2. Yes: each fragment with no row becomes `localize('reading-pipeline.<file stem>.<slug>', en[, vars])` at its site, the English unchanged; tests compare with the same call by equality or assert the code, and never hold the text.
 3. Yes: `word(key[, vars])` at each site whose sentence equals an existing row; never edit `rows.mjs`.
 Read whole, as you planned: `index.mjs`, `readingprov.mjs` and the five finding-holding tests, before the first edit.
+
+## B4 · CHANGE
+
+CHANGE (K3989), before I merge: the sentences you left as literals because the check does not count them (`tier3LoopNote`'s not-asked sentence, "the AI declined (…)", and the failed-reading basis strings in `read`/`readInner`: "the document names no capture digest…", "the capture's bytes are not held…", "the reading could not be composed…", "the {fmt} entry produced no text…" and the rest of that list) are sentences a member can read in a basis or note, so setup-words R13 binds them whatever the check counts (K3964): key each by `localize('reading-pipeline.<file stem>.<slug>', en[, vars])`, English unchanged, or `word` where a row already holds it; tests compare by equality. A string only a builder reads (a thrown developer Error) stays. Merge `tranche/T51`, run tests and the words check, COMPLETE again.

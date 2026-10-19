@@ -285,24 +285,14 @@ export class Content {
     if (notion.includes("tables") && !tables) missing.push(word("content.push.document_table_list"));
     if (notion.includes("images") && !images) missing.push(word("content.push.container_image_list"));
     if (held && notion.includes("paragraphs") && !notion.includes("tables"))
-      missing.push("the document's table list (this capture was acquired before the wire carried it — FW-19)");
+      missing.push(localize("content.index.document_table_list_before_wire", "the document's table list (this capture was acquired before the wire carried it — FW-19)"));
     if (held && notion.length && !notion.includes("images"))
-      missing.push("the container's image list (this capture was acquired before the wire carried it — FW-19)");
+      missing.push(localize("content.index.container_image_list_before_wire", "the container's image list (this capture was acquired before the wire carried it — FW-19)"));
     if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
-      missing.push("every sheet's row and column extent (this capture was acquired before the "
-                 + "wire read that figure, or its format fixes no grid — OpenDocument sets no "
-                 + "maximum table size, so a .ods workbook states a NULL bound rather than "
-                 + "borrowing one — D-359), so an unknown SHEET is bounded and a cell within a "
-                 + "known sheet is not");
+      missing.push(localize("content.index.every_sheet_row_column_extent", "every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid — OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one — D-359), so an unknown SHEET is bounded and a cell within a known sheet is not"));
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
-      missing.push("every slide's shape count (this capture was acquired before the wire read "
-                 + "that figure, no slide's part in it could be read, or the deck was over the text "
-                 + "size bound and only its length was read — D-359, COFF-13), so a slide "
-                 + "past the deck is bounded and a shape within a known slide is not");
-    if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
-                          + "slide list was persisted for this capture, and, if it is a PDF, no "
-                          + "list of the images its pages paint (a PDF acquired before D-420 "
-                          + "carries none)");
+      missing.push(localize("content.index.every_slide_shape_count", "every slide's shape count (this capture was acquired before the wire read that figure, no slide's part in it could be read, or the deck was over the text size bound and only its length was read — D-359, COFF-13), so a slide past the deck is bounded and a shape within a known slide is not"));
+    if (!held) missing.push(localize("content.index.container_own_extent_absent", "the container's own extent — no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)"));
     const containerName = held && typeof held.container === "string" ? held.container : null;
     const pdfImages = containerName === "pdf" && images ? images : null;
     const short = `${String(captureSha).slice(0, 12)}…`;
@@ -319,8 +309,7 @@ export class Content {
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length
         ? word("content.why.record_hold_capture", { missing: String(missing.join("; ")), short: String(short) })
-        : `the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so `
-          + `an address outside it is refused by name and one inside it mints`,
+        : localize("content.index.container_extent_format_entry", "the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints"),
     };
   }
 
@@ -375,7 +364,7 @@ export class Content {
       return { ok: true, capture_sha: sha, attestor: att.member, at: att.at, extent: e,
                chain_at_attestation: chain,
                why: word("content.why.checked_text_against", { member: String(att.member), page: String(e.kind === "document"
-                       ? "the whole document" : e.kind === "page" ? `page ${e.page}` : `a region of page ${e.source.page}`) }) };
+                       ? word("content.why.whole_document") : e.kind === "page" ? `page ${e.page}` : localize("content.index.a_region_of_page", "a region of page {page}", { page: String(e.source.page) })) }) };
     });
   }
 
@@ -454,11 +443,9 @@ export class Content {
   contentMint({ bundleId, extent, mintedBy, viewer = null, at = null }) {
     if (typeof mintedBy !== "string" || !mintedBy.trim())
       return { ok: false, reason: "NO_MINTER",
-               detail: `a content row records WHO marked the passage as citable, and this call carries nobody. The plane `
-                     + `stamps that from the credential that asked, so an empty one means the act arrived by a route that `
-                     + `does not attribute it — which is refused rather than filled in` };
+               detail: localize("content.index.no_minter_names_who", "a content row records WHO marked the passage as citable, and this call carries nobody. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it — which is refused rather than filled in") };
     if (typeof bundleId !== "string" || !bundleId.trim())
-      return { ok: false, reason: "NO_TARGET", detail: `marking a passage citable names the document the passage is in` };
+      return { ok: false, reason: "NO_TARGET", detail: localize("content.index.marking_passage_citable", "marking a passage citable names the document the passage is in") };
     const kind = this.#typeOf(bundleId);
     if (!kind || !this.sees(bundleId, viewer))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: bundleId,
@@ -555,7 +542,7 @@ export class Content {
           errs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check, code: "CONTENT_EXTENT_NO_CHAIN",
             translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
             detail: localize("content.index.lab_cites_describeextent_of_target", "{lab} cites {describeExtent} of '{target}', and this record holds no capture of that document at all{v1}", { lab: String(lab(i)), describeExtent: String(describeExtent(ext)), target: String(cit.target), v1: String(typeof cit.extent_capture === "string" && cit.extent_capture.trim()
-                      ? ` under the capture the leg names (${cit.extent_capture.trim().slice(0, 16)}…)` : ``) }) });
+                      ? localize("content.index.under_the_capture_the_leg", " under the capture the leg names ({capture}…)", { capture: cit.extent_capture.trim().slice(0, 16) }) : ``) }) });
         continue;
       }
       const bad = checkContentExtent(ext, p.ctx);
@@ -735,11 +722,7 @@ export class Content {
       transcription,
       /* The capture axis is the DOCUMENT's (DEC-4): one value, keyed by bundle, never a per-portion copy (R19, R35). */
       capture: { grain: "document", from: `earned.capture[${r.bundle_id}]`,
-        why: `the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion `
-           + `capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer `
-           + `states is the weakest link of how the BYTES arrived and what any machine transcription of this `
-           + `document's text is measured at — so a portion of an OCR'd document is bounded exactly as the document `
-           + `is, under earned.capture` },
+        why: localize("content.index.capture_axis_answered_once", "the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at — so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture") },
       ...(atts.truncated || (tx && txs.truncated) ? { attestations_truncated: true } : {}),
       says: r.stale ? staleSays(extent) : word("content.says.record_holds", { ext: String(describeExtent(extent)) }),
     };
@@ -774,13 +757,11 @@ export class Content {
     if (unknown.length)
       return { ok: false, reason: "FIXED_KEY_ONLY", rejected: unknown,
                detail: localize("content.index.the_content_read_is_fixed", "the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried {unknown}, which it refuses rather than ignores — a parameter silently dropped is a filter the caller believes was applied", { unknown: String(unknown.join(", ")) }) };
-    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
+    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: localize("content.index.content_requires_id", "content requires ?id=<content_id>") };
     const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, id);
     if (!r || !this.sees(r.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CONTENT", target: id,
-               detail: `no content row is addressed by this id in this record. A content id is hash(capture, canonical `
-                     + `extent, chain) — it is minted when a leg first cites the passage, so an id nothing has cited does `
-                     + `not exist yet` };
+               detail: localize("content.index.no_content_row_addressed", "no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) — it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet") };
     const txs = this.#transcriptionsOver([r.content_id]);
     const tx = txs.by.get(r.content_id) || null;
     const atts = tx ? { by: new Map(), truncated: false } : this.#attestationsOver([r.capture_sha]);
@@ -801,18 +782,14 @@ export class Content {
          read names no inquiry. */
       connection: { determined: false, grain: r.extent_kind === "document" ? "document" : "portion",
         grade: null, undetermined_because: "NO_SUBJECT_IN_THIS_READ",
-        empty_level: "the question — a connection grade is earned against an inquiry's subject entity, and this read "
-                   + "resolves a ROW rather than a LEG",
-        why: `ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the record earns `
-           + `between THIS document and THAT question's subject, and it has no value independent of a question` },
+        empty_level: localize("content.index.connection_empty_level_question", "the question — a connection grade is earned against an inquiry's subject entity, and this read resolves a ROW rather than a LEG"),
+        why: localize("content.index.connection_ask_earnedbasis", "ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the record earns between THIS document and THAT question's subject, and it has no value independent of a question") },
       capture,
       attestations: { covering, all, count: all.length,
         ...(atts.truncated || txs.truncated ? { truncated: true } : {}),
         why: tx
           ? localize("content.index.this_row_is_a_members", "this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than {transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed", { transcriber: String(tx.transcriber) })
-          : `an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's `
-            + `extentCovers) AND it was made against the transcription this row was minted under. A page attestation `
-            + `does not cover a whole-document row, and an attestation over another page does not cover this one` },
+          : localize("content.index.attestation_raises_ceiling", "an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one") },
     };
   }
 
@@ -868,8 +845,7 @@ export class Content {
       const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
       const g = before.units.length ? gradeAcross(row, extent, before, after)
         : { grade: "UNDETERMINED", affects: "undetermined", reason: "cited_text_not_held",
-            why: "the text this row was cited under is no longer held beside the new reading, so whether the re-read "
-               + "changed the passage cannot be told" };
+            why: localize("content.index.cited_text_no_longer_held", "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told") };
       if (g.affects === "unaffected") continue;
       rows.push({ content_id: row.content_id, bundle_id: row.bundle_id, capture_sha: row.capture_sha, ref: row.ref,
                   grade: g.grade, affects: g.affects, reason: g.reason, why: g.why,
@@ -884,8 +860,7 @@ export class Content {
       ungraded_why: ungraded
         ? localize("content.index.this_re_read_staled_n", "this re-read staled {n} rows and {STALE_GRADED_MAX} were graded; the other {ungraded} (the capture's stale rows whose content_id sorts after ungraded_after) were marked stale and not graded, so whether the re-read changed their passages is UNDETERMINED", { n: String(n), STALE_GRADED_MAX: String(STALE_GRADED_MAX), ungraded: String(ungraded) })
         : null,
-      says: "the document was re-read and the text under your citation may have changed. Nothing moved: keep the "
-          + "citation as it stands, or adopt the passage under the new reading",
+      says: localize("content.index.document_reread_text_under", "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading"),
     };
     for (const l of this.staleListeners) l.fn(notice);
     return n;
@@ -910,13 +885,12 @@ export class Content {
     if (!who || isMachineIdentity(who))
       return refusal("TRANSCRIBE_NOT_A_MEMBER",
         who ? localize("content.index.who_is_a_machine_credential", "'{who}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind", { who: String(who.slice(0, 60)) })
-            : `this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty `
-              + `one means the act arrived by a route that does not attribute it`);
+            : localize("content.index.transcriber_nobody", "this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty one means the act arrived by a route that does not attribute it"));
     const kind = target ? this.#typeOf(target) : null;
     const seen = kind ? this.sees(target, viewer) : false;
     if (!kind || !seen || kind !== "information")
       return refusal("TRANSCRIBE_NO_DOCUMENT",
-        !target ? `pass bundleId=<INFO-…>: the document whose page you transcribed`
+        !target ? localize("content.index.pass_bundleid_info_document", "pass bundleId=<INFO-…>: the document whose page you transcribed")
         : kind && seen ? localize("content.index.target_is_not_a_document", "{target} is not a document, so it has no page to transcribe (DEC-21)", { target: String(target) })
           : localize("content.index.no_document_is_addressed_by_2", "no document is addressed by {target} in this record", { target: String(target.slice(0, 60)) }),
         { target: target || null });
@@ -927,8 +901,7 @@ export class Content {
     const bare = extent == null || (isObj(extent) && Object.keys(extent).length === 0);
     if (bare)
       return refusal("TRANSCRIBE_NO_PORTION",
-        `no portion was selected. A transcription is of a PART the member read — a page or a region of one, or the `
-        + `whole document NAMED as such — and a typing with no stated part would be read as covering all of it`,
+        localize("content.index.no_portion_was_selected", "no portion was selected. A transcription is of a PART the member read — a page or a region of one, or the whole document NAMED as such — and a typing with no stated part would be read as covering all of it"),
         { target });
     /* END DEC-49 REGION is-transcribe-act */
     const typed = typeof text === "string" ? text : "";
@@ -971,7 +944,7 @@ export class Content {
       transcriber: who, text_sha256: digest, bytes, chain, chain_says: describeChain(chain),
       derivation_cap: standing ? standing.derivation_cap : null,
       transcription: standing ? standing.transcription : null,
-      says: localize("content.index.who_typed_describeextent_what_a", "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}", { who: String(who), describeExtent: String(describeExtent(extent)), v1: String(out.minted ? `` : `. This exact typing by ${who} was already recorded, and is found rather than written again`) }),
+      says: localize("content.index.who_typed_describeextent_what_a", "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}", { who: String(who), describeExtent: String(describeExtent(extent)), v1: String(out.minted ? `` : localize("content.index.exact_typing_already_recorded", ". This exact typing by {who} was already recorded, and is found rather than written again", { who: String(who) })) }),
     };
   }
 
@@ -990,7 +963,7 @@ export class Content {
     if (!t || !this.sees(t.bundle_id, viewer))
       return this.#transcribeRefusal("TRANSCRIPTION_NOT_FOUND",
         id ? localize("content.index.no_transcription_readable_here_is", "no transcription readable here is addressed by content_id '{id}…'", { id: String(id.slice(0, 16)) })
-           : `pass contentId=<the content id op=transcribe returned>`, { content_id: id || null });
+           : localize("content.index.pass_contentid_content_id", "pass contentId=<the content id op=transcribe returned>"), { content_id: id || null });
     /* END DEC-49 REGION is-transcription-source */
     return { ok: true, t };
   }
@@ -1081,8 +1054,7 @@ export class Content {
                why: word("content.why.newer_capture_hold", { said: String(said) }) };
     if (bad && bad.code === "CONTENT_EXTENT_NO_CHAIN")
       return { holds: false, reason: "newer_capture_unread", existing_content_id: null,
-               why: "nobody has read the newer capture yet, so the record holds no text of it at any extent to test "
-                  + "against — that is a fact about this record, not about the document" };
+               why: localize("content.index.nobody_has_read_newer", "nobody has read the newer capture yet, so the record holds no text of it at any extent to test against — that is a fact about this record, not about the document") };
     if (bad)
       return { holds: false, reason: "not_testable", existing_content_id: null,
                why: word("content.why.extent_test_asked", { code: String(bad.code), said: String(said) }) };
@@ -1145,8 +1117,7 @@ export class Content {
     const candidates = [...newerBySha.values()].map((v) => ({
       bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
       ...this.#candidateAt(row, fullExtent, v.capture_sha, memo,
-        "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same "
-        + "passage; extent-match is a sufficient signal for a candidate and never evidence of identity") }));
+        localize("content.index.candidate_same_extent_newer", "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity")) }));
     const state = newer === true
       ? (candidates.length && candidates.every((c) => c.matched) ? "newer_capture_matched" : "newer_capture_undetermined")
       : newer === false ? "no_newer_capture" : "chain_unread";
@@ -1197,9 +1168,7 @@ export class Content {
       const extent = safeJson(row.extent);
       return this.#candidateAt(row, extent ? { kind: row.extent_kind, ...extent } : null, captureSha,
         memo instanceof Map ? memo : new Map(),
-        "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not "
-        + "established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for "
-        + "a candidate and never evidence of identity");
+        localize("content.index.candidate_same_extent_compared", "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for a candidate and never evidence of identity"));
     } catch { return null; }
   }
 
@@ -1219,8 +1188,7 @@ export class Content {
     /* END DEC-49 REGION is-passage-notice */
     return { ok: true, ...this.#noticeForRow(r, viewer, new Map()), states: VERSION_NOTICE_STATES, grades: VERSION_NOTICE_GRADES,
              wrote: false, proposal_only: true,
-             visible_to: "the version chains here are the ones visible to you; a version filed in a project you were not "
-               + "invited to is not in them" };
+             visible_to: localize("content.index.version_chains_visible_to", "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them") };
   }
 
   /* ===================================================================== *
@@ -1278,10 +1246,9 @@ export class Content {
       const id = typeof contentId === "string" ? contentId.trim() : "";
       const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale FROM content WHERE content_id=?`, id)
         : null;
-      if (!r) return no("not_held", "this record holds no content row by that id");
+      if (!r) return no("not_held", localize("content.index.no_content_row_by_that", "this record holds no content row by that id"));
       if (r.stale)
-        return no("stale", "the row was cited under an earlier reading of its document, and the cells held now are the "
-          + "newer reading's, which may not be the cells cited");
+        return no("stale", localize("content.index.row_cited_under_earlier", "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited"));
       const e = safeJson(r.extent);
       if (r.extent_kind !== "sheet-cell" && r.extent_kind !== "sheet-range")
         return no("not_a_sheet_extent", localize("content.index.the_row_cites_a_extent", "the row cites a {extent_kind} extent, which names no cells of a sheet", { extent_kind: String(r.extent_kind) }));
@@ -1290,7 +1257,7 @@ export class Content {
       if (!got.cells) return no(got.reason, got.why);
       return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: got.cells };
     } catch {
-      return no("not_read", "the row's cells could not be read");
+      return no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
     }
   }
 
@@ -1303,7 +1270,7 @@ export class Content {
     try {
       const sha = typeof captureSha === "string" ? captureSha.trim() : "";
       const held = this.#officeOf(sha);
-      if (!held.read) return no("never_read", "this record holds no reading of that capture");
+      if (!held.read) return no("never_read", localize("content.index.no_reading_of_that", "this record holds no reading of that capture"));
       const m = held.metadata;
       if (m) {
         const v = (k) => (m[k] === undefined ? null : m[k]);
@@ -1312,11 +1279,10 @@ export class Content {
       }
       const kind = this.contentContextFor(sha).container;
       if (kind && kind.office === false)
-        return no("not_office", localize("content.index.v1_so_it_states_no", "{v1}, so it states no office metadata", { v1: String(kind.kind_why || "the capture is not an office document") }));
-      return no("none_held", "the capture's reading holds no office metadata (its file has no readable core-properties "
-        + "part, or it was read before readings carried it)");
+        return no("not_office", localize("content.index.v1_so_it_states_no", "{v1}, so it states no office metadata", { v1: String(kind.kind_why || localize("content.index.capture_not_office_document", "the capture is not an office document")) }));
+      return no("none_held", localize("content.index.reading_holds_no_office", "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)"));
     } catch {
-      return no("not_read", "the capture's metadata could not be read");
+      return no("not_read", localize("content.index.capture_metadata_could_not", "the capture's metadata could not be read"));
     }
   }
 
@@ -1334,43 +1300,39 @@ export class Content {
       : null;
     if (!r || !this.sees(r.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CONTENT", target: id || null,
-               detail: "no content row is addressed by this id in this record" };
+               detail: localize("content.index.no_content_row_addressed_2", "no content row is addressed by this id in this record") };
     const e = safeJson(r.extent) || {};
     if (r.extent_kind !== "image" || e.part != null || !Number.isInteger(e.page))
       return { ok: false, reason: "CROP_NOT_A_PAGE_IMAGE", content_id: r.content_id, extent_kind: r.extent_kind,
                detail: r.extent_kind !== "image"
                  ? localize("content.index.this_row_cites_a_extent", "this row cites a {extent_kind} extent, and only an image on a PDF page has a crop", { extent_kind: String(r.extent_kind) })
-                 : "this row cites an image that is a member of a container ({part}), whose bytes are the image itself "
-                   + "rather than a rectangle of a page; there is nothing to cut out of it" };
+                 : localize("content.index.image_member_of_container", "this row cites an image that is a member of a container (an embedded part), whose bytes are the image itself rather than a rectangle of a page; there is nothing to cut out of it") };
     const store = this.record.evidenceStore();
     if (!store)
       return { ok: false, reason: "CROP_NO_EVIDENCE_STORE", content_id: r.content_id,
-               detail: "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
-                     + "crop was made. That is a fact about how your team's Civicsmith is set up, not about the image" };
+               detail: localize("content.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image") };
     const obj = await store.get(r.capture_sha);
     if (!obj)
       return { ok: false, reason: "CROP_CAPTURE_NOT_HELD", content_id: r.content_id, capture_sha: r.capture_sha,
-               detail: "the evidence store holds no object under this row's capture, so no crop was made" };
+               detail: localize("content.index.evidence_store_holds_no", "the evidence store holds no object under this row's capture, so no crop was made") };
     const bytes = new Uint8Array(await obj.arrayBuffer());
     const out = await cropImage(bytes, { kind: "image", page: e.page, rect: Array.isArray(e.rect) ? e.rect : null });
     if (!out || out.ok !== true)
       return { ok: false, reason: "CROP_NOT_DERIVABLE", content_id: r.content_id, derived: true,
                pdf_pixels_reason: out && typeof out.reason === "string" ? out.reason : null,
                pdf_pixels_why: out && typeof out.why === "string" ? out.why : null,
-               detail: "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason "
-                     + "is beside this one" };
+               detail: localize("content.index.image_could_not_be_cut", "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason is beside this one") };
     if (out.capture_sha256 !== r.capture_sha)
       return { ok: false, reason: "CROP_CAPTURE_MISMATCH", content_id: r.content_id, capture_sha: r.capture_sha,
                cropped_from: out.capture_sha256 ?? null,
-               detail: "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back" };
+               detail: localize("content.index.crop_taken_from_bytes", "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back") };
     /* N119: the wire form is the module's, so every route hands back one encoding: the rendition's file as standard
        base64 (`bytes_base64`, D-419), whose `file_sha256` the answer states. Raw octets would reach JSON as an object
        keyed by index. */
     const { bytes: file, ...rest } = out;
     return { ...rest, bytes_base64: base64Of(file), ok: true, derived: true, content_id: r.content_id,
              capture_sha: r.capture_sha,
-             says: "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop "
-                 + "is not itself evidence" };
+             says: localize("content.index.derived_rendition_for_display", "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop is not itself evidence") };
   }
 }
 
@@ -1405,8 +1367,7 @@ function containerKindOf(reading, captureFormat, held) {
     if (entry) {
       const office = typeof entry.parts === "function";
       return { format, office,
-               kind_why: word("content.kind_why.records_capture_format", { source: String(source), format: String(format), office_clause: String(office ? "is an office container: its own bytes hold its embedded media parts"
-                           : "is not an office container: its own bytes hold no embedded media part") }) };
+               kind_why: word("content.kind_why.records_capture_format", { source: String(source), format: String(format), office_clause: String(office ? word("content.kind_why.office_container_bytes") : word("content.kind_why.office_container_bytes_hold")) }) };
     }
     return { format, office: null,
              kind_why: word("content.kind_why.records_capture_format_build", { source: String(source), format: String(format.slice(0, 40)) }) };
@@ -1415,16 +1376,13 @@ function containerKindOf(reading, captureFormat, held) {
     && typeof reading.container_extent === "object" ? reading.container_extent : null;
   if (ext && Array.isArray(ext.levels) && ext.levels.length)
     return { format: null, office: true,
-             kind_why: "the capture's reading carries a container extent an office entry itemised, so it is an office "
-               + "container, though no format key was recorded" };
+             kind_why: localize("content.index.reading_carries_container_extent", "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded") };
   return { format: null, office: null,
            kind_why: !held
              ? word("content.kind_why.record_holds_reading")
              : format === "undetermined"
-               ? "the format registry could not determine this capture's format at acquire, so whether it is a container "
-                 + "is UNDETERMINED"
-               : "this record does not hold this capture's format (it was promoted before the format was projected, and "
-                 + "its reading names no container), so whether it is a container is UNDETERMINED" };
+               ? localize("content.index.format_registry_could_not", "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED")
+               : localize("content.index.record_does_not_hold_format", "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED") };
 }
 
 /** THE LEGACY CONNECTION AXIS on a standing, for the earned registry that still composes it (`standings`'
@@ -1436,13 +1394,10 @@ function legacyConnectionAxis(r, extent, connectionByBundle) {
   if (r.extent_kind === "document")
     return doc ? { determined: true, grain: "document", ...doc }
       : { determined: false, grain: "document", grade: null, undetermined_because: "NO_RESOLUTION",
-          empty_level: "connection — no captured resolution of this document to the subject",
-          why: `no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on `
-             + `the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at `
-             + `all. Absence here is a fact about what the recogniser matched, never evidence about what the document says` };
+          empty_level: localize("content.index.connection_no_captured_resolution", "connection — no captured resolution of this document to the subject"),
+          why: localize("content.index.no_capture_resolves_subject", "no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at all. Absence here is a fact about what the recogniser matched, never evidence about what the document says") };
   return { determined: false, grain: "portion", grade: null, undetermined_because: "READING_POSITION_ABSENT",
-           empty_level: "position within the reading — `reading_refs` records THAT a reference was read in this "
-                      + "document and not WHERE it was read (I2, FW-17)",
+           empty_level: localize("content.index.position_within_reading", "position within the reading — reading_refs records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)"),
            why: localize("content.index.this_leg_cites_describeextent_and", "this leg cites {describeExtent} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for {bundle_id}, and it is the DOCUMENT's, not this portion's", { describeExtent: String(describeExtent(extent)), bundle_id: String(r.bundle_id) }) };
 }
 

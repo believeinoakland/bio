@@ -188,9 +188,7 @@ export function checkCalibration(cal) {
       localize("calibration.calibration.a_calibration_names_the_engine", "a calibration names the ENGINE and the VERSION it measured. A measurement of \"the OCR\" is a measurement of nothing re-runnable: an external service retrains under an unchanged name (DEC-35's own argument against Textract), which is exactly why the pair is required and why neither half is enough alone"));
   if (!(typeof c.at === "string" && c.at.trim()))
     return refusal("CAL_UNDATED",
-      `a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT `
-      + `A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a `
-      + `reader whether anybody has looked recently`);
+      localize("calibration.calibration.a_calibration_carries_the_date", "a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a reader whether anybody has looked recently"));
   if (c.cap != null && rank(c.cap) == null)
     return refusal("CAL_SHAPE",
       localize("calibration.calibration.cap_string_is_not_one", "cap '{String}' is not one of {BASIS_GRADES}, and a calibration does not invent a scale of its own — transcription fidelity bounds the capture axis and there is no third one (DEC-4)", { String: String(String(c.cap)), BASIS_GRADES: String(BASIS_GRADES.join(", ")) }));
@@ -209,7 +207,7 @@ export function checkCalibration(cal) {
      At the store's door `measured_by` is the control plane's stamp of the caller, never the body's. */
   if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
     return refusal("CAL_UNATTRIBUTED",
-      `a calibration names who ran the probe. An unattributed measurement is one nobody can ask to be re-run`);
+      localize("calibration.calibration.a_calibration_names_who_ran", "a calibration names who ran the probe. An unattributed measurement is one nobody can ask to be re-run"));
   /* END DEC-49 REGION is-calibration-shape */
   return null;
 }
@@ -268,23 +266,16 @@ export function drifted(verdict) {
   switch (verdict) {
     case DRIFT.WORSE:
       return { verdict, raises_obligation: true, regrades: false,
-               why: `this engine now measures WORSE than the calibration these transcriptions were `
-                  + `graded under, so legs resting on the old cap OVERCLAIM. The record names exactly `
-                  + `which transcriptions those are and changes none of them: what a worse `
-                  + `measurement establishes is a reason for a member to look, not a new letter to `
-                  + `stamp (DEC-4, no machine mints a grade)` };
+               why: localize("calibration.calibration.this_engine_now_measures_worse", "this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)") };
     case DRIFT.BETTER:
       return { verdict, raises_obligation: false, regrades: false,
                why: localize("calibration.calibration.this_engine_now_measures_better", "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)") };
     case DRIFT.SAME:
       return { verdict, raises_obligation: false, regrades: false,
-               why: `this measurement agrees with the one it supersedes, so nothing rests on a `
-                  + `superseded number` };
+               why: word("calibration.why.measurement_agrees_supersedes") };
     default:
       return { verdict: DRIFT.INCOMPARABLE, raises_obligation: false, regrades: false,
-               why: `these two measurements cannot be compared — a malformed calibration or a `
-                  + `different engine — so no direction can be claimed, and an obligation raised on `
-                  + `an uncomparable pair would name transcriptions for a reason nobody could check` };
+               why: word("calibration.why.two_measurements_cannot") };
   }
 }
 
@@ -312,8 +303,7 @@ export function drifted(verdict) {
  *  engine sits unmeasured for a month while the record grades against it. */
 export function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRATION_CADENCE_MS } = {}) {
   if (!Number.isFinite(lastAt)) return { at: 0, from: "never-probed",
-    why: `nothing has ever probed this engine, so a probe is due immediately rather than a cadence `
-       + `from a measurement that does not exist` };
+    why: word("calibration.why.nothing_probed_engine") };
   const cadenceAt = lastAt + cadenceMs;
   let at = cadenceAt, from = "cadence";
   for (const s of (Array.isArray(signals) ? signals : [])) {
@@ -330,10 +320,7 @@ export function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRAT
   return { at: Math.min(at, cadenceAt), from,
            cadence_at: cadenceAt,
            why: from === "signal"
-             ? `an announcement shortened the interval to the next probe. A watch may only ever `
-               + `ACCELERATE a probe: it never stands in for one and it never itself changes a grade, `
-               + `because absence of an announcement is not evidence of no change and a vendor's `
-               + `documentation is a claim, not a measurement`
+             ? word("calibration.why.announcement_shortened_interval")
              : word("calibration.why.declared_cadence", { cadence_ms: String(cadenceSentence(cadenceMs)) }) };
 }
 
@@ -343,13 +330,12 @@ export function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRAT
 export function checkSignal(sig) {
   /* DEC-49 REGION is-calibration-signal */
   const s = sig && typeof sig === "object" && !Array.isArray(sig) ? sig : null;
-  if (!s) return refusal("CAL_SIGNAL_SHAPE", `an announcement signal is an object`);
+  if (!s) return refusal("CAL_SIGNAL_SHAPE", localize("calibration.calibration.an_announcement_signal_is_an", "an announcement signal is an object"));
   if (!(typeof s.engine === "string" && s.engine.trim()))
-    return refusal("CAL_SIGNAL_SHAPE", `an announcement signal names the engine it is about`);
+    return refusal("CAL_SIGNAL_SHAPE", localize("calibration.calibration.an_announcement_signal_names_the", "an announcement signal names the engine it is about"));
   if (!(typeof s.source === "string" && s.source.trim()))
     return refusal("CAL_SIGNAL_SHAPE",
-      `an announcement signal names WHERE it was observed. It is somebody else's statement about `
-      + `their own product and the record keeps it as that`);
+      localize("calibration.calibration.an_announcement_signal_names_where", "an announcement signal names WHERE it was observed. It is somebody else's statement about their own product and the record keeps it as that"));
   /* THE RULE, and it is refused at the door rather than sanitised quietly: a
      signal that carries a cap is a signal trying to be a calibration. */
   if (s.cap !== undefined || s.scores !== undefined)
