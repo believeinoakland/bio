@@ -3,6 +3,7 @@
  * The refusal is C-22.7, built from its row in this module's own table (`./checks.mjs`, R11, N289), beside this one
  * minting site. Copied from `ai-runs/skill-version.mjs` at the ai-runs split (K617, K624 (1)). */
 import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 function refusal(key, detail) {
   const row = AI_RUN_OWN_CHECKS[key];
@@ -48,8 +49,10 @@ export function checkSkillVersion(version) {
     ? "this run named no skill version. §11 records the conditions a run was formed under — the "
       + "manifest in force, the standard pair, and the skill version it ran under — because a "
       + "version is only interpretable against them"
-    : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition `
-      + "cannot be read once a second pack exists — it looks like an answer and identifies nothing");
+    : localize("run-rules.skill-version.names_no_pack", "'{value}' names no pack. A skill version is {form}, and a bare edition cannot be read once a second pack exists — it looks like an answer and identifies nothing", {
+      value: v.slice(0, 60),
+      form: "<pack>@<edition>",
+    }));
 }
 
 /** The pack id and edition a recorded version names, or null if it names none.

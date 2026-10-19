@@ -129,7 +129,7 @@ test("R9 exploreAsksPending answers today's unapproved asks to the account's own
   assert.deepEqual([item.key, item.owner, item.what, item.word, item.estimate],
     ["explore-ask:project:P:2026-10-09", "project:P", ["What did the council vote?"], "ai.queue.exploreask", word("question-explorer.known")]);
   assert.equal(item.text, WORDS["ai.queue.exploreask"].replace("{what}", "What did the council vote?"));
-  assert.deepEqual(w.u.exploreAsksPending({ viewer: "bob", at: AT }).asks, [], "a participant who is not an owner");
+  assert.deepEqual(w.u.exploreAsksPending({ viewer: "bob", at: AT }).asks, []);
   assert.deepEqual(w.u.exploreAsksPending({ viewer: "admin", at: AT }).asks, []);
   assert.equal(w.snapshot(), before);
   assert.doesNotThrow(() => w.u.exploreAsksPending({}));
