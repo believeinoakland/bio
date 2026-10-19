@@ -209,7 +209,8 @@ function renderCapture(cs, view) {
        drawing is invented where the table holds no word (the "captured by" line, "nothing was added", the undetermined row). */
     const A = U.a64;
     let a64 = "";
-    if (A && A.failed !== undefined) a64 = `<p class="cs-state" data-state="failed" role="alert">${A.failed || cs.w("shell.unread")}</p>`;
+    if (A && A.looking) a64 = `<p class="cs-state" data-state="loading" role="status">${cs.w("state.loading")}</p>`;
+    else if (A && A.failed !== undefined) a64 = `<p class="cs-state" data-state="failed" role="alert">${A.failed || cs.w("shell.unread")}</p>`;
     else if (A) {
       const plain = (t) => String(t).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
       const copy = A.copy || {};
@@ -309,11 +310,11 @@ async function sendAcquire(view, el, cs) {
   const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
   const body = question ? { locator: address, for: question } : { locator: address };
   if (el && el.dataset && el.dataset.again === "1") { cs.set("a64", null); return { body }; }
-  cs.set("a64", null);
+  cs.set("a64", { looking: true });
   const asked = await cs.call("heldat", { query: { address, check: "true" } });
   const r = asked && asked.result && typeof asked.result === "object" ? asked.result : asked;
   if (!r || r.ok === false || typeof r.held !== "boolean") { cs.set("a64", { failed: r && r.ok === false ? view.parts.refusalHtml(cs, r) : "" }); return null; }
-  if (r.held === false) return { body };
+  if (r.held === false) { cs.set("a64", null); return { body }; }
   const state = r.changed && (r.changed.state === "unchanged" || r.changed.state === "changed") ? r.changed.state : "undetermined";
   cs.set("a64", { state, copy: r.copy && typeof r.copy === "object" ? r.copy : {} });
   return null;

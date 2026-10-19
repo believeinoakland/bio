@@ -583,7 +583,7 @@ test("R26 what the capture screen draws for a sample of its keys equals word(key
 });
 
 /* ---- T50 (T50-30): R29, R31, R33, R34, R35, R36 ---- */
-import { silent } from "../interface-shell/harness.mjs";
+import { silent, pending } from "../interface-shell/harness.mjs";
 
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 const dayOf = (iso) => { const d = new Date(iso); return word("date.daymonthyear", { day: String(d.getUTCDate()), month: word(`date.month.${MONTHS[d.getUTCMonth()]}`), year: String(d.getUTCFullYear()) }); };
@@ -911,4 +911,17 @@ test("R40 the document Watch and Check act on is found among the held and the vo
   assert.equal(p.byOp("monitorset")[0].body.bundleId, COPY_DOC, "a document the team has vouched for is found beside the collected ones");
   assert.ok(p.byOp("heldcaptures").length >= 2);
   assert.ok(p.byOp("heldcaptures").every((r) => r.query.state === "held_and_vouched"), "every look for a document at an address asks the vouched list too");
+});
+
+test("R38 while heldat is out the screen says it is loading, and once an address is not held the line is gone", async () => {
+  const p = await open("/app/capture/address", { plane: { ...A64, heldat: pending, ...CAPTURED } });
+  fill(p, { "ci-address": ADDRESS });
+  await p.click(btn(p, "acquire"));
+  await p.settle(20);
+  assert.ok(main(p).querySelector('[data-state="loading"]'), "the look is under way");
+  assert.equal(p.byOp("acquire").length, 0);
+  const q = await open("/app/capture/address", { plane: { ...A64, ...CAPTURED } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
+  assert.equal(main(q).querySelector('[data-state="loading"]'), null, "nothing is left saying it is loading");
 });
