@@ -320,7 +320,7 @@ const SOURCE = (i, kind = "source-modified", title = `Doc ${i}`) => ({ id: `FIND
 
 test("R22: five source-modified items draw one item reading \"5 documents changed at their source\", with the keyed detail, opening the list of its documents, each a reference with its own options", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [1, 2, 3, 4].map((i) => SOURCE(i)).concat([SOURCE(5, "source-modified", null)]) }) });
-  const rows = main(p).querySelectorAll(".cs-row");
+  const rows = main(p).querySelectorAll("section .cs-row");
   assert.equal(rows.length, 1, "one item");
   assert.ok(text(p, rows[0]).includes(word("queue.source-modified.many", { n: "5" })));
   assert.ok(text(p, rows[0]).includes(word("queue.source.detail")));
@@ -336,7 +336,7 @@ test("R22: control: a single item draws .one; source-removed is its own item; on
   const p = await open("/app/queue", { queue: ok({ items: [SOURCE(1), SOURCE(2, "source-removed"), SOURCE(3, "source-removed")] }) });
   assert.ok(text(p).includes(word("queue.source-modified.one")));
   assert.ok(text(p).includes(word("queue.source-removed.many", { n: "2" })));
-  assert.equal(main(p).querySelectorAll(".cs-row").length, 2);
+  assert.equal(main(p).querySelectorAll("section .cs-row").length, 2);
   const h = await open("/app", { queue: ok({ items: [1, 2, 3, 4, 5].map((i) => SOURCE(i)) }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
   assert.ok(inOrderText(h, [word("screen.home.needsgroup"), word("queue.source-modified.many", { n: "5" })]));
   assert.equal(main(h).querySelectorAll("section .cs-row").length, 1);
@@ -348,7 +348,7 @@ test("R28: a to-do names its subject by its title, a reference, and its act by t
   { id: "TSK-9", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "https://example.org/other.pdf",
     subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } }];
   const p = await open("/app/queue", { queue: ok({ items, item_count: 2 }) }, { screens: withScreens("document") });
-  const [titled, bare] = main(p).querySelectorAll(".cs-row");
+  const [titled, bare] = main(p).querySelectorAll("section .cs-row");
   assert.equal(titled.querySelector('a.cs-ref[href="/app/document/INF-7"]').textContent, "Permit application");
   assert.ok(titled.querySelector('button[data-act="taskresolve"]').textContent.startsWith(word("act.taskresolve.label.queue")));
   assert.doesNotMatch(text(p), /https?:/);

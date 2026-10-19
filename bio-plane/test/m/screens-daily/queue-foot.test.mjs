@@ -11,6 +11,8 @@ const MUTED = ok({ ok: true, count: 3, muted: [
   { kind: "step-cost-shared", case: { id: "PROJ-1", title: "Pothole repairs" }, at: "2026-10-05T10:00:00Z" },
   { kind: "watched-changed", case: { id: "PROJ-2", title: "Coliseum" }, at: null },
   { item: "FINDING::x::1", class: "FINDING", at: null },
+  { item: "FINDING::y::2", class: "FINDING", kind: "step-cost-shared", title: null, at: null },
+  { item: "FINDING::z::3", class: "FINDING", kind: "watched-changed", title: "Lease amendment", at: "2026-10-04T10:00:00Z" },
 ] });
 const queueOf = (items, muted = MUTED) => (req) => (req.query.muted ? muted : ok({ items, item_count: items.length }));
 
@@ -21,9 +23,13 @@ test("R50: Muted at the foot lists each kind muted in a project and each item mu
   assert.ok(text(p, sec).includes(word("queue.muted.kind", { kind: word("queue.kind.step-cost-shared"), project: "Pothole repairs" })));
   assert.ok(text(p, sec).includes(word("queue.muted.by", { date: dmy("2026-10-05") })));
   assert.ok(text(p, sec).includes(word("queue.muted.kind", { kind: word("queue.kind.watched-changed"), project: "Coliseum" })));
-  assert.equal((text(p, sec).match(new RegExp(word("queue.muted.by.undated").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, 2, "an undated row never draws a blank date");
-  assert.ok(text(p, sec).includes(word("queue.muted.item", { item: "FINDING::x::1" })));
-  assert.equal(sec.querySelectorAll('button[data-act="queuemute"]').length, 3);
+  assert.equal((text(p, sec).match(new RegExp(word("queue.muted.by.undated").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) || []).length, 3, "an undated row never draws a blank date");
+  // R61 (2): an item is named by its title, else its kind's plain name, else the shell's unread word; never by its id.
+  assert.ok(text(p, sec).includes(word("queue.muted.item", { item: "Lease amendment" })));
+  assert.ok(text(p, sec).includes(word("queue.muted.item", { item: word("queue.kind.step-cost-shared") })));
+  assert.ok(text(p, sec).includes(word("queue.muted.item", { item: word("shell.unread") })));
+  assert.ok(!text(p, sec).includes("FINDING::"), "control: no id is drawn");
+  assert.equal(sec.querySelectorAll('button[data-act="queuemute"]').length, 5);
   const unmute = sec.querySelectorAll('button[data-act="queuemute"]');
   assert.ok(unmute.every((b) => b.textContent.startsWith(word("queue.muted.unmute"))));
   const at = (pred) => main(p).querySelectorAll('button[data-act="queuemute"]').findIndex(pred);

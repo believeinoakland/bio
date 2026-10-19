@@ -10,22 +10,33 @@
    Every function is self-contained (interface-shell R21 (1)). */
 import { sourceItems } from "./source-items.mjs";
 import { itemWords } from "./item-words.mjs";
+import { queueStates } from "./queue-states.mjs";
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords },
+  parts: { sourceItems, itemWords, queueStates },
 
-  // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind).
+  // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
+  // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
+  // reads are `refresh: true` (R60, interface-shell R93): the shell reads them again while the screen is on view.
   reads: function (view) {
     const SORTS = ["added", "due", "case", "kind"];
-    const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "";
+    const sub = String(view.subject || "");
+    const none = function (key) { return function (v) { return !v || !Array.isArray(v[key]) || v[key].length === 0; }; };
+    if (sub === "answered") {
+      return {
+        answered: { op: "queue", query: { answered: "true" }, refresh: true, empty: none("answered") },
+        aside: { op: "queue", query: { aside: "true", limit: "200" }, refresh: true, empty: none("aside") },
+      };
+    }
+    const sort = SORTS.indexOf(sub) >= 0 ? sub : "";
     return {
       queue: {
-        op: "queue", query: sort ? { sort: sort } : {},
+        op: "queue", query: sort ? { sort: sort } : {}, refresh: true,
         empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; },
       },
       // R50 (1): what the member has muted, `queue` R55's list, at the foot.
-      muted: { op: "queue", query: { muted: "true" }, empty: function (v) { return !v || !Array.isArray(v.muted) || v.muted.length === 0; } },
+      muted: { op: "queue", query: { muted: "true" }, empty: none("muted") },
     };
   },
 
@@ -41,6 +52,11 @@ export const queue = Object.freeze({
       exploreapprove: "exploreapprove", updatelater: "updatelater", projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer",
     };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
+    const ui = view.ui || {};
+    const sub = String(view.subject || "");
+    const choosing = sub === "choose";
+    // R58: an outcome is shown only on the choosing route; leaving it drops the outcome, so choosing again starts clean.
+    if (!choosing && ui.outcome) ui.outcome = null;
     // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
     // a terminal or signed act's; these are not), each read by the act's `send` through `cs.value`.
     const FIELDS = {
@@ -153,7 +169,18 @@ export const queue = Object.freeze({
     };
     const src = view.parts.sourceItems();
     const iw = view.parts.itemWords();
-    const itemRow = function (it) {
+    const pickBox = function (it) {
+      const on = Array.isArray(ui["pick:queue"]) && ui["pick:queue"].indexOf(String(it.id)) >= 0;
+      const name = (iw.words(cs, it).summary || "").replace(/<[^>]*>/g, "") || String(it.id);
+      return '<input type="checkbox" class="mk-pick" id="queue-pick-' + cs.esc(String(it.id)) + '" data-shell="pick" data-table="queue" data-id="' + cs.esc(String(it.id)) + '"'
+        + (on ? " checked" : "") + ' aria-label="' + cs.w("screen.finder.pick", { title: name }) + '">';
+    };
+    const itemRow = function (it, picking) {
+      // R58: the choosing state draws a box on each item and its kind beside the words.
+      if (picking && !it.sources) {
+        const wd0 = iw.words(cs, it);
+        return cs.row(pickBox(it), wd0.summary + '<span class="meta">' + cs.mark("kind", CLASS_KIND[it.class] || "status") + (wd0.detail ? " " + wd0.detail : "") + "</span>", "", "");
+      }
       // R22: one kind's source notices as one item with its count; each document with its own options.
       if (it.sources) {
         const g = src.draw(cs, it, function (x) { return actsOf(x, caseOf(x)); });
@@ -170,7 +197,6 @@ export const queue = Object.freeze({
 
     // The three-kinds note: once per member, on the device (R2). Decided once per visit and kept in the screen's page
     // memory, so the page's redraws keep it while the member is here.
-    const ui = view.ui || {};
     if (ui.kindsNote === undefined) {
       let show = false;
       try {
@@ -205,27 +231,32 @@ export const queue = Object.freeze({
       }).join("")), { help: "queue.update.section_says" });
     };
 
-    const body = cs.state("queue", function (q) {
-      const all = Array.isArray(q.items) ? q.items : [];
-      const updates = all.filter(function (it) { return it && it.kind === "update-ready"; });
-      const items = src.fold(all.filter(function (it) { return !(it && it.kind === "update-ready"); }));
-      const groups = [];
-      const at = {};
-      items.forEach(function (it) {
-        const c = caseOf(it.sources ? it.sources[0] : it);
-        const key = c ? String(c.id) : "";
-        if (!(key in at)) { at[key] = groups.length; groups.push({ c: c, items: [] }); }
-        groups[at[key]].items.push(it);
-      });
-      const n = typeof q.item_count === "number" ? q.item_count : items.length;
-      const head = '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
-        + "</span> · <span>" + cs.w("screen.queue.grouped") + "</span></p>";
-      return head + updateSection(updates) + groups.map(function (g) {
-        const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
-        const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
-        return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
-      }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
-    }, { empty: "screen.queue.empty" });
+    // The list, by case: the default view (R2) or the choosing state (R58: a box on each item, the source notices not folded).
+    const listOf = function (picking) {
+      return cs.state("queue", function (q) {
+        const all = Array.isArray(q.items) ? q.items : [];
+        const updates = picking ? [] : all.filter(function (it) { return it && it.kind === "update-ready"; });
+        const rest = picking ? all : all.filter(function (it) { return !(it && it.kind === "update-ready"); });
+        const items = picking ? rest : src.fold(rest);
+        const groups = [];
+        const at = {};
+        items.forEach(function (it) {
+          const c = caseOf(it.sources ? it.sources[0] : it);
+          const key = c ? String(c.id) : "";
+          if (!(key in at)) { at[key] = groups.length; groups.push({ c: c, items: [] }); }
+          groups[at[key]].items.push(it);
+        });
+        const n = typeof q.item_count === "number" ? q.item_count : items.length;
+        const head = picking ? '<p class="mk-sub">' + cs.w("queue.multi.head") + " " + cs.w("queue.multi.head2") + "</p>"
+          : '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
+          + "</span> · <span>" + cs.w("screen.queue.grouped") + "</span></p>";
+        return head + updateSection(updates) + groups.map(function (g) {
+          const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
+          const snooze = g.c && !picking ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
+          return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(function (it) { return itemRow(it, picking); }).join("")) + "</section>";
+        }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
+      }, { empty: "screen.queue.empty" });
+    };
 
     // R50 (1): "Muted", at the foot: each kind muted in a project, and each item muted on its own, with "Turn back on". A row
     // with no instant says `queue.muted.by.undated`, never a blank date. Not drawn when nothing is drawable.
@@ -243,7 +274,9 @@ export const queue = Object.freeze({
         }
         if (r.item) {
           const unmute = cs.act("queuemute", { label: "queue.muted.unmute", data: { unmute: "item", item: String(r.item) } });
-          return cs.row("", cs.w("queue.muted.item", { item: String(r.item) }) + '<span class="meta">' + by + "</span>", unmute, "");
+          // R61 (2): the item by its title, else its kind's plain name, never its id; with neither, the shell's unread word.
+          const named = typeof r.title === "string" && r.title.trim() ? r.title : r.kind ? { html: cs.w("queue.kind." + String(r.kind)) } : { html: cs.w("shell.unread") };
+          return cs.row("", cs.w("queue.muted.item", { item: named }) + '<span class="meta">' + by + "</span>", unmute, "");
         }
         return "";
       }).filter(Boolean);
@@ -252,30 +285,78 @@ export const queue = Object.freeze({
     const doneNote = typeof ui.done === "string" && ui.done
       ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w("act." + ui.done + ".label.queue") } }) + "</p>" : "";
 
-    // R41 (U8b; DEC-292 D13): with nothing waiting, the sentence only: no kinds note, no sort controls.
+    // R41, R60: with nothing waiting and every feed answered, the sentence, each class "none here", the up-to-date row and the door to
+    // Home; with a feed that did not answer, the all-clear is withheld and the failed feed named with "Try again".
+    const states = view.parts.queueStates();
     const q = view.data.queue;
-    if (q && q.state === "empty") return cs.title(undefined, {}) + doneNote + body + mutedPart;
-    return cs.title(undefined, {}) + doneNote + note + sorts + body + mutedPart;
+    const qv = q && (q.state === "ok" || q.state === "empty") && q.value && typeof q.value === "object" ? q.value : {};
+    const again = "/app/queue" + (sub ? "/" + sub : "");
+    const failedRow = states.failedFeeds(cs, qv, again);
+    const wordsOf = function (it) { const wd = iw.words(cs, it); return wd.summary || cs.esc(String(it.id)); };
+    const doorOf = function (it, op) {
+      const c = caseOf(it);
+      return REGISTERED[op] ? actOf(REGISTERED[op], { item: it.id, project: c ? String(c.id) : "", subject: it.subject && it.subject.id ? String(it.subject.id) : "" }, it)
+        : (function () { const to = iw.open(it); return to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.queue.open") + "</a>" : ""; })();
+    };
+    // R59, R61: what the member answered, and the findings set aside, on the same page; the aside is paged by `after` to its end.
+    if (sub === "answered") {
+      const first = view.data.aside && view.data.aside.state === "ok" && view.data.aside.value && Array.isArray(view.data.aside.value.aside) ? view.data.aside.value.aside : [];
+      const av = view.data.aside && view.data.aside.state === "ok" ? view.data.aside.value : null;
+      if (Array.isArray(ui.asideAll) === false && av && av.truncated && av.next && !ui.asideWalking) {
+        ui.asideWalking = true;
+        const rows = first.slice();
+        const walk = function (after) {
+          return cs.call("queue", { query: { aside: "true", limit: "200", after: after } }).then(function (a) {
+            const v = a && typeof a === "object" ? (a.result && typeof a.result === "object" ? a.result : a) : null;
+            if (!v || v.ok === false || !Array.isArray(v.aside)) return rows;
+            v.aside.forEach(function (r) { rows.push(r); });
+            return v.truncated && v.next ? walk(String(v.next)) : rows;
+          }, function () { return rows; });
+        };
+        walk(String(av.next)).then(function (all) { cs.set("asideAll", all); });
+      }
+      const drawn = Array.isArray(ui.asideAll) ? ui.asideAll : first;
+      return states.answered(cs, view, states.aside(cs, view, drawn));
+    }
+    // R58: the outcome of a set act (state e), and the choosing state (state d) with its hold strip.
+    if (choosing && ui.outcome) return states.outcome(cs, view, ui.outcome, wordsOf, doorOf);
+    if (choosing) {
+      const picked = Array.isArray(ui["pick:queue"]) ? ui["pick:queue"] : [];
+      const have = q && q.state === "ok" && q.value && Array.isArray(q.value.items) ? q.value.items.filter(function (it) { return it && picked.indexOf(String(it.id)) >= 0; }).length : 0;
+      return cs.title(undefined, {}) + doneNote + listOf(true) + (have ? states.strip(cs, have) : "") + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/queue">' + cs.w("queue.multi.back") + "</a></p>" + mutedPart;
+    }
+    if (q && q.state === "empty") {
+      if (qv.feeds && qv.all_answered === false) {
+        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + mutedPart;
+      }
+      return cs.title(undefined, {}) + doneNote + listOf(false) + (qv.feeds ? states.allClear(cs, qv) : "") + mutedPart;
+    }
+    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + note + sorts + listOf(false) + mutedPart;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
   acts: [
     { op: "taskresolve", label: "act.taskresolve.label.queue",
-      send: function (view, el) { return { body: { id: el.dataset.item } }; },
+      send: function (view, el, cs, extra) { return el.dataset.multi ? view.parts.queueStates().run("taskresolve", view, el, cs, extra) : { body: { id: el.dataset.item } }; },
       done: function (view, answer, cs) { cs.set("done", "taskresolve"); } },
     { op: "taskforward", label: "act.taskforward.label.queue",
-      send: function (view, el, cs) {
+      send: function (view, el, cs, extra) {
+        if (el.dataset.multi) return view.parts.queueStates().run("taskforward", view, el, cs, extra);
         const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
         return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.queue.fieldfirst" };
       },
       done: function (view, answer, cs) { cs.set("done", "taskforward"); } },
     { op: "proposedispose", label: "act.proposedispose.label.queue",
-      send: function (view, el) {
+      send: function (view, el, cs, extra) {
+        if (el.dataset.multi) return view.parts.queueStates().run("proposedispose", view, el, cs, extra);
+        // R61: a deferred set-aside finding is dismissed with a reason: an instance row by its key and version, a project row by both.
+        if (el.dataset.key) return { body: { key: el.dataset.key, definition_version: el.dataset.version === "" ? undefined : Number(el.dataset.version), to: "dismissed" } };
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: "dismissed" } };
       },
       done: function (view, answer, cs) { cs.set("done", "proposedispose"); } },
     { op: "queuesnooze", label: "act.queuesnooze.label.queue",
-      send: function (view, el, cs) {
+      send: function (view, el, cs, extra) {
+        if (el.dataset.multi) return view.parts.queueStates().run("queuesnooze", view, el, cs, extra);
         const until = String(cs.value(el.dataset.f + "-until") || "").trim();
         return until ? { body: { case: el.dataset.project, until: until } } : { refuse: "screen.queue.fieldfirst" };
       } },

@@ -29,6 +29,8 @@ const ACTS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, 
 const KEYED_QUEUE = [...QUEUE_KINDS.flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`]), "queue.project-invitation.summary.unnamed"];
 // R50: a kind's plain name on the muted list (DEC-309 (1)), every `queue.kind.*` the list of words holds.
 const KIND_NAMES = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.kind."));
+// R60: the feeds the word list names (`queue.feed.<id>`), the ones `queue-states.mjs` can name when one did not answer.
+const KIND_FEEDS = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.feed."));
 // R42: the ways into a project, and who to ask; R50: the team's own passed date.
 const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.join.lead", "screen.home.join.nocreate", "screen.home.join.none",
   "queue.project-invitation.summary.unnamed", "queue.project-invitation.detail", "projects.findable.meta", "projects.request.asked", "act.projectrequest.label.home",
@@ -84,7 +86,16 @@ const WORDS_OF = {
     "screen.queue.note", "screen.queue.note.once", "screen.queue.nocase", "screen.queue.empty", "screen.queue.more", "screen.queue.more.one", "screen.queue.open",
     "screen.queue.hint.how", "screen.queue.hint.matched", "screen.queue.hint.method", "screen.queue.hint.trust", "screen.queue.hint.rate", "screen.queue.hint.rate.none",
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
-    "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop"],
+    "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop",
+    // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
+    "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",
+    "queue.multi.forward", "queue.multi.snooze", "queue.multi.snooze.help", "queue.multi.dismiss", "queue.multi.refused", "queue.multi.result", "queue.multi.result.one",
+    "queue.multi.why.letter", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
+    "queue.answered.title", "queue.answered.head", "queue.answered.heading", "queue.answered.help", "queue.answered.byyou", "queue.answered.bymember", "queue.answered.byother",
+    "queue.answered.forwarded", "queue.answered.snoozed", "queue.answered.snoozed.meta", "time.at", "time.clock", "time.am", "time.pm",
+    "queue.aside.help", "queue.aside.help2", "queue.aside.dismissed", "queue.aside.dismissed.bymember", "queue.aside.deferred", "queue.aside.deferred.bymember", "queue.aside.v2",
+    "progression.finding.state.dismissed", "queue.allclear.withheld", "queue.allclear.failed", "queue.allclear.failed2", "queue.allclear.failed.feed", "queue.tryagain",
+    ...KIND_FEEDS, ...["todo", "noticed", "status"].flatMap((k) => [`queue.none.${k}`, `queue.none.${k}2`]), "screen.queue.uptodate", "screen.queue.gohome"],
   projects: [...SHARED, "screen.projects.name", "screen.projects.purpose", "screen.projects.sub", "screen.imported.name", ...ACTS("projects", ["promote", "projectjoin"]),
     "projects.empty.sub", "projects.empty.note", "projects.invited.head", "projects.invited.says", "projects.findable.head", "projects.findable.says", "projects.findable.meta",
     "projects.request.asked", "act.projectrequest.label.projects", "act.projectrequestwithdraw.label.projects", "screen.projects.nocreate", "member.founder.unnamed",
