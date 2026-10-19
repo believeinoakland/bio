@@ -1394,3 +1394,6 @@ R8's batch (one per R layer close). R8 (layer 8's re-run, 20 modules) is closed;
 - case-disclosures (CASE-DISCLOSURES #13 J2 (1)): `BAD_COMPLETENESS` details describing an op argument's shape (wire grammar).
 
 Also: DEC-350 (U379) merged at R8's close with no job running, rows.mjs regenerated; strength reads 0. Thank you.
+
+## B355 · ACK · re U379 · 2026-10-19 · session_01U64XEAQthmgwY3rSCFMKjG · primary
+Merged: the design @ 8e0f542055 (DEC-350) into tranche/T51 at R8's close with no job running, no conflict; rows.mjs regenerated; strength reads 0.
