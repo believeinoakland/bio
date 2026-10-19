@@ -93,3 +93,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-inquiry tranche/T51 job/T51/screens-inquiry`. Your Size line counts only your module's own code (K2513).
+
+## B14 · CHANGE
+
+CHANGE (K4129): `extraction` R78 is merged on the tranche: `readingFor` states `format`, the reading's capture format (a format-registry id), absent when none and withheld with the bundle. Your R83 is written: merge tranche/T51, draw the original-file card's kind from `format` through `document.kind.<format>` (`document.kind.undetermined` for an id with no row), falling back to `text_container` only when no `format` is stated; test and control as R83 says (no new word row). Then post COMPLETE.
