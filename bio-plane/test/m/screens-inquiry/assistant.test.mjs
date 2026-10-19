@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, SESSION } from "../interface-shell/harness.mjs";
-import { open, plane, button, fill, says, word, P, Q, D } from "./fixtures.mjs";
+import { open, plane, button, fill, says, word, day, P, Q, D } from "./fixtures.mjs";
 
 const UNTESTED = { kind: "untested", part: "check", set: "s", set_version: 1, words: "ai.label.untested" };
 const SESSION_HEADER = "Bearer " + SESSION.t;
@@ -193,7 +193,7 @@ test("R6 R13 the door's refusals drawn by their words, beside the act", async ()
   }
   const k = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, code: "AI_KEPT_AWAY", keep_away: keep }) }));
   await workOn(k);
-  assert.ok(says(panel(k).querySelector('[data-refusal="airundispatch"]'), "ai.refused.keptaway", { member: "rosa", date: "2 October 2026", reason: "court order" }));
+  assert.ok(says(panel(k).querySelector('[data-refusal="airundispatch"]'), "ai.refused.keptaway", { member: "rosa", date: day("2026-10-02T09:00:00Z", { year: true }), reason: "court order" }));
   const ended = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, status: "completed" }) }));
   await workOn(ended);
   assert.ok(says(panel(ended).querySelector('[data-refusal="airundispatch"]'), "refusal.AI_RUN_NOT_RUNNING"));
@@ -237,7 +237,7 @@ test("R42 where the assistant cannot work, the other reasons by key and whose ac
   await workOn(w);
   const r = panel(w).querySelector('[data-reasons="assistant"]');
   assert.ok(says(r, "question.ai.other"));
-  assert.ok(says(r, "ai.refused.keptaway", { member: "rosa", date: "2 October 2026", reason: "court order" }), "kept away");
+  assert.ok(says(r, "ai.refused.keptaway", { member: "rosa", date: day("2026-10-02T09:00:00Z", { year: true }), reason: "court order" }), "kept away");
   assert.ok(says(r, "dock.withheld.AGENT_WORKER_UNBOUND"), "not installed");
   assert.ok(says(r, "question.ai.whose") && says(r, "ai.account.own.inline"), "whose account serves her");
   const none = await dock(Q, stub(), { accountreference: ok({ held: false }), groupkeystate: ok({ held: true, on: true }), agentpack: refusedIn("PACK_UNDETERMINED") });
