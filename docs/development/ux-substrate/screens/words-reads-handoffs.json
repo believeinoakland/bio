@@ -1051,10 +1051,22 @@
   ],
   "strength": [
    {
+    "file": "bio-plane/src/strength/index.mjs",
+    "line": 232,
+    "text": "{}\n## Session Log\n\n{}",
+    "why": "the session log's document grammar (B350, STRENGTH #16 J4)"
+   },
+   {
     "file": "bio-plane/src/strength/method.mjs",
     "line": 279,
     "text": "How {} grades a finding (method {}).",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 281,
+    "text": "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member's own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
@@ -1067,6 +1079,12 @@
     "line": 288,
     "text": "on a leg to another question, or to another {}'s finding, has nothing to grade and is listed, not counted.",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 289,
+    "text": "3. Questions resting on questions. A leg to another question contributes that question's own strengths, worked out the same way, up to six steps down. Past six steps, or where that question's strength is not known, the strength is stated as undetermined: unknown, not low.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
@@ -1088,9 +1106,21 @@
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
+    "line": 295,
+    "text": "5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
     "line": 298,
     "text": "strength is then the weaker of the legs needed by every set and that strongest set.",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 299,
+    "text": "6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
@@ -1113,8 +1143,8 @@
    {
     "file": "bio-plane/src/strength/method.mjs",
     "line": 309,
-    "text": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. ",
-    "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+    "text": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
@@ -1124,9 +1154,21 @@
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
+    "line": 315,
+    "text": "8. Calculations, held standards and obligations. A leg to a calculation counts for the capture strength only, at the weakest of its inputs' capture strengths, each no stronger than where it came from: a figure quoted from a document by that passage, a money figure by its own grade, a table by its source, another calculation by its own capture strength. The arithmetic of the recipe never weakens it. A value typed in with no captured source is testimony, D. A value another program computed is unknown until that program's agreement has been measured. The method is stated beside the grade and is not graded. A calculation whose result is not accepted, or an input that cannot be read, makes the strength undetermined.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
     "line": 321,
     "text": "that cannot be read, makes the strength undetermined.",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
+    "line": 322,
+    "text": "9. A leg to a held standard counts for the capture strength only, no stronger than the record holds for the text of that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
@@ -1136,15 +1178,15 @@
    },
    {
     "file": "bio-plane/src/strength/method.mjs",
+    "line": 324,
+    "text": "10. A leg to one occurrence of an obligation counts for the capture strength only, at the weaker of the text of the rule in force and the record of the date that started it. Whether it was met, late or overdue is stated beside the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
+    "why": "signed grading-method text, pinned bytes that stay code and never change (B352, K1333, K4017); its words.json row dropped by DEC-350"
+   },
+   {
+    "file": "bio-plane/src/strength/method.mjs",
     "line": 326,
     "text": "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
     "why": "a published, signed grading-method text pinned by its bytes, or the session log's document grammar (B350, STRENGTH #16 J3, J4; K1333)"
-   },
-   {
-    "file": "bio-plane/src/strength/index.mjs",
-    "line": 232,
-    "text": "{}\n## Session Log\n\n{}",
-    "why": "the session log's document grammar (B350, STRENGTH #16 J4)"
    }
   ],
   "contradiction": [
