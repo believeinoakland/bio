@@ -49,3 +49,34 @@ Size (session_017qPsKctYDpHHE9UBkwHN19): test runs 3, module lines 4212
 - **Raw lines of source**: 4,212, unchanged from J1 (test edits only in this change).
 
 Size (session_017qPsKctYDpHHE9UBkwHN19): test runs 6, module lines 4212
+
+## J3 · COMPLETE
+
+**COMPLETE**, CR-4 · membership (B3 START), on `job/T51/membership`; `tranche/T51` merged first.
+
+**Entries applied**
+1. **Delegation (R154, new) and the cut.** `membership/index.mjs` is 3,191 → 1,378 lines. `Membership` holds `members` (`member-roster`'s `Members`, built by `membersOf(ctx)` in `membershipOf`, or `new Members({sql})` for a direct construction); each of the 49 moved instance names is a one-line delegate of the same name (`(...a) => this.members.x(...a)`); the class statics (`ROOT_ADMIN`, `CAPABILITIES`, `adminMath`, `HANDLE_*`, `DOOR_WARNING`, `COURT_STATEMENT`, `GROUP_KINDS`, the limits) are aliases. `listenerRefusal`, `notAnAdmin`, `noSuchMember`, `MODULE_ORDER`, `moduleOrderFrom` are re-exported (same objects); `MEMBERSHIP_EXEMPT_TABLES` and `MEMBERSHIP_DECLARED_TABLES` alias `member-roster`'s and `declareTables` declares them under `"membership"`, so `record-core`'s census is unchanged. `migrate()` runs `members.migrate()` first, then the project tables.
+2. **Rows (K231, family census).** `checks.mjs` keeps its five own rows and exports `MEMBERSHIP_CHECKS` (the union with `member-roster`'s, every code one row), `MEMBER_ID_CHECKS`, `CUSTODIAL_CHECKS` from `MEMBER_ROSTER_ROWS`, in the same act that deleted the copies; `answer-envelope`'s families test (41) passes. `where` strings of the moved rows name `src/member-roster/index.mjs` (promotion's CR-5 stamp).
+3. **Notes 3 (a)–(d).** (a) the three tables as above; (b) `memberList` passes membership's own `projectsOf` (R18); (c) `checkAddressees` (R106) asks `expertiseHolders` and applies `inSight`; (d) `membershipOps` is `{...membersOps(m, …), project ops}` with `m` the `Membership`, so `memberlist` carries the projects and `adminremovalsopen` is answered through membership's ops (`m.adminRemovalsOpen` delegates).
+4. **Viewer spelling (R76, R43, R149).** `positionalMember` is `viewerMember`; `viewerPredicate`, `projectViewer` read `viewerMember`, `carriedProject`, `baseViewer` from `member-roster` (R73); the local copies are gone.
+5. **Note 4 (K3958).** `words.mjs` no longer reads `word` with a variable key: it re-exports `rowKey`/`rowWord` from `member-roster` and holds only its four keys; `WORD_KEYS` is the union.
+6. **Note 5, words findings.** The 22 `plain` findings: 20 were in code that moved (they went with it, converted in `member-roster`); the two left (`rescueRefusal`'s act phrase and the `NO_OWNERS` detail) are `localize('membership.index.adding_an_owner_to_a_project_whose_owners', …)` and `localize('membership.index.this_project_has_no_owner_rows', …)`; `order-build.mjs:59` went with the file. The testcopy findings: `t47-r142` (3) now compare with `localize`; the others lay in tests that moved. `checks/words.mjs membership`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures. No string judged unread-by-members is left unlisted.
+7. **Retired and deleted.** `order.mjs`, `order-build.mjs` (membership's generated list; `MODULE_ORDER` is `member-roster`'s). The requirements already retire the moved ids; I did not touch `build/`.
+
+**Tests.** The suites that only tested moved ids were deleted (their copies, 26 files, live in `test/m/member-roster/`): `administrators`, `capabilities-arithmetic`, `expertise`, `module-order`, `t34-joining`, `t47-admin-handle`, `t50-status-since`; moved tests were cut from `t14`, `t34-settings`, `t40`, `t46`, `t49`, `t50-roster-mark`, `t48-home-sight`, `not-an-admin-visibility`, `t9-notice-sight-bounds`; project-side tests stay. New `t51-delegation.test.mjs` (R154: seven tests with controls: every name delegated, reads equal over one store, writes read back, re-exports identical, rows unioned and one site per code, ops map, `checkAddressees`/`positionalMember`). `t50-words` and `t47-check-tables` re-pointed (union keys; `where` in either module).
+
+**Deferred**: none.
+
+**Found in other modules / for BOB**
+1. **Requirement text.** `membership` R154 says `memberRosterOf(ctx)`; `member-roster` R74 and the code say `membersOf(ctx)` / `Members` (the split map's name changed by K3946). Built to R74. R154 should read `membersOf`.
+2. **`member-roster` could export the machine spelling.** `viewerPredicate` must tell a machine credential (`class:admin|member|probe|daemon|ai`, sees every bundle) from a spelling it refuses, and R73's `viewerMember` answers `null` for both, so `membership` keeps one small regex (`MACHINE_VIEWER`) for the machine arm. If R73 gained `isMachineViewer(viewer)` it would go.
+3. **Generated artifacts made stale by deleting `membership/order.mjs`**: `setup-words/build.mjs` `GENERATED_FILES` still names `bio-plane/src/membership/order.mjs` (drop it; add `member-roster/order.mjs` if not yet), `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json`, `agent-worker/dist/agent-worker.bundled.mjs` and `.bundle.json`, and the manifest rows for `membership/order.mjs`. BOB's layer-close regeneration; `rows.mjs`/`words-unreviewed.json` also gain the two new `membership.index.*` ids.
+4. `connections` has 5 reds (R62, R63, R69) on `tranche/T51` itself; not this job's.
+5. `members.test.mjs`:444 (`civicos-ui never calls the op`) is a dated 2026-08-05 measurement, left as recorded (as in J1).
+
+**Raw lines of source (own code)**: `bio-plane/src/membership/` four files: `index.mjs` 1,378, `checks.mjs` 133, `schema.mjs` 102, `words.mjs` 13 = **1,626** (was 4,212; the generated `order.mjs` is gone).
+
+**Checks** (process repository): `format.mjs` 0 failures; `architecture.mjs membership` 36 files, 0 failures; `coverage.mjs membership` 49 of 49 live ids named, 0 failures; `words.mjs membership` 0 failures; `ownership.mjs membership tranche/T51 job/T51/membership` 0 failures; `run.mjs`: architecture 0, format 0, channels 0 (coverage 31 and words failures are other modules').
+**Tests run**: `membership` suites 171 pass, 0 fail (`test/m/membership/*.test.mjs`) and `test/members.test.mjs` 98 pass; users: `project-roster` 87, `credentials` 160, `promotion` 147, `answer-envelope` 41, `plane` 260, `ai-accounts` 114, `conformance` 119, `standards` 104, `case-carriage` 88, `control-plane` 302, all pass; `connections` 124 pass, 5 fail (red on the tranche too).
+
+Size (session_018652bxpkEPx4gMoCSpbHne): test runs 14, module lines 1626
