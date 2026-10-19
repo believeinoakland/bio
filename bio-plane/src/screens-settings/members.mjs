@@ -208,10 +208,10 @@ export const members = {
         if (diff > 0) h += `<details class="mk-details" data-fold="reconcile"><summary>${W(S + "founder.if.the.count.is.higher")}</summary><p class="mk-note">${W(S + (diff === 1 ? "founder.the.count.includes.1.administrator" : "founder.the.count.includes.n.administrators"), { n: diff })} ${W(S + "founder.the.founder.holds.the.team")} ${W(S + "founder.they.are.counted.because.the")}</p></details>`;
         // the scale: one row for each count of administrators, the live row marked now (R56 item 3)
         const table = Array.isArray(v.table) ? v.table : [];
-        const scale = table.length ? `<div class="tw"><table class="mk-table" data-list="scale"><thead><tr><th>${W(S + "scale.head.admins")}</th><th>${W(S + "scale.head.takes")}</th><th>${W(S + "scale.head.who")}</th></tr></thead><tbody>${table.map((t) => {
+        const scale = table.length ? `<table class="mk-table" data-list="scale"><thead><tr><th>${W(S + "scale.head.admins")}</th><th>${W(S + "scale.head.takes")}</th><th>${W(S + "scale.head.who")}</th></tr></thead><tbody>${table.map((t) => {
           const now = t.administrators === live.administrators;
           return `<tr${now ? ' aria-current="true"' : ""}><td>${E(t.administrators)}${now ? " " + W(S + "scale.now") : ""}</td><td>${t.possible ? W(S + "scale.takes", { k: t.votesNeeded, n: t.administrators }) : W(S + "scale.not_removable")}</td><td>${t.possible ? W(S + "scale.who", { v: t.eligibleVoters, n: t.administrators }) : W(S + "scale.no_majority")}</td></tr>`;
-        }).join("")}</tbody></table></div>` : "";
+        }).join("")}</tbody></table>` : "";
         h += `<details class="mk-details" data-fold="arith"><summary>${W(S + "how.it.changes.with.the")}</summary>${scale}<p class="mk-note">${W(S + "removal.takes.a.majority.of")} ${W(S + "the.one.facing.removal.is")} ${W(S + "a.lone.administrator.can.never")}</p></details>`;
         return h;
       };

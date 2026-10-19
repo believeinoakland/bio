@@ -4,7 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, GROUP_RULES, env, refuse, grouprulesTable } from "./fixtures.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
+import { ADMIN, MEMBER, GROUP_RULES, DOC_SHA, env, refuse, grouprulesTable } from "./fixtures.mjs";
 
 const item = (o, rule) => all(o.tree, (e) => e.tag === "li" && e.attrs["data-rule"] === rule)[0];
 const btn = (n, op) => acts(n).filter((b) => b.attrs["data-act"] === op);
@@ -90,5 +91,72 @@ test("R61 control: the assistant's note is drawn; a failed read is drawn failed,
   lacks(failed, "screen.grouprules.waiting");
   const empty = await open("grouprules", { me: MEMBER, table: grouprulesTable({ grouprules: env({ ok: true, rules: [], count: 0 }) }) });
   lacks(empty, "screen.grouprules.waiting"); lacks(empty, "screen.grouprules.confirm.heading");
-  assert.deepEqual(acts(empty.tree), [], "no act with nothing to act on");
+  assert.deepEqual([...new Set(acts(empty.tree).map((b) => b.attrs["data-act"]))], ["ruledraft"], "nothing to confirm or withdraw: only the draft form's act");
+});
+
+/* R61 "Draft the rule" (T51; DEC-357, U386): one name, the fields of a deadline or a legal fact, the document and the passage copied, found in the capture's text */
+const FORM = { "gr-kind": "deadline", "gr-name": "Parks Commission: comment cutoff", "gr-amount": "5", "gr-cite": "Parks Commission Rule 4(b)", "gr-eff": "2026-07-01", "gr-why": "We comment to it often", "gr-doc": DOC_SHA, "gr-pass": "Comments close five days before the meeting." };
+const PICK = { "gr-app": "request_for_comment", "gr-units": "days", "gr-count": "business", "gr-start": "hearing", "gr-dir": "backward", "gr-owed": "body", "gr-due": "cob" };
+
+test("R61 the draft form draws the design's fields: the kinds of action by their own names (claim first), the choices by their words, the document among the captures held, and writing help only while the assistant is reachable and only under What it says", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable(), reachable: true });
+  for (const k of ["screen.grouprules.kind.label", "screen.grouprules.name.label", "screen.grouprules.deadline.legend", "screen.grouprules.amount.label", "screen.grouprules.units.label", "screen.grouprules.start.label", "screen.grouprules.dir.label", "screen.grouprules.owed.label", "screen.grouprules.due.label", "screen.grouprules.fact.summary", "screen.grouprules.statement.label", "screen.grouprules.bears.legend", "screen.grouprules.cite.label", "screen.grouprules.eff.label", "screen.grouprules.src.legend", "screen.grouprules.doc.label", "screen.grouprules.pass.label", "screen.grouprules.why.label"]) has(a, k);
+  const kinds = all(all(a.tree, (e) => e.attrs.id === "gr-app")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
+  assert.deepEqual(kinds, [["claim", said("screen.grouprules.app.claim")], ["request_for_comment", said("screen.action.kind.request_for_comment")], ["public_comment", said("screen.action.kind.public_comment")], ["party_participation", said("screen.action.kind.party_participation")]]);
+  assert.ok(a.p.requests.some((r) => r.op === "rulefields" && r.query.section === "deadlines"));
+  const docs = all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value);
+  assert.deepEqual(docs, [DOC_SHA, "e".repeat(64)]);
+  // writing help: only under What it says, only while the assistant is reachable
+  assert.equal(btn(a.tree, "writinghelp").length, 1);
+  assert.ok(a.html.indexOf('data-act="writinghelp"') > a.html.indexOf('id="gr-statement"') && a.html.indexOf('data-act="writinghelp"') < a.html.indexOf('id="gr-bears"'));
+  const off = await open("grouprules", { me: MEMBER, table: grouprulesTable(), reachable: false });
+  assert.equal(btn(off.tree, "writinghelp").length, 0);
+  // the words the redrawn form retired are no longer words
+  for (const k of ["screen.grouprules.text.label", "screen.grouprules.link.label", "screen.grouprules.trigger.label"]) assert.ok(!hasWord(k), k);
+});
+
+test("R61 ruledraft for a deadline sends the section, the entry built from the fields (the stored rule derived from the one name), the source with the passage's place, and the reason", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
+  const r = await a.press("ruledraft", { values: FORM, choose: PICK });
+  assert.deepEqual(r.sent.find((x) => x.op === "ruledraft").body, { section: "deadlines",
+    entry: { rule: "parks_commission_comment_cutoff", applies_to: "request_for_comment", units: "days", amount: 5, starts: "hearing", direction: "backward", count: "business", owed_by: "body", due_at: "close_of_business", citation: "Parks Commission Rule 4(b)", effective_from: "2026-07-01" },
+    source: { captureSha: DOC_SHA, extent: { kind: "pdf-page", page: 2 } }, reason: "We comment to it often" });
+  assert.ok(r.sent.some((x) => x.op === "reading" && x.query.sha256 === DOC_SHA), "the capture's text is read to find the passage");
+  assert.ok(a.p.requests.filter((x) => x.op === "grouprules").length >= 2, "the rules are read again");
+  // a set time is typed on the 12-hour clock and sent as HH:MM; units other than days send no count; the office left unsaid sends no owed_by
+  const t = await a.press("ruledraft", { values: { ...FORM, "gr-time": "5:30 PM" }, choose: { ...PICK, "gr-units": "hours", "gr-due": "time", "gr-owed": "none" } });
+  const e = t.sent.find((x) => x.op === "ruledraft").body.entry;
+  assert.deepEqual([e.units, e.due_at, "count" in e, "owed_by" in e], ["hours", "17:30", false, false]);
+  assert.equal(await a.press("ruledraft", { values: { ...FORM, "gr-time": "13:00 pm" }, choose: { ...PICK, "gr-due": "time" } }).then((x) => x.sent.length), 0, "a time that is none is refused in place");
+});
+
+test("R61 ruledraft for a legal fact sends the key derived from the name, the trigger, what it says and the kinds ticked; none ticked leaves applies_to out", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
+  const values = { ...FORM, "gr-kind": "fact", "gr-name": "Speakers register by noon", "gr-statement": "Speakers register by noon on the meeting day", "gr-pass": "Speakers register by noon." };
+  const r = await a.press("ruledraft", { values: { ...values, "gr-bears": undefined }, choose: { "gr-shown": "pending_measure_or_candidate" } });
+  const b = r.sent.find((x) => x.op === "ruledraft").body;
+  assert.equal(b.section, "legal_facts");
+  assert.deepEqual(b.entry, { key: "speakers_register_by_noon", trigger: "pending_measure_or_candidate", statement: "Speakers register by noon on the meeting day", citation: "Parks Commission Rule 4(b)", effective_from: "2026-07-01" });
+  assert.deepEqual(b.source.extent, { kind: "pdf-page", page: 3 });
+});
+
+test("R61 a passage that is not in the document as written sends nothing and says so; a rule with no source held, no name or no whole amount sends nothing", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
+  const miss = await a.press("ruledraft", { values: { ...FORM, "gr-pass": "Words the document does not hold" }, choose: PICK });
+  assert.deepEqual(miss.sent.filter((x) => x.op === "ruledraft"), []);
+  assert.equal(a.refused.key, "screen.grouprules.pass.notfound1");
+  has(a, "screen.grouprules.pass.notfound2");
+  for (const bad of [{ "gr-name": "  " }, { "gr-amount": "five" }, { "gr-amount": "0" }]) assert.deepEqual((await a.press("ruledraft", { values: { ...FORM, ...bad }, choose: PICK })).sent.filter((x) => x.op === "ruledraft"), [], JSON.stringify(bad));
+  assert.deepEqual((await a.press("ruledraft", { values: { ...FORM, "gr-src-1": true }, choose: PICK })).sent.filter((x) => x.op === "ruledraft"), [], "the source first");
+});
+
+test("R61 writinghelp under What it says fills the draft into that field, labelled the assistant's, kept only by the member's own ruledraft; it asks for no draft of an empty field", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ writinghelp: () => env({ ok: true, text: "Speakers register by noon.", label: { kind: "machine", asked_by: "member:dev" }, withheld: [], note: "" }) }), reachable: true });
+  const none = await a.press("writinghelp", { values: { "gr-statement": "" } });
+  assert.deepEqual(none.sent, []);
+  const r = await a.press("writinghelp", { values: { "gr-statement": "speakers sign up by noon" }, reason: "help me say it" });
+  assert.deepEqual(r.sent.find((x) => x.op === "writinghelp").body.op, "ruledraft");
+  assert.equal(r.sent.find((x) => x.op === "writinghelp").body.field, "statement");
+  assert.equal(a.b.doc.getElementById("gr-statement").value, "Speakers register by noon.");
+  has(a, "screen.group-identity.draft.label", { handle: "dev" });
 });

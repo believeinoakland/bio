@@ -13,8 +13,8 @@ test("R1 the reads: the roster for every member; the recovery step and the signi
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
   // the screen's own reads, from its first (the frame's own reads, interface-shell R20, come before it)
   const all0 = a.p.requests.map((r) => [r.op, r.query]);
-  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 5);
-  assert.deepEqual(reads, [["memberlist", {}], ["expertiselist", { memberId: "ana" }], ["adminrecoverystep", {}], ["signerlist", {}], ["adminarith", {}]]);
+  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 6);
+  assert.deepEqual(reads, [["memberlist", {}], ["expertiselist", { memberId: "ana" }], ["adminrecoverystep", {}], ["signerlist", {}], ["adminarith", {}], ["adminremovalsopen", {}]]);
   // the team's key and its use are `teamai`'s reads (R47): whatever it reads beyond the roster's own and the frame's is not read here
   const mine = Object.values(SCREENS.find((s) => s.id === "members").reads({ me: ADMIN, subject: "ana" })).map((r) => r.op);
   const teams = Object.values(SCREENS.find((s) => s.id === "teamai").reads({ me: ADMIN })).map((r) => r.op).filter((op) => !mine.includes(op) && !SHELL_OPS.includes(op));
@@ -26,7 +26,7 @@ test("R1 the reads: the roster for every member; the recovery step and the signi
   // what the owners refuse a member: the reads the screen asks of an administrator beyond those it asks of a member (N1073)
   const members = SCREENS.find((s) => s.id === "members");
   const adminOnly = Object.values(members.reads({ me: ADMIN, subject: "ana" })).map((r) => r.op).filter((op) => !Object.values(members.reads({ me: MEMBER })).some((r) => r.op === op));
-  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("signerlist") && adminOnly.includes("adminarith"), "the administrators' reads");
+  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("signerlist") && adminOnly.includes("adminarith") && adminOnly.includes("adminremovalsopen"), "the administrators' reads");
   for (const op of adminOnly) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
@@ -354,8 +354,7 @@ test("R56 control: one administrator reads that none can be removed by vote; a r
   assert.equal(arithSection(m), undefined);
   assert.ok(!m.p.requests.some((r) => r.op === "adminarith"));
   // no block of a removal under way is drawn, whatever the roster holds
-  assert.ok(!/faces removal|hasn.t voted/.test(a.text), "no removal under way");
-  assert.equal(all(a.tree, (e) => /Agree: remove/.test(textOf(e))).length, 0);
+  assert.equal(all(a.tree, (e) => e.attrs["data-removal"] !== undefined).length, 0, "no removal under way");
   // a failed read is drawn failed
   const f = await open("members", { me: ADMIN, table: membersTable({ adminarith: "none" }) });
   assert.ok(all(arithSection(f), (e) => e.attrs["data-state"] === "failed").length === 1);
@@ -414,4 +413,39 @@ test("R35 control: with her handle held her row draws it, in her own session and
   has(other, "screen.members.count", { members: 2, administrators: 1 });
   assert.ok(textOf(rowOf(other.tree, "admin", "cleo")).includes("cleo"));
   assert.ok(!other.text.includes(said("member.founder.unnamed.help")));
+});
+
+test("R56 the scale table: a row for each count of administrators from adminarith's table, the live row marked (now) and aria-current; one administrator reads not removable", async () => {
+  const members = [FOUNDER_ROW, ...ROSTER, { member_id: "ana2", handle: "ana2", role: "admin", status: "active", capabilities: [], cover: "A2", expertise: [], invitation: "spent" }];
+  const a = await open("members", { me: ADMIN, table: membersTable({ adminarith: ARITH(4), memberlist: env({ members }) }) });
+  const table = all(a.tree, (e) => e.tag === "table" && e.attrs["data-list"] === "scale")[0];
+  assert.ok(table);
+  assert.deepEqual(all(table, (e) => e.tag === "th").map((h) => textOf(h)), ["screen.members.scale.head.admins", "screen.members.scale.head.takes", "screen.members.scale.head.who"].map((k) => said(k)));
+  const rows = all(table, (e) => e.tag === "tr").slice(1);
+  assert.equal(rows.length, 9);
+  const cells = (r) => all(r, (e) => e.tag === "td").map((c) => textOf(c).replace(/\s+/g, " ").trim());
+  assert.deepEqual(cells(rows[3]), ["4 " + said("screen.members.scale.now"), said("screen.members.scale.takes", { k: 3, n: 4 }), said("screen.members.scale.who", { v: 3, n: 4 })]);
+  assert.deepEqual(rows.filter((r) => r.attrs["aria-current"] === "true"), [rows[3]], "only the live row is current");
+  assert.equal(cells(rows[0])[1], said("screen.members.scale.not_removable"));
+  assert.equal(cells(rows[1])[2], said("screen.members.scale.no_majority"));
+});
+
+test("R56 a removal under way is drawn from adminremovalsopen alone: who it waits for, how many of those who may vote have agreed, the one facing removal counted and not voting; none under way draws no block; a failed read is drawn failed", async () => {
+  const under = env({ ok: true, removals: [{ target: "lu", voters: [{ voter: "admin", at: "2026-10-14T00:00:00Z" }], awaiting: ["rosa"], have: 1, need: 2 }] });
+  const a = await open("members", { me: ADMIN, table: membersTable({ adminremovalsopen: under }) });
+  const block = all(a.tree, (e) => e.attrs["data-removal"] === "lu")[0];
+  assert.ok(block, "drawn from the answer");
+  const t = textOf(block).replace(/\s+/g, " ");
+  assert.ok(t.includes(said("screen.members.2.of.3.have.agreed", { n: 1, total: 2 })));
+  assert.ok(t.includes(said("screen.members.teo.is.counted.but.doesn", { member: "lu", n: 2 })));
+  assert.ok(t.includes(said("screen.members.the.removal.waits.for.ana", { member: "rosa" })));
+  // control: none under way, whatever the roster holds, draws nothing
+  const none = await open("members", { me: ADMIN, table: membersTable() });
+  assert.equal(all(none.tree, (e) => e.attrs["data-removal"] !== undefined).length, 0);
+  // a failed read is drawn failed in the section, never as none under way
+  const f = await open("members", { me: ADMIN, table: membersTable({ adminremovalsopen: "none" }) });
+  assert.equal(all(arithSection(f), (e) => e.attrs["data-state"] === "failed").length, 1);
+  // a member who does not administer reads none of it
+  const m = await open("members", { me: MEMBER, table: membersTableMember() });
+  assert.ok(!m.p.requests.some((r) => r.op === "adminremovalsopen"));
 });

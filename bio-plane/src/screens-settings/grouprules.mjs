@@ -29,6 +29,7 @@ export const grouprules = {
     const tryT = (k, f) => { try { return T(k, f); } catch (e) { return null; } };
     const me = view.me || {};
     const data = view.data || {};
+    const ui = view.ui || {};
     const okv = (o) => (o && o.state === "ok" ? o.value : null);
     const roster = okv(data.roster) && Array.isArray(data.roster.value.members) ? data.roster.value.members : [];
     const today = new Date(typeof cs.now === "function" ? cs.now() : Date.now()).toISOString().slice(0, 10);
@@ -156,7 +157,8 @@ export const grouprules = {
       } },
     { op: "rulewithdraw", rereads: ["rules"],
       send(view, el) { return { body: { rule: el.dataset.rule } }; } },
-    { op: "ruledraft", rereads: ["rules"],
+    // the member's own words in the reason field are the act's reason (interface-shell R87)
+    { op: "ruledraft", rereads: ["rules"], reasonField: "reason",
       async send(view, el, cs) {
         const val = (id) => String(cs.value(id) || "").trim();
         const one = (id) => { const v = cs.value(id); return Array.isArray(v) ? String(v[0] || "") : String(v || ""); };
@@ -208,6 +210,7 @@ export const grouprules = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         const me = view.me || {};
         const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
+        if (a && typeof a.text === "string") cs.fill("gr-statement", a.text);
         cs.set("draft", { field: "statement", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
       } },
   ],

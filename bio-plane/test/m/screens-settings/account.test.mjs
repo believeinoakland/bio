@@ -244,3 +244,15 @@ test("R42 account draws the Sounds choice (off by default) beside Language and A
   assert.ok(sec && all(sec, (e) => e.attrs.role === "group" && e.attrs["aria-label"] === said("screen.account.sounds")).length === 1, "in the language section");
   assert.equal(a.text.split(said("screen.account.language.help")).length, 2, "said once");
 });
+
+test("R57 (1), (2) a key made with a typed passphrase opens no dialog, sends keyB64, and offers Save the key file from page memory; the passphrase and the file are in no request or storage", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  const r = await a.press("signerregisterown", { values: { "ma-keep": false, "ma-pass": "a typed passphrase 123" }, wait: true });
+  const sent = r.sent.find((x) => x.op === "signerregisterown");
+  assert.ok(sent && /^AAAAC3NzaC1lZDI1NTE5AAAAI[A-Za-z0-9+/=]+$/.test(sent.body.keyB64), "the public key is sent");
+  assert.equal(all(a.tree, (e) => e.attrs["data-shell"] === "dialog" || /\bcs-dialog\b/.test(e.attrs.class || "")).length, 0, "no dialog of the kit's own");
+  const save = all(a.tree, (e) => e.tag === "button" && e.attrs["data-shell"] === "bind" && textOf(e) === said("screen.account.key.savefile"));
+  assert.equal(save.length, 1, "Save the key file, for a key that made a file");
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("a typed passphrase 123") || String(v).includes("BIOKEY1.")), "kept nowhere");
+  assert.ok(!JSON.stringify(r.sent).includes("a typed passphrase 123") && !JSON.stringify(r.sent).includes("BIOKEY1."), "sent nowhere");
+});
