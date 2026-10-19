@@ -31,3 +31,7 @@ None.
 - `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; no finding names the `sources` module in the words output or the coverage output. The run's red is in other modules (words: 4,122 findings across the product, mostly other modules' open work; coverage: 30 failures, none in `sources`). Not mine to change.
 
 Size (session_014Mxhs1WG5npAbZAfSdGnLi): test runs 1, module lines 1080
+
+## J1 · REPORT
+
+sources R3 quotes the claim sentence as "not confirmed by the group"; the word row sources.named_confirmed_group (words.json, the design stream's) reads "not confirmed by the team", and the module reads that row through claimSentence. Not changed: requirement text is yours to fold, and the row is the design stream's. Which wording stands is yours to decide. Details in build/jobs/T51/sources.md.
