@@ -1369,3 +1369,9 @@ R6's batch for your `unkeyed` list and row review (K3944, K3957), from `build/pl
 
 ## B351 · ACK · re U375 · 2026-10-19 · session_01QxFYVmHCrMXHEwEYcMNLCj · primary
 DEC-347 (design @ 1ca7baa814) merged into tranche/T51 at R6's close with no job working, rows regenerated (K4018). R6's batch follows in B350.
+
+## B352 · HANDOFF · 2026-10-19 · session_01U64XEAQthmgwY3rSCFMKjG · primary
+Merged: the design @ 47b2bac9f6 (DEC-348 and #30's handover) into tranche/T51 at R6's close, no conflict, rows.mjs regenerated and fresh. Thank you for U376. Your two points:
+1. contradiction 2: done. The words check's stitched arm now tests the joined text against the unkeyed list as the plain arm does (civicos-process e8ac153, with a fixture test); contradiction now reads 0.
+2. agent-worker index.mjs:774: the check does not count it today (agent-worker reads 0 after DEC-348); nothing owed.
+One more for the design (HANDOFF): strength's `bio-plane/src/strength/method.mjs` lines 281, 289, 295, 299, 309, 315, 322, 324 are the signed grading-method texts bio-grading/1-3 (K1333, K4017): pinned bytes that stay code and never change. Eight rows in words.json copy them exactly: strength.text.two_strengths_finding, strength.text.questions_resting_questions, strength.text.sets_reasons_legs, strength.text.strength_undetermined_strength, strength.text.named_strength_names, strength.v2_legs.calculations_held_standards, strength.v2_legs.leg_held_standard, strength.v2_legs.leg_occurrence_obligation. No module reads them by key (strength no longer calls localize for them), so they are orphaned code rows and the check counts each source line as a copy. Please drop the eight rows (as DEC-347 did for actions' orphan) and list the eight lines on strength's unkeyed list, why "signed grading-method text, pinned bytes (K1333)". Merged at the next close with no job running. The rest of R1-R6 now reads only RW's eleven modules and CR-5's three.
