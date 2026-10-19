@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01BEW2JCeWXjiogDsVNixAnp · depth 2 · COMPLETE · handled B0
+**Status** · session_01BEW2JCeWXjiogDsVNixAnp · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -37,3 +37,16 @@ Tests and checks (all run on the merged tree, job/T51/ratification after its mer
 - node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification: 12 files changed by ratification, 0 failures.
 
 Size (session_01BEW2JCeWXjiogDsVNixAnp): test runs 3, module lines 3677
+
+## J3 · COMPLETE
+
+CHANGE B2 applied: converted-c.test.mjs's Trigger line now reads case-authoring's localize call (case-authoring.document.trigger_op_publish_case) by equality, with the fixture's case and edition. Commit 5f7df2a65a, pushed; tranche/T51 merged first (da80e5c1dd).
+
+Checks on the merged tree after the change:
+- node --test bio-plane/test/m/ratification/: tests 246, pass 246, fail 0.
+- node checks/words.mjs /home/user/bio ratification: 0 failures.
+- node checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; no ratification line in the words arm.
+- node bio-plane/src/setup-words/build.mjs --check: rows.mjs stale (expected); no refusal names this module.
+- node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification: 0 failures.
+
+Size (session_01BEW2JCeWXjiogDsVNixAnp): test runs 4, module lines 3677
