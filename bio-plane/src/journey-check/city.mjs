@@ -8,6 +8,9 @@ export const NOTICE_ADDRESS = CITY_ORIGIN + NOTICE_PATH;
 /* The passage the walk finds in the held notice (R9 step 7) and cites (step 8). */
 export const NOTICE_PASSAGE = "The landlord must repair the roof of 14 Lakeshore Row within 28 days of this notice.";
 
+/* The reading the walk writes as its own on the notice's question (R9 step 12): the notice, put as a member puts it. */
+export const NOTICE_READING = "The landlord must repair the roof within 28 days of the city's notice 2026-118.";
+
 /* R16: a second notice, for the question the walk answers without the assistant (heating, flat 6). */
 export const HEAT_PATH = "/housing/notices/2026-131";
 export const HEAT_ADDRESS = CITY_ORIGIN + HEAT_PATH;
