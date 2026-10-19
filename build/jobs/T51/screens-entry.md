@@ -37,3 +37,7 @@ B2 applied: tranche/T51 merged; no provider stand-in to drop; module tests 85/85
 ## Change B3 (K4097)
 
 Merged `tranche/T51`. `setup.mjs` named the scanner list's legends, the held tools and the test result by `name || label || provider_id`; each is now the provider's display name, vendor and product from the catalogue read (`offered`, `held` or `refused`), never its id; a held tool the catalogue does not name draws no line. The catalogue's own labels and hints are drawn as read. New test in `setup.test.mjs` with controls (no provider id drawn, in legends, held list or test result; the fixture catalogue now has `vendor` and `product`). Module tests: tests 86, pass 86, fail 0; format, architecture, coverage (25 of 25) and words 0 failures.
+
+## J3 · COMPLETE · re B3
+
+B3 applied: setup's scanner legends, held tools and test result draw the catalogue's vendor and product, never a provider id; test with controls; module tests 86/86; format, architecture, coverage, words, ownership 0 failures.
