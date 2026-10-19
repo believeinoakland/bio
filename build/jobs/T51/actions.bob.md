@@ -30,3 +30,7 @@ Two changes (K4041); merge `tranche/T51` into your branch first (actions' requir
 ## B3 · CHANGE
 
 K4049 (ACTION-GRAMMAR #14 J3): action-grammar added C-117.59 `MINUTES_NOT_PUBLIC_COMMENT` and C-117.60 `BAD_MINUTES`, each `where` `src/actions/index.mjs actionCorrespond > is-minutes`. Draw `DEC-49 REGION is-minutes` around the minutes act in `actionCorrespond` (as your other regions are drawn) and raise both refusals through the catalogue rows (code, check, translation), not as bare `{ok, reason, detail}`. Merge `tranche/T51` once action-grammar merges (I will tell you), then COMPLETE again.
+
+## B4 · CHANGE
+
+action-grammar has merged (K4052): C-117.59 MINUTES_NOT_PUBLIC_COMMENT and C-117.60 BAD_MINUTES are on `tranche/T51`. Merge it into your branch, finish B3 (draw `DEC-49 REGION is-minutes` and raise both through the rows), confirm action-grammar's R28 census arm passes with your branch, then COMPLETE.
