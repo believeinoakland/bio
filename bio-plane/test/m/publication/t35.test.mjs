@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, infoMd, V, SIG, NOW, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const A = "STD-2026-0001-policy", B = "STD-2026-0002-standard", GONE = "STD-2026-0003-ordinance";
@@ -99,17 +100,17 @@ test("R72 at a case edition's commit the criteria are one row per distinct (stan
     row({ standard: A, portion: "s.3", designation: "AI 4.12", edition: "2024", issuer: "Public Works", citation: "AI 4.12 §3",
           access: "free", body: CLERK, binds: true,
           passages: [{ content: C1, text: "Each request is logged." }, { content: C2, text: null }],
-          label: "Standard · binds City Clerk", access_words: "Free to read" }),
+          label: word("standard.binding.binds", { body: "City Clerk" }), access_words: word("label.standardaccess.free") }),
     row({ standard: B, designation: "NFPA 1710", edition: "2020 edition", issuer: "NFPA", citation: "NFPA 1710 (2020)",
           access: "paywalled", body: CLERK, binds: false, passages: [{ content: C4, text: "Turnout within 80 seconds." }],
-          label: "Benchmark · not binding on City Clerk", access_words: "Behind a paywall" }),
+          label: word("standard.binding.benchmark", { body: "City Clerk" }), access_words: word("label.standardaccess.paywalled") }),
     row({ standard: A, portion: "s.3", designation: "AI 4.12", edition: "2024", issuer: "Public Works", citation: "AI 4.12 §3",
           access: "free", body: BOARD, binds: false, passages: [{ content: C1, text: "Each request is logged." }],
-          label: "Benchmark · not binding on Water Board", access_words: "Free to read" }),
+          label: word("standard.binding.benchmark", { body: "Water Board" }), access_words: word("label.standardaccess.free") }),
     row({ standard: GONE, portion: "s.1", stated: "not held" }),
     row({ standard: B, designation: "NFPA 1710", edition: "2020 edition", issuer: "NFPA", citation: "NFPA 1710 (2020)",
           access: "paywalled", body: null, binds: false, passages: [{ content: C4, text: "Turnout within 80 seconds." }],
-          label: "Benchmark · not binding", access_words: "Behind a paywall" }),
+          label: word("publication.label.benchmark_binding"), access_words: word("label.standardaccess.paywalled") }),
   ]);
   /* a paywalled standard carries nothing of its text but the passages relied on: its other text never reaches a row */
   assert.deepEqual(criteria.filter((x) => x.standard === B).map((x) => x.passages.map((q) => q.content)), [[C4], [C4]],

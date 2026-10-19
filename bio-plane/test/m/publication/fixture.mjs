@@ -22,6 +22,7 @@ import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/inde
 import { materialsLines, materialAttestationLines, acceptedWorkBlockLines, calculationsLines,
          timelineLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -367,8 +368,8 @@ export function inquiryMd(id, { question = `Is ${id} answered?`, legs = [], refs
     ...(legs.length ? ["basis:", ...legs.flatMap((l) => [`  - target: ${l.target}`, `    role: ${l.role || "supports"}`,
                                                          ...(l.date ? [`    date: "${l.date}"`] : [])])] : []),
     ...extra,
-    "---", "", "## Question", "", question, "", "## What It Rests On", "", "## Conclusion", "",
-    "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "---", "", "## Question", "", question, "", word("conformance.rests"), "", "## Conclusion", "",
+    word("conformance.falsify"), "", "## Session Log", "", "## Review Notes", ""].join("\n");
 }
 
 export function infoMd(id) {

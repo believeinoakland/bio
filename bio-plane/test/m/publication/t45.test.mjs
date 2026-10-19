@@ -7,13 +7,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, infoMd, V, SIG } from "./fixture.mjs";
 import { rowOf, CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as publication from "../../../src/publication/index.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const ROW = { code: "COUNSEL_MATTER_NOT_PUBLISHED", check: "C-122.8",
-              translation: "This case rests on a counsel matter, and a counsel matter is never published. Nothing was published." };
+              translation: word("refusal.COUNSEL_MATTER_NOT_PUBLISHED") };
 
 /* A case of `proj` over two member documents, the first committed with `memberProject` (its front matter's `project:`)
    when given; prepared, unsigned. */
