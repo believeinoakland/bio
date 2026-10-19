@@ -53,3 +53,8 @@ CHANGE B2 applied: publicOp hands bootstrapOp the resolved admin caller; door.te
 ## J3 · COMPLETE
 
 CHANGE B3 applied: filings and actionPlans getters handed to controlPlaneOwnerOps; both ops answer through the plane. 266/266 with control-plane's branch merged uncommitted; on the tranche alone 2 tests wait for control-plane to merge (merge it first).
+
+## Record: CHANGE B4 (K4100, t50 R63 `groupidentity` 502)
+- Diagnosis: not a route or wiring flaw. `groupIdentityOp` (and `instanceGroupOp`) ask the store stub `fetch("http://do/groupidentity")` with an address string, as a Durable Object stub accepts; `t50.test.mjs`' `askWorld` bound `env.STORE.get` to the bare `Store`, whose `fetch(req)` needs a Request, so the call threw and the door answered 502 `STORE_DID_NOT_ANSWER`. Screens-daily's Home reading is the first widest-screen read to go that way. Directly (`/groupidentity` through the store door) the route answers 200.
+- Fix (test world, as the host builds it): `askWorld`'s stub wraps `fetch` to accept an address or a Request and delegates every other method. t50 8/8; plane suite 266/266; format, architecture, coverage 66/66, words: 0 failures. Nothing deferred; no other module affected.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 12, module lines 2308
