@@ -55,3 +55,11 @@ COMPLETE (after B8) for `interface-shell` in T51.
 **R73 (t50.test.mjs:40), red since the new registry, not mine:** the nine modules' real SCREENS are composed, and `screens-action` still names `actionhold` on `action`; the registry now lists it on `hold` (R31 there: "actionhold is no longer drawn on action"). The throw is `checkScreens` doing its job; it goes green when screens-action moves the act.
 
 format, architecture, coverage and ownership: 0 failures (unchanged files outside tests and `index.mjs` PATHS).
+
+## J4 · COMPLETE
+
+COMPLETE (after B9) for `interface-shell` in T51.
+
+B9 applied: `shell.readonly` takes `{members}` and draws `shell.readonly.members` as the reference to `members` (plain where that screen is not registered); the team-name wrap rule is the design's now, so the shell's `STYLE` carries none (the R65 test is back to its original selectors); terms read `screen.glossary.<term>.name` as built (R95 test uses the real rows). `refusal.DIGEST_MISMATCH.download` is the screen's word for R98's answer `{code: "DIGEST_MISMATCH"}` (the shell returns the code and the two digests; the screen picks the word).
+
+Suite: 192 tests, 189 pass, 3 fail: the two R100 tests (op-declarations R76 not merged; accepted B7) and R73 (screens-action still names `actionhold` on `action`; its job's). Checks: format, architecture, coverage, ownership 0 failures; words check lists only the SSH armour (unkeyed list, B371).
