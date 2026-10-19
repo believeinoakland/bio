@@ -364,7 +364,9 @@ test("R54, R34 (T47; affordances R54, R56): every member op T47 declares is expl
 
 test("R62, R63, R6 (K3143, K3144): the store-internal routes T47 adds — store-door's reauthdue (its R15), signin-door's five (signintokenhold, signintokenrefused, signindisclosuredue, signintracekeep, signintraceread; plane R49) and instance-setup's grouplogo (its R86) — have no spec and are in no table; publishedlist is public (classes null), in no session set, stamped nothing, no NEEDS row (negative control: a declared op is in a table, and publishedlist's neighbour index stays the working corpus's)", () => {
   const INTERNAL = ["reauthdue", "signintokenhold", "signintokenrefused", "signindisclosuredue", "signintracekeep",
-                    "signintraceread", "grouplogo"];
+                    "signintraceread", "grouplogo",
+                    /* T51 (K4076): instance-setup's store-internal route for the install facts, no spec, as grouplogo */
+                    "bootstrapfacts"];
   const inNoTable = (op) => !Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && neither(op) && !Object.hasOwn(OP_STAMPS, op)
     && !LISTS.some(([, l]) => l.includes(op)) && !Object.hasOwn(UNATTENDED_BY_DECISION, op) && !Object.hasOwn(REAUTH_ACTS, op);
   for (const op of INTERNAL) assert.ok(inNoTable(op), `${op} is in a table`);
