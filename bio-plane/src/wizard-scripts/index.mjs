@@ -46,6 +46,7 @@ import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS, ELSEWHERE_DOOR } from "./front-doors.mjs";
 import { START_ROUTES, matchesOf, proposeStart } from "./start.mjs";
 import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
@@ -158,16 +159,16 @@ const startOf = (steps) => (Array.isArray(steps) && steps.length && isObj(steps[
 /* R2's shape (R4, R5's `WIZARD_STEP_REFUSED`): the first step that is not a step, numbered from 1, with why; or null. A
    draft may leave `what` and `why` empty (R12 judges that); a draft's source must be one of the three. */
 function stepShape(steps) {
-  if (!Array.isArray(steps)) return { step: null, why: "steps are a list" };
+  if (!Array.isArray(steps)) return { step: null, why: word("wizard-scripts.why.steps_list") };
   if (steps.length > STEPS_MAX) return { step: null, why: `a script has at most ${STEPS_MAX} steps` };
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i], n = i + 1;
     if (!isObj(s)) return { step: n, why: "a step is {screen, act, what, why, draft?, via?}" };
     const extra = Object.keys(s).find((k) => !STEP_KEYS.includes(k));
     if (extra) return { step: n, why: `a step carries only screen, act, what, why, draft and via, not '${extra.slice(0, 40)}'` };
-    if (s.via !== undefined && s.via !== null && s.via !== "" && !oneLine(s.via, NAME_FIELD_MAX)) return { step: n, why: "a side trip names a script by its id" };
-    if (!oneLine(s.screen, NAME_FIELD_MAX)) return { step: n, why: "a step names its screen" };
-    if (s.act !== undefined && s.act !== null && !oneLine(s.act, NAME_FIELD_MAX)) return { step: n, why: "an act is an op's name, or none" };
+    if (s.via !== undefined && s.via !== null && s.via !== "" && !oneLine(s.via, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.side_trip_names") };
+    if (!oneLine(s.screen, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.step_names_screen") };
+    if (s.act !== undefined && s.act !== null && !oneLine(s.act, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.act_op_name") };
     for (const k of ["what", "why"])
       if (s[k] !== undefined && s[k] !== null && !textUpTo(s[k], STEP_TEXT_MAX, 0))
         return { step: n, why: `'${k}' is text of at most ${STEP_TEXT_MAX} characters` };
@@ -260,8 +261,8 @@ const finding = (code, step, detail, extra) => {
    `offered` maps each offered script's id to its steps; a side trip whose own steps lead back to `self` through `via`,
    however far, never returns (DEC-139 (4)). */
 function viaRefusal(via, self, steps, offered) {
-  if (typeof via !== "string" || !via.trim()) return "a side trip names a script by its id";
-  if (self !== null && via === self) return "a side trip cannot go to the script itself";
+  if (typeof via !== "string" || !via.trim()) return word("wizard-scripts.why.side_trip_names");
+  if (self !== null && via === self) return word("wizard-scripts.text.side_trip_go");
   if (!offered.has(via)) return `no script '${via.slice(0, 80)}' is offered here to go to`;
   const seen = new Set(), queue = [via];
   const graph = (id) => (id === self ? steps : offered.get(id) || []);
@@ -947,7 +948,7 @@ export class WizardScripts {
                      VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json(steps), sha, member, who, source && source.proposal ? source.proposal : null, at);
       return { ok: true, script: sid, version: versionId(sid, n), sha, state: "draft",
                ...(source && source.derived ? { derived_from: source.derived } : {}), ...(base ? { based_on: source.copy } : {}),
-               says: "a draft: only its author runs it, and it is offered to no one until it is submitted and approved" };
+               says: word("wizard-scripts.says.draft_author_runs") };
     });
   }
 
@@ -1022,7 +1023,7 @@ export class WizardScripts {
       proj = str(project);
       if (!proj || this.#call(() => this.membership.inSight(proj, viewer)) !== true) return this.#noWizard(project);
     }
-    const bad = Array.isArray(steps) && !steps.length ? { step: null, why: "a proposal proposes at least one step" } : stepShape(steps);
+    const bad = Array.isArray(steps) && !steps.length ? { step: null, why: word("wizard-scripts.why.proposal_proposes_least") } : stepShape(steps);
     if (bad) return this.#stepRefusal(bad);
     /* DEC-49 REGION is-wizard-propose */
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
@@ -1038,7 +1039,7 @@ export class WizardScripts {
       this.sql.exec(`INSERT INTO wiz_proposals (proposal_id, bundle_id, project, script_id, steps, sha, why, proposer, run, model, at)
                      VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json(canon), sha, why.trim(), who, cut(run), cut(model), at);
       return { ok: true, proposal: { id, project: proj, script: s ? s.id : null, sha, why: why.trim(), at, label: WizardScripts.#label(who) },
-               evidence: false, says: "proposed steps, stored apart: they are no script's until a member drafts from or adopts them" };
+               evidence: false, says: word("wizard-scripts.says.proposed_steps_stored") };
     });
   }
 
@@ -1117,7 +1118,7 @@ export class WizardScripts {
                       s.id, prev, s.bundle_id, "updated", member, who, json({ by: n }), at);
       return { ok: true, version: versionId(s.id, n), state: "approved", approved: { by: { id: member, name: who }, at },
                updated: prev !== null && prev !== n ? versionId(s.id, prev) : null, warnings,
-               says: "approved: offered to every member who may see it; an earlier approved version stays readable, as updated" };
+               says: word("wizard-scripts.says.approved_offered_member") };
     });
   }
 
@@ -1191,7 +1192,7 @@ export class WizardScripts {
       this.sql.exec(`INSERT INTO wiz_events (script_id, version, bundle_id, event, actor, actor_name, detail, at) VALUES (?,NULL,?,?,?,?,?,?)`,
                     s.id, s.bundle_id, "retired", member, who, json({ reason: reason.trim() }), at);
       return { ok: true, script: s.id, retired: { by: { id: member, name: who }, at, reason: reason.trim() },
-               says: "retired: none of its versions is offered again; each stays readable with this reason" };
+               says: word("filing-templates.says.retired_versions_offered") };
     }
     const n = this.#versionOf(s, version);
     if (n === null) return this.#noWizard(named);
@@ -1261,7 +1262,7 @@ export class WizardScripts {
       return { ok: true, state: "proposed", truncated: rows.length > WIZARDS_MAX,
                proposals: rows.slice(0, WIZARDS_MAX).map((p) => ({ id: p.proposal_id, project: p.project, script: p.script_id ?? null,
                  steps: parse(p.steps) || [], sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) })),
-               says: "proposed steps: none is offered, and none is a script's until a member drafts from or adopts them" };
+               says: word("wizard-scripts.says.proposed_steps_offered") };
     }
     /* R39 (T48; walk row 17): what is offered is listed to every member who may see it; each other state, as R10 says */
     const offered = !st || st === "offered";
