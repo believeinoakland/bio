@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { strengthOps, STRENGTH_AXES, STRENGTH_STATES, PARTITION_INDEPENDENCE_CHECKS } from "../../../src/strength/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const D = (n) => `INFO-2026-000${n}-a`;
@@ -25,11 +26,11 @@ test("R14 (d216-sharing.probe): two projects' bars never cross: each answers its
     const two = w.s.strengthBarOf({ project: P2, viewer }).bar;
     assert.deepEqual([one.project, one.capture, one.connection], [P1, "A", "C"], viewer);
     assert.deepEqual([two.project, two.capture, two.connection], [P2, null, "B"], viewer);
-    assert.match(two.detail, /no bar set on the capture axis, connection B/);
+    assert.ok(two.detail.includes(`${word("strength.map.bar_set_axis", { axis: "capture" })}, connection B`));
     assert.doesNotMatch(two.detail, /capture A|connection C/, "nothing of the other project's bar reaches this one");
   }
   assert.deepEqual(w.s.strengthBarOf({ project: P1, viewer: "member:alice" }), w.s.strengthBarOf({ project: P1, viewer: "member:bob" }),
-    "never set by who a reader is");
+    "two readers who may see one project are told the same bar");
 });
 
 test("R14 (publish, d280-strengthbar): a project's bar is sourced from the project and names it, with no composed key; an undeclared project's source is none", () => {
@@ -54,10 +55,8 @@ test("R16 (d280-strengthbar): BAR_IS_A_PROJECT_PROPERTY says the bar is a projec
   const w = world();
   const r = w.s.strengthBarOf({ target: "INQ-2026-0009-a", project: P1, viewer: MACHINE });
   assert.deepEqual([r.ok, r.reason, r.target], [false, "BAR_IS_A_PROJECT_PROPERTY", "INQ-2026-0009-a"]);
-  assert.match(r.detail, /property of a PROJECT, not of a finding or a claim/);
-  assert.match(r.detail, /op=strengthbarof&project=<project id>/);
-  assert.match(r.detail, /op=strengthbarof&group=/);
-  assert.match(r.detail, /whichever project published it/);
+  assert.equal(r.detail, localize("strength.index.a_standard_of_evidence_is_a_property_of_a_project",
+    "a standard of evidence is a property of a PROJECT, not of a finding or a claim (DEC-72). No bar attaches to this finding, and none ever did on its own behalf: what governed it was whichever project published it, at the moment it published. Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= for the default a new project starts from."));
 });
 
 test("R1, R4 (testimonyaxis): with testimony beside capture and connection, each axis's figure is over its own population", () => {
@@ -79,9 +78,9 @@ test("R1, R4 (testimonyaxis): with testimony beside capture and connection, each
   assert.equal(s.testimony.weakest.target_id, D(3));
   /* On capture, the testimony legs are named as not applying at all, a different fact from graded elsewhere. */
   const onCapture = Object.fromEntries(s.capture.not_load_bearing.map((m) => [m.target_id, m.why]));
-  assert.match(onCapture[D(3)], /graded as testimony: the capture grade measures how the record read a document in/);
-  assert.match(onCapture[D(4)], /does not apply here/);
-  assert.match(onCapture[D(2)], /the leg's grade is on the connection axis/);
+  assert.equal(onCapture[D(3)], word("strength.why.leg_rests_member"));
+  assert.equal(onCapture[D(4)], word("strength.why.leg_rests_member"));
+  assert.equal(onCapture[D(2)], word("strength.why.leg_grade_axis", { grade_axis: "connection" }));
   /* The testimony leg stated at B is read at D, and says so; it never lifts capture or connection. */
   const tw = world();
   tw.inquiry(INQ, [{ target: D(4), grade: "B", axis: "testimony", source: "testimony" }]);
@@ -110,8 +109,9 @@ test("R4 (grounds): an unstructured axis's exact keys; a structured one's per-se
   assert.deepEqual(c.grounds.map((x) => [x.ground, x.state, x.grade, x.population, x.load_bearing]),
     [["records", "graded", "A", 2, 1], ["witness", "graded", "D", 3, 2]]);
   assert.deepEqual([c.grade, c.population, c.load_bearing], ["A", 5, 3]);
-  assert.match(c.detail, /STRONGEST of the 2 sets of reasons that each carry this conclusion on their own, which is "records"/);
-  assert.match(c.detail, new RegExp(`which is ${D(1)}`));
+  assert.ok(c.detail.startsWith(localize("strength.arithmetic.strongest_of_the_sets_of_reasons",
+    "{axis} {grade} — the STRONGEST of the {count} sets of reasons that each carry this conclusion on their own, which is {set}, and no stronger than the weakest {axis} WITHIN that set, which is {leg}{via}.",
+    { axis: "connection", grade: "A", count: 2, set: '"records"', leg: D(1), via: "" })));
   assert.deepEqual(c.grounds[0].not_load_bearing.map((m) => m.target_id), [D(2)]);
 });
 
@@ -124,11 +124,13 @@ test("R2, R4 (grounds): undetermined_at names each unfinished leg; every set und
   assert.deepEqual([c.state, c.grade, c.determined], ["undetermined", null, false]);
   assert.deepEqual(c.undetermined_at.map((m) => [m.target_id, m.ground, m.via]),
     [["INQ-2026-0008-a", "chain", "inherited"], ["INQ-2026-0009-a", "loop", "inherited"]]);
-  for (const m of c.undetermined_at) assert.match(m.why, /is undetermined on connection/);
+  for (const m of c.undetermined_at)
+    assert.ok(m.why.startsWith(word("strength.why.undetermined", { from: m.target_id, axis: "connection", unknown: "" })));
   assert.deepEqual(c.grounds.map((x) => [x.ground, x.state, x.undetermined_at.length]), [["chain", "undetermined", 1], ["loop", "undetermined", 1]]);
-  assert.match(c.detail, /EVERY one of the 2 sets of reasons it rests on is undetermined/);
-  assert.match(c.detail, /depth bound of 6 at INQ-2026-0008-a, INQ-2026-0009-a/);
-  assert.match(c.detail, /unknown rather than absent/);
+  assert.equal(c.detail, localize("strength.arithmetic.no_computed_strength_every_set",
+    "this {axis} axis has NO computed strength: EVERY one of the {count} sets of reasons it rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.",
+    { axis: "connection", count: 2,
+      stopped: word("strength.text.basis_walk_reached", { depth_bound: 6, bound: "INQ-2026-0008-a, INQ-2026-0009-a" }) }));
 });
 
 test("R11, R12 (partitionindependence): the version arm's exact keys carry no strength; order and a POST body read the same; capture:<sha>; one part is unchecked; no partition is C-71.3", () => {

@@ -15,6 +15,7 @@
  * would be a silent pass on the side that overstates the finding. Nothing here writes. */
 
 import { legKind, parseOccurrenceRef } from "./legs.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R12: the origins read per step of the walk; reaching it makes the answer incomplete, never clean. */
 export const ORIGIN_LIMIT = 200;
@@ -154,7 +155,7 @@ export function originsReader(r) {
       if (i === j) continue;
       if (!dates.length) {
         if (anyStructure(i) || anyStructure(j))
-          out.push(`undetermined:issuer:${i}|${j} (no date settles the lines between them)`);
+          out.push(`undetermined:issuer:${i}|${j} (${localize("strength.origins.no_date_settles_the_lines_between_them", "no date settles the lines between them")})`);
         continue;
       }
       for (const at of dates) {

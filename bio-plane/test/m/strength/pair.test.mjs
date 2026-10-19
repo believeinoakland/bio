@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { STRENGTH_AXES, DEPTH_BOUND } from "../../../src/strength/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const COMPOSED = ["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"];
 
@@ -24,8 +25,9 @@ test("R1: each axis ranges over its own population; a leg counts on the axis its
   /* A leg graded on another axis is inert on this one and says so. */
   const cap = p.capture.not_load_bearing.map((m) => m.target_id);
   assert.deepEqual(cap.sort(), ["INFO-2026-0002-a", "INFO-2026-0003-a"]);
-  assert.match(p.capture.not_load_bearing.find((m) => m.target_id === "INFO-2026-0003-a").why, /does not apply here/);
-  assert.match(p.capture.not_load_bearing.find((m) => m.target_id === "INFO-2026-0002-a").why, /connection axis/);
+  assert.equal(p.capture.not_load_bearing.find((m) => m.target_id === "INFO-2026-0003-a").why, word("strength.why.leg_rests_member"));
+  assert.equal(p.capture.not_load_bearing.find((m) => m.target_id === "INFO-2026-0002-a").why,
+    word("strength.why.leg_grade_axis", { grade_axis: "connection" }));
 });
 
 test("R1: a document leg's capture grade is bounded by what its target earns (inquiry.legCapped), never raised", () => {
@@ -41,7 +43,7 @@ test("R1: a document leg's capture grade is bounded by what its target earns (in
   const g = w.s.strengthOf("INQ-2026-0001-a").capture.grounds;
   const byGround = Object.fromEntries(g.map((x) => [x.ground, x]));
   assert.equal(byGround.one.grade, "C", "capped at the ceiling");
-  assert.match(byGround.one.weakest.why, /no more than C/);
+  assert.equal(byGround.one.weakest.why, "ceiling C for INFO-2026-0001-a");
   assert.equal(byGround.two.grade, "B", "a letter under its ceiling stands, never raised");
   assert.equal(byGround.three.state, "unrated", "an undetermined ceiling makes the leg claim nothing");
   assert.match(byGround.three.not_load_bearing[0].why, /no measured fidelity/);
@@ -57,10 +59,10 @@ test("R1: a testimony leg is D whatever it states; a capture or testimony grade 
   ]);
   const p = w.s.strengthOf("INQ-2026-0001-a");
   assert.equal(p.testimony.grade, "D");
-  assert.match(p.testimony.weakest.why, /read at D/);
+  assert.equal(p.testimony.weakest.why, word("strength.why.leg_carries_testimony", { stated: "A", testimony_grade: "D" }));
   const noRef = p.capture.not_load_bearing.find((m) => m.target_id === "INQ-2026-0002-a" && m.via === "leg");
   assert.ok(noRef, "the inquiry leg is named on capture");
-  assert.match(noRef.why, /no referent/);
+  assert.equal(noRef.why, word("strength.why.target_inquiry_document", { axis: "capture" }));
   assert.equal(noRef.grade, null);
 });
 
@@ -93,9 +95,10 @@ test("R2: past the depth bound, or where the target is undetermined, the leg is 
     assert.equal(p[axis].state, "undetermined", axis);
     assert.equal(p[axis].determined, false);
     assert.ok(p[axis].undetermined_at.length >= 1);
-    assert.match(p[axis].detail, /depth bound of 6/);
+    assert.ok(p[axis].detail.includes(word("strength.text.basis_walk_reached", { depth_bound: 6, bound: "" })));
   }
-  assert.match(p.capture.undetermined_at[0].why, /undetermined on capture/);
+  assert.ok(p.capture.undetermined_at[0].why.startsWith(
+    word("strength.why.undetermined", { from: p.capture.undetermined_at[0].target_id, axis: "capture", unknown: "" })));
 });
 
 test("R3: an ungraded member is inert and named; an axis with no graded member is unrated; an empty basis rests on nothing", () => {
@@ -110,12 +113,15 @@ test("R3: an ungraded member is inert and named; an axis with no graded member i
   assert.ok(inert.includes("INFO-2026-0002-a") && inert.includes("INFO-2026-0003-a"), "every ungraded leg is named");
   assert.equal(p.connection.state, "unrated");
   assert.equal(p.connection.load_bearing, 0);
-  assert.match(p.connection.detail, /^UNRATED on connection: no leg on this axis carries an established grade/);
+  assert.equal(p.connection.detail, localize("strength.arithmetic.unrated_no_leg_on_this_axis",
+    "UNRATED on {axis}: no leg on this axis carries an established grade, so this conclusion rests on nothing established here. Not load-bearing: {legs}.",
+    { axis: "connection", legs: p.connection.not_load_bearing.map((m) => m.target_id).join(", ") }));
   w.inquiry("INQ-2026-0002-a", []);
   const e = w.s.strengthOf("INQ-2026-0002-a");
   for (const axis of STRENGTH_AXES) {
     assert.equal(e[axis].state, "unrated");
-    assert.match(e[axis].detail, /rests on nothing/);
+    assert.equal(e[axis].detail, localize("strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
+      "UNRATED on {axis}: this inquiry rests on nothing on this axis.", { axis }));
   }
 });
 
@@ -132,7 +138,9 @@ test("R4: a ground is its weakest member; grounds compose by the strongest; unla
   const g = Object.fromEntries(p.grounds.map((x) => [x.ground, x]));
   assert.equal(g.records.grade, "C");
   assert.equal(g.records.weakest.target_id, "INFO-2026-0002-a", "each ground names its own setter");
-  assert.match(p.detail, /STRONGEST of the 2 sets of reasons/);
+  assert.ok(p.detail.startsWith(localize("strength.arithmetic.strongest_of_the_sets_of_reasons",
+    "{axis} {grade} — the STRONGEST of the {count} sets of reasons that each carry this conclusion on their own, which is {set}, and no stronger than the weakest {axis} WITHIN that set, which is {leg}{via}.",
+    { axis: "connection", grade: "B", count: 2, set: '"witness"', leg: "INFO-2026-0003-a", via: "" })));
   assert.doesNotMatch(p.detail, /\b(AND|OR|disjunction|grounds?)\b/, "DEC-32 clause 1: no machine words");
 
   /* Mixed: the unlabelled leg is necessary, so the axis is the weaker of it and the OR part. */
@@ -144,7 +152,8 @@ test("R4: a ground is its weakest member; grounds compose by the strongest; unla
   const mixed = m.s.strengthOf("INQ-2026-0001-a").connection;
   assert.equal(mixed.grade, "C");
   assert.equal(mixed.weakest.target_id, "INFO-2026-0004-a");
-  assert.match(mixed.detail, /needed by every one of those sets/);
+  assert.ok(mixed.detail.includes(localize("strength.arithmetic.that_leg_is_needed_by_every",
+    "That leg is needed by every one of those sets, so no set can be stronger than it.")));
 });
 
 test("R4: the axis is undetermined only when a necessary part is: an open ground beside a graded one is named", () => {
@@ -158,7 +167,8 @@ test("R4: the axis is undetermined only when a necessary part is: an open ground
   const p = w.s.strengthOf("INQ-2026-0001-a").connection;
   assert.equal(p.state, "graded", "one graded branch carries it");
   assert.equal(p.grade, "C");
-  assert.match(p.detail, /1 further set is UNDETERMINED and could only be stronger/);
+  assert.ok(p.detail.includes(localize("strength.arithmetic.one_further_set_is_undetermined",
+    "{count} further set is UNDETERMINED and could only be stronger, never weaker: {sets}.", { count: 1, sets: '"chain"' })));
   /* The implicit part unknown: the whole axis is. */
   const q = world();
   q.inquiry("INQ-2026-0009-a", [{ target: "INQ-2026-0008-a" }]);
@@ -182,7 +192,7 @@ test("R5: a hunch leg is inert in every pair whatever it states, named as a hunc
   assert.equal(p.connection.grade, "C", "the hunch's A neither sets nor lifts the axis");
   const hunches = p.connection.not_load_bearing.filter((m) => m.grade_source === "hunch");
   assert.equal(hunches.length, 2);
-  for (const h of hunches) { assert.equal(h.grade, null); assert.match(h.why, /marked as a hunch/); }
+  for (const h of hunches) { assert.equal(h.grade, null); assert.equal(h.why, word("strength.hunch_why")); }
   assert.ok(!p.connection.not_load_bearing.some((m) => m.via === "inherited"), "the hunch inquiry leg inherits nothing");
   /* The live pair and the pair over a version of the same legs agree. */
   w.connection.set("null|INFO-2026-0002-a", "C");

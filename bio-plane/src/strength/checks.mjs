@@ -11,6 +11,7 @@
  * those functions, their codes, numbers and translations unchanged. */
 
 import { VERSION_STATES } from "../basis-versions/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 
@@ -44,14 +45,12 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_INQUIRY: {
     check: 'C-30.1',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'This asks how strongly one question is answered, and no question was named. '
-      + 'There is no default question here and there must not be one.',
+    translation: word('refusal.VERSION_STRENGTH_NO_INQUIRY'),
   },
   VERSION_STRENGTH_NOT_AN_INQUIRY: {
     check: 'C-30.2',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'That is not a question, so there is nothing here to say how strongly it is answered. '
-      + 'Only a question carries readings of the evidence, and only a reading has a strength.',
+    translation: word('refusal.VERSION_STRENGTH_NOT_AN_INQUIRY'),
   },
   /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
      same reason: there is no "the latest reading" and no default. A strength
@@ -60,23 +59,17 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_VERSION: {
     check: 'C-30.3',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'Say which reading of the evidence to measure, or say which project is asking so '
-      + 'that the reading it stands on can be used. There is no default reading, because a strength '
-      + 'reported for a reading nobody meant is a number about something else.',
+    translation: word('refusal.VERSION_STRENGTH_NO_VERSION'),
   },
   VERSION_STRENGTH_NO_SUCH_VERSION: {
     check: 'C-30.4',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'No reading by that name belongs to this question, or this project has not said '
-      + 'which reading it stands on. An empty answer here would say the question rests on nothing '
-      + 'when the truth is that nobody has pointed at anything yet.',
+    translation: word('refusal.VERSION_STRENGTH_NO_SUCH_VERSION'),
   },
   VERSION_STRENGTH_UNKNOWN_STATE: {
     check: 'C-30.5',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'One of the words used to say which readings to count is not one this record knows. '
-      + 'The set is closed on purpose: a strength that quietly counted readings nobody recognises '
-      + 'would be a number no reader could check.',
+    translation: word('refusal.VERSION_STRENGTH_UNKNOWN_STATE'),
   },
   /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
      unaccepted version is done by CALCULATING OVER IT, never by making it
@@ -86,9 +79,7 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_STATE_EXCLUDED: {
     check: 'C-30.6',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'Nobody has adopted that reading, so it is not what this record answers with. '
-      + 'You can still see what it would come to — ask for it as a what-if by saying which kinds of '
-      + 'reading to count — and the answer will say on its face that that is what it is.',
+    translation: word('refusal.VERSION_STRENGTH_STATE_EXCLUDED'),
   },
   /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
      super-conclusion over them and MUST NOT derive a single case-level
@@ -100,10 +91,7 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_COMPOSED: {
     check: 'C-30.7',
     where: at('refusePairComposed', 'is-pair-composed'),
-    translation: 'This answer tried to report one overall figure for a question, and there is no such '
-      + 'figure. How well the documents were captured and how firmly they connect to the subject are '
-      + 'two separate measurements over two separate things, and averaging them or picking one would '
-      + 'state something neither of them says.',
+    translation: word('refusal.VERSION_STRENGTH_COMPOSED'),
   },
   /* DEC-40 determination 2, and its own negative control: *"a filtered
      rendering states its filter IN DEC-34's per-page header … An unfiltered
@@ -115,15 +103,12 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_UNFILTERED: {
     check: 'C-30.8',
     where: at('refusePairComposed', 'is-pair-composed'),
-    translation: 'This answer did not say which readings it counted, and a strength separated from '
-      + 'that is a misreading waiting to happen. Every answer here says on its face whether it is '
-      + 'the record\'s own or a view somebody constructed.',
+    translation: word('refusal.VERSION_STRENGTH_UNFILTERED'),
   },
   VERSION_STRENGTH_TOO_MANY_STATES: {
     check: 'C-30.9',
     where: at('versionStrength', 'is-version-strength'),
-    translation: 'More kinds of reading were named than this record has. The bound is said here '
-      + 'rather than applied quietly, so nothing is dropped without you being told.',
+    translation: word('refusal.VERSION_STRENGTH_TOO_MANY_STATES'),
   },
 });
 
@@ -161,47 +146,37 @@ export const PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_NO_INQUIRY: {
     check: 'C-71.1',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'This asks whether the groups of reasons behind one question share a source, and no '
-      + 'question was named. There is no default question here and there must not be one.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_NO_INQUIRY'),
   },
   PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
     check: 'C-71.2',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'That is not a question you can read here, so it has no reasons to group. Only a '
-      + 'question rests on reasons, and a question you may not see answers exactly as one that does '
-      + 'not exist.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_NOT_AN_INQUIRY'),
   },
   PARTITION_INDEPENDENCE_UNREADABLE: {
     check: 'C-71.3',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'The grouping of reasons could not be read. Send it as a list of groups, each group a '
-      + 'list of the positions of the reasons in it, or as groups each carrying a name and its '
-      + 'positions. Every group needs at least one reason and a name no other group has.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_UNREADABLE'),
   },
   PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
     check: 'C-71.4',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'The grouping names a reason this question does not have. It was not dropped quietly, '
-      + 'because an answer about groups the question does not hold would be an answer about something else.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_UNKNOWN_LEG'),
   },
   PARTITION_INDEPENDENCE_LEG_TWICE: {
     check: 'C-71.5',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'One reason was put in two groups. Each reason belongs to exactly one group, because a '
-      + 'reason shared by two groups would make them share a source by construction.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_LEG_TWICE'),
   },
   PARTITION_INDEPENDENCE_NOT_TOTAL: {
     check: 'C-71.6',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'Some of this question\'s reasons are in no group. A grouping covers every reason, as a '
-      + 'written reading does, so that what is checked here is what would be written.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_NOT_TOTAL'),
   },
   PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
     check: 'C-71.7',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'This question rests on more reasons than a written reading may hold, so a grouping of '
-      + 'all of them could not be written and is not checked. The bound is said here rather than '
-      + 'applied quietly.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_TOO_MANY_LEGS'),
   },
   /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
      groups, answering independence on its own with no strength beside it. Two refusals the arm owes,
@@ -210,14 +185,12 @@ export const PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
     check: 'C-71.8',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'Both a written reading and a proposed grouping were named. This answers for one of them '
-      + 'at a time, and which one was meant is not something to guess, so name only the one you want.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_TWO_SUBJECTS'),
   },
   PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
     check: 'C-71.9',
     where: at('partitionIndependence', 'is-partition-independence'),
-    translation: 'No reading by that name belongs to this question, so there are no written groups of it '
-      + 'to check. Nothing was substituted for it.',
+    translation: word('refusal.PARTITION_INDEPENDENCE_NO_SUCH_VERSION'),
   },
 });
 
@@ -230,34 +203,26 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: 'C-32.9',
     where: at('machineCannotDeclare', 'is-machine-strength-bar'),
-    translation: 'How much evidence this team requires of itself is the team\'s own declaration '
-      + 'about the standard it works to, and everything filed afterwards is measured against it. '
-      + 'An automated credential cannot set that bar for the people it works for. Sign in to '
-      + 'change it.',
+    translation: word('refusal.MACHINE_CANNOT_DECLARE'),
   },
   STRENGTH_BAR_NOT_ADMIN: {
     check: 'C-107.1',
     where: at('strengthBarSet', 'is-admin-strength-bar'),
-    translation: 'The standard of evidence a new project starts from is set for the whole team, so only '
-      + 'an administrator can change it. A project can still declare its own standard in its own document. '
-      + 'Nothing was changed.',
+    translation: word('refusal.STRENGTH_BAR_NOT_ADMIN'),
   },
   /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: 'C-107.2',
     where: at('badGrade', 'is-strength-bar-grade'),
-    translation: 'A standard of evidence is stated in the grades the record uses, A to D, one for how the documents '
-      + 'were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed.',
+    translation: word('refusal.BAD_GRADE'),
   },
   /* DEC-88 (K1025): the administrator's own words on why the group sets this bar, recorded with it and answered beside
      it, because a standard set for everyone's work with no reason given is one nobody can weigh or answer. */
   BAR_NO_REASON: {
     check: 'C-107.3',
     where: at('strengthBarSet', 'is-strength-bar-reason'),
-    translation: 'A standard of evidence for the whole team is set with a reason: say in your own words why the team '
-      + 'works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. '
-      + 'Nothing was changed.',
+    translation: word('refusal.BAR_NO_REASON'),
   },
   /* R40 (T47; N976, K3003): a project's own standard of evidence, set by a member of the project, is recorded with the
      member's own words on why, as the group's default is (C-107.3), because a bar raised or lowered with no reason given
@@ -265,7 +230,6 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
   PROJECT_BAR_NO_REASON: {
     check: 'C-107.4',
     where: at('projectBarSet', 'is-project-bar-reason'),
-    translation: 'A project\'s standard of evidence is set with a reason: say in your own words why the project works to '
-      + 'this standard, in at most 2,000 characters. The reason is kept with it. Nothing was changed.',
+    translation: word('refusal.PROJECT_BAR_NO_REASON'),
   },
 });

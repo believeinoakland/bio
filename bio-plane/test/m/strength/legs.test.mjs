@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { STRENGTH_AXES, GRADING_METHOD_VERSION, recomputePair, parseOccurrenceRef } from "../../../src/strength/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const CALC = "CALC-2026-0001", CALC2 = "CALC-2026-0002";
@@ -30,11 +31,9 @@ test("R36: a calculation leg counts on the capture axis only, at the weakest inp
   assert.deepEqual(axesOf(p), [["capture", "graded", "C"], ["connection", "graded", "B"], ["testimony", "unrated", null]]);
   const m = p.capture.weakest;
   assert.deepEqual([m.target_id, m.via, m.grade], [CALC, "derived", "C"]);
-  assert.match(m.why, /weakest capture among its inputs/);
-  assert.match(m.why, /arithmetic does not weaken it/);
-  assert.match(m.why, /method is stated beside the grade \(a share of the totals\) and is not graded/);
+  assert.equal(m.why, word("strength.why.counts_weakest_capture", { id: CALC, grade: "C", named: " (a share of the totals)" }));
   for (const axis of ["connection", "testimony"])
-    assert.match(p[axis].not_load_bearing.find((x) => x.target_id === CALC).why, /capture axis only/, axis);
+    assert.equal(p[axis].not_load_bearing.find((x) => x.target_id === CALC).why, word("strength.why.leg_counts_capture"), axis);
   /* A stronger calculation beside a weaker document leaves the document setting the axis: never lifted. */
   w.calcs.set(CALC2, { capture: { grade: "A", why: "held" }, inputs: [] });
   w.inquiry("INQ-2026-0002-a", [{ target: CALC2 }, { target: DOC, grade: "D", axis: "capture", source: "capture" }]);
@@ -43,12 +42,13 @@ test("R36: a calculation leg counts on the capture axis only, at the weakest inp
 
 test("R36: not accepted, not held, unreadable facts, an unmeasured engine's value or no input capture: the leg is undetermined, named with why; a hunch is inert", () => {
   const cases = [
-    ["not accepted", (w) => w.calcs.set(CALC, { accepted: false, capture: { grade: "B" } }), /is not accepted/],
-    ["not held", () => {}, /is not a calculation your team's Civicsmith holds/],
+    ["not accepted", (w) => w.calcs.set(CALC, { accepted: false, capture: { grade: "B" } }),
+     word("strength.stopped.result_accepted_leg", { id: CALC })],
+    ["not held", () => {}, word("strength.stopped.calculation_group_civicsmith", { id: CALC })],
     ["another program's value", (w) => w.calcs.set(CALC, { capture: { grade: "B" }, inputs: [{ name: "cell", engine: "sheet" }] }),
-     /another program computed \(cell\).*not measured/],
+     word("strength.stopped.uses_value_program", { id: CALC, input: "cell" })],
     ["no input capture", (w) => w.calcs.set(CALC, { capture: { grade: null, why: "undetermined: a, not held" } }),
-     /capture strength of CALC-2026-0001 is unknown: undetermined: a, not held/],
+     word("strength.stopped.capture_strength_unknown", { id: CALC, grade: "undetermined: a, not held" })],
   ];
   for (const [name, set, why] of cases) {
     const w = world();
@@ -56,9 +56,9 @@ test("R36: not accepted, not held, unreadable facts, an unmeasured engine's valu
     w.inquiry(INQ, [{ target: CALC }]);
     const p = w.s.strengthOf(INQ);
     assert.equal(p.capture.state, "undetermined", name);
-    assert.match(exhaustedWhy(p.capture, CALC), why, name);
-    assert.match(p.capture.detail, /nothing here establishes what CALC-2026-0001 rests on/, name);
-    assert.doesNotMatch(p.capture.detail, /depth bound/, name);
+    assert.equal(exhaustedWhy(p.capture, CALC), why, name);
+    assert.ok(p.capture.detail.includes(word("strength.text.establishes_rests", { unknown: CALC })), name);
+    assert.ok(!p.capture.detail.includes(word("strength.text.basis_walk_reached", { depth_bound: 6, bound: "" })), name);
   }
   /* A calculations module whose read is a Promise (calculations R9 as built, J2) is not consumed: undetermined. */
   const a = world();
@@ -66,13 +66,13 @@ test("R36: not accepted, not held, unreadable facts, an unmeasured engine's valu
   const real = a.s.calculations.gradeFactsOf;
   a.s.calculations.gradeFactsOf = async (x) => real(x);
   a.inquiry(INQ, [{ target: CALC }]);
-  assert.match(exhaustedWhy(a.s.strengthOf(INQ).capture, CALC), /cannot be read here/);
+  assert.equal(exhaustedWhy(a.s.strengthOf(INQ).capture, CALC), word("strength.stopped.grade_facts_read", { id: CALC }));
   /* A hunch on a calculation counts nothing and inherits nothing. */
   const h = calcWorld();
   h.inquiry(INQ, [{ target: CALC, source: "hunch" }]);
   const hp = h.s.strengthOf(INQ);
   assert.equal(hp.capture.state, "unrated");
-  assert.match(hp.capture.not_load_bearing[0].why, /marked as a hunch/);
+  assert.equal(hp.capture.not_load_bearing[0].why, word("strength.hunch_why"));
   assert.equal(hp.hunches_left_out, 1);
 });
 
@@ -91,10 +91,10 @@ test("R36: versionStrength, candidatePair and recomputePair over gradingFacts an
   /* Unknown: the version names it in ungraded, the facts carry why, and the recomputation is undetermined too. */
   w.calcs.get(CALC).accepted = false;
   const u = w.s.versionStrength({ id: INQ, version: "v1", viewer: MACHINE });
-  assert.match(u.ungraded[0].why, /is not accepted/);
+  assert.equal(u.ungraded[0].why, word("strength.stopped.result_accepted_leg", { id: CALC }));
   assert.equal(u.pair.capture.state, "undetermined");
   const uf = w.s.gradingFacts({ inquiry: INQ, viewer: MACHINE });
-  assert.match(uf.legs[0].undetermined, /is not accepted/);
+  assert.equal(uf.legs[0].undetermined, word("strength.stopped.result_accepted_leg", { id: CALC }));
   assert.equal(recomputePair({ legs: uf.legs, version: GRADING_METHOD_VERSION }).capture.state, "undetermined");
 });
 
@@ -104,7 +104,7 @@ test("R37: a held standard leg counts on the capture axis at its stated grade bo
   w.inquiry(INQ, [{ target: STD, grade: "A", axis: "capture", source: "capture" }]);
   const p = w.s.strengthOf(INQ);
   assert.equal(p.capture.grade, "B", "capped at the ceiling of its text, never raised");
-  assert.match(p.capture.weakest.why, /no more than B for STD-2026-0001/);
+  assert.equal(p.capture.weakest.why, "ceiling B for STD-2026-0001");
   w.inquiry("INQ-2026-0002-a", [{ target: STD, grade: "C", axis: "capture", source: "capture" }]);
   assert.equal(w.s.strengthOf("INQ-2026-0002-a").capture.grade, "C");
   /* STANDARD_NO_TEXT (leg-earning R8): undetermined, unlike a document leg, which is inert. */
@@ -124,7 +124,7 @@ test("R37: a held standard leg counts on the capture axis at its stated grade bo
   c.inquiry(INQ, [{ target: STD, grade: "A", axis: "connection", source: "resolution" }]);
   const cp = c.s.strengthOf(INQ);
   assert.equal(cp.connection.state, "unrated");
-  assert.match(cp.connection.not_load_bearing[0].why, /held standard, so a connection grade on this leg has no referent/);
+  assert.equal(cp.connection.not_load_bearing[0].why, word("strength.why.target_held_standard", { axis: "connection" }));
   /* The pair over a version, a candidate and the recomputation agree. */
   w.version(INQ, "v1", "accepted", [{ target: STD, grade: "A", axis: "capture", source: "capture", ground: "" }]);
   assert.equal(w.s.versionStrength({ id: INQ, version: "v1", viewer: MACHINE }).pair.capture.grade, "B");
@@ -163,8 +163,8 @@ test("R38: an occurrence leg counts on the capture axis at the weaker of its sou
     assert.deepEqual([p.capture.state, p.capture.grade], ["graded", "C"], state);
     const m = p.capture.weakest;
     assert.deepEqual([m.target_id, m.via], [OCC, "derived"]);
-    assert.match(m.why, /set by the record of EVT-2026-0001's date/);
-    assert.match(m.why, new RegExp(`It is ${state.replace("_", " ")} as known today; that is stated beside the grade and never changes it`));
+    assert.equal(m.why, word("strength.why.counts_set_weaker", { ref: OCC, grade: "C", g: state.replace("_", " "),
+      setter: word("strength.setter.record_date", { ref: "EVT-2026-0001" }) }));
     grades.push(p.capture.grade);
   }
   assert.equal(new Set(grades).size, 1, "the state never raises or lowers the grade");
@@ -172,7 +172,7 @@ test("R38: an occurrence leg counts on the capture axis at the weaker of its sou
   const t = dutyWorld({ ceiling: "D", eventGrade: "A" });
   t.inquiry(INQ, [{ target: OCC }]);
   assert.equal(t.s.strengthOf(INQ).capture.grade, "D");
-  assert.match(t.s.strengthOf(INQ).capture.weakest.why, /set by the text of STD-2026-0001/);
+  assert.ok(t.s.strengthOf(INQ).capture.weakest.why.includes(word("strength.setter.text", { standard: STD })));
   /* A recurrence's date is computed from the rule itself: the source's text alone. */
   const r = dutyWorld({ trigger: { kind: "recurrence", ref: "2026-03", date: "2026-03-01" }, eventGrade: "D" });
   r.inquiry(INQ, [{ target: OCC }]);
@@ -181,25 +181,32 @@ test("R38: an occurrence leg counts on the capture axis at the weaker of its sou
 
 test("R38: a part of the derivation duties answers undetermined, or an occurrence not derived, makes the leg undetermined, named with why", () => {
   const cases = [
-    ["due date undetermined", { due: { undetermined: true, why: "the rule's day count is not held" } }, /due date is undetermined: the rule's day count/],
-    ["source in force undetermined", { inForce: { state: "undetermined", why: "no version covers the date" } }, /whether its source is in force is undetermined/],
-    ["a practice source holds no text", { source: { kind: "practice" } }, /its source holds no captured text/],
-    ["the source's text unknown", { ceiling: null }, /what the record holds for the text of STD-2026-0001 is undetermined/],
-    ["the trigger's date not attested", { trigger: { kind: "event", ref: "EVT-2026-0099", date: "2026-03-01" } }, /date of EVT-2026-0099, which started it, is not attested/],
-    ["the trigger date undetermined", { trigger: { kind: "date", ref: null, date: { undetermined: true } } }, /date that started it is undetermined/],
+    ["due date undetermined", { due: { undetermined: true, why: "the rule's day count is not held" } },
+     word("strength.unknown.due_date_undetermined", { why: ": the rule's day count is not held" })],
+    ["source in force undetermined", { inForce: { state: "undetermined", why: "no version covers the date" } },
+     word("strength.unknown.source_force_undetermined", { why: "no version covers the date" })],
+    ["a practice source holds no text", { source: { kind: "practice" } }, word("strength.unknown.source_holds_captured")],
+    ["the source's text unknown", { ceiling: null }, word("strength.unknown.record_holds_text", { standard: STD, why: ": the text of the rule is captured" })],
+    ["the trigger's date not attested", { trigger: { kind: "event", ref: "EVT-2026-0099", date: "2026-03-01" } },
+     word("strength.unknown.date_started_attested", { ref: "EVT-2026-0099" })],
+    ["the trigger date undetermined", { trigger: { kind: "date", ref: null, date: { undetermined: true } } },
+     word("strength.unknown.date_started_undetermined")],
   ];
   for (const [name, opts, why] of cases) {
     const w = dutyWorld(opts);
     w.inquiry(INQ, [{ target: OCC }]);
     const p = w.s.strengthOf(INQ);
     assert.equal(p.capture.state, "undetermined", name);
-    assert.match(exhaustedWhy(p.capture, OCC), why, name);
+    assert.equal(exhaustedWhy(p.capture, OCC), word("strength.stopped.leg_rests_unknown", { ref: OCC, why }), name);
   }
   const w = dutyWorld();
   w.inquiry(INQ, [{ target: `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff` }, { target: "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111" }]);
   const p = w.s.strengthOf(INQ);
-  assert.match(exhaustedWhy(p.capture, `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff`), /no occurrence by that key is derived/);
-  assert.match(exhaustedWhy(p.capture, "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111"), /DUT-2026-0009 is not an obligation your team's Civicsmith holds/);
+  const noKey = `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff`, noDuty = "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111";
+  assert.equal(exhaustedWhy(p.capture, noKey),
+    word("strength.stopped.leg_rests_unknown", { ref: noKey, why: word("strength.unknown.occurrence_key_derived") }));
+  assert.equal(exhaustedWhy(p.capture, noDuty),
+    word("strength.stopped.leg_rests_unknown", { ref: noDuty, why: word("strength.unknown.obligation_group_civicsmith", { duty: "DUT-2026-0009" }) }));
 });
 
 test("R38: versionStrength, candidatePair, gradingFacts and recomputePair answer the same occurrence grade; inquiryStrength withholds an occurrence whose obligation the viewer may not see", () => {
@@ -249,5 +256,5 @@ test("R32, R31: recomputePair at version 1 reads no new leg kind (each is a docu
     assert.equal(r.capture.undetermined_at[0].why, "unknown here", kind);
   }
   const none = recomputePair({ version: GRADING_METHOD_VERSION, legs: [{ target: "X", kind: "calculation" }] });
-  assert.match(none.capture.undetermined_at[0].why, /states no capture strength/);
+  assert.equal(none.capture.undetermined_at[0].why, word("strength.stopped.case_file_states_capture"));
 });
