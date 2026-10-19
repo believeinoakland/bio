@@ -1,6 +1,6 @@
 # installer (T51)
 
-**Status** · session_011hjYKR44H9ywSxAQA6QTj8 · depth 2 · COMPLETE · handled B12
+**Status** · session_015N9KMart6rS3Kg4rAe27xb · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -123,3 +123,42 @@ COMPLETE (B11 applied; pushed on job/T51/installer, tranche/T51 merged in).
 (3) requirements R40's by-key exemption for `how.finished` is dropped; the test passes on the reworded row. Both new keys are in KEYS.
 CHECKS: format 0 failures; architecture 0; coverage 70 of 70; ownership 0; words check for installer no finding; setup-words --check matches. Suites: wizard 207, requirements 54, t48 10, t50 19, t51 8, corpus 3, realsize 4, steps and embed pass; t47 red only in R53 (stale bundle).
 Size (session_011hjYKR44H9ywSxAQA6QTj8): test runs ~55, module lines 2905
+
+## J13 · COMPLETE
+
+COMPLETE (CR-23, B13 applied; pushed on job/T51/installer, tip 577c2e890d; tranche/T51 merged in, no installer path changed by it).
+
+APPLIED
+(1) R81 / BOB note 1: `MEMBER_OBJECTS` is removed from the re-export in `newgroup/src/index.mjs` (line 86) and from the export-list name list in `newgroup/test/t51.test.mjs` (R80's OLD_EXPORTS). New test `R81 ...` in t51.test.mjs asserts the export list holds no MEMBER_OBJECTS, with controls (the list is read; a list that holds the name is found). R81 is now named by a test; coverage 71 of 71.
+(2a) BOB note 2(a): the t50 release fixture (`newgroup/test/fixture.mjs`) now states agent-worker's `Worker` part (`worker.json`) with its own Durable Objects (SEGMENTS/SegmentDriver, CHECKS/CheckRecord, migrations v1, v2), as installer-steps' `test/steps/world.mjs` does (new `agentWorker` option, default AGENT_WORKER; `null` gives no part). R59 and R69 are green again.
+(2b) BOB note 2(b): `MEMBER_OBJECTS` removed from `index.mjs` and `t51.test.mjs` (see 1).
+(2c) BOB note 2(c): `t50.test.mjs` line 103 drops the stale first argument: `objectMigrations(null)` (new signature `(heldTag, objects)`).
+
+TESTS (session_015N9KMart6rS3Kg4rAe27xb; each run on the branch as it stands)
+- newgroup/test/t50.test.mjs + t51.test.mjs: 27 pass, 0 fail, 2 todo (R56, a todo since before this job). t51 alone: 9 pass, 0 fail (R81 passes).
+- newgroup/test/wizard.test.mjs: 207 passed, 0 failed.
+- requirements, t47, t48, corpus, realsize (node --test): 76 pass, 0 fail, 3 todo.
+- newgroup/test/steps/ (installer-steps' suite, run unchanged): 89 pass, 0 fail.
+- newgroup/test/embed.test.mjs: 23 passed, 0 failed.
+- Not run: newgroup-bundle-fresh (bio-plane/test/system); see FOR BOB (a).
+
+CHECKS (process repo, after the tranche merge)
+- node checks/format.mjs: 175 modules, 0 failures.
+- node checks/architecture.mjs installer: 0 failures.
+- node checks/coverage.mjs installer: 71 of 71 live requirement ids named by a test; 0 failures.
+- node checks/words.mjs installer: inline 0, plain 0, testcopy 0; 0 failures.
+- node checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer: 5 files changed by installer; 0 failures.
+- node checks/run.mjs /home/user/bio: installer's own lines clean (words and architecture for installer: 0 findings). The run has 8 coverage failures and 19 words failures, none in installer; listed under FOR BOB (b).
+
+DEFERRED: none.
+
+FOR BOB
+(a) STALE GENERATED ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (and its .bundle.json) is built from `newgroup/src/index.mjs`, which changed here (the re-export). Regenerate with `cd newgroup && npm run build` at L11's close (manifest §14). I did not run newgroup-bundle-fresh, so I do not know its current state.
+(b) OTHER MODULES' RED, seen in `node checks/run.mjs`, none of it mine:
+   - coverage, live ids named by no test: agent-harness R17; agent-runner R36 R37 R38 R40; installer-steps R26 R31; instance-setup R98 R99; journey-check R19; screens-inquiry R81 R82; screens-settings R62.
+   - words, inline copy in instance-setup `bio-plane/src/setup-fleet.mjs` lines 30 to 67 (12 sentences, instance-setup's, not installer's; these are the hosting-control sentences my J4 note says the design owns).
+   - testcopy in file-safety: `bio-plane/test/m/file-safety/fixture.mjs:126`, `tools.test.mjs:33,180,191,195,275,434` (7 literal copies).
+(c) REQUIREMENTS MARKER: `build/requirements/installer.md` R81 still reads "*(not yet met: T51)*". That file is not in my paths, so I did not edit it. The test that names R81 now passes; please mark it met.
+(d) installer-steps' test/steps/world.mjs and this module's fixture.mjs still carry two copies of the agent-worker release (J4 deferral 1 stands; world.mjs's shape is the one copied here).
+
+Size (session_015N9KMart6rS3Kg4rAe27xb): test runs ~9, module lines 2888 (src 2,472 without release.mjs, scripts 416).

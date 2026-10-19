@@ -185,10 +185,20 @@ test("R79 the invitation page is built from the keys: its committed file is exac
   assert.notEqual(committed.replace(word("installer.invite.button"), "Click here"), invitePage(), "an inline sentence is not the output");
 });
 
+/* ------------------------------------------------------------------------------------------------ R81 */
+
+test("R81 `src/index.mjs` no longer re-exports MEMBER_OBJECTS (gone with installer-steps R37): its export list holds no MEMBER_OBJECTS; control: the list is read (it holds objectMigrations), and a list that does hold the name is found", async () => {
+  const index = await import("../src/index.mjs");
+  const names = Object.keys(index);
+  assert.ok(names.includes("objectMigrations"), "control: the export list is read");
+  assert.ok(!names.includes("MEMBER_OBJECTS"), "the export list holds no MEMBER_OBJECTS");
+  assert.ok([...names, "MEMBER_OBJECTS"].includes("MEMBER_OBJECTS"), "control: a list with the name is found");
+});
+
 /* ------------------------------------------------------------------------------------------------ R80 */
 
 const OLD_EXPORTS = ["ARMED_SIGNERS", "ASSISTANT_BINDING", "ASSISTANT_OWN_ACCOUNTS", "BROWSER_BINDING", "CFG", "CONTAINER_PART", "HANDOVER_PATH",
-  "INSTANCE_AI_BINDING", "MEMBER_BINDING", "MEMBER_OBJECTS", "OWN_HOSTS_BINDING", "PER_REQUEST_DATASET", "PROFILES_BINDING", "RETIRED_BINDINGS",
+  "INSTANCE_AI_BINDING", "MEMBER_BINDING", "OWN_HOSTS_BINDING", "PER_REQUEST_DATASET", "PROFILES_BINDING", "RETIRED_BINDINGS",
   "RETIRED_CLAUDE_BINDING", "SEAL_BINDING", "SourceUnavailable", "VPC_BINDING", "VPC_MEMBER", "WORKER_PART", "assetResponse", "containerClasses",
   "containerDescriptor", "default", "filterExcludes", "instanceAiOk", "memberLimits", "objectMigrations", "planeLimits", "reportsBuilds",
   "vpcServiceOk", "workerDescriptor"];

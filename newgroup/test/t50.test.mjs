@@ -100,7 +100,7 @@ test("R59 the install and the update bind agent-worker's SEGMENTS (class Segment
     assert.ok(!(other?.bindings || []).some((b) => b.name === "SEGMENTS" || b.name === "CHECKS"), member);
     assert.equal(bindsBoth(other), false, `${member}: a member upload without both fails the check`);
   }
-  assert.equal(installer.objectMigrations("pdf-worker", null), null);
+  assert.equal(installer.objectMigrations(null), null);
   restoreSigners();
 });
 
