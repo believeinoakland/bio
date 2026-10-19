@@ -356,8 +356,7 @@ export class MachineryProducers {
           ? { state: "determined", since: new Date(refusedAt).toISOString(),
               ms: Math.max(0, now - refusedAt) }
           : { state: "undetermined", reason: "no_refusal_instant",
-              detail: "the governor row is in cool-off but carries no instant for the refusal that "
-                    + "started it, so how long this has been true is not derivable" },
+              detail: localize("machinery-producers.index.cooloff_no_refusal_instant", "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf(subj.ids),
@@ -428,7 +427,7 @@ export class MachineryProducers {
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
-              detail: "the session row carries a created stamp this producer cannot read as an instant" },
+              detail: localize("machinery-producers.index.session_created_unreadable", "the session row carries a created stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         options: bundleId ? this.#optionsOf([bundleId]) : [],
@@ -559,15 +558,11 @@ export class MachineryProducers {
                  writer: latest.writer ?? null, operation: latest.operation ?? null,
                  started_by: started.author, started_snap_key: started.snap_key,
                  started_created: started.created, grade_notes: notes,
-                 detail: "the machine writer is NAMED, never anonymous: the control plane deletes any "
-                       + "caller-supplied author and stamps token:<class> for a machine credential "
-                       + "(REC-2, closing D-61), so this is the record's own trace of an unattended "
-                       + "write and not an inference. It clears for every member when a person "
-                       + "authors the document again." },
+                 detail: localize("machinery-producers.index.machine_writer_is_named", "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.") },
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: latest.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
-              detail: "the manifest entry carries a created stamp this producer cannot read as an instant" },
+              detail: localize("machinery-producers.index.manifest_created_unreadable", "the manifest entry carries a created stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([b.bundle_id]),
@@ -653,7 +648,7 @@ export class MachineryProducers {
         age: Number.isFinite(capturedMs)
           ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
           : { state: "undetermined", reason: "unparseable_captured_at",
-              detail: "the request row carries a completion stamp this producer cannot read as an instant" },
+              detail: localize("machinery-producers.index.request_completion_unreadable", "the request row carries a completion stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([r.target]),
@@ -722,19 +717,15 @@ export class MachineryProducers {
         subject: { kind: "address", id: null, address,
                    bundles: subj.ids.slice(0, MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX) },
         summary: word("machinery-producers.summary.stopped_answering_often", { address }),
-        detail: "our own attempts at this address have failed enough times, for long enough, that the archive "
-              + "fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about "
-              + "the publisher.",
+        detail: localize("machinery-producers.index.our_own_attempts_at", "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher."),
         basis: { source: "monitoring.archiveEligible", address, reachability: r.reachability ?? null,
                  bound: { limit: page.limit ?? null, truncated: page.truncated === true },
                  paused: page.paused ?? null,
-                 detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it "
-                       + "(monitoring R47); the tick itself fires the fallback, and this item clears when the address "
-                       + "answers again." },
+                 detail: localize("machinery-producers.index.eligibility_is_captures_rule", "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.") },
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "no_first_failure",
-              detail: "the failing run carries no first-failure instant this producer can read" },
+              detail: localize("machinery-producers.index.failing_run_no_first_failure", "the failing run carries no first-failure instant this producer can read") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf(subj.ids),
@@ -773,7 +764,7 @@ export class MachineryProducers {
         age: overdue
           ? { state: "determined", since: r.due_at, ms: Math.max(0, now - dueMs) }
           : { state: "undetermined", reason: "unscheduled",
-              detail: "an unscheduled address has no instant it fell due" },
+              detail: localize("machinery-producers.index.unscheduled_no_instant", "an unscheduled address has no instant it fell due") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([r.bundle]),
@@ -852,7 +843,7 @@ export class MachineryProducers {
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "unparseable_requested_at",
-              detail: "the request row carries a request stamp this producer cannot read as an instant" },
+              detail: localize("machinery-producers.index.request_stamp_unreadable", "the request row carries a request stamp this producer cannot read as an instant") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([r.target]),
@@ -971,7 +962,7 @@ export class MachineryProducers {
         age: Number.isFinite(sinceMs)
           ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) }
           : { state: "undetermined", reason: "no_condition_instant",
-              detail: "the sweep's status carries no instant this producer can read" },
+              detail: localize("machinery-producers.index.sweep_status_no_instant", "the sweep's status carries no instant this producer can read") },
         assignee: null,
         assignee_role: null,
         options: this.#optionsOf([bundle]),
