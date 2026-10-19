@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01694DjkFk3Xc4UJ3gbq7ezF · depth 2 · COMPLETE · handled B7
+**Status** · session_01694DjkFk3Xc4UJ3gbq7ezF · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -46,3 +46,7 @@ Checks: format 0, architecture 0, coverage 35 of 35, ownership 0, words (my modu
 Deferred, with why: (1) "our move" from `approvedunsent` and `checkpointsdue`: neither answer's shape is stated in a requirement I can read as a contract, so "our move" stays read from `filingsfor`'s drafts (an approved, unsent text is a draft at step send/second, so approvedunsent adds nothing); the checkpoint half waits on a stated shape: BOB to state it or declare it not needed. (2) The kit's `help: [k1, k2]` option: my three sections' tooltips (own markup) and the second help sentences (as notes) still work; moving them to the kit is a cosmetic change for the next touch. (3) "Replies to read" (`screen.dash-action.tile.came`) is not drawn: no provider defines it. (4) R27 on `plan`, `request`, `start-send`: acts the shell's gate lets a reader see (`itemtakeup`, `optionstartpreview`, `addresseesuggest`) stay drawn; only `action`'s reminder is withheld.
 Found in other modules: none new since J2/J3.
 Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 75, module lines 3260
+
+## J5 · COMPLETE
+
+COMPLETE (T51-122), re B8. The checkpoint half is built: `dash-action` reads `checkpointsdue`, maps each due plan to its started options' actions through the `plan` read, and draws 'our move' for them; the test has the controls (a judged checkpoint, i.e. none due, is not our move; a plan with no action counts nowhere) and shows approvedunsent's items are the drafts at step send, the same rows. Suite 134 of 134; format, architecture, ownership, words 0; coverage 35 of 35. Deferrals (2)-(4) stand. Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 78, module lines 3290

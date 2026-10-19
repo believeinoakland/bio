@@ -18,6 +18,8 @@ export const dashAction = Object.freeze({
       queue: { op: "queue", empty: function () { return false; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
       profiles: { op: "profiles", empty: function () { return false; } },
+      // R30: the plan checkpoints whose day has come and that no member has judged (`action-plans` R17)
+      checkpoints: { op: "checkpointsdue", query: { limit: "500" }, empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
     };
   },
@@ -27,12 +29,12 @@ export const dashAction = Object.freeze({
     // R30: an action that is not resolved or abandoned is open
     isOpen: function (state) { return state !== "resolved" && state !== "abandoned"; },
     // R30: whose move it is, from facts the action states: "theirs", "ours" or ""
-    whose: function (a, step) {
+    whose: function (a, step, checkpoint) {
       const corr = Array.isArray(a.correspondence) ? a.correspondence : [];
       const sentOrds = corr.filter(function (c) { return c.direction === "sent"; }).map(function (c) { return Number(c.ord) || 0; });
       const lastSent = sentOrds.length ? Math.max.apply(null, sentOrds) : -1;
       const answered = corr.some(function (c) { return c.direction === "received" && (Number(c.ord) || 0) > lastSent; });
-      if (step === "approve" || step === "second" || step === "send") return "ours";
+      if (step === "approve" || step === "second" || step === "send" || checkpoint === true) return "ours";
       if (sentOrds.length && a.reply_owed && a.reply_owed.owed === true && !answered && a.current_state !== "resolved") return "theirs";
       return "";
     },
@@ -60,7 +62,15 @@ export const dashAction = Object.freeze({
         return { row: x, a: a, f: f, v: a.state === "ok" ? a.value : null, step: f.state === "ok" ? P.stepOf(f.value) : "" };
       });
       const ready = full.filter(function (x) { return x.v; });
-      const move = ready.map(function (x) { return Object.assign({ whose: P.whose(x.v, x.step) }, x); });
+      // a due, unjudged checkpoint on a plan whose started option made the action is that action's "our move"; a plan with no action counts nowhere
+      const cp = view.data.checkpoints && view.data.checkpoints.state === "ok" && view.data.checkpoints.value && Array.isArray(view.data.checkpoints.value.items) ? view.data.checkpoints.value.items : [];
+      const planIds = cp.map(function (c) { return c && c.plan; }).filter(function (id, i, all) { return id && all.indexOf(id) === i; }).slice(0, 40);
+      const checkpointed = new Set();
+      planIds.forEach(function (id) {
+        const pl = P.later(cs, view, "p:" + id, "plan", { id: id }, "");
+        (pl.state === "ok" && pl.value && Array.isArray(pl.value.options) ? pl.value.options : []).forEach(function (o) { if (o && o.action && o.action.id) checkpointed.add(o.action.id); });
+      });
+      const move = ready.map(function (x) { return Object.assign({ whose: P.whose(x.v, x.step, checkpointed.has(x.row.id)) }, x); });
       const running = move.filter(function (x) { return P.nextClock(x.v); });
       const week = running.filter(function (x) { const d = String(P.nextClock(x.v).date); return d >= today && d <= new Date(cs.now() + 7 * 86400000).toISOString().slice(0, 10); });
       const ours = move.filter(function (x) { return x.whose === "ours"; });
