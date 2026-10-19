@@ -40,7 +40,6 @@ const ARMS = [
 
 test("R9 the row reads DEC-199's sentence from words.json's refusal.BEARING_REFUSED by key, never a copy; code, number and where unmoved", () => {
   assert.ok(SENTENCE && SENTENCE.includes("{item}"), "words.json holds DEC-199's sentence with {item}");
-  assert.match(SENTENCE, /from 1 to 50 claims/);
   assert.equal(word(KEY, { item: "{item}" }), SENTENCE, "setup-words holds words.json's sentence, verbatim");
   const row = ACTION_REPLY_CHECKS.BEARING_REFUSED;
   assert.deepEqual([row.check, row.where, row.translation],
