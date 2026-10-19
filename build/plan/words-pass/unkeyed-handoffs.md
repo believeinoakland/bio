@@ -16,3 +16,6 @@ BOB batches these into one HANDOFF per R layer close. Each: module, file:line, t
 ## Rows asked of the design (R1)
 - image-cover: `refusal.NOT_A_COVERABLE_FORMAT`, `refusal.UNSUPPORTED_JPEG_PROCESS`, `refusal.PNG_INTERLACED`, `refusal.AREA_MALFORMED` have no member row; the module's `COVER_REFUSALS` English stands until they exist (IMAGE-COVER #3 J1).
 - Spelling for the design's review of code rows (SETUP-WORDS #7 J3): `odf-reader.odf.content_xml_with_text_list` and `roster-reader.org-chart.labelled_line_s_name_a` spell "labelled" (DEC-221: "labeled"); the table wins once reviewed (K3930).
+
+## Rows asked of the design (R2)
+- member-roster (new, K3972): `words-reads.json` has no `member-roster` entry; the keys it reads are on `membership`'s `reads` list (its `WORD_KEYS` lists them); please add the entry (MEMBER-ROSTER #1, finding 2).

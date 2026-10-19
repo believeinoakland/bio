@@ -3116,6 +3116,13 @@
       "line": 1169
     },
     {
+      "id": "ai-accounts.index.keeping_the_teams_material_away",
+      "en": "keeping the team's material away from every assistant",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1178
+    },
+    {
       "id": "ai-accounts.index.no_key_or_token_was",
       "en": "no key or token was given. Nothing was written.",
       "module": "ai-accounts",
@@ -3142,6 +3149,20 @@
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
       "line": 710
+    },
+    {
+      "id": "ai-accounts.index.reading_the_team_keys_assistant",
+      "en": "reading the team key's assistant settings",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 585
+    },
+    {
+      "id": "ai-accounts.index.switching_the_team_keys",
+      "en": "switching the team key's assistant settings",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 313
     },
     {
       "id": "ai-accounts.index.the_account_used_for_this",
@@ -3240,6 +3261,13 @@
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
       "line": 216
+    },
+    {
+      "id": "ai-accounts.index.this_one_has",
+      "en": "; this one has {length}",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1169
     },
     {
       "id": "ai-accounts.index.this_project_holds_no_claude",
@@ -9346,53 +9374,410 @@
       "line": 48
     },
     {
+      "id": "credentials.index.a_member_changes_their_own",
+      "en": "a member changes their own password from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 393
+    },
+    {
+      "id": "credentials.index.a_member_registers_their",
+      "en": "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 881
+    },
+    {
+      "id": "credentials.index.a_member_scoped_credential",
+      "en": "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1038
+    },
+    {
       "id": "credentials.index.a_reset_link_is_made",
       "en": "a reset link is made only for an active member of the team. Nothing was made.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1880
+      "line": 1842
+    },
+    {
+      "id": "credentials.index.a_run_in_a_project",
+      "en": "a run in a project",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1263
+    },
+    {
+      "id": "credentials.index.a_runs_credential_holds",
+      "en": "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1249
+    },
+    {
+      "id": "credentials.index.a_runs_credential_is",
+      "en": "a run's credential is minted only for an active member's own run. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1204
+    },
+    {
+      "id": "credentials.index.a_runs_credential_names",
+      "en": "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1246
     },
     {
       "id": "credentials.index.a_runs_credential_names_the",
       "en": "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1276
+      "line": 1248
+    },
+    {
+      "id": "credentials.index.a_standing_question_runs",
+      "en": "a standing question runs only for an active member. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1391
+    },
+    {
+      "id": "credentials.index.an_asks_grant_admits",
+      "en": "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1455
+    },
+    {
+      "id": "credentials.index.an_asks_grant_is",
+      "en": "an ask's grant is minted only under the member's own live session. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1369
+    },
+    {
+      "id": "credentials.index.empty_nothing_was",
+      "en": "{empty}. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1941
+    },
+    {
+      "id": "credentials.index.expected_the_base64_field",
+      "en": "expected the base64 field of an ssh-ed25519 public key",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 845
+    },
+    {
+      "id": "credentials.index.expiresindays_is_a",
+      "en": "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1066
+    },
+    {
+      "id": "credentials.index.from_is_before_the",
+      "en": "from is before the counts kept, which go back {days} days",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1570
+    },
+    {
+      "id": "credentials.index.from_is_not_an",
+      "en": "from is not an instant",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1564
+    },
+    {
+      "id": "credentials.index.from_is_not_before",
+      "en": "from is not before to",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1566
     },
     {
       "id": "credentials.index.id_already_names_a_credential",
       "en": "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1078
+      "line": 1055
     },
     {
       "id": "credentials.index.memberid_has_not_enrolled_status",
       "en": "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 835
+      "line": 824
+    },
+    {
+      "id": "credentials.index.memberid_is_on_the",
+      "en": "{memberId} is on the roster with status '{status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 826
+    },
+    {
+      "id": "credentials.index.minted_by_your_teams_civicsmith",
+      "en": "minted by your team's Civicsmith for one segment of your run",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1230
     },
     {
       "id": "credentials.index.no_credential_in_your_teams",
       "en": "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1140
+      "line": 1113
+    },
+    {
+      "id": "credentials.index.no_digest_of_the",
+      "en": "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1074
+    },
+    {
+      "id": "credentials.index.no_live_grant_answers",
+      "en": "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1442
+    },
+    {
+      "id": "credentials.index.no_live_session_answers",
+      "en": "no live session answers to this token: it ended, it expired, or it never existed. Nothing was ended.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 632
+    },
+    {
+      "id": "credentials.index.no_member_is_named",
+      "en": "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1030
+    },
+    {
+      "id": "credentials.index.no_member_is_named_2",
+      "en": "no member is named on this act, and a withdrawal nobody authored is not one.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1107
+    },
+    {
+      "id": "credentials.index.no_password_was_set",
+      "en": "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1767
+    },
+    {
+      "id": "credentials.index.no_standing_question_was",
+      "en": "no standing question was named. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1401
+    },
+    {
+      "id": "credentials.index.pass_an_identity",
+      "en": "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1056
+    },
+    {
+      "id": "credentials.index.period_refused_detail",
+      "en": "{what}. {rule} Nothing was read.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1580
+    },
+    {
+      "id": "credentials.index.principalkind_was",
+      "en": "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1050
+    },
+    {
+      "id": "credentials.index.recovery_codes_are_issued",
+      "en": "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1739
+    },
+    {
+      "id": "credentials.index.registered_to_you_and",
+      "en": "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 915
+    },
+    {
+      "id": "credentials.index.setting_the_teams_key",
+      "en": "setting the team's key for an outside service",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1929
+    },
+    {
+      "id": "credentials.index.sign_in_refused",
+      "en": "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 454
+    },
+    {
+      "id": "credentials.index.standing_questions_are_off",
+      "en": "standing questions are off for the {who}, which would serve this one. Nothing was minted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1398
     },
     {
       "id": "credentials.index.string_is_a_machine_identity",
       "en": "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1047
+      "line": 1029
     },
     {
       "id": "credentials.index.string_is_a_machine_identity_2",
       "en": "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1133
+      "line": 1106
+    },
+    {
+      "id": "credentials.index.switching_the_teams_key",
+      "en": "switching the team's key for an outside service",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1956
+    },
+    {
+      "id": "credentials.index.the_current_password_given",
+      "en": "the current password given does not derive the hash stored for this account, so the password was not changed. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 411
+    },
+    {
+      "id": "credentials.index.the_keyed_services_are",
+      "en": "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1898
+    },
+    {
+      "id": "credentials.index.the_kinds_counted_are",
+      "en": "the kinds counted are {kinds}. Nothing was counted.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1539
+    },
+    {
+      "id": "credentials.index.the_period_is_from",
+      "en": "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1631
+    },
+    {
+      "id": "credentials.index.the_period_is_from_2",
+      "en": "The period is from an earlier instant to a later one.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1687
+    },
+    {
+      "id": "credentials.index.the_period_is_longer",
+      "en": "the period is longer than {days} days",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1568
+    },
+    {
+      "id": "credentials.index.the_security_counts_could",
+      "en": "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1700
+    },
+    {
+      "id": "credentials.index.the_teams_key_for",
+      "en": "the team's key for this service is off or not held; the caller goes on without it.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1984
+    },
+    {
+      "id": "credentials.index.this_act_asks_for",
+      "en": "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 624
+    },
+    {
+      "id": "credentials.index.this_key_is_already",
+      "en": "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 914
+    },
+    {
+      "id": "credentials.index.this_key_is_registered",
+      "en": "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 893
+    },
+    {
+      "id": "credentials.index.this_key_of_yours",
+      "en": "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 901
+    },
+    {
+      "id": "credentials.index.this_reset_link_does",
+      "en": "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1831
+    },
+    {
+      "id": "credentials.index.this_session_is_locked",
+      "en": "this session is locked after a while without use: only unlocking it with the password, or signing out, is served. Nothing was changed.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 576
+    },
+    {
+      "id": "credentials.index.to_is_after_the",
+      "en": "to is after the present hour",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1571
+    },
+    {
+      "id": "credentials.index.to_is_not_an",
+      "en": "to is not an instant",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 1565
+    },
+    {
+      "id": "credentials.index.too_many_attempts_were",
+      "en": "too many attempts were refused recently, so this one was not judged: no password, code or claim was checked and nothing changed. Try again later.",
+      "module": "credentials",
+      "file": "bio-plane/src/credentials/index.mjs",
+      "line": 710
     },
     {
       "id": "doc-clean.images.a_malformed_referred_to_count",
@@ -19062,11 +19447,235 @@
       "line": 1068
     },
     {
+      "id": "member-roster.index.a_cover_is_the_label_you",
+      "en": "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 886
+    },
+    {
+      "id": "member-roster.index.a_listener_names_the_module",
+      "en": "a listener names the module that registers it and its function",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 170
+    },
+    {
+      "id": "member-roster.index.changing_the_join_link",
+      "en": "changing the join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1649
+    },
+    {
+      "id": "member-roster.index.changing_the_teams_join_link",
+      "en": "changing the team's join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1648
+    },
+    {
+      "id": "member-roster.index.changing_the_teams_website_key",
+      "en": "changing the team's website key",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1550
+    },
+    {
+      "id": "member-roster.index.changing_the_website_key",
+      "en": "changing the website key",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1551
+    },
+    {
+      "id": "member-roster.index.choosing_whether_members_are_told",
+      "en": "choosing whether members are told what a court can reach",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1798
+    },
+    {
+      "id": "member-roster.index.confirming_or_withdrawing_a_members_declared",
+      "en": "confirming or withdrawing a member's declared expertise",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 574
+    },
+    {
+      "id": "member-roster.index.creating_the_teams_website_key",
+      "en": "creating the team's website key",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1534
+    },
+    {
+      "id": "member-roster.index.declared_and_unconfirmed_which_costs_nothing",
+      "en": "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 567
+    },
+    {
+      "id": "member-roster.index.every_existing_administrator_must_endorse",
+      "en": "every existing administrator must endorse an addition beyond the second",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 780
+    },
+    {
+      "id": "member-roster.index.lowercase_letters_digits_and_dashes",
+      "en": "lowercase letters, digits and dashes, 2 to 41 characters",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 871
+    },
+    {
+      "id": "member-roster.index.module_has_already_registered_its_listener",
+      "en": "{module} has already registered its listener",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 173
+    },
+    {
+      "id": "member-roster.index.reading_the_administrator_removals_under_way",
+      "en": "reading the administrator removals under way",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1749
+    },
+    {
+      "id": "member-roster.index.reading_the_teams_website_key_and",
+      "en": "reading the team's website key and join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1714
+    },
+    {
+      "id": "member-roster.index.recording_who_holds_hosting_access",
+      "en": "recording who holds hosting access (4.8)",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 369
+    },
+    {
+      "id": "member-roster.index.removals_are_recorded_with_a_reason",
+      "en": "removals are recorded with a reason",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 825
+    },
+    {
+      "id": "member-roster.index.replacing_the_join_link",
+      "en": "replacing the join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1662
+    },
+    {
+      "id": "member-roster.index.replacing_the_teams_join_link",
+      "en": "replacing the team's join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1661
+    },
+    {
+      "id": "member-roster.index.switching_off_the_join_link",
+      "en": "switching off the join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1673
+    },
+    {
+      "id": "member-roster.index.switching_off_the_teams_join_link",
+      "en": "switching off the team's join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1672
+    },
+    {
+      "id": "member-roster.index.switching_off_the_teams_website_key",
+      "en": "switching off the team's website key",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1563
+    },
+    {
+      "id": "member-roster.index.switching_off_the_website_key",
+      "en": "switching off the website key",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1564
+    },
+    {
+      "id": "member-roster.index.switching_on_the_teams_join_link",
+      "en": "switching on the team's join link",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1632
+    },
+    {
+      "id": "member-roster.index.the_registration_could_not_be_read",
+      "en": "the registration could not be read: {reason}",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 184
+    },
+    {
+      "id": "member-roster.index.the_target_is_counted_in_the",
+      "en": "the target is counted in the denominator but does not vote",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 823
+    },
+    {
+      "id": "member-roster.index.this_listener_is_already_registered",
+      "en": "this listener is already registered, and it takes one registration",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 180
+    },
+    {
+      "id": "member-roster.index.this_listener_is_already_registered_by",
+      "en": "this listener is already registered by {holder}, and it takes one registration",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 179
+    },
+    {
+      "id": "member-roster.index.voting_to_remove_an_administrator",
+      "en": "voting to remove an administrator",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 800
+    },
+    {
+      "id": "member-roster.order-build.line_have_the_file_gives",
+      "en": "line {v1}: have {stringify}, the file gives {stringify_2}",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/order-build.mjs",
+      "line": 47
+    },
+    {
+      "id": "member-roster.order-build.out_is_stale",
+      "en": "member-roster: {out} is stale: {d}\n",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/order-build.mjs",
+      "line": 60
+    },
+    {
+      "id": "member-roster.order-build.the_generated_list_is_absent",
+      "en": "the generated list is absent",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/order-build.mjs",
+      "line": 59
+    },
+    {
       "id": "membership.index.a_door_makes_at_most",
       "en": "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2576
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1414
     },
     {
       "id": "membership.index.a_member_joins_a_project",
@@ -19078,23 +19687,23 @@
     {
       "id": "membership.index.a_member_row_already_holds",
       "en": "a member row already holds the id '{memberId}'; nothing was written",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2054
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 888
     },
     {
       "id": "membership.index.act_acts_on_the_teams",
       "en": "{act} acts on the team's live website key, and there is none. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2681
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1519
     },
     {
       "id": "membership.index.act_acts_on_the_teams_2",
       "en": "{act} acts on the team's join link, and it is off. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2690
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1528
     },
     {
       "id": "membership.index.act_on_string_is_work",
@@ -19106,16 +19715,16 @@
     {
       "id": "membership.index.adding_an_administrator_beyond_the",
       "en": "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2108
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 942
     },
     {
       "id": "membership.index.administrator_status_is_granted_and",
       "en": "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 1907
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 741
     },
     {
       "id": "membership.index.an_administrator_may_add_an",
@@ -19127,9 +19736,9 @@
     {
       "id": "membership.index.an_invitation_lasts_a_whole",
       "en": "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2565
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1403
     },
     {
       "id": "membership.index.an_owner_is_not_removed",
@@ -19141,16 +19750,16 @@
     {
       "id": "membership.index.choose_a_handle_it_is",
       "en": "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2212
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1046
     },
     {
       "id": "membership.index.detail_nothing_was_written",
       "en": "{detail} Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 3004
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1872
     },
     {
       "id": "membership.index.gate_mark_outside_or_participant",
@@ -19162,23 +19771,23 @@
     {
       "id": "membership.index.name_is_at_most_max",
       "en": "{name} is at most {max} characters.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 3015
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1883
     },
     {
       "id": "membership.index.name_who_holds_hosting_access",
       "en": "name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 646
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 375
     },
     {
       "id": "membership.index.no_member_of_your_team",
       "en": "no member of your team answers to that id here. Nothing was changed.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 258
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 108
     },
     {
       "id": "membership.index.no_other_owner_of_this",
@@ -19190,16 +19799,16 @@
     {
       "id": "membership.index.only_a_member_whose_status",
       "en": "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 1935
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 769
     },
     {
       "id": "membership.index.only_an_invitation_that_has",
       "en": "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2619
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1457
     },
     {
       "id": "membership.index.only_an_owner_of_this",
@@ -19218,16 +19827,16 @@
     {
       "id": "membership.index.other_was_chosen_and_the",
       "en": "`other` was chosen, and the kind it describes was left empty.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 3011
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1879
     },
     {
       "id": "membership.index.reactivated_as_an_ordinary_member",
       "en": "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2536
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1374
     },
     {
       "id": "membership.index.recorded_as_a_request_to",
@@ -19239,23 +19848,23 @@
     {
       "id": "membership.index.removal_takes_votesneeded_of_administrators",
       "en": "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 1996
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 830
     },
     {
       "id": "membership.index.resigned_an_ordinary_member_now",
       "en": "resigned: an ordinary member now, holding the capabilities an administrator last set for them.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 633
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 362
     },
     {
       "id": "membership.index.root_admin_names_the_founding",
       "en": "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2047
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 881
     },
     {
       "id": "membership.index.stringify_is_not_a_setting",
@@ -19274,121 +19883,121 @@
     {
       "id": "membership.index.the_choice_is_tell_or",
       "en": "the choice is `tell` or `dont`, and nothing else. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2934
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1802
     },
     {
       "id": "membership.index.the_description_is_seen_by",
       "en": "the description is seen by `members` or by the `public` too.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 3018
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1886
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen",
       "en": "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2476
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1314
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen_2",
       "en": "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2479
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1317
     },
     {
       "id": "membership.index.the_founding_administrator_holds_admin",
       "en": "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the remedy is at the hosting account (section 4.6). Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 621
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 350
     },
     {
       "id": "membership.index.the_founding_administrator_holds_admin_2",
       "en": "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 1976
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 810
     },
     {
       "id": "membership.index.the_join_link_has_let",
       "en": "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2857
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1695
     },
     {
       "id": "membership.index.the_kinds_are_a_list",
       "en": "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 3007
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1875
     },
     {
       "id": "membership.index.the_password_could_not_be",
       "en": "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2226
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1060
     },
     {
       "id": "membership.index.the_team_holds_one_live",
       "en": "the team holds one live website key at a time (DEC-133). Nothing was created.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2700
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1538
     },
     {
       "id": "membership.index.the_team_holds_one_live_2",
       "en": "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2798
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1636
     },
     {
       "id": "membership.index.the_team_would_be_left",
       "en": "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add another administrator first. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 628
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 357
     },
     {
       "id": "membership.index.the_website_key_has_made",
       "en": "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2785
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1623
     },
     {
       "id": "membership.index.the_website_names_the_person",
       "en": "the website names the person by the cover the team will know them by. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2781
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1619
     },
     {
       "id": "membership.index.this_invitation_is_not_live",
       "en": "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2142
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 976
     },
     {
       "id": "membership.index.this_key_opens_no_door",
       "en": "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2777
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1615
     },
     {
       "id": "membership.index.this_link_opens_no_door",
       "en": "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2848
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1686
     },
     {
       "id": "membership.index.this_project_is_discoverable_and",
@@ -19407,23 +20016,23 @@
     {
       "id": "membership.index.too_many_handles_were_checked",
       "en": "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 2401
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1244
     },
     {
       "id": "membership.index.what_is_an_administrators_act",
       "en": "{what} is an administrator's act (Membership Architecture v2 §4.9), and your team's Civicsmith takes who is asking from the signed-in session rather than from the caller. This caller is not one of the active administrators. Nothing was changed.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 225
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 97
     },
     {
       "id": "membership.index.whether_a_pairing_is_published",
       "en": "whether a pairing is published is the member's own decision or an administrator's (section 3). Nothing was written.",
-      "module": "membership",
-      "file": "bio-plane/src/membership/index.mjs",
-      "line": 681
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 410
     },
     {
       "id": "membership.index.whether_string_can_be_found",
@@ -21316,6 +21925,20 @@
       "line": 1117
     },
     {
+      "id": "promotion.gate.capture_absent_from_bucket",
+      "en": "registered capture is absent from the working bucket",
+      "module": "promotion",
+      "file": "bio-plane/src/gate.mjs",
+      "line": 1416
+    },
+    {
+      "id": "promotion.gate.capture_bytes_differ",
+      "en": "capture bytes differ from the register",
+      "module": "promotion",
+      "file": "bio-plane/src/gate.mjs",
+      "line": 1419
+    },
+    {
       "id": "promotion.gate.registered_capture_is_held_in",
       "en": "registered capture is held in parts, and {why}, so no part could be verified",
       "module": "promotion",
@@ -21379,6 +22002,13 @@
       "line": 516
     },
     {
+      "id": "promotion.index.project_needs_name",
+      "en": "a project needs a name, and it must be unique across your team's Civicsmith",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 699
+    },
+    {
       "id": "promotion.index.the_base_this_revision_names",
       "en": "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",
       "module": "promotion",
@@ -21398,6 +22028,13 @@
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
       "line": 589
+    },
+    {
+      "id": "promotion.names.give_project_title_unique",
+      "en": "give the project a title unique across your team's Civicsmith",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/names.mjs",
+      "line": 85
     },
     {
       "id": "promotion.text.rel_rel_target_target_status",
@@ -23504,14 +24141,28 @@
       "en": "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1005
+      "line": 1004
+    },
+    {
+      "id": "record-core.index.a_draft_of_a_new",
+      "en": "a draft of a new edition's statement of what changed",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 121
     },
     {
       "id": "record-core.index.a_grammar_names_its_module",
       "en": "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1223
+      "line": 1222
+    },
+    {
+      "id": "record-core.index.a_lease_is_taken_under",
+      "en": "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 633
     },
     {
       "id": "record-core.index.a_mint_seed_names_its",
@@ -23525,28 +24176,56 @@
       "en": "a setting is recorded under a name, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1825
+      "line": 1824
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with",
       "en": "a setting is recorded with who set it, and no one was named; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1827
+      "line": 1826
     },
     {
       "id": "record-core.index.a_setting_is_recorded_with_2",
       "en": "a setting is recorded with a value, and none was given; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1829
+      "line": 1828
+    },
+    {
+      "id": "record-core.index.a_settings_value_is_stored",
+      "en": "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1831
     },
     {
       "id": "record-core.index.a_statistics_source_names_its",
       "en": "a statistics source names its module and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1087
+      "line": 1086
+    },
+    {
+      "id": "record-core.index.a_store_gate_names_its",
+      "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1675
+    },
+    {
+      "id": "record-core.index.a_store_gate_names_its_2",
+      "en": "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1674
+    },
+    {
+      "id": "record-core.index.an_expunge_is_a_members",
+      "en": "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 1751
     },
     {
       "id": "record-core.index.an_expunge_names_one_of",
@@ -23567,7 +24246,7 @@
       "en": "an {what} names its module{v1} and is a function; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1169
+      "line": 1168
     },
     {
       "id": "record-core.index.applied_of_count_item_s",
@@ -23575,6 +24254,13 @@
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
       "line": 257
+    },
+    {
+      "id": "record-core.index.every_one_of_the_count",
+      "en": "every one of the {count} item(s) was applied, each by op={act}'s own rules.",
+      "module": "record-core",
+      "file": "bio-plane/src/record-core/index.mjs",
+      "line": 252
     },
     {
       "id": "record-core.index.gated_ids_are_minted_by",
@@ -23609,7 +24295,7 @@
       "en": "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1837
+      "line": 1835
     },
     {
       "id": "record-core.index.module_has_already_registered_its",
@@ -23623,21 +24309,21 @@
       "en": "{module} has already registered its figures; nothing more was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1015
+      "line": 1014
     },
     {
       "id": "record-core.index.module_has_already_registered_its_3",
       "en": "{module} has already registered its {what}; the first still runs.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1173
+      "line": 1172
     },
     {
       "id": "record-core.index.module_has_already_registered_its_4",
       "en": "{module} has already registered its grammar; the first still stands.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1227
+      "line": 1226
     },
     {
       "id": "record-core.index.module_s_check_on_table",
@@ -23651,7 +24337,7 @@
       "en": "no row of {name} matches the key; nothing was removed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1755
+      "line": 1754
     },
     {
       "id": "record-core.index.op_act_acts_on_at",
@@ -23679,7 +24365,7 @@
       "en": "read-only: a record whose manifest holds fewer rows than it has promotions lost a row to a repeated snap key before REC-176; nothing is rewritten. 'undetermined' is one promotion of a record with no creation row, which an overwrite and a store predating the creation row both produce. Which key collided is not recorded and is not guessed.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 932
+      "line": 931
     },
     {
       "id": "record-core.index.string_is_not_a_table",
@@ -23693,21 +24379,21 @@
       "en": "{table} is already declared by {declaredBy}, and a table is declared once; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1440
+      "line": 1439
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and",
       "en": "{table} is derived-rebuildable and names no rebuild; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1433
+      "line": 1432
     },
     {
       "id": "record-core.index.table_is_derived_rebuildable_and_2",
       "en": "{table} is derived-rebuildable and names no key columns; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1436
+      "line": 1435
     },
     {
       "id": "record-core.index.table_is_module_s_table",
@@ -23721,7 +24407,7 @@
       "en": "{table} names no {cls} class; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1427
+      "line": 1426
     },
     {
       "id": "record-core.index.table_s_checks_are_already",
@@ -23735,49 +24421,49 @@
       "en": "{table}'s {cls} class is one of {allowed}; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1429
+      "line": 1428
     },
     {
       "id": "record-core.index.table_was_not_declared_a",
       "en": "{table} was not declared: a table's name, and every column or table its declaration names, is a plain identifier; nothing was declared.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1424
+      "line": 1423
     },
     {
       "id": "record-core.index.the_audits_answer_key_key",
       "en": "the audit's answer key {key} is already held by {keyHeldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1172
+      "line": 1171
     },
     {
       "id": "record-core.index.the_check_id_is_already",
       "en": "the check {id} is already claimed by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1228
+      "line": 1227
     },
     {
       "id": "record-core.index.the_figure_key_is_already",
       "en": "the figure {key} is already reported by {heldBy}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1016
+      "line": 1015
     },
     {
       "id": "record-core.index.the_grammar_claims_part_of",
       "en": "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1222
+      "line": 1221
     },
     {
       "id": "record-core.index.the_instances_figures_are_already",
       "en": "the instance's figures are already supplied by {module}; nothing was registered.",
       "module": "record-core",
       "file": "bio-plane/src/record-core/index.mjs",
-      "line": 1090
+      "line": 1089
     },
     {
       "id": "record-core.index.your_teams_civicsmith_could_not",
