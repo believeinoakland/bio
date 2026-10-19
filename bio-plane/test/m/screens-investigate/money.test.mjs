@@ -153,7 +153,7 @@ test("R4 a refused act is drawn beside it, nothing else changed (control)", asyn
   const p = await open(at, { plane: { exclude: refusedIn("NO_SUCH_SET", "There is no such trail.") } });
   const panel = await openPanel(p, M1);
   await press(p, "exclude", { within: panel, reason: "x" });
-  assert.ok(panelOf(p, M1).textContent.includes("There is no such trail."), "the refusal by its words");
+  assert.ok(panelOf(p, M1).textContent.includes(word("refusal.NO_SUCH_SET")), "the refusal by its words");
 });
 
 test("R34 the money trail's figure form chooses the document by title and sends its digest; no field asks for a fingerprint or a page number by itself", async () => {

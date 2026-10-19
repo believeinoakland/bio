@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, WALK, GRAPH, ENT, ORG, SHA, word, hasWord, drew, notDrew } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, WALK, GRAPH, ENT, ORG, SHA, word, hasWord, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/explore/" + ENT;
 const walked = async (o = {}) => {
@@ -171,7 +171,7 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
   drew(done, "screen.explore.evidenced", undefined, "evidenced, no longer a lead");
   notDrew(done, "screen.explore.declared");
   assert.equal(done.querySelector(".cs-grade").textContent, "ConnectionB", "at the capture's grade");
-  drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: "mai", date: "12 October 2026" });
+  drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: "mai", date: dayOf("2026-10-12") });
   await press(p, "stepsourcewithdraw", { within: done, reason: "wrong page" });
   assert.deepEqual(p.byOp("stepsourcewithdraw")[0].body, { id: "STEPSOURCE-1", reason: "wrong page" });
   drew(lead(), "screen.explore.lead", undefined, "after the withdrawal it is drawn a lead");
@@ -184,5 +184,5 @@ test("R17 an attachment without its passage or without the member's words sends 
   assert.equal(p.byOp("stepsource").length, 0);
   fill(p, { "explore-assert-sha": SHA, "explore-assert-basis": "The minutes name him." });
   await press(p, "stepsource", { within: lead() });
-  assert.ok(main(p).textContent.includes("That passage cannot be read."), "the refusal by its words");
+  assert.ok(main(p).textContent.includes(word("refusal.EXTENT_MALFORMED")), "the refusal by its words");
 });

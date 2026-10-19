@@ -71,7 +71,7 @@ test("R1 identityclaim \"Say another record is this person\" with its basis and 
   fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-doc-a": SHA, "person-claim-doc-b": SHA, "person-claim-note": "same name" });
   await press(q, "identityclaim");
   assert.equal(q.byOp("identityclaim")[0].body.evidence.a.captureSha, SHA);
-  assert.ok(main(q).textContent.includes("That basis does not earn this grade."), "the refusal by its words");
+  assert.ok(main(q).textContent.includes(word("refusal.IDENTITY_GRADE_UNEARNED")), "the refusal by its words");
   assert.equal(q.doc.getElementById("person-claim-note").value, "same name");
 });
 
@@ -89,7 +89,7 @@ test("R1 followregister: a register the person appears in (control: an address t
 test("R1 personexpunge: the consequence statement (op-grades R21) filled with the day and the member, the reason naming the law or order, the Irreversible weight, a dialog before anything is sent", async () => {
   const p = await open(at, { ...admin, plane: { personexpunge: ok({ ok: true, removed: 1 }) } });
   const d = main(p).querySelector('[data-consequence="personexpunge"]');
-  const day = /\d+ \w+ \d{4}/.exec(d.querySelector(".ends").textContent)[0];
+  const day = dayOf(new Date().toISOString().slice(0, 10));
   assert.equal(d.querySelector(".ends").textContent, word("screen.person.expunge.statement", { date: day, member: "rosa" }), "the statement, filled with the day and the member");
   const b = button(p, "personexpunge");
   assert.ok(b.textContent.includes(word("weight.irreversible.name")));

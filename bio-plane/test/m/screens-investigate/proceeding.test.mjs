@@ -60,7 +60,7 @@ test("R6 each act names what it needs (control: nothing sent), and a refusal is 
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
   fill(p, { "pr-party": "ENT-2026-0104", "pr-doc": SHA });
   await press(p, "recordline");
-  assert.ok(sec(p, "screen.proceeding.parties").textContent.includes("A party is joined to a proceeding."), "the refusal by its words");
+  assert.ok(sec(p, "screen.proceeding.parties").textContent.includes(word("refusal.PROCEEDING_ENDS")), "the refusal by its words");
 });
 
 test("R16 Follow its register sends proceeding, the screen's own entity id, and the register list shows only the follows follows answers with that proceeding; control: a register followed from another proceeding's screen is not listed here", async () => {
@@ -139,7 +139,7 @@ test("R36 with no forum held the screen draws court.none in its fold and the Add
   const bad = await open("/app/proceeding", { plane: { entitycreate: refusedIn("PROCEEDING_KIND_UNKNOWN", "That kind of proceeding is not one your profiles name.") } });
   fill(bad, { "pr-forum": COURT, "pr-number": "RG1", "pr-kind": "civil", "pr-note": "n" });
   await press(bad, "entitycreate", { el: bad.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
-  assert.ok(main(bad).textContent.includes("That kind of proceeding is not one your profiles name."));
+  assert.ok(main(bad).textContent.includes(word("refusal.PROCEEDING_KIND_UNKNOWN")));
 });
 
 test("R34 recordline chooses the document by title; with no document the choice's empty state is drawn and nothing is sent", async () => {
