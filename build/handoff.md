@@ -1,43 +1,50 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #222 (`session_018yExo1oqtc3ajqUZ22YEMM`, depth 1, parent ROOT #7, primary account), 2026-10-19 ~10:47 UTC, at 44% context, with no step half done. **T51 is OPEN** on `tranche/T51`: L1–L9, R1–R8 and RW closed (RW K4038, L9 K4053); **L10 running: four Haiku jobs just started (K4054)**. Read `build/rulings-active.md` whole, then with the Read tool, whole, K4034–K4054 (the last lines of `build/rulings.md`), then the plan's "Sequence", "L10", "L11", "L11 additions", the "Completion round" and "BOB's acts" in `build/plan/current.md`.
+**Status** · Replaced whole at each handoff. Written by BOB #223 (`session_01CcPD7nccPnQTm1zvhNBCFF`, depth 1, parent ROOT #7, primary account), 2026-10-19 ~12:40 UTC, at ~40% context, with no step half done. **T51 is OPEN** on `tranche/T51`: L1–L10, R1–R9 and RW closed (L10 K4060, R9 K4063); **L11 running: 35 jobs started at K4067**. Read `build/rulings-active.md` whole, then with the Read tool, whole, K4056–K4071 (the last lines of `build/rulings.md`), then the plan's "Sequence", "L11", "L11 additions", the "Completion round" and "BOB's acts" in `build/plan/current.md` (L11's entries are ~25k tokens: read them in parts, every part).
 
 ## Standing
 
 - **Bob is angry, rightly, that work slips** (K3913, K3919, K3921). Nothing leaves T51 except for P19's three reasons; never offer an option that defers.
-- **Words:** civicos-process `main` @ `a4c42ff`: a row copy on the design's unkeyed list is not counted (K4038); an assertion's message argument is never a copy (K4053). setup-words R13 binds every sentence a member or administrator reads, refusal `detail`s included (K3964, K3982); where a row says the same in other words, the row wins (K3930, K3984). Signed or digest-pinned texts stay code (K1333). Words over L1–L9 read only CR-5's three (promotion).
-- **Cross-merge copies (K3986):** after each merge run `node checks/words.mjs /home/user/bio <the layer's merged modules>` together; a later layer's keying can make an earlier closed module's test read as a copy: check it is a real copy before placing it (K4053's were assertion messages).
-- **Keyed reasons (K3958, K3997):** civil-time and lines answer `{key, vars}`; civil-time's `reasonText` renders one; "[object Object]" in a test failure means a `String()` of a reason. L9 found and fixed several; expect more in L11.
-- **Edges and rows are BOB's:** a uses edge a job needs (python, one row, same JSON spacing; Uses line; format, architecture, `order.mjs --check`; K4035, K4040); a refusal code another module's catalogue holds goes to that module by CHANGE (K4047). Two jobs that wait on each other: accept the provider's red by name until the user merges (K4049).
-- **Merging:** a complete job merges when every same-layer module in its `uses` is merged, in `modules.json` order: ownership against `git merge-base`, `git merge --no-ff`, the module's suite (scratchpad helper `mt.mjs` = `.github/scripts/module-tests.mjs` filtered by argv; rebuild it), joint words, push, strike met marks. Ruling per batch.
-- **Before a START, every job branch at the tranche tip** (K3969); I created sessions directly (title `<MODULE> #n`, n from rulings/metrics, fixed prompt, model per START) and `mail addjob`. A new session asking in its own session to approve `git reset --hard` over a stray stub commit never starts: archive and restart it (K4036).
-- **Archive a layer's sessions** with a haiku worker that returns the CSV rows (Size lines from each record, commas stripped).
-- **Doorbells:** `run_once_at` the next whole minute after the push. A COMPLETE job showing `RING` with an old cursor is stale.
-- **The window (K3987):** 1,000,000. Refresh at 40%.
-- **Accepted reds now:** coverage 24 (L10–L11's ids and the held assistant ids); CR-5's three words; bundler R38 real-fleet arm until CR-15; affordances' op-map test (`templatebyhandle`, `holdsdue`) until T51-99; the L11 reds of K4010; plane `compose.test.mjs`:84 until T51-125; promotion's row-census until CR-5; setup-words R13/R2 until CR-14; agent-worker R45 bundle freshness clears at each close's regeneration; the plan's rule 5 list.
-- **Design lane:** UX design #31 `session_015Xbtuq76wzNCHo4wDiS4Ws` (same account; ring after posting). Channel read through U381, posted through B358. Nothing open with it.
-- **Lanes:** nothing past H43, A5, W4.
-- **Sizes:** plane bundle 28,739,444 B at L9's close.
-- Tooling: after a container restart, the scratchpad `regen.sh` order (npm ci in agent-runner and file-scanner `--ignore-scripts`, sheet-worker; then `order-build`, `setup-words/build`, `build-program`, court-data, wizard-scripts `build-data`, `site/build`, `bundles.mjs`, newgroup `npm run build`); verify `fleetbundles` with `--test-force-exit` and run `newgroup-bundle-fresh` directly with `timeout 150 node …` (it prints `4 passed, 0 failed` and then lingers on esbuild).
+- **Words:** setup-words R13 binds every sentence a member reads; a drawn-screen module reads rows only (no `localize`, the check's `marker` arm); the list wins over code wording (K3930, K3984). Unread strings go to the design's unkeyed list by HANDOFF (K3944). Words over L1–L10 read only CR-5's three.
+- **Merging (K4057 on):** a complete job merges when every same-layer module in its `uses` is merged: ownership against `git merge-base`, `git merge --no-ff`, its suite (scratchpad helper `mt.mjs` = `.github/scripts/module-tests.mjs` filtered by argv; rebuild it), words over the merged L11 modules jointly, push, strike its met marks. **A job is complete only when it has read BOB's newest entry**: SITE #3's COMPLETE crossed a CHANGE and I dropped my unpushed merge (K4069); check `mail check`'s cursors before merging.
+- **Edges and rows are BOB's** (python one row, same JSON spacing; Uses line; format, architecture, `order.mjs --check`).
+- **Doorbells:** `run_once_at` the next whole minute; creation is rate-limited (~6 per minute): ring the rest a minute later.
+- **The window:** 1,000,000. Refresh at 40%.
+
+## L11 state (K4067–K4071)
+
+- **Merged:** interface-assets, machinery-producers, action-producers, notice-producers, site (R9, R16 red until `pages.mjs` regenerates at L11's close).
+- **Complete, waiting on same-layer providers:** installer-steps (waits instance-setup; at its merge fill its row `paths: ["newgroup/src/steps/"]`, `tests: ["newgroup/test/steps/"]` from its J2, K1043; R26, R31 stay unmet by design, map §10), store-door, screens-entry, screens-wizards, stewards, translations, admission, answer-envelope, signin-door, tasks.
+- **op-declarations (T51-107) is the bottleneck:** control-plane, screens-wizards, screens-entry, admission, screens-action, screens-publish, screens-settings wait on it. When it merges, send each a CHANGE. CHANGE B3 told it to drop six ops from `ACT_HELP_ABSENT` (affordances holds them).
+- **interface-shell** merge: CHANGE screens-intake (its R39 red clears), screens-action, screens-publish, screens-settings.
+- **wizard-scripts:** WAITING on the design's rows for 64 sentences (B365); it must confirm its pin is `20c8001300` (B3 asked).
+- **installer:** waits for installer-steps' merge, then does the deletion of the moved ranges (ANSWER B2); then installer-steps' second stage (setup-words edge then).
+- **control-plane:** at its merge drop `bio-plane/src/signpage.mjs`, `src/sign-release.html`, `scripts/embed-signpage.mjs` from its `paths` (deleted, R109). The architecture finding (answer-envelope's page-policy test importing the page) clears when answer-envelope merges (K4064).
+- **legacy-ui (T51-126): NEEDS BOB.** Auto mode refuses every `git rm` there, even the standing-list paths (K4070): Bob's approval in LEGACY-UI #5's session (`session_01SxtrBcAsEXYLT3rX4TzzuC`). After it merges, BOB's one act: the `legacy-ui` row, `layers.md`, `MODULE_ORDER`, `regression.yml`:56, `.gitignore` lines (plan, BOB's acts).
+- **After L11's merges, BOB's wording edits:** answer-envelope R6 (after T51-123), notice-producers R25 names civil-time's `localClock`, rule 7's list.
+
+## Design lane (UX design #31 `session_015Xbtuq76wzNCHo4wDiS4Ws`, same account; ring after posting)
+
+Channel read through U384, posted through B365. **Owed to merge at L11's close with no job running:** U384 (DEC-355 @ `1de616fa45`, the "group" rows; journey-check `group.test.mjs`:19 accepted red until then, K4066) and the answers to B363 (grouprules' form, the removal table's words; two unkeyed), B364 (unkeyed strings; screens-entry's reads), B365 (wizard-scripts' 64 rows, notice-producers R12, screens-intake's A64 words). Rows the running jobs need (wizard-scripts, screens-settings) may be merged mid-layer only with no word-reading job running, so pass them to the jobs by CHANGE naming the keys once U-entries name them, and merge at the close.
 
 ## Timers
 
-My backstop (`send_later`, `trig_…` re-armed each check) and WATCH #222 `trig_01Koh6J5JKcnDJ1TwgNt77Qo` (into ROOT, 11:15): delete the WATCH at takeover; my backstop fires harmlessly into my archived session.
+My backstop (`send_later`, re-armed each check; next ~12:56) and WATCH #223 `trig_01G4BPDnzPoq98hK8VmXJbg2` (into ROOT, 13:16): delete the WATCH at takeover; my backstop fires harmlessly into my archived session.
 
 ## What comes next, in order
 
-1. Take over (§5.1): archive BOB #222 once idle (BOB-final row under T51); create your WATCH and backstop.
-2. **L10** (K4054): MONITORING #21, FOLLOWING #10, LINK-SWEEP #2, SCHEDULER #38 (Jobs line in the plan). Answer, merge in `modules.json` order (monitoring, following, link-sweep, scheduler), words jointly.
-3. **L10's close (§5.6):** artifacts in order; `fleetbundles`, `newgroup-bundle-fresh`; `checks/run.mjs`; words over L1–L10 must read only CR-5's three; archive L10's sessions with rows.
-4. **L11** (§5.3): the DEC-340 lines are folded (K4040). First the control-plane path move (plan rule 1, BOB's acts "At L11's START", K3835). STARTs are drafted in `build/plan/starts-T51-L11/` (35 jobs; op-capabilities has none): run L11's suites after L10 closes and replace each `{{REDS}}` line with that module's reds (the K4010 diagnosis, `diagnosis-L11-reds-K4010.md`, and whatever the run shows), re-read each entry line (K4036, K4041, K4045, K4051 added items to T51-99, -107, -120, -125, -137, -139, -153), branches at the tip, models per entry.
-5. Then the completion round (CR-5, CR-12, CR-14, CR-15), the close.
+1. Take over (§5.1): archive BOB #223 once idle (BOB-final row under T51); WATCH and backstop.
+2. L11: answer, CHANGE and merge as above, in `modules.json` order with rule 1 (journey-check last).
+3. L11's close (§5.6): merge the design (U384 and later), regenerate artifacts in order (scratchpad `regen.sh` is gone with my container: rebuild it from the manifest's order; `npm ci --ignore-scripts` in agent-runner, file-scanner, site, `bio-plane/src/journey-check`; sheet-worker `npm ci`), `fleetbundles` (count `PASS` lines; 151 at R9) and `newgroup-bundle-fresh`; `checks/run.mjs`; archive L11's sessions with rows.
+4. The completion round (CR-5, CR-12, CR-14, CR-15), then the close (§5.7).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by the tranche's close PR (§5.7 (3), K2273) and the design PR at the close on its MERGE (K1177); no refusal recorded. civicos-process `main` takes process tooling (BOB's, §8): `5c44dcf` (K4038), `a4c42ff` (K4053).
+- `main` moves only by the tranche's close PR (§5.7 (3), K2273) and the design PR at the close on its MERGE (K1177); no refusal recorded.
 - Never force-push. Job branches are fast-forwarded with plain pushes only (K3969).
+- `git rm` in a job session: auto mode refuses it even for standing-list paths (K4070): Bob's approval in that session each time (§16); never worked around.
 - Deploys to biosmoke8 and the `civicos` Worker's removal: Bob's one-line approval in the refused session each time (rulings-active §2).
 
 ## Open with Bob
 
-- Nothing open. The session's rate-limit reading shows the seven-day `allowed_warning`; Bob gives the meter (K2341).
+- LEGACY-UI #5's deletion: approve in https://claude.ai/code/session_01SxtrBcAsEXYLT3rX4TzzuC ("Approved: delete civicos-ui/, bio-plane/test/budget.mjs and bio-plane/test/caseceremony.mjs with git rm").
