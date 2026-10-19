@@ -18,3 +18,23 @@ Findings in other modules (not changed here):
 - The full suite (`node checks/run.mjs /home/user/bio`) is red in many other modules: coverage of live ids not named by a test (installer-steps, interface-shell, screens-*, queue, and others), and words testcopy/inline/handlist findings (wizard-scripts t47 and t48, writing-help.test.mjs:204–205, and more). Counts: 1380 words failures and the coverage list. None names action-grammar after my changes.
 - The cross-module words check (the layer 9 set you named, K3986) lists 192 failures, none on action-grammar.
 - `setup-words/build.mjs --check` reports rows.mjs stale, naming my new keys (e.g. action-grammar.checks.claims_i_is_not_a). That is the expected stale note; the rows are regenerated at the layer close.
+
+## J2 · COMPLETE
+
+Done: T51-87 action-grammar, the words pass (K3949) and R2's red test.
+
+Applied: every words finding in the module is fixed (the 22 at START, all now 0 by `node checks/words.mjs /home/user/bio action-grammar`); R2's `grammar.test.mjs`:40 is green (golden.json's lawProposalLabel wording followed record-grammar's current label); test copies of sentences are gone from the module's tests; the cross-module words check names no line of action-grammar. Commit 62dfa913e9 on job/T51/action-grammar, pushed. Decisions and the findings in other modules are in my REPORT (the one before this).
+
+Tests: `node --test test/m/action-grammar/*.test.mjs`: 80 of 80 pass, exit 0 (the last run, after the final commit's edits).
+Checks (process repo, against /home/user/bio on this job branch):
+- format: 176 modules, 175 requirements files; 0 failures
+- architecture action-grammar: 15 product files, 43 relative imports; 0 failures
+- coverage action-grammar: 29 of 29 live requirement ids named by a test; 0 failures
+- words action-grammar: 0 failures
+- ownership action-grammar tranche/T51 job/T51/action-grammar: 10 files changed by action-grammar; 0 failures
+- setup-words build --check: rows.mjs stale, naming my new word keys (expected)
+- run.mjs: format and architecture 0 failures; no line names action-grammar; other modules red (see REPORT)
+
+Deferred: none of the entry's parts. The stale comment at checks.mjs:524 is unmatched, see REPORT item 6.
+
+Size (session_01Wkof3P16pbHsMX1b882161): test runs 11, module lines 2579 (src/action-grammar, its own code).
