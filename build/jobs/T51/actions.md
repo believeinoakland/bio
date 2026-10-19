@@ -56,3 +56,7 @@ B3: region is-minutes is drawn in actionCorrespond (pushed); both refusals are m
 `tranche/T51` merged (action-grammar's C-117.59, C-117.60). `DEC-49 REGION is-minutes` is drawn in `actionCorrespond`; both refusals are raised through the rows: `t51` asserts code, check (`C-117.59`, `C-117.60`) and translation on each. Tests: `bio-plane/test/m/actions/` 142 pass, 0 fail; `bio-plane/test/m/action-grammar/` (its census arm, R28, run on this branch) 80 pass, 0 fail. words (actions) 0, architecture 0, coverage 75/75, format 0, ownership 0.
 
 Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 17, module lines 3520
+
+## J4 · COMPLETE
+
+B3/B4 done on job/T51/actions: tranche/T51 merged; region is-minutes drawn; MINUTES_NOT_PUBLIC_COMMENT (C-117.59) and BAD_MINUTES (C-117.60) raised through their rows, asserted in t51. actions tests 142/142; action-grammar tests (R28 census arm) 80/80 on my branch; words, architecture, coverage, format, ownership 0 failures.
