@@ -30,3 +30,10 @@ BLOCKED (cause: tests; waits on providers that merge before this module): R24 to
 **Checks.** `checks/format.mjs` 0 failures, `architecture.mjs` 0, `coverage.mjs` 35 of 35, `ownership.mjs` 0, `words.mjs screens-action` 0, `setup-words/build.mjs --check` clean.
 
 Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 55, module lines 3189
+
+## J3 · REPORT
+
+REPORT, re B4 and B5. B5's rows are drawn: the due labels, `shell.readonly.noun.<screen>` (derived from each screen's name key), "Open the question", the guide's Expect and Source, counsel's labels, the dashboard's head and the two notes ("due this week", "due <day>"; "came in" is not drawn, no reading defines "replies to read"), the plan list's "more" note, the notice's four ways of sending, and the release of a hold on `hold` (`actionholdrelease`, its reason `screen.hold.release.reason`, confirmed because it cannot be undone).
+**The shell refuses `hold` on the tranche as it stands:** the registry generated at `20c8001300` lacks `actionholdrelease` on `hold`, so `checkScreens` throws and every suite of this module fails to boot until BOB re-takes the registry (wizard-scripts). I ran with the registry regenerated locally from the design's `registry.json` (not committed): 130 of 133 pass; the 3 red are R27's, which wait on interface-shell's `cs.readonly`. Words 0, coverage 35 of 35.
+Still waiting on: the registry re-take, interface-shell (`cs.readonly`, `help: [k1, k2]`), op-declarations (`holdsdue`, `approvedunsent`, `checkpointsdue` for "our move").
+Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 70, module lines 3260
