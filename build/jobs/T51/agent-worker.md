@@ -69,3 +69,7 @@ Words pass applied (T51-209, B3, B4): all 84 findings keyed or compared by local
 Merged `tranche/T51`. The 7 test copies of sentences other modules now localize are compared with the product's own call (same id, en): `agent-harness.harness.the_one_question_the_runs` and `.the_runs_context_question` (`agent-worker.test`, `harness.test`, `requirements.test`), `agent-steps.work.the_cited_record_names_no_source` (`requirements.test`), and the label `the AI's reading`, which `transcribe.mjs` now writes by `localize("agent-worker.transcribe.the_ais_reading", …)` and `t42.test`, `t46.test` compare by the same call. `t42.control` arm 16 mutates the route sentence under an unlisted id (the list wins over `en` since R6's rows). Words check over agent-worker, agent-harness, agent-steps: no agent-worker finding but the four accepted `ops.mjs` strings. `npm test`: 21 of 22, the red R45 (stale bundle); `t42.control` 17/0, `t46.control` 13/0.
 
 Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 17, module lines 2598
+
+## J4 · COMPLETE
+
+B6 done: the 7 test copies compare by the product's own localize call (same id, en); transcribe.mjs's label now a localize; t42.control arm 16 re-anchored. Words check clean for agent-worker but the 4 accepted ops.mjs strings. npm test: only R45 (stale bundle). Ownership 0.
