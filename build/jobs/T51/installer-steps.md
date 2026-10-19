@@ -82,3 +82,21 @@ BLOCKED (cause: context). My window is at half (about 500 of 1,000 K tokens); pe
 - Both need REPORTs of the API assumptions (field names, restart by rollout) to BOB.
 
 Size so far (session_014EVFpcuKfLr1hY4LJt8xfV): test runs 33, module lines about 1,850.
+
+## J6 · REPORT
+
+REPORT (B6 items 1 to 4; code on job/T51/installer-steps, pushed with this entry). Two parts: what installer must add, and every Cloudflare assumption for your live walk.
+
+**For installer's job (the call it must add).** After `bindMembers` and beside `verifyServing`, call `confirmContainers(session, account, base, release, fleetResult, onWait)` with the result `installFleet` returned. It answers `{confirmed, restarted, lags}`. Pass `lags` as `byteLags` to `withByteLags` (it now drops a verdict lag whose sentence is identical, so a member still old is said once). Also new in `installFleet`'s answer: `containers`, each placed application `{member, id, appName, config}`; `placeContainer` returns `{action, lag, id, appName, config}`. The R17/R20/R28 text should say so (the requirements are yours; the tests assert `containers`). `readCopyFacts(address, onWait = null)` takes an optional second argument to draw its waits.
+
+**Cloudflare API assumptions to check live (none confirmed by a real account).**
+1. Application read: `GET /accounts/<id>/containers/applications/<id>` answers `configuration.image` and `health.instances.{failed, starting}` (counts). A pull failure is `failed > 0`; "still starting" is `starting > 0`.
+2. Rollout read: `GET …/applications/<id>/rollouts/<rolloutId>` answers `status`, one of `pending`, `in_progress` or `progressing` (waited on) or `failed` (a pull failure). The rollout id is the `id` of the answer to the rollout POST; an application just created has no rollout id, so only health decides. If the app read carries `rollout.status` it is used when the rollout read gives none (a guess; the walk should say whether it exists).
+3. Waiting: only while pending or starting, every 5 nominal seconds, inside the 5-minute bound; an application created with `instances: 0` shows none starting and is not waited on. A start still pending at the bound is not a pull failure (the image read-back and the version check decide).
+4. Restart: there is no restart call I know of; `confirmContainers` restarts by a further full rollout (`POST …/rollouts`, same body as the first: `strategy: rolling`, `kind: full_auto`, `step_percentage: 100`, `target_configuration` = the image and instance_type). The walk must show a second rollout to the same configuration actually restarts the instance (the first "no changes" rollout is the case S9 found).
+5. Version check: `memberVersions[member].state === "SERVING"` and `.version` from `op=bootstrap&members=1`, as `servingVerdict` already reads it. A member the plane does not list, or not SERVING, is no reading: it is not restarted and is left to the verdict.
+6. Read-back: `GET /accounts/<id>/workers/scripts/<slug>` (`accept: application/javascript+module`) now waits out 429/5xx/no answer (Retry-After honoured) and a 401 throws ApproveAgain; any other refusal reads as nothing readable, as before.
+7. Pull failure's row: left out with `installer.fleet.why.unpullable` (exists); the member's Worker was uploaded, so it is not `out`, and it is not in `done`, so its class is not bound into agent-worker. Its half-made application stays in the account for the next update.
+8. Still assumed from earlier jobs: `Retry-After` on a 429; Containers application create/rollout shapes as `placeContainer` sends them; the list fields `script`, `class`, `id` of Durable Object namespaces; `durable_objects` in the Worker part (CR-15, `MEMBER_OBJECTS` stays until bundler writes it).
+
+**Decisions of mine (job level).** `readCopyFacts` waits only on 429 and 5xx, at most one nominal minute; no answer at all is not waited on (a removed copy's address is the usual case, and waiting five minutes per copy would stall the inventory). `scriptHash` rethrows only ApproveAgain; a failure that never mended is null, as `currentDeployment` does. F9 unchanged.
