@@ -6249,7 +6249,7 @@
       "en": "This team's Civicsmith keeps a trace of sign-ins only when it runs as a test instance, and this one does not. Nothing was read or changed.",
       "module": "answer-envelope",
       "file": "bio-plane/src/answer-envelope/checks.mjs",
-      "line": 83
+      "line": 84
     },
     {
       "id": "answer-envelope.index.op_op_needs_argument_in",
@@ -35537,28 +35537,42 @@
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2643
+      "line": 2661
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2599
+      "line": 2613
+    },
+    {
+      "id": "op-declarations.index.money_detectors_run_sweep",
+      "en": "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
+      "module": "op-declarations",
+      "file": "bio-plane/src/op-declarations/index.mjs",
+      "line": 2520
+    },
+    {
+      "id": "op-declarations.index.reevaluation_raise_sweep",
+      "en": "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or monitoring calls.",
+      "module": "op-declarations",
+      "file": "bio-plane/src/op-declarations/index.mjs",
+      "line": 2518
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs",
       "en": "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2498
+      "line": 2505
     },
     {
       "id": "op-declarations.index.src_control_plane_ops_mjs_2",
       "en": "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING TEAM IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION OF ANY ROLE REACHES IT.'",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2504
+      "line": 2511
     },
     {
       "id": "op-grades.marks.dec_300_5_over_the",
@@ -38218,483 +38232,623 @@
       "en": "a calendar date is snoozed until the start of that day where this team is, and no time zone is held for this copy (its jurisdiction profile gives none), so the day cannot be read without guessing one. Send an instant instead (ISO-8601, with its time).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1844
+      "line": 2060
     },
     {
       "id": "queue.index.a_conflict_the_record_holds",
       "en": "a conflict the record holds is a duty: it is never muted, dismissed or set aside, and it leaves every list only when a member of a project it reaches resolves it, by saying what it turned out to be or by taking it up as a question and concluding it (DEC-84 item 2).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 906
+      "line": 908
     },
     {
       "id": "queue.index.a_disposition_is_recorded_under",
       "en": "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2060
+      "line": 2274
     },
     {
       "id": "queue.index.a_finding_that_carries_no",
       "en": "a finding that carries no progression stage is dispositioned at the JUDGMENT LAYER, and that act is scoped to ONE project's feed (D-266: a stance is expressly one project's own property, §7/D-216, and R5 makes forks at the judgment layer legitimate). Name the project you are acting for — op=queue publishes the candidates as disposition.projects. It is not defaulted even when there is only one, because a plane choosing whose judgment the record carries is the single shared stance §7 rejected, arriving through a defaulted parameter.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1984
+      "line": 2199
+    },
+    {
+      "id": "queue.index.a_finding_this_case_published",
+      "en": "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it or the conflict is resolved.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 925
+    },
+    {
+      "id": "queue.index.a_kind_is_a_slug",
+      "en": "a kind is a slug and may not contain a comma; the stored set is comma-separated",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1939
     },
     {
       "id": "queue.index.a_lead_is_the_records",
       "en": "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 914
+      "line": 916
     },
     {
       "id": "queue.index.a_mute_is_personal_and",
       "en": "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1797
+      "line": 2014
     },
     {
       "id": "queue.index.a_mute_is_personal_it",
       "en": "a mute is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it. There is no instance-wide mute and there must not be.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1694
+      "line": 1903
     },
     {
       "id": "queue.index.a_mute_is_personal_this",
       "en": "a mute is PERSONAL: this one item leaves YOUR feed, which says so in its `mute` block. Nothing left the record, no other member's feed moved, no disposition was written, and op=proposals still carries the finding. A finding leaves the team's list only when it is adopted, deferred or dismissed (op=proposedispose). The key is the item's own id, so the same item arising again stays muted for you until you unmute it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1765
+      "line": 1982
     },
     {
       "id": "queue.index.a_newer_capture_of_what",
       "en": "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable, and takes a why of up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). Either closes this notice.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 824
+      "line": 826
+    },
+    {
+      "id": "queue.index.a_personal_preference_is_keyed",
+      "en": "a personal preference is keyed (member, case); name the case it is about",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1651
     },
     {
       "id": "queue.index.a_project_scoped_disposition_names",
       "en": "a project-scoped disposition names the FINDING it ages, by the queue item's own id (op=queue publishes it as disposition.finding). A project with no finding names a team and no decision.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1982
+      "line": 2197
     },
     {
       "id": "queue.index.a_queue_entry_is_filed",
       "en": "a queue entry is filed under a CASE — an inquiry or a project — and personal state is keyed to that. A document is a SUBJECT, not a home: muting one would be muting every question that rests on it, for reasons none of those questions' owners could see.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1621
+      "line": 1664
     },
     {
       "id": "queue.index.a_reason_is_at_most",
       "en": "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2056
+      "line": 2270
     },
     {
       "id": "queue.index.a_snooze_is_personal_it",
       "en": "a snooze is PERSONAL: it is keyed to the member whose attention it is about, and a machine credential has no member behind it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1821
+      "line": 2038
+    },
+    {
+      "id": "queue.index.a_snooze_that_has_already",
+      "en": "a snooze that has already expired is not a snooze; it would report as deferred while deferring nothing",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2078
     },
     {
       "id": "queue.index.a_status_item_is_a",
       "en": "a status item is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it — personally, with the status item persisting and every other member still seeing it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 782
+      "line": 787
     },
     {
       "id": "queue.index.a_to_do_is_a",
       "en": "a to-do is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1044
+      "line": 1086
     },
     {
       "id": "queue.index.a_to_do_is_something",
       "en": "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one.{v1}",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 776
+      "line": 781
     },
     {
       "id": "queue.index.bias_debts_settled_in_the",
       "en": "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1587
+      "line": 1632
+    },
+    {
+      "id": "queue.index.deferring_or_dismissing_the_records",
+      "en": "deferring or dismissing the record's own question is recorded with a reason, in the member's own words — a disposition with no reason ages a finding with no account of why",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2267
     },
     {
       "id": "queue.index.every_finding_here_left_the",
       "en": "every finding here left the OPEN list by an AUTHORED RECORD ACT (op=proposedispose) carrying its author and their reason — never by a preference, which is the block above. It has NOT left the record: the decision is keyed on the finding's own identity, the same id the open feed mints for it, and it stands until it is RE-TRIAGED. Whether the underlying gap still fires is NOT asserted here and does not matter to the decision (D-79) — op=proposals is the op that answers that. **WHOSE FEED EACH DECISION GOVERNS IS ON THE ROW AND IS NOT ONE ANSWER (D-266, IC-60): `scope: instance` cleared this finding for EVERYBODY, because a progression-stage finding is a fact about the shared record and one act clearing it under every case is dedup (DEC-16); `scope: project` cleared it for THAT PROJECT AND NO OTHER, because a stance is one project's own property (§7, D-216) and R5 makes forks at the judgment layer legitimate.** So `personal: false` means no member's preference did this, and it never means every team's feed moved. AN EMPTY LIST MEANS THE RECORD LOOKED AND HOLDS NONE, never that this plane cannot say; and which act any given finding is open to is published on the item's own `disposition`, never inferred from its kind.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1451
+      "line": 1496
     },
     {
       "id": "queue.index.every_queue_item_says_which",
       "en": "every queue item says which of {map} it is, and this one carries {v1}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1134
+      "line": 1175
+    },
+    {
+      "id": "queue.index.kind_is_not_a_kind",
+      "en": "'{kind}' is not a kind this record's catalogue names. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1181
     },
     {
       "id": "queue.index.muting_is_personal_and_dismissing",
       "en": "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A status item or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1437
+      "line": 1482
+    },
+    {
+      "id": "queue.index.name_either_one_item_item",
+      "en": "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are two different preferences and this plane will not guess which one you meant",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1915
     },
     {
       "id": "queue.index.name_the_instant_to_snooze",
       "en": "name the instant to snooze until. There is no default and there must not be one: P-87 requires re-notification at the stage's OWN declared interval, never at a global one, so this plane holds no instance-wide snooze constant to fall back on.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1829
+      "line": 2046
     },
     {
       "id": "queue.index.name_the_kinds_to_mute",
       "en": "name the kinds to mute, or name one `item`. A mute is scoped to the kinds present when it was made — that is what lets a NEW kind on this case still reach you — so there is no whole-case mute to ask for.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1724
+      "line": 1932
     },
     {
       "id": "queue.index.no_case_by_that_id",
       "en": "no case by that id is visible to you. A case you may not see and a case that does not exist answer identically here (D-15), so this refusal reveals nothing either way.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1617
+      "line": 1660
     },
     {
       "id": "queue.index.no_queue_item_by_that",
       "en": "no queue item by that id is one this plane can classify: a noticed item's or a status item's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1736
+      "line": 1944
+    },
+    {
+      "id": "queue.index.one_of_your_accounts_may",
+      "en": "one of your accounts may explore today, and the ask is yours as its owner: approve it (op=exploreapprove), or let the day pass and it lapses. No team's list holds it.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 813
     },
     {
       "id": "queue.index.re_notification_about_this_case",
       "en": "re-notification about this case is deferred for YOU until that instant. The items themselves are unchanged, they still appear in your feed, and no other member's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1883
+      "line": 2098
     },
     {
       "id": "queue.index.readings_of_a_shared_question",
       "en": "readings of a SHARED question that this read met and could not attribute to a team, so no `new-version-arrived-from-another-team` item was minted for them. The source team is a run's own stored context or it is nothing: a member does not name a team in this record, and guessing one from who authored a reading would manufacture the very connection the notification claims attention for. SO THE COUNT IS PUBLISHED AND THE ATTRIBUTION IS NOT — an empty item list and an unattributable set are different facts and until now they read the same. The questions are named so a member can go and look (op=basisversions); the readings are not named and no author is implied. Why each one could not be attributed is deliberately NOT distinguished: telling a hand-composed reading from one whose run sat under something other than a project would mean projecting a stored column of `ai_runs`, which this reader's declared role forbids (REC-74). Zero means this read attributed everything it met, not that it did not look.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1475
+      "line": 1520
     },
     {
       "id": "queue.index.recorded_for_this_project_and",
       "en": "recorded for THIS project and for no other. One team's dismissal of a judgment-layer finding governs that team's feed and nothing else (D-266, §7/D-216, R5) — no other project's queue moved by an item, and the finding itself is aged rather than deleted (D-79): it stands until it is re-triaged, whether or not the underlying fact still fires.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2104
+      "line": 2318
     },
     {
       "id": "queue.index.something_this_project_rests_on",
       "en": "something this project rests on is in conflict with a record you cannot see. It is never muted: your project can ask to resolve it, and once every project holding a side has asked, the projects are named to each other and you can respond (DEC-85).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 910
+      "line": 912
     },
     {
       "id": "queue.index.something_you_watch_changed_and",
       "en": "something you watch changed, and you alone are told: no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; the watch goes on and a later change is told as a new item.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 799
+      "line": 804
     },
     {
       "id": "queue.index.string_is_catalogued_as_v1",
       "en": "'{String}' is catalogued as \"{v1}\" and this item mints it as \"{v2}\". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would let one member silence a task the record believes reached a person, and minting a status item's kind as something noticed would make a fact about our own machinery undismissable.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1149
+      "line": 1185
     },
     {
       "id": "queue.index.that_day_has_already_begun",
       "en": "that day has already begun where this team is, so the snooze, which holds until its start, has already lapsed and defers nothing. The items are unchanged and no other member's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1881
+      "line": 2096
     },
     {
       "id": "queue.index.that_day_is_before_today",
       "en": "that day is before today ({today}) where this team is; a snooze that has already expired is not a snooze, it would report as deferred while deferring nothing",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1852
+      "line": 2068
+    },
+    {
+      "id": "queue.index.the_day_could_not_be",
+      "en": "the day could not be read in this copy's time zone; send an instant instead",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2065
     },
     {
       "id": "queue.index.the_feed_keeps_four_orders",
       "en": "the feed keeps four orders besides its default (grouped by case): {QUEUE_SORTS}. Send one of them as `sort`, or none for the default. Nothing was read.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 979
+      "line": 1031
     },
     {
       "id": "queue.index.the_machines_and_the_assistants",
       "en": "the machine's and the assistant's noticed items, duties come due and dated waits come round are read here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed nothing this time: its absence from the feed is not a statement that it has nothing to say.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1466
+      "line": 1511
     },
     {
       "id": "queue.index.the_notification_catalogue_does_not",
       "en": "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1737
+      "line": 1945
     },
     {
       "id": "queue.index.the_snooze_is_cleared_re",
       "en": "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1884
+      "line": 2099
+    },
+    {
+      "id": "queue.index.the_task_row_carries_a",
+      "en": "the task row carries a created stamp this producer cannot read as an instant",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1090
     },
     {
       "id": "queue.index.this_finding_carries_a_progression",
       "en": "this finding carries a progression stage, the identity the disposition act is keyed on, so Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a fact about the shared record, so one act clears it under every case (D-266, DEC-16).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 837
+      "line": 839
     },
     {
       "id": "queue.index.this_finding_carries_no_progression",
       "en": "this finding carries no progression stage, so its disposition is one project's judgment, scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: there is no team to record a decision for. A decision, where one can be made, ages the finding out of the team's open list until it is re-triaged, and deletes nothing (D-79).{v1}",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 878
+      "line": 880
     },
     {
       "id": "queue.index.this_finding_carries_no_progression_2",
       "en": "this finding carries no progression stage, so its disposition is a judgment-layer act, and a stance is one project's own property (§7, D-216): one team's decision governs that team's feed and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting project is yours to name) and `finding` with your disposition and reason. The decision ages the finding out of that team's open list until it is re-triaged, and deletes nothing (D-79).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 881
+      "line": 883
     },
     {
       "id": "queue.index.this_is_about_an_account",
       "en": "this is about an account and is told to whom it concerns; no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 810
+      "line": 814
+    },
+    {
+      "id": "queue.index.this_item_carries_no_kind",
+      "en": "this item carries no kind at all. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1180
     },
     {
       "id": "queue.index.this_names_a_finding_that",
       "en": "this names a FINDING that carries no progression stage, so this is the project-scoped disposition and it needs the project you are acting for. Send `project` (one of op=queue's disposition.projects for this item) and `finding` (its disposition.finding) instead of `key`. Nothing was written and no team's feed moved.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2041
+      "line": 2256
     },
     {
       "id": "queue.index.this_names_v1_and_v2",
       "en": "this names {v1}, and {v2} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its `disposition.instead`. Nothing was written. The rest of a selection is unaffected — under the per-item weight this item alone is kept, carrying this reason.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 2033
+      "line": 2248
     },
     {
       "id": "queue.index.this_one_is_a_bias",
       "en": " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason — or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 657
+      "line": 662
     },
     {
       "id": "queue.index.this_one_is_a_case",
       "en": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 665
+      "line": 670
     },
     {
       "id": "queue.index.this_one_is_a_check",
       "en": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays open to the others asked. Once someone takes it, everyone else's closes, naming who took it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 683
+      "line": 688
     },
     {
       "id": "queue.index.this_one_is_a_checkpoint",
       "en": " This one is a checkpoint your team set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 659
+      "line": 664
     },
     {
       "id": "queue.index.this_one_is_a_date",
       "en": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 668
+      "line": 673
     },
     {
       "id": "queue.index.this_one_is_a_date_2",
       "en": " This one is a date you set on a step, keyed by the step and the date rather than by a task, and it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 669
+      "line": 674
     },
     {
       "id": "queue.index.this_one_is_a_holiday",
       "en": " This one is a holiday calendar or office hours one of the team's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 664
+      "line": 669
     },
     {
       "id": "queue.index.this_one_is_a_members",
       "en": " This one is a member's request to join a project you own, keyed by the request rather than by a task: it leaves when an owner grants or declines it (op=projectrequestanswer), or when it is withdrawn.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 680
+      "line": 685
     },
     {
       "id": "queue.index.this_one_is_a_release",
       "en": " This one is a release of your team's Civicsmith that is ready to install, one to-do for every administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that release or newer. A newer release replaces it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 677
+      "line": 682
     },
     {
       "id": "queue.index.this_one_is_a_reminder",
       "en": " This one is a reminder you asked for on one of the team's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 661
+      "line": 666
     },
     {
       "id": "queue.index.this_one_is_a_reminder_2",
       "en": " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on its day only.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 670
+      "line": 675
     },
     {
       "id": "queue.index.this_one_is_a_reminder_3",
       "en": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it is told on its day only.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 671
+      "line": 676
     },
     {
       "id": "queue.index.this_one_is_a_reply",
       "en": " This one is a reply your team marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 662
+      "line": 667
     },
     {
       "id": "queue.index.this_one_is_a_review",
       "en": " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 663
+      "line": 668
     },
     {
       "id": "queue.index.this_one_is_a_review_2",
       "en": " This one is a review day your team set for a plan, keyed by the plan and the day rather than by a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 674
+      "line": 679
     },
     {
       "id": "queue.index.this_one_is_a_signing",
       "en": " This one is a signing key a member registered for themselves, which is keyed by the KEY rather than by a task, so it leaves when an administrator revokes the key (op=signerset), or when it is otherwise no longer active.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 658
+      "line": 663
     },
     {
       "id": "queue.index.this_one_is_a_watch",
       "en": " This one is a watch a plan set running, asked about once because the plan closed or every promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown with no door.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 673
+      "line": 678
     },
     {
       "id": "queue.index.this_one_is_a_wizard",
       "en": " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 667
+      "line": 672
     },
     {
       "id": "queue.index.this_one_is_an_escalations",
       "en": " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 660
+      "line": 665
     },
     {
       "id": "queue.index.this_one_is_an_invitation",
       "en": " This one is an invitation to a project, keyed by the invitation and by you rather than by a task: it leaves when you join the project (op=projectjoin) or leave it, or when the invitation is withdrawn.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 679
+      "line": 684
     },
     {
       "id": "queue.index.this_one_is_an_item",
       "en": " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 666
+      "line": 671
     },
     {
       "id": "queue.index.this_one_is_the_date",
       "en": " This one is the date your team set to look again at a paused plan, keyed by the plan and the day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 675
+      "line": 680
     },
     {
       "id": "queue.index.this_projects_conclusion_may_not",
       "en": "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: your project can ask to resolve it (DEC-85).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 920
+      "line": 922
     },
     {
       "id": "queue.index.this_team_decided_this_finding",
       "en": "this team decided this finding at the judgment layer, so it has left their open list; it is still live for the teams named above, whose feed that act did not touch (D-266).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 1245
+      "line": 1281
+    },
+    {
+      "id": "queue.index.this_tells_the_projects_owners",
+      "en": "this tells the project's owners that a member who left had items routed to them. There is nothing here for a team to set aside: take up the items you choose (the acts this item offers first), and quiet it for yourself (op=queuemute, naming this item) once you have read it.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 821
+    },
+    {
+      "id": "queue.index.to_dos_that_left_the",
+      "en": "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened.",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 1633
     },
     {
       "id": "queue.index.two_projects_conclusions_may_not",
       "en": "two projects' conclusions may not both hold. Setting it aside would not clear it: naming the difference does, or taking it up as a question (DEC-84 item 3).",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 917
+      "line": 919
+    },
+    {
+      "id": "queue.index.until_must_be_an_instant",
+      "en": "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a real day",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2056
+    },
+    {
+      "id": "queue.index.until_must_be_an_instant_2",
+      "en": "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)",
+      "module": "queue",
+      "file": "bio-plane/src/queue/index.mjs",
+      "line": 2075
     },
     {
       "id": "queue.index.your_standing_questions_answer_is",
       "en": "your standing question's answer is told to you once and to nobody else, so no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it; your question keeps running and a later run's new finds are told to you as a new item.",
       "module": "queue",
       "file": "bio-plane/src/queue/index.mjs",
-      "line": 793
+      "line": 798
+    },
+    {
+      "id": "queue.queuestate.a_bias_statements_measure_has",
+      "en": "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 222
+    },
+    {
+      "id": "queue.queuestate.a_connections_grade_is_improvable",
+      "en": "a connection's grade is improvable (D-72)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 220
+    },
+    {
+      "id": "queue.queuestate.a_duplicate_document_was_detected",
+      "en": "a duplicate document was detected (D-60)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 216
+    },
+    {
+      "id": "queue.queuestate.a_register_entrys_bytes_are",
+      "en": "a register entry's bytes are unbacked (D-9, D-45)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 228
     },
     {
       "id": "queue.queuestate.a_to_do_is_something",
       "en": "a to-do is something a named person must do for the record to proceed, and it leaves every list only when it is DONE (op=taskresolve, or the act its item names as `disposition.instead`): record state, not a preference. Quieting it would remove it from the only list that routes it while `tasks` keeps no per-member quiet, so the record would go on believing the question reached a person.",
       "module": "queue",
       "file": "bio-plane/src/queuestate.mjs",
-      "line": 448
+      "line": 447
+    },
+    {
+      "id": "queue.queuestate.every_owner_of_a_project",
+      "en": "every owner of a project is inactive; rescue is available (D-47)",
+      "module": "queue",
+      "file": "bio-plane/src/queuestate.mjs",
+      "line": 106
     },
     {
       "id": "ratification.checks.some_of_these_documents_are",
@@ -42537,21 +42691,21 @@
       "en": "Signing in with Claude is not installed in your team's Civicsmith yet. Whoever installed your team's Civicsmith can add it.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 42
+      "line": 43
     },
     {
       "id": "signin-door.index.the_sign_in_trace_is",
       "en": "the sign-in trace is kept only on a test instance of Civicsmith, and your team's Civicsmith is not one. Nothing was read.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 269
+      "line": 270
     },
     {
       "id": "signin-door.index.your_teams_civicsmith_has_no",
       "en": "your team's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in.",
       "module": "signin-door",
       "file": "bio-plane/src/signin-door/index.mjs",
-      "line": 110
+      "line": 111
     },
     {
       "id": "site-profiles.aspnet-webforms.an_advertising_or_analytics",
@@ -45302,14 +45456,28 @@
       "en": "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 247
+      "line": 248
+    },
+    {
+      "id": "store-door.dispatch.asking_the_assistant_to_draft",
+      "en": "asking the assistant to draft the team's description",
+      "module": "store-door",
+      "file": "bio-plane/src/store-door/dispatch.mjs",
+      "line": 334
+    },
+    {
+      "id": "store-door.dispatch.the_account_that_would_serve",
+      "en": "the account that would serve this draft could not be read; nothing was used",
+      "module": "store-door",
+      "file": "bio-plane/src/store-door/dispatch.mjs",
+      "line": 309
     },
     {
       "id": "store-door.dispatch.this_bundle_is_or_may",
       "en": "this bundle is, or may be, material a litigation hold preserves. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 248
+      "line": 249
     },
     {
       "id": "store-door.pull.material_handed_to_the_team",
