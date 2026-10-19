@@ -730,10 +730,26 @@ function render(cs, view) {
         };
         const relWord = (r) => (r === "same" ? W("screen.question.word.same") : r === "stronger" ? W("screen.question.word.stronger")
           : r === "weaker" ? W("screen.question.word.weaker") : W("screen.question.word.unknown"));
-        /* R72: the axis and its change; an axis that carries a citation (`strength[axis].cited`, what was cited) draws say054, whose tail names it */
+        /* R72 (DEC-366): say054's {source} is the newest document the question cited on that axis after this edition published (its
+           citations' dates against `published_at`); with no such read the axis draws `compare.axis`. The capture axis reads each cited
+           document's capture date (`source.retrieved`, in the image the screen already reads for the title); the citations carry no
+           date for the connection axis, so it draws `compare.axis` until a read gives one. */
+        const pubAt = Date.parse(String(c.published_at || ""));
+        const newerSource = (a) => {
+          if (a !== "capture" || Number.isNaN(pubAt)) return "";
+          let best = null;
+          for (const t of new Set(citedLegs.filter(live).map((l) => String(l.target)))) {
+            const im = later("doc:" + t, "image", { id: t });
+            const head = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? (im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : "";
+            const m = /^\s+retrieved:\s*"?([^"\n]+?)"?\s*$/m.exec(head);
+            const when = m ? Date.parse(m[1]) : NaN;
+            if (!Number.isNaN(when) && when > pubAt && (!best || when > best.when)) best = { when, target: t };
+          }
+          return best ? legTitle({ target: best.target }) : "";
+        };
         const axisCard = (a) => {
           const name = `<span class="cs-card" tabindex="0" data-tip="${cs.esc(W(a === "capture" ? "screen.question.compare.captured.explain" : "screen.question.compare.connected.explain"))}">${W("mark.scale." + a + ".name")}</span>`;
-          const cited = c.strength && c.strength[a] && typeof c.strength[a].cited === "string" ? c.strength[a].cited : "";
+          const cited = newerSource(a);
           const said = cited ? W("screen.question.say054", { change: { html: relWord(rel(a)) }, source: cited })
             : W("screen.question.compare.axis", { axis: { html: name }, change: { html: relWord(rel(a)) } });
           return `<span class="mk-small" data-axis="${a}" data-relation="${rel(a)}">${cited ? name + " " : ""}${said}</span>`;
