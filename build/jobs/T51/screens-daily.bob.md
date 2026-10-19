@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -20,3 +20,11 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-daily tranche/T51 job/T51/screens-daily`. Your Size line counts only your module's own code (K2513).
+
+## B2 · RESUME
+
+RESUME (K4072). SCREENS-DAILY #8 stopped at half its window (J1); you are its next session. Read your record's "Progress" whole and continue from "Not yet done", in order. Answers to J1:
+(1) wizard-scripts is pinned at `20c8001300`, whose registry lists `cite` on `finder`: when wizard-scripts merges (it is converting its last words now), its regenerated `screen-registry.mjs` reaches tranche/T51 and your finder tests boot. Until then keep your local patch uncommitted as before.
+(2) interface-shell R90, R93, R95: CHANGE B4 to interface-shell (K4072) also makes a kit choice that redraws re-run the screen's `reads`, so Find's browse carries `refresh: true` (your J1 (b)). You get a CHANGE when interface-shell merges.
+(a) "Search projects" with no registry act, the `.tw` wrapper, and your R57–R60 words: sent to UX-DESIGN (HANDOFF B366). Meanwhile keep your stand-ins as drawn, each named in your record; a missing row or act arrives by CHANGE.
+Do R64, R54's rest that needs no kit change, and the 14 words findings now; the kit parts after the merges.
