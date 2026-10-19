@@ -17329,30 +17329,6 @@
    "note": "DEC-340: B330 N858 D8: draft form"
   },
   {
-   "key": "screen.grouprules.text.label",
-   "en": "What it requires",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: draft form; DEC-341: B335 2: local-facts R10, R18"
-  },
-  {
-   "key": "screen.grouprules.text.help1",
-   "en": "What the rule makes someone do or allows, in plain words, such as the time or the limit it sets.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: draft form; DEC-341: B335 2"
-  },
-  {
-   "key": "screen.grouprules.text.help2",
-   "en": "It must be valid as an entry of your jurisdiction's profile.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: RULE_ENTRY_INVALID"
-  },
-  {
-   "key": "screen.grouprules.src.help1",
-   "en": "The passage of a captured document that states the rule.",
-   "protected": false,
-   "note": "DEC-340: B330 N858 D8: RULE_NO_SOURCE"
-  },
-  {
    "key": "screen.grouprules.src.help2",
    "en": "A rule with no source held here is not drafted.",
    "protected": false,
@@ -18025,24 +18001,6 @@
    "note": "DEC-341: B335 2: grouprules: kind option"
   },
   {
-   "key": "screen.grouprules.trigger.label",
-   "en": "What sets it off",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field, the trigger"
-  },
-  {
-   "key": "screen.grouprules.trigger.help1",
-   "en": "For a legal fact, the situation in which it is shown.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help (LEGAL_FACT_TRIGGERS)"
-  },
-  {
-   "key": "screen.grouprules.trigger.help2",
-   "en": "For a deadline, the event that starts its count.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help (deadline starts)"
-  },
-  {
    "key": "screen.grouprules.trigger.start.received",
    "en": "The office receives your team's request",
    "protected": false,
@@ -18123,18 +18081,6 @@
   {
    "key": "screen.grouprules.cite.help1",
    "en": "The provision the rule comes from, such as a section number or a rule number.",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field help"
-  },
-  {
-   "key": "screen.grouprules.link.label",
-   "en": "A link to it",
-   "protected": false,
-   "note": "DEC-341: B335 2: grouprules: field, the source as a link"
-  },
-  {
-   "key": "screen.grouprules.link.help1",
-   "en": "Optional. The web address of the document that states the rule.",
    "protected": false,
    "note": "DEC-341: B335 2: grouprules: field help"
   },
@@ -22667,6 +22613,312 @@
    "en": "(now)",
    "protected": false,
    "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a mark after the size the team has today"
+  },
+  {
+   "key": "screen.grouprules.name.label",
+   "en": "Its name",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: the rule (deadline) or key (legal fact); Civicsmith derives the stored id from it"
+  },
+  {
+   "key": "screen.grouprules.name.help1",
+   "en": "A short name your team will know it by.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.name.help2",
+   "en": "Civicsmith files the rule under it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.deadline.legend",
+   "en": "The deadline",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the group of a deadline's fields"
+  },
+  {
+   "key": "screen.grouprules.app.label",
+   "en": "The kind of action it applies to",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: applies_to, one kind"
+  },
+  {
+   "key": "screen.grouprules.app.help1",
+   "en": "The kinds of action your jurisdiction's profile lists, by their own names.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.app.claim",
+   "en": "A claim against a public body",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the choice \"claim\": a claim for money or another remedy filed with a public body"
+  },
+  {
+   "key": "screen.grouprules.amount.label",
+   "en": "How long",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: amount"
+  },
+  {
+   "key": "screen.grouprules.amount.help1",
+   "en": "A whole number.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.label",
+   "en": "Counted in",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: units"
+  },
+  {
+   "key": "screen.grouprules.units.days",
+   "en": "Days",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.hours",
+   "en": "Hours",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.business_hours",
+   "en": "Business hours",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.months",
+   "en": "Months",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.units.years",
+   "en": "Years",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.count.label",
+   "en": "Which days count",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: count, asked only for days"
+  },
+  {
+   "key": "screen.grouprules.count.calendar",
+   "en": "Every day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: count: calendar"
+  },
+  {
+   "key": "screen.grouprules.count.business",
+   "en": "Business days only",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: count: business"
+  },
+  {
+   "key": "screen.grouprules.count.help1",
+   "en": "Asked only for a deadline counted in days.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.start.label",
+   "en": "Counted from",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: starts; its choices are screen.grouprules.trigger.start.*"
+  },
+  {
+   "key": "screen.grouprules.start.help1",
+   "en": "The event that starts the count.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.dir.label",
+   "en": "Before or after it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: direction"
+  },
+  {
+   "key": "screen.grouprules.dir.forward",
+   "en": "After it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: direction: forward"
+  },
+  {
+   "key": "screen.grouprules.dir.backward",
+   "en": "Before it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: direction: backward"
+  },
+  {
+   "key": "screen.grouprules.dir.help1",
+   "en": "Most deadlines run after the event.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.dir.help2",
+   "en": "A notice that must come first runs before it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.owed.label",
+   "en": "Who must act by then",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: owed_by"
+  },
+  {
+   "key": "screen.grouprules.owed.body",
+   "en": "The office",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by: body"
+  },
+  {
+   "key": "screen.grouprules.owed.group",
+   "en": "Your team",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by: the team"
+  },
+  {
+   "key": "screen.grouprules.owed.none",
+   "en": "The source doesn't say",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: owed_by left out: undetermined"
+  },
+  {
+   "key": "screen.grouprules.due.label",
+   "en": "By what time on the last day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: due_at"
+  },
+  {
+   "key": "screen.grouprules.due.none",
+   "en": "Any time that day",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at left out"
+  },
+  {
+   "key": "screen.grouprules.due.cob",
+   "en": "Close of business",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at: close_of_business"
+  },
+  {
+   "key": "screen.grouprules.due.time",
+   "en": "A set time",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: due_at: a time, entered in the 12-hour clock and stored as HH:MM"
+  },
+  {
+   "key": "screen.grouprules.due.help1",
+   "en": "Choose a set time only when the source names one, such as {time}.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: {time} is a time of day, e.g. 5:00 PM"
+  },
+  {
+   "key": "screen.grouprules.fact.summary",
+   "en": "For a legal fact, these instead of the deadline",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the legal fact's own fields"
+  },
+  {
+   "key": "screen.grouprules.shown.label",
+   "en": "When it is shown",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: trigger; its choices are screen.grouprules.trigger.fact.*"
+  },
+  {
+   "key": "screen.grouprules.shown.help1",
+   "en": "The situation in which the fact is shown to a member.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.statement.label",
+   "en": "What it says",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: statement"
+  },
+  {
+   "key": "screen.grouprules.statement.help1",
+   "en": "The protection or the limit, in plain words.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.statement.help2",
+   "en": "It must be valid as an entry of your jurisdiction's profile.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.bears.legend",
+   "en": "The kinds of action it bears on",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: applies_to, several, optional"
+  },
+  {
+   "key": "screen.grouprules.bears.help1",
+   "en": "Leave them all unticked when it is not tied to a kind of action.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.src.legend",
+   "en": "Where the source states it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: the group of the source fields"
+  },
+  {
+   "key": "screen.grouprules.doc.label",
+   "en": "The document that states it",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: source.captureSha, one of the captures the member can see"
+  },
+  {
+   "key": "screen.grouprules.doc.help1",
+   "en": "A capture your team holds and you can see.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.pass.label",
+   "en": "The passage",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: field: the words that become source.extent"
+  },
+  {
+   "key": "screen.grouprules.pass.help1",
+   "en": "Copy the words that state the rule exactly as the document writes them.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "screen.grouprules.pass.help2",
+   "en": "Civicsmith finds them in it.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: Civicsmith locates the copied words in the capture and keeps their place as the source"
+  },
+  {
+   "key": "screen.grouprules.pass.notfound1",
+   "en": "Those words are not in that document as written.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields; translator: shown when the copied words are not found"
+  },
+  {
+   "key": "screen.grouprules.pass.notfound2",
+   "en": "Copy them exactly, or choose the document that holds them. Nothing was written.",
+   "protected": false,
+   "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
   }
  ],
  "rewrite": {
