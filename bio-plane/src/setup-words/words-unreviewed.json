@@ -25215,11 +25215,326 @@
       "line": 1397
     },
     {
+      "id": "following.index.account_gated_member_credential",
+      "en": "an account-gated register is read with the member's own credential",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 804
+    },
+    {
+      "id": "following.index.act_names_item",
+      "en": "an act on an item names the item",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1360
+    },
+    {
+      "id": "following.index.answer_keep_member_act",
+      "en": "answering whether to keep a watch is a member's own act",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1220
+    },
+    {
+      "id": "following.index.answer_keep_or_stop",
+      "en": "an answer either keeps the watch until a day, or stops it now",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1232
+    },
+    {
+      "id": "following.index.body_no_legistar_id",
+      "en": "the body holds no identifier in a scheme the active profiles name for Legistar",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 318
+    },
+    {
+      "id": "following.index.end_date_member_act",
+      "en": "a follow's end date is set by a member's own act",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 350
+    },
+    {
+      "id": "following.index.end_date_set_by_author",
+      "en": "a follow's end date is set by the member who made it",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 356
+    },
+    {
+      "id": "following.index.follow_already_ended",
+      "en": "the follow has already ended",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 357
+    },
+    {
+      "id": "following.index.follow_ended_by_author_only",
+      "en": "a follow is ended only by the member who made it",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 338
+    },
+    {
+      "id": "following.index.follow_home_visible_bundle",
+      "en": "the follow's home is a bundle you may see, whose project it lives in",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 256
+    },
+    {
+      "id": "following.index.follow_is_member_act",
+      "en": "a follow is a member's own act; the machine follows nothing of its own accord",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 254
+    },
+    {
+      "id": "following.index.follow_no_longer_held",
+      "en": "the follow is no longer held",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1258
+    },
+    {
+      "id": "following.index.keep_names_day",
+      "en": "keeping a watch names the day it is kept until",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1236
+    },
+    {
+      "id": "following.index.link_watch_member_act",
+      "en": "linking a watch to a plan is a member's own act",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1086
+    },
+    {
+      "id": "following.index.no_address_per_meeting",
+      "en": "no address you may see is watched per meeting",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 484
+    },
+    {
+      "id": "following.index.no_body_registered_seen",
+      "en": "no body by that id is registered that you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 485
+    },
+    {
+      "id": "following.index.no_body_seen",
+      "en": "no body by that id is registered that you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 316
+    },
+    {
+      "id": "following.index.no_follow_held",
+      "en": "no follow by that id is held",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 337
+    },
+    {
+      "id": "following.index.no_follow_seen_held",
+      "en": "no follow by that id you may see is held",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 353
+    },
+    {
+      "id": "following.index.no_item_marks_list",
+      "en": "no item by that id is one the marks list",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1497
+    },
+    {
+      "id": "following.index.no_item_seen",
+      "en": "no item by that id is one you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1362
+    },
+    {
+      "id": "following.index.no_item_seen_2",
+      "en": "no item by that id is one you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1427
+    },
+    {
+      "id": "following.index.no_link_seen",
+      "en": "no link of a watch you may see is held under that id",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1223
+    },
+    {
+      "id": "following.index.no_live_register_follow",
+      "en": "no live register follow by that id is held",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 796
+    },
+    {
+      "id": "following.index.no_open_second_look",
+      "en": "the item has no open second look to clear",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1418
+    },
+    {
+      "id": "following.index.no_portal_follow_seen",
+      "en": "no portal follow by that id you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1607
+    },
+    {
+      "id": "following.index.no_portal_follow_seen_2",
+      "en": "no portal follow by that id you may see",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1623
+    },
+    {
+      "id": "following.index.no_question_yours_now",
+      "en": "there is no question about this watch that is yours to answer now",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1229
+    },
+    {
+      "id": "following.index.no_watch_of_kind_seen",
+      "en": "no watch of that kind that you may see is held under that id",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1093
+    },
+    {
+      "id": "following.index.no_watch_of_kind_seen_2",
+      "en": "no watch of that kind that you may see is held under that id",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1095
+    },
+    {
+      "id": "following.index.only_follower_refreshes",
+      "en": "only the member who follows this register refreshes it, with their own credential",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 800
+    },
+    {
+      "id": "following.index.period_days_named",
+      "en": "a follow names the days it covers: from (a day), and until (a day not before it) or none",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 320
+    },
+    {
+      "id": "following.index.policy_standing_watch_no_end",
+      "en": "a policy's watch is the team's standing watch: it takes no end date and ends only with the policy",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 355
+    },
+    {
+      "id": "following.index.portal_declares_key_field",
+      "en": "a portal follow declares the field that keys its rows",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 467
+    },
+    {
+      "id": "following.index.portal_public_https_locator",
+      "en": "a portal is followed at a public https locator",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 464
+    },
+    {
+      "id": "following.index.portal_public_https_locator_2",
+      "en": "a portal is followed at a public https locator",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 466
+    },
+    {
+      "id": "following.index.public_register_read_tick",
+      "en": "a public register is read on the tick; a member's refresh is for one behind an account or a fee",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 798
+    },
+    {
+      "id": "following.index.register_public_https_locator",
+      "en": "a register is followed at a public https locator",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 382
+    },
+    {
+      "id": "following.index.relied_on_not_offered",
+      "en": "something else still relies on this watch, so it is not offered for keeping or stopping",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1230
+    },
+    {
+      "id": "following.index.render_true_or_false",
+      "en": "render is true or false",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 383
+    },
+    {
+      "id": "following.index.second_looks_names_item",
+      "en": "a read of an item's second looks names the item",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1426
+    },
+    {
+      "id": "following.index.snapshots_same_follow",
+      "en": "both snapshots are of this follow, by their sequence numbers",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1610
+    },
+    {
       "id": "following.index.this_register_charges_price_the",
       "en": "this register charges {price}; the refresh runs only once that price is accepted as shown",
       "module": "following",
       "file": "bio-plane/src/following/index.mjs",
       "line": 802
+    },
+    {
+      "id": "following.index.watch_already_ended",
+      "en": "that watch has already ended",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1113
+    },
+    {
+      "id": "following.index.watch_body_member_act",
+      "en": "naming a watch's body is a member's own act",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 481
+    },
+    {
+      "id": "following.index.watch_flag_member_acts",
+      "en": "watching and flagging are a member's own acts; the machine marks nothing",
+      "module": "following",
+      "file": "bio-plane/src/following/index.mjs",
+      "line": 1359
     },
     {
       "id": "format-registry.formats.content_type_ct_matched_no",
@@ -31578,6 +31893,20 @@
       "line": 66
     },
     {
+      "id": "link-sweep.checks.is_missing",
+      "en": "is missing",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/checks.mjs",
+      "line": 63
+    },
+    {
+      "id": "link-sweep.checks.must_be_1_to_40",
+      "en": "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/checks.mjs",
+      "line": 65
+    },
+    {
       "id": "link-sweep.checks.must_be_a_nonempty_single",
       "en": "must be a nonempty single line of at most {title} characters",
       "module": "link-sweep",
@@ -31620,6 +31949,27 @@
       "line": 112
     },
     {
+      "id": "link-sweep.checks.must_be_an_object",
+      "en": "must be an object",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/checks.mjs",
+      "line": 92
+    },
+    {
+      "id": "link-sweep.checks.must_be_boolean",
+      "en": "must be boolean",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/checks.mjs",
+      "line": 71
+    },
+    {
+      "id": "link-sweep.checks.must_be_budget",
+      "en": "must be {per_run, backlog}: per_run an integer {per_run_range}, backlog an integer {backlog_range}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/checks.mjs",
+      "line": 123
+    },
+    {
       "id": "link-sweep.checks.must_be_one_of_sweep",
       "en": "must be one of: {SWEEP_CADENCES}",
       "module": "link-sweep",
@@ -31655,11 +32005,95 @@
       "line": 84
     },
     {
+      "id": "link-sweep.sweep-match.a_backreference",
+      "en": "a backreference",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 52
+    },
+    {
+      "id": "link-sweep.sweep-match.a_closes_no_group",
+      "en": "a ) closes no group",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 114
+    },
+    {
       "id": "link-sweep.sweep-match.a_count_is_at_most",
       "en": "a count is at most {TERM_REPEAT_MAX} and never runs backwards",
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep-match.mjs",
       "line": 129
+    },
+    {
+      "id": "link-sweep.sweep-match.a_count_past_the_bound",
+      "en": "a count past the bound",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 129
+    },
+    {
+      "id": "link-sweep.sweep-match.a_has_no_closing",
+      "en": "a [ has no closing ]",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 73
+    },
+    {
+      "id": "link-sweep.sweep-match.a_lookahead",
+      "en": "a lookahead",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 96
+    },
+    {
+      "id": "link-sweep.sweep-match.a_lookbehind",
+      "en": "a lookbehind",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 97
+    },
+    {
+      "id": "link-sweep.sweep-match.a_named_group_s",
+      "en": "a named group's name has no closing >",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 98
+    },
+    {
+      "id": "link-sweep.sweep-match.a_paren_has_no_closing",
+      "en": "a ( has no closing )",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 102
+    },
+    {
+      "id": "link-sweep.sweep-match.a_quantifier_with_nothing",
+      "en": "a quantifier with nothing to repeat",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 113
+    },
+    {
+      "id": "link-sweep.sweep-match.a_range_in_a_class",
+      "en": "a range in a class runs backwards or ends in a class",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 81
+    },
+    {
+      "id": "link-sweep.sweep-match.a_repeated_assertion",
+      "en": "a repeated assertion",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 134
+    },
+    {
+      "id": "link-sweep.sweep-match.a_reversed_or_open",
+      "en": "a reversed or open range",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 81
     },
     {
       "id": "link-sweep.sweep-match.a_term_is_a_single",
@@ -31669,11 +32103,123 @@
       "line": 242
     },
     {
+      "id": "link-sweep.sweep-match.a_trailing_backslash",
+      "en": "a trailing backslash",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 51
+    },
+    {
+      "id": "link-sweep.sweep-match.an_anchor_or_word",
+      "en": "an anchor or word boundary cannot be repeated",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 134
+    },
+    {
+      "id": "link-sweep.sweep-match.an_expression_past_the_bound",
+      "en": "an expression past the bound",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 156
+    },
+    {
+      "id": "link-sweep.sweep-match.an_unclosed_class",
+      "en": "an unclosed class",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 73
+    },
+    {
+      "id": "link-sweep.sweep-match.an_unclosed_group",
+      "en": "an unclosed group",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 102
+    },
+    {
+      "id": "link-sweep.sweep-match.an_unclosed_group_name",
+      "en": "an unclosed group name",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 98
+    },
+    {
+      "id": "link-sweep.sweep-match.an_unopened_group",
+      "en": "an unopened group",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 114
+    },
+    {
+      "id": "link-sweep.sweep-match.c_repeats_nothing",
+      "en": "{c} repeats nothing",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 113
+    },
+    {
+      "id": "link-sweep.sweep-match.escape_a_term_reads",
+      "en": "\\{c} is not an escape a term reads",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 64
+    },
+    {
+      "id": "link-sweep.sweep-match.escape_needs_hex_digits",
+      "en": "\\{c} needs {n} hex digits",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 60
+    },
+    {
+      "id": "link-sweep.sweep-match.escape_refers_back_to_a",
+      "en": "\\{c} refers back to a group, and a backreference cannot be matched in linear time",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 52
+    },
+    {
+      "id": "link-sweep.sweep-match.escape_without_hex_digits",
+      "en": "\\{c} without {n} hex digits",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 60
+    },
+    {
       "id": "link-sweep.sweep-match.k_looks_ahead_which_a",
       "en": "(?{k} looks ahead, which a term may not",
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep-match.mjs",
       "line": 96
+    },
+    {
+      "id": "link-sweep.sweep-match.k_looks_behind_which",
+      "en": "(?<{k} looks behind, which a term may not",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 97
+    },
+    {
+      "id": "link-sweep.sweep-match.the_escape",
+      "en": "the escape \\{c}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 64
+    },
+    {
+      "id": "link-sweep.sweep-match.the_expression_ends_with_a",
+      "en": "the expression ends with a backslash",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 51
+    },
+    {
+      "id": "link-sweep.sweep-match.the_group_k",
+      "en": "the group (?{k}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep-match.mjs",
+      "line": 99
     },
     {
       "id": "link-sweep.sweep-match.the_term_compiles_to_more",
@@ -31690,11 +32236,60 @@
       "line": 99
     },
     {
+      "id": "link-sweep.sweep.failed_reason",
+      "en": "failed; {reason}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 471
+    },
+    {
       "id": "link-sweep.sweep.fetched_for_the_sweep_name",
       "en": "fetched for the sweep {name}",
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep.mjs",
-      "line": 478
+      "line": 480
+    },
+    {
+      "id": "link-sweep.sweep.format_excluded_format",
+      "en": "format_excluded; {format}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 477
+    },
+    {
+      "id": "link-sweep.sweep.governed_the_per_host",
+      "en": "governed; the per-host governor held the seed's fetch",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 420
+    },
+    {
+      "id": "link-sweep.sweep.governed_the_per_host_2",
+      "en": "governed; the per-host governor held the fetch",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 462
+    },
+    {
+      "id": "link-sweep.sweep.held_backlog",
+      "en": "held: backlog",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 283
+    },
+    {
+      "id": "link-sweep.sweep.its_bundle_s_daemon",
+      "en": "its bundle's daemon block says enabled: false",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 281
+    },
+    {
+      "id": "link-sweep.sweep.its_bundle_s_daemon_2",
+      "en": "its bundle's daemon sweep_budget allows no fetch in this tick, so the run made none",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 407
     },
     {
       "id": "link-sweep.sweep.member_is_not_an_owner",
@@ -31704,11 +32299,46 @@
       "line": 194
     },
     {
+      "id": "link-sweep.sweep.no_answer",
+      "en": "no answer",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 471
+    },
+    {
+      "id": "link-sweep.sweep.no_locator_was_named",
+      "en": "no locator was named",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 590
+    },
+    {
+      "id": "link-sweep.sweep.no_reason_given",
+      "en": "no reason given",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 530
+    },
+    {
       "id": "link-sweep.sweep.no_sweep_is_named_string",
       "en": "no sweep is named {String}",
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep.mjs",
-      "line": 583
+      "line": 585
+    },
+    {
+      "id": "link-sweep.sweep.not_ratified",
+      "en": "not ratified",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 278
+    },
+    {
+      "id": "link-sweep.sweep.out_of_scope_redirect_to",
+      "en": "out_of_scope_redirect to {target}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 466
     },
     {
       "id": "link-sweep.sweep.seed_outcome_for_the_sweep",
@@ -31718,11 +32348,32 @@
       "line": 428
     },
     {
+      "id": "link-sweep.sweep.seed_reason",
+      "en": "seed {reason}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 443
+    },
+    {
+      "id": "link-sweep.sweep.seed_reason_to_target",
+      "en": "seed {reason} to {target}",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 442
+    },
+    {
       "id": "link-sweep.sweep.string_is_outside_the_sweeps",
       "en": "{String} is outside the sweep's sources",
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep.mjs",
-      "line": 588
+      "line": 590
+    },
+    {
+      "id": "link-sweep.sweep.the_sweep_s_backlog_is",
+      "en": "the sweep's backlog is at or over its limit",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 587
     },
     {
       "id": "link-sweep.sweep.this_list_belongs_to_no",
@@ -31730,6 +32381,13 @@
       "module": "link-sweep",
       "file": "bio-plane/src/link-sweep/sweep.mjs",
       "line": 195
+    },
+    {
+      "id": "link-sweep.sweep.undetermined",
+      "en": "undetermined",
+      "module": "link-sweep",
+      "file": "bio-plane/src/link-sweep/sweep.mjs",
+      "line": 477
     },
     {
       "id": "link-sweep.sweep.v1_is_not_a_member",
@@ -33381,28 +34039,35 @@
       "en": "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1258
+      "line": 1257
+    },
+    {
+      "id": "monitoring.index.fetched_the_opendocument_export",
+      "en": " — fetched {exportAddress}, the OpenDocument export composed from the Drive {kind} in {address}",
+      "module": "monitoring",
+      "file": "bio-plane/src/monitoring/index.mjs",
+      "line": 1145
     },
     {
       "id": "monitoring.index.frequency_when_given_must_be",
       "en": "'frequency', when given, must be one of {MONITOR_FREQ}. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2021
+      "line": 2018
     },
     {
       "id": "monitoring.index.gathered_for_the_named_request",
       "en": "Gathered for the named request {id}, carried by {bundle}'s data/gathering.json, which authorised the fetch; locator {v1} of {length} in the request's order. Collected {at}. Filed at {GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2557
+      "line": 2553
     },
     {
       "id": "monitoring.index.monitoring_set_by_member_v1",
       "en": "Monitoring set by {member}: {v1}{v2} (a member's act; nothing was fetched).",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2036
+      "line": 2033
     },
     {
       "id": "monitoring.index.text_session_log_entry",
@@ -33416,7 +34081,7 @@
       "en": "the addresses the archive tick would find eligible could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2943
+      "line": 2939
     },
     {
       "id": "monitoring.index.the_capture_is_rendered_and",
@@ -33458,14 +34123,14 @@
       "en": "the flagged monitored documents could not be read: {String}",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2982
+      "line": 2978
     },
     {
       "id": "monitoring.index.the_reason_must_be_one",
       "en": "the reason must be one of {keys}, or {CUSTOM_REASON} with the member's own words of 1 to {FREQUENCY_REASON_MAX} characters. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 1912
+      "line": 1910
     },
     {
       "id": "monitoring.index.the_served_bytes_could_not",
@@ -33479,14 +34144,14 @@
       "en": "{v1} Its bytes are `{file}`, exactly as served; nothing here summarises them.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2554
+      "line": 2551
     },
     {
       "id": "monitoring.index.whether_a_document_is_watched",
       "en": "whether a document is watched is asked by a named member; a machine may propose it (R33) and never sets it. Nothing was written.",
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
-      "line": 2005
+      "line": 2002
     },
     {
       "id": "monitoring.index.why_a_shape_your_teams",
@@ -33508,6 +34173,13 @@
       "module": "monitoring",
       "file": "bio-plane/src/monitoring/index.mjs",
       "line": 738
+    },
+    {
+      "id": "monitoring.says.an_objective",
+      "en": "an objective",
+      "module": "monitoring",
+      "file": "bio-plane/src/monitoring/index.mjs",
+      "line": 3091
     },
     {
       "id": "network-notices.index.no_group_slug_detail",
@@ -41474,6 +42146,13 @@
       "module": "run-rules",
       "file": "bio-plane/src/run-rules/test-bar.mjs",
       "line": 155
+    },
+    {
+      "id": "scheduler.index.the_file_safety_owner_offers_no_onfilework",
+      "en": "the file-safety owner offers no onFileWork",
+      "module": "scheduler",
+      "file": "bio-plane/src/scheduler/index.mjs",
+      "line": 636
     },
     {
       "id": "scheduler.index.the_key_key_is_one",
