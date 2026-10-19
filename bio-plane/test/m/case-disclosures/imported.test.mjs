@@ -7,9 +7,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, FLAG_SENTENCE, FLAGS_SAY, acceptedBodyLines, acceptedWorkRow, flagsListed } from "../../../src/case-disclosures/index.mjs";
-import { CASE_DOCUMENT_FORMAT, acceptedWorkBlockLines, acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
+import { CASE_DOCUMENT_FORMAT, acceptedWorkBlockLines, acceptedWorkOf, pairLine } from "../../../src/case-grammar/index.mjs";
 import { caseFile, SOURCE, CASE } from "../case-import/fixture.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const IMP = "a".repeat(64), THEIRS = "INQ-2026-0042-x";
@@ -46,7 +46,10 @@ test("R13: acceptedWorkJudged reads, for each ref leg, case-import's acceptance 
   assert.deepEqual(acceptedWorkOf(fm).rows.map((r) => [r.ref, r.edition, r.reason]), [[ref, 2, "We recreated it whole."]]);
   const body = acceptedBodyLines({ rows: a.rows, flags: [] }).join("\n");
   assert.ok(body.includes(word("case-disclosures.group_work_case")));
-  assert.ok(body.includes(`- ${Q} rests, through ${Q}, on ${THEIRS} of other-group's case CASE-2026-0900, edition 2: accepted by alice on 2026-09-27T00:00:00Z, because: We recreated it whole. It was recreated from that case file, with the gaps stated: the third page's image was not carried.`));
+  assert.ok(body.includes(word("case-disclosures.rests_through_case", { member: Q, leg_of: Q, finding: THEIRS, group: "other-group", case: "CASE-2026-0900",
+    edition: "2", accepted_by: "alice", accepted_at: "2026-09-27T00:00:00Z", reason: "We recreated it whole.", result: "recreated",
+    gaps: `, ${word("case-disclosures.gaps_stated", { gaps: "the third page's image was not carried." })}`, pair: pairLine({ capture: "B", connection: "C" }),
+    manifest_sha: "f".repeat(64) })));
   /* the reason's own full stop is not doubled (N535) */
   assert.equal(body.includes(".."), false);
   assert.ok(body.includes(word("case-disclosures.flag_open_work")));
@@ -61,16 +64,22 @@ test("R13, R14 (N535): each member's words in the section — an acceptance's re
     manifest_sha: null, pair: null, result: "recreated", gaps, accepted_by: "alice", accepted_at: "t", reason });
   const flag = (issue, words) => ({ ref: "R", edition: 1, flag: "F1", issue, flagged_at: "t", words, acknowledged_by: "alice", acknowledged_at: "t" });
   const line = (r, f = []) => acceptedBodyLines({ rows: [r], flags: f }).filter((l) => l.startsWith("- "));
+  /* the lines as case-disclosures' own words state them, the row's `reason` and `gaps` and the flag's words as given */
+  const rests = (reason, gaps) => word("case-disclosures.rests_through_case", { member: "M", leg_of: "L", finding: "F", group: "g", case: "C",
+    edition: "1", accepted_by: "alice", accepted_at: "t", reason, result: "recreated", gaps, pair: pairLine(null),
+    manifest_sha: localize("case-disclosures.document.not_stated", "not stated") });
+  const flagLine = (words, owner) => word("case-disclosures.flag_edition_raised", { flag: "F1", ref: "R", edition: "1", flagged_at: "t", words,
+    acknowledged_by: owner, acknowledged_at: "alice", value: "t" });
   for (const [given, printed] of [["We recreated it whole", "We recreated it whole."], ["We recreated it whole.", "We recreated it whole."],
                                   ["Did it recreate?", "Did it recreate?"], ["It did!", "It did!"], ["and so on…", "and so on…"],
                                   ["Three dots...", "Three dots..."], ["ends in a quote 'x'", "ends in a quote 'x'."]]) {
-    assert.ok(line(row(given, null))[0].includes(`because: ${printed} It was recreated from that case file. Its grades`), given);
-    assert.ok(line(row("r", given))[0].includes(`with the gaps stated: ${printed} Its grades`), given);
+    assert.equal(line(row(given, null))[0], rests(printed, "."), given);
+    assert.equal(line(row("r", given))[0], rests("r.", `, ${word("case-disclosures.gaps_stated", { gaps: printed })}`), given);
     const [, f] = line(row("r", null), [flag(given, given)]);
-    assert.equal(f, `- Flag F1 on R, edition 1, raised t: ${printed} In the owner's words: ${printed} Disclosed by alice on t.`, given);
+    assert.equal(f, flagLine(printed, ` ${word("case-disclosures.owner_words", { words: printed })}`), given);
   }
   const [, nowords] = line(row("r", null), [flag("an issue.", null)]);
-  assert.equal(nowords, "- Flag F1 on R, edition 1, raised t: an issue. Disclosed by alice on t.");
+  assert.equal(nowords, flagLine("an issue.", ""));
   for (const l of [...line(row("x.", "y."), [flag("z.", "w.")])]) assert.equal(/\.\./.test(l), false, l);
 });
 
@@ -142,10 +151,11 @@ test("R14: disclosureBlocks' flags carry the issue, when it was flagged, the own
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...acceptedWorkBlockLines({ rows: a.rows, flags }), "---", ""].join("\n"));
   assert.deepEqual(acceptedWorkOf(fm).flags, flags);
   const body = acceptedBodyLines({ rows: a.rows, flags }).join("\n");
-  assert.ok(body.includes(`- Flag IMPFLAG-1 on ${ref}, edition 2, raised 2026-09-27T00:00:00Z: page 3 is misread. In the owner's words: we checked page 3 ourselves. Disclosed by alice on ${AT}.`));
+  assert.ok(body.includes(word("case-disclosures.flag_edition_raised", { flag: "IMPFLAG-1", ref, edition: "2", flagged_at: "2026-09-27T00:00:00Z",
+    words: "page 3 is misread.", acknowledged_by: ` ${word("case-disclosures.owner_words", { words: "we checked page 3 ourselves." })}`, acknowledged_at: "alice", value: AT })));
   assert.equal((JSON.stringify(flags) + body).includes("bo"), false, "the flagging member is not named");
-  assert.equal(FLAG_SENTENCE, "Rests on another team's work that carries an open flag, disclosed with this case: ");
-  assert.equal(FLAGS_SAY, "publishing discloses each of these flags, and is never blocked by one (DEC-96 item 4): list each in flagsDisclosed at op=publish, with your own words if you choose.");
+  assert.equal(FLAG_SENTENCE, `${word("case-disclosures.rests_group_work")} `);
+  assert.equal(FLAGS_SAY, localize("case-disclosures.accepted.flags_say", "publishing discloses each of these flags, and is never blocked by one (DEC-96 item 4): list each in flagsDisclosed at op=publish, with your own words if you choose."));
 });
 
 /* Alice imports another group's case file through the real case-import, recreated whole, and accepts edition 1. */

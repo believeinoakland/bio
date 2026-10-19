@@ -8,7 +8,7 @@
  * publisher may not see is not followed and not listed (R17: sight at the act governs). */
 
 import { PHOTO_WORDS } from "./checks.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The material one leg reaches: the passage's own capture when the leg names a content row, else every capture its
  *  document registers. Answers `[{ref, kind, sha}]`; `kind` is `observation` for a member's authored words (provenance
@@ -180,7 +180,7 @@ export function photoRead(read) {
      marks do not give is an answer R10 does not state */
   const obscured = carried ? obscuredRead(a.obscured, carried, "photo") : null;
   if (carried && (!obscured || obscured.marked !== (state === "marked")))
-    return unread("the marks read answered a copy with no obscured object R22 states for it");
+    return unread(localize("case-disclosures.materials.marks_read_answered_copy", "the marks read answered a copy with no obscured object R22 states for it"));
   return { photo: true, state, marks: a.marks, copy: carried, refused, ...(obscured ? { obscured } : {}) };
 }
 
@@ -217,11 +217,11 @@ export function documentRead(read) {
   if (a.state === "undetermined") return unread(word("case-disclosures.case_carriage_read"));
   if (a.state === "photo") return unread(word("case-disclosures.copy_state_read_answered_photo"));
   if (a.state === "copy") {
-    if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread("the copy's state read answered copy with no SHA-256");
+    if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread(localize("case-disclosures.materials.copy_state_read_answered_copy", "the copy's state read answered copy with no SHA-256"));
     /* R32 (T47): its `obscured` object, `kind` "document", handed on whole */
     const obscured = obscuredRead(a.obscured, a.copy.toLowerCase(), "document");
     return obscured ? { state: "copy", copy: a.copy.toLowerCase(), refused: null, obscured }
-      : unread("the copy's state read answered copy with no obscured object R22 states for it");
+      : unread(localize("case-disclosures.materials.copy_state_read_answered_copy_obscured", "the copy's state read answered copy with no obscured object R22 states for it"));
   }
   if (a.state === "refused")
     return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code

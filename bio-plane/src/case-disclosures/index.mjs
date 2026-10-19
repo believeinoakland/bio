@@ -52,6 +52,7 @@
  *                        the caller's transaction (its R16).
  *   bias                 `statementInForce` (its R49; R30: the statements this case's lens prints).
  *   caseChecker          `checkAccount` (its R24; R30), pure; imported unless given.
+ *   retrieval            `zone` (its R69: the team's governing time zone; R33).
  *   now                  the judgment's instant, for the day `personAt` is read at (R26).
  * (T41) R31 asks `inquiry.biasAppliedFindings` (its R61's one in-force test, `biasNotInForce` its one spelling).
  *
@@ -84,6 +85,8 @@ import { peopleOf as peopleModuleOf } from "../people/index.mjs";
 import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL } from "../case-carriage/index.mjs";
 import * as caseCheckerModule from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
+import { localDay } from "../civil-time/index.mjs";
 import { DRAFT_KINDS } from "../run-rules/index.mjs";
 import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS } from "./checks.mjs";
 import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
@@ -92,6 +95,8 @@ import { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_NO
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 import { word, localize } from "../setup-words/index.mjs";
+
+const NO_ANSWER = localize("case-disclosures.why.no_answer", "no answer");
 
 export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS, ACCOUNT_ARMS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
@@ -127,13 +132,14 @@ export class CaseDisclosures {
   constructor({ storage, record, host = null, inquiry = null, strength = null, contradiction = null, provenance = null,
                 attestation = null, capture = null, sources = null, extraction = null, caseImport = null,
                 promotion = null, entities = null, events = null, lines = null, money = null, people = null,
-                membership = null, caseCarriage = null, bias = null, caseChecker = null, now = null } = {}) {
+                membership = null, caseCarriage = null, bias = null, caseChecker = null, retrieval = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.#deps = { host, inquiry, strength, contradiction, provenance, attestation, capture, sources, extraction,
                    caseImport, promotion, entities, events, lines, money, people, membership, caseCarriage, bias,
-                   caseChecker };
+                   caseChecker, retrieval };
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -164,6 +170,8 @@ export class CaseDisclosures {
      (`case-checker` R24, pure, imported unless a test passes its own). */
   get bias() { return this.#deps.bias ||= biasOf(this.#deps.host); }
   get caseChecker() { return this.#deps.caseChecker ||= caseCheckerModule; }
+  /* R33 (T51): the team's governing time zone (`retrieval` R69), the zone a photo's day is read in. */
+  get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -211,7 +219,7 @@ export class CaseDisclosures {
       try { basis = this.inquiry.basisFor(p.id); }
       catch (e) { undetermined.push({ target: p.id, why: String(e && e.message || e).slice(0, 160) }); continue; }
       if (!basis || basis.ok === false) {
-        undetermined.push({ target: p.id, why: basis ? basis.reason ?? word("case-disclosures.why.read_failed") : "no answer" });
+        undetermined.push({ target: p.id, why: basis ? basis.reason ?? word("case-disclosures.why.read_failed") : NO_ANSWER });
         continue;
       }
       for (const leg of (Array.isArray(basis.legs) ? basis.legs : []))
@@ -220,10 +228,8 @@ export class CaseDisclosures {
     if (!hunches.length && !undetermined.length) return null;
     /* DEC-49 REGION is-hunch-cleared */
     return disclosureRefusal("UNCLEARED_HUNCH", { hunches, ...(undetermined.length ? { undetermined } : {}),
-      detail: localize("case-disclosures.index.v1_a_hunch_is_temporary", "{v1}A hunch is temporary declared bias, and it is the one bias that must be cleared before publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.", { v1: String((hunches.length ? `${hunches.length} basis leg(s) of this case's findings rest on a HUNCH (`
-            + hunches.map((h) => `${h.target} leg ${h.ord} on ${h.leg_target}`).join("; ") + `). ` : "")
-            + (undetermined.length ? `The basis of ${undetermined.map((u) => `${u.target} (${u.why})`).join("; ")} `
-              + `could not be read, so whether it rests on a hunch is not known. ` : "")) }) });
+      detail: localize("case-disclosures.index.v1_a_hunch_is_temporary", "{v1}A hunch is temporary declared bias, and it is the one bias that must be cleared before publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.", { v1: String((hunches.length ? localize("case-disclosures.index.hunch_legs", "{count} basis leg(s) of this case's findings rest on a HUNCH ({legs}). ", { count: String(hunches.length), legs: String(hunches.map((h) => localize("case-disclosures.index.hunch_leg", "{target} leg {ord} on {leg_target}", { target: String(h.target), ord: String(h.ord), leg_target: String(h.leg_target) })).join("; ")) }) : "")
+            + (undetermined.length ? localize("case-disclosures.index.hunch_unread", "The basis of {unread} could not be read, so whether it rests on a hunch is not known. ", { unread: String(undetermined.map((u) => localize("case-disclosures.index.target_why", "{target} ({why})", { target: String(u.target), why: String(u.why) })).join("; ")) }) : "")) }) });
     /* END DEC-49 REGION is-hunch-cleared */
   }
 
@@ -253,9 +259,7 @@ export class CaseDisclosures {
     if (notStanding.length)
       refusals.push(disclosureRefusal("DISCLOSURE_NOT_STANDING", {
         not_standing: notStanding.map((d) => ({ candidate: d.candidate, ord: d.ord })),
-        detail: `${notStanding.map((d) => d.candidate).join(", ")} is not an unresolved conflict on this case's `
-              + `findings at the bytes this act pins: it may have been resolved since, or it names nothing this `
-              + `case rests on. Read the list again (op=publishtensions). Nothing was published.` }));
+        detail: localize("case-disclosures.index.candidates_not_unresolved_conflict", "{candidates} is not an unresolved conflict on this case's findings at the bytes this act pins: it may have been resolved since, or it names nothing this case rests on. Read the list again (op=publishtensions). Nothing was published.", { candidates: String(notStanding.map((d) => d.candidate).join(", ")) }) }));
     /* END DEC-49 REGION is-disclosure-standing */
     return { refusals, entries: read.entries, unread: read.unread, byCandidate: listed.byCandidate };
   }
@@ -537,8 +541,9 @@ export class CaseDisclosures {
 
   /** R29 (T37; N757; DEC-180 (3); K2206; T38: DEC-183 (1), K2220, K2303): the ceremony's Photos step, over the
    *  `materials` R6 answered. One entry per document material whose capture is a photo, in materials order, `{ref, sha,
-   *  taken_by, relied_on_by, state, marks, copy, refused, words, unread}`: `taken_by` its attesting member (R8: the
-   *  capture's first actor, as `capture.captureAccountsOf` lets `viewer` see them), `relied_on_by` `[{target, role}]` of
+   *  taken_by, dated, relied_on_by, state, marks, copy, refused, words, unread}`: `taken_by` its attesting member (R8: the
+   *  capture's first actor, as `capture.captureAccountsOf` lets `viewer` see them), `dated` the day it was taken (R33:
+   *  the local day, in the team's zone, of that actor's instant, else null), `relied_on_by` `[{target, role}]` of
    *  the members whose chains reach it; `state`, `marks` (with their withdrawals), `copy` (its SHA-256) and `refused` as
    *  `photoMarks` answers them (R6's read, `photo`, else read here); `words` `PHOTO_UNCHECKED_WORDS`
    *  (`photo.refused.unchecked`) for an unchecked photo, `PHOTO_NOT_COVERABLE_WORDS` (`photo.refused.format`) for a
@@ -552,13 +557,16 @@ export class CaseDisclosures {
     const roleOf = new Map((Array.isArray(memberRoles) ? memberRoles : [])
       .filter((r) => r && typeof r === "object").map((r) => [r.target, r.role ?? null]));
     const photos = [];
+    let zone;
     for (const m of Array.isArray(materials) ? materials : []) {
       if (!m || typeof m !== "object" || m.kind !== "document" || typeof m.sha !== "string") continue;
       const p = m.photo && typeof m.photo === "object" && (m.photo.photo === false || m.photo.photo === true || m.photo.unread)
         ? m.photo : photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer }));
       if (p.photo === false || (p.unread && !marksDecide(m))) continue;
       const members = Array.isArray(m.members) ? m.members : [];
-      const entry = { ref: m.ref ?? null, sha: m.sha, taken_by: this.#takenBy(m.sha, viewer),
+      const first = this.#firstActor(m.sha, viewer);
+      if (zone === undefined) zone = this.#teamZone();
+      const entry = { ref: m.ref ?? null, sha: m.sha, taken_by: first ? first.actor : null, dated: dayOf(first, zone),
                       relied_on_by: members.map((t) => ({ target: t, role: roleOf.get(t) ?? null })) };
       if (p.unread) {
         photos.push({ ...entry, state: null, marks: null, copy: null, refused: null, words: null, unread: true });
@@ -571,13 +579,21 @@ export class CaseDisclosures {
     return { photos, unchecked: photos.filter((p) => p.state === "unchecked").length };
   }
 
-  /* R8, R29: a capture's attesting member, its first actor (`acquisition` R16; a pulled knock's puller, `capture` R65), as
-     the viewer may see them; null when none is held or seen, or the read fails. */
-  #takenBy(sha, viewer) {
+  /* R8, R29, R33: a capture's attesting member and the instant they made it, its first actor `{actor, at}`
+     (`acquisition` R16; a pulled knock's puller, `capture` R65), as the viewer may see them; null when none is held or
+     seen, or the read fails. */
+  #firstActor(sha, viewer) {
     let a = null;
     try { a = this.capture.captureAccountsOf(sha, { viewer }); } catch { a = null; }
-    const first = a && Array.isArray(a.actors) ? a.actors.find((x) => x && typeof x.actor === "string") : null;
-    return first ? first.actor : null;
+    return a && Array.isArray(a.actors) ? a.actors.find((x) => x && typeof x.actor === "string") || null : null;
+  }
+
+  /* R33: the team's governing time zone (`retrieval` R69), or null when none is held or the read fails: no zone is never
+     read as UTC. */
+  #teamZone() {
+    let z = null;
+    try { z = this.retrieval.zone(); } catch { z = null; }
+    return typeof z === "string" && z ? z : null;
   }
 
   /** R15 (DEC-112 (3); K1305, K1315): for each finding a member's chain reaches (R8), its legs exactly as
@@ -691,8 +707,7 @@ export class CaseDisclosures {
     if (j.notStanding.length)
       refusals.push(disclosureRefusal("FLAG_DISCLOSURE_NOT_STANDING", {
         not_standing: j.notStanding.map((d) => ({ flag: d.flag, ord: d.ord })),
-        detail: `${j.notStanding.map((d) => d.flag).join(", ")} is not an open flag on work this case rests on: it may `
-              + `have been cleared since. Read the list again (op=publishpreflight). Nothing was published.` }));
+        detail: localize("case-disclosures.index.flags_not_open", "{flags} is not an open flag on work this case rests on: it may have been cleared since. Read the list again (op=publishpreflight). Nothing was published.", { flags: String(j.notStanding.map((d) => d.flag).join(", ")) }) }));
     /* END DEC-49 REGION is-flag-disclosure-standing */
     return { refusals, open: j.open, byFlag: listed.byFlag };
   }
@@ -882,10 +897,7 @@ export class CaseDisclosures {
     if (unrecorded.length)
       refusals.push(disclosureRefusal("PERSON_BASIS_UNRECORDED", {
         unrecorded: unrecorded.map((p) => ({ person: p.person, places: p.places })),
-        detail: `${unrecorded.length} person(s) this case names have no recorded basis (`
-              + unrecorded.map((p) => localize("case-disclosures.index.person_named_in_v1", "{person}, named in {v1}", { person: String(p.person), v1: String(placesStated(p.places) || "the case") })).join("; ")
-              + `). Every person a case names is named on a basis the record holds (Design Requirement 6): list each in `
-              + `peopleBases with its basis and reference. Nothing was written.` }));
+        detail: localize("case-disclosures.index.persons_no_recorded_basis", "{length} person(s) this case names have no recorded basis ({map}). Every person a case names is named on a basis the record holds (Design Requirement 6): list each in peopleBases with its basis and reference. Nothing was written.", { length: String(unrecorded.length), map: String(unrecorded.map((p) => localize("case-disclosures.index.person_named_in_v1", "{person}, named in {v1}", { person: String(p.person), v1: String(placesStated(p.places) || localize("case-disclosures.index.the_case", "the case")) })).join("; ")) }) }));
     /* END DEC-49 REGION is-person-basis-recorded */
     /* DEC-49 REGION is-person-basis-standing */
     if (notStanding.length)
@@ -1014,9 +1026,9 @@ export class CaseDisclosures {
     if (missing.length) {
       const mine = missing.filter((s) => s === me);
       refusals.push(disclosureRefusal("TIE_ATTESTATION_MISSING", { missing: mine, others_missing: missing.length - mine.length,
-        detail: (mine.length ? `You have not attested that you hold no undeclared tie to anyone or anything this case names. ` : "")
-              + (missing.length - mine.length ? `${missing.length - mine.length} other signer(s) have not attested. ` : "")
-              + `Each signer attests before the case is signed, or declares the tie first (op=membertie). Nothing was written.` }));
+        detail: (mine.length ? localize("case-disclosures.index.you_not_attested_tie", "You have not attested that you hold no undeclared tie to anyone or anything this case names. ") : "")
+              + (missing.length - mine.length ? localize("case-disclosures.index.others_not_attested", "{count} other signer(s) have not attested. ", { count: String(missing.length - mine.length) }) : "")
+              + localize("case-disclosures.index.each_signer_attests", "Each signer attests before the case is signed, or declares the tie first (op=membertie). Nothing was written.") }));
     }
     /* END DEC-49 REGION is-tie-attested */
     const rows = [], undetermined = [];
@@ -1026,7 +1038,7 @@ export class CaseDisclosures {
       let t = null;
       try { t = this.people.tiesConcerning({ entities: [...ids], member: s, viewer: `member:${s}` }); }
       catch (e) { t = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
-      if (!t || t.ok === false || !Array.isArray(t.ties)) { undetermined.push({ signer: s, why: t ? t.reason ?? word("case-disclosures.why.read_failed") : "no answer" }); continue; }
+      if (!t || t.ok === false || !Array.isArray(t.ties)) { undetermined.push({ signer: s, why: t ? t.reason ?? word("case-disclosures.why.read_failed") : NO_ANSWER }); continue; }
       let facts = null;
       for (const tie of t.ties) {
         const level = tie.attribution ?? null;
@@ -1085,7 +1097,7 @@ export class CaseDisclosures {
       catch (e) { r = { undetermined: true, why: String(e && e.message || e).slice(0, 160) }; }
       if (!r || r.ok === false || r.undetermined || r.truncated || !Array.isArray(r.candidates)) {
         failed.push({ finding: p.id, sha: p.bundleSha,
-                      why: !r ? "no answer" : r.truncated ? word("case-disclosures.why.candidates", { bound: String(r.bound ?? "its bound of") })
+                      why: !r ? NO_ANSWER : r.truncated ? word("case-disclosures.why.candidates", { bound: String(r.bound ?? word("case-disclosures.why.bound")) })
                          : r.why || word("case-disclosures.why.read_failed") });
         continue;
       }
@@ -1109,9 +1121,7 @@ export class CaseDisclosures {
   tensionsUndetermined(failed) {
     /* DEC-49 REGION is-tensions-determined */
     return disclosureRefusal("TENSIONS_UNDETERMINED", { undetermined: failed,
-      detail: `the record could not be read whole for conflicts on ${failed.map((f) => `${f.finding ?? "this case's "
-                + "findings"} (${f.why})`).join("; ")}, so what this case must disclose is not known. Nothing was `
-            + `published.` });
+      detail: localize("case-disclosures.index.record_not_read_whole_conflicts", "the record could not be read whole for conflicts on {map}, so what this case must disclose is not known. Nothing was published.", { map: String(failed.map((f) => localize("case-disclosures.index.finding_why", "{finding} ({why})", { finding: String(f.finding ?? localize("case-disclosures.index.this_cases_findings", "this case's findings")), why: String(f.why) })).join("; ")) }) });
     /* END DEC-49 REGION is-tensions-determined */
   }
 
@@ -1179,40 +1189,39 @@ export class CaseDisclosures {
       /* DEC-49 REGION is-account-checked */
       if (sentences.length)
         refusals.push(disclosureRefusal("ACCOUNT_CHECK_UNDETERMINED", { sentences: marked(sentences),
-          detail: `the account could not be checked against what it cites (${answer && answer.ok === false
-            ? `the check answered ${answer.reason ?? "a refusal"}` : "the check answered nothing it states"}), so whether `
-            + `each of its ${sentences.length} sentence(s) stands is not known. Try again. Nothing was written.` }));
+          detail: localize("case-disclosures.index.account_not_checked", "the account could not be checked against what it cites ({why}), so whether each of its {length} sentence(s) stands is not known. Try again. Nothing was written.", { why: String(answer && answer.ok === false
+            ? localize("case-disclosures.index.check_answered", "the check answered {reason}", { reason: String(answer.reason ?? localize("case-disclosures.index.a_refusal", "a refusal")) })
+            : localize("case-disclosures.index.check_answered_nothing", "the check answered nothing it states")), length: String(sentences.length) }) }));
       /* END DEC-49 REGION is-account-checked */
     } else {
       const named = (code) => marked([...new Set(departures.filter((d) => d.code === code).map((d) => d.ord))]
         .map((o) => byOrd.get(o)));
-      const say = (list) => list.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
+      const say = (list) => list.map((x) => localize("case-disclosures.index.sentence_quoted", "sentence {ord} (\"{text}\")", { ord: String(x.ord), text: String(x.text.slice(0, 80)) })).join("; ");
       let n;
       /* DEC-49 REGION is-account-sentence-supported */
       if ((n = named("ACCOUNT_SENTENCE_UNSUPPORTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_SENTENCE_UNSUPPORTED", { sentences: n,
-          detail: `${say(n)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, `
-                + `or take it out. Nothing was written.` }));
+          detail: localize("case-disclosures.index.sentence_cites_nothing", "{say} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.", { say: say(n) }) }));
       /* END DEC-49 REGION is-account-sentence-supported */
       /* DEC-49 REGION is-account-fact-cited */
       if ((n = named("ACCOUNT_FACT_NOT_IN_CITED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_FACT_NOT_IN_CITED", { sentences: n,
-          detail: `${say(n)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.` }));
+          detail: localize("case-disclosures.index.sentence_fact_not_cited", "{say} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.", { say: say(n) }) }));
       /* END DEC-49 REGION is-account-fact-cited */
       /* DEC-49 REGION is-account-consistent-with-record */
       if ((n = named("ACCOUNT_CONTRADICTED_BY_RECORD")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CONTRADICTED_BY_RECORD", { sentences: n,
-          detail: `${say(n)} says other than the record holds, and cannot be tied to evidence. Nothing was written.` }));
+          detail: localize("case-disclosures.index.sentence_contradicts_record", "{say} says other than the record holds, and cannot be tied to evidence. Nothing was written.", { say: say(n) }) }));
       /* END DEC-49 REGION is-account-consistent-with-record */
       /* DEC-49 REGION is-account-bias-printed */
       if ((n = named("ACCOUNT_BIAS_NOT_PRINTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_BIAS_NOT_PRINTED", { sentences: n,
-          detail: `${say(n)} is framed by a bias statement this case's lens does not print. Nothing was written.` }));
+          detail: localize("case-disclosures.index.sentence_bias_not_printed", "{say} is framed by a bias statement this case's lens does not print. Nothing was written.", { say: say(n) }) }));
       /* END DEC-49 REGION is-account-bias-printed */
       /* DEC-49 REGION is-account-bias-not-a-claim */
       if ((n = named("ACCOUNT_CLAIM_NOT_BIAS")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CLAIM_NOT_BIAS", { sentences: n,
-          detail: `${say(n)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.` }));
+          detail: localize("case-disclosures.index.sentence_claim_not_bias", "{say} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.", { say: say(n) }) }));
       /* END DEC-49 REGION is-account-bias-not-a-claim */
     }
     /* the machine's flags, judged here (R30): answered by the sentence's removal, or by evidence it did not cite */
@@ -1231,8 +1240,7 @@ export class CaseDisclosures {
       /* DEC-49 REGION is-account-flag-answered */
       if (n.length)
         refusals.push(disclosureRefusal("ACCOUNT_FLAG_UNANSWERED", { sentences: n,
-          detail: `the machine flagged ${n.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ")} as not `
-                + `supported by what it cites, and it stands as flagged. Tie it to evidence, or take it out. Nothing was written.` }));
+          detail: localize("case-disclosures.index.machine_flagged_sentences", "the machine flagged {say} as not supported by what it cites, and it stands as flagged. Tie it to evidence, or take it out. Nothing was written.", { say: String(n.map((x) => localize("case-disclosures.index.sentence_quoted", "sentence {ord} (\"{text}\")", { ord: String(x.ord), text: String(x.text.slice(0, 80)) })).join("; ")) }) }));
       /* END DEC-49 REGION is-account-flag-answered */
     }
     return { refusals, sentences, printed };
@@ -1414,6 +1422,16 @@ function photoLabel(marked) {
   return marked
     ? { label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }
     : { label: PUBLISHED_LABEL, marked: false, label_key: "photo.published.label" };
+}
+
+/* R33: the local day, in `zone`, of an actor's instant (`civil-time.localDay`); null when there is no actor, no zone or
+   an instant the clock cannot read (a refusal), never a UTC day. */
+function dayOf(first, zone) {
+  if (!first || typeof first.at !== "string" || !zone) return null;
+  try {
+    const day = localDay(first.at, zone);
+    return typeof day === "string" ? day : null;
+  } catch { return null; }
 }
 
 /* R6 (T39; N806): the publication-copy states (`case-carriage` R16) a document is judged in by what is held, as any
