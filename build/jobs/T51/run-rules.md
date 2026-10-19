@@ -38,3 +38,12 @@ Tests and checks:
 - `node --check` on both files: OK.
 
 Size (session_01JK3uw1JJkjBgojR6Ty8YBQ): test runs 1, module lines 2574
+
+## J3 · REPORT
+
+REPORT on T51-218 (run-rules, words, B2). Seven of the words check's `plain` findings are developer text, not member text, so I did not convert them. Listed for BOB's settlement with the design stream (K3944):
+
+- `bio-plane/src/run-rules/checks.mjs`:259 and :321, the `where:` field of two refusal rows. It names the source site that mints the refusal (`src/ai-runs/index.mjs groupTestSet ...`, `src/run-rules/rules.mjs levelEmptyHolds ...`). A developer locates the code with it; no member sees it. Its own test pins it to a site, so it stays a plain string.
+- `bio-plane/src/run-rules/deployment.mjs`:71, :213, :230, :296 and :300. These are fields of the deployment gate's mode records (`role`, `means`, `when`, `why`) that describe each mode's place in the doctrine and its reach for the people who deploy it (threat model, reach, deploy flag). They are read by the reviewer changing a deploy flag, never rendered to a member. (The one place a member sees a mode's refusal is `checks.mjs`, already read by key.)
+
+Everything else from the findings is converted (see the commit message). Once BOB settles these seven, the run-rules part of `checks/words.mjs` reads zero.
