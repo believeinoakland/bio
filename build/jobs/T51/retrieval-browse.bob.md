@@ -34,3 +34,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio retrieval-browse tranche/T51 job/T51/retrieval-browse`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+K4003: retrieval's merge keyed 'a selection is readable only by the credential that made it', so your test/m/retrieval-browse/fixture.mjs:173 now counts as a test copy (K3986). Merge tranche/T51, read it through the product's own call (localize with retrieval's id and en, by equality, or a neutral string if the fixture only needs a stand-in), re-run tests and checks (words 0 for retrieval-browse), COMPLETE again.
