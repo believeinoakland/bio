@@ -24,3 +24,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio action-clocks`: 0 failures. `checks/coverage.mjs bio action-clocks`: 23 of 23 live ids named, 0 failures. `checks/ownership.mjs bio action-clocks tranche/T51 job/T51/action-clocks`: 15 files changed, 0 failures. `checks/run.mjs bio`: format and architecture 0 failures, no line names this module.
 
 Size (session_01GRpmGF7jXboFitBgdF89Tk): test runs 8, module lines 2081
+
+## J1 · COMPLETE
+
+T51-238 done. Words: all 9 findings fixed (rows by word, the rest by localize ids action-clocks.<index|count|ics>.*; refusal details and trace/basis fragments converted too); nothing judged unread, so no REPORT. The 8 reds are green: whyOf rendered civil-time's {key, vars} with String(); it now uses civil-time's reasonText where this module builds a sentence. Shape of why for filings: computeDeadline.why, proposal.undetermined and CLOCK_PROPOSAL_UNDETERMINED.why are rendered strings, never {key, vars}. Module tests 74/74; format, architecture, coverage (23/23), ownership 0 failures; words 0 for this module (also in the 14-module cross run). Stale: setup-words rows.mjs / words-unreviewed.json (my new localize ids; BOB regenerates). Details in the record.
