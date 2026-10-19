@@ -33,3 +33,7 @@
 - `checks/run.mjs`: format 0 failures; architecture 1 failure (answer-envelope's); words 1085 failures across other modules, none naming translations.
 
 Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 988
+
+## J1 · COMPLETE
+
+T51-105 applied: R17 (not_drafted[].why as {key, vars}), words.mjs, all 12 words findings and 7 plain ones converted to localize (no REPORT needed). Tests 32/32, format/architecture/coverage/ownership/words 0 failures for translations. Found elsewhere: screens-settings 2 tests red at the tip without my changes (interface-shell R38 registry test; R39 words by key); screens-settings reads why as {key, vars} now. Details in build/jobs/T51/translations.md.
