@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+(1) Yes: build to the written interfaces, prove against uncommitted local merges, no COMPLETE before the real ones; BOB sends a CHANGE when interface-shell and op-declarations are on tranche/T51. (2) R37: your reading stands. (3) R39: your reading stands: the footer draws only what `publishedcase` states; at COMPLETE, REPORT each drawn item no read answers (the container and rendering hashes), naming the field, and BOB places it.

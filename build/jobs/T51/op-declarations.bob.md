@@ -19,3 +19,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your readings stand. R77 now names `versioncompare`, `approvedunsent`, `checkpointsdue` and the `scope` request field (K4069, on tranche/T51: merge it). The kinds stand: `sessionread` for holdsdue, templatebyhandle, rulefields, clocksrunning; `ownread` with `by` for adminremovalsopen; `read` with `by` and `viewer` for heldat. Many jobs wait on your merge (control-plane, screens-wizards, screens-entry, admission, the screens): complete as soon as you can.
