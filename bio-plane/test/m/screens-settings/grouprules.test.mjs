@@ -13,7 +13,7 @@ const btn = (n, op) => acts(n).filter((b) => b.attrs["data-act"] === op);
 test("R61 reads the rules and the roster; Waiting for a second member lists each drafted rule: what it is for, who drafted it and when, its source as a reference opening the document, its trigger, citation and the day it takes effect", async () => {
   const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
   assert.ok(a.p.requests.some((r) => r.op === "grouprules") && a.p.requests.some((r) => r.op === "memberlist"));
-  has(a, "screen.grouprules.waiting");
+  has(a, "screen.grouprules.waiting"); has(a, "screen.grouprules.inforce"); has(a, "screen.grouprules.draft");
   for (const k of ["screen.grouprules.sub1", "screen.grouprules.sub2", "screen.grouprules.note", "screen.grouprules.note2", "screen.grouprules.inprofile", "screen.grouprules.inprofile2"]) has(a, k);
   const one = item(a, "GR-0001"), t = textOf(one);
   assert.ok(t.includes("Parks Commission: written comments close five days before the meeting"), "the rule's own words, as data");
@@ -148,6 +148,7 @@ test("R61 a passage that is not in the document as written sends nothing and say
   has(a, "screen.grouprules.pass.notfound2");
   for (const bad of [{ "gr-name": "  " }, { "gr-amount": "five" }, { "gr-amount": "0" }]) assert.deepEqual((await a.press("ruledraft", { values: { ...FORM, ...bad }, choose: PICK })).sent.filter((x) => x.op === "ruledraft"), [], JSON.stringify(bad));
   assert.deepEqual((await a.press("ruledraft", { values: { ...FORM, "gr-src-1": true }, choose: PICK })).sent.filter((x) => x.op === "ruledraft"), [], "the source first");
+  assert.equal(a.refused.key, "screen.grouprules.src.refuse");
 });
 
 test("R61 writinghelp under What it says fills the draft into that field, labelled the assistant's, kept only by the member's own ruledraft; it asks for no draft of an empty field", async () => {

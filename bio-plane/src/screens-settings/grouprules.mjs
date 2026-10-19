@@ -90,8 +90,7 @@ export const grouprules = {
           const later = typeof e.effective_from === "string" && e.effective_from > today;
           return `<li data-rule="${E(r.rule)}" data-state="confirmed"><b class="rec">${E(title(r))}</b><span class="mk-small">${forLine(r)} · ${drafted(r)} · ${W(S + "confirmed", { member: who(r.confirmer), date: D(r.confirmed_at) })}${later ? "" : " · " + W(S + "applies")}${src(r) ? " · " + src(r) : ""}</span>${facts(r)}${cs.act("rulewithdraw", { data: { rule: r.rule } })}</li>`;
         }).join("");
-        // the design's heading "Rules in force" is held by no key (REPORT J1): the list is drawn without one until it is
-        h += `<div class="cs-section" data-section="inforce"><ul class="mk-list" data-list="inforce">${rows}</ul><p class="mk-note">${W(S + "withdrawn")}</p></div>`;
+        h += cs.sec(S + "inforce", `<ul class="mk-list" data-list="inforce">${rows}</ul><p class="mk-note">${W(S + "withdrawn")}</p>`);
       }
       return h;
     }));
@@ -139,7 +138,7 @@ export const grouprules = {
         + (ui.passMiss ? `<p class="mk-msg" data-note="passage">${W(S + "pass.notfound2")}</p>` : "")
         + "</div>";
       f += cs.field("gr-why", S + "why.label", { area: true, rec: true, max: 500 });
-      out.push(`<div data-form="draft">${f}${draftIt}</div>`);
+      out.push(cs.sec(S + "draft", `<div data-form="draft">${f}${draftIt}</div>`));
     }
     out.push(`<p class="mk-note">${W(S + "machine")} ${W(S + "machine2")}</p>`);
     return out.join("");
@@ -189,7 +188,7 @@ export const grouprules = {
         entry.citation = val("gr-cite"); entry.effective_from = val("gr-eff");
         // the source: the capture chosen, and the place of the passage copied, found in its reading's text units
         const sha = one("gr-doc").toLowerCase();
-        if (one("gr-src") === "first" || !/^[0-9a-f]{64}$/.test(sha)) return { refuse: "screen.grouprules.src.help2" };
+        if (one("gr-src") === "first" || !/^[0-9a-f]{64}$/.test(sha)) return { refuse: "screen.grouprules.src.refuse" };
         const norm = (t) => String(t || "").replace(/\s+/g, " ").trim();
         const want = norm(cs.value("gr-pass"));
         const a = want ? await cs.call("reading", { query: { sha256: sha } }) : null;

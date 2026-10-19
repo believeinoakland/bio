@@ -439,6 +439,10 @@ test("R56 a removal under way is drawn from adminremovalsopen alone: who it wait
   assert.ok(t.includes(said("screen.members.2.of.3.have.agreed", { n: 1, total: 2 })));
   assert.ok(t.includes(said("screen.members.teo.is.counted.but.doesn", { member: "lu", n: 2 })));
   assert.ok(t.includes(said("screen.members.the.removal.waits.for.ana", { member: "rosa" })));
+  assert.ok(t.includes(said("screen.members.removal.heading")));
+  assert.ok(t.includes(said("screen.members.removal.agreed", { member: said("member.founder.unnamed") })) && t.includes(day("2026-10-14T00:00:00Z")), "who agreed, the day beside");
+  assert.ok(t.includes(said("screen.members.removal.notyet", { member: "rosa" })));
+  assert.ok(t.includes(said("screen.members.removal.faces", { member: "lu" })));
   assert.ok(t.includes(said("screen.members.removing.teo.as.an.administrator", { member: "lu" })));
   assert.ok(t.includes(said("screen.members.four.administrators.rosa.dev.ana", { n: 3, members: "the founder, rosa, and lu" }).replace("the founder", said("member.founder.unnamed"))));
   assert.ok(t.includes(said("screen.members.counted.in.the.4.doesn", { n: 3 })));
