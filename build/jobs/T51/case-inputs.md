@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01NHLtFixbMhA4qCMEieYzDT · depth 2 · COMPLETE · handled B2
+**Status** · session_01XQkjrJ84xQvzqWSREkCCoB · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -51,3 +51,40 @@ Checks after the change:
 Deferred and other-module findings: unchanged from J2.
 
 Size (session_01NHLtFixbMhA4qCMEieYzDT): test runs 4, module lines 1337
+
+## J4 · QUESTION
+
+R19 reading: the shape of `minutesLine(row)`.
+
+R19 says `minutesLine(row)` "answers `{key, says}`: `signing.minutes.line` with `{meeting}` and `{date}`, beside `signing.minutes.left`, `.right` and, by `same`, `.same` or `.differs`". It does not say how the other four sentences are carried beside the line.
+
+Best reading, built: `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}`. The top-level `{key, says}` is `signing.minutes.line` filled with the row's meeting and date; `comparison` is `signing.minutes.same` or `.differs` by `same`. This is `openRequestLine`'s form (a line with a sibling object, as `quoting`), and `case-authoring` R77 can spread it into each row unchanged, as it does R34's.
+
+If you want another shape (a flat list of four, or the labels left out), tell me with a CHANGE; it is a few lines and one test. `case-authoring` T51-161 reads the shape, so the answer should reach that job before it merges.
+
+## J5 · COMPLETE
+
+T51-160 · case-inputs: complete (restart #5, after B3).
+
+**Entries applied.**
+- R19 (Text: fold): `registerMinutesComparisons`, `minutesComparisonsSource`, `minutesComparisonsOn`, `minutesLine`, `MINUTES_KEYS`, in `index.mjs` beside R8's. The shape of `minutesLine` is my reading, asked in J4. A row whose `same` contradicts the whitespace-folded comparison of `minutes` and `filed` is malformed, so the source reads `undetermined` (a row saying "the two read the same" of texts that differ would tell a member something false). Tests: new `minutes.test.mjs` (3 tests, R19).
+- Words (W): all 30 findings by the words rule, ids `case-inputs.<file stem>.<slug>`. `checks.mjs`: the eight `CASE_INPUTS_WORDS` copies are now `word(key)` with their placeholders kept for the caller (`keep`), the table equal to words.json verbatim as before. `document.mjs`: the recipient row, the participant row, the draft suffix and the truncation line are `localize` calls, byte-identical to the old output (they are in signed documents, K1333). `index.mjs`: the cites message, the draft-length reasons, the draft's `next` sentence, and every remaining acknowledge-statement detail (C-82.2, .3's suffix, .4, .5, .6, .7, .8), the `listed` sentences and the `why`, each one `localize` call with the same bytes. Plain findings (K3957): all three are sentences a member can read (they ride in a refusal's `detail`, the draft's `next` and a result's `why`), so all three are keyed, none listed as unread.
+- Test copies: `t46-words.test.mjs` no longer holds C-82.8's sentence (reads `refusal.STATEMENT_ACK_NO_REASON` from words.json), the "is missing or isn't in that form" substring, or the retired T46 sentence (its "answered no longer" control is removed with it; the row equalling the key's sentence is still asserted).
+
+**Deferred.** None.
+
+**For BOB (another module's or the design's).**
+1. words.json carries design rows under other ids for several of these sentences, spelled "acknowledgment" (for example `case-inputs.acks.rows.map.participant`, `.given_draft` without the dash, `.document.list_stops_acknowledgments`, `case-inputs.listed.*`, `case-inputs.why.case_document_authored`). I used module ids with the code's own text, so the signed document's bytes do not move (K1333). If the design means those rows to govern, it is a signed-text change to be ruled on, not a job's.
+2. `signing.minutes.unread` exists in words.json (DEC-341) but R19 does not read it; `case-authoring` R77 draws `undetermined` with no sentence. A reader of R42 may expect a `MINUTES_UNREAD_SENTENCE` beside `OPEN_REQUESTS_UNREAD_SENTENCE`; say so and I add it (one line, a test).
+3. `rows.mjs` is stale for my new ids, as expected (`build.mjs --check` names `case-inputs.document.given_on_draft`); BOB regenerates it.
+
+**Checks.**
+- `node --test test/m/case-inputs/*.test.mjs`: 51 pass, 0 fail.
+- format: 176 modules, 175 requirements files; 0 failures.
+- architecture (case-inputs): 12 product files, 47 relative imports; 0 failures.
+- coverage (case-inputs): 19 of 19 live requirement ids named by a test; 0 failures.
+- words (case-inputs): inline 0, plain 0, testcopy 0, missingkey 0, marker 0; 0 failures.
+- ownership: 6 files changed by case-inputs; 0 failures.
+- `checks/run.mjs`: the words and coverage failures it lists are other modules' (for example wizard-scripts); none names case-inputs.
+
+Size (session_01XQkjrJ84xQvzqWSREkCCoB): test runs 3, module lines 1467
