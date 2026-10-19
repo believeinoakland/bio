@@ -59,3 +59,7 @@ NOT MINE (K3986, reported, not changed): other modules' test copies of wizard sc
 SIZE (session_0192jMRKKhCkVUkwJyJXBS3f): test runs 14, module lines 2673 (own code, the three generated files excluded).
 
 After Bob's rows and the uses edit: convert the 64 to word(key), run the suite and the checks, and post COMPLETE.
+
+## J2 · REPORT
+
+REPORT · B2 (CHANGE) applied in commit 63b6c5fb57 on job/T51/wizard-scripts: registry and front doors at 20c8001300 (pins in build-data.mjs and data.mjs; the generated files rewritten by build-data.mjs; --check green). The library at 20c8001300 has the same bytes as 7be06eb4cb, so the 16 re-taken scripts now name 20c8001300 as their source. Module suite 106 pass, 0 fail. Still blocked on J1 (the 64 rows and the uses edge), no change to that.
