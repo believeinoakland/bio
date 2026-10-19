@@ -13934,7 +13934,7 @@
   },
   {
    "key": "screen.members.agree.remove.teo.as.administrator",
-   "en": "Agree: remove {member} as administrator",
+   "en": "Agree: remove {member} as an administrator",
    "protected": false,
    "note": "DEC-330: B306 A72/A74: drawn sentence; DEC-359 (B367 1): {member} the administrator facing removal"
   },
@@ -22826,7 +22826,7 @@
   },
   {
    "key": "screen.grouprules.bears.help1",
-   "en": "Leave them all unticked when it is not tied to a kind of action.",
+   "en": "Leave them all unchecked when it is not tied to a kind of action.",
    "protected": false,
    "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
   },
@@ -22910,7 +22910,7 @@
   },
   {
    "key": "wizard-scripts.refusal.widen_admin_only",
-   "en": "Only an administrator can offer a script team-wide.",
+   "en": "Only an administrator can offer a script team-wide. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1092; translator: Refusal detail when a non-administrator tries to offer a script team-wide."
   },
@@ -22922,13 +22922,13 @@
   },
   {
    "key": "wizard-scripts.refusal.approve_team_wide_admin_only",
-   "en": "Only an administrator can approve a team-wide script.",
+   "en": "Only an administrator can approve a team-wide script. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when a non-administrator tries to approve a team-wide script."
   },
   {
    "key": "wizard-scripts.refusal.approve_owner_only",
-   "en": "Only an owner of the script's project can approve it.",
+   "en": "Only an owner of the script's project can approve it. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when someone who does not own the project tries to approve a project script."
   },
@@ -22970,13 +22970,13 @@
   },
   {
    "key": "wizard-scripts.refusal.retire_team_wide_admin_only",
-   "en": "Only an administrator can retire a team-wide script.",
+   "en": "Only an administrator can retire a team-wide script. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-administrator tries to retire a team-wide script."
   },
   {
    "key": "wizard-scripts.refusal.retire_owner_only",
-   "en": "Only an owner of the script's project can retire it.",
+   "en": "Only an owner of the script's project can retire it. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-owner tries to retire a project script."
   },
@@ -22988,7 +22988,7 @@
   },
   {
    "key": "wizard-scripts.refusal.assistant_no_help_field",
-   "en": "The assistant can't help word this field.",
+   "en": "The assistant can't help word this field. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1528; translator: Refusal detail when the writing assistant is not offered for this field."
   },
@@ -23048,49 +23048,49 @@
   },
   {
    "key": "wizard-scripts.refusal.needs_one_step",
-   "en": "A script needs at least one step.",
+   "en": "A script needs at least one step. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:299; translator: Check finding shown when a script has no steps."
   },
   {
    "key": "wizard-scripts.refusal.screen_unknown",
-   "en": "There is no screen {screen}.",
+   "en": "There is no screen {screen}. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:306; translator: Check finding when a step names a screen that does not exist. {screen}: the screen name as given (first 80 characters)."
   },
   {
    "key": "wizard-scripts.refusal.act_unknown",
-   "en": "The screen {screen} has no action {act}.",
+   "en": "The screen {screen} has no action {act}. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:309; translator: Check finding when a step names an action its screen does not offer. {screen}: the screen name; {act}: the action as given (first 80 characters)."
   },
   {
    "key": "wizard-scripts.refusal.step_needs_what_why",
-   "en": "This step needs to say what the member does and why.",
+   "en": "This step needs to say what the member does and why. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:311; translator: Check finding when a step lacks its \"what\" or \"why\" text."
   },
   {
    "key": "wizard-scripts.refusal.template_not_offered",
-   "en": "There is no filing template {template} on offer here.",
+   "en": "There is no filing template {template} on offer here. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:318; translator: Check finding when a step's draft names a missing filing template. {template}: the template id as given (first 80 characters)."
   },
   {
    "key": "wizard-scripts.refusal.draft_text_length_check",
-   "en": "A draft's text must be 1 to {max} characters.",
+   "en": "A draft's text must be 1 to {max} characters. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:319; translator: Check finding when a step's draft text is empty or too long. {max}: the most characters allowed."
   },
   {
    "key": "wizard-scripts.refusal.assistant_never_helps_act",
-   "en": "The assistant can't help word the action {act}, because it can't be done by a machine or can't be undone.",
+   "en": "The assistant can't help word the action {act}, because it can't be done by a machine or can't be undone. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:330; translator: Check finding when a step asks the assistant to help word an action it may not help with. {act}: the action name (internal action id)."
   },
   {
    "key": "wizard-scripts.refusal.act_refused_to_machine",
-   "en": "The assistant can't take the action {act}. It can only place a labeled draft there.",
+   "en": "The assistant can't take the action {act}. It can only place a labeled draft there. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:332; translator: Check finding when a machine-made step uses a restricted action. {act}: the action name."
   },
@@ -23108,7 +23108,7 @@
   },
   {
    "key": "wizard-scripts.refusal.no_such_script",
-   "en": "No wizard script has that id, or you can't see it.",
+   "en": "No wizard script has that id, or you can't see it. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:463; translator: Refusal detail when a script id is unknown or hidden from the viewer."
   },
@@ -23126,13 +23126,13 @@
   },
   {
    "key": "wizard-scripts.refusal.script_already_retired",
-   "en": "This script was already retired.",
+   "en": "This script was already retired. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when retiring an already retired script."
   },
   {
    "key": "wizard-scripts.refusal.version_already_withdrawn",
-   "en": "This version was already withdrawn.",
+   "en": "This version was already withdrawn. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when withdrawing an already withdrawn version."
   },
@@ -23162,7 +23162,7 @@
   },
   {
    "key": "wizard-scripts.refusal.rumor_as_lead",
-   "en": "A rumor can't be proposed as a question. Propose it as a lead instead.",
+   "en": "A rumor can't be proposed as a question. Propose it as a lead instead. Nothing was written.",
    "protected": false,
    "note": "DEC-358: B365, reviewed from code (K3930): start.mjs:86; translator: Detail shown when a rumor part of a start is proposed as a question."
   },
@@ -23336,7 +23336,7 @@
   },
   {
    "key": "queue.feed.action",
-   "en": "Actions and their clocks",
+   "en": "Actions and their deadlines",
    "protected": false,
    "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the action feed (queue R60)"
   },
@@ -23360,7 +23360,7 @@
   },
   {
    "key": "queue.feed.wizards",
-   "en": "Wizards waiting on approval or newer",
+   "en": "Wizards waiting for approval or a newer version",
    "protected": false,
    "note": "DEC-359 (B367 2c, B368 1): the {feed} of queue.allclear.failed.feed; the wizards feed (queue R60)"
   },
@@ -23750,7 +23750,7 @@
   },
   {
    "key": "installer.update.retired",
-   "en": "Left as it was: {parts}, from an earlier release that this one no longer uses. Your team's Civicsmith doesn't use it now.",
+   "en": "Left as it was: {parts}. They came from an earlier release, and this one no longer uses them.",
    "protected": false,
    "note": "DEC-359 (B368 4): installer; foreignContainers answers retired; {parts} the parts' names as a list"
   },
@@ -24152,7 +24152,7 @@
   },
   {
    "key": "screen.home.todo.vouch.noplace",
-   "en": "Vouch for {count} photos you captured",
+   "en": "Vouch for the {count} photos you captured",
    "protected": false,
    "note": "DEC-360 (B371 1): screens-inquiry, dash-project R79; the same on Home"
   },
@@ -24218,7 +24218,7 @@
   },
   {
    "key": "screen.document.a30.tally.one",
-   "en": "{n} links on this page. 1 leads outside the record, where the site is as it is today and may differ from what was captured.",
+   "en": "{n} links on this page. 1 of them leads outside the record, where the site is as it is today and may differ from what was captured.",
    "protected": false,
    "note": "DEC-360 (B371 1): screens-inquiry, document R67"
   },
@@ -24497,6 +24497,18 @@
    "en": "The file that arrived doesn't match the fingerprint your team holds for it, so it was not saved or opened. Nothing was changed. Try the download again.",
    "protected": false,
    "note": "DEC-360 (B371 2): interface-shell R98; the browser-side check before a download is saved"
+  },
+  {
+   "key": "screen.dash-project.next.vouch.noplace.one",
+   "en": "Vouch for the photo you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): the one-photo form"
+  },
+  {
+   "key": "screen.home.todo.vouch.noplace.one",
+   "en": "Vouch for the photo you captured",
+   "protected": false,
+   "note": "DEC-360 (B371 1): the one-photo form on Home"
   }
  ],
  "rewrite": {
