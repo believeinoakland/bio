@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, M, BOB, MACHINE, INQ, INQ2, INQ3, INFO, RFC, RFC2, REQ, leg } from "./fixture.mjs";
 import { ACTION_REPLY_CHECKS, BEARINGS, BEARING_PROPOSALS_READ_MAX } from "../../../src/action-replies/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 
 /* A request for comment putting two inquiries and resting on a document, sent, then answered. */
 function answered() {
@@ -103,8 +104,8 @@ test("R1 R4 actionBearingPropose: any credential proposes, stored apart and labe
   const p = w.r.actionBearingPropose({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "new_evidence" }], proposer: MACHINE, viewer: MACHINE });
   assert.equal(p.ok, true, JSON.stringify(p));
   assert.deepEqual([p.proposal.state, p.proposal.machine_work, p.proposal.by, p.evidence], ["machine_proposed", true, MACHINE, false]);
-  assert.match(p.proposal.says, /machine work/);
-  assert.match(p.says, /not the reply's layout/);
+  assert.equal(p.proposal.says, proposalLabel(MACHINE, "bearing").says, "record-grammar's bearing sentence, whole");
+  assert.equal(p.says, word("action-replies.says.proposed_layout_reply", { value: word("action-replies.says.layout_member_stated") }));
   assert.deepEqual(p.layout, layout, "the layout as it stands, beside the proposal");
   w.clock.ms += 1000;
   assert.equal(w.r.actionBearingPropose({ target: RFC, ord: got, claims: [{ claim: INQ2, bearing: "not_addressed" }], proposer: BOB, viewer: BOB }).ok, true);
