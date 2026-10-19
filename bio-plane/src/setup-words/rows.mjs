@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15753 design words, 934 protected; SHA-256
-   3769b0f0fe923996732b9debbd81fcc0cb9044de8fe196ec909b5e272de88c3a) followed by 6633 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15767 design words, 934 protected; SHA-256
+   8a67a686c5f0c2e16faaadac170091d97ee51aa52dfebafd5be71c00cb3eadc6) followed by 6633 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "3769b0f0fe";
+export const WORDS_COMMIT = "8a67a686c5";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8700,6 +8700,20 @@ export const WORD_ROWS = Object.freeze([
   ["installer.fleet.why.pullfailed","its software was placed in your account but couldn't be started from there","DEC-365 (B381 3): installer-steps F5; a container image that failed to pull once placed",null,false,"design"],
   ["installer.address.offer","Your account has no web address prefix yet. The installer can give it a free one, “{prefix}”, which every future program on this account will share. Nothing has been created yet.","DEC-366 (B383 2a): installer-steps offerSubdomain (F7), shown before anything is created; installer.address.prefix stays the line after it is set",null,false,"design"],
   ["installer.install.stopped.foreign","Stopped: the installer found something in this account that it doesn't recognize as part of this release, and left it as it was. Nothing was created. Ask whoever manages the account whether they added it. If they did, they can remove it in Cloudflare; then start again from the installer's first page.","DEC-366 (B383 2b): an install that continues an unfinished team's Civicsmith; installer.update.stopped.foreign stays the update's",null,false,"design"],
+  ["document.kind.pdf","PDF","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pdf`",null,false,"design"],
+  ["document.kind.docx","Word document","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `docx`",null,false,"design"],
+  ["document.kind.xlsx","Excel spreadsheet","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `xlsx`",null,false,"design"],
+  ["document.kind.pptx","PowerPoint slide deck","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `pptx`",null,false,"design"],
+  ["document.kind.odt","OpenDocument text document","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odt`",null,false,"design"],
+  ["document.kind.ods","OpenDocument spreadsheet","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `ods`",null,false,"design"],
+  ["document.kind.odp","OpenDocument slide deck","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `odp`",null,false,"design"],
+  ["document.kind.csv","CSV table","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `csv`",null,false,"design"],
+  ["document.kind.jpeg","JPEG image","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `jpeg`",null,false,"design"],
+  ["document.kind.png","PNG image","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `png`",null,false,"design"],
+  ["document.kind.html","web page","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `html`",null,false,"design"],
+  ["document.kind.zip","ZIP archive","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the format registry entry `zip`",null,false,"design"],
+  ["document.kind.text","plain-text file","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; a text/plain capture, which the registry leaves undetermined",null,false,"design"],
+  ["document.kind.undetermined","file","DEC-368 (B386 1): screens-inquiry, document; {kind} in document.read.original.card, mid-sentence after \"the\"; the fallback for a format the registry does not name (\"the file exactly as captured\")",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
