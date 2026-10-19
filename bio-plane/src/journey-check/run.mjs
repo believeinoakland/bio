@@ -155,11 +155,12 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
         "The copy is the notice the city published at that address", "Recorded by the release walk.", "This is what the tenants need answered.", "Tenants of 14 Lakeshore Row report water coming in."];
       await signInBy(walk, ps.page, copy, who.founder, "R27 · she signs in on a device that draws the pseudo rows").catch(going);
       for (const s of sweepScreens()) {
+        const said = new Set();
         await walk.step(ps.page, `pseudo screen ${s.id}`, async (p) => {
           for (const width of WIDTHS) {
             await p.setViewportSize(viewportOf(width));
             await p.goto(new URL(addressOf(s.id), copy).href); await settle(p);
-            for (const e of await escapedOnPage(p, { entered })) walk.fail(FAIL.PSEUDO, localize("journey-check.run.id_at_width_px_element", "{id} at {width}px: {element}: \"{text}\" escaped the word list", { id: String(s.id), width: String(width), element: String(e.element), text: String(e.text) }));
+            for (const e of await escapedOnPage(p, { entered })) if (!said.has(e.text) && said.add(e.text)) walk.fail(FAIL.PSEUDO, localize("journey-check.run.id_at_width_px_element", "{id} at {width}px: {element}: \"{text}\" escaped the word list", { id: String(s.id), width: String(width), element: String(e.element), text: String(e.text) }));
           }
         }, { expect: [ABSENCE] }).catch(going);
       }

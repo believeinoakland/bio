@@ -57,7 +57,7 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true, ass
     + (${JSON.stringify(adminActs)} && who.result.administer && id === "members" ? '<button class="cs-btn" data-act="memberadd" type="button">Invite a member</button>' : "");
   document.getElementById("root").innerHTML = '<div class="cs-frame" id="cs-frame">'
     + '<div class="cs-testband' + (f === "band" ? " cs-narrow" : "") + '" role="note">A test instance</div>'
-    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (FLAW[f] || "")) + '</main>'
+    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (id === "home" && ${JSON.stringify(doors)} ? '<a href="/app/dash-project">Investigation</a> <a href="/app/dash-action">Action</a>' : "") + (FLAW[f] || "")) + '</main>'
     + '<nav class="cs-tabs' + (f === "tabs" ? " cs-flow" : "") + '"><a class="cs-tab" href="/app">Home</a><a class="cs-tab" href="/app/queue">Queue</a></nav></div>';
   const on = (op, fn) => { for (const b of document.querySelectorAll('[data-act="' + op + '"]')) b.onclick = fn; };
   on("promote", () => { const t = document.querySelector("#projects-title, #project-question");
