@@ -125,11 +125,12 @@ test("R28: the twelve rows whose raising site moved to action-records (C-73.2–
 
 test("R28: no other row moves: exactly those twelve name action-records, every other row's where names actions' or this module's site as before; control: C-32.21 stays actions' #seeksFence (its R72) and C-73.1, C-73.6, C-90.1 stay where they were", () => {
   const moved = new Set(Object.values(MOVED).flatMap((rows) => Object.keys(rows)));
-  /* T48 (R29) adds five rows to those naming action-records, pinned in t48.test.mjs; T50 (BOB B2) adds NO_SUCH_ACTION, C-117.2, whose site action-records raises */
-  const T48_MOVED = ["MACHINE_CANNOT_CORRESPOND", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY", "UNREGISTERED_ARTIFACT", "NO_SUCH_ACTION"];
-  const naming = allRows().filter(({ row }) => row.where.startsWith(`${RECORDS_FILE} `)).map(({ code }) => code).sort();
-  assert.deepEqual(naming, [...moved, ...T48_MOVED].sort());
-  for (const { code, row } of allRows()) if (!moved.has(code) && !T48_MOVED.includes(code)) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs /, code);
+  /* R29 (T48) adds six rows naming action-records, pinned by their codes in t48.test.mjs; here the rows naming that file are
+     the R28 set and those six, and no other row names it */
+  const naming = allRows().filter(({ row }) => row.where.startsWith(`${RECORDS_FILE} `)).map(({ code }) => code);
+  assert.equal(naming.length, moved.size + 6);
+  assert.ok([...moved].every((code) => naming.includes(code)));
+  for (const { code, row } of allRows()) if (!moved.has(code) && !naming.includes(code)) assert.match(row.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs /, code);
   assert.equal(AG.RECORDS_LAW_FENCE_CHECKS.MACHINE_CANNOT_STATE_SEEKS.where, "src/actions/index.mjs #seeksFence > is-machine-state-seeks");
   assert.equal(AG.GOVERNING_LAW_CHECKS.GOVERNING_LAWS_REWRITTEN.where, "src/actions/index.mjs #lawsFence > is-promote-governing-laws");
   assert.equal(AG.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where, "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law");

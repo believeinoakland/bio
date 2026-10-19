@@ -173,7 +173,7 @@ function alreadySuperseded(id, next) {
 
 /** R6: a revision's reason: null when it is stated and within `REASON_MAX` (an addressed record's is R9's own, T45). */
 function reasonRefusal(reason) {
-  if (!str(reason)) return refuse("NO_REASON", `the record says why.${NOTHING}`);
+  if (!str(reason)) return refuse("NO_REASON", localize("consequences.index.the_record_says_why", "the record says why.{NOTHING}", { NOTHING: String(NOTHING) }));
   if (reason.trim().length > REASON_MAX)
     return refuse("BAD_REASON", localize("consequences.index.a_reason_is_at_most", "a reason is at most {REASON_MAX} characters.{NOTHING}", { REASON_MAX: String(REASON_MAX), NOTHING: String(NOTHING) }));
   return null;
@@ -213,14 +213,13 @@ function redressFigureKey(v, depth = 0) {
 export function checkAffected(a) {
   const o = isObj(a) ? a : {};
   const kind = str(o.kind) ? o.kind.trim().toLowerCase() : null;
-  const unknown = (why) => refuse("AFFECTED_UNKNOWN_KIND", `${why}: kind one of ${AFFECTED_KINDS.join(", ")}, with a `
-    + "description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.", { kind: kind ?? null });
-  if (!isObj(a)) return unknown("an affected is {kind, description, role?, person?}");
-  if (!kind || !AFFECTED_KINDS.includes(kind)) return unknown(`"${String(o.kind ?? "")}" is not a kind of affected`);
-  if (!str(o.description)) return unknown("an affected is described");
+  const unknown = (why) => refuse("AFFECTED_UNKNOWN_KIND", localize("consequences.index.kind_one_of", "{why}: kind one of {kinds}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.", { why: String(why), kinds: String(AFFECTED_KINDS.join(", ")) }), { kind: kind ?? null });
+  if (!isObj(a)) return unknown(localize("consequences.index.an_affected_is_kind", "an affected is {kind, description, role?, person?}"));
+  if (!kind || !AFFECTED_KINDS.includes(kind)) return unknown(localize("consequences.index.is_not_a_kind_of_affected", "{kind} is not a kind of affected", { kind: `"${String(o.kind ?? "")}"` }));
+  if (!str(o.description)) return unknown(localize("consequences.index.an_affected_is_described", "an affected is described"));
   if (o.role != null && (!isObj(o.role) || !str(o.role.role) || !str(o.role.body)))
-    return unknown("a role is an office, {role, body}: the office and the body it belongs to");
-  if (o.person != null && kind !== "person") return unknown(`a person is named only on kind "person", and this is ${kind}`);
+    return unknown(localize("consequences.index.a_role_is_an_office", "a role is an office, {role, body}: the office and the body it belongs to"));
+  if (o.person != null && kind !== "person") return unknown(localize("consequences.index.a_person_is_named_only", 'a person is named only on kind "person", and this is {kind}', { kind: String(kind) }));
   const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
   const out = { kind, description: o.description.trim(), ...(role ? { role } : {}) };
   if (kind === "person") {
@@ -401,8 +400,7 @@ export class Consequences {
   #causationNow(inquiryId, viewer) {
     if (!str(inquiryId))
       return { state: "unproven", inquiry: null,
-               why: "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not "
-                  + "establish it (DEC-14), so the causation is unproven until one concludes" };
+               why: localize("consequences.index.no_inquiry_is_named_whose", "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes") };
     const who = viewer ?? INTERNAL;
     const info = this.record.bundleInfo(inquiryId);
     if (!info || !this.membership.inSight(inquiryId, who) || normalizeType(info.type) !== "inquiry")
@@ -416,7 +414,7 @@ export class Consequences {
                why: word("consequences.why.inquiry_named_superseded") };
     if (!CONCLUDED.has(st))
       return { state: "unproven", inquiry: inquiryId,
-               why: word("consequences.why.inquiry_named_concluded", { state: String(st ?? "in no state") }) };
+               why: word("consequences.why.inquiry_named_concluded", { state: String(st ?? word("consequences.why.state")) }) };
     return { state: "established", inquiry: inquiryId,
              why: word("consequences.why.inquiry_named_concluded_finding") };
   }
@@ -452,8 +450,8 @@ export class Consequences {
     try { e = person.entity ? this.entities.readEntity({ entityId: person.entity, viewer: who }) : null; } catch { e = null; }
     const ent = e && e.ok !== false && e.found !== false ? e.entity : null;
     if (!ent || ent.kind !== "person")
-      return refuse("AFFECTED_NOT_A_PERSON", localize("consequences.index.v1_a_harmed_person_is", "{v1}: a harmed person is a registered person entity.{NOTHING}", { v1: String(person.entity ? `${person.entity} is not a person this record holds`
-        : "an affected person names the person entity"), NOTHING: String(NOTHING) }),
+      return refuse("AFFECTED_NOT_A_PERSON", localize("consequences.index.v1_a_harmed_person_is", "{v1}: a harmed person is a registered person entity.{NOTHING}", { v1: String(person.entity ? localize("consequences.index.entity_is_not_a_person", "{entity} is not a person this record holds", { entity: String(person.entity) })
+        : localize("consequences.index.an_affected_person_names", "an affected person names the person entity")), NOTHING: String(NOTHING) }),
         { entity: person.entity ?? null });
     const notNamed = (why) => refuse("AFFECTED_PERSON_NOT_NAMED", localize("consequences.index.why_a_person_is_recorded", "{why}: a person is recorded as affected only as a document in the record names them.{NOTHING}", { why: String(why), NOTHING: String(NOTHING) }), { entity: person.entity, named_in: person.named_in ?? null });
     if (!person.named_in) return notNamed("no passage naming the person is given (named_in)");
@@ -624,7 +622,7 @@ export class Consequences {
         return refuse("BAD_RATIONALE", localize("consequences.index.a_rationale_is_at_most", "a rationale is at most {RATIONALE_MAX} characters. Nothing was written.", { RATIONALE_MAX: String(RATIONALE_MAX) }));
       const rests = basis.rests_on ?? basis.restsOn ?? [];
       if (!Array.isArray(rests))
-        return basisUnreadable("what an assessment rests on is a list of content ids or findings, possibly empty");
+        return basisUnreadable(localize("consequences.index.what_an_assessment_rests", "what an assessment rests on is a list of content ids or findings, possibly empty"));
       const unseen = this.#evidenceRefusal(rests, who, "an assessment rests on"); if (unseen) return unseen;
       return { ok: true, state: "assessed", measure, rationale, restsOn: rests.map(String),
                doc: { rationale, rests_on: rests.map(String) } };
@@ -641,12 +639,10 @@ export class Consequences {
   #computation(basis, measure, who, figure = false) {
     const op = str(basis.op);
     if (!op || !OPS.includes(op))
-      return basisUnreadable(`a computation names its op, one of ${OPS.join(", ")}`, { op: basis.op ?? null });
+      return basisUnreadable(localize("consequences.index.a_computation_names_its", "a computation names its op, one of {ops}", { ops: String(OPS.join(", ")) }), { op: basis.op ?? null });
     const given = Array.isArray(basis.operands) ? basis.operands.map(operandOf) : null;
     if (!given || given.some((o) => !o))
-      return basisUnreadable("a computation's operands are a list, each {content, figure} (the content id whose passage "
-        + "holds the figure, and the figure as read), {money} (a money fact) or {calculation, key} (a calculation's "
-        + "result, named by its key)");
+      return basisUnreadable(localize("consequences.index.a_computation_operands_are", "a computation's operands are a list, each {content, figure} (the content id whose passage holds the figure, and the figure as read), a money fact (its id) or {calculation, key} (a calculation's result, named by its key)"));
     const read = given.map((o, i) => this.#readOperand(o, i, op, who));
     const fault = read.find((r) => r && r.ok === false);
     if (fault) return fault;
@@ -665,7 +661,7 @@ export class Consequences {
     const base = { ok: true, kind: o.kind, ref: o.ref, ...(o.key ? { key: o.key } : {}),
                    ...(o.kind === "content" ? { figure: o.figure } : {}) };
     const lacking = (code, why) => ({ ...base, grade: null, route: null, determined: false, basis: null,
-                                      lacking: { code, why: `operand ${i} ${why}` } });
+                                      lacking: { code, why: localize("consequences.index.operand_i_why_2", "operand {i} {why}", { i: String(i), why }) } });
     if (o.kind === "content") {
       const row = this.content.contentRow(o.ref);
       if (!row || !this.membership.inSight(row.bundle_id, who ?? INTERNAL))
@@ -677,7 +673,7 @@ export class Consequences {
       if (o.figure == null || !String(o.figure).trim())
         return { ...out, lacking: { code: "not_in_record", why: word("consequences.why.operand_states_figure", { i: String(i) }) } };
       const f = readFigure(o.figure);
-      if (!f.ok) return basisUnreadable(`operand ${i}: ${f.why}`, { operand: i });
+      if (!f.ok) return basisUnreadable(localize("consequences.index.operand_i_why", "operand {i}: {why}", { i: String(i), why: String(f.why) }), { operand: i });
       const text = this.#passageText(o.ref);
       if (text === null)
         return { ...out, lacking: { code: "form_not_read", why: word("consequences.why.operand_passage_held", { i: String(i) }) } };
@@ -867,7 +863,7 @@ export class Consequences {
         try { s = this.strength.inquiryStrength({ id: r.causation, viewer: who }); } catch { s = null; }
         out.causation.strength = s && s.ok
           ? { capture: s.capture ?? null, connection: s.connection ?? null, testimony: s.testimony ?? null,
-              says: "per axis, never composed (DEC-44)" }
+              says: localize("consequences.index.per_axis_never_composed", "per axis, never composed (DEC-44)") }
           : { capture: null, connection: null, testimony: null, says: word("consequences.says.inquiry_strength_read") };
         /* strength R6 withheld a member of the pair inside the answer: something of the part's answer was withheld. */
         if (s && s.ok && s.out_of_view === true) withheld = true;
@@ -916,8 +912,7 @@ export class Consequences {
           try { h = this.inquiry.stateHistory(r.causation); } catch { h = null; }
           reopened = !!(h && h.ok && h.transitions.some((t) => t.to === "open" && t.at && instantOrder(t.at, r.at) > 0));
         }
-        if (reopened) causes.push({ cause: "causation_reopened", why: "the causation inquiry has been reopened since "
-                                     + "this part was recorded" });
+        if (reopened) causes.push({ cause: "causation_reopened", why: word("consequences.why.causation_inquiry_reopened") });
       }
     }
     return causes;
@@ -961,8 +956,7 @@ export class Consequences {
     return { ok: true, determination: d.id, standard: str(standard), parts, totals,
              undetermined: parts.filter((p) => p.state === "undetermined").map((p) => p.id),
              unproven: parts.filter((p) => p.causation.state === "unproven").map((p) => p.id),
-             says: parts.length ? "each part is what it is: computed, assessed or undetermined; nothing here is composed "
-                                  + "into one figure, and nothing ranks it"
+             says: parts.length ? word("consequences.says.part_computed_assessed")
                                 : word("escalation.consequence_recorded") };
   }
 
@@ -1172,15 +1166,14 @@ export class Consequences {
      promise of either (a calculation operand). */
   #successFigures(figures, who, byMachine) {
     if (!Array.isArray(figures))
-      return basisUnreadable("a success record's figures are a list, each {label, basis: {op, operands}}");
+      return basisUnreadable(localize("consequences.index.a_success_records_figures", "a success record's figures are a list, each {label, basis: {op, operands}}"));
     for (const [i, f] of figures.entries()) {
       if (!isObj(f) || !str(f.label) || f.label.trim().length > 200)
-        return basisUnreadable(`figure ${i} is {label, basis: {op, operands}}, its label words of at most 200 characters`,
+        return basisUnreadable(localize("consequences.index.figure_i_is_label", "figure {i} is {label, basis: {op, operands}}, its label words of at most 200 characters", { i: String(i) }),
                                { figure: i });
       const stated = ["value", "range"].some((k) => k in f || (isObj(f.basis) && k in f.basis));
       if (stated || !isObj(f.basis) || !("op" in f.basis || "operands" in f.basis))
-        return refuse("SUCCESS_FIGURE_NOT_COMPUTED", `figure ${i} (${str(f.label) ?? "unlabelled"}) is computed from cited `
-          + `sources, never stated: give its computation {op, operands}.${NOTHING}`, { figure: i });
+        return refuse("SUCCESS_FIGURE_NOT_COMPUTED", localize("consequences.index.figure_i_is_computed_from", "figure {i} ({label}) is computed from cited sources, never stated: give its computation {op, operands}.{NOTHING}", { i: String(i), label: String(str(f.label) ?? "unlabelled"), NOTHING: String(NOTHING) }), { figure: i });
     }
     const all = figures.map((f) => this.#computation(f.basis, null, who, true));
     const shape = (rs) => {
@@ -1197,8 +1190,7 @@ export class Consequences {
     if (cause === null || cause === undefined) return null;
     const c = isObj(cause) ? cause : {};
     if (!str(c.statement) || [...c.statement.trim()].length > STATEMENT_MAX)
-      return refuse("SUCCESS_CAUSE_UNSTATED", "that the team's action caused the change is stated in the member's words, "
-        + `1 to ${STATEMENT_MAX} characters.${NOTHING}`);
+      return refuse("SUCCESS_CAUSE_UNSTATED", localize("consequences.index.that_the_teams_action_caused", "that the team's action caused the change is stated in the member's words, 1 to {STATEMENT_MAX} characters.{NOTHING}", { STATEMENT_MAX: String(STATEMENT_MAX), NOTHING: String(NOTHING) }));
     const ev = c.evidence;
     if (!Array.isArray(ev) || !ev.length || ev.length > SUCCESS_LIMITS.evidence
         || ev.some((x) => !this.#resolvesEvidence(x, who ?? INTERNAL)))
@@ -1374,7 +1366,7 @@ export class Consequences {
     const c = isObj(carry) ? carry : {};
     const which = ["success", "addressed", "cure"].filter((k) => c[k] !== undefined && c[k] !== null);
     let out;
-    if (which.length !== 1) return noSuchSuccessRecord(null, true, "a carry names one of {success}, {addressed} or {cure}");
+    if (which.length !== 1) return noSuchSuccessRecord(null, true, localize("consequences.index.a_carry_names_one", "a carry names one of {success}, {addressed} or {cure}", { success: "success", addressed: "addressed", cure: "cure" }));
     if (which[0] === "success") {
       const r = this.#successRow(c.success, who);
       if (!r) return noSuchSuccessRecord(c.success, true);
@@ -1643,8 +1635,7 @@ function undeterminedWhyFor(r, place, withheld) {
 
 /* R16 (DEC-78): a person the part names never enters its document or title, which are fenced by the project's sight
    alone; the part's own reads answer them, to a viewer R16 admits. */
-const PERSON_IN_TABLE = "a person a document names: answered by this module's reads only to a viewer who may see the "
-  + "passage naming them (R16)";
+const PERSON_IN_TABLE = localize("consequences.index.a_person_a_document", "a person a document names: answered by this module's reads only to a viewer who may see the passage naming them (R16)");
 
 function titleOf(p) {
   if (p.affected.kind === "person") return word("consequences.text.person_named_record");

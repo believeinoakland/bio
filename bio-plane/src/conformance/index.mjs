@@ -120,8 +120,7 @@ export const ACT_ROLES = Object.freeze(["decider", "author", "signatory", "imple
 /** R25: the sentence beside those participants. */
 export const PARTICIPANTS_SAY = word("conformance.people_record_states");
 /** R25: the sentence an actor with no office entity carries. */
-export const NO_OFFICE_ENTITY = "no office entity is held for this role and body, so the actor stands as the office's "
-  + "role and body only";
+export const NO_OFFICE_ENTITY = localize("conformance.index.no_office_entity_is_held", "no office entity is held for this role and body, so the actor stands as the office's role and body only");
 /** R26: the sentence an actor recorded before T33 carries (no actor then carried an entity). */
 export const ACTOR_BEFORE_ENTITIES = word("conformance.actor_recorded_act");
 /** R26: the sentence an act no member has yet linked to an event carries. */
@@ -746,8 +745,7 @@ export class Conformance {
     const list = Array.isArray(standards) ? standards : [];
     /* DEC-49 REGION is-standard-named */
     if (!list.length)
-      return refusal("NO_STANDARDS", "a determination measures the act against at least one standard the record holds "
-        + "(R14). Nothing was written.");
+      return refusal("NO_STANDARDS", localize("conformance.index.a_determination_measures_the_act", "a determination measures the act against at least one standard the record holds (R14). Nothing was written."));
     /* END DEC-49 REGION is-standard-named */
     const out = [], byId = new Map();
     for (const item of list) {

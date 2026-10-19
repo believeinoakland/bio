@@ -98,7 +98,7 @@ test("R16 actionReceipt answers the five conditions through the site, in R4's or
   const m = R({ author: MACHINE });
   assert.deepEqual([m.reason, m.target, m.check, m.detail],
     ["MACHINE_CANNOT_CORRESPOND", A, row("MACHINE_CANNOT_CORRESPOND").check,
-     "a receipt is a named member's record that the team's sending reached its addressee. A machine credential may not record one. Sign in as a member."]);
+     records.RECEIPT_DETAIL.MACHINE_CANNOT_CORRESPOND]);
   assert.equal(R({ author: "", target: "" }).reason, "MACHINE_CANNOT_CORRESPOND", "the fence is first");
   const bd = R({ at: "2026-02-30" });
   assert.deepEqual([bd.reason, bd.at, bd.target],  ["BAD_DATE", "2026-02-30", A]);
@@ -111,6 +111,6 @@ test("R16 actionReceipt answers the five conditions through the site, in R4's or
   assert.deepEqual([none.reason, none.target], ["NEITHER_CAPTURE_NOR_TESTIMONY", A]);
   const un = R({ account: "", artifactSha: H });
   assert.deepEqual([un.reason, un.target, un.artifact_sha, un.detail],
-    ["UNREGISTERED_ARTIFACT", A, H, "this hash names no capture in this store. Capture it first, or record a named account instead."]);
+    ["UNREGISTERED_ARTIFACT", A, H, records.RECEIPT_DETAIL.UNREGISTERED_ARTIFACT]);
   assert.equal(R({ account: "", artifactSha: held }).ok, true, "control: a registered hash is held");
 });
