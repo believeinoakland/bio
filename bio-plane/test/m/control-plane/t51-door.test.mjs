@@ -54,15 +54,13 @@ test("R110 (T51-123; capture R96, R86): `heldat` reaches capture with `by` and `
     assert.equal(inner.params.by, `class:${m.name}`, `${m.name}: by`);
     assert.equal(inner.params.viewer, `class:${m.name}`, `${m.name}: viewer`);
   }
-  /* an `ai` credential is NOT refused by the row (op-declarations R77 gives heldat no `machineClasses`, so admission admits an
-     agent within its scope, as it does every such read): it reaches capture with the machine form `class:ai/<tokenId>` as `by`,
-     which capture's own fence refuses for `check: true`. R110's text says it is refused at the door: reported to BOB (J2). */
+  /* R110: an `ai` credential is refused `heldat` at the door (the row's machineClasses omit `ai`), nothing reaches capture */
   const agentCall = machines.find((x) => x.name === "agent");
   w.env.calls.length = 0;
-  assert.equal((await call(w.env, { op: "heldat", token: agentCall.token, params: forged })).status, 200);
-  const [viaAgent] = opCalls(w.env).filter((c) => c.route === "heldat");
-  assert.equal(viaAgent.params.by, "class:ai/agent-ann");
-  assert.equal(viaAgent.params.viewer, "member:ann");
+  const viaAgent = await call(w.env, { op: "heldat", token: agentCall.token, params: forged });
+  assert.notEqual(viaAgent.status, 200);
+  assert.equal(viaAgent.json.ok, false);
+  assert.deepEqual(opCalls(w.env).filter((c) => c.route === "heldat"), []);
   /* control: a credential in none of heldat's classes (the daemon's) is refused before any store request */
   for (const m of machines.filter((x) => x.name !== "agent" && !classesOf.includes(x.name))) {
     w.env.calls.length = 0;
