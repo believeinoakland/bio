@@ -1819,20 +1819,8 @@
    "note": "DEC-260: strength, text"
   },
   {
-   "key": "strength.text.two_strengths_finding",
-   "en": "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member's own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
    "key": "strength.text.legs_count_leg",
    "en": "2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written on a leg to another question, or to another team's finding, has nothing to grade and is listed, not counted.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.questions_resting_questions",
-   "en": "3. Questions resting on questions. A leg to another question contributes that question's own strengths, worked out the same way, up to six steps down. Past six steps, or where that question's strength is not known, the strength is stated as undetermined: unknown, not low.",
    "protected": false,
    "note": "DEC-260: strength, text"
   },
@@ -1843,46 +1831,10 @@
    "note": "DEC-260: strength, text"
   },
   {
-   "key": "strength.text.sets_reasons_legs",
-   "en": "5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.strength_undetermined_strength",
-   "en": "6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
    "key": "strength.text.anonymous_testimony_evidence",
    "en": "7. Anonymous testimony and evidence. Testimony from a member credited only to the team or the project, and material from an unnamed source that such a member attests, counts only when something independent beside it bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document that shares no origin with it (not the same document, not the same capture, not the same web address) and is not itself credited anonymously; for anonymous testimony, also a member's testimony credited by cover name or real name, by another member, sharing no origin with it. Testimony or material credited by cover name or real name is graded as usual.",
    "protected": false,
    "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.text.named_strength_names",
-   "en": "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out.",
-   "protected": false,
-   "note": "DEC-260: strength, text"
-  },
-  {
-   "key": "strength.v2_legs.calculations_held_standards",
-   "en": "8. Calculations, held standards and obligations. A leg to a calculation counts for the capture strength only, at the weakest of its inputs' capture strengths, each no stronger than where it came from: a figure quoted from a document by that passage, a money figure by its own grade, a table by its source, another calculation by its own capture strength. The arithmetic of the recipe never weakens it. A value typed in with no captured source is testimony, D. A value another program computed is unknown until that program's agreement has been measured. The method is stated beside the grade and is not graded. A calculation whose result is not accepted, or an input that cannot be read, makes the strength undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
-  },
-  {
-   "key": "strength.v2_legs.leg_held_standard",
-   "en": "9. A leg to a held standard counts for the capture strength only, no stronger than the record holds for the text of that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
-  },
-  {
-   "key": "strength.v2_legs.leg_occurrence_obligation",
-   "en": "10. A leg to one occurrence of an obligation counts for the capture strength only, at the weaker of the text of the rule in force and the record of the date that started it. Whether it was met, late or overdue is stated beside the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
-   "protected": false,
-   "note": "DEC-260: strength, =V2_LEGS"
   },
   {
    "key": "strength.stopped.case_file_states",

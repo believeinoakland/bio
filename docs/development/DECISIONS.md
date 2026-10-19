@@ -5421,3 +5421,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) image-cover's six member refusals (`refusal.NOT_A_COVERABLE_FORMAT`, `UNSUPPORTED_JPEG_PROCESS`, `PNG_INTERLACED`, `AREA_MALFORMED`, `AREA_OUTSIDE`, `PHOTO_TOO_LARGE`) say "obscure" as the ceremony's Photos step and the marking refusals do, and name the product "your team's Civicsmith" as their siblings do; the ceremony's drawn rule (`screen.ceremony.photos.rules`) and the screens page's note say "obscured" likewise. (2) `odf-reader.odf.content_xml_with_text_list`, a builder's provenance note, loses the two job ids it carried. (3) `observation-log.vocabulary.condition_governor_holding_host` speaks in the team's voice ("Your team's Civicsmith is spacing out its captures from this site on purpose"). The other 107 rows agree; the refusals' ending ("Nothing was recorded.") is left off image-cover's eight, which refuse before anything is written.
 reasoning recorded in: this entry; `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: nothing.
+
+### DEC-350 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B352; K1333, K4017)
+for: design
+question: Strength's eight signed grading-method sentences are pinned bytes in code that no module reads by key; what becomes of their words.json rows?
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: keep the rows for translation; rejected, since the signed text never changes and nothing reads the rows, so they would be orphans the check counts as copies.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: the eight rows (`strength.text.two_strengths_finding`, `questions_resting_questions`, `sets_reasons_legs`, `strength_undetermined_strength`, `named_strength_names`, `strength.v2_legs.calculations_held_standards`, `leg_held_standard`, `leg_occurrence_obligation`) are dropped from `words-mod-1.src.py` and from strength's reads in `words-reads-mod-1.json`, as DEC-347 did for lines' orphans; `bio-plane/src/strength/method.mjs` lines 281, 289, 295, 299, 309, 315, 322 and 324 go on strength's unkeyed list in `words-reads-handoffs.json`, each whole as the words check on tranche/T51 reads it, why "signed grading-method text, pinned bytes that stay code and never change" (line 309's earlier fragment replaced by its whole folded text). The words check on tranche/T51 reads strength 0.
+reasoning recorded in: this entry; `screens/words-mod-1.src.py`, `screens/words-reads-mod-1.json`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.
