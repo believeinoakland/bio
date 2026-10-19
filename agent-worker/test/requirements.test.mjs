@@ -1387,8 +1387,8 @@ section("R37 · it judges no scope; PLANE_OPS is exactly its ops, and it calls n
   await seen(mf);
   t("R37: the ops the member called across this suite's last run are all in PLANE_OPS",
     [...OPS_SEEN].filter((o) => !PLANE_OPS[o]), []);
-  t("R37: none of its ops is one that returns document bytes",
-    Object.keys(PLANE_OPS).filter((o) => ["capture", "acquire", "image", "archivelookup", "publishedmanifest", "bytes", "file"].includes(o)), []);
+  t("R37: none of its ops returns document bytes: no answer this suite received carries a data URL or a long base64 run",
+    ANSWERS.filter((a) => /data:[\w/+.-]+;base64,|[A-Za-z0-9+/]{400,}={0,2}/.test(a.text)).length, 0);
 }
 
 section("R38 · it never writes runtime-ceiling-reached or any ending itself");

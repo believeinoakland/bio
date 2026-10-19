@@ -78,18 +78,17 @@ export async function resolveClaudeCascade(account) {
     return { available: true, level, kind: account.kind,
              member: typeof account.member === "string" ? account.member : null,
              ...(level === "project" ? { project: projectOf(account) } : {}), levels };
-  const whose = level === "group" ? "the team's API key"
-    : level === "project" ? "the project's Claude account" : "the member's own Claude account reference";
+  const whose = level === "group" ? localize("agent-worker.cascade.the_teams_api_key", "the team's API key")
+    : level === "project" ? localize("agent-worker.cascade.the_projects_claude_account", "the project's Claude account")
+    : localize("agent-worker.cascade.the_members_own_claude_account", "the member's own Claude account reference");
   return {
     available: false, reason: CASCADE_NO_ACCOUNT, level, levels,
     detail: state === LEVEL_REVOKED
       ? localize("agent-worker.cascade.whose_has_been_published_in", "{whose} has been published in this repository, which revokes it, so no model turn can run under it. {v1}", { whose: String(whose), v1: String(level === "group"
-          ? "An administrator sets a new key for the team, or members connect their own."
+          ? localize("agent-worker.cascade.an_administrator_sets_a_new", "An administrator sets a new key for the team, or members connect their own.")
           : level === "project"
-          ? "An owner of the project sets a new one; until then the member's own account, else the team's API key, "
-            + "serves them only while your team's Civicsmith holds it and it is on."
-          : "The member connects a new one; until then the team's API key serves them only while your team's "
-            + "Civicsmith holds it and it is on.") })
+          ? localize("agent-worker.cascade.an_owner_of_the_project", "An owner of the project sets a new one; until then the member's own account, else the team's API key, serves them only while your team's Civicsmith holds it and it is on.")
+          : localize("agent-worker.cascade.the_member_connects_a_new", "The member connects a new one; until then the team's API key serves them only while your team's Civicsmith holds it and it is on.")) })
       : localize("agent-worker.cascade.no_usable_claude_account_arrived", "no usable Claude account arrived for this act ({whose} was absent, empty, named no member{v1}, or of a kind its level does not hold). Which account serves a member's act is your team's Civicsmith's to answer (the project's, else the member's own, else the team's API key while it is held and on); a member whom none serves has no assistant.", { whose: String(whose), v1: String(level === "project"
           ? " or no project" : "") }),
   };

@@ -370,11 +370,7 @@ async function accountOf(body) {
       || (a.kind === "signin" && ((a.secret !== undefined && a.secret !== null && typeof a.secret !== "string")
         || (a.suggestions !== undefined && typeof a.suggestions !== "boolean"))))
     return { refusal: refusal("BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
-      + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the team's account an API key only), `
-      + "and member the member whose act it serves; a project's account names its project, and no other does; a "
-      + "signin account is the member's own, its secret the token held for that member, and its suggestions switch, "
-      + "when sent, is true or false. What arrived is not one, and this member judges only what it is handed.",
+      localize("agent-worker.index.account_is_the_account_that", "account is the account that serves the member's act: {shape}, kind one of {kinds}, level one of {levels} (the team's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own, its secret the token held for that member, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.", { shape: "{kind, level, secret, member}", kinds: ACCOUNT_KINDS.join(", "), levels: CASCADE_ORDER.join(", ") }),
       400, { field: "account" }) };
   /* R82 (T47; K3060 D10): a sign-in serves an act only on the token `credentials` holds for the member; with none held
      (every connection made before T47 among them) the member connects again, and nothing was done. */
@@ -450,8 +446,7 @@ async function handleRun(req, env) {
         body: JSON.stringify({ body, whoami: asked.body }) });
     } catch (e) {
       return refusal("SEGMENT_NOT_ACCEPTED",
-        "the segment driver could not be reached, so no segment was started and the run stays as it was; it is "
-        + "resumable.", 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
+        localize("agent-worker.index.the_segment_driver_could_not", "the segment driver could not be reached, so no segment was started and the run stays as it was; it is resumable."), 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
     }
     if (res.status === 202) return json({ accepted: true, run_id: runId }, 202);
     return res;
@@ -788,7 +783,7 @@ export default {
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "signin") return handleSignin(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "transcribe") return handleTranscribe(req, env, ASK_DEPS);
-    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.",
+    return refusal("UNKNOWN", localize("agent-worker.index.post_run_post_ask_post", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only."),
       404);
   },
 };
