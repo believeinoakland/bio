@@ -8,6 +8,9 @@ import { REF_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { open, main, actsIn, fill, press, says, section, word, P } from "./fixtures.mjs";
 
 const at = "/app/project/" + P;
+/* a day as `cs.date` draws it, read through the same words (DEC-333), never copied */
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const day = (iso) => { const [y, m, d] = iso.slice(0, 10).split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + MONTHS[m - 1]), year: String(y) }); };
 const KINDS = ["plan", "timeline", "money", "calculation", "proceeding", "standard", "request", "matter", "action", "case-editor", "review-copy", "ceremony"];
 
 test("R52 (1) This project's work lists every screen that works within a project, each with its card, a kind with none still listed; a screen the shell cannot reach is no link", async () => {
@@ -39,7 +42,7 @@ test("R53 what the team has at stake here: the team's statement read-only, the p
   const s = section(p, "stake.project.title");
   assert.ok(says(s, "stake.project.group", { stake: "The team is funded by a union of city workers." }));
   assert.ok(s.textContent.includes("We rent from the contractor."));
-  assert.ok(says(s, "stake.set", { who: "dev", date: "2 October 2026" }) && says(s, "stake.history", { n: "1" }), "who, when, and the earlier statements");
+  assert.ok(says(s, "stake.set", { who: "dev", date: day("2026-10-02") }) && says(s, "stake.history", { n: "1" }), "who, when, and the earlier statements");
   const heads = main(p).querySelectorAll("section h2").map((h) => h.textContent);
   assert.ok(heads.indexOf(word("stake.project.title")) < heads.indexOf(word("screen.project.members.head")), "above Members");
   fill(p, { "project-stake": "We rent from the contractor, and from the city." });
