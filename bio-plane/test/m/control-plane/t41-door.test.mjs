@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { O, world, call, opCalls, FORGED, aik, cred } from "./harness.mjs";
 import { callers, ok, routesForSessions } from "./door-routes.mjs";
 import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
+import { aiUseOps } from "../../../src/ai-use/index.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
 
 const { OPS } = O;
@@ -28,12 +30,13 @@ test("R56 (DEC-188 (8); credentials R37): `groupswitchset` and `accountswitchset
   assert.equal(opCalls(w.env).filter((c) => c.route === "accountusesset").length, 1);
 });
 
-/* credentials' project-account ops and ai-use's `aiUseOps`, read from their owners' declarations: the ops of those
-   families the T41 grades (R69's) that a member's session alone reaches, less the ones R69 tests apart */
+/* credentials' project-account ops and ai-use's `aiUseOps`, read from their owners' maps: the ops those maps serve that
+   the T41 grades (R69's) and a member's session alone reaches */
 const T41_GRADED = new Set([...Object.keys(T41_RUNGS), ...Object.keys(T41_RUNG_ABSENT), ...Object.keys(T41_NON_ACTS)]);
 const sessionOnly = (op) => OPS[op]?.machineClasses?.length === 0;
 const kindsOf = (...owners) => owners.flatMap((o) => Object.keys(O.OP_FAMILIES[o].kinds));
-const R69_OPS = kindsOf("credentials", "ai-use").filter((op) => T41_GRADED.has(op) && sessionOnly(op));
+const R69_OPS = [...Object.keys(aiAccountsOps(null, new URL("http://do/"), null, {})), ...Object.keys(aiUseOps(null, new URL("http://do/"), null))]
+  .filter((op) => T41_GRADED.has(op) && sessionOnly(op));
 
 test("R69 (op-declarations R41; K2373, K2488): credentials' project-account ops and ai-use's `aiUseOps` reach their owners' maps for a member's session only, each declared stamp from the session and none from the caller; every machine credential is refused before any store request", async () => {
   await routesForSessions(R69_OPS, (op) => ({ project: "prj-1", owner: "project:prj-1",

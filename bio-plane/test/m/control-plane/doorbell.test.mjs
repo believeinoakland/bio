@@ -293,8 +293,12 @@ test("R27 (N364, N379): the new reads that carry an id and reach a store route a
   const { PROJECT_NAMING_READS: NAMES, PROJECT_NAMING_READS_NOT: NOT } = D;
   assert.deepEqual(NAMES.publishpreflight, ["project"]);
   /* sources' reads are store routes of this door since N379, so they are classified with the knock and capture reads */
-  for (const op of ["knocksof", "pulledknocks", "lateattestations", "captureaccounts",
-                    "sourceof", "sourcerung", "sourcereadlog", "sourcepublishable"]) {
+  const { sourcesOps: sourcesMap } = await import("../../../src/sources/index.mjs");
+  const sourceReads = Object.keys(sourcesMap({}, new URL("http://do/"), null)).filter((op) => !O.SOURCE_ACTIONS.includes(op) && !O.OPS[op]?.mutating);
+  /* the knock and capture reads: reads the door's store routes take that are not sources' own, from the owners' declarations
+     (the knocks' and capture requests' families) */
+  const knockCaptureReads = Object.values(O.OP_FAMILIES).filter((f) => ["capture-requests", "doorbell", "attestations"].includes(f.owner)).flatMap((f) => f.reads);
+  for (const op of [...knockCaptureReads, ...sourceReads]) {
     assert.equal(typeof NOT[op], "string", op);
     assert.equal(Object.hasOwn(NAMES, op), false, op);
   }
