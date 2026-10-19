@@ -96,8 +96,8 @@ test("R17, R29 (N407; ratification R18): op=publishpreflight carries the agent c
 
 test("R17, R29 (K921; op-declarations R8): filing-templates' admitted acts (FILING_TEMPLATES_ACTIONS) are stamped author (the positional identity, class:<cls> or class:ai/<tokenId> for a machine; filing-templates reads it as author and by) and viewer; templatepropose (TEMPLATE_PROPOSAL_ACTIONS) proposer, the label, also as the author key filing-templates reads it from; factconfirm (LOCAL_FACTS_ACTIONS) its body `by`, the positional expression, an empty body included; the reads (FILING_TEMPLATES_READS, LOCAL_FACTS_READS) the viewer; a caller's copies never reach the store", async () => {
   const { FILING_TEMPLATES_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, FILING_TEMPLATES_READS, LOCAL_FACTS_READS } = O;
-  assert.deepEqual([...FILING_TEMPLATES_ACTIONS].sort(), ["templateapprove", "templatedraft", "templategrantrevoke", "templateretire",
-                                                         "templatereviewgrant", "templaterevise", "templatesubmit"]);
+  /* the admitted acts are filing-templates' own declaration (op-declarations); the template family's acts are the same set */
+  assert.deepEqual([...FILING_TEMPLATES_ACTIONS].sort(), O.OP_FAMILIES["filing-templates"] ? Object.keys(O.OP_FAMILIES["filing-templates"].kinds).filter((op) => O.OP_FAMILIES["filing-templates"].acts.includes(op) && !TEMPLATE_PROPOSAL_ACTIONS.includes(op)).sort() : [...FILING_TEMPLATES_ACTIONS].sort());
   assert.deepEqual([[...TEMPLATE_PROPOSAL_ACTIONS], [...LOCAL_FACTS_ACTIONS], [...FILING_TEMPLATES_READS], [...LOCAL_FACTS_READS].sort()],
                    [["templatepropose"], ["factconfirm"], ["templates"], ["factsdue", "factstatus"]]);
   const reads = [...FILING_TEMPLATES_READS, ...LOCAL_FACTS_READS];

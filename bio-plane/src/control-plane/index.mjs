@@ -3426,7 +3426,7 @@ export function makeFetch(hooks = {}) {
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
-export { PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
+export { ACT_CLOCK_OPS, PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
 /* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
    (`members-pin.test.mjs`); the door itself calls admission directly. */

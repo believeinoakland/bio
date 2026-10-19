@@ -5,6 +5,7 @@
    over the harness's store, which records every request the plane makes. R103's ops are declared by `op-declarations` R73,
    whose merge in layer 11 comes before this module's. */
 import { test } from "node:test";
+import { T50_SHARES, T50_FAMILIES } from "../../../src/op-declarations/t50.mjs";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, makeFetch, defaultHooks, refused, aik, cred, hex64, FORGED } from "./harness.mjs";
 import { ok, routesForSessions } from "./door-routes.mjs";
@@ -70,9 +71,9 @@ test("R102 (T50; N933; public-read R36): the review copy's group fields are read
 
 /* ================================================================ R103 */
 
-const T50_OPS = Object.freeze(["watchitem", "secondlook", "secondlookclear", "lookedat", "browse", "opencaptures", "capturegrade",
-  "inquirypartition", "instances", "projectstakeset", "projectstake", "projectownersgone", "actionstake", "actioninquiry",
-  "stakeatpreparation"]);
+/* the 15 ops of op-declarations R73, assembled from t50.mjs's own declarations (K3268) */
+const T50_OPS = Object.freeze([...Object.values(T50_SHARES).flatMap((x) => Object.keys(x.ops)), ...T50_FAMILIES.flatMap((f) => Object.keys(f.ops))]);
+if (T50_OPS.length !== 15) throw new Error(`R73 declares 15 ops, found ${T50_OPS.length}`);
 const T50_BODY = { watchitem: { item: "ITEM-1", on: true }, secondlook: { item: "ITEM-1", note: "n" }, secondlookclear: { item: "ITEM-1", flag: "f" },
                    projectstakeset: { projectId: "PRJ-1", stake: "the lease" }, actionstake: { target: "ACT-1", stake: "the lease" },
                    actioninquiry: { action: "ACT-1", question: "Q-1" } };

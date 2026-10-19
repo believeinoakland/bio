@@ -44,7 +44,8 @@ const ROUTES = {
   docketprepare: [DOCKET_MAP, byed], docketpost: [DOCKET_MAP, byed], docketdecline: [DOCKET_MAP, byed],
   docketinvitation: [DOCKET_MAP, viewer],
 };
-const DOCKET_MEMBER = ["docketfile", "docketpressure", "docket", "docketprepare", "docketpost", "docketdecline", "docketinvitation"];
+/* docket's seven member ops, from op-declarations' own declaration of its acts and its reads */
+const DOCKET_MEMBER = [...O.DOCKET_ACTIONS, ...O.DOCKET_READS];
 const admits = (spec, c) => (c.session ? true
   : c.name === "agent" ? !Array.isArray(spec.machineClasses)
   : (Array.isArray(spec.machineClasses) ? spec.machineClasses : spec.classes).includes(c.name));

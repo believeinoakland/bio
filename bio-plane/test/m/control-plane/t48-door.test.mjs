@@ -7,6 +7,7 @@
    module's declared uses. (`action-replies`, `explore`, `standards` and `filings` are not yet among them, so their maps'
    composition is `plane` R5's test, and here each is driven through the door.) */
 import { test } from "node:test";
+import { T48_SHARES, T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { routesForSessions, callers, ok } from "./door-routes.mjs";
@@ -148,7 +149,10 @@ test("R92 (T48; N1026, N1027, N1029, N1030, N1034, N1035, N1038, N1043; K3203, K
   for (const [op, owner] of Object.entries(OWNERS)) assert.ok(routesOf(owner, {}).includes(op), `${op} is a route of its owner's map`);
   /* the reads' rows say whether a binding class reaches them (op-declarations R67 gives `aiuseovertime` and the acts a
      session only); the machine control is asked of those whose row says `machineClasses: []` */
-  await routesForSessions(["aiuseovertime", "exploregraph", "standardproposals", "filingread", "pressurefor", "planask", "lookedsince"],
+  /* the reads and the acts of the shares t48.mjs gives `ai-use`, `explore`, `standards`, `filings`, `action-holds`, `action-plans`, `membership` */
+  const SHARED = ["ai-use", "explore", "standards", "filings", "action-holds", "action-plans", "membership"].flatMap((k) => Object.keys(T48_SHARES[k].ops));
+  assert.equal(SHARED.length, 7);
+  await routesForSessions(SHARED,
     (op) => (op === "planask" ? { plan: "PLAN-1" } : {}), { refuseMachines: (op) => OPS[op]?.machineClasses?.length === 0 });
   for (const op of ["aiuseovertime", "planask", "lookedsince"]) assert.deepEqual(OPS[op]?.machineClasses, [], `${op}: a session only`);
   /* the acts that name `member` and `viewer` (never the body's): stepsource, stepsourcewithdraw */
@@ -286,10 +290,7 @@ test("R93 (controls; T48): a request that reaches no ask, run, draft or transcri
 /* ================================================================ R94 */
 
 test("R94 (T48; N996; K3101; amends R53, R56, R63, R69): the 24 account ops `op-declarations` R68 moves are each a route of `ai-accounts`' own map (`aiAccountsOps`), and each reaches the store's route of its own name for a member's session with its declared stamps and none from the caller; `groupkeystate` and `accountreferenceset` answer as before with nothing of `credentials` in the fixture", async () => {
-  const MOVED = ["accountreferenceset", "accountreferenceremove", "accountreference", "groupkeyset", "groupkeyremove", "groupkeyswitch",
-    "groupkeystate", "groupkeynotice", "groupkeynoticeseen", "subscriptiondisconnect", "aikeepaway", "aikeepawaystate", "accountusesset",
-    "accountuses", "accounthistory", "projectkeyset", "projectsigninset", "projectaccountremove", "projectaccountswitch",
-    "projectaccountstate", "projectkeynotice", "projectkeynoticeseen", "projectaikeepaway", "projectaikeepawaystate"];
+  const MOVED = Object.keys(T48_FAMILIES.find((f) => f.owner === "ai-accounts").ops);
   assert.equal(new Set(MOVED).size, 24);
   const routes = routesOf(aiAccountsOps, {});
   for (const op of MOVED) {
@@ -349,8 +350,8 @@ test("R95 (T48; K3254): a read of the test-instance fact that throws passes `fal
 /* the owner-ops map is unchanged by T48 (R71, R72): a route of this module's own map is still served */
 test("R90, R91, R92 (T48): this module's own owner-ops map holds none of T48's ops (each is its owner's own arm, R26's pattern)", () => {
   const own = Object.keys(controlPlaneOwnerOps({}, U, null));
-  for (const op of ["actionreplyquoting", "proceedingdates", "readtranslate", "updatenotice", "updatestart", "updatelater", "updateskip",
-                    "aiuseovertime", "exploregraph", "standardproposals", "filingread", "pressurefor", "planask", "stepsource",
-                    "stepsourcewithdraw", "lookedsince"])
+  const T48_OPS = [...Object.values(T48_SHARES).flatMap((x) => Object.keys(x.ops)), ...Object.keys(T48_FAMILIES.find((f) => f.owner === "connections").ops)];
+  assert.equal(T48_OPS.length, 16);
+  for (const op of T48_OPS)
     assert.equal(own.includes(op), false, `${op}: not this module's arm`);
 });

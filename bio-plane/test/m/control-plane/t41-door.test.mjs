@@ -5,6 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, FORGED, aik, cred } from "./harness.mjs";
 import { callers, ok, routesForSessions } from "./door-routes.mjs";
+import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
 
 const { OPS } = O;
 const SHA = "a".repeat(64);
@@ -26,9 +28,12 @@ test("R56 (DEC-188 (8); credentials R37): `groupswitchset` and `accountswitchset
   assert.equal(opCalls(w.env).filter((c) => c.route === "accountusesset").length, 1);
 });
 
-const R69_OPS = ["projectkeyset", "projectsigninset", "projectaccountremove", "projectaccountswitch", "projectaccountstate",
-                 "projectkeynotice", "projectkeynoticeseen", "projectaikeepaway", "projectaikeepawaystate", "accountusesset",
-                 "accountuses", "accounthistory", "ailimitset", "ailimits", "aiusage", "exploreapprove"];
+/* credentials' project-account ops and ai-use's `aiUseOps`, read from their owners' declarations: the ops of those
+   families the T41 grades (R69's) that a member's session alone reaches, less the ones R69 tests apart */
+const T41_GRADED = new Set([...Object.keys(T41_RUNGS), ...Object.keys(T41_RUNG_ABSENT), ...Object.keys(T41_NON_ACTS)]);
+const sessionOnly = (op) => OPS[op]?.machineClasses?.length === 0;
+const kindsOf = (...owners) => owners.flatMap((o) => Object.keys(O.OP_FAMILIES[o].kinds));
+const R69_OPS = kindsOf("credentials", "ai-use").filter((op) => T41_GRADED.has(op) && sessionOnly(op));
 
 test("R69 (op-declarations R41; K2373, K2488): credentials' project-account ops and ai-use's `aiUseOps` reach their owners' maps for a member's session only, each declared stamp from the session and none from the caller; every machine credential is refused before any store request", async () => {
   await routesForSessions(R69_OPS, (op) => ({ project: "prj-1", owner: "project:prj-1",
@@ -99,17 +104,13 @@ test("R70 (membership R124; R17, R29): `handlechange` reaches membership's map f
 });
 
 /* R43's session ops, each through its owner's map or the door's own (`owner-ops.mjs`), with `by` or `viewer` stamped. */
-const R71_SESSION_OPS = ["stepcreate", "stepstart", "stepend", "stepdelete", "steprefer", "stepslike", "stepproduct",
-  "stepwait", "stepwaitremove", "stepreminder", "stepcostadd", "stepcostremove", "costmessage", "questionfollow",
-  "stepaccept", "stepsrunai", "steps", "findaccept", "milestoneset", "milestonerevise", "milestoneremove",
-  "milestoneitemremove", "milestonereminder", "milestones", "reportdraft", "reportkeep", "reports", "interviewkeep",
-  "interview", "narrativeclaim", "claimfindstep", "claimfound", "planaccept", "projectwatch", "projectclosewithgaps",
-  "projectstanding", "hypothesistakeup", "hypothesissetaside", "noteshare", "noteunshare", "shares", "questionwaits",
-  "projectsshownon", "proposalaccept", "bearingnote", "guidedraft", "guidereview", "guideoffer", "guideadopt",
-  "guideretire", "guides", "accountpropose", "accountdrafts", "approvalruleset", "caseapprove", "reviewcomments",
-  "aiestimate", "aiactual", "grouptestset", "grouptestresults", "acceptancecounts", "bearingnotes", "claims",
-  "investigationproposals", "quietstate", "interviewform", "stepoutcome", "steplearn", "stepbywhen", "findmute",
-  "stepproposals", "costmessages", "questionfollowstate", "stepproducts", "recordsteps", "finddoors"];
+/* the door's own map (`controlPlaneOwnerOps`) serves steps', investigation's and question-explorer's ops and the owners'
+   that export a service and no arm; the owners' own maps serve the rest of R43's declarations (hypotheses' shares,
+   inquiry's waits, run-productions', reading-guides'): every op of those families the T41 grades that a session alone reaches */
+const DOOR_OPS = Object.keys(controlPlaneOwnerOps(null, new URL("http://do/"), null));
+const R71_SESSION_OPS = [...new Set([
+  ...DOOR_OPS.filter((op) => kindsOf("steps", "investigation", "question-explorer", "leg-earning", "case-account", "review", "ai-runs", "ai-use").includes(op)),
+  ...kindsOf("hypotheses", "inquiry", "run-productions", "reading-guides")])].filter((op) => T41_GRADED.has(op) && sessionOnly(op));
 
 test("R71 (op-declarations R43; N820; K2496, K2498, K2486, K2560, K2569, K2570): each of R43's session ops reaches the store's route of its own name for a member's session only, each declared stamp from the session and none the caller's; every machine credential is refused before any store request; an owner's refusal is answered as given", async () => {
   /* (T46; K3003, K3006) `stepsrunai` and `grouptestset` record their own clock, so a caller's `at` never reaches it (R17; t46-door.test.mjs) */

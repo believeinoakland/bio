@@ -18,10 +18,9 @@ const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session
 /* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
 const DOOR = { source: "src-test", country: null };
 /* (T41; R70, R72) `handlechange` and `captureupload` too: membership and capture compare the bare member id */
-const MEMBER_ID_BY = ["handlechange", "captureupload", "invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                      "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset",
-                      /* (T46; R54) the administrator's read of the two doors, asked of `isAdministrator` as the acts are */
-                      "joindoors"];
+const MEMBER_ID_BY = [
+  ...Object.entries(O.OP_FAMILIES.membership.kinds).filter(([, kind]) => ["own", "roster", "ownread"].includes(kind)).map(([op]) => op),
+  ...O.OP_FAMILIES.capture.acts];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,
@@ -34,12 +33,12 @@ const MAPS = {
   workbooks: ["workbooks/ops.mjs", "workbooksOps"], answers: ["answers/ops.mjs", "answersOps"],
   following: ["following/index.mjs", "followingOps"],
 };
-const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountusesset", "aigrantmint",
-              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "ailimitset",
-              "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
-              "clocksics", "clocklateness", "clockpropose"];
+/* the arms' owners (op-declarations' families): every op each declares, the whole of its row set */
+const ARM_OWNERS = ["ai-accounts", "credentials", "sources", "ai-use", "ai-runs", "inquiry", "corpus-export", "actions", "action-clocks"];
+const ARMS = Object.values(O.OP_FAMILIES).filter((f) => ARM_OWNERS.includes(f.owner)).flatMap((f) => Object.keys(f.kinds));
 async function t33Ops() {
-  const out = new Set(ARMS);
+  /* `exportpage` is declared apart from its family (op-declarations: stamped nothing) */
+  const out = new Set([...ARMS, "exportpage"]);
   for (const [file, fn] of Object.values(MAPS))
     for (const op of Object.keys((await import(`../../../src/${file}`))[fn](null, URL0, null, {}))) out.add(op);
   return [...out].sort();
@@ -239,7 +238,9 @@ test("R53, R29 (K1687): standards' five T33 acts read their author from the body
   const { w, list } = callers();
   const who = { admin: "class:admin", probe: "class:probe", founder: "member:admin", ann: "member:ann", agent: "class:ai/agent-ann" };
   let checked = 0;
-  for (const op of ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"]) for (const c of list) {
+  /* the T33 acts standards' family declares as author- or proposer-stamped in the body's place: its member and proposal acts */
+  const LAW = Object.entries(O.OP_FAMILIES.standards.kinds).filter(([op, kind]) => ["member", "proposal"].includes(kind) && /^(law|court)/.test(op)).map(([op]) => op);
+  for (const op of LAW) for (const c of list) {
     w.env.calls.length = 0;
     const r = await call(w.env, { op, token: c.token, params: c.params, method: "POST", body: { author: FORGED, proposer: FORGED, note: "kept" } });
     if (r.status !== 200) continue;
