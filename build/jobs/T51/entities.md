@@ -22,7 +22,9 @@
 - `node checks/ownership.mjs /home/user/bio entities tranche/T51 job/T51/entities`: 1 file changed by entities, 0 failures.
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only; no refusal names entities.
 
-Size (session_015aYMNxepX61Evw4qN8aqmA): test runs 4, module lines 2402
+**Re-completion (B3, K3998).** After the merge of `tranche/T51`, `t48.test.mjs` held events' sentence "status as of a date is read of an entity of kind proceeding" (events' `localize('events.index.status_as_of_a_date', …)`) as a test string, which K3986 counts as a copy. That sentence has no words row, and events exports neither it nor its key, so the test cannot take it by equality. The test now passes its own caller sentence through `notAProceeding` and asserts it comes back unchanged, which is what R53 requires (the caller's detail named). Words check for entities: 0 failures; entities tests 131 pass, 0 fail; `checks/run.mjs`: format and architecture 0 failures; ownership 1 file.
+
+Size (session_015aYMNxepX61Evw4qN8aqmA): test runs 5, module lines 2402
 
 ## Completion (T51-30)
 
