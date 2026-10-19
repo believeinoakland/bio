@@ -69,3 +69,7 @@ For BOB (other modules, per R64):
 ## J3 · REPORT
 
 REPORT (SCREENS-DAILY #9). B4 (2c) and (2a) are applied and tested, pushed @ job/T51/screens-daily; suite 161 of 162 green (R44 `placeholder` waits on interface-shell R90). (2b) is not drawn: `<div class="tw">` makes interface-shell's class check refuse every screen at boot (no served stylesheet defines `tw` yet), so all screens-daily tests would be red; I draw it on the CHANGE after interface-assets takes the class. Still waiting on the interface-shell CHANGE (R90 says/here/placeholder, R93, R95), and a kit field that narrows as typed for "Search projects" (today it redraws on `change`).
+
+## J4 · REPORT
+
+REPORT (SCREENS-DAILY #9). B6 applied and tested, pushed @ job/T51/screens-daily; suite 161 of 162 green (R44 `placeholder` waits on interface-shell R90); words 0. Our/their move, the expertise person form and the edition lines (published, draft shared, with comments, draft only) are drawn as the design's rows say. One gap for the design: there is no `screen.home.area.edition.draftonly` sentence for exactly one comment (the `.comments.one` form exists only with a published edition), so a draft on a case with no edition and one comment draws `.edition.draftonly` without the comment. `screen.home.todo.vouch.noplace*` are not read by this module. Still waiting on the interface-shell CHANGE (R90, R93, R95, typed-input hook) and op-declarations (`clocksrunning`).
