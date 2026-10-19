@@ -51,3 +51,7 @@ Size (session_01R5Q8GiUFkdmFTFrNbWpmSr): test runs 7, module lines 3935
 **Tests and checks.** `test/m/promotion/` + `d526-refusal-order`: 150 pass, 0 fail (`m/promotion` alone 149). `system/row-census`: 10 pass, 0 fail (1923 rows, digest as pinned). `checks/words promotion`: 0 failures. `checks/coverage promotion`: no promotion line failing (R59 named). `checks/run`: promotion's only failures are (a). `checks/ownership promotion tranche/T51 job/T51/promotion`: 1 failure, (a).
 
 Size (session_01NQ73uXH2mGnUfNvX2qwAyZ): test runs 12, module lines 3951
+
+## J5 · COMPLETE
+
+CR-5 done: R59 capture_sha (with tests); the 3 words findings converted; civicos-ui census patterns and gate.mjs comments removed; second stamp 1.79.0, 1923 rows, c5885eaf..., system/row-census green; promotion tests 150 pass; words 0. Open for BOB: (a) modules.json promotion tests entry still names row-census-1.78.0.jsonl, now 1.79.0 (format, architecture and ownership each show 1 failure until moved); (b) case-checker program.mjs stale after the stamp (3 tests; regenerate with build-program.mjs); (c) R59's not-yet-met marker is BOB's to clear. Detail in my record.
