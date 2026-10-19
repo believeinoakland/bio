@@ -99,10 +99,10 @@ export function filed(loc, opts, { bytes = `bytes of ${loc}`, existed = false, e
   const o = opts && opts.captureRequest && opts.captureRequest.origin;
   return { status: 200, body: { ok: true, existed, document: {
     file: `snapshots/${s.slice(0, 16)}.bin`, locator: loc, retrieved: "2026-09-28T01:00:00Z",
-    authority_state: "undetermined", authority_basis: "no assertion was supplied",
-    provenance_chain: [{ who: "instance testbed (Civicsmith/9.9.9)", asserts: `these bytes were served for ${loc}`,
-                         evidence: "first-party https fetch, hashed at receipt", bound: false, via: null }],
-    capture: { method: "bio-plane acquire, https fetch, hashed at receipt", grade: "B", actor_class: "daemon",
+    authority_state: "undetermined", authority_basis: "fixture: authority not asserted",
+    provenance_chain: [{ who: "instance testbed (Civicsmith/9.9.9)", asserts: `fixture bytes at ${loc}`,
+                         evidence: "fixture fetch, digested on arrival", bound: false, via: null }],
+    capture: { method: "fixture acquire, digested on arrival", grade: "B", actor_class: "daemon",
                sha256: s, encoding: "binary", bytes: n, content_type: "application/pdf" },
     origin: o && o.matched_sweep ? { kind: "sweep", matched_sweep: o.matched_sweep, deeming_actor: o.deeming_actor ?? null }
                                  : { kind: "named_request" },

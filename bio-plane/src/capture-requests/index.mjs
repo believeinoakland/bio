@@ -259,8 +259,7 @@ export class CaptureRequests {
     if (!runRow && !mine)
       return refusal("CAPTURE_REQUEST_NO_RUN",
         run ? localize("capture-requests.index.no_run_named_run_is", "no run named '{run}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.", { run: String(run.slice(0, 60)) })
-            : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
-              + "(DEC-47), and a request naming no session names no authorisation.",
+            : localize("capture-requests.index.pass_run_the_run_asking", "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation."),
         { run: run || null });
     const notPrincipal = mine ? null : runPrincipalGate({ caller, principal: runRow.principal_plane,
                                                           act: "requesting a capture under a run" });
@@ -285,8 +284,7 @@ export class CaptureRequests {
     try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
     if (!host)
       return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host your team's Civicsmith can read, and the per-host pacing DEC-47 requires is "
-        + "computed from one.", { address });
+        localize("capture-requests.index.no_host_readable", "this address has no host your team's Civicsmith can read, and the per-host pacing DEC-47 requires is computed from one."), { address });
     /* R49 (T35; F2 as Bob ruled it, K1880; K1881's bound): AN ADDRESS THE RECORD ALREADY HOLDS, query and fragment
        included, within 2,048 characters; judged here and again at the drain (R14), before anything is written. */
     /* R56: not asked of a member's own request: R49 guards what a run read (K1880), and she may fetch any public address
@@ -644,7 +642,7 @@ export class CaptureRequests {
     const at = stampInstant("second", nowMs);
     if (!this.configured())
       return { configured: false, actor, at, drained: 0, captured: [], refused: [], held: [], expired: [], remaining: 0,
-               detail: "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it" };
+               detail: localize("capture-requests.index.no_daemon_credential_bound", "no daemon credential is bound: your team's Civicsmith drains nothing and holds no alarm for it") };
     /* R11: NOT RE-ENTRANT. The tick awaits its fetches, and a second tick while one is out would judge the same rows
        and could send the same fetch twice. */
     if (this.#draining)
@@ -670,10 +668,9 @@ export class CaptureRequests {
         const renderRow = q.render === 1;
         const reason = renderHoldReason(q.code);
         const why = String(q.detail || "").slice(0, 400);
-        const said = word("capture-requests.held_request_expired", { check: String(reason.check || "no catalogued check"), code: String(q.code || "(no code: never attempted)"), expires: String(q.expires), why: String(renderRow ? "The render was never performed and nothing was filed for it, so what the page showed "
-                                  + "is UNDETERMINED"
-                                : "Nothing was fetched or filed for it after that, so what the address holds is "
-                                  + "UNDETERMINED"), check_2: String(why ? ` — the reason last given: ${why}` : " — no further detail was carried") });
+        const said = word("capture-requests.held_request_expired", { check: String(reason.check || "no catalogued check"), code: String(q.code || word("capture-requests.code_attempted")), expires: String(q.expires), why: String(renderRow
+                                  ? localize("capture-requests.index.render_never_performed", "The render was never performed and nothing was filed for it, so what the page showed is UNDETERMINED")
+                                  : localize("capture-requests.index.nothing_fetched_after_expiry", "Nothing was fetched or filed for it after that, so what the address holds is UNDETERMINED")), check_2: String(why ? localize("capture-requests.index.reason_last_given", " — the reason last given: {why}", { why: String(why) }) : localize("capture-requests.index.no_further_detail", " — no further detail was carried")) });
         this.#sql.exec(`UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
                        said.slice(0, 600), at, q.request);
         /* A held render is GOVERNED (D-491: every C-83 admission refusal is a fact about US), condition
@@ -945,8 +942,7 @@ export class CaptureRequests {
   async #sweepAdmits(q) {
     const name = String(q.sweep);
     if (!SWEEP_NAME.test(name))
-      return sweepOutOfScope(`'${name.slice(0, 80)}' is not a sweep's name ("<bundle>#<id>"), so no sweep admits this `
-                             + `request`);
+      return sweepOutOfScope(localize("capture-requests.index.not_a_sweep_name", "'{name}' is not a sweep's name (\"<bundle>#<id>\"), so no sweep admits this request", { name: String(name.slice(0, 80)) }));
     const check = this.#sweepScope;
     if (!check)
       return sweepOutOfScope(localize("capture-requests.index.no_scope_check_is_registered", "no scope check is registered in your team's Civicsmith, so nothing can say that {name} is ratified, not held and reaches {address}", { name: String(name), address: String(q.address) }));
@@ -1074,12 +1070,10 @@ export class CaptureRequests {
           "source:", `  locator: ${JSON.stringify(q.address)}`, `  retrieved: ${retrieved}`,
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
-          (q.run ? `The document served at ${q.address}, captured by the daemon at an investigative session's request `
-                 + `under ${q.target}${q.sweep ? `, filed under the sweep ${q.sweep}` : ""}.`
+          (q.run ? localize("capture-requests.index.document_served_run", "The document served at {address}, captured by the daemon at an investigative session's request under {target}{sweep_note}.", { address: String(q.address), target: String(q.target), sweep_note: q.sweep ? localize("capture-requests.index.filed_under_the_sweep", ", filed under the sweep {sweep}", { sweep: String(q.sweep) }) : "" })
                  /* R56: a member's own request, asked for later by her act. */
-                 : `The document served at ${q.address}, captured by the daemon at the request of ${q.principal_plane}`
-                 + `${q.target ? ` under ${q.target}` : ""}.`)
-          + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+                 : localize("capture-requests.index.document_served_member", "The document served at {address}, captured by the daemon at the request of {plane}{target_note}.", { address: String(q.address), plane: String(q.principal_plane), target_note: q.target ? localize("capture-requests.index.under_the_question", " under {target}", { target: String(q.target) }) : "" }))
+          + localize("capture-requests.index.bytes_exactly_as_served", " Its bytes are `{file}`, exactly as served; nothing here summarises them.", { file: String(doc.file) }), "",
           "## Provenance Notes", "",
           word("capture-requests.requested_collected_filed", { statement: String(attribution.statement), requested_at: String(q.requested_at), request: String(q.request), at: String(at) }), "",
           "## Session Log", "",
@@ -1108,7 +1102,7 @@ export class CaptureRequests {
                              detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
       });
     } catch {
-      return { ok: false, detail: "the promotion did not complete and your team's Civicsmith did not record why" };
+      return { ok: false, detail: localize("capture-requests.index.promotion_did_not_complete", "the promotion did not complete and your team's Civicsmith did not record why") };
     }
   }
 
@@ -1705,7 +1699,7 @@ const CAPTURED_FOR_CHUNK = 100;
 const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
 /** R45: what the scope check's `reason` says, in the refusal's words. */
 const SWEEP_REFUSALS = Object.freeze({
-  unknown: "is not a sweep your team's Civicsmith holds", unratified: "is not ratified", held: "is held",
+  unknown: localize("capture-requests.index.is_not_a_sweep_your_team", "is not a sweep your team's Civicsmith holds"), unratified: "is not ratified", held: "is held",
   "out-of-scope": "does not reach this address",
 });
 
