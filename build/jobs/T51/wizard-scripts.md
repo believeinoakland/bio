@@ -67,3 +67,13 @@ REPORT · B2 (CHANGE) applied in commit 63b6c5fb57 on job/T51/wizard-scripts: re
 ## J3 · REPORT
 
 Confirmed: the pin is 20c8001300 (B2, commit 41fedd10b8 on job/T51/wizard-scripts): build-data.mjs and data.mjs, the generated files rewritten, --check green. Waiting on the rows from the UX-DESIGN HANDOFF and the CHANGE that carries them, and on the uses decision for the fixture (J1 item 2).
+
+## J4 · QUESTION
+
+QUESTION · B4 (the 48 rows) is done in commit 629d894a89 on job/T51/wizard-scripts: 46 sentences now read `word(key, vars)` (named placeholders from the row, the row's English wins). Suite 106 pass, 0 fail; format 0; architecture 0 (the fixture's uses edge is clean); coverage 44/44; ownership 0; setup-words --check matches.
+
+One thing I could not do as B4 says: data.mjs:55 "Comment for the group" and data.mjs:59 "Update your group's Civicsmith" (B4 item 1 names them as rows to convert). They are not display text; they are match keys. LIBRARY_ADDED and LIBRARY_RETAKEN look up library entries by name in the vendored files at 3f40899950 and 4664e8efd4, and those files hold the old names ("Comment for the group", "Update your group's Civicsmith"). The rows are the current names ("Comment for the team", "Update your team's Civicsmith"). Converting them made the build fail ("'Comment for the team' is added but the file at 3f40899950 does not hold it"), so I put the literals back. The words check then shows exactly these 2 inline failures in my module.
+
+Options, your ruling:
+(a) Treat them as identifiers (K3971: a string the code compares is an identifier, not a localize sentence), and the words check exempts or accepts them.
+(b) Let me match by the script id instead of the name (WIZ-f06504b9133b8d61 and WIZ-7de505135a9ecd4f; both ids are in the vendored files), so no name literal is needed. This changes adoptedLibrary's matching inside my module. I recommend (b): it removes the name from the code entirely and needs no exemption. I will do it on your word.
