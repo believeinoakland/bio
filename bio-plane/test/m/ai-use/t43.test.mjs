@@ -23,7 +23,7 @@ const differences = (held, file) => Object.entries(held).filter(([k, en]) => typ
 
 test("R13 (T43) every AI_USE_WORDS entry equals its words.json en verbatim, ai.refused.explorenotenabled included; a changed character fails (negative control)", () => {
   assert.deepEqual(differences(AI_USE_WORDS, WORDS), []);
-  assert.equal(AI_USE_WORDS["ai.refused.explorenotenabled"], "Exploring is off on {whose} account. Its owners can switch it on.");
+  assert.equal(AI_USE_WORDS["ai.refused.explorenotenabled"], WORDS["ai.refused.explorenotenabled"]);
   /* every key R13 names is held, so a key words.json lacks fails here */
   const named = ["ai.refused.limit", "ai.refused.limit.overall", "ai.refused.limit.member", "ai.refused.limit.unjudged",
     "ai.refused.limitinvalid", "ai.refused.unitunavailable", "ai.refused.explorenotenabled", "ai.queue.exploreask",

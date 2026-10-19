@@ -326,7 +326,7 @@ export class AiUse {
     try {
       const p = owner === NOT_RECORDED ? { kind: "none", owner: NOT_RECORDED } : parseOwner(owner);
       const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-use.index.detail_nothing_was_counted_2", "{detail} Nothing was counted.", { detail: String(detail) }));
-      if (!p) return bad("the use names no paying account: 'group', 'project:<id>' or 'member:<id>'.");
+      if (!p) return bad(localize("ai-use.index.the_use_names_no_paying", "the use names no paying account: 'group', 'project:<id>' or 'member:<id>'."));
       const id = memberIdOf(member);
       if (!id) return bad("the use names no member whose act it was.");
       if (!USE_KINDS.includes(use)) return bad(`the use '${String(use).slice(0, 40)}' is not a kind of use (${USE_KINDS.join(", ")}).`);
@@ -561,7 +561,7 @@ export class AiUse {
                by = null, at = null } = {}) {
     try {
       const p = parseOwner(owner);
-      if (!p) return this.#invalid("owner", "a limit's owner is 'group', 'project:<id>' or 'member:<id>'.");
+      if (!p) return this.#invalid("owner", localize("ai-use.index.a_limit_s_owner_is", "a limit's owner is 'group', 'project:<id>' or 'member:<id>'."));
       const bar = this.#ownerBar(p, by, "set");
       if (bar) return bar;
       const scopes = ["overall", ...USE_KINDS, ...(p.kind === "member" ? [] : ["per_member"])];
@@ -644,7 +644,7 @@ export class AiUse {
    *  month in the group's zone by default. Writes nothing. */
   aiUsage({ owner = null, viewer = null, month = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "use is read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.use_is_read_for", "use is read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, viewer, "read");
     if (bar) return bar;
     const { day, zone } = this.#dayOf(at);
@@ -803,7 +803,7 @@ export class AiUse {
    *  for that local day (R2's refusals for anyone else). */
   exploreApprove({ owner = null, day = null, by = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "exploring is approved for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.exploring_is_approved_for", "exploring is approved for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, by, "approve exploring on");
     if (bar) return bar;
     if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day.trim()))
@@ -845,7 +845,7 @@ export class AiUse {
    *  only to the account's owners (R2's refusals otherwise). Writes nothing. */
   estimate({ owner = null, use = null, mode = null, count = 1, viewer = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "an estimate is for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.an_estimate_is_for", "an estimate is for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#ownerBar(p, viewer, "read");
     if (bar) return bar;
     if (!USE_KINDS.includes(use)) return this.#invalid("use", localize("ai-use.index.an_estimate_names_a_kind", "an estimate names a kind of use ({USE_KINDS}).", { USE_KINDS: String(USE_KINDS.join(", ")) }));
@@ -882,7 +882,7 @@ export class AiUse {
    *  anyone else is refused as R15 refuses them. Writes nothing. */
   aiLimits({ owner = null, viewer = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "limits are read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.limits_are_read_for", "limits are read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#accountsBar(p, viewer, "reading an account's limits");
     if (bar) return bar;
     try {
@@ -927,7 +927,7 @@ export class AiUse {
    *  `unreadable: true`, never zeros. Writes nothing; never throws. */
   accountUseOverTime({ owner = null, viewer = null, at = null } = {}) {
     const p = parseOwner(owner);
-    if (!p) return this.#invalid("owner", "use over time is read for 'group', 'project:<id>' or 'member:<id>'.");
+    if (!p) return this.#invalid("owner", localize("ai-use.index.use_over_time_is_read_for", "use over time is read for 'group', 'project:<id>' or 'member:<id>'."));
     const bar = this.#accountsBar(p, viewer, "reading an account's use");
     if (bar) return bar;
     try {

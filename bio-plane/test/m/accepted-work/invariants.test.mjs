@@ -36,9 +36,7 @@ test("R6 rows C-21.4 IMPORTED_NOT_ACCEPTED and C-21.5 ACCEPTED_WORK_UNREADABLE a
   assert.equal(accepted.ACCEPTED_WORK_CHECKS, ROWS_FILE, "one table, exported from the module");
   assert.deepEqual(Object.keys(ROWS_FILE).sort(), ["ACCEPTED_WORK_UNREADABLE", "IMPORTED_NOT_ACCEPTED"]);
   assert.equal(ROWS_FILE.IMPORTED_NOT_ACCEPTED.check, "C-21.4");
-  assert.equal(ROWS_FILE.IMPORTED_NOT_ACCEPTED.translation,
-    "This finding rests on another team's finding that this team has not accepted at that edition. Accept that edition "
-    + "first, or take the leg out. Nothing was written.");
+  assert.equal(ROWS_FILE.IMPORTED_NOT_ACCEPTED.translation, word("refusal.IMPORTED_NOT_ACCEPTED"));
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.check, "C-21.5");
   assert.equal(ROWS_FILE.ACCEPTED_WORK_UNREADABLE.translation,
     word("refusal.ACCEPTED_WORK_UNREADABLE"));
