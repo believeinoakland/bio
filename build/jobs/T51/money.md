@@ -44,3 +44,11 @@ Completion record, T51-198 (money, words). Layer 5, re-run R5. Model claude-haik
 **Size (session_01EALiSa4XrZJimPmaSkDTWA)**: test runs 4, module lines 1424
 
 **Note**: one commit message (`6ce8fb314c`) carries a meaningless `Co-Authored-By: none` line I wrote in error; it is on the job branch and I did not rewrite it (the branch carries the merge on top).
+
+## J3 · BLOCKED
+
+NEEDS BOB. Cause: needs Bob.
+
+My permission check refused `git push -u origin job/T51/money`, so the two product commits are local only: `6ce8fb314c` (money: member-facing sentences read through localize and word, T51-198) and the merge `97587a6881` (tranche/T51 merged in). The record commits are on origin (J1 REPORT, J2 COMPLETE, state COMPLETE), so the record is ahead of the code; I have set the state to NEEDS BOB.
+
+Act needed: push the branch from /home/user/bio with `git push -u origin job/T51/money` (or give me the push permission and I push it, then post COMPLETE again). Nothing else is blocked: the money tests pass 72 of 72 and the checks in the COMPLETE record are clean.
