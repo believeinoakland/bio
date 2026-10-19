@@ -29,3 +29,7 @@ R95 amended on tranche/T51 (K4068): `cs.stateChip` also draws `deferred`, `dismi
 ## B3 · CHANGE
 
 CHANGE (K4072), from screens-daily (SCREENS-DAILY #8 J1 (b), confirmed; BOB's detail of R90 and R93, meaning unchanged). A kit choice that redraws its screen (R90) re-runs the screen's `reads` with the choice in page memory before drawing, so a read whose query depends on a choice (Find's browse) can carry `refresh: true` (R93) and is re-read every 45 seconds with the current choice. Test: a choice that changes a read's query re-reads it once, with the new query; control: a choice that changes no read sends no read beyond the redraw's. screens-daily (R54, R55, R93's adopter) and screens-settings (R59's chips, R95) wait on your merge, and op-declarations' merge before it.
+
+## B4 · CHANGE
+
+CHANGE (K4073), from screens-action J2 and screens-publish J2 (confirmed; BOB's details of the kit, meaning unchanged, R90 and the shell's existing services): (1) `cs.sec` and `cs.field` take `help` as one key or a list of keys, each drawn as its own sentence (the design's `.help1/.help2`, `.tip1/.tip2`); (2) `refusalOf(a, own, kit)`: a read's own refusal function is handed the kit (today `outcome` passes null), so a screen draws a read's refusal with its own words; (3) `cs.checks` takes R90's redraw-on-change, as the choice control does. Each with a test and a control. Screens-action, screens-publish, screens-daily and screens-settings wait on your merge.
