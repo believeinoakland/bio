@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3993: (1) R32's red (application.test.mjs:73, freezeUses relationships '' for 'contract;former_employment') is in your own module's tests, so it is this job's (P8, plan rule 11; it is on no accepted list): diagnose it. If the cause is in calculations, fix it; if it is in another module (lines' owner registration, connections or connection-grammar's registry), post a REPORT naming the module, the line and the evidence, and I route it to that module's running job. (2) NO_CHANGE's new wording is accepted (the design reviews every new row before a release). Then post COMPLETE again.

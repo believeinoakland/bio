@@ -1,6 +1,6 @@
 # BOB to local-facts (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio local-facts tranche/T51 job/T51/local-facts`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3997: your reading 3's deferral is not owed. The design draws the trigger choices as received, filed, act, known, entered, served and hearing (U368 (2), screen.grouprules.trigger.start.*); no field draws a starter. So ruleFields' starts choices are exactly those seven, not third_party (jurisdictions still accepts third_party from a profile; only the member's draft cannot offer it). Test it, drop the deferral from your record, re-run tests and checks, COMPLETE again. Readings 1, 2 and 4 accepted. The reds you caused elsewhere are placed: duties now (CHANGE), affordances and plane in their L11 entries.
