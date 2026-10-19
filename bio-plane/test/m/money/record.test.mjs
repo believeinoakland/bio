@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, kinds, phases, stages, bases, precisions }
   from "../../../src/money/index.mjs";
 
@@ -190,7 +191,7 @@ test("R4 the machine writes only from a canonical table row read through a bindi
   assert.equal(ok.ok, true, ok.detail);
   const f = s.m.readFact({ factId: ok.fact_id, viewer: ANN }).fact;
   assert.deepEqual(f.source, { table: "TBL-payments", row: "17", binding: "BND-1", capture_sha: s.cap });
-  assert.match(f.citation, /^row 17 of the table TBL-payments, read from capture [0-9a-f]{64} through the binding BND-1$/);
+  assert.equal(f.citation, word("money.citation", { source_row: "17", source_table: "TBL-payments", source_capture_sha: s.cap, source_binding: "BND-1" }));
   assert.equal(f.grade.reading, "B");
   assert.equal(s.one(`SELECT source_capture_sha FROM money_facts WHERE fact_id=?`, ok.fact_id).source_capture_sha, s.cap);
   assert.equal(machine({ source: { capture_sha: s.cap } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
