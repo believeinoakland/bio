@@ -18,6 +18,7 @@ import { aiAccountsOf, aiAccountsOps } from "../../../src/ai-accounts/index.mjs"
 import { hypothesesOf } from "../../../src/hypotheses/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
+import { translationsOf } from "../../../src/translations/index.mjs";
 import { wizardScriptsOf } from "../../../src/wizard-scripts/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
@@ -108,12 +109,12 @@ test("R50 (T48; N670; DEC-127 (3)): the draft door takes readtranslate for the a
   assert.equal(JSON.stringify(other.body).includes("Bob's private note"), false, "the text of another's note is never shown");
 });
 
-test("R50 (T48; N670): the language is instance-setup's readingLanguage, a language asked passes through and its refusal is answered as given; a passage over the limit is refused before any account is read with the owner's text shown; a malformed subject is BAD_TASK; each posts nothing", async () => {
+test("R50, R67 (T48; N670; K4124): the language is translations' readingLanguage (its R10), a language asked passes through and its refusal is answered as given; a passage over the limit is refused before any account is read with the owner's text shown; a malformed subject is BAD_TASK; each posts nothing", async () => {
   const x = await doors({ language: null });
   const n = hypothesesOf(x.ctx).noteWrite({ text: "Short note.", by: "member:ann" });
   const asked = [];
-  const setup = instanceSetupOf(x.ctx, x.env), real = setup.readingLanguage;
-  setup.readingLanguage = (q) => { asked.push(q); return real.call(setup, q); };
+  const trans = translationsOf(x.ctx), real = trans.readingLanguage;
+  trans.readingLanguage = (q) => { asked.push(q); return real.call(trans, q); };
   const none = await x.draft({ op: "readtranslate", subject: { kind: "note", id: n.note } });
   assert.equal(none.body.reason, "LANGUAGE_NOT_SET", JSON.stringify(none.body));
   assert.equal(none.body.ok, false);
