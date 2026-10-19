@@ -17,8 +17,8 @@ const PULLABLE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-
 export const IMAGE_UNPINNED = "installer.image.unpinned";
 export const IMAGE_UNPULLABLE = "installer.image.unpullable";
 
-/* The reason `why` (one of the two above) said for the part `part`, in the design's words. */
-export const imageSaid = (why, part) => (why === IMAGE_UNPINNED ? word("installer.image.unpinned", { part }) : word("installer.image.unpullable", { part }));
+/* The reason `why` (one of the two above) as the fragment the left-out list shows. */
+export const imageSaid = (why) => (why === IMAGE_UNPINNED ? word("installer.fleet.why.unpinned") : word("installer.fleet.why.unpullable"));
 
 /* null when the image installs; else why not (IMAGE_UNPINNED or IMAGE_UNPULLABLE). */
 export function imageWhy(image) {
