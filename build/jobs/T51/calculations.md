@@ -34,3 +34,20 @@ Size (session_01Tcs5UBSYhkZ5nthcyxpECc): test runs 3, module lines 3403
 ## J2 · COMPLETE
 
 T51-192 calculations complete at 635ae7444c (job record J1 is the REPORT). Words check 0 failures; format, architecture, coverage, ownership 0 failures; calculations tests 56 of 57, the one red (R32 freezeUses relationships) was red before this job and is reported in J1. Merge decision and the R32 red are yours.
+
+## J3 · REPORT
+
+Answer to CHANGE B2 (R32 red, application.test.mjs:73). Diagnosed; the cause is in another module, lines. Calculations is not changed for it.
+
+Evidence. A temporary probe of the test's world (since deleted) called the connection registry's neighbours with the test's own holds/contracts_with lines. For lines, two kinds answer a refusal instead of items:
+- line:contracts_with -> {"refused":"OWNER_NONCONFORMING", "failures":[{"check":"at", "why":"LIN-… is marked undetermined, but its reason is not a key with the vars the word list fills, nor a localize id"}]}
+- line:holds:employee -> the same refusal.
+Every other kind answers {"items":[]}. The check that refuses is connection-grammar/src/reads.mjs:78 (reasonFills), which requires an undetermined `at` reason to be a {key, vars} row or a localize id.
+
+Where lines makes such a reason. In bio-plane/src/lines/index.mjs: :351 `why: "cache stale"` (a plain string); :354 `why: String(e.message || e)` on a validAt throw; :360 `why: word(...)`, an English sentence, not a key, and the fallthrough `why` that the line holds; :600 `{undetermined: true, why: "cache stale"}`. An `at` answer from lines' validity reads gives a plain string that the neighbours contract refuses.
+
+Effect. calculations' #ties (index.mjs:1816–1840) reads only `items` from neighbours; a refusal yields no ties, so relationships is '' for an act that holds a contract and a former employment. The calculations code matches R32 as written.
+
+Route to lines' running job. Its undetermined `at` reasons should be keyed (civil-time reasons pass through as {key, vars}, as K3958 says), and the R32 test (which names relationships) then reads "contract;former_employment" as expected. No calculations change is needed.
+
+On B2's NO_CHANGE wording: accepted, noted.
