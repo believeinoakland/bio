@@ -2530,6 +2530,22 @@
     "text": "Vouched for by the team {}, under this case's own signature.",
     "why": "a signed case-document sentence, pinned per format, so it stays code (B354, CASE-GRAMMAR #18 J3; K1333, K4024)"
    }
+  ],
+  "interface-assets": [
+   {
+    "file": "bio-plane/src/interface-assets/generate.mjs",
+    "line": 114,
+    "text": "   {}'s <style> at {}. Never edited by hand. */\n",
+    "why": "the generated CSS file's header comment; no member reads it (B363, INTERFACE-ASSETS #5)"
+   }
+  ],
+  "store-door": [
+   {
+    "file": "bio-plane/src/store-door/dispatch.mjs",
+    "line": 244,
+    "text": "purge refused: a litigation hold is in place",
+    "why": "the envelope's legacy `error` key, kept byte-identical for civicos-ui (D-278) until T51-126 deletes it; the member reads the localized `detail` (B363, STORE-DOOR #10)"
+   }
   ]
  }
 }

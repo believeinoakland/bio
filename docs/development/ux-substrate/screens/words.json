@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4712,
+  "screen": 4720,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15402,
+  "total": 15410,
   "protected": 933
  },
  "words": [
@@ -57922,6 +57922,62 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)"
+  },
+  {
+   "key": "screen.members.scale.head.admins",
+   "en": "Administrators",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many administrators the team has"
+  },
+  {
+   "key": "screen.members.scale.head.takes",
+   "en": "Votes it takes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: the votes a removal needs at that size"
+  },
+  {
+   "key": "screen.members.scale.head.who",
+   "en": "Who votes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many of the administrators may vote (the one facing removal does not)"
+  },
+  {
+   "key": "screen.members.scale.takes",
+   "en": "{k} of {n}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {k} votes needed out of {n} administrators, e.g. 3 of 4"
+  },
+  {
+   "key": "screen.members.scale.who",
+   "en": "{v} of {n} may vote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {v} of the {n} administrators may vote, e.g. 3 of 4 may vote"
+  },
+  {
+   "key": "screen.members.scale.not_removable",
+   "en": "not removable",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: at this size no administrator can be removed by vote"
+  },
+  {
+   "key": "screen.members.scale.no_majority",
+   "en": "no majority that leaves out the one facing removal can be reached",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: why, at one or two administrators"
+  },
+  {
+   "key": "screen.members.scale.now",
+   "en": "(now)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a mark after the size the team has today"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

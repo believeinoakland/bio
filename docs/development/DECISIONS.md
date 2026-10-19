@@ -5511,3 +5511,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) 29 rows mean the team and get a words.json row under the same id saying "team" (the table wins, K3930), American spelling fixed on the way ("labeled", "organization", "defense", "catalog"): the 28 `skills.skilldoctrine.*` rows in the team sense (the team's own writing, choices, record and language, "from team to team", "members or teams") and `case-grammar.casefile.group` ("the source team is named by its slug"). (2) 40 rows keep "group" in another sense and join `GROUP_SENSE` in `build_words.mjs`: a grouping of reasons or legs (inquiry 5, strength 12, calc-grammar, calculations, case-authoring's axis group), regular-expression groups (link-sweep 8, court-citations), SQL `GROUP BY` (query-language), the owner token or parameter `group` (ai-use 7, strength's `&group=`, promotion's `group:` line), a kind of organization ("a civic group by role": action-grammar, `skills.skilldoctrine.an_action_is_addressed_to`) and the verb ("groups by the address": `skills.skilldoctrine.the_count_a_run_publishes`). R17's rule run over the tranche's rows with these words leaves only journey-check's own two.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/build_words.mjs`.
 owed: nothing.
+
+### DEC-356 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's QUESTION B363, items 2 to 4; L11)
+for: design
+question: Words for the members screen's administrator-removal scale table; two strings no member reads.
+why it is Bob's: it is not (P17): the design's words and lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (2) `screen.members.scale.head.admins` ("Administrators"), `.head.takes` ("Votes it takes"), `.head.who` ("Who votes"), `.takes` ("{k} of {n}"), `.who` ("{v} of {n} may vote"), `.not_removable` ("not removable"), `.no_majority` ("no majority that leaves out the one facing removal can be reached"), `.now` ("(now)"), each with a translator's note, as drawn. (3) interface-assets' `generate.mjs`:114 (the generated CSS file's header comment) and (4) store-door's `dispatch.mjs`:244 on tranche/T51 (the legacy `error` key, byte-identical for civicos-ui until T51-126) go on their modules' unkeyed lists. Item 1 (the rule-drafting form) is DEC-357.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-handoffs.json`, `screens/words-reads.json`.
+owed: nothing.

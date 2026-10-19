@@ -4346,6 +4346,16 @@ W.append(dict(key='skills.skilldoctrine.what_the_group_sends_is', en='What the t
 W.append(dict(key='skills.skilldoctrine.wherever_a_member_writes_in', en='Wherever a member writes in their own words, the assistant, when reachable, offers "Help me write this": it works only from what the member tells it and what the team holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labeled "Draft · the assistant\'s, asked by <handle>", saved only when the member keeps them.', protected=False, note='DEC-355: B362, reviewed from code (K3930, K4066): "group" for the team written as "team"; American spelling (DEC-221)'))
 W.append(dict(key='skills.skilldoctrine.with_the_members_suggestions_switch', en="With the member's suggestions switch off it works only from what the member typed; with it on it may also draw on what the team holds (rule 7).", protected=False, note='DEC-355: B362, reviewed from code (K3930, K4066): "group" for the team written as "team"; American spelling (DEC-221)'))
 
+# DEC-356: B363 Q2: the administrator-removal scale table
+W.append(dict(key='screen.members.scale.head.admins', en='Administrators', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many administrators the team has'))
+W.append(dict(key='screen.members.scale.head.takes', en='Votes it takes', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: the votes a removal needs at that size'))
+W.append(dict(key='screen.members.scale.head.who', en='Who votes', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many of the administrators may vote (the one facing removal does not)'))
+W.append(dict(key='screen.members.scale.takes', en='{k} of {n}', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {k} votes needed out of {n} administrators, e.g. 3 of 4'))
+W.append(dict(key='screen.members.scale.who', en='{v} of {n} may vote', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: {v} of the {n} administrators may vote, e.g. 3 of 4 may vote'))
+W.append(dict(key='screen.members.scale.not_removable', en='not removable', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: at this size no administrator can be removed by vote'))
+W.append(dict(key='screen.members.scale.no_majority', en='no majority that leaves out the one facing removal can be reached', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a cell: why, at one or two administrators'))
+W.append(dict(key='screen.members.scale.now', en='(now)', protected=False, note='DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: a mark after the size the team has today'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
