@@ -310,7 +310,7 @@ export class AiAccounts {
   #usesOwner(owner, by) {
     const said = (v) => (typeof v === "boolean" ? (v ? "on" : "off") : String(v));
     if (owner === "group") {
-      const bar = this.#adminBar(by, "switching the team key's assistant settings");
+      const bar = this.#adminBar(by, localize("ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings"));
       return bar ? { refusal: bar } : { table: "group_key", where: "id=1", args: [],
         ensure: () => this.sql.exec(`INSERT INTO group_key (id) VALUES (1) ON CONFLICT(id) DO NOTHING`),
         act: (n, v) => this.#groupKeyAct(`switch:${n}`, said(v), by) };
@@ -582,7 +582,7 @@ export class AiAccounts {
   /* R15, R16: the owners of the account `owner` names are those R14 lets set its switches; anyone else is refused as
      R14 refuses them. Null when `viewer` is one of them. */
   #ownerBar(owner, viewer) {
-    if (owner === "group") return this.#adminBar(viewer, "reading the team key's assistant settings");
+    if (owner === "group") return this.#adminBar(viewer, localize("ai-accounts.index.reading_the_team_keys_assistant", "reading the team key's assistant settings"));
     if (typeof owner === "string" && owner.startsWith("project:"))
       return this.#projectOwnerBar(owner.slice(8), viewer, "reading a project's assistant settings");
     if (typeof owner === "string" && owner.startsWith("member:")) return this.#accountBar(owner, viewer);
@@ -1166,7 +1166,7 @@ export class AiAccounts {
     /* DEC-49 REGION is-keep-away-reason */
     if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
         && typeof reason !== "string"))
-      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", localize("ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", { min: String(KEEP_AWAY_REASON.min), max: String(KEEP_AWAY_REASON.max), v1: String(given ? `; this one has ${length}` : "") }));
+      return AiAccounts.#row(AI_ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", localize("ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", { min: String(KEEP_AWAY_REASON.min), max: String(KEEP_AWAY_REASON.max), v1: String(given ? localize("ai-accounts.index.this_one_has", "; this one has {length}", { length: String(length) }) : "") }));
     /* END DEC-49 REGION is-keep-away-reason */
     return null;
   }
@@ -1175,7 +1175,7 @@ export class AiAccounts {
      blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. (T40; R22) It
      takes `uses`, the kinds of use the limit covers (all when absent). */
   aiKeepAwaySet({ on = false, uses = null, reason = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "keeping the team's material away from every assistant");
+    const bar = this.#adminBar(by, localize("ai-accounts.index.keeping_the_teams_material_away", "keeping the team's material away from every assistant"));
     if (bar) return bar;
     const turnOn = on === true;
     const noReason = AiAccounts.#keepAwayReason(turnOn, reason);

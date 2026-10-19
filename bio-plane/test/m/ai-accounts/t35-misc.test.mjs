@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { AI_ACCOUNT_CHECKS, AI_ACCOUNTS_TABLES, AiAccounts, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const SHA = (c) => c.repeat(64);
@@ -137,9 +138,8 @@ test("R30 (credentials R48's share): the account sweep rows (DEC-149): each memb
   /* C-29.22 and its detail */
   const bare = await world({ sealSecret: null }).group("ann");
   const unsealed = await bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk", by: "ann" });
-  has(unsealed.translation, "Your team's Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has changed.");
-  has(unsealed.translation, "Ask whoever hosts your team's Civicsmith to set it.");
-  has(unsealed.detail, "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
+  assert.equal(unsealed.translation, word("refusal.ACCOUNT_SEAL_UNAVAILABLE"));
+  assert.equal(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
   /* the unknown kind's detail */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
@@ -150,10 +150,10 @@ test("R30 (credentials R48's share): the account sweep rows (DEC-149): each memb
   w.c.groupKeyNoticeSeen({ member: "dee", by: "dee" });
   const other = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: `${SEAL}-changed` });
   has((await other.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).detail,
-    "the reference does not open under the seal secret of your team's Civicsmith, which has changed");
+    localize("ai-accounts.index.the_reference_does_not_open", "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used."));
   w.c.groupKeyNoticeSeen({ member: "second", by: "second" });
   has((await other.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).detail,
-    "the team's key does not open under the seal secret of your team's Civicsmith, which has changed");
+    localize("ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used."));
 });
 
 test("R30 (credentials R48's share; T36's R7 and R20 included): no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
