@@ -466,7 +466,9 @@ function render(cs, view) {
   const originalCard = (() => {
     const rv = reading.state === "ok" && reading.value ? reading.value : null;
     if (!rv || !Number.isInteger(rv.bytes)) return "";
-    const named = rv.reading && typeof rv.reading.text_container === "string" ? rv.reading.text_container.trim() : "";
+    /* R83 (CR-19; K4127): the capture format `extraction` states (R78) names the kind; the reading's own `text_container` only when none is stated */
+    const stated = typeof rv.format === "string" ? rv.format.trim() : "";
+    const named = stated || (rv.reading && typeof rv.reading.text_container === "string" ? rv.reading.text_container.trim() : "");
     const id0 = named || (/^text\/plain\b/.test(String(rv.content_type || "")) ? "text" : "");
     const kind = view.parts.kinds.includes(id0) ? id0 : "undetermined";
     const n = rv.bytes;
