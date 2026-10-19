@@ -18324,406 +18324,406 @@
       "en": "a member changes their own password from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 393
+      "line": 405
     },
     {
       "id": "credentials.index.a_member_registers_their",
       "en": "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 881
+      "line": 893
     },
     {
       "id": "credentials.index.a_member_scoped_credential",
       "en": "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1038
+      "line": 1050
     },
     {
       "id": "credentials.index.a_reset_link_is_made",
       "en": "a reset link is made only for an active member of the team. Nothing was made.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1842
+      "line": 1854
     },
     {
       "id": "credentials.index.a_run_in_a_project",
       "en": "a run in a project",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1263
+      "line": 1275
     },
     {
       "id": "credentials.index.a_runs_credential_holds",
       "en": "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1249
+      "line": 1261
     },
     {
       "id": "credentials.index.a_runs_credential_is",
       "en": "a run's credential is minted only for an active member's own run. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1204
+      "line": 1216
     },
     {
       "id": "credentials.index.a_runs_credential_names",
       "en": "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1246
+      "line": 1258
     },
     {
       "id": "credentials.index.a_runs_credential_names_the",
       "en": "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1248
+      "line": 1260
     },
     {
       "id": "credentials.index.a_standing_question_runs",
       "en": "a standing question runs only for an active member. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1391
+      "line": 1403
     },
     {
       "id": "credentials.index.an_asks_grant_admits",
       "en": "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1455
+      "line": 1467
     },
     {
       "id": "credentials.index.an_asks_grant_is",
       "en": "an ask's grant is minted only under the member's own live session. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1369
+      "line": 1381
     },
     {
       "id": "credentials.index.empty_nothing_was",
       "en": "{empty}. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1941
+      "line": 1953
     },
     {
       "id": "credentials.index.expected_the_base64_field",
       "en": "expected the base64 field of an ssh-ed25519 public key",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 845
+      "line": 857
     },
     {
       "id": "credentials.index.expiresindays_is_a",
       "en": "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1066
+      "line": 1078
     },
     {
       "id": "credentials.index.from_is_before_the",
       "en": "from is before the counts kept, which go back {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1570
+      "line": 1582
     },
     {
       "id": "credentials.index.from_is_not_an",
       "en": "from is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1564
+      "line": 1576
     },
     {
       "id": "credentials.index.from_is_not_before",
       "en": "from is not before to",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1566
+      "line": 1578
     },
     {
       "id": "credentials.index.id_already_names_a_credential",
       "en": "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1055
+      "line": 1067
     },
     {
       "id": "credentials.index.memberid_has_not_enrolled_status",
       "en": "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 824
+      "line": 836
     },
     {
       "id": "credentials.index.memberid_is_on_the",
       "en": "{memberId} is on the roster with status '{status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 826
+      "line": 838
     },
     {
       "id": "credentials.index.minted_by_your_teams_civicsmith",
       "en": "minted by your team's Civicsmith for one segment of your run",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1230
+      "line": 1242
     },
     {
       "id": "credentials.index.no_credential_in_your_teams",
       "en": "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1113
+      "line": 1125
     },
     {
       "id": "credentials.index.no_digest_of_the",
       "en": "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1074
+      "line": 1086
     },
     {
       "id": "credentials.index.no_live_grant_answers",
       "en": "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1442
+      "line": 1454
     },
     {
       "id": "credentials.index.no_live_session_answers",
       "en": "no live session answers to this token: it ended, it expired, or it never existed. Nothing was ended.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 632
+      "line": 644
     },
     {
       "id": "credentials.index.no_member_is_named",
       "en": "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1030
+      "line": 1042
     },
     {
       "id": "credentials.index.no_member_is_named_2",
       "en": "no member is named on this act, and a withdrawal nobody authored is not one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1107
+      "line": 1119
     },
     {
       "id": "credentials.index.no_password_was_set",
       "en": "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1767
+      "line": 1779
     },
     {
       "id": "credentials.index.no_standing_question_was",
       "en": "no standing question was named. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1401
+      "line": 1413
     },
     {
       "id": "credentials.index.pass_an_identity",
       "en": "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1056
+      "line": 1068
     },
     {
       "id": "credentials.index.period_refused_detail",
       "en": "{what}. {rule} Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1580
+      "line": 1592
     },
     {
       "id": "credentials.index.principalkind_was",
       "en": "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1050
+      "line": 1062
     },
     {
       "id": "credentials.index.recovery_codes_are_issued",
       "en": "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1739
+      "line": 1751
     },
     {
       "id": "credentials.index.registered_to_you_and",
       "en": "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 915
+      "line": 927
     },
     {
       "id": "credentials.index.setting_the_teams_key",
       "en": "setting the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1929
+      "line": 1941
     },
     {
       "id": "credentials.index.sign_in_refused",
       "en": "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 454
+      "line": 466
     },
     {
       "id": "credentials.index.standing_questions_are_off",
       "en": "standing questions are off for the {who}, which would serve this one. Nothing was minted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1398
+      "line": 1410
     },
     {
       "id": "credentials.index.string_is_a_machine_identity",
       "en": "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1029
+      "line": 1041
     },
     {
       "id": "credentials.index.string_is_a_machine_identity_2",
       "en": "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1106
+      "line": 1118
     },
     {
       "id": "credentials.index.switching_the_teams_key",
       "en": "switching the team's key for an outside service",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1956
+      "line": 1968
     },
     {
       "id": "credentials.index.the_current_password_given",
       "en": "the current password given does not derive the hash stored for this account, so the password was not changed. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 411
+      "line": 423
     },
     {
       "id": "credentials.index.the_keyed_services_are",
       "en": "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1898
+      "line": 1910
     },
     {
       "id": "credentials.index.the_kinds_counted_are",
       "en": "the kinds counted are {kinds}. Nothing was counted.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1539
+      "line": 1551
     },
     {
       "id": "credentials.index.the_period_is_from",
       "en": "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1631
+      "line": 1643
     },
     {
       "id": "credentials.index.the_period_is_from_2",
       "en": "The period is from an earlier instant to a later one.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1687
+      "line": 1699
     },
     {
       "id": "credentials.index.the_period_is_longer",
       "en": "the period is longer than {days} days",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1568
+      "line": 1580
     },
     {
       "id": "credentials.index.the_security_counts_could",
       "en": "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1700
+      "line": 1712
     },
     {
       "id": "credentials.index.the_teams_key_for",
       "en": "the team's key for this service is off or not held; the caller goes on without it.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1984
+      "line": 1996
     },
     {
       "id": "credentials.index.this_act_asks_for",
       "en": "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 624
+      "line": 636
     },
     {
       "id": "credentials.index.this_key_is_already",
       "en": "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 914
+      "line": 926
     },
     {
       "id": "credentials.index.this_key_is_registered",
       "en": "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 893
+      "line": 905
     },
     {
       "id": "credentials.index.this_key_of_yours",
       "en": "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 901
+      "line": 913
     },
     {
       "id": "credentials.index.this_reset_link_does",
       "en": "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1831
+      "line": 1843
     },
     {
       "id": "credentials.index.this_session_is_locked",
       "en": "this session is locked after a while without use: only unlocking it with the password, or signing out, is served. Nothing was changed.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 576
+      "line": 588
     },
     {
       "id": "credentials.index.to_is_after_the",
       "en": "to is after the present hour",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1571
+      "line": 1583
     },
     {
       "id": "credentials.index.to_is_not_an",
       "en": "to is not an instant",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 1565
+      "line": 1577
     },
     {
       "id": "credentials.index.too_many_attempts_were",
       "en": "too many attempts were refused recently, so this one was not judged: no password, code or claim was checked and nothing changed. Try again later.",
       "module": "credentials",
       "file": "bio-plane/src/credentials/index.mjs",
-      "line": 710
+      "line": 722
     },
     {
       "id": "doc-clean.images.a_malformed_referred_to_count",
@@ -23000,84 +23000,84 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1370
+      "line": 1377
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1570
+      "line": 1577
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1739
+      "line": 1746
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1279
+      "line": 1286
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1374
+      "line": 1381
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 981
+      "line": 987
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1360
+      "line": 1367
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1565
+      "line": 1572
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
       "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1483
+      "line": 1490
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1576
+      "line": 1583
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1379
+      "line": 1386
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1581
+      "line": 1588
     },
     {
       "id": "file-safety.index.a_safe_view_is_made",
@@ -23199,578 +23199,830 @@
       "line": 751
     },
     {
+      "id": "file-scanner.catalogue.any_https_endpoint_taking_a_json",
+      "en": "any HTTPS endpoint taking a JSON POST",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 258
+    },
+    {
+      "id": "file-scanner.catalogue.any_icap_server_rfc_3507",
+      "en": "any ICAP server (RFC 3507)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 104
+    },
+    {
+      "id": "file-scanner.catalogue.any_syslog_collector_rfc_5424",
+      "en": "any syslog collector (RFC 5424 over TLS)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 252
+    },
+    {
       "id": "file-scanner.catalogue.azure_storage_account_name",
       "en": "Azure storage account name",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 111
+      "line": 116
     },
     {
       "id": "file-scanner.catalogue.blob_container_the_files_are",
       "en": "Blob container the files are scanned in",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 112
+      "line": 117
     },
     {
       "id": "file-scanner.catalogue.cloud_not_stored_in_private",
       "en": "Cloud: not stored in private mode; the sanitized copy deleted after 24 hours",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 131
+      "line": 136
     },
     {
       "id": "file-scanner.catalogue.cloud_scan_results_remain_limited",
       "en": "Cloud: scan results remain, limited to the submitter",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 132
+      "line": 137
+    },
+    {
+      "id": "file-scanner.catalogue.cloudflare_account_id",
+      "en": "Cloudflare account ID",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 201
     },
     {
       "id": "file-scanner.catalogue.cloudflare_inc_the_teams_own",
       "en": "Cloudflare, Inc. (the team's own account)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 198
+      "line": 203
+    },
+    {
+      "id": "file-scanner.catalogue.cloudflare_intel_cloudflares_network",
+      "en": "Cloudflare's network",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 203
     },
     {
       "id": "file-scanner.catalogue.cloudflare_intel_the_teams_own",
       "en": "the team's own Cloudflare account, a token with Intel Read",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 200
+      "line": 205
     },
     {
       "id": "file-scanner.catalogue.connect_over_tls_yes_or",
       "en": "Connect over TLS: yes or no (default no)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 103
+      "line": 108
     },
     {
       "id": "file-scanner.catalogue.data_collection_endpoint_host",
       "en": "Data collection endpoint host",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 222
+      "line": 227
     },
     {
       "id": "file-scanner.catalogue.data_collection_rule_immutable_id",
       "en": "Data collection rule immutable ID",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 223
+      "line": 228
     },
     {
       "id": "file-scanner.catalogue.deep_cdr_metadefender_cloud_or",
       "en": "Deep CDR (MetaDefender Cloud or Core)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 123
+      "line": 128
     },
     {
       "id": "file-scanner.catalogue.deep_cdr_not_stated_cloud",
       "en": "not stated (Cloud); the organization's own servers (Core)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 130
+      "line": 135
+    },
+    {
+      "id": "file-scanner.catalogue.deep_cdr_opswat_inc_cloud_or",
+      "en": "OPSWAT, Inc. (Cloud), or the organization's own Core server",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 134
     },
     {
       "id": "file-scanner.catalogue.defender_storage_the_blobs_index",
       "en": "the blob's index tag, deleted with it; alerts as the organization's Defender for Cloud keeps them",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 116
+      "line": 121
     },
     {
       "id": "file-scanner.catalogue.defender_storage_the_organizations_own",
       "en": "the organization's own Azure subscription, billed per GB scanned",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 118
+      "line": 123
     },
     {
       "id": "file-scanner.catalogue.defender_storage_the_service_does",
       "en": "the service does not retain the scanned content; this adapter deletes the blob after the result",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 115
+      "line": 120
     },
     {
       "id": "file-scanner.catalogue.defender_storage_the_storage_accounts",
       "en": "the storage account's region; content read within it",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 114
+      "line": 119
     },
     {
       "id": "file-scanner.catalogue.elastic_as_the_organization",
       "en": "as the organization keeps its logs",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 245
+      "line": 250
     },
     {
       "id": "file-scanner.catalogue.elastic_the_organizations_own",
       "en": "the organization's own Elastic deployment",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 244
+      "line": 249
+    },
+    {
+      "id": "file-scanner.catalogue.elastic_the_organizations_own_deployment",
+      "en": "the organization's own deployment",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 251
     },
     {
       "id": "file-scanner.catalogue.elasticsearch_address_host_or_host",
       "en": "Elasticsearch address (host, or host:port)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 242
+      "line": 247
     },
     {
       "id": "file-scanner.catalogue.endpoint_address_host_or_host",
       "en": "Endpoint address (host, or host:port)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 256
+      "line": 261
     },
     {
       "id": "file-scanner.catalogue.falcon_sandbox_community_access_off",
       "en": "community access off: every upload confidential",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 170
+      "line": 175
     },
     {
       "id": "file-scanner.catalogue.falcon_sandbox_falcon_intelligence",
       "en": "Falcon Sandbox (Falcon Intelligence)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 163
+      "line": 168
+    },
+    {
+      "id": "file-scanner.catalogue.falcon_sandbox_get_settings_before_each",
+      "en": "GET /falconx/entities/settings/v1 before each send: community access is off for the API client",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 176
     },
     {
       "id": "file-scanner.catalogue.falcon_sandbox_kept_in_the",
       "en": "kept in the Falcon platform",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 173
+      "line": 178
     },
     {
       "id": "file-scanner.catalogue.falcon_sandbox_stored_in_the",
       "en": "stored in the Falcon platform; period not stated",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 173
+      "line": 178
+    },
+    {
+      "id": "file-scanner.catalogue.falcon_sandbox_the_falcon_cloud_chosen",
+      "en": "the Falcon cloud chosen",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 177
     },
     {
       "id": "file-scanner.catalogue.falcon_sandbox_with_the_organizations",
       "en": "with the organization's Falcon subscription",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 175
+      "line": 180
     },
     {
       "id": "file-scanner.catalogue.glasswall_an_entitlement_to",
       "en": "an entitlement to a number of files or a volume a day",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 142
+      "line": 147
     },
     {
       "id": "file-scanner.catalogue.glasswall_halo_api_address_host",
       "en": "Glasswall Halo API address (host, or host:port)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 138
+      "line": 143
     },
     {
       "id": "file-scanner.catalogue.glasswall_removed_according_to",
       "en": "removed according to the deployment's file retention policy",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 140
+      "line": 145
     },
     {
       "id": "file-scanner.catalogue.glasswall_the_analysis_report",
       "en": "the analysis report, as the deployment keeps it",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 141
+      "line": 146
     },
     {
       "id": "file-scanner.catalogue.glasswall_the_halo_deployment",
       "en": "the Glasswall Halo deployment the organization runs or subscribes to",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 139
+      "line": 144
+    },
+    {
+      "id": "file-scanner.catalogue.glasswall_where_that_deployment_runs",
+      "en": "where that deployment runs",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 145
     },
     {
       "id": "file-scanner.catalogue.google_cloud_project_id",
       "en": "Google Cloud project ID",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 234
+      "line": 239
     },
     {
       "id": "file-scanner.catalogue.google_llc_the_organizations_own",
       "en": "Google LLC (the organization's own instance)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 236
+      "line": 241
     },
     {
       "id": "file-scanner.catalogue.google_secops_as_the_instance",
       "en": "as the instance keeps its logs",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 237
+      "line": 242
+    },
+    {
+      "id": "file-scanner.catalogue.google_secops_the_instances_region",
+      "en": "the instance's region",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 241
+    },
+    {
+      "id": "file-scanner.catalogue.google_secops_the_organizations_own_instance",
+      "en": "the organization's own instance",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 243
     },
     {
       "id": "file-scanner.catalogue.google_security_operations_importlogs",
       "en": "Google Security Operations (ImportLogs)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 228
+      "line": 233
     },
     {
       "id": "file-scanner.catalogue.google_web_risk_no_file",
       "en": "no file is sent; the server sees only a hash prefix on a local match",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 207
+      "line": 212
     },
     {
       "id": "file-scanner.catalogue.google_web_risk_the_organizations_own",
       "en": "the organization's own Google Cloud project; results must not be redistributed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 209
+      "line": 214
+    },
+    {
+      "id": "file-scanner.catalogue.https_webhook_the_organizations_own_endpoint",
+      "en": "the organization's own endpoint",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 264
+    },
+    {
+      "id": "file-scanner.catalogue.icap_server_address_host_or_host",
+      "en": "ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 106
+    },
+    {
+      "id": "file-scanner.catalogue.icap_service_name_default_avscan",
+      "en": "ICAP service name (default avscan)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 107
     },
     {
       "id": "file-scanner.catalogue.icap_the_organizations_own_server",
       "en": "the organization's own server and licence",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 106
+      "line": 111
     },
     {
       "id": "file-scanner.catalogue.index_the_counts_are_written",
       "en": "Index the counts are written to (default civicsmith-security-counts)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 243
+      "line": 248
+    },
+    {
+      "id": "file-scanner.catalogue.instance_customer_id",
+      "en": "Instance (customer) ID",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 240
+    },
+    {
+      "id": "file-scanner.catalogue.instance_location",
+      "en": "Instance location",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 239
     },
     {
       "id": "file-scanner.catalogue.intelix_clean_files_up_to",
       "en": "clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 58
+      "line": 63
     },
     {
       "id": "file-scanner.catalogue.intelix_metadata_up_to_6",
       "en": "metadata up to 6 months for research",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 59
+      "line": 64
     },
     {
       "id": "file-scanner.catalogue.intelix_the_organizations_own",
       "en": "the organization's own Intelix account (free monthly allowance, then pay as you go)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 60
+      "line": 65
     },
     {
       "id": "file-scanner.catalogue.intelix_the_region_chosen",
       "en": "the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 57
+      "line": 62
     },
     {
       "id": "file-scanner.catalogue.joe_sandbox_an_edition_of",
       "en": "an edition of Light or above, whose analyses and results are private",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 149
+      "line": 154
     },
     {
       "id": "file-scanner.catalogue.joe_sandbox_cloud_light_and",
       "en": "Joe Sandbox Cloud (Light and above)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 145
+      "line": 150
     },
     {
       "id": "file-scanner.catalogue.joe_sandbox_kept_until_the",
       "en": "kept until the customer deletes it; then securely deleted in near real time",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 152
+      "line": 157
     },
     {
       "id": "file-scanner.catalogue.joe_sandbox_kept_until_the_2",
       "en": "kept until the customer deletes it",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 153
+      "line": 158
+    },
+    {
+      "id": "file-scanner.catalogue.joe_sandbox_post_account_info_before_each",
+      "en": "POST /api/v2/account/info before each send: the account is not of the Basic edition",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 155
     },
     {
       "id": "file-scanner.catalogue.joe_sandbox_the_organizations_own",
       "en": "the organization's own Light, Pro or Enterprise subscription",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 154
+      "line": 159
     },
     {
       "id": "file-scanner.catalogue.log_type_the_counts_are",
       "en": "Log type the counts are imported as",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 235
+      "line": 240
     },
     {
       "id": "file-scanner.catalogue.metadefender_cloud_file_not",
       "en": "private mode: not stored or shared; permanently removed from storage",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 86
+      "line": 91
     },
     {
       "id": "file-scanner.catalogue.metadefender_cloud_private_mode",
       "en": "MetaDefender Cloud (private mode)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 81
+      "line": 86
     },
     {
       "id": "file-scanner.catalogue.metadefender_cloud_scan_results",
       "en": "scan results remain in the MetaDefender Cloud database, limited to the submitter",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 87
+      "line": 92
+    },
+    {
+      "id": "file-scanner.catalogue.metadefender_cloud_the_organizations_own_paid",
+      "en": "the organization's own paid licence; \"solely for Your internal use\" (OPSWAT's written yes needed for product use)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 94
     },
     {
       "id": "file-scanner.catalogue.metadefender_core_as_the_organization",
       "en": "as the organization configures its server",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 96
+      "line": 101
     },
     {
       "id": "file-scanner.catalogue.metadefender_core_as_the_organization_2",
       "en": "as the organization configures its server",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 97
+      "line": 102
     },
     {
       "id": "file-scanner.catalogue.metadefender_core_server_address_host",
       "en": "MetaDefender Core server address (host, or host:port)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 94
+      "line": 99
     },
     {
       "id": "file-scanner.catalogue.metadefender_core_server_address_host_2",
       "en": "MetaDefender Core server address (host, or host:port; Core only)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 127
+      "line": 132
     },
     {
       "id": "file-scanner.catalogue.metadefender_core_the_organizations_own",
       "en": "the organization's own MetaDefender Core server",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 95
+      "line": 100
+    },
+    {
+      "id": "file-scanner.catalogue.metadefender_core_the_organizations_own_servers",
+      "en": "the organization's own servers",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 101
+    },
+    {
+      "id": "file-scanner.catalogue.metadefender_get_v4_apikey_before_each",
+      "en": "GET /v4/apikey/ before each send: the key's licence is paid and private processing is on",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 53
     },
     {
       "id": "file-scanner.catalogue.microsoft_defender_for_storage",
       "en": "Microsoft Defender for Storage",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 107
+      "line": 112
     },
     {
       "id": "file-scanner.catalogue.microsoft_entra_tenant_id",
       "en": "Microsoft Entra tenant ID",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 36
+      "line": 41
     },
     {
       "id": "file-scanner.catalogue.microsoft_sentinel_logs_ingestion_api",
       "en": "Microsoft Sentinel (Logs Ingestion API)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 219
+      "line": 224
     },
     {
       "id": "file-scanner.catalogue.microsoft_the_organizations_own_azure",
       "en": "Microsoft (the organization's own Azure storage account)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 113
+      "line": 118
     },
     {
       "id": "file-scanner.catalogue.microsoft_the_organizations_own_workspace",
       "en": "Microsoft (the organization's own workspace)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 224
+      "line": 229
+    },
+    {
+      "id": "file-scanner.catalogue.no_file_is_sent",
+      "en": "no file is sent",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 15
     },
     {
       "id": "file-scanner.catalogue.palo_alto_networks_inc",
       "en": "Palo Alto Networks, Inc.",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 177
+      "line": 182
     },
     {
       "id": "file-scanner.catalogue.palo_alto_networks_inc_2",
       "en": "Palo Alto Networks, Inc.",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 185
+      "line": 190
     },
     {
       "id": "file-scanner.catalogue.path_on_the_endpoint_default",
       "en": "Path on the endpoint (default /)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 256
+      "line": 261
     },
     {
       "id": "file-scanner.catalogue.private_mode_samplesharing_0",
       "en": "private mode: samplesharing 0 and private processing on every call (paid licence only)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 46
+      "line": 51
     },
     {
       "id": "file-scanner.catalogue.region_one_of_keys",
       "en": "Region: one of {keys}",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 17
+      "line": 22
+    },
+    {
+      "id": "file-scanner.catalogue.sandbox_environment_id_default_160",
+      "en": "Sandbox environment ID (default 160, Windows 10 64-bit)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 173
+    },
+    {
+      "id": "file-scanner.catalogue.scanii_chosen_by_the_team",
+      "en": "chosen by the team: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 80
     },
     {
       "id": "file-scanner.catalogue.scanii_deleted_on_completion",
       "en": "deleted on completion of analysis",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 76
+      "line": 81
     },
     {
       "id": "file-scanner.catalogue.scanii_the_teams_own_key",
       "en": "the team's own key; terms allow use within its own products made available to its clients",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 78
+      "line": 83
     },
     {
       "id": "file-scanner.catalogue.scanii_up_to_400_days",
       "en": "up to 400 days in the processing region",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 76
+      "line": 81
     },
     {
       "id": "file-scanner.catalogue.sentinel_as_the_workspace",
       "en": "as the workspace keeps its logs",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 225
+      "line": 230
     },
     {
       "id": "file-scanner.catalogue.sentinel_the_organizations_own",
       "en": "the organization's own Azure workspace",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 226
+      "line": 231
+    },
+    {
+      "id": "file-scanner.catalogue.sentinel_the_workspaces_region",
+      "en": "the workspace's region",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 229
     },
     {
       "id": "file-scanner.catalogue.splunk_hec_as_the_organization",
       "en": "as the organization keeps its logs",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 217
+      "line": 222
+    },
+    {
+      "id": "file-scanner.catalogue.splunk_hec_the_organizations_own_splunk",
+      "en": "the organization's own Splunk",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 221
+    },
+    {
+      "id": "file-scanner.catalogue.splunk_hec_the_organizations_own_splunk_2",
+      "en": "the organization's own Splunk",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 223
     },
     {
       "id": "file-scanner.catalogue.splunk_http_event_collector",
       "en": "Splunk HTTP Event Collector",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 212
+      "line": 217
     },
     {
       "id": "file-scanner.catalogue.splunk_http_event_collector_address",
       "en": "Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 215
+      "line": 220
+    },
+    {
+      "id": "file-scanner.catalogue.stated_by_the_administrator",
+      "en": "stated by the administrator",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 12
     },
     {
       "id": "file-scanner.catalogue.stream_name_in_the_rule",
       "en": "Stream name in the rule",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 223
+      "line": 228
     },
     {
       "id": "file-scanner.catalogue.syslog_collector_address_host_or",
       "en": "Syslog collector address (host, or host:port; port 6514 unless named)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 249
+      "line": 254
+    },
+    {
+      "id": "file-scanner.catalogue.syslog_tls_the_organizations_own_collector",
+      "en": "the organization's own collector",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 257
     },
     {
       "id": "file-scanner.catalogue.the_engines_the_tool_runs",
       "en": "The engines the tool runs, as its maker names them",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 32
+      "line": 37
+    },
+    {
+      "id": "file-scanner.catalogue.the_organizations_own_licence",
+      "en": "the organization's own licence",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 17
     },
     {
       "id": "file-scanner.catalogue.the_tools_statement_of_what",
       "en": "The tool's statement of what it receives, keeps and shares",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 33
+      "line": 38
+    },
+    {
+      "id": "file-scanner.catalogue.vmray_kept_in_the_account",
+      "en": "kept in the account",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 166
     },
     {
       "id": "file-scanner.catalogue.vmray_not_stated_beyond",
       "en": "not stated beyond the account",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 161
+      "line": 166
+    },
+    {
+      "id": "file-scanner.catalogue.vmray_the_organizations_own_subscription",
+      "en": "the organization's own subscription",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 167
+    },
+    {
+      "id": "file-scanner.catalogue.vmray_us_or_germany_as_the",
+      "en": "US or Germany, as the account is hosted",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 165
     },
     {
       "id": "file-scanner.catalogue.web_risk_update_api",
       "en": "Web Risk (Update API)",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 202
+      "line": 207
+    },
+    {
+      "id": "file-scanner.catalogue.where_it_runs",
+      "en": "where it runs",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 16
     },
     {
       "id": "file-scanner.catalogue.where_that_statement_is_published",
       "en": "Where that statement is published",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 34
+      "line": 39
+    },
+    {
+      "id": "file-scanner.catalogue.wildfire_benign_14_days_malicious",
+      "en": "benign 14 days; malicious 10 years",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 192
     },
     {
       "id": "file-scanner.catalogue.wildfire_signatures_and_reports",
       "en": "signatures and reports kept indefinitely",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 187
+      "line": 192
+    },
+    {
+      "id": "file-scanner.catalogue.wildfire_the_organizations_own_wildfire_api",
+      "en": "the organization's own WildFire API subscription (150 submissions a day base)",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/catalogue.mjs",
+      "line": 194
     },
     {
       "id": "file-scanner.catalogue.wildfire_the_regional_cloud",
       "en": "the regional cloud chosen; some metadata shared across regional clouds",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/catalogue.mjs",
-      "line": 186
+      "line": 191
     },
     {
       "id": "file-scanner.clamav.file_scanner_v1_signature_mirror",
@@ -23805,42 +24057,63 @@
       "en": "a test record of zero counts was accepted",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 334
+      "line": 340
+    },
+    {
+      "id": "file-scanner.routes.no_safe_view",
+      "en": "no safe view",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/routes.mjs",
+      "line": 21
+    },
+    {
+      "id": "file-scanner.routes.removed_names",
+      "en": "removed: {names}",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/routes.mjs",
+      "line": 325
+    },
+    {
+      "id": "file-scanner.routes.the_eicar_test_file_answered",
+      "en": "the EICAR test file answered found",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/routes.mjs",
+      "line": 19
+    },
+    {
+      "id": "file-scanner.routes.the_eicar_test_file_did",
+      "en": "the EICAR test file did not answer found",
+      "module": "file-scanner",
+      "file": "file-scanner/src/providers/routes.mjs",
+      "line": 22
     },
     {
       "id": "file-scanner.routes.the_safe_view_reported_nothing",
       "en": "the safe view reported nothing removed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 320
+      "line": 326
     },
     {
       "id": "file-scanner.routes.the_sandbox_was_still_running",
       "en": "the sandbox was still running after {PROVIDER_TIMEOUT_MS} ms",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 312
+      "line": 318
     },
     {
       "id": "file-scanner.routes.the_test_address_answered",
       "en": "the test address answered listed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 331
+      "line": 337
     },
     {
       "id": "file-scanner.routes.the_test_address_did",
       "en": "the test address did not answer listed",
       "module": "file-scanner",
       "file": "file-scanner/src/providers/routes.mjs",
-      "line": 331
-    },
-    {
-      "id": "file-scanner.scanners.malware_scanning_scan_result",
-      "en": "Malware Scanning scan result",
-      "module": "file-scanner",
-      "file": "file-scanner/src/providers/scanners.mjs",
-      "line": 132
+      "line": 337
     },
     {
       "id": "filing-templates.index.a_comment_is_1_to",
@@ -36216,105 +36489,126 @@
       "en": "registered capture is absent from the working bucket",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1416
+      "line": 1427
     },
     {
       "id": "promotion.gate.capture_bytes_differ",
       "en": "capture bytes differ from the register",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1419
+      "line": 1430
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in",
       "en": "registered capture is held in parts, and {why}, so no part could be verified",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1390
+      "line": 1401
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_2",
       "en": "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1394
+      "line": 1405
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_3",
       "en": "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1399
+      "line": 1410
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_4",
       "en": "registered capture is held in parts, all present, but the digest of {length} could not be verified: {label}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1401
+      "line": 1412
     },
     {
       "id": "promotion.gate.registered_capture_is_held_in_5",
       "en": "registered capture is held in parts, and the parts the record names sum to {sum} bytes where the register says {bytes}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1402
+      "line": 1413
     },
     {
       "id": "promotion.gate.registered_capture_is_held_only",
       "en": "registered capture is held only in parts: the acquisition receipt of your team's Civicsmith names the whole hash, and the working bucket stores the document as its parts, each under its own hash, but the record's data/provenance.json names no parts for it. Publication copies the parts the record names, so name them there, or register the parts rather than the whole",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1413
+      "line": 1424
     },
     {
       "id": "promotion.gate.the_case_document_catalogue_could",
       "en": "the case-document catalogue could not judge this document, so it is not passed: {String}",
       "module": "promotion",
       "file": "bio-plane/src/gate.mjs",
-      "line": 1292
+      "line": 1303
     },
     {
       "id": "promotion.index.cut_was_produced_by_cut",
       "en": "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 752
+      "line": 761
     },
     {
       "id": "promotion.index.empty_neither_text_a_string",
       "en": "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 516
+      "line": 525
+    },
+    {
+      "id": "promotion.index.machine_cannot_reopen",
+      "en": "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 1160
+    },
+    {
+      "id": "promotion.index.not_set_down",
+      "en": "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 1191
+    },
+    {
+      "id": "promotion.index.project_name_taken",
+      "en": "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.",
+      "module": "promotion",
+      "file": "bio-plane/src/promotion/index.mjs",
+      "line": 194
     },
     {
       "id": "promotion.index.project_needs_name",
       "en": "a project needs a name, and it must be unique across your team's Civicsmith",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 699
+      "line": 708
     },
     {
       "id": "promotion.index.the_base_this_revision_names",
       "en": "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 726
+      "line": 735
     },
     {
       "id": "promotion.index.the_sha256_sent_for_map",
       "en": "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 567
+      "line": 576
     },
     {
       "id": "promotion.index.this_store_records_no_producing",
       "en": "this store records no producing team, and this creation names none — neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created.",
       "module": "promotion",
       "file": "bio-plane/src/promotion/index.mjs",
-      "line": 589
+      "line": 598
     },
     {
       "id": "promotion.names.give_project_title_unique",

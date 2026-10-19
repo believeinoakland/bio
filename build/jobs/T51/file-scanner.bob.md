@@ -1,6 +1,6 @@
 # BOB to file-scanner (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -60,3 +60,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio file-scanner tranche/T51 job/T51/file-scanner`. Your Size line counts only your module's own code (K2513).
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+
+## B7 · CHANGE
+
+CHANGE (K4120), re-opening CR-17 for one addition before your merge: your REPORT (1) is placed as your R33, written on the tranche (merge it first): `handling.on_own`, a boolean each descriptor states (true for the self-run tools whose recipient is the organization's own server or service), never derived from `recipient`'s words; `validateDescriptor` refuses a `handling` without a boolean `on_own` (`DESCRIPTOR_MALFORMED`, field `handling.on_own`). Test it as R33 says, with its control. screens-settings reads it in CR-20 after you merge; file-safety's test copies (your REPORT) are CR-21's. Then post COMPLETE again.

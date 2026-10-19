@@ -268,7 +268,8 @@ for (const m of members) {
       "The release copies a member's buckets and schedule from its own config and never defaults them:\n"
       + "  r2_buckets     [{ binding, bucket_name }] — each bucket one of the plane's own, named by its role in the part:\n"
       + "                 bio-captures (captures) or bio-published (published); any other has no role an installer can bind\n"
-      + "  triggers.crons a list of cron expressions, where the member states a schedule");
+      + "  triggers.crons a list of cron expressions, where the member states a schedule\n"
+      + "  durable_objects, migrations  its own Durable Objects ({name, class_name}) and migrations ({tag, new_sqlite_classes}), as its config states them");
   if (w.part) workerPartOf.set(m.name, { path: WORKER_PART_PATH, type: "Worker", sha256: sha256(w.part.bytes),
     bytes: w.part.bytes.length, data: w.part.bytes });
 }

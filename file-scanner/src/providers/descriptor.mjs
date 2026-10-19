@@ -13,7 +13,7 @@ export const SAMPLE_SHARING = Object.freeze(['none', 'vendor_internal_research',
 export const SENDS = Object.freeze(['file_bytes', 'url', 'hostname', 'hash_prefix', 'counts']);
 export const NEVER_SENDS_REQUIRED = Object.freeze(['file_name', 'member_identity', 'ip_address']);
 export const NOT_STATED = 'not stated';
-const HANDLING_FIELDS = ['sends', 'never_sends', 'recipient', 'sub_processors', 'region', 'file_retention',
+const HANDLING_FIELDS = ['on_own', 'sends', 'never_sends', 'recipient', 'sub_processors', 'region', 'file_retention',
   'result_retention', 'sample_sharing'];
 const FIELDS = ['provider_id', 'vendor', 'product', 'kinds', 'transport', 'reach', 'hosts', 'engine_family',
   'credentials', 'config', 'test_probe', 'handling', 'mode_required', 'mode_check', 'licence_note', 'source_urls', 'read_on'];
@@ -79,6 +79,7 @@ function malformed(d) {
   const h = d.handling;
   if (!h || typeof h !== 'object' || Array.isArray(h)) return 'handling';
   for (const k of Object.keys(h)) if (!HANDLING_FIELDS.includes(k)) return `handling.${k}`;
+  if (typeof h.on_own !== 'boolean') return 'handling.on_own';
   if (!stated(h.sends, (v) => strList(v, true) && v.every((s) => SENDS.includes(s)))) return 'handling.sends';
   if (!stated(h.never_sends, (v) => strList(v, false))) return 'handling.never_sends';
   for (const k of ['recipient', 'region', 'file_retention', 'result_retention']) if (!str(h[k])) return `handling.${k}`;
