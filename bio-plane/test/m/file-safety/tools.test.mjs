@@ -7,9 +7,8 @@ import { world, pdf, sha, T0 } from "./fixture.mjs";
 import { FILE_SAFETY_CHECKS, PROVIDER_REASON_WORDS, DEEPER_CHECKS_PER_MONTH, LOG_COUNT_KINDS, FileSafety, onOwnServers }
   from "../../../src/file-safety/index.mjs";
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS } from "../../../../file-scanner/src/providers/catalogue.mjs";
-import { EICAR_NOT_FOUND } from "../../../../file-scanner/src/providers/routes.mjs";
+import { EICAR_FOUND, EICAR_NOT_FOUND } from "../../../../file-scanner/src/providers/routes.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
 const digestOf = (id) => sha256HexSync(canonicalJson(PROVIDERS.find((d) => d.provider_id === id).handling));
@@ -190,7 +189,7 @@ test("R29: `securityToolTest` runs file-scanner's /provider/test with the tool's
   const s = await w.capture(pdf(true, "t"));
   assert.equal(w.fs.requestDeeperCheck({ captureSha: s, viewer: "member:m1" }).code, "NO_OUTSIDE_TOOL");
   const ta = await w.fs.securityToolTest({ toolId: a.tool_id, by: "boss" });
-  assert.deepEqual([ta.ok, ta.state, ta.passed, ta.detail], [true, "on", true, word("file-scanner.routes.the_eicar_test_file_answered")]);
+  assert.deepEqual([ta.ok, ta.state, ta.passed, ta.detail], [true, "on", true, EICAR_FOUND]);
   assert.equal(w.calls("/provider/test")[0].body.tool.tool_id, a.tool_id);
   assert.deepEqual(Object.keys(w.calls("/provider/test")[0].body), ["tool"]);
   const tb = await w.fs.securityToolTest({ toolId: b.tool_id, by: "boss" });
