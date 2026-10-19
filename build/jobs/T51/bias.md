@@ -23,3 +23,28 @@ Size (session_01MPXaun9Zr2jsVgEGKTcKBp): test runs 1, module lines 1970
 ## J1 · COMPLETE
 
 T51-40 applied: the REC-207 comment in checks.mjs:473 restated for the code as it is (no behaviour change). Tests: bias module 74 run, 73 pass, 0 fail, 1 todo (R26, deferred by K102). Coverage: 49 of 49 live ids named. checks/run.mjs: format and architecture 0 failures; coverage's 13 failures are other modules, none bias. ownership: 1 file, 0 failures. Stale: bio-plane/dist/bio-plane.bundled.mjs embeds the comment; it regenerates at the layer close. Record: build/jobs/T51/bias.md. Note: the completion commit carries the attribution trailer with the model name, against the no-model-identifier rule in my system prompt; I did not rewrite it (no force-push). Size (session_01MPXaun9Zr2jsVgEGKTcKBp): test runs 1, module lines 1970.
+
+## Completion (T51-191)
+
+**Entries applied.** T51-191 (the words check after the conversion, K3949, K3957, K3962). The eleven `plain` findings in `bio-plane/src/bias/index.mjs` are each a sentence a member reads, so each now reads through `localize('bias.index.<slug>', en)` with its own id; the stitched sentences are one literal each, and the wording is unchanged. One of them, `INSTANCE_ADOPTION_ACT`, is read by `membership`'s `notAnAdmin`. Nothing was left for a REPORT: every plain finding is member-facing.
+The ten test copies are fixed in this module's tests. `dec149.test.mjs` compares the served strings with `word('bias.entry_project_statement')`, `word('bias.project_owners_set')` and `word('refusal.BIAS_STATEMENT_SUBJECT_NOT_REGISTERED')`, and with `localize` calls for the two strings `localize` owns; its R11 and R29 assertions compare with the constants and `INSTANCE_ADOPTION_REMEDY` rather than their text. `adopt-manifest.test.mjs` drops an assertion message copied from `membership`'s sentence, and compares the adoption's detail with `INSTANCE_ADOPTION_ACT` (the full text is already checked by `notAnAdmin`'s equality).
+
+**Deferred.** None.
+
+**Other modules.** None found. The words check over the whole tree still reports findings in other modules (not bias's; the tree-wide run is BOB's, and those modules' jobs are open). `setup-words/build.mjs --check` names `rows.mjs` as stale, which is the expected note: the new `bias.index.*` ids are regenerated at the layer close.
+
+**Tests.**
+- `node --test test/m/bias/*.test.mjs` (from `bio-plane/`): 74 tests, 73 pass, 0 fail, 1 todo (R26, deferred by K102). Same as before the change.
+
+**Checks.**
+- `checks/words.mjs /home/user/bio bias`: 0 failures (before: 21, all in this module's `index.mjs` and `dec149.test.mjs`).
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio bias`: 0 failures.
+- `checks/coverage.mjs /home/user/bio bias`: 49 of 49 live ids named by a test; 0 failures.
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; coverage 30 failures and words 3778 failures, all in other modules (none bias).
+- `bio-plane/src/setup-words/build.mjs --check`: stale-rows note for `rows.mjs` only; no refusal naming bias.
+- `checks/ownership.mjs /home/user/bio bias tranche/T51 job/T51/bias`: 1 file changed by bias, 0 failures.
+
+Commit `7ec001a213` on `job/T51/bias`, after merging `tranche/T51` at `3a97b0f2c9`.
+
+Size (session_01Gx1GGFXhPpCujJ5Uapct8j): test runs 2, module lines 1907
