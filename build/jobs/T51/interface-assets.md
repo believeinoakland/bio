@@ -29,3 +29,7 @@ T51-112 applied; record 'Completion' section is pushed. Design re-taken at 20c80
 ## Change B2 (K4081, DEC-359)
 
 Merged `tranche/T51`; `ASSETS_COMMIT` re-taken at `2a64c5ae77`, `index.mjs` regenerated. Findings: (1) the commit's only change to the page's `<style>` since `20c8001300` is the phone rule `fieldset.mk-checks input:is([type="checkbox"],[type="radio"])`; the `.tw { overflow-x: auto }` rule was already in the page and was NOT carried, because `tw` is no `mk-`/`cs-` class and not in R7's product list; 12 screens draw `class="tw"` (table wrappers), so the generator's `PRODUCT` list now names `tw` and `shell.css` carries it (R7 lists the named product classes: its text should add `.tw`). (2) My test's selector splitter split `:is(a,b)` at the comma; it now splits at top-level commas only. Suite 22 pass, 0 fail; format, architecture, coverage, setup-words --check 0 failures; words: same single finding as above (`generate.mjs` header comment).
+
+## J2 · COMPLETE · re B2
+
+CHANGE B2 applied: ASSETS_COMMIT 2a64c5ae77, shell.css regenerated. Note: .tw was already in the page and not carried (not mk-/cs-); 12 screens draw class=tw, so generate.mjs PRODUCT now names tw and shell.css carries it — R7's named product-class list should add .tw. Suite 22 pass; format/architecture/coverage/setup-words 0 failures. Earlier REPORT items (R10 stale text, words finding at generate.mjs:114) stand.
