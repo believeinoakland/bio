@@ -2,7 +2,7 @@
    (interface-shell's harness). Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open as openRaw, ok, text, ops, press, last, main, word, withScreens, MEMBER, dmy } from "./page.mjs";
+import { open as openRaw, ok, text, ops, press, last, main, word, withScreens, MEMBER, dmy, settle } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 const open = (path, plane, o = {}) => openRaw(path, plane, { screens: withScreens("document", "question", "project", "action", "dash-project", "members"), ...o });
@@ -117,6 +117,21 @@ test("R49: a queue or Home item names its subject by subject.title, a reference;
   assert.ok(!text(f).includes("PROJ-1"));
 });
 
+test("R51 (K4107): the Investigation door names a project: the newest changed, else the first listed; with none it opens projects, never the bare dashboard", async () => {
+  const base = { queue: ok({ items: [] }), projectquestions: ok({ ok: true, items: [], cursor: null }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), groupidentity: ok({ ok: true, display_name: "L" }),
+    startfrom: ok({ ok: true, scripts: [], doors: [] }), browse: ok({ ok: true, items: [], total: 12 }) };
+  const door = async (projects) => {
+    const p = await open("/app", { ...base, projectlist: ok({ ok: true, projects }) });
+    await settle();
+    return main(p).querySelector('[data-area="investigation"] .h a.cs-ref').getAttribute("href");
+  };
+  const mk = (id, last) => ({ id, name: id, stage: "forming", participation: "joined", ...(last ? { lastChange: last } : {}) });
+  assert.equal(await door([mk("PROJ-1", "2026-10-01T00:00:00Z"), mk("PROJ-2", "2026-10-12T00:00:00Z"), mk("PROJ-3")]), "/app/dash-project/PROJ-2", "several: the newest changed");
+  assert.equal(await door([mk("PROJ-7")]), "/app/dash-project/PROJ-7", "one, never changed: the first listed");
+  assert.equal(await door([mk("PROJ-4"), mk("PROJ-5")]), "/app/dash-project/PROJ-4", "none changed: the first listed");
+  assert.equal(await door([]), "/app/projects", "no project: projects, not the bare dashboard");
+});
+
 test("R51: Home's Investigation block opens the investigation dashboard and its project is a reference; Home's member count equals Members', the founder once", async () => {
   const roster = ok({ members: [{ member_id: "admin", handle: null, founder: true, role: "admin", status: "active" }, { member_id: "rosa", handle: "rosa", role: "admin", status: "active" },
     { member_id: "mai", handle: "mai", role: "member", status: "active" }, { member_id: "k", handle: "k", role: "member", status: "invited" }] });
@@ -126,7 +141,7 @@ test("R51: Home's Investigation block opens the investigation dashboard and its 
     startfrom: ok({ ok: true, scripts: [], doors: [] }), profiles: ok({ ok: true, profiles: [] }), grouplanguages: ok({ languages: [] }), aiuseovertime: ok({ periods: [] }) };
   const p = await open("/app", plane);
   const inv = main(p).querySelector('[data-area="investigation"]');
-  assert.equal(inv.querySelector("a.cs-ref").getAttribute("href"), "/app/dash-project");
+  assert.equal(inv.querySelector("a.cs-ref").getAttribute("href"), "/app/dash-project/PROJ-1");
   assert.ok(inv.querySelectorAll("a.cs-ref").some((a) => a.textContent === "The Coliseum lease" && a.getAttribute("href") === "/app/project/PROJ-1"), "its project opens the project");
   const members = main(p).querySelector('[data-area="members"]');
   assert.match(text(p, members), /3\s*[^\d]*members/i);
