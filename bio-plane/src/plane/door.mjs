@@ -42,7 +42,16 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
       body: () => req.clone().json() }); if (pd) return pd; }
   /* Anyone, no token, no session: the doorbell (R37), confined to the inbox namespace. */
   { const knocked = await doorbellPublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country }); if (knocked) return knocked; }
-  return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer });
+  /* R95 (T51; instance-setup, K4076): the bootstrap report states its seven facts only to a credentialed caller, handed as
+     the control plane resolves who is asking (`caseReader`, the admission gate's `readerOf`): `{cls: "admin"}` for an
+     admin-class token or an administrator's signed-in session; none for a caller that presented nothing, a stranger or a
+     store silence, who is answered R132's key set only. */
+  let caller = null;
+  try {
+    const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);
+    if (!reader.silent && reader.cls === "admin") caller = { cls: "admin" };
+  } catch { caller = null; }
+  return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller });
 }
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */

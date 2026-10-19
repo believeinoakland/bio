@@ -11,6 +11,7 @@ import { Miniflare } from "miniflare";
 const PLANE = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const SRC = join(PLANE, "src");
 const ENTRY = join(SRC, "plane", "index.mjs");
+const { BOOTSTRAP_FACT_KEYS } = await import("../../../src/setup.mjs");
 const entry = await import(ENTRY);   /* after the fixture, which answers `cloudflare:workers` */
 const { PLANE_LIMITS } = await import(join(SRC, "control-plane", "index.mjs"));
 
@@ -93,6 +94,22 @@ test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names th
   assert.deepEqual(cfg.browser, { binding: "BROWSER" });
   assert.equal(cfg.account_id, "20b533579290b9b93168345edd3b7f72");
   assert.deepEqual(cfg.compatibility_flags, ["nodejs_compat"]);
+});
+
+/* instance-setup R95 (T51; K4076): `op=bootstrap` states its seven facts only to a credentialed caller, handed by the plane's
+   public hook as the control plane resolves it. The key set is read from instance-setup's own declaration. */
+const FACTS = BOOTSTRAP_FACT_KEYS;
+
+test("R6 (T51; instance-setup R95, K4076): the public hook hands `op=bootstrap` the caller as the control plane resolved it: an admin-class token is told the seven facts; control: no credential, a member's token or an unknown one is answered the key set without them", async () => {
+  const admin = await get("op=bootstrap", "adm-plane");
+  assert.equal(admin.status, 200, JSON.stringify(admin.body));
+  for (const k of FACTS) assert.ok(Object.hasOwn(admin.body, k), `${k} stated to an administrator`);
+  for (const [who, token] of [["no credential", null], ["a member token", "mem-plane"], ["an unknown token", "zz-unknown"]]) {
+    const r = await get("op=bootstrap", token);
+    assert.equal(r.status, 200, who);
+    assert.equal(r.body.ok, true, who);
+    for (const k of FACTS) assert.equal(Object.hasOwn(r.body, k), false, `${k} withheld from ${who}`);
+  }
 });
 
 test("R7, R64: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry; the build holds no render step", () => {
