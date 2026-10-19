@@ -62,3 +62,21 @@ Size (session_018PacXfPZi6itmHMiic6QeW): test runs 12, module lines 3769
 4. **Signed-adjacent text routed through `localize`.** The container manifest's `verify`, `layout.note` and the two in-band `over` strings are now `localize(...)`. Their bytes are unchanged (no row exists), so existing containers verify as before. Decision for you (K1333): if the design adds rows for these keys, new containers' manifest bytes change. Either these keys never get rows, or a row is a new container version.
 5. **Words check blind spot.** `checks/words.mjs` does not flag some stitched sentences that members read (e.g. `index.mjs` `evidencePackage` detail, `graph_detail` before this job, `NOT_PUBLISHED` detail). I converted the ones I found in this module as well (R13). Widening the check to those shapes would catch the rest of the family.
 6. **Test-side regex copies kept on purpose:** structural checks (hashes, ids, formats), fixture text the test invents, negative controls for old wording, and fragments under the threshold. Two sentences are built inline with no word or constant (`criteria` "Standard · binds …" in `publication`; "is already registered by" in `public-read`), so they cannot be converted from this module.
+
+## J7 · COMPLETE
+
+**COMPLETE (T51-233 words, public-read).** Entries applied:
+- Words-check findings: all 14 inline and 11 test copies fixed; the 2 `plain` findings (index `registerGroupIdentity`, see REPORT 1) are left inline for your ruling.
+- Also converted, per R13 (member-facing sentences the check does not flag): `index` evidence-package, altitudes, graph, tensions/blocks, loose-record and NOT_PUBLISHED details; `worker` CASE_DOCUMENT_UNSERVABLE, `verify`, `layout.note`, the two in-band `over` strings, the case-file part request; `casefile` notAssembled details and causes; `container` part-missing.
+- Test copies and regex copies converted across the module's test files; the rest kept as listed in REPORT 6.
+- Wording is unchanged: every converted en was verified against the HEAD source (byte-identical comparison).
+
+Deferred: none. Found in other modules: none new.
+
+Tests and checks:
+- `node --test test/m/public-read/`: 227 pass, 0 fail.
+- format: 176 modules, 0 failures. architecture public-read: 0 failures. coverage public-read: 39 of 39 ids named, 0 failures. ownership public-read: 20 files, 0 failures.
+- words public-read: inline 2, plain 2 (the registration findings in REPORT 1), testcopy 0, missingkey 0, marker 0, unkeyed 8.
+- setup-words build --check: stale-rows note only (expected), no refusal naming public-read.
+
+Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 4, module lines 3663
