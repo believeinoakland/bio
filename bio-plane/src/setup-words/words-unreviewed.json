@@ -36,25 +36,74 @@
       "line": 156
     },
     {
+      "id": "acquisition.index.a_locator_must_be_https",
+      "en": "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 705
+    },
+    {
+      "id": "acquisition.index.a_sweep_origin_acquire_names",
+      "en": "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 651
+    },
+    {
+      "id": "acquisition.index.an_archive_sourced_capture_names",
+      "en": "an archive-sourced capture names the document address, not a replay locator",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 619
+    },
+    {
+      "id": "acquisition.index.archive_org_is_a_backup",
+      "en": "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 243
+    },
+    {
+      "id": "acquisition.index.bio_plane_acquire_hashed_at_receipt",
+      "en": "bio-plane acquire, https fetch, hashed at receipt",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1061
+    },
+    {
       "id": "acquisition.index.bio_plane_acquire_https_fetch",
       "en": "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1187
+      "line": 1186
     },
     {
       "id": "acquisition.index.browser_is_bound_to_something",
       "en": "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 739
+      "line": 738
+    },
+    {
+      "id": "acquisition.index.first_party_https_fetch_of_the",
+      "en": "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1180
+    },
+    {
+      "id": "acquisition.index.first_party_https_fetch_transport",
+      "en": "first-party https fetch, hashed at receipt, transport record on this document",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1181
     },
     {
       "id": "acquisition.index.google_answered_status_at_the",
       "en": "Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place — a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 880
+      "line": 879
     },
     {
       "id": "acquisition.index.hostnameof_is_one_of_your",
@@ -64,39 +113,46 @@
       "line": 561
     },
     {
+      "id": "acquisition.index.listed_whole_over_the_stored",
+      "en": "listed whole over the stored parts",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1369
+    },
+    {
       "id": "acquisition.index.no_renderer_is_bound_to",
       "en": "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 740
+      "line": 739
     },
     {
       "id": "acquisition.index.render_stringify_is_not_a",
       "en": "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 727
+      "line": 726
     },
     {
       "id": "acquisition.index.render_true_cannot_be_combined",
       "en": "render: true cannot be combined with {conflict}.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 733
+      "line": 732
     },
     {
       "id": "acquisition.index.running_renders_are_running_in",
       "en": "{running} renders are running in your team's Civicsmith, which runs at most {cap} at once; this render is waiting and nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 761
+      "line": 760
     },
     {
       "id": "acquisition.index.subresource_capture_reads_the_primary",
       "en": "subresource capture reads the primary back into memory to parse it, so it is bounded to {SUB_PARSE_MAX} bytes; this document is {total}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1407
+      "line": 1406
     },
     {
       "id": "acquisition.index.the_archive_fallback_is_a",
@@ -106,6 +162,20 @@
       "line": 615
     },
     {
+      "id": "acquisition.index.the_archive_has_no_endpoint",
+      "en": "the archive has no endpoint for this address",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 349
+    },
+    {
+      "id": "acquisition.index.the_archive_is_rate_limiting",
+      "en": "the archive is rate-limiting us; the governor will hold this host",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 361
+    },
+    {
       "id": "acquisition.index.the_archives_what_answered_status",
       "en": "the archive's {what} answered {status}",
       "module": "acquisition",
@@ -113,11 +183,18 @@
       "line": 362
     },
     {
+      "id": "acquisition.index.the_body_broke_off_credential",
+      "en": "the body broke off while it was read; its error is not carried because a supplied credential rode it",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 946
+    },
+    {
       "id": "acquisition.index.the_body_broke_off_while",
       "en": "the body broke off while it was read ({String})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 948
+      "line": 947
     },
     {
       "id": "acquisition.index.the_daemon_class_reaches_op",
@@ -127,11 +204,46 @@
       "line": 591
     },
     {
+      "id": "acquisition.index.the_document_address_must_be",
+      "en": "the document address must be https on a public host",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 458
+    },
+    {
+      "id": "acquisition.index.the_document_exceeds_what_this",
+      "en": "the document exceeds what this surface will capture even in parts",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 980
+    },
+    {
+      "id": "acquisition.index.the_fetch_did_not_complete",
+      "en": "the fetch did not complete; its error is not carried because a supplied credential rode it",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 857
+    },
+    {
       "id": "acquisition.index.the_governor_is_holding_requests",
       "en": "the governor is holding requests to {hostOf} ({reason})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
       "line": 357
+    },
+    {
+      "id": "acquisition.index.the_incremental_hash_and_the",
+      "en": "the incremental hash and the block hash of the same bytes differ",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 999
+    },
+    {
+      "id": "acquisition.index.the_memento_exceeds_what_this",
+      "en": "the memento exceeds what this surface will capture even in parts",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 469
     },
     {
       "id": "acquisition.index.the_mementos_body_broke_off",
@@ -145,91 +257,112 @@
       "en": "the OpenDocument export address answered with `{ect}`, which is the Google Drive APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I §6's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 890
+      "line": 889
     },
     {
       "id": "acquisition.index.the_opendocument_export_address_served",
       "en": "the OpenDocument export address served bytes that are HTML — {signals} — while declaring `{v1}`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 974
+      "line": 973
     },
     {
       "id": "acquisition.index.the_per_host_governor_is",
       "en": "the per-host governor is holding requests to {rHost} ({v1}).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 750
+      "line": 749
     },
     {
       "id": "acquisition.index.the_per_host_governor_is_2",
       "en": "the per-host governor is holding requests to this host ({reason}); retry in about {ceil}s",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 822
+      "line": 821
+    },
+    {
+      "id": "acquisition.index.the_primary_capture_did_not",
+      "en": "the primary capture did not read back",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1412
     },
     {
       "id": "acquisition.index.the_render_allowance_could_not",
       "en": "the render allowance could not be read, so the render is deferred rather than run unmetered.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 767
+      "line": 766
     },
     {
       "id": "acquisition.index.the_rendered_document_is_length",
       "en": "the rendered document is {length} bytes, over this surface's {MAX}.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1052
+      "line": 1051
     },
     {
       "id": "acquisition.index.the_served_bytes_are_v1",
       "en": "the served bytes are {v1}, not an HTML page; nothing was filed.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1039
+      "line": 1038
+    },
+    {
+      "id": "acquisition.index.the_whole_page_qualifier",
+      "en": "; {reading}, so they are not asserted to be the whole page",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1177
     },
     {
       "id": "acquisition.index.these_bytes_are_the_document",
       "en": "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1178
+      "line": 1177
     },
     {
       "id": "acquisition.index.these_bytes_were_served_for",
       "en": "these bytes were served for {locator} at {retrieved}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1179
+      "line": 1178
     },
     {
       "id": "acquisition.index.this_request_carried_map_the",
       "en": "this request carried {map}. The export address, the export format and the producer are DERIVED by your team's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 674
+      "line": 673
     },
     {
       "id": "acquisition.index.todays_render_allowance_allowance_ms",
       "en": "today's render allowance ({allowance_ms} ms, day {day}) is committed ({spent_ms} ms spent, {reserved_ms} ms reserved by renders in flight), and this render reserves {reserve_ms} ms; it is recorded as deferred ({deferred} today).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 766
+      "line": 765
+    },
+    {
+      "id": "acquisition.index.too_large_to_be_a",
+      "en": "too large to be a single page",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/index.mjs",
+      "line": 1038
     },
     {
       "id": "acquisition.index.url_redirected_status_to_v1",
       "en": "{url} redirected ({status}) to {v1}, which is outside the sweep's scope; the redirect was not followed, nothing at its target was fetched, and nothing was filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 845
+      "line": 844
     },
     {
       "id": "acquisition.index.work_calls_compute_calls_over",
       "en": "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1485
+      "line": 1484
     },
     {
       "id": "acquisition.index.your_teams_civicsmith_fetches_a",
@@ -239,25 +372,39 @@
       "line": 584
     },
     {
+      "id": "acquisition.keyed.a_citation_lookup_is_a",
+      "en": "a citation lookup is a member's or an operator's act, and none was named; nothing was sent",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 155
+    },
+    {
+      "id": "acquisition.keyed.a_keyed_outside_service",
+      "en": "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 70
+    },
+    {
       "id": "acquisition.keyed.a_keyed_request_is_a",
       "en": "a keyed request is a GET or POST of a public https address on {host}, its form a flat set of strings; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 77
+      "line": 76
     },
     {
       "id": "acquisition.keyed.courtlistener_is_holding_citation_lookups",
       "en": "CourtListener is holding citation lookups from this key for now; nothing was looked up",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 169
+      "line": 168
     },
     {
       "id": "acquisition.keyed.hostof_is_one_of_your",
       "en": "{hostOf} is one of your team's own hosts; nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 83
+      "line": 82
     },
     {
       "id": "acquisition.keyed.the_keyed_services_your_teams",
@@ -271,49 +418,133 @@
       "en": "the per-host governor is holding requests to {host} ({reason})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 114
+      "line": 113
+    },
+    {
+      "id": "acquisition.keyed.the_request_to_the_service",
+      "en": "the request to the service did not complete; its error is not carried because the team's key rode it",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 110
     },
     {
       "id": "acquisition.keyed.the_service_answered_status",
       "en": "the service answered {status}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 124
+      "line": 123
     },
     {
       "id": "acquisition.keyed.the_service_reads_at_most",
       "en": "the service reads at most {CITATION_TEXT_MAX} characters a request and this text is {length}; nothing was sent",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 160
+      "line": 159
+    },
+    {
+      "id": "acquisition.keyed.the_service_s_answer_broke",
+      "en": "the service's answer broke off while it was read",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 117
+    },
+    {
+      "id": "acquisition.keyed.the_service_s_answer_is",
+      "en": "the service's answer is not the list of citations its documentation describes",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 176
     },
     {
       "id": "acquisition.keyed.the_services_answer_is_over",
       "en": "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/keyed.mjs",
-      "line": 119
+      "line": 118
+    },
+    {
+      "id": "acquisition.keyed.the_team_s_key_for",
+      "en": "the team's key for this service is off or not held; the caller goes on without it",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 92
+    },
+    {
+      "id": "acquisition.keyed.there_is_no_text",
+      "en": "there is no text to look citations up in; nothing was sent",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/keyed.mjs",
+      "line": 157
+    },
+    {
+      "id": "acquisition.unpack.an_archive_is_opened",
+      "en": "an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 496
+    },
+    {
+      "id": "acquisition.unpack.no_acquisition_instance_holds",
+      "en": "no acquisition instance holds this storage's archive records",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 785
+    },
+    {
+      "id": "acquisition.unpack.no_acquisition_receipt_or",
+      "en": "no acquisition receipt or register row names this archive; nothing was opened",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 508
+    },
+    {
+      "id": "acquisition.unpack.no_archive_your_team",
+      "en": "no archive your team holds and you may see answers to that digest",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 787
+    },
+    {
+      "id": "acquisition.unpack.set_whether_your_team_s",
+      "en": "set whether your team's captures ask a public archive for a copy",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 356
     },
     {
       "id": "acquisition.unpack.the_archives_capture_sha_its",
       "en": "the archive's capture {sha}; its central directory and the entry's local header agree on this entry",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 698
+      "line": 697
+    },
+    {
+      "id": "acquisition.unpack.the_setting_is_true",
+      "en": "the setting is true (on) or false (off); nothing was recorded",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 360
+    },
+    {
+      "id": "acquisition.unpack.the_store_handed_in",
+      "en": "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened",
+      "module": "acquisition",
+      "file": "bio-plane/src/acquisition/unpack.mjs",
+      "line": 500
     },
     {
       "id": "acquisition.unpack.these_bytes_are_entry_index",
       "en": "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 697
+      "line": 696
     },
     {
       "id": "acquisition.unpack.why_nothing_was_opened",
       "en": "{why}; nothing was opened",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 511
+      "line": 510
     },
     {
       "id": "action-clocks.count.the_closure_list_list_year",
@@ -3802,6 +4033,69 @@
       "line": 14
     },
     {
+      "id": "attestation.index.attest_takes_sha",
+      "en": "attest takes the sha256 of a capture already in the store",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 84
+    },
+    {
+      "id": "attestation.index.held_in_parts",
+      "en": "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. Your team's Civicsmith hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on.",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 108
+    },
+    {
+      "id": "attestation.index.nest_deeper",
+      "en": "the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX ({max}): the archive {archive} (through entries {path}) was not read, so its attestations are not here",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 301
+    },
+    {
+      "id": "attestation.index.no_key_detail",
+      "en": "your team's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your team's Civicsmith sets one as a secret; nothing is claimed signed until then",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 232
+    },
+    {
+      "id": "attestation.index.no_such_capture",
+      "en": "no object is stored under that hash, the register holds no row for it under a record that exists, and your team's Civicsmith holds no receipt of having acquired it",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 119
+    },
+    {
+      "id": "attestation.index.no_such_capture_unasked",
+      "en": "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 120
+    },
+    {
+      "id": "attestation.index.receipt_names",
+      "en": "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 403
+    },
+    {
+      "id": "attestation.index.register_names_bytes",
+      "en": "the record's register names these bytes, but no object is stored under this hash and your team's Civicsmith holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing.",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 115
+    },
+    {
+      "id": "attestation.index.takes_sha_of_capture",
+      "en": "attestationsOf takes the sha256 of a capture: 64 hex characters",
+      "module": "attestation",
+      "file": "bio-plane/src/attestation/index.mjs",
+      "line": 279
+    },
+    {
       "id": "basis-versions.checks.accepting_this_reading_claims_that",
       "en": "Accepting this reading claims that each of the parts it rests on would carry the answer on its own. That is a claim only a named member can make, and it is made part by part rather than assumed from silence, so every part has to be named before this reading becomes what the record stands on.",
       "module": "basis-versions",
@@ -5377,6 +5671,20 @@
       "line": 885
     },
     {
+      "id": "capture-sources.browserrender.it_is_not_a_public",
+      "en": "it is not a public https address",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 149
+    },
+    {
+      "id": "capture-sources.browserrender.its_host_is_one_of",
+      "en": "its host is one of your team's own (where your team's Civicsmith or its fleet is reached)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/browserrender.mjs",
+      "line": 150
+    },
+    {
       "id": "capture-sources.browserrender.the_browser_could_not_navigate",
       "en": "the browser could not navigate to {String}: {refusedSentence}",
       "module": "capture-sources",
@@ -5389,6 +5697,41 @@
       "module": "capture-sources",
       "file": "bio-plane/src/cdx.mjs",
       "line": 177
+    },
+    {
+      "id": "capture-sources.cdx.digest_is_the_empty_body",
+      "en": "digest is the empty-body digest: the capture holds nothing",
+      "module": "capture-sources",
+      "file": "bio-plane/src/cdx.mjs",
+      "line": 83
+    },
+    {
+      "id": "capture-sources.cdx.no_digest",
+      "en": "no digest",
+      "module": "capture-sources",
+      "file": "bio-plane/src/cdx.mjs",
+      "line": 82
+    },
+    {
+      "id": "capture-sources.cdx.the_cdx_record_carried_no",
+      "en": "the CDX record carried no urlkey",
+      "module": "capture-sources",
+      "file": "bio-plane/src/cdx.mjs",
+      "line": 176
+    },
+    {
+      "id": "capture-sources.cdx.the_first_row_does_not",
+      "en": "the first row does not name timestamp and original",
+      "module": "capture-sources",
+      "file": "bio-plane/src/cdx.mjs",
+      "line": 45
+    },
+    {
+      "id": "capture-sources.cdx.the_index_holds_no_200",
+      "en": "the index holds no 200 response with a non-empty body for this address",
+      "module": "capture-sources",
+      "file": "bio-plane/src/cdx.mjs",
+      "line": 109
     },
     {
       "id": "capture-sources.cdx.these_bytes_were_served_for",
@@ -5412,11 +5755,46 @@
       "line": 308
     },
     {
+      "id": "capture-sources.credentials.capture_credential_no_key_no",
+      "en": "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your team's Civicsmith, so no credential is used and the source's refusal stands",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 387
+    },
+    {
       "id": "capture-sources.credentials.capture_credential_own_host_h",
       "en": "CAPTURE_CREDENTIAL_OWN_HOST: {h} is one of your team's own hosts, so no credential is used for it and the fetch goes without credentials",
       "module": "capture-sources",
       "file": "bio-plane/src/capture-sources/credentials.mjs",
       "line": 369
+    },
+    {
+      "id": "capture-sources.credentials.no_credential_by_that_id",
+      "en": "no credential by that id is visible to this member",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 416
+    },
+    {
+      "id": "capture-sources.credentials.no_encryption_key_is_set",
+      "en": "no encryption key is set for your team's Civicsmith, so nothing is stored in the clear",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 326
+    },
+    {
+      "id": "capture-sources.credentials.no_secret_was_given",
+      "en": "no secret was given",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 319
+    },
+    {
+      "id": "capture-sources.credentials.only_an_editor_of_the_project",
+      "en": "only an editor of the project may supply a credential for it",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 226
     },
     {
       "id": "capture-sources.credentials.only_its_supplier_or_an",
@@ -5426,6 +5804,48 @@
       "line": 234
     },
     {
+      "id": "capture-sources.credentials.only_its_supplier_or_an_owner",
+      "en": "only its supplier or an owner of its project may withdraw a project credential",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 232
+    },
+    {
+      "id": "capture-sources.credentials.the_credential_could_not_be",
+      "en": "the credential could not be encrypted and stored, so nothing was written",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 334
+    },
+    {
+      "id": "capture-sources.credentials.the_credential_could_not_be_read",
+      "en": "the credential could not be read or withdrawn, so nothing was changed",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 428
+    },
+    {
+      "id": "capture-sources.credentials.the_fetch_names_no_host",
+      "en": "the fetch names no host a credential can be for, so it goes without credentials",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 366
+    },
+    {
+      "id": "capture-sources.credentials.the_host_given_is_not_a",
+      "en": "the host given is not a bare host name (a credential is for the one host the source that refused is served from)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 295
+    },
+    {
+      "id": "capture-sources.credentials.the_host_given_is_one",
+      "en": "the host given is one of your team's own (where your team's Civicsmith or its fleet is reached), and a credential is never for one of them",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 302
+    },
+    {
       "id": "capture-sources.credentials.the_kind_given_is_not",
       "en": "the kind given is not one of {CREDENTIAL_KINDS}",
       "module": "capture-sources",
@@ -5433,11 +5853,25 @@
       "line": 289
     },
     {
+      "id": "capture-sources.credentials.the_project_named_is_not",
+      "en": "the project named is not a project this record holds",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 314
+    },
+    {
       "id": "capture-sources.credentials.the_scope_given_is_not",
       "en": "the scope given is not one of {CREDENTIAL_SCOPES}",
       "module": "capture-sources",
       "file": "bio-plane/src/capture-sources/credentials.mjs",
       "line": 308
+    },
+    {
+      "id": "capture-sources.credentials.the_supplier_named_is_not",
+      "en": "the supplier named is not an active member of your team",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/credentials.mjs",
+      "line": 285
     },
     {
       "id": "capture-sources.drive.confirmed_from_the_bytes_format",
@@ -5459,6 +5893,13 @@
       "module": "capture-sources",
       "file": "bio-plane/src/drive.mjs",
       "line": 257
+    },
+    {
+      "id": "capture-sources.drive.the_bytes_were_not_sniffed",
+      "en": "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed",
+      "module": "capture-sources",
+      "file": "bio-plane/src/drive.mjs",
+      "line": 258
     },
     {
       "id": "capture-sources.drive.the_export_address_was_composed",
@@ -5496,6 +5937,13 @@
       "line": 178
     },
     {
+      "id": "capture-sources.drive.though_the_link_named",
+      "en": ", though the link named {host}",
+      "module": "capture-sources",
+      "file": "bio-plane/src/drive.mjs",
+      "line": 245
+    },
+    {
       "id": "capture-sources.drive.your_teams_civicsmith_recorded_fetching",
       "en": "your team's Civicsmith recorded fetching the export address {exportAddress} (CAP-8), and {said}",
       "module": "capture-sources",
@@ -5517,6 +5965,13 @@
       "line": 211
     },
     {
+      "id": "capture-sources.memento.no_memento_datetime_was_recorded",
+      "en": "no Memento-Datetime was recorded with this hop",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 251
+    },
+    {
       "id": "capture-sources.memento.sha_256_digest_computed_by",
       "en": "SHA-256 {digest}, computed by your team's Civicsmith over the bytes it received, not a digest the archive stated",
       "module": "capture-sources",
@@ -5531,11 +5986,25 @@
       "line": 208
     },
     {
+      "id": "capture-sources.memento.the_link_format_text_is",
+      "en": "the link-format text is not a string",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 81
+    },
+    {
       "id": "capture-sources.memento.the_link_header_detail",
       "en": "the Link header: {detail}",
       "module": "capture-sources",
       "file": "bio-plane/src/capture-sources/memento.mjs",
       "line": 195
+    },
+    {
+      "id": "capture-sources.memento.the_memento_s_link_header",
+      "en": "the memento's Link header names no rel=\"original\", so it does not say which resource it is a memento of",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 212
     },
     {
       "id": "capture-sources.memento.the_timegate_answered_st_with",
@@ -5545,6 +6014,27 @@
       "line": 200
     },
     {
+      "id": "capture-sources.memento.the_timegate_s_location_is",
+      "en": "the TimeGate's Location is not an address",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 202
+    },
+    {
+      "id": "capture-sources.memento.the_timemap_holds_no_memento",
+      "en": "the TimeMap holds no memento at or before the bound",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 171
+    },
+    {
+      "id": "capture-sources.memento.the_timemap_names_no",
+      "en": "the TimeMap names no rel=\"original\" link, so it does not say which resource its mementos are of",
+      "module": "capture-sources",
+      "file": "bio-plane/src/capture-sources/memento.mjs",
+      "line": 145
+    },
+    {
       "id": "capture-sources.memento.these_bytes_were_served_for",
       "en": "these bytes were served for {original} at {archived_at}, with HTTP status {statuscode}",
       "module": "capture-sources",
@@ -5552,25 +6042,60 @@
       "line": 249
     },
     {
+      "id": "capture-sources.render.completeness_quiet_window_wait",
+      "en": "completeness: {settled}{open_for} — the renderer's wait ended on its quiet window, which does not wait for them, so what they would have brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (D-570, BOB #34, 2026-09-25).",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 466
+    },
+    {
       "id": "capture-sources.render.completeness_render_incomplete_reading_the",
       "en": "completeness: {RENDER_INCOMPLETE_READING} — the renderer's wait ended on its timeout{v1}{v2}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).",
       "module": "capture-sources",
       "file": "bio-plane/src/render.mjs",
-      "line": 472
+      "line": 471
     },
     {
       "id": "capture-sources.render.k_supplied_data_v1",
       "en": "{k} supplied data ({v1})",
       "module": "capture-sources",
       "file": "bio-plane/src/render.mjs",
-      "line": 530
+      "line": 528
+    },
+    {
+      "id": "capture-sources.render.rather_than_on_the_condition",
+      "en": " rather than on the `{until}` condition",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 471
     },
     {
       "id": "capture-sources.render.rendered_capture_at_reasons_a",
       "en": "rendered capture, {at}: {reasons}. A person resolves this by an assertion carrying its basis (CLIENT-RENDERED.md, DESIGNED 2026-09-21 item 3).",
       "module": "capture-sources",
       "file": "bio-plane/src/render.mjs",
-      "line": 540
+      "line": 538
+    },
+    {
+      "id": "capture-sources.render.requests_open_longer_than",
+      "en": " (requests open longer than {older_than_s} s)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 468
+    },
+    {
+      "id": "capture-sources.render.requests_the_renderer_did_not",
+      "en": "requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 426
+    },
+    {
+      "id": "capture-sources.render.scripts_the_renderer_could_not",
+      "en": "scripts: the renderer could not record which scripts executed, so the script set is undetermined (BOB #31)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 445
     },
     {
       "id": "capture-sources.render.subresources_undigested_of_the_length",
@@ -5584,14 +6109,28 @@
       "en": "the renderer answered HTTP {status} with no JSON",
       "module": "capture-sources",
       "file": "bio-plane/src/render.mjs",
-      "line": 591
+      "line": 589
+    },
+    {
+      "id": "capture-sources.render.the_renderer_reported_the_wait",
+      "en": "the renderer reported the wait fired on `{waitFired}`, which is neither the `{until}` condition your team's Civicsmith asked for nor a timeout",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 474
     },
     {
       "id": "capture-sources.render.the_renderer_service_could_not",
       "en": "the renderer service could not be reached: {String}",
       "module": "capture-sources",
       "file": "bio-plane/src/render.mjs",
-      "line": 589
+      "line": 587
+    },
+    {
+      "id": "capture-sources.render.which_scripts_executed_is",
+      "en": "which scripts executed is undetermined: the renderer could not record the script set (BOB #31)",
+      "module": "capture-sources",
+      "file": "bio-plane/src/render.mjs",
+      "line": 531
     },
     {
       "id": "capture.grammar.field_v1_is_not_one",
@@ -5613,6 +6152,13 @@
       "module": "capture",
       "file": "bio-plane/src/capture/grammar.mjs",
       "line": 52
+    },
+    {
+      "id": "capture.grammar.verified_needs_snapshot",
+      "en": "verified state requires at least one file in snapshots/",
+      "module": "capture",
+      "file": "bio-plane/src/capture/grammar.mjs",
+      "line": 77
     },
     {
       "id": "capture.index.argument_must_be_one_of",
@@ -5657,11 +6203,158 @@
       "line": 2154
     },
     {
+      "id": "capture.index.file_bytes_unreadable",
+      "en": "the file's bytes could not be read whole or held under their own digest, so nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 693
+    },
+    {
+      "id": "capture.index.file_no_bytes",
+      "en": "the file has no bytes; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 695
+    },
+    {
+      "id": "capture.index.file_too_large",
+      "en": "the file exceeds what this surface will capture even in parts; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 683
+    },
+    {
+      "id": "capture.index.held_acts_unreadable",
+      "en": "the set-asides recorded with this question could not be read",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1765
+    },
+    {
+      "id": "capture.index.heldat_capture_unknown",
+      "en": "the record cannot say how this copy was captured, so a plain look at the site is not compared with it",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1103
+    },
+    {
+      "id": "capture.index.heldat_changed_document",
+      "en": "the site now gives a different document from this copy",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1125
+    },
+    {
+      "id": "capture.index.heldat_export",
+      "en": "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1104
+    },
+    {
+      "id": "capture.index.heldat_host_paced",
+      "en": "the host is being given time between requests, so the source was not looked at",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1120
+    },
+    {
+      "id": "capture.index.heldat_member_act",
+      "en": "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1079
+    },
+    {
+      "id": "capture.index.heldat_no_address",
+      "en": "this copy has no address to look at",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1099
+    },
+    {
+      "id": "capture.index.heldat_no_copy_seen",
+      "en": "the record holds no copy of this that you may see, so there is nothing to compare",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1090
+    },
+    {
+      "id": "capture.index.heldat_no_public_address",
+      "en": "this copy has no public address to look at",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1106
+    },
+    {
+      "id": "capture.index.heldat_not_plain_fetch",
+      "en": "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1101
+    },
+    {
+      "id": "capture.index.heldat_not_whole",
+      "en": "the document did not arrive whole, so the source was not looked at",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1143
+    },
+    {
+      "id": "capture.index.heldat_record_unreadable",
+      "en": "the record could not be read, so whether it holds this, and whether the source has changed, is not known",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1086
+    },
+    {
+      "id": "capture.index.heldat_rendered",
+      "en": "this copy is a rendered capture, which a plain look at the site cannot be compared with",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1102
+    },
+    {
+      "id": "capture.index.heldat_request_incomplete",
+      "en": "the request for the address did not complete, so the source was not looked at",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1117
+    },
+    {
+      "id": "capture.index.heldat_same_document",
+      "en": "the site still gives the same document as this copy",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1125
+    },
+    {
+      "id": "capture.index.heldat_too_large",
+      "en": "the document at the address is larger than this surface compares, so it was not looked at whole",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1140
+    },
+    {
       "id": "capture.index.kind_must_be_one_of",
       "en": "kind must be one of: {TASK_KINDS}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2564
+      "line": 2563
+    },
+    {
+      "id": "capture.index.names_no_document",
+      "en": "name at least one document; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1644
+    },
+    {
+      "id": "capture.index.not_set_aside",
+      "en": "these documents are not set aside; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 1725
     },
     {
       "id": "capture.index.op_op_needs_argument_in",
@@ -5682,7 +6375,35 @@
       "en": "outcome must be one of: {SOURCE_OUTCOMES}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2693
+      "line": 2692
+    },
+    {
+      "id": "capture.index.reattest_needs_sha",
+      "en": "reattest takes the sha256 of a capture the record holds",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 897
+    },
+    {
+      "id": "capture.index.receipt_not_written",
+      "en": "the acquisition receipt could not be written, so nothing was filed",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 716
+    },
+    {
+      "id": "capture.index.refusal_member_brings_file",
+      "en": "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 631
+    },
+    {
+      "id": "capture.index.reuse_posthoc_unverified",
+      "en": "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 2389
     },
     {
       "id": "capture.index.say_so_the_file_cannot",
@@ -5690,6 +6411,20 @@
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
       "line": 649
+    },
+    {
+      "id": "capture.index.sha_identifies_event",
+      "en": "a capture sha256 identifies the event; a record does not exist yet at capture time",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 2565
+    },
+    {
+      "id": "capture.index.signature_not_verified",
+      "en": "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 859
     },
     {
       "id": "capture.index.the_record_holds_this_copy",
@@ -5704,6 +6439,34 @@
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
       "line": 1130
+    },
+    {
+      "id": "capture.index.upload_no_bytes",
+      "en": "the upload carried no bytes; nothing was written",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 652
+    },
+    {
+      "id": "capture.index.upload_receipt_evidence",
+      "en": "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 779
+    },
+    {
+      "id": "capture.index.vouched_basis",
+      "en": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+      "module": "capture",
+      "file": "bio-plane/src/capture/index.mjs",
+      "line": 224
+    },
+    {
+      "id": "capture.ops.body_hash_mismatch",
+      "en": "body hash does not match the sha256 parameter",
+      "module": "capture",
+      "file": "bio-plane/src/capture/ops.mjs",
+      "line": 87
     },
     {
       "id": "case-account.document.v1_on_v2_replace",
@@ -11488,6 +12251,13 @@
       "line": 71
     },
     {
+      "id": "doorbell.door.inline_storage_needs_evidence",
+      "en": "this team's inbox stores knocks inline; large material needs its evidence storage configured",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/door.mjs",
+      "line": 53
+    },
+    {
       "id": "doorbell.index.argument_must_be_one_of",
       "en": "{argument} must be one of {shape}; {stringify} is not",
       "module": "doorbell",
@@ -11495,11 +12265,95 @@
       "line": 509
     },
     {
+      "id": "doorbell.index.bytes_not_held_digest",
+      "en": "the knock's bytes could not be held under their own digest, so nothing was written",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 635
+    },
+    {
+      "id": "doorbell.index.capture_method_label",
+      "en": "doorbell knock, received, hashed at receipt",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 725
+    },
+    {
+      "id": "doorbell.index.content_did_not_decode",
+      "en": "the content did not decode",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 418
+    },
+    {
+      "id": "doorbell.index.knock_bytes_no_longer_held",
+      "en": "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 629
+    },
+    {
+      "id": "doorbell.index.knock_receipt_evidence",
+      "en": "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 721
+    },
+    {
+      "id": "doorbell.index.knocks_of_names_pseudonym",
+      "en": "knocksOf names the pseudonym whose knocks it lists",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 742
+    },
+    {
+      "id": "doorbell.index.material_not_stored",
+      "en": "the material could not be stored, so nothing was received and no inbox row was written",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 434
+    },
+    {
+      "id": "doorbell.index.no_evidence_storage_knock",
+      "en": "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 611
+    },
+    {
+      "id": "doorbell.index.no_puller_named",
+      "en": "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 577
+    },
+    {
+      "id": "doorbell.index.no_secret_recognised",
+      "en": "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 262
+    },
+    {
       "id": "doorbell.index.op_op_needs_argument_in",
       "en": "op={op} needs '{argument}' in the shape {shape}, and this request carried none the operation could use. Nothing was read.",
       "module": "doorbell",
       "file": "bio-plane/src/doorbell/index.mjs",
       "line": 510
+    },
+    {
+      "id": "doorbell.index.receipt_not_written",
+      "en": "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 656
+    },
+    {
+      "id": "doorbell.index.tally_member_only",
+      "en": "the doorbell's tally is read by a signed-in member; nothing was read",
+      "module": "doorbell",
+      "file": "bio-plane/src/doorbell/index.mjs",
+      "line": 358
     },
     {
       "id": "doorbell.index.these_bytes_were_received_at",
@@ -12720,11 +13574,39 @@
       "line": 1170
     },
     {
+      "id": "file-safety.index.reading_scanners_state",
+      "en": "reading the scanner's state",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 974
+    },
+    {
+      "id": "file-safety.index.reading_security_tools_offered",
+      "en": "reading the security tools offered",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1059
+    },
+    {
+      "id": "file-safety.index.reading_teams_security_tools",
+      "en": "reading the team's security tools",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 1075
+    },
+    {
       "id": "file-safety.index.the_text_could_not_be",
       "en": "The text could not be read.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
       "line": 816
+    },
+    {
+      "id": "file-safety.index.warned_must_be_exactly",
+      "en": "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",
+      "module": "file-safety",
+      "file": "bio-plane/src/file-safety/index.mjs",
+      "line": 742
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_could_not",
@@ -22156,32 +23038,165 @@
       "line": 78
     },
     {
+      "id": "provenance-routes.index.a_fetched_address_locator",
+      "en": "a fetched address (`locator`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 223
+    },
+    {
+      "id": "provenance-routes.index.a_named_custodian_custody",
+      "en": "a named custodian (`custody.holder`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 226
+    },
+    {
+      "id": "provenance-routes.index.data_provenance_json_is_not",
+      "en": "data/provenance.json is not valid JSON",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 473
+    },
+    {
+      "id": "provenance-routes.index.data_provenance_json_must_be",
+      "en": "data/provenance.json must be {\"documents\": [...]}",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 477
+    },
+    {
+      "id": "provenance-routes.index.every_document_already_records",
+      "en": "every document already records a chain",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 518
+    },
+    {
+      "id": "provenance-routes.index.how_it_was_captured",
+      "en": "how it was captured (`capture.method`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 225
+    },
+    {
+      "id": "provenance-routes.index.method_sha256_sha_recorded",
+      "en": "{method}, sha256 {sha} recorded at receipt{tsrNote}",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 196
+    },
+    {
       "id": "provenance-routes.index.neverassessed_of_documentsvisible_captured_documents",
       "en": "{neverAssessed} of {documentsVisible} captured documents have NEVER been assessed — NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 971
+      "line": 960
     },
     {
       "id": "provenance-routes.index.no_document_of_that_name",
       "en": "no document of that name is in the record, or none this viewer may see — the two answer identically here, as they do on every read addressed to a record (REC-25/D-15).",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 673
+      "line": 665
+    },
+    {
+      "id": "provenance-routes.index.nobody_looked_at_this_level",
+      "en": "nobody looked at this level for this subject",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 56
+    },
+    {
+      "id": "provenance-routes.index.not_recorded",
+      "en": "not recorded",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 196
+    },
+    {
+      "id": "provenance-routes.index.pass_apply_1_to_write",
+      "en": "pass apply=1 to write these chains into the register",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 517
+    },
+    {
+      "id": "provenance-routes.index.pass_bundleid_id",
+      "en": "pass bundleId=<id>",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 455
+    },
+    {
+      "id": "provenance-routes.index.reconstructing_a_provenance_chain",
+      "en": "reconstructing a provenance chain is a named act: the record must show who decided that the evidence supported this route",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 453
+    },
+    {
+      "id": "provenance-routes.index.recorded_every_document_in",
+      "en": "recorded: every document in this register can show its route",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 739
+    },
+    {
+      "id": "provenance-routes.index.recorded_this_documents_route",
+      "en": "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 738
     },
     {
       "id": "provenance-routes.index.recording_that_a_route_cannot",
       "en": "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 664
+      "line": 656
+    },
+    {
+      "id": "provenance-routes.index.setting_attestation_sha256_sha",
+      "en": "{setting}{attestation}; sha256 {sha} recorded at receipt{tsrNote}",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 211
+    },
+    {
+      "id": "provenance-routes.index.setting_not_recorded",
+      "en": "setting not recorded",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 212
     },
     {
       "id": "provenance-routes.index.the_capture_record_does_not",
       "en": "the capture record does not hold a route for every document in this register, and a chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was written. Stating the route these bytes took would be an invention, which is the one thing this path exists to refuse. What CAN be done is to say so in the record: op=provenanceroute records a standing marker on this document that its route cannot be shown, leaving the document where it is (DEC-56, DEC-19).",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 519
+      "line": 510
+    },
+    {
+      "id": "provenance-routes.index.the_document_entry_is_not",
+      "en": "the document entry is not an object",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 112
+    },
+    {
+      "id": "provenance-routes.index.the_instant_it_was",
+      "en": "the instant it was retrieved (`retrieved`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 224
+    },
+    {
+      "id": "provenance-routes.index.the_knocks_receipt_it_was",
+      "en": "the knock's receipt it was received under (`source.receipt`, with `knock_id` and `received`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 150
     },
     {
       "id": "provenance-routes.index.the_knocks_receipt_sha256_v1",
@@ -22189,6 +23204,13 @@
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
       "line": 155
+    },
+    {
+      "id": "provenance-routes.index.the_uploads_receipt_it_was",
+      "en": "the upload's receipt it was received under (`source.receipt`, with `sha256` and `received`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 174
     },
     {
       "id": "provenance-routes.index.the_uploads_receipt_sha256_rsha",
@@ -22202,7 +23224,7 @@
       "en": "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the team put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again — it means no assessment has run, not that anything is wrong.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 357
+      "line": 359
     },
     {
       "id": "provenance-routes.index.these_bytes_were_received_for",
@@ -22226,11 +23248,18 @@
       "line": 195
     },
     {
+      "id": "provenance-routes.index.this_assessment_found_exactly",
+      "en": "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 736
+    },
+    {
       "id": "provenance-routes.index.this_document_stays_where_the",
       "en": "this document stays where the team put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held — a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 294
+      "line": 296
     },
     {
       "id": "provenance-routes.index.this_member_held_these_bytes",
@@ -22240,25 +23269,67 @@
       "line": 210
     },
     {
+      "id": "provenance-routes.index.this_record_carries_no",
+      "en": "this record carries no readable data/provenance.json, so there is no capture record to derive from",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 470
+    },
+    {
       "id": "provenance-routes.index.this_record_is_a_string",
       "en": "this record is a {String}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 677
+      "line": 669
+    },
+    {
+      "id": "provenance-routes.index.we_looked_and_could_not",
+      "en": "we looked and could not tell",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 58
+    },
+    {
+      "id": "provenance-routes.index.we_looked_and_got_part",
+      "en": "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 60
+    },
+    {
+      "id": "provenance-routes.index.we_looked_and_it_is",
+      "en": "we looked and it is there",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 59
+    },
+    {
+      "id": "provenance-routes.index.we_looked_and_it_is_positively",
+      "en": "we looked and it is positively not there",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 57
+    },
+    {
+      "id": "provenance-routes.index.when_the_custodian_obtained",
+      "en": "when the custodian obtained it (`custody.obtained`)",
+      "module": "provenance-routes",
+      "file": "bio-plane/src/provenance-routes/index.mjs",
+      "line": 227
     },
     {
       "id": "provenance-routes.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Reconstructing a provenance chain is a named member's act: the record must show which person decided that the evidence supported this route",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 460
+      "line": 452
     },
     {
       "id": "provenance-routes.index.who_is_a_machine_credential_2",
       "en": "'{who}' is a machine credential. Recording that a route cannot be shown is a named member's act: the record must show which person assessed the evidence and found it did not support a route, and a credential's class is nobody's name.",
       "module": "provenance-routes",
       "file": "bio-plane/src/provenance-routes/index.mjs",
-      "line": 663
+      "line": 655
     },
     {
       "id": "provenance.index.a_members_firsthand_observation_their",
@@ -22266,6 +23337,13 @@
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
       "line": 1572
+    },
+    {
+      "id": "provenance.index.capture_axis_authored",
+      "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/index.mjs",
+      "line": 1649
     },
     {
       "id": "public-read.container.this_container_is_larger_than",
