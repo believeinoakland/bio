@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, silent, pending } from "../interface-shell/harness.mjs";
-import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, PATHS, dayOf, word, drew, notDrew } from "./fixtures.mjs";
+import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, PATHS, DECLARED, dayOf, word, drew, notDrew } from "./fixtures.mjs";
 
 const graphOf = (p) => main(p).querySelector(".mk-graph");
 
@@ -68,7 +68,7 @@ test("R18 control: a step the read does not answer (a hidden hop) is not drawn o
 
 test("R18 a declared step is drawn \"declared, not evidenced\" as a lead and a hunch as a hunch, never as evidence", async () => {
   const g = GRAPH();
-  g.steps[0] = { ...g.steps[0], kind: "proxy_for", word: "proxy for", class: "declared", label: "declared, not evidenced", grade: { assertion: "D", ends: ["D", "D"] }, evidence: [] };
+  g.steps[0] = { ...g.steps[0], kind: "proxy_for", word: "proxy for", class: "declared", label: DECLARED, grade: { assertion: "D", ends: ["D", "D"] }, evidence: [] };
   g.steps[1] = { ...g.steps[1], kind: "hunch_of", word: "suspected", class: "hunch", label: "hunch", grade: null, evidence: [] };
   const p = await open("/app/explore/" + ENT, { plane: { exploregraph: ok(g) } });
   const m = graphOf(p);
