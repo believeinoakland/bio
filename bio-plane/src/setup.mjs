@@ -975,9 +975,9 @@ export class InstanceSetup {
     out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
       due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: (now) => this.updateCheckTick(now) });
     try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
-    catch (e) { out.slot = { drawn: false, detail: localize("instance-setup.setup.the_minute_of_the_day", "the minute of the day could not be drawn: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
+    catch (e) { out.slot = { drawn: false, detail: localize("instance-setup.setup.the_minute_of_the_day", "the minute of the day could not be drawn: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     try { out.running = this.#recordRunning(); }
-    catch (e) { out.running = { recorded: false, detail: localize("instance-setup.setup.the_running_release_could_not", "the running release could not be recorded: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
+    catch (e) { out.running = { recorded: false, detail: localize("instance-setup.setup.the_running_release_could_not", "the running release could not be recorded: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.compute = this.#capture().on("compute", "instance-setup",
       (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
                                             unit: unitOfMetric(m && m.metric) }));
@@ -988,13 +988,13 @@ export class InstanceSetup {
       /* R50: at setup, the offices the profiles just recorded name are seeded (the machine's act, DEC-52). */
       if (out.profiles && out.profiles.recorded === true) {
         try { out.offices = this.officesSeed({ boot: true }); }
-        catch (e) { out.offices = { ok: false, detail: localize("instance-setup.setup.the_offices_could_not_be", "the offices could not be seeded at setup: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
+        catch (e) { out.offices = { ok: false, detail: localize("instance-setup.setup.the_offices_could_not_be", "the offices could not be seeded at setup: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
       }
     }
     /* R62: at each start, with a place named, the profiles that arrived for it; and once, the read `queue-producers`
        raises the administrators' one Status item from (its R38), read as the plane. */
     try { out.places = this.#comparePlaces(); }
-    catch (e) { out.places = { compared: false, detail: localize("instance-setup.setup.the_place_could_not_be", "the place could not be compared: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
+    catch (e) { out.places = { compared: false, detail: localize("instance-setup.setup.the_place_could_not_be", "the place could not be compared: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     out.arrivals = this.#registerArrivals();
     out.identity = this.#registerIdentity();
     out.language = this.#registerLanguage(this.#translations());
@@ -1018,7 +1018,7 @@ export class InstanceSetup {
      answering R10's `groupIdentityPublic`. A refusal or a throw is answered in the start's report, never thrown. */
   #registerIdentity() {
     let pr = null;
-    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: localize("instance-setup.setup.public_read_could_not_be", "public-read could not be reached: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) }; }
+    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: localize("instance-setup.setup.public_read_could_not_be", "public-read could not be reached: {reason}", { reason: String(String(e && e.message || e).slice(0, 200)) }) }; }
     if (!pr || typeof pr.registerGroupIdentity !== "function") return { ok: false, detail: "no public-read to register with" };
     try { return pr.registerGroupIdentity({ identity: () => this.groupIdentityPublic() }); }
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
@@ -1193,7 +1193,7 @@ export class InstanceSetup {
   async #readWellKnown(domain, path, address, slug) {
     let g;
     try { g = this.#governor().governorAdmit({ host: domain }); }
-    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer", "the governor did not answer ({String})", { String: String(String(e && e.message || e).slice(0, 120)) }) }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer", "the governor did not answer ({reason})", { reason: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
       return { verdict: "undetermined", status: null,
                detail: word("instance-setup.domain.detail.held", { domain, reason: String(g && g.reason) }) };
@@ -1437,7 +1437,7 @@ export class InstanceSetup {
       return { ok: true, languages: out };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: localize("instance-setup.setup.the_languages_could_not_be", "the languages could not be read ({String}).", { String: String(String(e && e.message || e).slice(0, 160)) }) };
+               detail: localize("instance-setup.setup.the_languages_could_not_be", "the languages could not be read ({reason}).", { reason: String(String(e && e.message || e).slice(0, 160)) }) };
     }
   }
 
@@ -2057,7 +2057,7 @@ export class InstanceSetup {
     try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({String}), so no ask is put to an assistant and no run starts.", { String: String(String(e && e.message || e)
+               detail: localize("instance-setup.setup.whether_your_team_keeps_its", "whether your team keeps its material away from every assistant did not answer ({reason}), so no ask is put to an assistant and no run starts.", { reason: String(String(e && e.message || e)
                  .slice(0, 160)) }) };
     }
   }
@@ -2317,7 +2317,7 @@ export class InstanceSetup {
    *  not answer is the store's silence (R43), never `met: false`. Writes nothing and never throws. */
   adminRecoveryStep({ viewer = null } = {}) {
     const silent = (what, e) => ({ ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-      detail: localize("instance-setup.setup.what_did_not_answer_string", "{what} did not answer ({String}), so whether the step is met is not known", { what: String(what), String: String(String(e && e.message || e).slice(0, 160)) }) });
+      detail: localize("instance-setup.setup.what_did_not_answer_string", "{what} did not answer ({reason}), so whether the step is met is not known", { what: String(what), reason: String(String(e && e.message || e).slice(0, 160)) }) });
     const who = typeof viewer === "string" ? viewer.trim() : "";
     let admin;
     try { admin = !!who && !/^class:/.test(who) && this.#membership().isAdministrator(who) === true; }
@@ -2513,7 +2513,7 @@ export class InstanceSetup {
     const host = new URL(RELEASE_NOTICE_ADDRESS).host;
     let g;
     try { g = this.#governor().governorAdmit({ host }); }
-    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer_2", "the governor did not answer ({String})", { String: String(String(e && e.message || e).slice(0, 120)) }) }; }
+    catch (e) { g = { admitted: false, reason: localize("instance-setup.setup.the_governor_did_not_answer_2", "the governor did not answer ({reason})", { reason: String(String(e && e.message || e).slice(0, 120)) }) }; }
     if (!g || !g.admitted)
       return { outcome: "unreachable", detail: word("instance-setup.updates.detail.held", { host, reason: String(g && g.reason) }) };
     if (g.wait_ms) await this.#sleep(g.wait_ms);
@@ -2644,7 +2644,7 @@ export class InstanceSetup {
 
   #updateSilence(what, e) {
     return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-             detail: localize("instance-setup.setup.what_could_not_be_read", "{what} could not be read ({String}), so it is not known.", { what: String(what), String: String(String(e && e.message || e).slice(0, 160)) }) };
+             detail: localize("instance-setup.setup.what_could_not_be_read", "{what} could not be read ({reason}), so it is not known.", { what: String(what), reason: String(String(e && e.message || e).slice(0, 160)) }) };
   }
 
   /** R89, op=updatenotice: to an administrator only (`NOT_AN_ADMIN`, a machine included), what Settings › Updates draws:
@@ -3239,7 +3239,7 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
     ...(complete ? {} : { last_confirmed_step: confirmed }),
     note: complete
       ? localize("instance-setup.setup.this_run_returned_so_the", "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.")
-      : localize("instance-setup.setup.the_store_did_not_confirm", "the store did not confirm step {v1}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.", { v1: confirmed + 1, confirmed }) });
+      : localize("instance-setup.setup.the_store_did_not_confirm", "the store did not confirm step {next}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is {confirmed}.", { next: confirmed + 1, confirmed }) });
 }
 
 /* ============================================================================================================
