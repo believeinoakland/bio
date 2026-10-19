@@ -190,7 +190,7 @@ test("R59 the guide's marks are drawn inside the screen's title row, after its h
 });
 
 test("R60 the masthead never draws a count at zero, never the group's slug (\"Your group\" when groupidentity answers no display_name), and names the explanation level by its own words; control: a set name is drawn", async () => {
-  const p = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "FINDING" }] }), groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
+  const p = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "OTHER" }] }), groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector('[data-kind="todo"]'), null, "zero To-do items draw no count");
   assert.ok(!mast.textContent.includes("0"));
@@ -203,7 +203,7 @@ test("R60 the masthead never draws a count at zero, never the group's slug (\"Yo
   /* control: a set name is drawn, and a count above zero */
   const q = await boot({ screens: ALL });
   assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, "River Town");
-  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, "2 to do");
+  assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, word("shell.todo", { n: 3 }));
 });
 
 test("R61 absence: a subject read refused with an absence code draws only Nothing is here, with the way back to its place; a subject screen opened with no subject likewise, reading nothing; a refusal with its own words draws them alone; a failure without words draws could not be read with its reference; control: a 5xx still draws can't be reached", async () => {

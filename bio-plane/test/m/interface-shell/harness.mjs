@@ -36,6 +36,7 @@ export const FRAME = Object.freeze({
   subscriptionsignin: ok({ connected: false }),
   groupkeystate: ok({ on: false }),
   signout: ok({ ok: true }),
+  version: { status: 200, text: "build-1\n" },
 });
 /* The session record interface-shell R32 keeps in localStorage under `SESSION_STORE_KEY`: `{t, e, d, w}`. */
 export const SESSION = Object.freeze({ t: "tok-1", e: 0, d: "own", w: "mai" });
@@ -95,7 +96,8 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const answers = { ...FRAME, ...plane };
   const fetch = async (url, init = {}) => {
     const u = new URL(url, "https://group.example");
-    const op = u.searchParams.get("op");
+    /* R92: the version poll is a plain-text address of its own, not an op */
+    const op = u.pathname === "/version" ? "version" : u.searchParams.get("op");
     const req = { url: String(url), op, query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
     requests.push(req);
@@ -106,7 +108,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     if (a.silent) throw new TypeError("Failed to fetch");
     return { status: a.status, ok: a.status >= 200 && a.status < 300,
       headers: { get: (h) => (h.toLowerCase() === "content-type" ? (a.ndjson !== undefined ? "application/x-ndjson" : a.bytes !== undefined ? a.type : a.json !== undefined ? "application/json" : "text/plain") : null) },
-      text: async () => (a.ndjson !== undefined ? a.ndjson.map((e) => (typeof e === "string" ? e : JSON.stringify(e))).join("\n") + "\n" : JSON.stringify(a.json ?? "")),
+      text: async () => (a.text !== undefined ? a.text : a.ndjson !== undefined ? a.ndjson.map((e) => (typeof e === "string" ? e : JSON.stringify(e))).join("\n") + "\n" : JSON.stringify(a.json ?? "")),
       blob: async () => new Blob([a.bytes ?? ""], { type: a.type || "" }),
       json: async () => { if (a.json === undefined) throw new SyntaxError("not JSON"); return JSON.parse(JSON.stringify(a.json)); } };
   };

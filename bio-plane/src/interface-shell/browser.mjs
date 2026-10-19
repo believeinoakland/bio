@@ -85,7 +85,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (REAUTH) { const r = REAUTH; REAUTH = null; r.resolve(false); }
     if (DIALOG) { const d = DIALOG; DIALOG = null; if (d.resolve) d.resolve(d.kind === "register" ? null : false); }
     OVERLAY_REFUSAL = "";
-    S = null; ME = null; LOCKED = false; stopIdle();
+    S = null; ME = null; LOCKED = false; stopIdle(); stopVersion();
     clearRecord(why);
     ENTRY = { state: why, handle };
     route();
@@ -163,7 +163,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* ---------- the act gate (R12, R30, R45) and the weights (R11) ---------- */
   const ADMIN = new Set(D.adminActs);
   const SESSION = { member: new Set(D.sessionOps.member), admin: new Set(D.sessionOps.admin) };
+  /* R100: an act the page does alone (`op-declarations` R76), of the screen the table names it for: drawn to any session and to
+     none, never an op (no weight, no friction, no phone hold, no request) */
+  const browserAct = (op, inst) => !!(inst && inst.spec && inst.spec.id && Object.hasOwn(D.browserActs, op) && D.browserActs[op] === inst.spec.id);
   function can(op, inst) {
+    if (browserAct(op, inst)) return true;
     if (!(op in D.ops)) return false;
     /* R30, R45: a screen drawn without a session offers only the public ops */
     if (inst && inst.pub) return D.publicOps.includes(op) || (op === "unlock" && !!S);
@@ -279,7 +283,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return { state: "none", handle: null };
   }
   function instance(spec, subject, key, serves) {
-    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {} };
+    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {}, words: {}, fresh: {}, refreshT: {}, ro: false };
     inst.view = key === "g"
       /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
       ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
@@ -310,6 +314,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
       if (gen !== inst.gen && !names) return;
       inst.data[n] = outcome(spec, a);
+      /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
+      if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
       /* R74: a locked act is enabled again once a read started after it has redrawn the screen */
       for (const [k, v] of ACTSTATE) if (v.lock && k.startsWith(inst.key + "|") && gen >= v.gen) ACTSTATE.delete(k);
       /* R9, R35: the subject's read decides whether the screen can be drawn at all */
@@ -324,6 +330,36 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       }
       draw();
     }));
+  }
+  /* R93 (A10): a read a screen marks `refresh: true` is read again by the shell every 45 seconds, as a background read (R33),
+     while the page is visible, no lock, password, signer or other overlay is open, no act of the screen has its reason field or
+     confirmation open, and the member's focus is not in a text field; the screen redraws in place (draw keeps focus, scroll,
+     open panels, picks and typed text); a re-read that fails keeps the list from the last answer; the timers go with the screen */
+  function armRefresh(inst, n) {
+    if (inst.refreshT[n] !== undefined) clearTimeout(inst.refreshT[n]);
+    inst.refreshT[n] = setTimeout(() => refreshNow(inst, n), REFRESH_MS);
+    /* the line expires on its own: a redraw once the answer is older than `list.fresh` may claim */
+    if (inst.refreshT["fresh:" + n] !== undefined) clearTimeout(inst.refreshT["fresh:" + n]);
+    inst.refreshT["fresh:" + n] = setTimeout(() => { if (live(inst) && inst.fresh[n] && Date.now() - inst.fresh[n] > FRESH_MS) draw(); }, FRESH_MS + 1000);
+  }
+  const typingNow = () => {
+    const el = doc.activeElement, root = doc.getElementById("cs-root");
+    if (!el || !root || !root.contains(el)) return false;
+    return el.localName === "textarea" || (el.localName === "input" && !["checkbox", "radio", "button", "submit", "reset", "file", "range", "color", "image"].includes(el.type));
+  };
+  const formOpen = () => !!doc.getElementById("cs-root").querySelector(".mk-slot .cs-reason, .mk-slot .cs-dialog");
+  async function refreshNow(inst, n) {
+    delete inst.refreshT[n];
+    if (!live(inst) || (inst.unavail && inst.unavail !== "nothing")) return;
+    if (doc.hidden === true || LOCKED || REAUTH || DIALOG || formOpen() || typingNow()) { inst.refreshT[n] = setTimeout(() => refreshNow(inst, n), REFRESH_MS); return; }
+    let spec = null;
+    try { spec = (inst.spec.reads ? inst.spec.reads(inst.view) || {} : {})[n] || null; } catch { spec = null; }
+    if (!spec || spec.refresh !== true) return;
+    const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background: true });
+    if (!live(inst)) return;
+    if (a.kind === "ok") { inst.data[n] = outcome(spec, a); inst.fresh[n] = Date.now(); } else inst.fresh[n] = 0;
+    armRefresh(inst, n);
+    draw();
   }
   /* R35: an unreachable screen is tried again every 30 seconds, in the background, while it is the one shown */
   function retryLater(inst) {
@@ -346,6 +382,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     tag: { cls: "cs-kind", attr: null, icon: null },
     scale: { cls: "cs-grade", attr: "data-scale", icon: (v) => v },
   };
+  /* R95: the kinds `cs.stateChip` draws; R93: a refreshing read is fresh for 90 seconds, re-read every 45 */
+  const STATE_KINDS = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched"];
+  const FRESH_MS = 90 * 1000, REFRESH_MS = 45 * 1000;
   const wordOrData = (o) => (o && typeof o === "object" ? (typeof o.key === "string" ? w(o.key, o.fills) : esc(o.text)) : typeof o === "string" ? w(o) : "");
   function kit(inst, bg) {
     const cs = {
@@ -378,11 +417,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const type = r.headers && r.headers.get ? r.headers.get("content-type") || "" : "";
         if (!r.ok || /json/i.test(type)) { let j = null; try { j = await r.json(); } catch { j = null; } return { ok: false, answer: j }; }
         const blob = await r.blob();
+        /* R98 (A28): with `verify`, the bytes are hashed here before any file is made; a difference saves nothing */
+        if (typeof o.verify === "string" && o.verify) {
+          const got = Array.from(new Uint8Array(await win.crypto.subtle.digest("SHA-256", await blob.arrayBuffer()))).map((b) => b.toString(16).padStart(2, "0")).join("");
+          const expected = o.verify.toLowerCase();
+          if (got !== expected) return { ok: false, answer: { code: "DIGEST_MISMATCH", expected, got } };
+        }
         saveFile(blob, o.name || "");
         return { ok: true, answer: { type, size: blob.size } };
       },
       set: (name, value) => { inst.ui[name] = value; draw(); },
       value(id) {
+        /* R91: a words control answers the text and extents of the units selected, in order; null when none */
+        if (Object.hasOwn(inst.words, id)) {
+          const st = inst.words[id], on = new Set(st.sel);
+          const picked = (st.units || []).filter((u) => on.has(u.extent));
+          return picked.length ? { text: picked.map((u) => u.text).join(" "), extents: picked.map((u) => u.extent) } : null;
+        }
         /* R49: an areas control answers its rectangles in the image's pixels */
         if (Object.hasOwn(inst.areas, id)) return inst.areas[id].map((r) => ({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) }));
         const el = doc.getElementById(id);
@@ -445,23 +496,28 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       act(op, o = {}) {
         const spec = (inst.spec.acts || []).find((a) => a.op === op);
         if (!spec || !can(op, inst)) return "";
-        const weight = weightOf(op);
+        const browser = browserAct(op, inst);
+        const weight = browser ? "none" : weightOf(op);
         const label = w(o.label || spec.label || "act." + op + ".label." + (inst.spec.id || "guide"), o.fills);
-        const does = has("act." + op + ".does") ? w("act." + op + ".does") : "";
+        /* R90: where the screen draws the button, `act.<op>.here.<place>` explains it in place of `.does`; a `here` word the
+           table lacks falls back to `.does`, and no empty explanation is drawn */
+        const hereKey = typeof o.here === "string" && o.here ? "act." + op + ".here." + o.here : "";
+        const doesKey = hereKey && has(hereKey) ? hereKey : "act." + op + ".does";
+        const does = has(doesKey) ? w(doesKey) : "";
         const outward = !!(spec.outward || o.outward);
         /* R11 (DEC-181), R50 (K3156): a signed or irreversible act, or any weighed act `op-grades.phoneOf` answers false for,
          is held at the phone width */
         if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward }) - 1;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward, browser }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
            only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
            weight name, on its button and in its explanation; public pages carry no weight marks (R30, R84). */
         const mark = weight === "none" && WEIGHTS.includes(D.marks[op]) ? D.marks[op] : null;
         const shown = mark || weight;
-        const weighed = shown !== "none" && shown !== "reversible" && !inst.pub;
+        const weighed = shown !== "none" && shown !== "reversible" && !inst.pub && !D.publicPages.includes(inst.spec.id);
         const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(shown) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
         /* R76: an explanation never repeats the button's label: it is the act's own sentence (the label leading it, as the
            design draws it), and an act with none draws none of its own */
@@ -533,7 +589,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const cls = "cs-input" + (o.rec ? " rec" : "") + (o.draft ? " cs-draft" : "");
         const attrs = (o.type ? ' type="' + esc(o.type) + '"' : o.area ? "" : ' type="text"') + (o.max ? ' maxlength="' + esc(o.max) + '"' : "")
           + (o.accept ? ' accept="' + esc(o.accept) + '"' : "") + (o.capture ? ' capture="' + esc(o.capture) + '"' : "")
-          + (o.help ? ' aria-describedby="' + esc(id) + '-help"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "");
+          + (o.help ? ' aria-describedby="' + esc(id) + '-help"' : "") + (o.autocomplete ? ' autocomplete="' + esc(o.autocomplete) + '"' : "")
+          + (o.placeholder ? ' placeholder="' + wordOrData(o.placeholder) + '"' : "");
         const input = o.area ? '<textarea id="' + esc(id) + '" class="' + cls + '"' + attrs + ">" + esc(o.value || "") + "</textarea>"
           : "<input id=\"" + esc(id) + '" class="' + cls + '"' + attrs + (o.type === "file" || o.type === "password" ? "" : ' value="' + esc(o.value || "") + '"') + ">";
         return '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey, o.fills) + "</label>"
@@ -546,14 +603,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const valueOf = (x) => (Array.isArray(x) ? x[0] : x && typeof x === "object" ? x.value : x);
         /* R49 (K3150): `{acts: {<value>: op}}`: the choice drives the act it governs, one button following it */
         const drives = !!(o.acts && typeof o.acts === "object");
+        /* R90: `{redraw: <name>}`: the value chosen is `view.ui[<name>]` and the screen redraws at once; no op, no address;
+           `o.value` seeds the draw only until the member chooses */
+        const redraw = typeof o.redraw === "string" && o.redraw ? o.redraw : "";
         const values = (options || []).map(valueOf);
-        const chosen = drives ? (values.includes(inst.ui["choice:" + id]) ? inst.ui["choice:" + id] : values.includes(o.value) ? o.value : values[0]) : o.value;
+        const chosen = drives ? (values.includes(inst.ui["choice:" + id]) ? inst.ui["choice:" + id] : values.includes(o.value) ? o.value : values[0])
+          : redraw && Object.hasOwn(inst.ui, redraw) ? inst.ui[redraw] : o.value;
         if (drives) inst.ui["choice:" + id] = chosen;
         const opt = (x) => {
           const [v, t] = Array.isArray(x) ? [x[0], w(x[1], x[2])] : x && typeof x === "object" ? [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text)] : [x, esc(x)];
           return '<option value="' + esc(v) + '"' + (chosen === v ? " selected" : "") + ">" + t + "</option>";
         };
-        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : "") + ">"
+        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : redraw ? ' data-shell="choice" data-redraw="' + esc(redraw) + '"' : "") + ">"
           + (options || []).map(opt).join("") + "</select></div>";
         return drives && Object.hasOwn(o.acts, chosen) ? field + cs.act(o.acts[chosen], o.act || {}) : field;
       },
@@ -699,9 +760,63 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
             + w("shell.glance.strip.sum", { n: "" }).trim() + "</a></div>";
         }
+        /* R90: a reading's `says` (a word key or `{text}`) closes that reading's own explanation, after its label in bold */
         return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '">' + four.map((r) =>
-          '<a class="cs-ref" href="' + esc(hrefOf(r.screen || "queue", r.subject)) + '" data-nav><b>' + esc(r.n) + "</b> " + wordOrData(r.label) + "</a>").join("") + "</div>";
+          '<a class="cs-ref" href="' + esc(hrefOf(r.screen || "queue", r.subject)) + '" data-nav'
+          + (r.says ? tipAttr("<b>" + wordOrData(r.label) + '</b><span class="more">' + wordOrData(r.says) + "</span>", 1) : "") + "><b>" + esc(r.n) + "</b> " + wordOrData(r.label) + "</a>").join("") + "</div>";
       },
+      /* R91 (N1236): a document's words for choosing a passage on a form: `units` `{extent, text}` in order (text is data);
+         selected by pointer or touch, or by keyboard (each unit takes focus, Space toggles, Shift with the arrows extends);
+         `cs.value(id)` answers `{text, extents}` or null; the control sends nothing and reads no op */
+      words(id, o = {}) {
+        const units = (Array.isArray(o.units) ? o.units : []).filter((u) => u && typeof u === "object").map((u) => ({ extent: String(u.extent == null ? "" : u.extent), text: String(u.text == null ? "" : u.text) }));
+        const label = o.label ? wordOrData(o.label) : w("form.choose.passage");
+        const st = inst.words[id] || (inst.words[id] = { sel: [], anchor: null });
+        st.units = units;
+        if (!units.length) return '<p class="cs-state" data-state="empty" id="' + esc(id) + '">' + w("state.empty") + "</p>";
+        const on = new Set(st.sel);
+        return '<div id="' + esc(id) + '" class="mk-pagetext" role="group" aria-label="' + label + '" data-words="' + esc(id) + '">' + units.map((u, i) => {
+          const sel = on.has(u.extent);
+          const attrs = ' role="checkbox" aria-checked="' + sel + '" tabindex="0" data-shell="word" data-id="' + esc(id) + '" data-i="' + i + '"';
+          return (sel ? '<mark class="mk-sel"' : "<span") + attrs + ">" + esc(u.text) + (sel ? "</mark>" : "</span>");
+        }).join(" ") + "</div>";
+      },
+      /* R93 (A10): `list.fresh` as a polite status line, only while the screen's refreshing read last answered no more than 90
+         seconds ago on the page's clock; none before its first answer or after a failed re-read */
+      fresh(name) {
+        const stamps = Object.entries(inst.fresh).filter(([n]) => !name || n === name).map(([, t]) => t);
+        if (!stamps.length || stamps.some((t) => !t) || Date.now() - Math.min(...stamps) > FRESH_MS) return "";
+        return '<p class="mk-note" role="status" aria-live="polite" data-fresh>' + w("list.fresh") + "</p>";
+      },
+      /* R94 (A13): a member who may read and not act is told so, once on a screen; "" for one who holds Contribute */
+      readonly(noun) {
+        if (!ME || ME.administer === true || (Array.isArray(ME.capabilities) && ME.capabilities.includes("contribute")) || inst.ro) return "";
+        inst.ro = true;
+        const n = noun && typeof noun === "object" ? wordOrData(noun) : typeof noun === "string" && has(noun) ? w(noun) : esc(noun == null ? "" : noun);
+        return '<p class="mk-note" role="note">' + w("shell.readonly", { noun: html(n) }) + "</p>";
+      },
+      /* R95 (A11): the design's state chip for a kind, explained at level 1 by what it means, can and cannot (separate lines
+         of the one explanation); a kind outside the list draws nothing */
+      stateChip(kind) {
+        if (!STATE_KINDS.includes(kind)) return "";
+        const base = "state.item." + kind;
+        if (!has(base + ".name")) return "";
+        const tip = "<b>" + w(base + ".name") + "</b>" + (has(base + ".means") ? ": " + w(base + ".means") : "")
+          + [".can", ".cannot"].filter((x) => has(base + x)).map((x) => '<span class="why">' + w(base + x) + "</span>").join("");
+        return '<span class="mk-chip" tabindex="0"' + tipAttr(tip, 1) + ">" + w(base + ".name") + "</span>";
+      },
+      /* R95: a glossary term as a card: its name, explained by its definition then `shell.card.open`, a click opening `glossary`;
+         until the design gives the term a name (`<definition key>.name`), no term is drawn as a term */
+      term(termKey) {
+        const def = "screen.glossary." + String(termKey == null ? "" : termKey);
+        if (!has(def) || !has(def + ".name")) return "";
+        const target = screenOf("glossary") ? hrefOf("glossary") : null;
+        const tip = w(def) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
+        return target ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(tip, 1) + ">" + w(def + ".name") + "</a>"
+          : '<span class="cs-card" tabindex="0"' + tipAttr(tip, 1) + ">" + w(def + ".name") + "</span>";
+      },
+      /* R99 (A79): the page printed now; `printed(cs, view)` follows when printing ends or is cancelled */
+      print() { try { win.print(); } catch { /* the browser refused to print: nothing printed */ } return true; },
     };
     /* R46 (screens-entry R2, R6, R7): the session handed over by a screen, and its end */
     cs.signin = (answer, o = {}) => signedIn(answer, o);
@@ -884,6 +999,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   };
   function renderOf(inst) {
     if (inst.key !== "g") { inst.acts = []; inst.binds = []; }
+    inst.ro = false;
     try { return inst.spec.render(kit(inst), inst.view); } catch { return inst.key === "g" ? "" : '<p class="cs-state" data-state="failed" role="alert">' + w("shell.unread") + "</p>"; }
   }
   /* K3143: the guide's marks, on each draw of a working screen; R51: held in one element that says they are the guide's,
@@ -1026,7 +1142,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     const place = placeOf(route.screen);
     const rail = RAIL.map((k) => '<a href="' + placeHref(k) + '" data-nav' + (place === k ? ' aria-current="page"' : "") + tipAttr(w("rail." + k + ".holds"), RAILW < 120 ? 1 : 2) + ">"
-      + I(RAIL_ICON[k]) + w("rail." + k + ".name") + "</a>").join("")
+      + I(RAIL_ICON[k]) + w("rail." + k + ".name") + (k === "queue" && TODO ? '<span class="count">' + esc(TODO) + "</span>" : "") + "</a>").join("")
       + '<button type="button" class="cs-grip" data-shell="grip" role="separator" aria-orientation="vertical" aria-label="' + w("shell.width") + '" aria-valuemin="64" aria-valuemax="320" aria-valuenow="' + RAILW + '"' + tipAttr(w("shell.width.holds"), 2) + "></button>";
     const tabs = TABS.map((k) => '<a href="' + (k === "more" ? "/app/more" : placeHref(k)) + '" data-nav'
       + ((place === k || (k === "more" && ["projects", "people", "settings", "more"].includes(place))) ? ' aria-current="page"' : "")
@@ -1042,8 +1158,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + '<button type="button" class="cs-btn" data-shell="level-keep" data-level-to="prompt">' + w("level.keep.prompt") + "</button>"
       + '<button type="button" class="cs-btn" data-shell="level-keep" data-level-to="pause">' + w("level.keep.pause") + "</button></div></div>"
       : onHome && KEEP_LATER ? '<div class="cs-reason" role="status" data-level-note="later"><p>' + w("level.keep.later") + "</p></div>" : "";
+    /* R92 (A9): a newer version is ready, across the top of the frame, above the masthead and below the test-instance band; the
+       button reloads, nothing reloads by itself */
+    const update = NEWER ? '<div class="cs-testband mk-updband" role="status"><b>' + w("shell.update.title") + "</b><span>" + w("shell.update.says") + '</span><button type="button" class="cs-btn" data-tone="quiet" data-shell="reload"'
+      + tipAttr("<b>" + w("shell.reload") + "</b>: " + w("shell.update.reload.does") + " " + w("shell.update.reload.warn"), 2) + ">" + w("shell.reload") + "</button></div>" : "";
     return '<div class="cs-frame cs-shell' + (dock ? " with-dock" : "") + (RAILW < 120 ? " rail-icons" : "") + '" data-frame="working" id="cs-frame" style="--rail:' + RAILW + 'px">'
-      + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
+      + update + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
       + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + ask + main + "</main>" + dock
       + '<nav class="cs-tabs" aria-label="' + w("shell.sections") + '">' + tabs + "</nav></div>";
   }
@@ -1105,7 +1225,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R35: what was typed is kept while the screen cannot be reached, and comes back with it */
     if (MAIN && MAIN.unavail === "unreachable" && Object.keys(values).length) MAIN.stash = Object.assign({}, MAIN.stash || {}, values);
     const fk = focusKey(doc.activeElement);
+    /* R93: a redraw in place leaves the main column where it was scrolled to */
+    const before = doc.getElementById("cs-main"), top = before ? before.scrollTop : 0;
     root.innerHTML = frameHtml(ROUTE) + overlayHtml();
+    const after = doc.getElementById("cs-main");
+    if (after && top) after.scrollTop = top;
     /* R59: the guide's marks in the title row of a working screen that is drawn */
     if (!UNREACHED && !ENTRY_PAGE && (MAIN ? !MAIN.unavail && frameOf(MAIN.spec.id) === "working" : D.places.includes(ROUTE.screen))) placeMarks(root, marksHtml());
     absorb(root);
@@ -1142,7 +1266,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const id = OUTSIDE ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
     const name = has("screen." + id + ".name") ? textOf(w("screen." + id + ".name"))
       : D.places.includes(ROUTE.screen) ? textOf(w(ROUTE.screen === "more" ? "shell.more" : "rail." + ROUTE.screen + ".name")) : textOf(w("screen.unavailable.name"));
-    const plain = OUTSIDE || ENTRY_PAGE || (MAIN && frameOf(MAIN.spec.id) !== "working");
+    const plain = OUTSIDE || ENTRY_PAGE || (MAIN && D.publicPages.includes(MAIN.spec.id));
     return plain ? textOf(w("page.title.public", { page: name, team })) : textOf(w("page.title", { screen: name, team }));
   }
 
@@ -1156,6 +1280,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!inst) return;
     for (const t of inst.timers) clearTimeout(t);
     inst.timers = [];
+    /* R93: a refreshing read's timers are cancelled with the screen (R27's rule); R91: a selection is page memory only */
+    for (const t of Object.values(inst.refreshT)) clearTimeout(t);
+    inst.refreshT = {};
+    inst.words = {};
     for (const k of [...ACTSTATE.keys()]) if (k.startsWith(inst.key + "|")) ACTSTATE.delete(k);
     if (inst.retry !== null) { clearTimeout(inst.retry); inst.retry = null; }
     /* R49: the images' object addresses released with the screen */
@@ -1213,6 +1341,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function show(id, subject) {
     const spec = screenOf(id);
     MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m") : null;
+    if (ME && S && frameOf(id) === "working") startVersion();
     DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
     draw();
     const n = ROUTING;
@@ -1442,6 +1571,28 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (el.parentElement) el.parentElement.insertBefore(label, el);
   }
 
+  /* ---------- a newer version (R92; DEC-330 A9) ---------- */
+  /* `GET /version` (plain text, a public address: no Authorization header, no session, no activity, no log) once when the
+     working frame opens and every five minutes while the page is visible, on the page's clock; the first answer is the version
+     the page runs, a later one that differs draws the band, which stays until its button is pressed. */
+  const VERSION_MS = 5 * 60 * 1000;
+  let VERSION = null, NEWER = false, VT = null, VSTARTED = false;
+  async function pollVersion() {
+    VT = null;
+    if (doc.hidden !== true) {
+      let v = null;
+      try {
+        const r = await win.fetch("/version", { cache: "no-store" });
+        const type = r && r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
+        if (r && r.ok && /^text\//i.test(type)) v = String(await r.text()).trim();
+      } catch { v = null; }
+      if (v) { if (VERSION === null) VERSION = v; else if (v !== VERSION && !NEWER) { NEWER = true; draw(); } }
+    }
+    if (VSTARTED) VT = setTimeout(pollVersion, VERSION_MS);
+  }
+  function startVersion() { if (VSTARTED) return; VSTARTED = true; pollVersion(); }
+  function stopVersion() { VSTARTED = false; if (VT !== null) clearTimeout(VT); VT = null; }
+
   /* ---------- the signer (R40–R42; DEC-207, DEC-208, DEC-210; K3079 (a), K3080) ---------- */
   /* The member's Ed25519 key, made in this browser and never sent: kept, by the member's choice, as a non-extractable key
      in this origin's IndexedDB; otherwise given out once as a key file (`signatures` R43's `BIOKEY1.`, made here) and held
@@ -1518,9 +1669,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const k = await kept();
     return k && k.priv && k.raw32 ? { priv: k.priv, raw32: new Uint8Array(k.raw32) } : null;
   }
-  /* R40, R47: the key made in the browser; kept on the device only when `keep`, else handed out once as a key file in
-     `BIOKEY1.` form under a passphrase the member types twice in the kit's own dialog. Answers `{ok, keyB64}` or
-     `{ok: false, declined: true}` when the member stops. */
+  /* R40, R47, R97: the key made in the browser; kept on the device only when `keep`, else made as a key file: under the
+     `passphrase` typed on the page (no dialog), unprotected (`BIOKEY-RAW1.`) when that is the empty string, else under a
+     passphrase the member types twice in the kit's own dialog. The file is downloaded, or with `defer` answered as `file` and
+     held in page memory for the sitting only. Answers `{ok, keyB64, line, kept, file?}` or `{ok: false, declined: true}` when
+     the member stops. */
   async function register(o = {}) {
     if (o.keep) {
       const pair = await subtle().generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
@@ -1530,17 +1683,19 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       SITTING = null;
       return { ok: true, kept: true, ...lineOf(raw32, LABEL) };
     }
-    for (;;) {
-      const pass = await new Promise((resolve) => { DIALOG = { kind: "register", resolve }; OVERLAY_REFUSAL = ""; draw(); });
+    let pass;
+    if (typeof o.passphrase === "string") pass = o.passphrase;
+    else {
+      pass = await new Promise((resolve) => { DIALOG = { kind: "register", resolve }; OVERLAY_REFUSAL = ""; draw(); });
       if (pass === null) return { ok: false, declined: true };
-      const seed = win.crypto.getRandomValues(new Uint8Array(32));
-      const { priv, raw32 } = await seedKeys(seed);
-      const file = await wrapSeed(seed, pass);
-      seed.fill(0);
-      saveFile(new Blob([file + "\n"], { type: "text/plain" }), "bio-signing-key.txt");
-      SITTING = { priv, raw32 };
-      return { ok: true, kept: false, ...lineOf(raw32, LABEL) };
     }
+    const seed = win.crypto.getRandomValues(new Uint8Array(32));
+    const { priv, raw32 } = await seedKeys(seed);
+    const file = pass === "" ? ["BIOKEY-RAW1", LABEL, b64(seed)].join(".") : await wrapSeed(seed, pass);
+    seed.fill(0);
+    if (!o.defer) saveFile(new Blob([file + "\n"], { type: "text/plain" }), "bio-signing-key.txt");
+    SITTING = { priv, raw32 };
+    return { ok: true, kept: false, ...lineOf(raw32, LABEL), ...(o.defer ? { file } : {}) };
   }
   const SIGNER = {
     /* the key this browser holds: kept on the device, or loaded for this sitting */
@@ -1613,6 +1768,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
 
   /* ---------- acts: friction (R11), sending, refusals beside the act (R13), the password asked again (R34) ---------- */
   const instOf = (k) => (k === "m" ? MAIN : k === "d" ? DOCKI : k === "g" ? GUIDEI : null);
+  /* the screen instance that drew an element: the guide's panel, the assistant's, else the main screen */
+  const ownerOf = (el) => (el.closest && el.closest('.cs-dock[data-panel="guide"]') ? GUIDEI : el.closest && el.closest(".cs-dock") ? DOCKI : MAIN);
   function slotOf(ai) { return doc.getElementById("cs-root").querySelector('[data-slot="' + ai + '"]'); }
   function besideAct(ai, inner) { const s = slotOf(ai); if (s) s.innerHTML = inner; }
   const refusalHtml = (words) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words + "</span></span>";
@@ -1630,7 +1787,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (RING && RING.op === d.op) RING = null;
     /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
     if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
-    const weight = weightOf(d.op);
+    const weight = d.weight;
     if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
     /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
     if (weight === "reasoned" && d.spec.reasonField) return run(inst, d, btn, ai, { own: true });
@@ -1677,6 +1834,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   async function run(inst, d, btn, ai, extra) {
     let req;
     if (d.table) extra.picked = (inst.ui["pick:" + d.table] || []).slice();
+    /* R100: a browser act does its work in `send` and sends no request: no header, no op door, no read; its `done` and
+       `rereads` do not run. The button answers the press as any act's does (R74), a refusal drawn in its slot (R13). */
+    if (d.browser) {
+      besideAct(ai, "");
+      actState(inst, d, { busy: true });
+      let out;
+      try { out = d.spec.send ? await d.spec.send(inst.view, btn, kit(inst), extra) : null; } catch { return actState(inst, d, null); }
+      if (out && typeof out === "object" && out.refuse) { actState(inst, d, null); return refuseBeside(ai, w(out.refuse, out.fills)); }
+      actState(inst, d, { done: true });
+      setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); paint(inst, d.key); } }, 2000);
+      return;
+    }
     try {
       req = d.spec.send ? await d.spec.send(inst.view, btn, kit(inst), extra) : { body: Object.assign({}, d.data) };
     } catch { req = null; }
@@ -1739,11 +1908,27 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     TIP = el;
     el.setAttribute("aria-describedby", "cs-tip");
     if (el.getBoundingClientRect && t.style) {
-      /* R84: below what it explains, above when the room below is short, never over the next control */
+      /* R103 (R84): below what it explains, else to its right, else its left, else above: the first that covers no other control
+         and stays inside the page; failing that, the first inside the page, else below */
       const r = el.getBoundingClientRect();
-      const h = Number(t.offsetHeight) || 0, vh = Number(win.innerHeight) || 0;
-      t.style.left = Math.max(8, Math.round(r.left)) + "px";
-      t.style.top = Math.round(vh && h && r.bottom + 6 + h > vh && r.top - 6 - h > 0 ? r.top - 6 - h : r.bottom + 6) + "px";
+      const tw = Number(t.offsetWidth) || 0, th = Number(t.offsetHeight) || 0, vw = Number(win.innerWidth) || 0, vh = Number(win.innerHeight) || 0, gap = 6;
+      const at = [
+        { left: Math.max(8, Math.round(r.left)), top: Math.round(r.bottom + gap) },
+        { left: Math.round(r.right + gap), top: Math.round(r.top) },
+        { left: Math.round(r.left - gap - tw), top: Math.round(r.top) },
+        { left: Math.max(8, Math.round(r.left)), top: Math.round(r.top - gap - th) },
+      ];
+      const inside = (c) => c.left >= 0 && c.top >= 0 && (!vw || c.left + tw <= vw) && (!vh || c.top + th <= vh);
+      const others = [];
+      for (const c of doc.getElementById("cs-root").querySelectorAll("a[href], button, input, select, textarea, [tabindex]")) {
+        if (c === el || (el.contains && (el.contains(c) || c.contains(el))) || typeof c.getBoundingClientRect !== "function") continue;
+        const b = c.getBoundingClientRect();
+        if (b && b.right > b.left && b.bottom > b.top) others.push(b);
+      }
+      const covers = (c) => others.some((b) => c.left < b.right && c.left + tw > b.left && c.top < b.bottom && c.top + th > b.top);
+      const pick = at.find((c) => inside(c) && !covers(c)) || at.find(inside) || at[0];
+      t.style.left = pick.left + "px";
+      t.style.top = pick.top + "px";
     }
   }
   function closeTip() {
@@ -1789,9 +1974,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (sh) return shell(sh, e);
       /* R49: a choice that drives its act redraws with the act following it */
       const ch = e.target.closest ? e.target.closest('[data-shell="choice"]') : null;
+      if (ch && ch.getAttribute("data-redraw")) {
+        /* R90: a choice that redraws sets its value in `view.ui` and redraws; it sends nothing */
+        const name = ch.getAttribute("data-redraw");
+        const inst = ownerOf(ch);
+        if (inst) { activity(); inst.ui[name] = ch.value; draw(); }
+        return;
+      }
       if (ch) { const inst = [MAIN, DOCKI, GUIDEI].find((i) => i && Object.hasOwn(i.ui, "choice:" + ch.getAttribute("data-choice"))); if (inst) { inst.ui["choice:" + ch.getAttribute("data-choice")] = ch.value; draw(); } }
     });
     root.addEventListener("pointerover", (e) => {
+      const wd = WORDDRAG && e.target.closest ? e.target.closest('[data-shell="word"]') : null;
+      if (wd && wd.getAttribute("data-id") === WORDDRAG.id) {
+        const j = Number(wd.getAttribute("data-i"));
+        if (j !== WORDDRAG.from || WORDDRAG.st.dragged) { WORDDRAG.st.dragged = true; WORDDRAG.st.anchor = WORDDRAG.from; wordRange(WORDDRAG.st, WORDDRAG.from, j, false); draw(); }
+      }
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (!el) return;
       clearTimeout(closeT);
@@ -1823,6 +2020,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     root.addEventListener("pointerdown", (e) => {
       if (blocked(e.target)) return;
+      /* R91: a sweep over the words begins on a unit */
+      const wd = e.target.closest ? e.target.closest('[data-shell="word"]') : null;
+      if (wd) { const x = wordAt(wd); if (x) WORDDRAG = { id: x.id, st: x.st, from: x.i }; return; }
       /* R49: a rectangle drawn over the image, or one moved, by the pointer or a finger */
       const box = e.target.closest ? e.target.closest('[data-shell="areas-box"]') : null;
       if (box) {
@@ -1865,6 +2065,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (blocked(e.target)) return;
       const gc = (e.key === "Enter" || e.key === " ") && !e.repeat && !(e.target.matches && e.target.matches("input, textarea, select")) ? guideControl(e.target) : null;
       if (gc) { e.preventDefault(); GUIDE_KEYED = { el: gc, at: Date.now() }; return guidePress(gc); }
+      if (e.target.closest && e.target.closest('[data-shell="word"]') && wordKey(e.target.closest('[data-shell="word"]'), e)) return;
       const g = e.target.closest ? e.target.closest('[data-shell="grip"]') : null;
       if (g && ["ArrowLeft", "ArrowRight", "Home"].includes(e.key)) {
         e.preventDefault();
@@ -1899,8 +2100,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R31: Alt+Shift+W asks the running guide to ring its step again */
       if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && GUIDEI) { e.preventDefault(); guideCall("ring"); }
     });
+    win.addEventListener("pointerup", () => { WORDDRAG = null; });
     win.addEventListener("popstate", () => route());
-    win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; });
+    win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; stopVersion(); });
     /* R32: every tab sees a sign-in, a lock, a sign-out or an end through the storage event */
     win.addEventListener("storage", (e) => {
       if (!e || (e.key !== D.storeKey && e.key !== STATE_KEY && e.key !== null)) return;
@@ -1918,9 +2120,57 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (S && LOCKED && why !== "locked") { LOCKED = false; OVERLAY_REFUSAL = ""; activity(); armIdle(); draw(); }
     });
     if (mq && mq.addEventListener) mq.addEventListener("change", () => draw());
-    win.addEventListener("beforeprint", () => doc.documentElement.setAttribute("data-theme", "light"));
-    win.addEventListener("afterprint", () => applyTheme());
+    /* R99: the printout is the light theme, the frame, the main column and the body lifted off their fixed height by inline
+       style (a stylesheet rule would cut it at one page), all restored after; then the screen's `printed(cs, view)` */
+    let LIFTED = null;
+    win.addEventListener("beforeprint", () => {
+      doc.documentElement.setAttribute("data-theme", "light");
+      if (LIFTED) return;
+      LIFTED = [doc.getElementById("cs-frame"), doc.getElementById("cs-main"), doc.body].filter((el) => el && el.style).map((el) => ({ el, height: el.style.height, overflow: el.style.overflow }));
+      for (const { el } of LIFTED) { el.style.height = "auto"; el.style.overflow = "visible"; }
+    });
+    win.addEventListener("afterprint", () => {
+      applyTheme();
+      if (LIFTED) { for (const { el, height, overflow } of LIFTED) { el.style.height = height || ""; el.style.overflow = overflow || ""; } LIFTED = null; }
+      for (const inst of [MAIN, DOCKI]) if (inst && typeof inst.spec.printed === "function") { try { inst.spec.printed(kit(inst), inst.view); } catch { /* a screen's own work never stops the shell */ } }
+    });
   }
+  /* R91: the words control's selection: a unit toggled by a click, extended from the last one by Shift with a click or the arrows,
+     or swept by the pointer; page memory only (`inst.words`), dropped with the screen */
+  function wordAt(el) {
+    const inst = ownerOf(el), id = el.getAttribute("data-id"), i = Number(el.getAttribute("data-i"));
+    const st = inst && inst.words[id];
+    return st && st.units && st.units[i] ? { inst, id, st, i } : null;
+  }
+  function wordRange(st, a, b, add) {
+    const ex = st.units.slice(Math.min(a, b), Math.max(a, b) + 1).map((u) => u.extent);
+    st.sel = add ? [...new Set(st.sel.concat(ex))] : ex;
+  }
+  function wordPress(el, e) {
+    const x = wordAt(el);
+    if (!x) return;
+    const { st, i } = x;
+    if (st.dragged) { st.dragged = false; return; }
+    if (e && e.shiftKey && st.anchor !== null && st.units[st.anchor]) wordRange(st, st.anchor, i, true);
+    else { const ex = st.units[i].extent; st.sel = st.sel.includes(ex) ? st.sel.filter((v) => v !== ex) : st.sel.concat(ex); st.anchor = i; }
+    draw();
+  }
+  /* Space toggles the focused unit; the arrows move the focus along the units, and with Shift extend the run to the one reached */
+  function wordKey(el, e) {
+    const x = wordAt(el);
+    if (!x) return false;
+    const { id, st, i } = x;
+    if (e.key === " ") { e.preventDefault(); wordPress(el, {}); return true; }
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return false;
+    e.preventDefault();
+    const j = Math.max(0, Math.min(st.units.length - 1, i + step));
+    if (e.shiftKey) { if (st.anchor === null || !st.units[st.anchor]) st.anchor = i; wordRange(st, st.anchor, j, true); draw(); }
+    const next = doc.getElementById("cs-root").querySelector('[data-shell="word"][data-id="' + String(id).replace(/"/g, "") + '"][data-i="' + j + '"]');
+    if (next && next.focus) next.focus();
+    return true;
+  }
+  let WORDDRAG = null;
   function shell(el, e) {
     const what = el.getAttribute("data-shell");
     const inst = MAIN;
@@ -1951,6 +2201,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       return draw();
     }
     if (what === "area" || what === "areas-box") return;
+    if (what === "word") return wordPress(el, e);
+    if (what === "reload") { try { win.location.reload(); } catch { /* the browser refused: the page stays */ } return; }
     if (what === "menu") { MENU = !MENU; return draw(); }
     if (what === "signout") return signOut();
     if (what === "theme") { MENU = false; return setTheme(el.getAttribute("data-theme-to")); }
@@ -2022,9 +2274,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (g.kind === "ok" && g.value) GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
     if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) {
       const count = (c) => q.value.items.filter((x) => x && x.class === c).length;
-      TODO = count("OBLIGATION");
       /* R82: the queue's three kinds (To do, Noticed, Status), answered only with the queue read; none, no sentence */
-      QUEUE_COUNTS = { todo: TODO, noticed: count("FINDING"), status: count("CONDITION") };
+      QUEUE_COUNTS = { todo: count("OBLIGATION"), noticed: count("FINDING"), status: count("CONDITION") };
+      /* R96 (A6): the number the masthead and the rail's Queue place draw is the design's, the sum of the three kinds */
+      TODO = QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status;
     }
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
       LEVEL_INFO = lv.value;
