@@ -255,7 +255,7 @@ test("R11 the copy covers every area of every mark, two members marking at once 
   assert.equal(w.snapshot().register, register, "never registered");
   assert.equal(w.snapshot().files, files, "never a file of the record");
   assert.ok(!w.evidence.calls.some((c) => c[0] === "put"), "nothing put in the evidence store");
-  assert.deepEqual(w.evidence.held.get(p), original, "the original is unchanged");
+  assert.deepEqual(w.evidence.held.get(p), original, "original digest unchanged");
   assert.equal(w.rows(`SELECT * FROM register WHERE capture_sha IN (?, ?)`, a.copy.sha256, b.copy.sha256).length, 0);
   /* nothing of the original but its pixels: its comment chunk is not carried */
   assert.deepEqual(decodePng(original).chunks.includes("tEXt"), true);

@@ -4,9 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, attributionFrontmatterLines, attributionBodyLines, fmSafe,
-         SECTIONS, REAUTHORABLE_SECTIONS, materialsLines, materialAttestationLines } from "../../../src/case-grammar/index.mjs";
+         SECTIONS, REAUTHORABLE_SECTIONS, materialsLines, materialAttestationLines, SENTENCES } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
+const WHY = "WHY";
 const OBS = "INFO-2026-0099-observation";
 const OBS2 = "INFO-2026-0098-observation";
 
@@ -46,7 +47,7 @@ test("R2 attributionBodyLines: the head, the count of firsthand observations, th
     { observation: "INFO-2026-0096-o", level: "cover", shown: "heron", chosen_at_edition: 2 },
     { observation: "INFO-2026-0095-o", level: "name", shown: "olive", chosen_at_edition: 3 },
     { observation: "INFO-2026-0094-o", level: "group", shown: null, chosen_at_edition: 1 },
-    { observation: OBS2, level: null, why: "its author has chosen no level" },
+    { observation: OBS2, level: null, why: WHY },
   ];
   const lines = attributionBodyLines(rows, "bio-case-document/7");
   assert.equal(lines[0], ATTRIBUTION_PROSE_HEAD);
@@ -61,8 +62,7 @@ test("R2 attributionBodyLines: the head, the count of firsthand observations, th
     "- **INFO-2026-0095-o** — attributed to the name its author chose to appear under: olive — level `name`, chosen at edition 3.",
     "- **INFO-2026-0094-o** — attributed to the group that publishes this case (this record names no producing group, so none "
       + "is printed) — level `group`, chosen at edition 1.",
-    `- **${OBS2}** — NO LEVEL IS CHOSEN: its author has chosen no level. This edition cannot be signed until its author `
-      + "chooses one, or the finding resting on it leaves the case.",
+    SENTENCES.noLevel(OBS2, WHY),
     ""]);
   assert.match(attributionBodyLines([rows[0]])[2], / on 1 firsthand observation recorded /, "singular for one");
   for (const odd of [null, undefined, 7, {}, [null]])
@@ -105,7 +105,7 @@ test("R3 a document carrying no such run answers null for it, and a locator neve
   assert.equal(SECTIONS.attribution(DOC.slice(0, at("## What This Excludes"))), null, "a prose run no heading closes");
   assert.equal(SECTIONS.acknowledgements(without(["  statement_sha: "])), null);
   assert.equal(SECTIONS.acknowledgements(without(["completeness_excluded:"])), null);
-  assert.equal(SECTIONS.acknowledgements(without(["**Who else read this statement.**"])), null);
+  assert.equal(SECTIONS.acknowledgements(without([SENTENCES.whoElse])), null);
   assert.equal(SECTIONS.acknowledgements(without(["## What Was Searched"])), null);
   for (const odd of [null, undefined, 7, "text", {}, [], [null, 7]])
     for (const s of REAUTHORABLE_SECTIONS) assert.equal(SECTIONS[s](odd), null);
@@ -122,7 +122,7 @@ test("R2 K1315 an off-the-record capture's attesting member is a row keyed captu
   assert.deepEqual([fm.findings, fm.data.observation_attributions], [[], [{ capture: CAP, level: "name", shown: "olive", chosen_at_edition: 1 }]]);
   const body = attributionBodyLines([{ capture: CAP, level: "name", shown: "olive", chosen_at_edition: 1 }, { capture: CAP, level: null, why: "not chosen" }]);
   assert.equal(body[4], `- **${CAP}** — attributed to the name its author chose to appear under: olive — level \`name\`, chosen at edition 1.`);
-  assert.match(body[5], new RegExp(`^- \\*\\*${CAP}\\*\\* — NO LEVEL IS CHOSEN: not chosen\\.`));
+  assert.equal(body[5], SENTENCES.noLevel(CAP, "not chosen"));
 });
 
 test("R3 K1317 attestations: from material_attestations: to the next top-level key, with no prose run, so re-writing it leaves every other line as it was", () => {

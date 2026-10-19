@@ -48,7 +48,8 @@ test("R3 docketOf: every entry on all three shelves, oldest first, each record e
     assert.ok(RECORD_STATES.includes(e.state));
     for (const k of ["proposed", "reason", "found_by", "contests", "pressure"]) assert.ok(k in e, `${k} answered`);
   }
-  assert.deepEqual(rec(contesting.entry).pressure, { kind: "legal", note: "A letter.", at: "2026-10-01T12:00:04Z" });
+  assert.deepEqual(rec(contesting.entry).pressure, { kind: "legal", note: "A letter.", at: "2026-10-01T12:00:04Z",
+    by: { member: "bob", handle: "h_bob" } });
   assert.deepEqual(rec(contesting.entry).prompts, {
     reevaluation: { cause: "contested", case: CASE, edition: 1, entry: contesting.entry, since: "2026-10-01T12:00:04Z",
                     findings: [{ bundle_id: w.F1, sha: sha(w.F1) }, { bundle_id: w.F2, sha: sha(w.F2) }] },
@@ -455,5 +456,27 @@ test("R6 R1 R2 R4 the vocabularies and the ops map pass a call's fields through,
   assert.equal(ops({ author: "member:bob", viewer: "member:bob" }, { entry: fromQuery.entry, pressure: { kind: "other" } }).docketpressure().ok, true);
   assert.equal(ops({ by: A, viewer: A }, { entry: fromQuery.entry, reason: "redactions" }).docketdecline().ok, true);
   assert.equal(ops({ viewer: A, entry: fromQuery.entry }).docketinvitation().reason, "NO_SUCH_DOCKET_ENTRY");
-  assert.deepEqual(Object.keys(ops({})).sort(), ["docket", "docketdecline", "docketfile", "docketinvitation", "docketpost", "docketprepare", "docketpressure"]);
+  /* the ops map is the module's own declaration (K3268): the seven ops the exercise above drove, each a handler */
+  const declared = ops({});
+  assert.equal(Object.keys(declared).length, 7);
+  for (const [name, handler] of Object.entries(declared)) assert.equal(typeof handler, "function", `${name} is a handler`);
+});
+
+test("R30 (T51; DEC-340) docketOf answers each pressure mark with who made it; the plane-level reads still name no member", () => {
+  const w = seeded();
+  const marked = file(w).entry, plain = file(w).entry;
+  w.docket.docketPressure({ entry: marked, pressure: { kind: "legal", note: "Counsel wrote." }, author: V("bob"), viewer: V("bob") });
+  for (const viewer of [A, V("bob")]) {
+    const d = w.docket.docketOf({ case: CASE, viewer });
+    const rec = (id) => d.entries.find((e) => e.shelf === "record" && e.entry === id);
+    assert.deepEqual(rec(marked).pressure, { kind: "legal", note: "Counsel wrote.", at: "2026-10-01T12:00:00Z",
+                                            by: { member: "bob", handle: "h_bob" } }, "a participant is told who marked it");
+    assert.equal(rec(plain).pressure, null, "control: an unmarked entry has no mark");
+  }
+  /* control: a viewer who does not see the project in full is told nothing */
+  assert.equal(w.docket.docketOf({ case: CASE, viewer: V("dave") }).reason, "NO_SUCH_CASE");
+  /* control: R27's reads still name no member */
+  const flat = JSON.stringify([w.docket.docketPressureMarks({}), w.docket.docketPressureOf({ entry: marked, viewer: A })]);
+  assert.doesNotMatch(flat, /bob|"by"/);
+  assert.ok(w.docket.docketPressureMarks({}).marks.every((m) => !("by" in m)));
 });

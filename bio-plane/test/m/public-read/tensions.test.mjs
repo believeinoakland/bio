@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { world, V, SIG } from "./fixture.mjs";
 import { TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSIONS_PREDATE_SENTENCE, TENSIONS_UNREADABLE_SENTENCE,
          TENSION_DEPTH_SENTENCE, caseTensionsOf } from "../../../src/case-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
 
@@ -92,7 +92,7 @@ test("R3 a /5 document's tension section round-trips to `tensions`: each disclos
   const byMember = Object.fromEntries(c.findings.map((f) => [f.bundle_id, f.tensions]));
   assert.deepEqual(byMember[F].map((s) => [s.candidate, s.template, s.highlighted]),
                    [["c-open", "in_tension", false], ["c-expl", "explained", false]]);
-  assert.match(byMember[F][0].sentence, /^In tension, not yet resolved/);
+  assert.ok(byMember[F][0].sentence.startsWith(localize("case-disclosures.document.in_tension_not_yet_resolved", "In tension, not yet resolved: ")));
   assert.equal("strength" in c, false, "no case-level strength (R26)");
 });
 
@@ -101,8 +101,7 @@ test("R3 DEC-85 a disclosed contradiction with a side the publisher could not se
   const c = w.read("publishedcase", { id: "CASE-2026-0001" });
   const hid = c.tensions.find((x) => x.candidate === "c-hid");
   assert.deepEqual([hid.unseen_other_side, hid.highlighted, hid.sentence, hid.state], [true, true, TENSION_HIGHLIGHT_SENTENCE, "open"]);
-  assert.equal(TENSION_HIGHLIGHT_SENTENCE, "This finding rests on a side in conflict with a record not shown here. The "
-    + "record and who holds it are not named.");
+  assert.equal(TENSION_HIGHLIGHT_SENTENCE, word("case-disclosures.finding_rests_side"));
   assert.deepEqual(hid.side, { kind: "claim", text: "S5 says so", source: "SRC-S5", date: "2026-09-01", doctype: "minutes", capture: null });
   assert.equal(c.highlighted, 1);
   for (const k of ["sides", "explanation", "kind", "b", "a"]) assert.equal(k in hid, false, `no ${k}`);

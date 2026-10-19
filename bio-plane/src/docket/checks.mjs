@@ -20,7 +20,7 @@
  * by key (`DOCKET_WORDS` below), its code, number and `where` unmoved; the row reads changed until T48's stamp. K3110:
  * C-129.13 `DOCKET_PRESSURE_REFUSED` reads `refusal.DOCKET_PRESSURE_REFUSED` by key the same way, its sentence unchanged. */
 
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -141,13 +141,11 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_WITHDRAWAL_FINAL: {
     check: "C-129.24", where: KIND,
-    translation: "A withdrawal is never taken back. To stand behind the case again, publish a new edition. Nothing "
-      + "was published.",
+    translation: localize("docket.checks.withdrawal_final", "A withdrawal is never taken back. To stand behind the case again, publish a new edition. Nothing was published."),
   },
   DOCKET_TAKE_BACK_FINAL: {
     check: "C-129.25", where: KIND,
-    translation: "A take-back is never itself taken back. Place the entry again if it should stand. Nothing was "
-      + "published.",
+    translation: localize("docket.checks.take_back_final", "A take-back is never itself taken back. Place the entry again if it should stand. Nothing was published."),
   },
   DOCKET_ALREADY_WITHDRAWN: {
     check: "C-129.26", where: KIND,
@@ -156,9 +154,7 @@ export const DOCKET_CHECKS = Object.freeze({
   /* R25 (K1480, T33-64): a court order's own refusals; rows awaiting promotion's stamp. */
   DOCKET_ORDER_UNREADABLE: {
     check: "C-129.27", where: ORDER,
-    translation: "A court order is placed with what it orders (remove, redact, seal or unseal), the published editions "
-      + "it names, and, to redact, seal or unseal, the parts of the edition it names. This one does not say so. Nothing "
-      + "was published.",
+    translation: localize("docket.checks.order_unreadable", "A court order is placed with what it orders (remove, redact, seal or unseal), the published editions it names, and, to redact, seal or unseal, the parts of the edition it names. This one does not say so. Nothing was published."),
   },
   DOCKET_NOTHING_SEALED: {
     check: "C-129.28", where: ORDER,

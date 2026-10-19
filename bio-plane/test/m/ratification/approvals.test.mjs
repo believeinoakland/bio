@@ -13,6 +13,7 @@ import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, SILENT
 import { caseRatifyOp, publishAtOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, rowOf, RATIFY_SCOPE_CHECKS } from "../../../src/ratification/index.mjs";
 import { approvalsLines, approvalSubjectSha } from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -73,9 +74,7 @@ const committed = (w) => w.count("published_cases");
 test("R49, R14: APPROVAL_MISSING is C-58.11 in this module's C-58 family, with its translation and its one minting site", () => {
   assert.deepEqual(RATIFY_SCOPE_CHECKS.APPROVAL_MISSING.check, "C-58.11");
   assert.equal(RATIFY_SCOPE_CHECKS.APPROVAL_MISSING.where, "src/ratification/refusals.mjs approvalMissingRefusal > is-approval-missing");
-  assert.equal(rowOf("APPROVAL_MISSING").translation,
-    "This case edition can't be signed yet: the team requires named members to approve a case before it is signed, and "
-    + "some of them have not approved this version of it. They are named. Ask them to approve it, then sign. Nothing was signed.");
+  assert.equal(rowOf("APPROVAL_MISSING").translation, word("refusal.APPROVAL_MISSING"));
 });
 
 test("R50: the approval reader is registered once at start; a second is refused APPROVAL_READER_DECLARED, a malformed one MALFORMED, and the first stays the one read", async () => {

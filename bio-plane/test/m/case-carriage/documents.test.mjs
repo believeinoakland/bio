@@ -12,7 +12,7 @@ import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
 import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
          CASE_CARRIAGE_DOCUMENT_TABLES, MEMBER_DOCUMENT_ONLY_AS_COPY, ARCHIVE_SUPPLIED_BY_MEMBER, obscuredKey }
   from "../../../src/case-carriage/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const KNOCKED = pdf();                                                    // EXIF with GPS in its image, /Info, XMP
@@ -83,7 +83,7 @@ test("R15 copyBatch: a knock PDF whose image carries EXIF is cleaned by doc-clea
   assert.deepEqual(held.opts.customMetadata, { derived: "cleaned", original: knock, label: COPY_CLEANED_LABEL });
   for (const secret of SECRETS) assert.equal(has(held.bytes, secret), false, `${secret} is not in the copy`);
   assert.ok(has(KNOCKED, "GPSSECRET") && has(KNOCKED, "AUTHORSECRET"), "negative control: the original carries them");
-  assert.equal(sha(w.evidence.held.get(knock)), knock, "the original is unchanged");
+  assert.equal(sha(w.evidence.held.get(knock)), knock, "original digest unchanged");
   assert.equal(w.count("register"), register, "the copy is never registered");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM register WHERE capture_sha=?`, k.copy).n, 0);
   assert.deepEqual(w.cc.documentCopy(refused), { state: "refused", copy: null,
@@ -437,7 +437,7 @@ test("R18 (T40; N818, K2383) a refused onReceipt registration ({ok: false}, a th
        { notice: "onReceipt", reason: "LISTENER_MALFORMED", detail: "refused here" }],
       ["a throw", { onReceipt: () => { throw new Error("provenance is down"); } },
        { notice: "onReceipt", reason: "REGISTRATION_THREW", detail: "provenance is down" }],
-      ["no onReceipt to ask", {}, { notice: "onReceipt", reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" }],
+      ["no onReceipt to ask", {}, { notice: "onReceipt", reason: "NO_RECEIPT_NOTICE", detail: localize("case-carriage.index.no_provenance_onreceipt", "no provenance onReceipt to register the receipt listener with") }],
       ["an answer that is no answer", { onReceipt: () => undefined },
        { notice: "onReceipt", reason: "REGISTRATION_UNANSWERED", detail: "the registration answered undefined" }],
     ];

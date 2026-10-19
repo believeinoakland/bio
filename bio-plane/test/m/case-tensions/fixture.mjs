@@ -100,7 +100,7 @@ export function publicationStandIn() {
       const e = editions.get(key(caseId, edition));
       const held = { case_id: caseId, edition, doc_sha: e ? e.doc_sha : null };
       if (!e) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_held") };
-      if (e.signed) return { ok: true, ...held, reauthored: false, why: "this case document is signed" };
+      if (e.signed) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_signed") };
       if (docSha && e.doc_sha !== docSha) return { ok: true, ...held, reauthored: false, why: "moved" };
       const all = e.text.split("\n");
       const at = SECTIONS[section](all);

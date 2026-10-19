@@ -48,6 +48,7 @@
  * kind is added, and a manifest naming one for them departs as any unknown kind does. */
 
 import { sha256HexSync } from "../record-grammar/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 /** R13: the format token written, and the formats read as written (newest first). */
 export const CASE_FILE_FORMAT = "bio-case-file/3";
@@ -164,7 +165,7 @@ export function casePartDigest(files, index) {
 }
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-const shown = (v) => { try { const s = JSON.stringify(v); return s === undefined ? String(v) : s.slice(0, 120); } catch { return "an unreadable value"; } };
+const shown = (v) => { try { const s = JSON.stringify(v); return s === undefined ? String(v) : s.slice(0, 120); } catch { return localize("case-grammar.casefile.unreadable-value", "an unreadable value"); } };
 
 /** R13: every way `manifest` departs from the format it states (`bio-case-file/3`, or `/2` or `/1` read as written:
  *  a kind a later format adds is a departure in an earlier one), each `{at, rule, detail}` (`at` the field's place,
@@ -180,95 +181,95 @@ export function caseFileManifestCheck(manifest, given = {}) {
   const no = (at, rule, detail) => out.push({ at, rule, detail });
   try {
     if (!plain(manifest)) {
-      no("manifest", "not_a_manifest", `a case file's manifest is an object, and this is ${shown(manifest)}`);
+      no("manifest", "not_a_manifest", localize("case-grammar.casefile.not-a-manifest", "a case file's manifest is an object, and this is {value}", { value: shown(manifest) }));
       return out;
     }
     const format = CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format) ? manifest.format : CASE_FILE_FORMAT;
     const lacked = KINDS_LACKED[format];
     for (const k of Object.keys(manifest))
-      if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", `the manifest has no field ${shown(k)} in ${format}`);
+      if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", localize("case-grammar.casefile.unknown-field", "the manifest has no field {field} in {format}", { field: shown(k), format }));
     if (!CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format))
-      no("format", "format", `the format is ${CASE_FILE_FORMAT} (or ${CASE_FILE_FORMAT_V2} or ${CASE_FILE_FORMAT_V1}, read as written), and this manifest states ${shown(manifest.format)}`);
+      no("format", "format", localize("case-grammar.casefile.format", "the format is {current} (or {v2} or {v1}, read as written), and this manifest states {value}", { current: CASE_FILE_FORMAT, v2: CASE_FILE_FORMAT_V2, v1: CASE_FILE_FORMAT_V1, value: shown(manifest.format) }));
     if (typeof manifest.group !== "string" || !SLUG.test(manifest.group))
-      no("group", "group", `the source group is named by its slug, and this manifest states ${shown(manifest.group)}`);
+      no("group", "group", localize("case-grammar.casefile.group", "the source group is named by its slug, and this manifest states {value}", { value: shown(manifest.group) }));
     if (typeof manifest.case !== "string" || !SEGMENT.test(manifest.case))
-      no("case", "case", `the case is named by its id, and this manifest states ${shown(manifest.case)}`);
+      no("case", "case", localize("case-grammar.casefile.case", "the case is named by its id, and this manifest states {value}", { value: shown(manifest.case) }));
     if (!Number.isSafeInteger(manifest.edition) || manifest.edition < 1)
-      no("edition", "edition", `the edition is a whole number from 1, and this manifest states ${shown(manifest.edition)}`);
+      no("edition", "edition", localize("case-grammar.casefile.edition", "the edition is a whole number from 1, and this manifest states {value}", { value: shown(manifest.edition) }));
     if (typeof manifest.case_document_sha !== "string" || !HEX64.test(manifest.case_document_sha))
-      no("case_document_sha", "sha256", `the case document's SHA-256 is 64 lower-case hex digits, and this manifest states ${shown(manifest.case_document_sha)}`);
+      no("case_document_sha", "sha256", localize("case-grammar.casefile.sha256", "the case document's SHA-256 is 64 lower-case hex digits, and this manifest states {value}", { value: shown(manifest.case_document_sha) }));
 
     /* the signing keys */
     if (!Array.isArray(manifest.keys) || !manifest.keys.length)
-      no("keys", "keys", "the manifest names at least one signing key, with its fingerprint");
+      no("keys", "keys", localize("case-grammar.casefile.keys", "the manifest names at least one signing key, with its fingerprint"));
     const prints = new Set();
     (Array.isArray(manifest.keys) ? manifest.keys : []).forEach((k, i) => {
       const at = `keys[${i}]`;
-      if (!plain(k)) return no(at, "key", `a signing key is {key, fingerprint}, and this is ${shown(k)}`);
-      for (const f of Object.keys(k)) if (!CASE_FILE_KEY_FIELDS.includes(f)) no(`${at}.${f}`, "unknown_field", `a signing key has no field ${shown(f)}`);
+      if (!plain(k)) return no(at, "key", localize("case-grammar.casefile.key-shape", "a signing key is {key, fingerprint}, and this is {value}", { value: shown(k) }));
+      for (const f of Object.keys(k)) if (!CASE_FILE_KEY_FIELDS.includes(f)) no(`${at}.${f}`, "unknown_field", localize("case-grammar.casefile.key-unknown-field", "a signing key has no field {field}", { field: shown(f) }));
       if (typeof k.key !== "string" || !k.key.trim() || /[\r\n]/.test(k.key))
-        no(`${at}.key`, "key", "a signing key is its public key on one line");
+        no(`${at}.key`, "key", localize("case-grammar.casefile.key-line", "a signing key is its public key on one line"));
       if (typeof k.fingerprint !== "string" || !FINGERPRINT.test(k.fingerprint))
-        no(`${at}.fingerprint`, "fingerprint", `a key's fingerprint is SHA256: and 43 base64 characters, and this is ${shown(k.fingerprint)}`);
-      else if (prints.has(k.fingerprint)) no(`${at}.fingerprint`, "key_twice", `the key ${k.fingerprint} is listed twice`);
+        no(`${at}.fingerprint`, "fingerprint", localize("case-grammar.casefile.fingerprint", "a key's fingerprint is SHA256: and 43 base64 characters, and this is {value}", { value: shown(k.fingerprint) }));
+      else if (prints.has(k.fingerprint)) no(`${at}.fingerprint`, "key_twice", localize("case-grammar.casefile.key-twice", "the key {fingerprint} is listed twice", { fingerprint: k.fingerprint }));
       else prints.add(k.fingerprint);
     });
 
     /* the parts */
     const parts = Array.isArray(manifest.parts) ? manifest.parts : null;
-    if (!parts || !parts.length) no("parts", "parts", "the manifest lists at least one part");
+    if (!parts || !parts.length) no("parts", "parts", localize("case-grammar.casefile.parts", "the manifest lists at least one part"));
     (parts || []).forEach((p, i) => {
       const at = `parts[${i}]`;
-      if (!plain(p)) return no(at, "part", `a part is {index, sha256, bytes}, and this is ${shown(p)}`);
-      for (const f of Object.keys(p)) if (!CASE_FILE_PART_FIELDS.includes(f)) no(`${at}.${f}`, "unknown_field", `a part has no field ${shown(f)}`);
-      if (p.index !== i + 1) no(`${at}.index`, "part_index", `the parts are numbered from 1 in order, so this one is ${i + 1}, and it states ${shown(p.index)}`);
-      if (typeof p.sha256 !== "string" || !HEX64.test(p.sha256)) no(`${at}.sha256`, "sha256", `a part's SHA-256 is 64 lower-case hex digits, and this is ${shown(p.sha256)}`);
-      if (!Number.isSafeInteger(p.bytes) || p.bytes < 0) no(`${at}.bytes`, "bytes", `a part's size is a whole number of bytes, and this is ${shown(p.bytes)}`);
+      if (!plain(p)) return no(at, "part", localize("case-grammar.casefile.part-shape", "a part is {index, sha256, bytes}, and this is {value}", { value: shown(p) }));
+      for (const f of Object.keys(p)) if (!CASE_FILE_PART_FIELDS.includes(f)) no(`${at}.${f}`, "unknown_field", localize("case-grammar.casefile.part-unknown-field", "a part has no field {field}", { field: shown(f) }));
+      if (p.index !== i + 1) no(`${at}.index`, "part_index", localize("case-grammar.casefile.part-index", "the parts are numbered from 1 in order, so this one is {expected}, and it states {value}", { expected: i + 1, value: shown(p.index) }));
+      if (typeof p.sha256 !== "string" || !HEX64.test(p.sha256)) no(`${at}.sha256`, "sha256", localize("case-grammar.casefile.part-sha256", "a part's SHA-256 is 64 lower-case hex digits, and this is {value}", { value: shown(p.sha256) }));
+      if (!Number.isSafeInteger(p.bytes) || p.bytes < 0) no(`${at}.bytes`, "bytes", localize("case-grammar.casefile.part-bytes", "a part's size is a whole number of bytes, and this is {value}", { value: shown(p.bytes) }));
     });
 
     /* the files */
     const files = Array.isArray(manifest.files) ? manifest.files : null;
-    if (!files) no("files", "files", "the manifest lists every file of the case file");
+    if (!files) no("files", "files", localize("case-grammar.casefile.files", "the manifest lists every file of the case file"));
     const paths = new Set();
     const kinds = new Map();
     const indices = new Set((parts || []).map((p) => (plain(p) ? p.index : null)));
     (files || []).forEach((f, i) => {
       const at = `files[${i}]`;
-      if (!plain(f)) return no(at, "file", `a file is {path, sha256, bytes, part, kind}, and this is ${shown(f)}`);
-      for (const k of Object.keys(f)) if (!CASE_FILE_FILE_FIELDS.includes(k)) no(`${at}.${k}`, "unknown_field", `a file has no field ${shown(k)}`);
+      if (!plain(f)) return no(at, "file", localize("case-grammar.casefile.file-shape", "a file is {path, sha256, bytes, part, kind}, and this is {value}", { value: shown(f) }));
+      for (const k of Object.keys(f)) if (!CASE_FILE_FILE_FIELDS.includes(k)) no(`${at}.${k}`, "unknown_field", localize("case-grammar.casefile.file-unknown-field", "a file has no field {field}", { field: shown(k) }));
       const entry = caseFileEntryOf(f.path);
-      if (!CASE_FILE_KINDS.includes(f.kind)) no(`${at}.kind`, "kind", `a file's kind is one of ${CASE_FILE_KINDS.join(", ")}, and this is ${shown(f.kind)}`);
+      if (!CASE_FILE_KINDS.includes(f.kind)) no(`${at}.kind`, "kind", localize("case-grammar.casefile.file-kind", "a file's kind is one of {kinds}, and this is {value}", { kinds: CASE_FILE_KINDS.join(", "), value: shown(f.kind) }));
       if (lacked.includes(f.kind))
-        no(`${at}.kind`, "kind_format", `a ${format} case file carries no ${f.kind}: that kind is ${KIND_FORMAT[f.kind]}'s`);
-      if (!entry) no(`${at}.path`, "path", `${shown(f.path)} is not a path ${format} spells for any file`);
+        no(`${at}.kind`, "kind_format", localize("case-grammar.casefile.kind-format", "a {format} case file carries no {kind}: that kind is {kindFormat}'s", { format, kind: f.kind, kindFormat: KIND_FORMAT[f.kind] }));
+      if (!entry) no(`${at}.path`, "path", localize("case-grammar.casefile.path", "{path} is not a path {format} spells for any file", { path: shown(f.path), format }));
       else if (CASE_FILE_KINDS.includes(f.kind) && entry.kind !== f.kind)
-        no(`${at}.path`, "path_kind", `${shown(f.path)} is where a ${entry.kind} is carried, and this file says it is a ${f.kind}`);
+        no(`${at}.path`, "path_kind", localize("case-grammar.casefile.path-kind", "{path} is where a {carried} is carried, and this file says it is a {kind}", { path: shown(f.path), carried: entry.kind, kind: f.kind }));
       if (typeof f.path === "string") {
-        if (paths.has(f.path)) no(`${at}.path`, "path_twice", `${shown(f.path)} is listed twice`);
+        if (paths.has(f.path)) no(`${at}.path`, "path_twice", localize("case-grammar.casefile.path-twice", "{path} is listed twice", { path: shown(f.path) }));
         paths.add(f.path);
       }
-      if (typeof f.sha256 !== "string" || !HEX64.test(f.sha256)) no(`${at}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f.sha256)}`);
+      if (typeof f.sha256 !== "string" || !HEX64.test(f.sha256)) no(`${at}.sha256`, "sha256", localize("case-grammar.casefile.file-sha256", "a file's SHA-256 is 64 lower-case hex digits, and this is {value}", { value: shown(f.sha256) }));
       else if (entry && entry.input && f.sha256 !== entry.input)
-        no(`${at}.sha256`, "input_sha", `a calculation's input is named by its SHA-256, and ${shown(f.path)} is listed with another`);
+        no(`${at}.sha256`, "input_sha", localize("case-grammar.casefile.input-sha", "a calculation's input is named by its SHA-256, and {path} is listed with another", { path: shown(f.path) }));
       else if (entry && entry.archive && f.sha256 !== entry.archive)
-        no(`${at}.sha256`, "archive_sha", `an archive is named by its SHA-256, and ${shown(f.path)} is listed with another`);
-      if (!Number.isSafeInteger(f.bytes) || f.bytes < 0) no(`${at}.bytes`, "bytes", `a file's size is a whole number of bytes, and this is ${shown(f.bytes)}`);
-      if (!indices.has(f.part) || f.part == null) no(`${at}.part`, "part", `a file is in one of the parts listed, and this one names ${shown(f.part)}`);
+        no(`${at}.sha256`, "archive_sha", localize("case-grammar.casefile.archive-sha", "an archive is named by its SHA-256, and {path} is listed with another", { path: shown(f.path) }));
+      if (!Number.isSafeInteger(f.bytes) || f.bytes < 0) no(`${at}.bytes`, "bytes", localize("case-grammar.casefile.file-bytes", "a file's size is a whole number of bytes, and this is {value}", { value: shown(f.bytes) }));
+      if (!indices.has(f.part) || f.part == null) no(`${at}.part`, "part", localize("case-grammar.casefile.file-part", "a file is in one of the parts listed, and this one names {value}", { value: shown(f.part) }));
       if (CASE_FILE_KINDS.includes(f.kind)) kinds.set(f.kind, [...(kinds.get(f.kind) || []), f]);
     });
     if (files) for (let i = 1; i < files.length; i++)
       if (plain(files[i - 1]) && plain(files[i]) && typeof files[i - 1].path === "string" && typeof files[i].path === "string"
           && files[i - 1].path > files[i].path) {
-        no(`files[${i}]`, "file_order", "the files are listed in path order");
+        no(`files[${i}]`, "file_order", localize("case-grammar.casefile.file-order", "the files are listed in path order"));
         break;
       }
     if (files) for (const kind of CASE_FILE_SINGLE_KINDS) {
       const n = (kinds.get(kind) || []).length;
-      if (n !== 1) no("files", kind, `a case file carries exactly one ${kind}, and this one lists ${n}`);
+      if (n !== 1) no("files", kind, localize("case-grammar.casefile.single-kind", "a case file carries exactly one {kind}, and this one lists {count}", { kind, count: n }));
     }
     if (files) for (const kind of CASE_FILE_OPTIONAL_SINGLE_KINDS) {
       const n = (kinds.get(kind) || []).length;
-      if (n > 1) no("files", kind, `a case file carries at most one ${kind}, and this one lists ${n}`);
+      if (n > 1) no("files", kind, localize("case-grammar.casefile.optional-single-kind", "a case file carries at most one {kind}, and this one lists {count}", { kind, count: n }));
     }
     /* K2004: an archive or a container record belongs to a carried member document's chain, so its ref carries one */
     if (files) {
@@ -277,7 +278,7 @@ export function caseFileManifestCheck(manifest, given = {}) {
         if (!plain(f) || !Object.hasOwn(CHAIN_DIRS, f.kind)) return;
         const entry = caseFileEntryOf(f.path);
         if (entry && entry.kind === f.kind && !documents.has(entry.ref))
-          no(`files[${i}].path`, "chain_without_document", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, and the case file carries no document under that ref`);
+          no(`files[${i}].path`, "chain_without_document", localize("case-grammar.casefile.chain-without-document", "{path} is a {kind} under {ref}, and the case file carries no document under that ref", { path: shown(f.path), kind: f.kind, ref: shown(entry.ref) }));
       });
     }
     /* T37 (N757), T39 (N806): a material carried as its copy, judged against the case document's rows when they are handed */
@@ -293,29 +294,29 @@ export function caseFileManifestCheck(manifest, given = {}) {
         if (!entry || entry.kind !== f.kind || !entry.ref) return;
         if (f.kind === "obscured") {
           if ((copies.get(entry.ref) || []).includes(f.sha256)) carried.add(`${entry.ref} ${f.sha256}`);
-          else no(`files[${i}]`, "obscured_unnamed", `${shown(f.path)} is a copy carried in its original's place, and no row of the case document's materials names a copy at ${shown(f.sha256)} under ${shown(entry.ref)}`);
+          else no(`files[${i}]`, "obscured_unnamed", localize("case-grammar.casefile.obscured-unnamed", "{path} is a copy carried in its original's place, and no row of the case document's materials names a copy at {sha} under {ref}", { path: shown(f.path), sha: shown(f.sha256), ref: shown(entry.ref) }));
         } else if (CASE_FILE_ORIGINAL_KINDS.includes(f.kind) && copies.has(entry.ref))
-          no(`files[${i}]`, "original_carried", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, whose material the case carries as its copy: the original never travels`);
+          no(`files[${i}]`, "original_carried", localize("case-grammar.casefile.original-carried", "{path} is a {kind} under {ref}, whose material the case carries as its copy: the original never travels", { path: shown(f.path), kind: f.kind, ref: shown(entry.ref) }));
       });
       for (const [ref, list] of copies) for (const copy of list)
         if (!carried.has(`${ref} ${copy}`))
-          no("files", "obscured_copy_missing", `the case document carries ${shown(ref)} as its copy at ${shown(copy)}, and the case file lists no obscured file under that ref at that SHA-256`);
+          no("files", "obscured_copy_missing", localize("case-grammar.casefile.obscured-copy-missing", "the case document carries {ref} as its copy at {sha}, and the case file lists no obscured file under that ref at that SHA-256", { ref: shown(ref), sha: shown(copy) }));
     }
     const doc = (kinds.get("case_document") || [])[0];
     if (doc && typeof manifest.case_document_sha === "string" && doc.sha256 !== manifest.case_document_sha)
-      no("case_document_sha", "case_document_sha", "the case document's SHA-256 is the one its file is listed with");
+      no("case_document_sha", "case_document_sha", localize("case-grammar.casefile.case-document-sha", "the case document's SHA-256 is the one its file is listed with"));
 
     /* each part's fingerprint and size, from its files */
     if (files) (parts || []).forEach((p, i) => {
       if (!plain(p) || p.index !== i + 1) return;
       const mine = files.filter((f) => plain(f) && f.part === p.index);
-      if (!mine.length) return no(`parts[${i}]`, "part_empty", `part ${p.index} carries no file`);
+      if (!mine.length) return no(`parts[${i}]`, "part_empty", localize("case-grammar.casefile.part-empty", "part {index} carries no file", { index: p.index }));
       const d = casePartDigest(files, p.index);
-      if (p.sha256 !== d.sha256) no(`parts[${i}].sha256`, "part_sha256", `part ${p.index}'s SHA-256 is not the one its files give`);
-      if (p.bytes !== d.bytes) no(`parts[${i}].bytes`, "part_bytes", `part ${p.index}'s size is not the sum of its files' sizes`);
+      if (p.sha256 !== d.sha256) no(`parts[${i}].sha256`, "part_sha256", localize("case-grammar.casefile.part-sha256-differs", "part {index}'s SHA-256 is not the one its files give", { index: p.index }));
+      if (p.bytes !== d.bytes) no(`parts[${i}].bytes`, "part_bytes", localize("case-grammar.casefile.part-bytes-differs", "part {index}'s size is not the sum of its files' sizes", { index: p.index }));
     });
   } catch {
-    no("manifest", "unreadable", "the manifest could not be read whole");
+    no("manifest", "unreadable", localize("case-grammar.casefile.unreadable", "the manifest could not be read whole"));
   }
   return out;
 }

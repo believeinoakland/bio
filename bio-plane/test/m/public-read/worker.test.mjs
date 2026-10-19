@@ -10,6 +10,7 @@ import { world, stubOf, bucket, V, SIG, NOW, sha } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer, publishedStoreAbsent, noPublishedPart,
          publishedObjectMissing } from "../../../src/publication/worker.mjs";
 import { rowOf } from "../../../src/public-read/checks.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { serialiseContainer, containerEntries, CONTAINER_MAX_BYTES, layoutOf } from "../../../src/container.mjs";
 import { inbandQuartet, canonicalBytes, floorsOf, INBAND_FORMAT } from "../../../src/inband.mjs";
 import { readContainer, readPart, crc32 } from "../../../src/ooxml.mjs";
@@ -213,7 +214,7 @@ test("R7 inbandQuartet answers the format, the hash over JSON.stringify(subject,
   assert.deepEqual([quartet.floors.capture, quartet.floors.connection, quartet.floors.declared], ["B", null, true]);
   const none = floorsOf(null);
   assert.deepEqual([none.capture, none.connection, none.declared], [null, null, false]);
-  assert.match(none.detail, /NO FLOOR IS DECLARED/, "no declared bar says so in words");
+  assert.equal(none.detail, localize("public-read.inband.no_floor_is_declared_and", "NO FLOOR IS DECLARED, and that is not a floor of zero: the publishing project states no required strength, so nothing here claims to have cleared a standard."), "no declared bar says so in words");
   const q2 = (await inbandQuartet({ subject: {}, over: "x" })).quartet;
   assert.deepEqual([q2.date, q2.author], [null, null]);
 });

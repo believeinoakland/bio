@@ -22,7 +22,7 @@ import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 /* ================================================================ a /6 case document, in op=publish's shape */
 
@@ -85,11 +85,10 @@ function publishedCaseText({ caseId, edition = 1, project, members, conclusions 
     "## What Was Searched", "", "- **document level** (referent): PARTIAL.", "",
     "## What Each Finding Reached, As Read For This Case", "",
     ...members.map((m) => `- **${m.id}** (its edition 1): capture UNRATED; connection grade D, no stronger than ${MEMO}.`), "",
-    "## Bias Manifest", "", `NO MANIFEST WAS IN FORCE for ${project} when this case was published.`, "",
+    "## Bias Manifest", "", word("case-authoring.body.manifest_force_case", { scope_id: project }), "",
     "## Citations", "", word("case-authoring.body.case_project_cited"), "",
     "## Bias Acknowledgement", "", BACK, "",
-    "## Standard Of Evidence", "", `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
-      + "An absent bar is not a bar of zero.", "",
+    "## Standard Of Evidence", "", word("case-authoring.body.case_production_standard", { project, bar: "" }), "",
     "## Session Log", "", `### Session ${at} | Case published | alice`, `Trigger: op=publish, case ${caseId} edition ${edition}`, ""];
   return fm.join("\n") + body.join("\n");
 }
@@ -466,7 +465,8 @@ test("R4 (ratify-envelope site 1): a reference the store genuinely does not hold
   };
   const dangling = await run(DANGLER);
   assert.deepEqual([dangling.status, dangling.body.reason, dangling.body.findings.map((x) => x.check)], [409, "GATE_REFUSED", ["C-6.2"]]);
-  assert.ok(dangling.body.findings.some((x) => x.detail.includes("does not resolve in the store")));
+  assert.ok(dangling.body.findings.some((x) => x.detail.includes(localize("record-grammar.bundle.references_i_target_t_does_2",
+    "references[{i}].target '{t}' does not resolve in the store", { i: "0", t: "INFO-2026-9999-never-existed" }))));
   w.ops.list = () => SILENT;
   const silent = await run(CITER);
   assert.deepEqual([silent.status, silent.body.op, "findings" in silent.body], [502, "ratify/list", false]);

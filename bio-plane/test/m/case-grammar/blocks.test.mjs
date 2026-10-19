@@ -18,10 +18,8 @@ const BEFORE5 = ["bio-case-document/4", "bio-case-document/3", "bio-case-documen
 /* ===== R27 ===== */
 
 test("R27 the two sentences are exported verbatim", () => {
-  assert.equal(CG.BLOCKS_PREDATE_SENTENCE, "this case document's format predates the statement of each capture's grade, "
-    + "co-attestation and source, so it states none; that is not a statement that there were none");
-  assert.equal(CG.BLOCK_UNREADABLE_SENTENCE, "this case document declares a format that states each capture's grade, "
-    + "co-attestation and source, but carries no readable block for it, so what it stated is undetermined");
+  assert.equal(sha(CG.BLOCKS_PREDATE_SENTENCE), "6fceeeacc08c96e1c8ea3126db4e05e7c1f0b0abe013bc3f3b273d1a812aa1d7", "the bytes are pinned");
+  assert.equal(sha(CG.BLOCK_UNREADABLE_SENTENCE), "a6cc0545d19b82a519cb528173361519612954ed9b6b39678aaf985ef6a10e93", "the bytes are pinned");
 });
 
 test("R27 before /5: a document R1's caseDocumentRequiresTensionSection does not hold for answers captures and sources null with the predate sentence, whatever blocks it carries", () => {

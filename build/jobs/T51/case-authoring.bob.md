@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -40,3 +40,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`. Your Size line counts only your module's own code (K2513).
+
+## B5 · CHANGE
+
+CHANGE (K4025): case-inputs R19's `minutesLine(row)` is built as `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}` (CASE-INPUTS #5 J4/J5; `comparison` is signing.minutes.same or .differs by `same`); R77 carries it on each row unchanged. R77 carries no sentence for an unreadable source (`minutes: {undetermined: true}` only; the screen draws signing.minutes.unread). case-inputs merges before you: merge tranche/T51 once it lands (I will say so).

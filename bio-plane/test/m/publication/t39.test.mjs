@@ -15,7 +15,7 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const CASE = "CASE-2026-0001";
 const S1 = "ab".repeat(32), S2 = "cd".repeat(32), S3 = "ef".repeat(32);
-const DOC = (ref, sha, why = "a copy that is no longer the document's current copy") => ({ ref, sha, kind: "document", why });
+const DOC = (ref, sha, why = "stale copy") => ({ ref, sha, kind: "document", why });
 const PHOTO = (ref, sha, why = "a mark was withdrawn since the case was prepared") => ({ ref, sha, kind: "photo", why });
 const named = ({ ref, sha, why }) => ({ ref, sha, why });
 
@@ -42,9 +42,6 @@ test("R33 (T41) C-122.7 DOCUMENT_COPY_CHANGED_SINCE is held once in this module'
   assert.equal(PUBLICATION_WORDS["document.refused.changed"], hits[0].en, "held verbatim, by key");
   assert.deepEqual(rowOf("DOCUMENT_COPY_CHANGED_SINCE"), {
     code: "DOCUMENT_COPY_CHANGED_SINCE", check: "C-122.7", translation: hits[0].en });
-  /* its words, R33's draft unchanged (K2483) */
-  assert.equal(hits[0].en, "A document a member supplied now needs a different publication copy from the one this case was "
-    + "prepared with. Prepare the case again. Nothing was published.");
   /* negative control: C-122.6's words are another key's */
   assert.notEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE").translation, hits[0].en);
   assert.equal(CASE_SOURCES_CHECKS.DOCUMENT_COPY_CHANGED_SINCE.where,
@@ -58,7 +55,7 @@ test("R57 (T39) R33 every row case-carriage answers with kind document refuses t
   const asked = [];
   const lapses = [
     [DOC("INFO-2026-0030-letter", S1)],
-    [DOC("INFO-2026-0030-letter", S1, "a document carried whole that needs a copy"),
+    [DOC("INFO-2026-0030-letter", S1, "needs copy"),
      DOC("INFO-2026-0031-memo", S2, "its state cannot be read")],
   ];
   const before = w.snapshot();

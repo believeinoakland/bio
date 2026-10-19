@@ -68,9 +68,7 @@ export function release(deps,
              detail: localize("ratification.release.a_bulk_release_records_the", "a bulk release records the member's explicit acknowledgment that the batch is homogeneous and that the risks of releasing in bulk were weighed. Without it the record shows only that a button was pressed.") };
   if (!mit)
     return { ok: false, reason: "NO_MITIGATION", ...rowOf("NO_MITIGATION"),
-             detail: "a bulk release records what the member actually did: what was sampled, what was "
-                   + "checked. 'Sender domains verified on a sample of twelve' can be audited later; "
-                   + "silence cannot." };
+             detail: localize("ratification.release.a_bulk_release_records_what", "a bulk release records what the member actually did: what was sampled, what was checked. 'Sender domains verified on a sample of twelve' can be audited later; silence cannot.") };
   /* END DEC-49 REGION is-release-account */
   for (const [name, v] of [["acknowledgment", ack], ["mitigation", mit]])
     if (v.length > RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
@@ -82,7 +80,7 @@ export function release(deps,
   if (!sel.ok) return sel;
   if (!sel.members.length)
     return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-             detail: "this selection resolves to no members, so there is nothing to release" };
+             detail: localize("ratification.release.this_selection_resolves_to_release", "this selection resolves to no members, so there is nothing to release") };
 
   /* R22, R23: every member examined before any document changes, each counted under the first class it fails. */
   const failed = { NOT_INFORMATION: [], ILLEGAL_TRANSITION: [], CRUCIAL_IN_BATCH: [], CONTESTED_IN_BATCH: [],

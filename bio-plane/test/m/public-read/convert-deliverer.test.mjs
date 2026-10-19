@@ -13,6 +13,8 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, NOW, KEY, SIG, legacyCaseCommit } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { DELIVERER_UNDETERMINED_DETAIL } from "../../../src/deliverer.mjs";
 
 class StoreSilent extends Error { constructor(op) { super(op); this.op = op; } }
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -31,14 +33,17 @@ const route = async (w, env, op, q) => {
 
 const FOUNDER_IS = { kind: "founder", member: null };
 const MEMBER_IS = (m) => ({ kind: "member", member: m });
-const UNDETERMINED = /not inferred from the signer/;
 const isUndetermined = (d) => !!d && d.kind === "undetermined" && d.member === null
-  && typeof d.detail === "string" && UNDETERMINED.test(d.detail);
+  && d.detail === DELIVERER_UNDETERMINED_DETAIL;
 const kindOf = (d) => (d && typeof d === "object") ? (d.kind === "member" ? `member:${d.member}` : d.kind) : `ABSENT(${JSON.stringify(d)})`;
 
 const CASE = "CASE-2026-0001", LEGACY_CASE = "CASE-2026-0002";
 const LEAD = "INQ-2026-0001", OLD_LEAD = "INQ-2026-0002";
 const LOOSE = "INFO-2026-0001", OLD_LOOSE = "INFO-2026-0002";
+/* The container's verify sentence: the tamper-evidence statement, then the member-pair sentence, which a case document
+   that states member blocks adds (both cases here are prepared with a strength pair). */
+const VERIFY = localize("public-read.worker.verify_tamper_evident", "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero — the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this team's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this team's Civicsmith's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it.")
+  + localize("public-read.worker.verify_member_pair_in_document", " Each finding's `strength` and its own `edition` are stated in the CASE DOCUMENT carried above (`case_strength`, `case_roles`), under the case document's signature: publishing wrote nothing on any finding, so its own signature covers the finding as its project concluded it, and the pair is this case's reading of those bytes.");
 
 /* One case edition's commit, as ratification makes it; `deliveredBy` omitted is a legacy commit (no deliverer). */
 function commitCase(w, caseId, project, roster, deliveredBy) {
@@ -166,13 +171,8 @@ test("R6 (deliverer) the container a stranger holds carries delivered_by beside 
                     man.findings[0].attestor.member, kindOf(man.findings[0].delivered_by)],
                    ["bio-case-container/6", "iris", "founder", "iris", "member:gus"]);
   assert.equal(typeof man.verify, "string");
-  assert.match(man.verify, /`attestor` is who SIGNED/);
-  assert.match(man.verify, /`delivered_by` is who DELIVERED/);
-  assert.match(man.verify, /not covered by any\s+signature/i);
-  assert.match(man.verify, /`undetermined` there means the delivery was not recorded; it never means the signer delivered it/);
   /* T34-87 (DEC-149; K1821): the voice for a reader with no credential, at worker.mjs' three rows of this sentence */
-  assert.match(man.verify, /makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith\. /);
-  assert.match(man.verify, /DELIVERED that signature to this team's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this team's Civicsmith's record, not covered by any signature/);
+  assert.equal(man.verify, VERIFY);
   assert.doesNotMatch(man.verify, /this instance|the instance's|this copy|this plane/i);
   const legacy = await readManifest((await assemble(w, env, LEGACY_CASE)).manifest_sha);
   assert.equal(legacy.format, "bio-case-container/6");
@@ -180,5 +180,5 @@ test("R6 (deliverer) the container a stranger holds carries delivered_by beside 
     assert.equal(d.attestor.member, "iris");
     assert.ok(isUndetermined(d.delivered_by), `the legacy container states undetermined: ${JSON.stringify(d.delivered_by)}`);
   }
-  assert.match(legacy.verify, /not covered by any\s+signature/i);
+  assert.equal(legacy.verify, VERIFY);
 });

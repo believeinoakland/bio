@@ -207,7 +207,7 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   const lapsed = [{ ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: word("case-carriage.photo_only_as_copy") }];
   assert.deepEqual(whole(), lapsed, "unchecked");
   await w.cc.obscureMark({ captureSha: plain, areas: [], by: OLIVE });
-  assert.deepEqual(whole(), lapsed, "nothing to obscure");
+  assert.deepEqual(whole(), lapsed, word("photo.state.nothing"));
   await w.cc.obscureMark({ captureSha: plain, areas: [area([0, 0, 2, 2])], by: OLIVE });
   assert.deepEqual(whole(), lapsed, "marked");
   /* a mark since: the obscured row lapses */

@@ -84,6 +84,7 @@ import { calculationsOf } from "./calculations.mjs";
 import { timelineOf } from "./timeline.mjs";
 import { accountOf, accountBiasMark, reviewCommentsOf, approvalsOf } from "./account.mjs";
 import { outcomesOf, outcomeWords } from "./outcomes.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
 /** R14: the sections, in order, by their headings (the UX stream's words, until it gives them). */
 export const COMPLETE_EDITION_HEADINGS = Object.freeze(["The claims", "The findings", "The documents and observations",
@@ -290,14 +291,14 @@ export function completeEditionOf(caseFile) {
     const sources = (caseDocumentBlocks(docText).sources) || [];
     const attestOf = (ref) => ((mats && mats.attestations) || []).filter((a) => a.ref === ref);
     const materialHtml = !mats || !mats.materials
-      ? [p("This case document lists no materials.")]
+      ? [p(SENTENCES.noMaterials)]
       : mats.materials.length === 0 ? [p("No document or observation is reached by this case's findings.")]
       : mats.materials.map((x) => {
           const src = sources.filter((r) => r.capture && r.capture === x.sha);
           const ob = x.obscured;
           return `<h3>${esc(said(x.ref))} (${esc(said(x.kind))})</h3>${ul([
             li(ob ? `${W.original}${said(x.sha)}` : `Fingerprint (SHA-256): ${said(x.sha)}`),
-            ...(x.text_sha ? [li(`Extracted text fingerprint: ${x.text_sha}`)] : []),
+            ...(x.text_sha ? [li(SENTENCES.textFingerprint(x.text_sha))] : []),
             li(`Origin: ${said(x.origin)}`),
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
             /* T40 (DEC-185 (1)): the copy line or the unmarked line by R12's `marked`, then the label word for word when
@@ -305,8 +306,8 @@ export function completeEditionOf(caseFile) {
             ...(ob ? [...(copyIsDocument(ob, files.get(caseFilePath("obscured", x.ref))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
                 : (ob.marked ?? ob.label !== null) ? [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`)]
                 : [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]), ...(ob.label === null ? [] : [li(ob.label)])]
-              : [li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel.")]),
-            li(x.rests_under === "load_bearing" ? "A finding this case relies on rests on it." : "Only supporting findings rest on it."),
+              : [li(x.included ? SENTENCES.includedWhole : "Not included: only its fingerprint, origin and archived copy travel.")]),
+            li(x.rests_under === "load_bearing" ? SENTENCES.reliesOn : SENTENCES.onlySupporting),
             ...src.map((r) => li(sourceRowWithheld(r) ? `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`
                                                       : `Source: ${said(r.stated)}`)),
             ...attestOf(x.ref).map((a) => li(attestationWords(a, W))),
@@ -315,7 +316,7 @@ export function completeEditionOf(caseFile) {
 
     /* 4. what was searched */
     const searched = fm.searched && typeof fm.searched === "object" ? fm.searched : null;
-    const searchedHtml = !searched ? [p("This case document does not state what was searched.")] : [
+    const searchedHtml = !searched ? [p(SENTENCES.notSearched)] : [
       p(`Computed at ${said(searched.computed_at)} over ${said(searched.subjects)} subject(s), ${said(searched.looked)} `
         + "with a recorded observation. It records what was looked for, not how much exists."),
       ul(objects(fm.searched_levels).map((l) => li(`${said(l.level)} level (${said(l.subject_kind)}): `
@@ -362,7 +363,7 @@ export function completeEditionOf(caseFile) {
     const methodHtml = methodText ? methodText.split("\n").filter((l) => l.trim()).map(p)
       : [p(method && method.grading
         ? `This case was graded by method ${method.grading}, whose words this rendering does not hold.`
-        : "This case document does not state the grading method it was graded by.")];
+        : SENTENCES.noMethod)];
     if (method && method.checks) methodHtml.push(p(`It was checked under catalogue version ${method.checks}.`));
 
     /* 9. how to check it */
@@ -374,7 +375,7 @@ export function completeEditionOf(caseFile) {
         + "finding against the bar, and runs the same publication checks."),
       p("3. Each finding is then recreated, recreated in part (naming what is missing, such as a document to fetch: a "
         + "document whose fingerprint matches completes it), or did not recreate (naming what differs)."),
-      p("Recreating a case shows it is intact and consistent. It does not show that it is true."),
+      p(SENTENCES.recreating),
     ];
 
     /* C11, C:A-12: the timeline after the findings, the calculations after the materials, each only when carried */
@@ -408,12 +409,12 @@ export function completeEditionOf(caseFile) {
    to a question followed into that question's own facts when the case file carries them (to `strength`'s depth bound,
    6, never round a loop), a leg to another group's finding stopping there with what the case states of it (R16). */
 function chainHtml(finding, facts, accepted, member, depth, seen, W) {
-  if (seen.has(finding)) return p(`${finding} is already shown above in this chain.`);
+  if (seen.has(finding)) return p(SENTENCES.alreadyShown(finding));
   if (depth > 6) return p("This chain goes deeper than six steps; the steps below are not followed.");
   const next = new Set([...seen, finding]);
   const legs = facts.legs(finding);
   const legHtml = legs === null
-    ? p(`This case file carries no grading facts for ${finding}, so its chain is not shown.`)
+    ? p(SENTENCES.noGradingFacts(finding))
     : legs.length === 0 ? p(`${finding} rests on nothing.`)
     : ul(legs.map((l) => {
         const target = said(l.target);
@@ -429,11 +430,11 @@ function chainHtml(finding, facts, accepted, member, depth, seen, W) {
               li(`Recreated as: ${RESULT_WORDS[r.result] ?? said(r.result)}${r.gaps ? `; the gaps stated: ${r.gaps}` : ""}. Its grades as that edition published them: ${pairWords(r.pair)}.`),
               li(`Check that finding in its own case file: ${said(r.group)}, case ${said(r.case)}, edition ${said(r.edition)}, `
                  + `finding ${said(r.finding)}, manifest SHA-256 ${said(r.manifest_sha)}.`)])
-              : [li("This case states no acceptance for it.")]),
+              : [li(SENTENCES.noAcceptance)]),
             ...flags.filter((f) => rows.length === 0 || rows.some((r) => r.edition === f.edition))
               .map((f) => li(`An open flag is disclosed: ${clause(f.issue)} (flagged ${said(f.flagged_at)})`
                 + `${f.words ? `. The case's owner says: ${clause(f.words)}` : ""}.`)),
-            li("The chain stops here: what that finding rests on is in its own case file."),
+            li(SENTENCES.chainStops),
           ])}</li>`;
         }
         if (l.kind === "inquiry") return `<li>${esc(head)}${chainHtml(target, facts, accepted, member, depth + 1, next, W)}</li>`;
@@ -458,12 +459,12 @@ function timelineHtml(t) {
     ...["they_did", "we_did"].flatMap((lane) => [`<h3>${esc(TIMELINE_LANE_WORDS[lane])}</h3>`,
       t[lane].length ? ul(t[lane].map((x) => li(`${valueWords(x.when, "when undetermined")}: ${clause(valueWords(x.label, "an item"))}`
         + `${x.ref ? ` (${valueWords(x.ref)})` : ""}. Source: ${valueWords(x.source)}.`)))
-        : p("Nothing is stated in this lane.")])];
+        : p(SENTENCES.laneEmpty)])];
 }
 
 /* R18 (C:A-12): each calculation, with what it computed from, what it stored, and whether it recomputed. */
 function calculationsHtml(rows, W) {
-  if (!rows.length) return [p("No calculation is reached by this case's findings.")];
+  if (!rows.length) return [p(SENTENCES.noCalculation)];
   return [p("Each calculation is stated so that anyone can run its recipe again on the same inputs. A result is a "
     + "computed fact, never a judgment."), ...rows.map((c) => `<h3>${esc(said(c.calc))}</h3>${ul([
     li(`Recipe: ${valueWords(c.recipe)}`),
@@ -472,7 +473,7 @@ function calculationsHtml(rows, W) {
     ...(c.results ? Object.keys(c.results).sort().map((k) => li(`Result ${k}: ${valueWords(c.results[k])}`)) : [li("Its results are not stated.")]),
     li(`Result key: ${said(c.result_key, "undetermined")}`),
     li(`It was ${(c.recompute === "not_recomputed" ? W.notRecomputed : RECOMPUTE_WORDS[c.recompute]) ?? "recomputed at publication with an outcome not stated"}.`),
-    ...(c.disclosed ? [li(`The publisher's disclosure: ${c.disclosed}`)] : []),
+    ...(c.disclosed ? [li(SENTENCES.publisherDisclosure(c.disclosed))] : []),
   ])}`)];
 }
 
@@ -480,7 +481,7 @@ function calculationsHtml(rows, W) {
    lens block prints of it, when it does); the four statements' rows are the check's, not printed here. */
 function accountHtml(rows, lens, W) {
   const sentences = rows.filter((r) => r.kind === "account");
-  if (!sentences.length) return [p("This case states no account.")];
+  if (!sentences.length) return [p(SENTENCES.noAccount)];
   const statements = lens ? lens.statements : [];
   const named = (id) => statements.find((s) => s.id === id || lensStatementKey(s.bundle, s.id) === id);
   return [p(W.accountIntro),
@@ -494,24 +495,23 @@ function accountHtml(rows, lens, W) {
 
 /* R29 (T45): each outcome carried into this edition, in the order carried, with its kind, date, text and cites. */
 function outcomesHtml(rows) {
-  return rows.length ? [ul(rows.map((r) => li(outcomeWords(r))))] : [p("No outcome is carried into this edition.")];
+  return rows.length ? [ul(rows.map((r) => li(outcomeWords(r))))] : [p(SENTENCES.noOutcome)];
 }
 
 /* R25 (D61): the comments the publisher included, and how many were left out. */
 function reviewCommentsHtml({ comments, left_out: leftOut }) {
   return [comments.length ? ul(comments.map((c) => li(`${said(c.reviewer, "A reviewer")}${c.at ? `, on ${c.at}` : ""}: ${said(c.text, "")}`)))
-    : p("The publisher included no reviewer's comment."),
-    p(leftOut === null ? "How many reviewers' comments were left out is not stated."
-      : `${leftOut} reviewer's comment${leftOut === 1 ? " was" : "s were"} left out by the publisher.`)];
+    : p(SENTENCES.noReviewComment),
+    p(leftOut === null ? SENTENCES.leftOutUnstated : SENTENCES.leftOut(leftOut))];
 }
 
 /* R26 (D60): the approval rule in force at signing, and each approval. */
 function approvalsHtml({ rule, approvals }, W) {
-  return [p(!rule ? "No approval rule was in force when this case was signed."
+  return [p(!rule ? SENTENCES.noApprovalRule
       : W.approvalRule(rule.approvers.length ? rule.approvers.join(", ") : "no one named",
           rule.set_by ? ` (set by ${rule.set_by}${rule.set_at ? ` on ${rule.set_at}` : ""})` : "")),
     approvals.length ? ul(approvals.map((a) => li(`Approved by ${said(a.by)}${a.at ? ` on ${a.at}` : ""}.`)))
-      : p("No approval is recorded.")];
+      : p(SENTENCES.noApproval)];
 }
 
 /* An attestation row in words (R12): an anonymous member is never named. */

@@ -18,8 +18,7 @@ test("R4 a /5 or /4 document carrying case_citations answers them as signed", ()
 
 test("R4 R6 every other document states its citation versions undetermined, never filled: /3 and older, a /4 without the list, and anything unreadable", () => {
   const undetermined = { state: "undetermined", rows: null, stated: CITATIONS_UNDETERMINED_SENTENCE };
-  assert.equal(CITATIONS_UNDETERMINED_SENTENCE, "version undetermined (signed before capture pins): this document was "
-    + "signed before a case's citation edges were pinned to the capture they were made against, and it carries neither");
+  assert.equal(sha(CITATIONS_UNDETERMINED_SENTENCE), "7dfcb03addadd4a6b476f01b2524ef70977df5d98b5034a9edb31a8c0c71ed54", "the bytes are pinned");
   for (const format of ["bio-case-document/3", "bio-case-document/2", "bio-case-document/1", null])
     assert.deepEqual(signedCitations(doc(format, citations(ROWS))), undetermined, `format ${format}`);
   assert.deepEqual(signedCitations(doc("bio-case-document/4")), undetermined);

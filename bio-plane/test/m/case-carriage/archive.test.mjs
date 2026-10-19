@@ -74,7 +74,7 @@ const setProvenance = (w, bundleId, documents) =>
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`, JSON.stringify({ documents }), bundleId);
 const unpackedEntry = (container, extra = {}) => ({ file: `snapshots/zip-${container.archive_sha256}-${container.index}`,
   locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW, authority_state: "undetermined",
-  authority_basis: "a file cut out of an archive", capture: { method: "unpacked", grade: "B", actor_class: "daemon",
+  authority_basis: word("acquisition.authority_basis.file_cut_out", { at: String(container.index) }), capture: { method: "unpacked", grade: "B", actor_class: "daemon",
   sha256: container.member_sha256, encoding: "binary", bytes: container.uncompressed }, container,
   origin: { kind: "named_request" }, attestation_attempts: [], ...extra });
 

@@ -11,7 +11,7 @@ import { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          editionStatementsOf, captureBlockLines, sourceBlockLines, caseDocumentBlocks, caseTensionsOf,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          caseDocumentRequiresTensionSection, signedCitations, SECTIONS, attributionFrontmatterLines,
-         attributionBodyLines } from "../../../src/case-grammar/index.mjs";
+         attributionBodyLines, SENTENCES } from "../../../src/case-grammar/index.mjs";
 import { doc, tensionLines, sha, NOW, V } from "./helpers.mjs";
 
 const V5 = "bio-case-document/5";
@@ -139,9 +139,7 @@ test("R9 N524 the section: the acknowledgement first, each statement's kind in p
     scrutiny: "a source this group checks more closely before relying on it",
     inference: "an inference this group allows or refuses to draw",
     pattern: "a pattern this group has evidence an institution or source follows" });
-  assert.deepEqual([...LENS_CLOSING_SENTENCES], [
-    "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.",
-    "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material."]);
+  assert.equal(sha(JSON.stringify([...LENS_CLOSING_SENTENCES])), "7ed4ace3e23fe65e25edf6f25ce147cafe3c7c8960a09be7a91b454121874362", "the closing sentences' bytes are pinned");
   const lines = lensSectionLines({ acknowledgement: "Ours.", statements: LENS, format: V7 });
   assert.equal(lines[0], LENS_HEAD);
   assert.equal(lines[2], "**The publisher's acknowledgement.** Ours.", "the acknowledgement first");
@@ -231,7 +229,7 @@ test("R1 a /5 document states every block at once, each read back by its own rea
 });
 
 test("R3 R8 a 'What changed' statement whose words begin a line as the acknowledgement run does is never taken for that run, so re-authoring the acknowledgements cannot splice over it", () => {
-  const WHO = "**Who else read this statement.**";
+  const WHO = SENTENCES.whoElse;
   const statement = `${WHO} We asked two members to check it.\n  statement_sha: not the list's`;
   const lines = ["---", `format: ${V5}`, ...whatChangedBlockLines({ statement, began_as: "member" }),
     "completeness:", "  statement_sha: abc", "completeness_excluded:", "---", "", ...whatChangedSectionLines(statement),

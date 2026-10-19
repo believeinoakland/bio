@@ -8,6 +8,7 @@
  * project's bar (capture B, connection C)". */
 
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
+import { SENTENCES } from "./sentences.mjs";
 
 /** R15: the axes a bar declares, in order (`strength` R14's two). */
 export const BAR_AXES = Object.freeze(["capture", "connection"]);
@@ -40,7 +41,7 @@ export function standingOf(given) {
     const r = Object.hasOwn(STANDING_ROLE_WORDS, role) ? role : null;
     const who = r ? STANDING_ROLE_WORDS[r] : "Its role in this case is not stated";
     if (!anyBar)
-      return { role: r, bar: declared, meets: "no_bar", short: [], line: `${who} · this project declared no bar` };
+      return { role: r, bar: declared, meets: "no_bar", short: [], line: `${who}${SENTENCES.noBar}` };
     if (r === "supporting")
       return { role: r, bar: declared, meets: "not_asked", short: [],
                line: `${who} · not asked to meet this project's bar (${barWords(declared)})` };
@@ -54,6 +55,6 @@ export function standingOf(given) {
                : `${who} · short of this project's bar on ${short.join(" and ")} (${barWords(declared)})` };
   } catch {
     return { role: null, bar: { capture: null, connection: null }, meets: null, short: [],
-             line: "Its standing against this project's bar could not be read" };
+             line: SENTENCES.standingUnread };
   }
 }

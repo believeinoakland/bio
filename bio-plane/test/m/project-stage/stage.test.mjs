@@ -7,8 +7,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, NOW, SIG } from "./fixture.mjs";
 import { STAGE_QUESTIONS_MAX, WORK_PRODUCTS_MAX, READINESS_RUNGS, PROJECT_STAGES, STAGE_NEEDS, STAGE_SENTENCES,
-         CLOSED_REASONS, CLOSED_RECORDED_MAX } from "../../../src/project-stage/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+         stageSentence, CLOSED_REASONS, CLOSED_RECORDED_MAX } from "../../../src/project-stage/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const Q1 = "INQ-2026-0001", Q2 = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 /* An inquiry's own (no-project) conclusion, as inquiry R11 accepts it (inquiry-grammar R1; K819): a conclusion and a
@@ -299,7 +299,7 @@ function oneRule(s) {
   return s;
 }
 const at = (s, name) => s.stages.find((x) => x.stage === name);
-const fill = (key, n) => STAGE_SENTENCES[key].replace(/\{(\w+)\}/g, (_, k) => String(n[k]));
+const fill = (key, n) => stageSentence(key, n);
 
 test("R4 one rule: on every step of the four-stage walk `stages` is produced with `stage`, the reached stages an unbroken prefix, each `since` the instant of the evidence that earns it", () => {
   const { w, proj, write, stage } = setup();
@@ -327,7 +327,7 @@ test("R4 one rule: on every step of the four-stage walk `stages` is produced wit
   write({ state: "closed", closedReason: "resolved", cites: [Q1], history: [{ at: "2026-09-26T12:00:00Z", from: "investigating", to: "closed" }] });
   s = oneRule(stage());
   assert.deepEqual(at(s, "closed"), { stage: "closed", reached: true, earned: { closed_reason: "resolved" },
-    since: "2026-09-26T12:00:00Z", needs: null, why: STAGE_SENTENCES.closed_reached });
+    since: "2026-09-26T12:00:00Z", needs: null, why: stageSentence("closed_reached") });
   write({ state: "forming", cites: [Q1] });
   oneRule(stage());
 });
@@ -422,7 +422,7 @@ test("R4 the investigating need: no question held says so; one held without a le
   const { w, write, stage } = setup();
   let s = oneRule(stage());
   assert.deepEqual([at(s, "investigating").why, at(s, "investigating").needs.any_of[0].have],
-                   [STAGE_SENTENCES.investigating_none_held, 0]);
+                   [stageSentence("investigating_none_held"), 0]);
   w.inquiry(Q1);
   write({ cites: [Q1] });
   s = oneRule(stage());
@@ -464,7 +464,8 @@ test("R4 R2 R7 a failed question read still asks rule 2's ratified half: a ratif
   };
   let s = oneRule(stage());
   assert.deepEqual([s.stage, s.at_least, s.questions.truncated, s.basis], ["undetermined", "investigating", true, null]);
-  assert.equal(s.detail, "the questions this project holds could not all be read, so its stage is undetermined");
+  assert.equal(s.detail, localize("project-stage.stage.questions_unread",
+    "the questions this project holds could not all be read, so its stage is undetermined"));
   assert.deepEqual(s.stages.map((x) => x.reached), [true, true, null, null]);
   w.basisVersions.projectQuestions = () => { throw new Error(word("case-disclosures.why.read_failed")); };
   assert.deepEqual([stage().stage, stage().at_least], ["undetermined", "forming"]);
@@ -487,7 +488,7 @@ test("R4 closed: each reason in `closed_reason` and `closed.earned`; the compute
                      ["closed", reason, { closed_reason: reason }, "2026-09-26T08:00:00Z"]);
     /* how far it had come: investigating, from its leg; matured not reached, needing nothing while closed */
     assert.deepEqual(s.stages.slice(0, 3).map((x) => [x.reached, x.needs]), [[true, null], [true, null], [false, null]]);
-    assert.deepEqual([at(s, "investigating").since, at(s, "matured").why], ["2026-09-19T00:00:00Z", STAGE_SENTENCES.closed_project]);
+    assert.deepEqual([at(s, "investigating").since, at(s, "matured").why], ["2026-09-19T00:00:00Z", stageSentence("closed_project")]);
     assert.deepEqual(s.questions, { read: 1, with_legs: 1, concluded: 0, truncated: false });
   }
   /* a close recorded with no history entry: the instant is not held, so it is null */
@@ -496,7 +497,7 @@ test("R4 closed: each reason in `closed_reason` and `closed.earned`; the compute
   write({ state: "forming", cites: [Q1] });
   const s = oneRule(stage());
   assert.deepEqual([s.stage, at(s, "closed").reached, at(s, "closed").why, "recorded" in at(s, "closed")],
-                   ["investigating", false, STAGE_SENTENCES.closed_not_recorded, false]);
+                   ["investigating", false, stageSentence("closed_not_recorded"), false]);
 });
 
 test("R4 a close without a recognised reason is not closed: `closed.recorded` holds the reason as written (null if absent, cut to 40), the stage computed", () => {
@@ -506,7 +507,7 @@ test("R4 a close without a recognised reason is not closed: `closed.recorded` ho
     write({ state: "closed", closedReason: reason, cites: [Q1] });
     const s = oneRule(stage());
     assert.deepEqual([s.stage, s.closed_reason, at(s, "closed")], ["forming", null,
-      { stage: "closed", reached: false, earned: null, since: null, needs: null, why: STAGE_SENTENCES.closed_unrecognised, recorded }]);
+      { stage: "closed", reached: false, earned: null, since: null, needs: null, why: stageSentence("closed_unrecognised"), recorded }]);
   }
   assert.equal(CLOSED_RECORDED_MAX, 40);
 });
@@ -521,8 +522,11 @@ test("R4 an unread document: all four stages undetermined with the answer's deta
 
 test("R4 R9 fixed text: every `why` is one of the module's fixed sentences with counts filled in, naming no member, question or place", () => {
   const { w, proj, write, stage } = setup();
-  const templates = Object.values(STAGE_SENTENCES).map((t) =>
-    new RegExp(`^${t.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\\?\{(read|with_legs|concluded|editions)\\?\}/g, "\\d+")}$`));
+  /* each sentence's English with its counts as digits: the `why` of a stage is one of these, filled in */
+  const templates = Object.keys(STAGE_SENTENCES).map((name) => {
+    const text = stageSentence(name, { read: "#", with_legs: "#", concluded: "#", editions: "#" });
+    return new RegExp(`^${text.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/#/g, "\\d+")}$`);
+  });
   const whys = [];
   const take = () => { const s = stage(); for (const x of s.stages) whys.push([x.why, s.detail]); };
   take();
