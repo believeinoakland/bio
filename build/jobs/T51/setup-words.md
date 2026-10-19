@@ -92,3 +92,17 @@ Size (session_0159yMToiZVmPM49sS8nuxny): test runs 3, module lines 349
 - `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 7 failures, all in other modules as listed above; words 15 failures, all in other modules as listed above, none in setup-words.
 
 Size (session_0159yMToiZVmPM49sS8nuxny): test runs 4, module lines 349
+
+## J6 · COMPLETE
+
+**CHANGE (B6) applied.** Merged `tranche/T51` into `job/T51/setup-words` (merge commit `5513b1f445`, pushed). DEC-369 (U400) is on the tranche: the three `lines.index.*` rows hold no brace form now.
+
+**R13 is green, no longer an accepted red.** `node --test bio-plane/test/m/setup-words/`: 21 tests, 21 pass, 0 fail. `word-list.test.mjs` passes in full. `node bio-plane/src/setup-words/build.mjs --check`: matches `rows.mjs` and `words-unreviewed.json`, exit 0.
+
+**Checks.** `checks/format.mjs`: 0 failures. `checks/architecture.mjs setup-words`: 0 failures. `checks/coverage.mjs setup-words`: 13 of 13 live ids named, 0 failures. `checks/ownership.mjs setup-words tranche/T51 job/T51/setup-words`: 3 files, 0 failures.
+
+**Entries applied:** R19 (reason inside a reason) and the placeholder-stripped "labelled" checks, as in J5. No change to my module since J5.
+
+**Deferred:** none. **Found in other modules:** none new; the list in J5 stands.
+
+Size (session_0159yMToiZVmPM49sS8nuxny): test runs 3, module lines 349
