@@ -43,3 +43,7 @@ BLOCKED (cause: needs BOB, one act): add "setup-words" to publication's uses in 
 **Checks.** words 0 failures; tests `tests 151, pass 150, fail 0` (1 todo, pre-existing); `format: 0 failures`; `architecture: 32 product files … 0 failures`; `coverage: 48 of 48 … 0 failures`; `ownership: 13 files changed by publication … 0 failures`; `setup-words build --check`: stale-rows note only (expected).
 
 **Size (session_01W7ArLV5djt9odo9CqsoN5L): test runs 6, module lines 2020**
+
+## J4 · COMPLETE
+
+T51-234 done: 73 words findings and 14 plain findings converted, tests 151 (150 pass, 0 fail, 1 todo), format/architecture/coverage/ownership 0 failures; details in my record. Other modules' words findings remain (not mine).
