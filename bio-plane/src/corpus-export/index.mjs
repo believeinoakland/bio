@@ -139,13 +139,16 @@ export class CorpusExport {
    *  derived-rebuildable: its rows never travel) or `EXPORT_PAGE_MALFORMED` (an index that is not a whole number). */
   exportPage({ table = null, index = null, after = null } = {}) {
     const d = this.#declared().find((x) => x.name === table);
-    if (!d) return { ok: false, reason: "EXPORT_TABLE_UNKNOWN", table, detail: "no declared table has that name" };
+    if (!d) return { ok: false, reason: "EXPORT_TABLE_UNKNOWN", table, detail: localize("corpus-export.index.table_not_declared", "no declared table has that name") };
     if (d.export === "never" || d.derive === "derived-rebuildable")
       return { ok: false, reason: "EXPORT_TABLE_NOT_CARRIED", table,
-               detail: d.derive === "derived-rebuildable" ? "derived-rebuildable: it travels as its rule" : "export never: its rows never travel" };
+               detail: d.derive === "derived-rebuildable"
+                 ? localize("corpus-export.index.table_rebuilt_by_rule", "derived-rebuildable: it travels as its rule")
+                 : localize("corpus-export.index.table_never_travels", "export never: its rows never travel") };
     const i = Number(index);
     if (!Number.isInteger(i) || i < 0)
-      return { ok: false, reason: "EXPORT_PAGE_MALFORMED", table, detail: "a page is named by its index, a whole number, and its after" };
+      return { ok: false, reason: "EXPORT_PAGE_MALFORMED", table,
+               detail: localize("corpus-export.index.page_named_by_index", "a page is named by its index, a whole number, and its after") };
     let from = after;
     if (typeof from === "string") { try { from = JSON.parse(from); } catch { /* a plain key */ } }
     const pager = new TablePager(this.sql, d);
@@ -236,7 +239,7 @@ export function verifyCorpusExport(input) {
   const counts = { bundles: 0, files: 0, promotions: 0, snapshots: 0, captures: 0, tables: 0, pages: 0 };
   try {
     if (!manifest || typeof manifest !== "object" || !Array.isArray(manifest.bundles))
-      return refused([{ reason: "MANIFEST_MALFORMED", expected: "an export's manifest: an object listing its records",
+      return refused([{ reason: "MANIFEST_MALFORMED", expected: localize("corpus-export.index.manifest_object_listing_records", "an export's manifest: an object listing its records"),
                         found: describe(manifest) }], counts);
     const held = bytesOf(bytes);
     const digests = new Map();
@@ -309,14 +312,14 @@ export function verifyCorpusExport(input) {
         const replaced = under.find((s) => s && s.path === "bundle.md") || under[0] || null;
         if (!replaced || lower(base) !== lower(replaced.sha256))
           failures.push({ reason: "BASE_UNLINKED", bundle, snap_key: key,
-                          expected: replaced ? lower(replaced.sha256) : "a snapshot filed under this key",
+                          expected: replaced ? lower(replaced.sha256) : localize("corpus-export.index.snapshot_filed_under_key", "a snapshot filed under this key"),
                           found: describe(base) });
       });
       for (const [key, rows] of filed)
         if (!keys.has(key))
           for (const s of rows)
             failures.push({ reason: "SNAPSHOT_UNLINKED", bundle, snap_key: key, path: s ? s.path ?? null : null,
-                            expected: "a promotion filed under this key", found: null });
+                            expected: localize("corpus-export.index.promotion_filed_under_key", "a promotion filed under this key"), found: null });
     }
     for (const r of Array.isArray(manifest.register) ? manifest.register : []) {
       counts.captures++;
@@ -346,11 +349,11 @@ export function verifyCorpusExport(input) {
 function verifyTables(manifest, held, failures, counts, declared) {
   const tables = manifest.tables;
   if (tables === undefined) {
-    if (declared != null) failures.push({ reason: "MANIFEST_MALFORMED", expected: "the declared tables, a list", found: null });
+    if (declared != null) failures.push({ reason: "MANIFEST_MALFORMED", expected: localize("corpus-export.index.declared_tables_list", "the declared tables, a list"), found: null });
     return 0;
   }
   if (!Array.isArray(tables)) {
-    failures.push({ reason: "MANIFEST_MALFORMED", expected: "the declared tables, a list", found: describe(tables) });
+    failures.push({ reason: "MANIFEST_MALFORMED", expected: localize("corpus-export.index.declared_tables_list", "the declared tables, a list"), found: describe(tables) });
     return 0;
   }
   const td = new TextDecoder("utf-8", { fatal: true });
@@ -363,7 +366,7 @@ function verifyTables(manifest, held, failures, counts, declared) {
     const pages = t && Array.isArray(t.pages) ? t.pages : [];
     const where = { table };
     if (t && t.classes && t.classes.export === "never" && (pages.length || t.rows))
-      failures.push({ reason: "TABLE_NEVER_CARRIED", ...where, expected: "no row of a table declared export never",
+      failures.push({ reason: "TABLE_NEVER_CARRIED", ...where, expected: localize("corpus-export.index.never_table_no_row", "no row of a table declared export never"),
                       found: `${pages.length} page(s)` });
     if (!t || t.carried !== "rows") continue;
     let rows = 0;
@@ -386,7 +389,7 @@ function verifyTables(manifest, held, failures, counts, declared) {
       let page = null;
       try { page = JSON.parse(td.decode(b)); } catch { page = null; }
       if (!page || !Array.isArray(page.rows) || canonical(page) !== td.decode(b)) {
-        failures.push({ reason: "PAGE_MALFORMED", ...at, expected: "a canonical page of rows", found: null });
+        failures.push({ reason: "PAGE_MALFORMED", ...at, expected: localize("corpus-export.index.canonical_page_of_rows", "a canonical page of rows"), found: null });
         continue;
       }
       if (page.table !== table || page.index !== p.index || page.owner !== t.owner)
@@ -404,7 +407,7 @@ function verifyTables(manifest, held, failures, counts, declared) {
   const must = Array.isArray(declared) ? declared.map((d) => (typeof d === "string" ? d : d && d.name)).filter(Boolean) : [];
   for (const name of must)
     if (!named.has(name))
-      failures.push({ reason: "TABLE_NOT_CARRIED", table: name, expected: "every declared table carried or named", found: null });
+      failures.push({ reason: "TABLE_NOT_CARRIED", table: name, expected: localize("corpus-export.index.declared_table_carried_or_named", "every declared table carried or named"), found: null });
   return sound ? total : null;
 }
 
