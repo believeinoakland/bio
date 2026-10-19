@@ -218,7 +218,26 @@ function render(cs, view) {
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
     const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p><p class="mk-small">${cs.w("document.read.cite.help")}</p>` : "";
     const none = ui.citeNone ? `<details class="mk-details" data-cite="none" open><summary>${cs.w("screen.document.cite.none.summary")}</summary><p class="mk-small">${cs.w("screen.find-in.questionfirst")}</p></details>` : "";
-    return `<p class="mk-small">${cs.w("document.read.select")}</p>` + list.map((p, i) => {
+    /* R80, R78: the reading's pages (an extent's page counts from 0, a slide from 1) drawn from one, one at a time, with the kit's
+       choice control (interface-shell R90) redrawing in the page: no op, no new read. A text of one page draws no page bar. */
+    const numOf = (p) => { const e = p.extent && typeof p.extent === "object" ? p.extent : null;
+      if (e && e.kind === "pdf-page" && Number.isInteger(e.page) && e.page >= 0) return e.page + 1;
+      if (e && /^slide/.test(String(e.kind || "")) && Number.isInteger(e.slide) && e.slide >= 1) return e.slide;
+      return null; };
+    const nums = list.map(numOf).filter((n) => n !== null);
+    const unreadN = Array.isArray(r.unread_pages) ? r.unread_pages.filter((n) => Number.isInteger(n) && n >= 0).map((n) => n + 1) : [];
+    const total = nums.length ? Math.max(...nums, ...unreadN) : 0;
+    const paged = total > 1;
+    const first = paged ? Math.min(...nums) : 0;
+    const asked = Number(ui.readpage);
+    const cur = paged ? (Number.isInteger(asked) && asked >= 1 && asked <= total ? asked : first) : 0;
+    const shown = paged ? list.map((p, i) => [p, i]).filter(([p]) => { const n = numOf(p); return n === cur || (n === null && cur === first); }) : list.map((p, i) => [p, i]);
+    const bar = paged ? `<div class="mk-pagebar" data-pagebar="1">`
+      + cs.checks("document-read-tab", "document.read.title", [{ value: "page", key: "document.read.tab.page", on: true }], { radio: true, redraw: "readtab" })
+      + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
+          (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
+          { radio: true, redraw: "readpage" }) + "</div>" : "";
+    return `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
@@ -308,14 +327,11 @@ function render(cs, view) {
       if (!open.length && closed.length) {
         /* decided: what she chose, who and when, in her own words; nothing more is offered for that capture */
         const c = closed[closed.length - 1];
-        const sentence = c.why && c.closed_by && c.closed_at
-          ? W(stateOf(c) === "adopted" ? "screen.document.a34.moved" : "screen.document.a34.kept", { member: who(c.closed_by), date: { html: dayOf(c.closed_at) }, why: String(c.why) })
-          : null;
-        /* the sentence holds all three fills; a keep with no reason stated has no key, so what the record holds is drawn beside the act's own label */
-        meta.push(`<span data-leg-state="decided" data-decided="${cs.esc(stateOf(c))}">` + (sentence !== null ? sentence
-          : W(stateOf(c) === "adopted" ? "act.adoptversion.label.document" : "act.keepversion.label.document")
-            + (c.closed_by ? " · " + cs.esc(who(c.closed_by)) : "") + (c.closed_at ? " · " + dayOf(c.closed_at) : "")
-            + (c.why ? ` · <span class="rec">“${cs.esc(String(c.why))}”</span>` : "")) + "</span>");
+        const adopted = stateOf(c) === "adopted";
+        const fills = { member: who(c.closed_by || ""), date: { html: dayOf(c.closed_at) } };
+        const sentence = c.why ? W(adopted ? "screen.document.a34.moved" : "screen.document.a34.kept", { ...fills, why: String(c.why) })
+          : W(adopted ? "screen.document.a34.moved.noreason" : "screen.document.a34.kept.noreason", fills);
+        meta.push(`<span data-leg-state="decided" data-decided="${cs.esc(stateOf(c))}">` + sentence + "</span>");
       } else if (ans || open.length) {
         const lines = [];
         const legs = ans && ans.state === "ok" ? ans.legs.filter((n) => n && String(n.target) === id) : [];
@@ -431,7 +447,7 @@ function render(cs, view) {
         if (isSet) {
           const fa2 = new Map(filesOf(revs[ia]).map((f) => [String(f.path), String(f.sha256 || "")])), fb2 = new Map(filesOf(revs[ib]).map((f) => [String(f.path), String(f.sha256 || "")]));
           changed = [...new Set([...fa2.keys(), ...fb2.keys()])].filter((p) => fa2.get(p) !== fb2.get(p))
-            .map((p) => `<p class="mk-small id" data-file-changed="${cs.esc(p)}">${cs.esc(p)} ${fa2.has(p) ? `<del>${cs.esc(shortOf(fa2.get(p)))}</del>` : ""} ${fb2.has(p) ? `<ins>${cs.esc(shortOf(fb2.get(p)))}</ins>` : ""}</p>`).join("");
+            .map((p) => `<p class="mk-small id" data-file-changed="${cs.esc(p)}">${cs.esc(p)} ${fa2.has(p) ? `<del>${W("screen.document.compare.fingerprint", { digest: shortOf(fa2.get(p)) })}</del>` : ""} ${fb2.has(p) ? `<ins>${W("screen.document.compare.fingerprint", { digest: shortOf(fb2.get(p)) })}</ins>` : ""}</p>`).join("");
         }
         panel = `<div class="mk-compare" data-compare="revisions">${side(ia, fa, fb, true)}${side(ib, fb, fa, false)}</div>` + changed;
       }
@@ -833,8 +849,8 @@ const words = Object.freeze([
     "a34.a_newer_copy_exists_captured_2_october", "a34.page_same", "a34.page_differs", "a34.no_newer", "a34.moved", "a34.kept", "a34.not_checked_yet", "a34.it_does_not_guess",
     "a34.one_line_for_each_question_that_rests_on", "a64.captured_together_with_this_page_and_che",
     "a64.not_established_means_the_record_cannot_"].map((k) => "screen.document." + k),
-  "document.read.title", "document.read.help", "document.read.select", "document.read.cite.help",
-  ...["record.release", "record.added", "revisions.truncated", "revision.nobytes", "compare.grade", "place.restson", "names.matched.identifier",
+  "document.read.title", "document.read.help", "document.read.tab.page", "document.read.page", "document.read.prev", "document.read.next", "document.read.select", "document.read.cite.help",
+  ...["record.release", "record.added", "revisions.truncated", "revision.nobytes", "compare.grade", "compare.fingerprint", "a34.moved.noreason", "a34.kept.noreason", "place.restson", "names.matched.identifier",
     "names.matched.reference", "names.matched.reference_key", "names.matched.label", "names.matched.testimony", "names.matched.none"].map((k) => "screen.document." + k),
   ...["captured", "copy", "fingerprint", "fingerprint.means", "passages.head", "passage.where", "cite.question", "cite.role",
     "cite.noquestion", "unread.head", "unread.page", "unread.words", "unread.empty", "gradenote.head", "gradenote.none",

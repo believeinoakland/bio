@@ -5,6 +5,11 @@ import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, day, READING, DOCUMENT_MD, DATASET, provenanceOf, P, Q, D, SHA } from "./fixtures.mjs";
 
+/** R80: the page bar's Next (a radio of the kit's choice control, no op): checked and changed. */
+async function nextPage(p) {
+  const box = p.doc.getElementById("document-read-page").querySelectorAll("label").find((l) => l.textContent.includes(word("document.read.next"))).querySelector("input");
+  box.checked = true; p.fire(box, "change"); await p.settle();
+}
 const at = "/app/document/" + D;
 /* R78: a page the record counts from zero is drawn from one; read here through the same arithmetic, never copied */
 const one = (p) => p + 1;
@@ -45,10 +50,14 @@ test("R3 R32 the document drawn: title, source as an outside link, its grade as 
   assert.deepEqual([g.getAttribute("data-scale"), g.textContent.slice(-1)], ["capture", "B"]);
   assert.equal(m.querySelector(".mk-facts").querySelectorAll('.cs-gap[data-gap="unrated"]').length, 0, "never Unrated beside a B note");
   assert.equal(m.querySelector(`a[href="/app/open-file/${SHA}"]`).textContent, word("screen.document.open"), "R22: the original by its digest");
+  /* R80: the reading is drawn a page at a time, the first page holding words first; the other page one choice away */
   const passages = m.querySelectorAll("blockquote");
-  assert.equal(passages.length, 2);
+  assert.equal(passages.length, 1);
   assert.ok(says(passages[0], "screen.document.passage.where", { page: one(2) }), "R78: the record's page 2 is drawn from one");
-  assert.equal(section(p, "document.read.title").querySelectorAll('button[data-act="cite"]').length, 2, "each passage citable");
+  assert.equal(section(p, "document.read.title").querySelectorAll('button[data-act="cite"]').length, 1, "each passage citable");
+  await nextPage(p);
+  assert.ok(says(main(p).querySelectorAll("blockquote")[0], "screen.document.passage.where", { page: one(3) }), "the record's page 3 is drawn from one");
+  assert.equal(section(p, "document.read.title").querySelectorAll('button[data-act="cite"]').length, 1, "each passage citable");
   assert.ok(says(section(p, "document.read.title"), "document.read.select") && says(section(p, "document.read.title"), "document.read.cite.help"), "the Read it section's own words");
   assert.ok(says(m, "document.unread.pages", { pages: `${one(7)}–${one(9)}` }));
   assert.ok(m.querySelector('[data-changed="true"]'), "a newer version marked changed");
@@ -147,8 +156,9 @@ test("R3 acts send what their owners take", async () => {
   const p = await open(at, { boot: { plane: { ...plane({ plane: {
     attest: ok({ ok: true }), monitor: ok({ ok: true }), transcribe: ok({ ok: true }), cite: ok({ ok: true }), identityclaim: ok({ ok: true }),
     pagetranscribe: { status: 200, json: { ok: true, transcription: { performed: true, pages: [7, 8], untested: { kind: "untested" } } } }, resolutions: NAMES } }), ...REACH } } });
+  await nextPage(p);
   fill(p, { "document-cite-question": Q, "document-cite-role": "cuts_against" });
-  await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[1].nextElementSibling });
+  await press(p, "cite", { within: main(p).querySelectorAll("blockquote")[0].nextElementSibling });
   const cite = p.byOp("cite")[0].query;
   assert.deepEqual([cite.project, cite.role, JSON.parse(cite.found)], [Q, "cuts_against", { capture_sha: SHA, extent: { kind: "pdf-page", page: 3 }, kind: "passage" }]);
   await press(p, "attest");
@@ -243,8 +253,10 @@ test("R3 R32 (K3387) every capture read is keyed on the capture's sha from its p
 test("R3 (K3387) the document's words are the reading's text_units; a reading with none says so, and no invented field is read", async () => {
   const p = await open(at);
   const q = main(p).querySelectorAll("blockquote");
-  assert.equal(q.length, 2);
+  assert.equal(q.length, 1, "R80: one page at a time");
   assert.ok(q[0].textContent.includes("within seven calendar days"));
+  await nextPage(p);
+  assert.ok(main(p).querySelectorAll("blockquote")[0].textContent.includes("Repairs are recorded as closed"));
   const none = await open(at, { plane: { reading: ok(READING({ text_units: [], reading: { passages: [{ text: "invented" }], units: [{ text: "invented" }], text: "invented" } })) } });
   const s = section(none, "document.read.title");
   assert.ok(says(s, "state.empty"));

@@ -144,6 +144,9 @@ test("R65 a copy that came as a set of files: every file with its digest in the 
   fill(p, { "document-rev-a": "1", "document-rev-b": "3" });
   await press(p, "revisioncompare");
   assert.ok(main(p).querySelector('[data-file-changed="snapshots/map.png"]') && !main(p).querySelector('[data-file-changed="bundle.md"]'), "only the file that changed (bundle.md's digest is the same in both)");
+  const short = (h) => h.slice(0, 8) + "…" + h.slice(-4);
+  const ch = main(p).querySelector('[data-file-changed="snapshots/map.png"]');
+  assert.ok(says(ch.querySelector("del"), "screen.document.compare.fingerprint", { digest: short("5".repeat(64)) }) && says(ch.querySelector("ins"), "screen.document.compare.fingerprint", { digest: short("6".repeat(64)) }), "R65: each file's digest by screen.document.compare.fingerprint");
   const single = await open(at, withHistory());
   assert.ok(!says(record(single), "screen.document.a27.a_copy_that_came_as_a_set_of_files_such_"));
 });
@@ -449,4 +452,57 @@ test("R69 an answer that the cited section differs says so by page; no newer cop
   const kept = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ ...NOTICE_Q, state: "kept", closed_by: "dev", closed_at: "2026-10-13T10:00:00Z", why: "the cited wording is the one we need" }] : [] });
   const k = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, reevaluationnotices: kept } });
   assert.ok(says(legs(k)[0], "screen.document.a34.kept", { member: "dev", date: day("2026-10-13T10:00:00Z"), why: "the cited wording is the one we need" }));
+});
+
+test("R69 a keep or a move with no reason is drawn by its own key (a34.kept.noreason, a34.moved.noreason), never a sentence composed from the act's label", async () => {
+  for (const [state, key] of [["kept", "screen.document.a34.kept.noreason"], ["adopted", "screen.document.a34.moved.noreason"]]) {
+    const dec = (r) => ok({ ok: true, notices: r.query.holder === Q ? [{ ...NOTICE_Q, state, closed_by: "dev", closed_at: "2026-10-13T10:00:00Z" }] : [] });
+    const k = await open(at, { images: { ...QPROJECT(LEG), ...TWO }, plane: { backlinks: () => backlinks2, reevaluationnotices: dec } });
+    assert.ok(says(legs(k)[0], key, { member: "dev", date: day("2026-10-13T10:00:00Z") }), key);
+    assert.ok(!text(legs(k)[0]).includes(word("act.keepversion.label.document") + " ·") && !text(legs(k)[0]).includes("“"), "control: no composed fallback and no quotation");
+  }
+});
+
+/* ---- R80 ---- */
+const unit = (seq, extent, t) => ({ seq, extent, reference: "u" + seq, truncated: false, text: t });
+const readingOf = (units, o = {}) => ok({ ...READING({ unread_pages: [], ...o }), text_units: units });
+const bar = (p) => main(p).querySelector("[data-pagebar]");
+const nextBox = (p) => p.doc.getElementById("document-read-page").querySelectorAll("label").find((l) => l.textContent.includes(word("document.read.next"))).querySelector("input");
+
+test("R80 a document of several pages draws the Read it tab and \"Page 1 of m\" from the reading it already read; Next moves to page 2 sending no request and no new read; Previous is not offered on page 1", async () => {
+  const units = [unit(1, { kind: "pdf-page", page: 0 }, "First page words."), unit(2, { kind: "pdf-page", page: 1 }, "Second page words."), unit(3, { kind: "pdf-page", page: 2 }, "Third page words.")];
+  const p = await open(at, { plane: { reading: readingOf(units) } });
+  const s = section(p, "document.read.title");
+  assert.ok(bar(p) && says(bar(p), "document.read.tab.page"), "the tab of the reading the screen reads, by its key");
+  assert.ok(says(s, "document.read.page", { n: String(one(0)), count: String(units.length) }), "Page 1 of m, from one");
+  assert.ok(says(s, "document.read.next") && !says(s, "document.read.prev"), "control: no Previous on the first page");
+  assert.ok(text(main(p)).includes("First page words.") && !text(main(p)).includes("Second page words."), "the page's own words");
+  assert.ok(says(main(p).querySelector("blockquote"), "screen.document.passage.where", { page: one(0) }));
+  const before = p.requests.length, reads = p.byOp("reading").length;
+  const box = nextBox(p); box.checked = true; p.fire(box, "change"); await p.settle();
+  assert.ok(says(section(p, "document.read.title"), "document.read.page", { n: String(one(1)), count: String(units.length) }), "Page 2 of m");
+  assert.ok(text(main(p)).includes("Second page words.") && !text(main(p)).includes("First page words."));
+  assert.ok(says(section(p, "document.read.title"), "document.read.prev"), "Previous is offered from page 2");
+  assert.equal(p.requests.length, before, "no request is sent");
+  assert.equal(p.byOp("reading").length, reads, "no new read of what is held");
+  assert.equal(writes(p).length, 0);
+});
+
+test("R80 a slide deck numbers from 1: slide 1 is \"Page 1\", never 0 or 2", async () => {
+  const units = [unit(1, { kind: "slide", slide: 1 }, "Opening slide."), unit(2, { kind: "slide", slide: 2 }, "Second slide."), unit(3, { kind: "slide", slide: 3 }, "Third slide.")];
+  const p = await open(at, { plane: { reading: readingOf(units) } });
+  assert.ok(says(section(p, "document.read.title"), "document.read.page", { n: "1", count: String(units.length) }), "a slide counts from 1 as it is");
+  assert.ok(text(main(p)).includes("Opening slide."));
+  const box = nextBox(p); box.checked = true; p.fire(box, "change"); await p.settle();
+  assert.ok(says(section(p, "document.read.title"), "document.read.page", { n: "2", count: String(units.length) }) && text(main(p)).includes("Second slide."));
+});
+
+test("R80 control: a single-page text draws no page bar and no tab, and a text with no page stated draws all its passages", async () => {
+  const one1 = await open(at, { plane: { reading: readingOf([unit(1, { kind: "pdf-page", page: 0 }, "Only page.")]) } });
+  assert.equal(bar(one1), null);
+  assert.ok(!says(main(one1), "document.read.page", { n: "1", count: "1" }));
+  assert.ok(text(main(one1)).includes("Only page."));
+  const flat = await open(at, { plane: { reading: readingOf([unit(1, { kind: "heading" }, "A heading."), unit(2, { kind: "heading" }, "Another.")]) } });
+  assert.equal(bar(flat), null);
+  assert.equal(main(flat).querySelectorAll("blockquote").length, 2);
 });
