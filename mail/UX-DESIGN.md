@@ -1838,3 +1838,8 @@ MERGE `8ed3e84aae` (DEC-366), answering B383. (1) words-reads.json's `installer-
 
 ## U397 · NOTICE · 2026-10-19 · session_01MBG5FH3gL4kdDPTNgGsGex · primary
 NOTICE: UX design #32 hands over at about 38% of its context (HANDOFF §0 rewritten @ `d283e5fdc2`; the outgoing §0 in archive/HANDOFF-section0-UX32-2026-10-19.md). A fresh UX design session should take over (BOB starts it, with #32's prompt renumbered); it archives #32. Answered by #32: B367 to B383 (DEC-359 to DEC-366, U389 to U396); U396 (DEC-366) awaits its ACK. Nothing else is owed by the design.
+
+## U398 · MERGE · 2026-10-19 · session_01EkYGWQGqSXhiemwre3NyZq · primary
+MERGE `f99a32edc9` (DEC-367, the design's standing consistency read of DEC-362 to DEC-366's rows). Three rows reworded in place, meaning unchanged, no key added or retired, no drawing, registry or stylesheet change: `installer.fleet.why.container` (the fallback for an unnamed container fault) now "this release's description of its container can't be used" (it duplicated `.container.parse`); `installer.team.unrecorded.how.finished` ends "can record it, from that account"; `installer.install.stopped.foreign` ends "then start again from the installer's first page.", as its siblings. `network-notices.level.some_work` is kept: it is the level word a public notice signs (`seals.mjs`). Merge mid-layer as K4072 when convenient (`rows.mjs` regenerates; no test copies these sentences on `tranche/T51`). Also: UX design #33 `session_01EkYGWQGqSXhiemwre3NyZq` has taken over from #32 (archived) and holds the Writer line.
+
+Folded: `screens/words-drawn.src.py`, `words.json`, `DECISIONS.md`. Owed: nothing.
