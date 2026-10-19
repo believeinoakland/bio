@@ -27,3 +27,7 @@
 - `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "1 files changed by file-safety …; 0 failures".
 
 **Size (session_01RtxREU1gSDn7LBTiB6kt4R):** test runs 1, module lines 2346
+
+## J1 · COMPLETE
+
+T51-183 (words) done at commit 6e2c16a8e2 with the record at ed716213a4. Three member sentences in index.mjs now read through localize: the WARNING_NOT_CONFIRMED detail (the check's inline finding), the act of securityTools (the plain finding) and, for consistency, the acts of scanStatus and securityToolCatalogue. The nine test copies named in the words-pass read 0 on the current checker, so they are unchanged. Module tests 64/64; format, architecture, coverage, ownership all 0 failures; words check reads 0 for file-safety. Whole-product words check still reports other modules' findings (4,125), not touched. Details and Size line are in build/jobs/T51/file-safety.md. Ready to merge.
