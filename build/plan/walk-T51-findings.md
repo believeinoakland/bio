@@ -36,6 +36,7 @@
 
 | # | group | owner | fix | covering test | state |
 | --- | --- | --- | --- | --- | --- |
-| A | R22: Home draws no door to `dash-action` (R20's control fails only as its echo) | (diagnosis) | | | open |
-| B | R27 on `setup`: catalogue labels, hints, legends, vendor names escape (the pseudo route rewrites only the document's word pairs) | (diagnosis) | | | open |
-| C | R27 on `places`, `elsewhere`: profile values outside `DATA`'s `li` selectors | (diagnosis) | | | open |
+| A | R22: Home draws no door to `dash-action` (R20's control fails only as its echo) | journey-check | CR-25 (R22 amended) | R22's fixture Home without the Action door | open |
+| B | R27 on `setup`: catalogue labels, hints, legends, vendor names escape (the pseudo route rewrites only the document's word pairs) | journey-check | CR-25 (R29 (a), (b), (c)) | R29's real `setup` and `security` (fold open) through the harness | open |
+| C | R27 on `places`, `elsewhere`: profile values outside `DATA`'s `li` selectors | journey-check | CR-25 (R29 (b)) | R29's real `places` (chooser) and `elsewhere` through the harness | open |
+| D | R27's `RUN` on comma-joined lists and fills (Home with three languages and places; not reached by this run) | journey-check | CR-25 (R29 (b)) | R29's real Home | open |
