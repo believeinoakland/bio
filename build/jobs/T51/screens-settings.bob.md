@@ -71,3 +71,19 @@ CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_A
 ## B9 · CHANGE
 
 CHANGE (K4094): journey-check's pseudo-locale walk (R27) finds slugs drawn as text on setup's scanner list: the legends 'google-web-risk', 'opswat-deep-cdr' (setup-words R13; R6 a slug is not a name). Draw each provider's display name, never its id. The catalogue's own labels and hints are file-scanner's sentences (CR-17), not yours: draw them as you read them until it merges.
+
+## B10 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the completion round (§5.7 (0); P10 as amended, K3915): **CR-20 · screens-settings** (read the entry line whole). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/screens-settings.md` (read whole). R62 is marked not yet met: meet it.
+BOB's notes for this job:
+1. `file-scanner` R33 (`handling.on_own`) is merged on the tranche (merge it first). `security.mjs`:56 (`onOwn`) and :167 (`own`) read it instead of matching `recipient`'s English; no pattern over a sentence remains.
+2. The local walk (journey-check R1 (a)) runs once after this round and must find nothing (Bob, K4111): `security` is on it. Do not run the walk yourself; prove R62 with your module's own tests (its test and control as R62 says).
+Your layer has closed; this round runs as a layer (§5.3 to §5.6). Nothing found here waits for the next tranche (K3915): a flaw in your module is fixed in this job, one in another module is a REPORT.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a test asserts the key or reads the text from the word table, never copies it. Every refusal a control. Report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Never edit a generated artifact (manifest §14); report one you make stale.
+Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513).
