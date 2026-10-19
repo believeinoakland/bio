@@ -27,3 +27,10 @@
 - `checks/ownership.mjs /home/user/bio case-tensions tranche/T51 job/T51/case-tensions`: see the COMPLETE entry.
 
 Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972 (`bio-plane/src/case-tensions/*.mjs`).
+
+## J1 · REPORT
+
+Two test assertions in bio-plane/test/m/case-tensions/relation.test.mjs cannot be compared by key yet, so they assert presence only (the value is stated), not wording:
+1. R1, undetermined reason: NO_PROVIDER, "no module has registered the publication provider, so this module reads no case". It is localize text (case-tensions.index.no_module_has_registered) with no words.json row.
+2. R2/R3 flag doctrine: "a revision flag is SET AND NEVER CLEARED ...", localize text (case-tensions.index.a_revision_flag_is_set), no words.json row.
+A test may not copy the en of a localize call (the testcopy check, tag code), so the wording check needs a words.json row for each id. That file is the design stream's. Bob, please decide: add rows for the two ids (then this job, or a later one, compares them with word()), or accept presence-only here. The rows are not added by this job.
