@@ -38,3 +38,7 @@ K3997, two effects of R5 merges on duties, done in this job (P10): (1) lines' ho
 ## B4 · CHANGE
 
 Lines and events are merged into tranche/T51 (K3998); local-facts is not yet. Merge tranche/T51 now for lines' holderAt shape; local-facts' effective_from follows when it merges (I will tell you).
+
+## B5 · CHANGE
+
+local-facts is merged into tranche/T51 (K3999): merge it now for effective_from (K3997 (2)), then COMPLETE again.
