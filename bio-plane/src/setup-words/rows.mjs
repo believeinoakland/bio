@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (15767 design words, 934 protected; SHA-256
-   238fb7b56dadb032d070a4552aa5e8637e772a4f133f1381be3f73a56e0f8f60) followed by 6689 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   4e6503d0487b28c5933eb46c6ed5f30f67b32a34b408403bceec5d9c0e46ed8e) followed by 6690 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "238fb7b56d";
+export const WORDS_COMMIT = "4e6503d048";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8332,7 +8332,7 @@ export const WORD_ROWS = Object.freeze([
   ["skills.skilldoctrine.this_layer_is_instruction_every_5","this layer is INSTRUCTION. Every act it names is refused or labeled by the module that performs it: a drafted statement is stored apart and labeled as machine work, and becomes the team's statement only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
   ["skills.skilldoctrine.what_the_group_chose_changes","What the team chose changes only by a member's act.","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
   ["skills.skilldoctrine.what_the_group_sends_is","What the team sends is checked against its record.","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
-  ["skills.skilldoctrine.wherever_a_member_writes_in","Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me write this\": it works only from what the member tells it and what the team holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labeled \"Draft · the assistant's, asked by \", saved only when the member keeps them.","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
+  ["skills.skilldoctrine.wherever_a_member_writes_in","Wherever a member writes in their own words, the assistant, when reachable, offers \"Help me write this\": it works only from what the member tells it and what the team holds, never adds a fact (for an observation it only helps word what the member saw), and its words arrive labeled \"Draft · the assistant's, asked by\" and the asking member's handle, saved only when the member keeps them.","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
   ["skills.skilldoctrine.with_the_members_suggestions_switch","With the member's suggestions switch off it works only from what the member typed; with it on it may also draw on what the team holds (rule 7).","DEC-355: B362, reviewed from code (K3930, K4066): \"group\" for the team written as \"team\"; American spelling (DEC-221)",null,false,"design"],
   ["screen.members.scale.head.admins","Administrators","DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: how many administrators the team has",null,false,"design"],
   ["screen.members.scale.head.takes","Votes it takes","DEC-356: B363 Q2 (SCREENS-SETTINGS #7, members R56): the administrator-removal scale table; translator: column head: the votes a removal needs at that size",null,false,"design"],
@@ -20112,6 +20112,7 @@ export const WORD_ROWS = Object.freeze([
   ["journey-check.design.the_mock_s_offers_no_state","the mock's {control} offers no state like /{option}/",null,null,false,"code"],
   ["journey-check.investigation.v1_cite_it_with_a","{v1}cite it with a role (supports)",null,null,false,"code"],
   ["journey-check.investigation.v1_open_the_document_see","{v1}open the document, see its words, and Find-in a passage",null,null,false,"code"],
+  ["journey-check.journeys.action_block_not_drawn_the_team_holds","Action block: not drawn, the team holds no action",null,null,false,"code"],
   ["journey-check.journeys.dashboard_id_opened_from_the_door","dashboard {id}: opened from the door on Home",null,null,false,"code"],
   ["journey-check.journeys.id_draws_admin_as_a","{id} draws admin as a name: {map}",null,null,false,"code"],
   ["journey-check.local.import_site_from_stringify_export","import site from {stringify};\nexport default site;\n",null,null,false,"code"],

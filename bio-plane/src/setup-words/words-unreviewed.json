@@ -30360,11 +30360,18 @@
       "line": 175
     },
     {
+      "id": "journey-check.journeys.action_block_not_drawn_the_team_holds",
+      "en": "Action block: not drawn, the team holds no action",
+      "module": "journey-check",
+      "file": "bio-plane/src/journey-check/journeys.mjs",
+      "line": 455
+    },
+    {
       "id": "journey-check.journeys.dashboard_id_opened_from_the_door",
       "en": "dashboard {id}: opened from the door on Home",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/journeys.mjs",
-      "line": 455
+      "line": 458
     },
     {
       "id": "journey-check.journeys.id_draws_admin_as_a",
