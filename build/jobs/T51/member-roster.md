@@ -1,6 +1,6 @@
 # member-roster (T51)
 
-**Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · WORKING · handled B1
+**Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · WORKING · handled B2
 
 ## Completion (MEMBER-ROSTER #2) · words round RW (B2, K4015)
 
