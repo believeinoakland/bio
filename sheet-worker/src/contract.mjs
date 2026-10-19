@@ -75,8 +75,7 @@ export const REFUSALS = Object.freeze({
     + "this message. This is not NOT_FOUND, which says the namespace exists and holds no such capture",
   R2_NOT_CONFIGURED: "this member holds no CAPTURES binding, so it cannot read the bytes",
   NOT_FOUND: localize("sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store"),
-  NOT_ENABLED: "workbook recompute is not enabled on this instance; an administrator enables it after the release "
-    + "deploys this member",
+  NOT_ENABLED: localize("sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member"),
   ENGINE_ABSENT: localize("sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed"),
   NOT_A_WORKBOOK: "the bytes are not an OOXML spreadsheet",
   OVER_BOUND: localize("sheet-worker.contract.the_workbook_is_larger_than", "the workbook is larger than this member recomputes; nothing of it was recomputed"),
