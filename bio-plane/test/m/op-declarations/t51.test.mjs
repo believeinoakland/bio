@@ -48,12 +48,14 @@ const KINDS = {
   read:        { spec: { classes: MP, mutating: false },                          needs: null },
   sessionread: { spec: { classes: MP, machineClasses: [], mutating: false },      needs: null },
   ownread:     { spec: { classes: ["admin", "member"], machineClasses: [], mutating: false }, needs: null },
+  /* K4098: machine classes named, so admission refuses an `ai` credential */
+  readfenced:  { spec: { classes: MP, machineClasses: ["admin", "probe"], mutating: false }, needs: null },
 };
 /* The 14 session reads, each with its owner, kind and the stamps R77 to R79 name (`viewer` always, beside the family's own);
    `map` is the owner's ops map where it serves the op (`approvedunsent` and `checkpointsdue` have no owner arm: the control
    plane's route serves them, screens-action R30). */
 const T51 = {
-  heldat:             { owner: "capture",         kind: "read",        stamps: ["by", "viewer"], map: captureOps },
+  heldat:             { owner: "capture",         kind: "readfenced",        stamps: ["by", "viewer"], map: captureOps },
   bundlehistory:      { owner: "promotion",       kind: "read",        stamps: ["viewer"],       map: promotionOps },
   entityidonly:       { owner: "entities",        kind: "read",        stamps: ["viewer"],       map: entitiesOps },
   subjectsnamed:      { owner: "entities",        kind: "read",        stamps: ["viewer"],       map: entitiesOps },
@@ -212,8 +214,10 @@ test("R77, R78, R79: the kinds' controls — an `ai` credential is refused every
   for (const op of Object.keys(T51)) assert.ok(!machineAdmits(op).includes("ai"), `${op} admits ai`);
   for (const op of ["holdsdue", "templatebyhandle", "rulefields", "clocksrunning", "adminremovalsopen"])
     assert.deepEqual(machineAdmits(op), [], `${op}: a bearer is admitted`);
-  for (const op of ["heldat", "bundlehistory", "entityidonly", "subjectsnamed", "entitysimilar", "projectinvitations", "versioncompare"])
+  for (const op of ["bundlehistory", "entityidonly", "subjectsnamed", "entitysimilar", "projectinvitations", "versioncompare"])
     assert.deepEqual(machineAdmits(op), MP, `${op}: reads as the family's reads do`);
+  /* heldat names its machine classes: admission refuses an ai credential at the door (control-plane R110, K4098), the operator's bearers reach it and capture refuses `check` without a member session */
+  assert.deepEqual(machineAdmits("heldat"), ["admin", "probe"]);
   /* negative control */
   assert.deepEqual(machineAdmits("projectdirectory"), MP);
   assert.ok(!OPS.adminremovalsopen.classes.includes("probe"));
@@ -256,15 +260,15 @@ test("R77, R78, R79, R4: each viewer, each `by` and each request field of the 12
   assert.ok(!body.find(([k]) => k === "heldAt")[1][0].member);
 });
 
-test("R77 (K3853): publishedfrozen is public — classes null, not mutating, no credential, nothing stamped, no NEEDS capability and no row, in neither session set, id a query field read by public-read's own map, in public-read's family, off AI_GRANT_OPS and no act list — and answered with no credential (negative control: a credential-gated read is not public)", async () => {
+test("R77 (K3853): publishedfrozen is public — classes null, not mutating, no credential, nothing stamped, no NEEDS capability (a present null row), in neither session set, id a query field read by public-read's own map, in public-read's family, off AI_GRANT_OPS and no act list — and answered with no credential (negative control: a credential-gated read is not public)", async () => {
   assert.deepEqual(plain(OPS.publishedfrozen), { classes: null, mutating: false });
   assert.ok(Object.isFrozen(OPS.publishedfrozen));
   assert.deepEqual(stamps("publishedfrozen"), []);
-  assert.ok(!Object.hasOwn(NEEDS, "publishedfrozen") && ACT_GATE.needs("publishedfrozen") === null);
+  assert.ok(Object.hasOwn(NEEDS, "publishedfrozen") && NEEDS.publishedfrozen === null && ACT_GATE.needs("publishedfrozen") === null);   /* a present null row: op-grades names it a non-act, affordances R12 */
   assert.ok(!SESSION_OPS.member.has("publishedfrozen") && !SESSION_OPS.admin.has("publishedfrozen"));
   assert.equal(ACT_GATE.mode("publishedfrozen"), "machine");
   assert.deepEqual(familyOf("publishedfrozen"), ["public-read"]);
-  assert.equal(OP_FAMILIES["public-read"].kinds.publishedfrozen, "public");
+  assert.equal(OP_FAMILIES["public-read"].kinds.publishedfrozen, "publicread");
   assert.ok(!AI_GRANT_OPS.includes("publishedfrozen") && !UNATTENDED_BY_DECISION.publishedfrozen);
   assert.deepEqual(listsOf("publishedfrozen"), []);
   assert.deepEqual(ground("publishedfrozen"), [], "a public read in no session set needs no ACT_HELP_ABSENT ground");
@@ -325,10 +329,10 @@ test("R79 (T51; N1088, K4059; action-clocks R24): clocksrunning is a read in act
 });
 
 test("R77 (K3826, K3852): heldat's `by` is the session's member alone — stamped by the door from the session, never taken from a caller (a body or query copy is overwritten by the stamp), absent when the caller arrives without a session, so `check: true` from an admin, probe or ai credential carries no member and capture refuses it MEMBER_SESSION_REQUIRED (its R86 fence); declared a read, its one write the governor's bookkeeping (negative control: bundlehistory carries no by)", () => {
-  assert.deepEqual(plain(OPS.heldat), { classes: MP, mutating: false });
+  assert.deepEqual(plain(OPS.heldat), { classes: MP, machineClasses: ["admin", "probe"], mutating: false });
   assert.ok(stamps("heldat").includes("by") && stamps("heldat").includes("viewer"));
   assert.ok(!stamps("bundlehistory").includes("by"));
-  assert.equal(OP_FAMILIES.capture.kinds.heldat, "read");
+  assert.equal(OP_FAMILIES.capture.kinds.heldat, "readfenced");
   assert.ok(!O.CAPTURE_MEMBER_ACTIONS.includes("heldat"), "heldat is an act");
   assert.equal(OPS.heldat.mutating, false);
   assert.ok(!machineAdmits("heldat").includes("ai"));
