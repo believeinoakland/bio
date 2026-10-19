@@ -126,15 +126,13 @@ export const PARTS = Object.freeze({
     return String(html).split(cs.esc(cs.w(was))).join(cs.esc(cs.w(now)));
   },
 
-  /* R27 (`review` R35): the team's time zone as the copy answer carries it: its own `zone`, else the first roster row's;
-     `known` says whether the answer carried one at all (a member's first share has no row yet); `zone` is "" when none is
-     held, never UTC in its place. */
+  /* R27, R41 (`review` R35): the team's time zone as the member door's copy answer carries it: its own top-level `zone`, else
+     the first roster row's; "" when none is held, never UTC in its place. */
   copyZone: function (copy) {
     const rows = copy && Array.isArray(copy.grants) ? copy.grants : [];
     const own = copy && typeof copy.zone === "string" && copy.zone ? copy.zone : null;
     const held = own || (rows.find(function (g) { return g && typeof g.zone === "string" && g.zone; }) || {}).zone || "";
-    const said = copy && Object.hasOwn(copy, "zone") || rows.some(function (g) { return g && Object.hasOwn(g, "zone"); });
-    return { zone: typeof held === "string" ? held : "", known: !!said };
+    return { zone: typeof held === "string" ? held : "" };
   },
 
   /* R27: the zone drawn as the browser names it: its generic name and its city (a zone with no key of its own). */
@@ -228,14 +226,6 @@ export const PARTS = Object.freeze({
         .formatToParts(new Date(t)).forEach(function (x) { p[x.type] = x.value; });
       return p.year + "-" + p.month + "-" + p.day;
     } catch (e) { return ""; }
-  },
-
-  /* The group's IANA zone from `publishpreflight`'s answer (`case-authoring` R75's `publish_at.zone`); "" when none. */
-  zoneOf: function (pre) {
-    const steps = pre && Array.isArray(pre.steps) ? pre.steps : [];
-    const s = steps.find(function (x) { return x && typeof x === "object" && x.publish_at; });
-    const z = s && s.publish_at ? s.publish_at.zone || s.publish_at.time_zone : "";
-    return typeof z === "string" ? z : "";
   },
 
   /* The members, project and case `publish` and `publishpreflight` take for a draft, from its review copy's answer

@@ -11,7 +11,7 @@ const carries = (body, want) => { for (const [k, v] of Object.entries(want)) ass
 
 const withGrants = (grants) => ({ reviewcopy: ok(COPY({ grants })) });
 /* R27 (`review` R35): the zone the copy answer carries on each roster row; a zone of null is "none held". */
-const zoned = (zone) => ({ reviewcopy: ok(COPY({ grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
+const zoned = (zone) => ({ reviewcopy: ok(COPY({ zone, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
 const PACIFIC = "Pacific Time, Los Angeles";
 const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
 

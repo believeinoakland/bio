@@ -1,0 +1,112 @@
+/* screens-publish: the helpers the `published` screen adds to the module's shared parts (R37–R39; DEC-330 A76, A77, A79).
+ * Like `PARTS`, each is self-contained: it refers only to its parameters and the language's own globals, and calls the others
+ * through `view.parts`. Pure: nothing here reads or sends a request; the page draws what `publishedcase` answered. */
+
+export const PUBLISHED_PARTS = Object.freeze({
+  /* The address of a case, an edition of it, or one finding of an edition, as the `published` screen takes it. */
+  hrefOf: function (caseId, edition, finding) {
+    const sub = [caseId].concat(edition !== undefined && edition !== null && edition !== "" ? [String(edition)] : [], finding ? [String(finding)] : []).join("/");
+    return "/app/published/" + encodeURIComponent(sub);
+  },
+
+  /* The answer the screen draws from, once read: the case's (or the finding's) `publishedcase`. */
+  answer: function (view) {
+    return view.data.edition && view.data.edition.state === "ok" ? view.data.edition.value : null;
+  },
+
+  /* A finding's grade on `axis` as a letter (A to D), or "" when its frozen pair does not state one. */
+  gradeOf: function (f, axis) {
+    const st = f && Array.isArray(f.strength) ? f.strength : [];
+    const x = st.find(function (y) { return y && y.axis === axis; });
+    const g = x && typeof x.grade === "string" ? x.grade.trim().toUpperCase() : "";
+    return /^[A-D]$/.test(g) ? g : "";
+  },
+  rank: function (letter) { return { A: 4, B: 3, C: 2, D: 1 }[letter] || 0; },
+
+  /* R38: the reader's minimum, `{capture, connection}` each "" or a letter; null when none is set. */
+  floorOf: function (view) {
+    const fl = view.ui.floor;
+    return fl && (fl.capture || fl.connection) ? fl : null;
+  },
+  /* R38: whether a finding meets the minimum on each axis it is set on; a grade the answer does not state never does. */
+  meets: function (view, f) {
+    const P = view.parts, fl = P.floorOf(view);
+    return !fl || ["capture", "connection"].every(function (a) { return !fl[a] || P.rank(P.gradeOf(f, a)) >= P.rank(fl[a]); });
+  },
+
+  /* R37: a leg of the signed bytes is served (its target a published finding of a case) or only named. */
+  legs: function (f) {
+    return (f && Array.isArray(f.basis) ? f.basis : []).filter(function (l) { return l && typeof l === "object"; });
+  },
+  cuts: function (leg) { return leg.role === "cuts_against"; },
+  titleOf: function (leg) {
+    return leg.served === true && leg.cited_edition && typeof leg.cited_edition.title === "string" ? leg.cited_edition.title : "";
+  },
+
+  /* The finding's place in the edition, 1-based; 0 when it is not in it. */
+  placeOf: function (e, id) {
+    const list = e && Array.isArray(e.findings) ? e.findings : [];
+    for (let i = 0; i < list.length; i++) if (String(list[i].bundle_id || list[i].id || "") === String(id)) return i + 1;
+    return 0;
+  },
+
+  /* A grade as the kit marks it, on the axis the answer names; "" for a grade that is no letter. */
+  gradeMark: function (cs, axis, letter) {
+    const g = typeof letter === "string" ? letter.trim().toUpperCase() : "";
+    return /^[A-D]$/.test(g) && typeof axis === "string" && axis ? cs.grade(axis, g) : "";
+  },
+
+  /* R6, R37–R39: one finding as the case page draws it: its place, its conclusion in the author's words, its two strengths
+     and whether it meets the project's bar (`standing`, case-grammar R15; nothing is said when the bar was not asked).
+     `o.link` makes its name the way to its own page (R37); `o.open` adds the sources it rests on, for the print (R39). */
+  card: function (cs, view, f, n, e, caseId, o) {
+    const P = view.parts, body = f.body || {}, edition = e && e.edition !== undefined ? e.edition : "";
+    const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
+    const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null;
+    const bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
+    const id = String(f.bundle_id || f.id || n);
+    const name = cs.w("screen.published.finding", { n: String(n) });
+    const head = '<span class="eyebrow">' + (o && o.link ? '<a href="' + P.hrefOf(caseId, edition, id) + '" data-nav data-finding-page>' + name + "</a>" : name) + "</span>";
+    const line = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " "
+      + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
+      + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
+    return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(body.conclusion || body.question || f.title || "")
+      + "</p><p>" + line + "</p>" + (o && o.open ? P.sources(cs, view, f) : "") + "</article>";
+  },
+
+  /* R39: what a finding rests on, listed for the print: the documents it only names, counted, by what they do to it; and
+     the published findings of other teams it leans on, each by the title of the edition it cites. A document the case does
+     not publish is not named, and nothing of it is drawn. */
+  sources: function (cs, view, f) {
+    const P = view.parts, legs = P.legs(f);
+    const part = function (cut) {
+      const named = legs.filter(function (l) { return l.served !== true && P.cuts(l) === cut; }).length;
+      const served = legs.filter(function (l) { return l.served === true && P.cuts(l) === cut && P.titleOf(l); });
+      const said = !named ? "" : cut ? cs.w("screen.published.cut.against.by.a.letter")
+        : cs.w(named === 1 ? "screen.published.rests.on.the.council.minutes.one" : "screen.published.rests.on.the.council.minutes", { count: String(named) });
+      const titles = served.map(function (l) { return '<span class="rec">' + cs.esc(P.titleOf(l)) + "</span>"; }).join(" · ");
+      return said || titles ? '<p class="mk-small">' + said + (said && titles ? " " : "") + titles + "</p>" : "";
+    };
+    return part(false) + part(true);
+  },
+
+  /* R39: the signer and the key's fingerprint, as `publishedcase` states them: the case document's signer, else the
+     finding's attestor; `{member, key}`, either "" when not stated. */
+  signerOf: function (e) {
+    const first = e && Array.isArray(e.findings) && e.findings[0] ? e.findings[0] : {};
+    const by = [e && e.signed_by, e && e.attestor, first.attestor].find(function (a) { return a && typeof a === "object" && (a.member || a.key_b64 || a.fingerprint); }) || {};
+    return { member: typeof by.member === "string" ? by.member : "", key: typeof by.key_b64 === "string" ? by.key_b64 : "",
+      fingerprint: typeof by.fingerprint === "string" ? by.fingerprint : "" };
+  },
+  /* R39: a key's fingerprint: the first eight hexadecimal digits of the SHA-256 of its wire bytes, in two groups of four; ""
+     when the key is not stated or the browser cannot hash. */
+  fingerprintOf: async function (key) {
+    if (typeof key !== "string" || !key) return "";
+    try {
+      const raw = atob(key), bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      const hex = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+      return hex.slice(0, 4) + " " + hex.slice(4, 8);
+    } catch (x) { return ""; }
+  },
+});

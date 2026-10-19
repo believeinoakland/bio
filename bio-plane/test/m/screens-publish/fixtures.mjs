@@ -23,7 +23,8 @@ export const GRANT_UNTIL = "2099-10-21T06:59:59Z";
 
 const projectMd = ["---", `id: ${P}`, "object_type: project", "title: \"The Coliseum lease\"", "---", ""].join("\n");
 
-export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft: DR, project: P,
+/** `review` R35: the member door's copy carries the team's zone at its top level, with or without a grant. */
+export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft: DR, project: P, zone: "America/Los_Angeles",
   case: { case_id: C, edition: 2, identity: "The Coliseum lease", newCase: false },
   authored: { scope: "Rent adjustments under the Coliseum lease, 2024 to 2026.", statement: "The rents rose without the vote the lease requires.",
     excluded: [{ target: "INFO-9", description: "Whether the rents are fair", reason: "outside the lease's terms" }] },

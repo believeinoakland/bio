@@ -83,7 +83,7 @@ test("R26 a stake stated in a form that cannot be read draws its note in its fol
 /* ---------- R27: the review link's end ---------- */
 
 test("R27 with no zone held, an administrator is told to set it and a member to ask one, each in the fold, with no UTC drawn in its place; nothing is shared", async () => {
-  const noZone = { reviewcopy: ok(COPY({ grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: null }] })) };
+  const noZone = { reviewcopy: ok(COPY({ zone: null, grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone: null }] })) };
   const a = await open(`/app/review-copy/${P}`, { plane: { ...noZone, whoami: ok({ ...ADMIN, member: "rosa", handle: "rosa", capabilities: ["contribute", "create_projects", "publish"] }) } });
   fill(a, { "rc-name": "Ana", "rc-role": "editor", "rc-until": "2099-10-20" });
   await press(a, "reviewgrant");
