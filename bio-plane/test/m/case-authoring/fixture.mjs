@@ -130,7 +130,7 @@ function reviewProvider(w) {
     draftForMember, draftFor: draftForMember,
     draftIdentity: identity,
     caseIdentitySentence: (caseId, edition, newCase) => (caseId ? `the next edition (${edition}) of ${caseId}`
-      : newCase ? "a new case" : "a derived case"),
+      : newCase ? "NEW-CASE" : "DERIVED-CASE"),
     statedEdition: (ident, newCase) => (ident.caseId || newCase ? ident.edition : null),
     liveGrant,
     grantAdmitsCaseEdition: (s, c, e) => { const l = liveGrant(s); return !!(l && l.grant.case_id === c && Number(l.grant.edition) === Number(e)); },

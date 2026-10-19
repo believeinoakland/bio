@@ -8,7 +8,7 @@ import { PLANE_VIEWER, searchedSection, SEARCHED_LEVEL_OUTCOMES, SEARCHED_SUBJEC
   from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const DOC5 = "INFO-2026-0005-e";
@@ -85,10 +85,12 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-cas
   const body = bodyOf(row.text);
   for (const s of [AUTHORED.scope, AUTHORED.statement, AUTHORED.subjectJustification, AUTHORED.biasAcknowledgement,
                    `- ${DOC2} — the second memo: it was withheld`, "- the side letter: not in hand",
-                   `Position on putting this case to its subject: ${AUTHORED.subjectPosition}.`,
+                   word("case-authoring.body.position_putting_case", { position: AUTHORED.subjectPosition, justification: AUTHORED.subjectJustification }),
                    "capture C, no bar set on the connection axis", "Readings given on draft DRAFT-2026-0001",
                    "## Whose Words These Are", "## What Was Searched", "## Citations", "## Bias Manifest",
-                   `### Session ${w.clock.now} | Case published | alice`, `Pinned: ${Q} at ${w.head(Q)}, its edition 1; nothing was written on it.`])
+                   localize("case-authoring.document.session_at_case_published_author", "### Session {at} | Case published | {author}", { at: w.clock.now, author: "alice" }),
+                   word("case-authoring.body.pinned_written", { member: Q, pin: w.head(Q),
+                     edition_clause: localize("case-authoring.document.its_edition", ", its edition {edition}", { edition: "1" }) })])
     assert.ok(body.includes(s), `the body prints: ${s}`);
   /* never over a signed document: a later edition is a new document and the signed one is untouched */
   w.ratify(r);
@@ -126,14 +128,16 @@ test("R14 (D54): the bias manifest is frozen from bias.biasManifest at the proje
                     fm.bias_manifest.pins_proposed, fm.bias_manifest_bundles.map((b) => b.bundle_id),
                     fm.bias_manifest_pins_proposed.map((b) => [b.bundle_id, b.pinned_state])],
     [true, "f".repeat(64), 1, 1, ["BIAS-2026-0001-lens"], [["BIAS-2026-0002-new", "proposed"]]]);
-  assert.ok(bodyOf(docOf(w, on).text).includes("AN ADOPTION PINNED A PROPOSED REVISION"));
+  assert.ok(bodyOf(docOf(w, on).text).includes(word("case-authoring.body.adoption_pinned_proposed",
+    { adoptions: localize("case-authoring.document.one_adoption", "one adoption") })));
   lens = { in_force: null, stated: "a pinned revision's bytes cannot be read", pins_proposed: [] };
   const und = w.publish(P, "alice", [Q2]);
   assert.deepEqual([und.bias_manifest.in_force, und.bias_manifest.stated, und.bias_manifest.statements_sha,
                     und.bias_manifest.bundles], [null, "a pinned revision's bytes cannot be read", null, []]);
   const ufm = w.fm(docOf(w, und).text);
   assert.deepEqual([ufm.bias_manifest.in_force, ufm.bias_manifest.stated], [null, "a pinned revision's bytes cannot be read"]);
-  assert.ok(bodyOf(docOf(w, und).text).includes("THE MANIFEST IS UNDETERMINED"));
+  assert.ok(bodyOf(docOf(w, und).text).includes(word("case-authoring.body.manifest_undetermined_claimed",
+    { scope_id: P, stated: "a pinned revision's bytes cannot be read" })));
 });
 
 test("R15: the answer carries the case, whether it was minted, its edition, the document to review (its sha and length), the findings with their pins, pairs, roles and bar, the scope, project, bar, roles, bias acknowledgement and manifest, citations, completeness, the tensions disclosed (R55 (case-disclosures R1)), author, instant, weight and next; target, bundleSha and state at the top only for one member", () => {
@@ -315,7 +319,7 @@ test("R22: everything the document asserts arrived as an argument or was read fr
     bar: w.strength.projectBar(P), roster: [Q], roles: [{ target: Q, role: "load_bearing" }], pins: new Map([[Q, "p"]]),
     statement: "st", position: "not_sought", justification: "j", excluded: [], author: "alice", at: "t",
     searched: searchedSection({ at: "t", subjectSource: "case_basis", levels: [] }), frozen: new Map() }), text);
-  assert.ok(text.includes("NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER"), "an absent fact is stated, never invented");
+  assert.ok(text.includes(localize("case-authoring.document.m_no_frozen_strength_was", "- **{m}** — NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.", { m: Q })), "an absent fact is stated, never invented");
   assert.deepEqual(STRENGTH_AXES.includes("testimony"), true);
 });
 
@@ -335,7 +339,8 @@ test("R26: undetermined is stated and never filled — a statement writer, an un
   assert.match(r.completeness.statement_by_stated, /^UNDETERMINED: 2 drafts .* name different authors \(alice, bo\)/);
   const text = docOf(w, r).text, fm = w.fm(text), body = bodyOf(text);
   assert.equal(fm.completeness.statement_by, null);
-  assert.ok(body.includes(`**Who wrote this statement.** ${r.completeness.statement_by_stated}`));
+  assert.ok(body.includes(localize("case-authoring.document.who_wrote_this_statement", "**Who wrote this statement.** {stated}",
+    { stated: r.completeness.statement_by_stated })));
   assert.deepEqual([fm.required_strength.connection, body.includes("no bar set on the connection axis")], [null, true]);
   assert.deepEqual([fm.bias_manifest.in_force, fm.bias_manifest.stated], [null, "a pin cannot be read"]);
   assert.deepEqual(r.case_citations.find((x) => x.target === DOC3), { target: DOC3, version: "undetermined", capture: null });

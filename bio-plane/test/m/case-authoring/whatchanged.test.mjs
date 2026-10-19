@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { PLANE_VIEWER } from "../../../src/case-authoring/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 /* R38 (T47; N908): the 8,000-character bound is case-inputs' one spelling, imported by case-authoring. */
 import { WHAT_CHANGED_MAX } from "../../../src/case-inputs/index.mjs";
 import { whatChangedOf, whatChangedSectionLines, whatChangedBlockLines, WHAT_CHANGED_HEAD, lensOf, lensBlockLines,
@@ -215,14 +216,15 @@ test("R40: with no manifest in force the section states that none was, and the b
   assert.deepEqual([p.data.lens_statements, p.data.lens_citations, lensOf(p.data)], [[], [], { statements: [] }]);
   assert.ok(doc.text.includes(lensSectionLines({ acknowledgement: AUTHORED.biasAcknowledgement, inForce: false }).join("\n")));
   assert.ok(doc.text.includes(LENS_NONE_SENTENCE));
+  const UNDETERMINED = word("bias.undetermined_adoption_pins");
   const u = world({ deps: { bias: { biasManifest: () => ({ ok: true, in_force: null, statements: [], bundles: [],
-    stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce" }) } } });
+    stated: UNDETERMINED }) } } });
   u.member("alice"); u.doc(DOC); u.finding(Q, [{ target: DOC }]);
   const ur = u.publish(u.project("Team", "alice", [Q]), "alice", [Q]);
   const ut = docOf(u, ur.caseId, 1).text;
   assert.deepEqual(parseFrontmatter(ut).data.lens_statements, []);
   assert.ok(ut.includes(lensSectionLines({ acknowledgement: AUTHORED.biasAcknowledgement, inForce: null,
-    stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce" }).join("\n")));
+    stated: UNDETERMINED }).join("\n")));
 });
 
 test("R40: the frozen manifest is read every page — a lens longer than one page is printed whole, in its order", () => {

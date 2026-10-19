@@ -11,6 +11,7 @@ import { caseAuthoringOf, caseAuthoringOps, CASE_DERIVATION_CHECKS, CASE_DISCLOS
 import { caseInputsOf, caseInputsOps, CASE_INPUTS_TABLES, CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS }
   from "../../../src/case-inputs/index.mjs";
 import * as CHECKS from "../../../src/case-authoring/checks.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
 
@@ -109,9 +110,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"], ["CASE_EDITION_WAITING", "C-44.6"]]);
   /* C-44.6's translation is the requirements' own, word for word (case-authoring.md, "Row C-44.6") */
-  assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.translation, "An edition of this case is signed and waiting to "
-    + "be published at the time set. Prepare the next edition after it is published, or cancel it first. Nothing was "
-    + "prepared.");
+  assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.translation, word("refusal.CASE_EDITION_WAITING"));
   assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.where,
     "src/case-authoring/index.mjs #publishCase > is-case-edition-waiting");
   /* (T47; N908) C-82.2–C-82.8 and C-136.3–C-136.8 are case-inputs' (its R12): held nowhere in this module's files, and the
@@ -132,10 +131,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
      ["STANDARDS_USE_REFUSED", "C-136.2"]]);
   /* R61's new row (T36): its region, and its translation the requirements' own, word for word (case-authoring.md R29) */
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.where, "src/case-authoring/index.mjs #publishCase > is-standards-use");
-  assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.translation, "This case uses a standard as a published case may not: "
-    + "it would carry the whole text of a standard that is not free to read, quote a passage of one that no finding relies "
-    + "on, or call a finding that rests only on benchmarks \"violated\" or \"nonconforming\". Each is named below. Change "
-    + "the case and prepare it again. Nothing was prepared.");
+  assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.translation, word("refusal.STANDARDS_USE_REFUSED"));
   /* R56's new row (T33-69), this module's own, never case-disclosures' */
   assert.equal(PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.where,
     "src/case-authoring/index.mjs #calculationsJudged > is-calculation-disclosed");

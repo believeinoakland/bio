@@ -201,7 +201,7 @@ function standardsUseWords(r) {
     case "BENCHMARK_CALLED_NONCONFORMING":
       return word("case-authoring.text.rests_benchmarks_binds", { finding: r.finding, standard: r.standard, word: r.word });
     default:
-      return word("case-authoring.text.case_use_standards", { arguments: r && r.field ? r.field : "its arguments" });
+      return word("case-authoring.text.case_use_standards", { arguments: r && r.field ? r.field : localize("case-authoring.index.its_arguments", "its arguments") });
   }
 }
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
@@ -292,7 +292,7 @@ export class CaseAuthoring {
      `case-inputs.openRequestsOn` (its R8); each line is its `openRequestLine` (its R10, R17), the unread sentence its
      `OPEN_REQUESTS_UNREAD_SENTENCE`; this module spells none of them (T47; N908). */
   #openRequestsStep(at, viewer) {
-    if (!at) return { read: false, stated: "not reached: op=publish refuses before the case and its pins are known" };
+    if (!at) return { read: false, stated: localize("case-authoring.index.not_reached_op_publish_refuses_before", "not reached: op=publish refuses before the case and its pins are known") };
     const r = this.inputs.openRequestsOn({ case: at.case, members: at.members, viewer });
     if (!r.ok) return { read: false, undetermined: true, key: OPEN_REQUEST_KEYS.unread, says: OPEN_REQUESTS_UNREAD_SENTENCE };
     return { read: true, lines: r.rows.map((row) => ({ ...row, ...openRequestLine(row) })) };
@@ -408,8 +408,8 @@ export class CaseAuthoring {
    *  the calculations cite (case-disclosures R27). */
   #calculationsJudged(prepared, memberRoles, calculationsDisclosed, facts) {
     const bad = (field) => ({ refusal: { ok: false, reason: "BAD_COMPLETENESS", field,
-      detail: `${field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its `
-            + `words, when given, are at most ${COMPLETENESS_MAX} characters with no quote, backslash or line break` } });
+      detail: localize("case-authoring.index.field_is_a_list_of", "{field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its words, when given, are at most {COMPLETENESS_MAX} characters with no quote, backslash or line break",
+                       { field: String(field), COMPLETENESS_MAX: String(COMPLETENESS_MAX) }) } });
     const listed = new Map();
     if (calculationsDisclosed != null) {
       if (!Array.isArray(calculationsDisclosed)) return bad("calculationsDisclosed");
@@ -466,11 +466,8 @@ export class CaseAuthoring {
     /* DEC-49 REGION is-calculation-disclosed */
     if (undisclosed.length)
       return { refusal: actRefusal("CALCULATION_NOT_DISCLOSED", { calculations: undisclosed,
-        detail: `${undisclosed.map((u) => `${u.calc} (${u.recompute}; ${u.members.join(", ")})`).join("; ")}: a load-bearing `
-              + "finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on "
-              + "an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, "
-              + "with your own words if you choose, and the published case states it. A disclosed one never blocks "
-              + "(DEC-76 item 4). Nothing was written." }), rows, money };
+        detail: localize("case-authoring.index.listed_a_load_bearing_finding_rests", "{listed}: a load-bearing finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, with your own words if you choose, and the published case states it. A disclosed one never blocks (DEC-76 item 4). Nothing was written.",
+                         { listed: undisclosed.map((u) => `${u.calc} (${u.recompute}; ${u.members.join(", ")})`).join("; ") }) }), rows, money };
     /* END DEC-49 REGION is-calculation-disclosed */
     return { rows, money: [...new Set(money)] };
   }
@@ -587,9 +584,7 @@ export class CaseAuthoring {
     const members = set.map((s) => str(s)).filter(Boolean);
     if (!members.length)
       return { ok: false, reason: "NO_TARGET",
-               detail: "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question "
-                     + "that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal "
-                     + "and is the degenerate case (DEC-44); what is not legal is publishing nothing." };
+               detail: localize("case-authoring.index.a_published_case_is_a_container", "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.") };
     {
       const seen = new Set();
       for (const m of members) {
@@ -787,7 +782,7 @@ export class CaseAuthoring {
       if (waiting && (!owner || owner === proj))
         return derivationRefusal("CASE_EDITION_WAITING", {
           caseId: theCase, edition: Number(waiting.edition), at: waiting.at ?? null, publish_at: waiting.publish_at ?? null,
-          detail: localize("case-authoring.index.edition_edition_of_thecase_is", "edition {edition} of {theCase} is signed and waiting to be published{v1}. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.", { edition: String(waiting.edition), theCase: String(theCase), v1: String(waiting.at && waiting.at.date ? ` on ${waiting.at.date} at ${waiting.at.time}`
+          detail: localize("case-authoring.index.edition_edition_of_thecase_is", "edition {edition} of {theCase} is signed and waiting to be published{v1}. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.", { edition: String(waiting.edition), theCase: String(theCase), v1: String(waiting.at && waiting.at.date ? localize("case-authoring.index.on_date_at_time", " on {date} at {time}", { date: String(waiting.at.date), time: String(waiting.at.time) })
                                                    + (waiting.at.zone ? ` (${waiting.at.zone})` : "") : "") }) });
       /* END DEC-49 REGION is-case-edition-waiting */
     }
@@ -831,7 +826,7 @@ export class CaseAuthoring {
         return derivationRefusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
           draft_case: di.caseId ?? null, draft_edition: di.edition,
           case_id: theCase ?? null, edition: predicted,
-          detail: localize("case-authoring.index.draft_draftnamed_is_prepared_for", "draft {draftNamed} is prepared for {caseIdentitySentence}, and this act publishes {v1}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names {v2}, or name the draft of this one.", { draftNamed: String(draftNamed), caseIdentitySentence: String(review.caseIdentitySentence(di.caseId, di.edition)), v1: String(theCase ? `edition ${predicted} of ${theCase}` : "a new case"), v2: String(di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) }) });
+          detail: localize("case-authoring.index.draft_draftnamed_is_prepared_for", "draft {draftNamed} is prepared for {caseIdentitySentence}, and this act publishes {v1}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names {v2}, or name the draft of this one.", { draftNamed: String(draftNamed), caseIdentitySentence: String(review.caseIdentitySentence(di.caseId, di.edition)), v1: String(theCase ? localize("case-authoring.index.edition_predicted_of_thecase", "edition {predicted} of {theCase}", { predicted: String(predicted), theCase: String(theCase) }) : localize("case-authoring.index.a_new_case", "a new case")), v2: String(di.caseId ? `(case=${di.caseId})` : `(newCase=true)`) }) });
       /* END DEC-49 REGION is-publish-draft-this-case */
       /* publication R40's read contract: one draft, one case edition it produced. */
       const already = this.#one(`SELECT case_id, edition FROM case_documents WHERE draft_id=?
@@ -1189,18 +1184,11 @@ export class CaseAuthoring {
              /* R61: each criteria row stated "not held", not judged, beside an act that succeeds. */
              ...(standardsUse.unjudged.length ? { unjudged: standardsUse.unjudged } : {}),
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE ONE (R24). */
-             next: `review the CASE DOCUMENT (op=casedocument&case=${theCase}&edition=${edition}) and `
-               + `ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its `
-               + `bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION `
-               + `HASHES each finding has now, and each member's own edition and frozen strength as this `
-               + `case reads it — and your signature over it is what commits them. Nothing was written on `
-               + `any finding (BIO_Publication_v0_1.md §3 rule 12). `
+             next: localize("case-authoring.index.review_the_case_document_and_ratify_it", "review the CASE DOCUMENT (op=casedocument&case={caseId}&edition={edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it — and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md §3 rule 12). ",
+                            { caseId: String(theCase), edition: String(edition) })
                + (written.length === 1
-                 ? `Then ratify the finding itself (op=ratify): it is signed on its own bytes because the `
-                 + `finding is the unit of truth.`
-                 : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
-                 + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
-                 + `servable as a container when the last of them lands.`) };
+                 ? localize("case-authoring.index.then_ratify_the_finding_itself", "Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.")
+                 : localize("case-authoring.index.then_ratify_each_of_these_findings", "Then ratify EACH of these {count} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.", { count: String(written.length) })) };
   }
 
   /** R68 (D60; K2528, K2533): the rule in force and the approvals held for the approval digest `docSha`, read through
@@ -1253,10 +1241,8 @@ export class CaseAuthoring {
     const text = wc && typeof wc.text === "string" ? wc.text : null;
     if (text === null || !text.trim())
       return { ok: false, reason: "NO_WHAT_CHANGED", caseId, edition,
-               detail: `edition ${edition} of ${caseId} must say what changed in it since the edition before, and why `
-                     + `(whatChanged: {text}): a reader of a later edition is owed the difference in the team's own `
-                     + `words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was `
-                     + `written.` };
+               detail: localize("case-authoring.index.edition_of_caseid_must_say_what_changed", "edition {edition} of {caseId} must say what changed in it since the edition before, and why (whatChanged: {text}): a reader of a later edition is owed the difference in the team's own words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was written.",
+                                { edition: String(edition), caseId: String(caseId), text: "{text}" }) };
     const length = [...text].length;
     if (length > WHAT_CHANGED_MAX)
       return { ok: false, reason: "BAD_WHAT_CHANGED", caseId, edition, length, max: WHAT_CHANGED_MAX,
@@ -1266,9 +1252,8 @@ export class CaseAuthoring {
     const d = this.inputs.whatChangedDraftOf(caseId, named);
     if (!d)
       return { ok: false, reason: "NO_SUCH_WHAT_CHANGED_DRAFT", caseId, edition, draft: named,
-               detail: `no draft of ${caseId}'s statement of what changed answers to ${named} `
-                     + `(op=whatchangeddrafts&case=${caseId} lists them). Name one of them, or write the statement in `
-                     + `your own words (whatChanged: {text}) and publish again. Nothing was written.` };
+               detail: localize("case-authoring.index.no_draft_of_caseid_statement", "no draft of {caseId}'s statement of what changed answers to {named} (op=whatchangeddrafts&case={caseId} lists them). Name one of them, or write the statement in your own words (whatChanged: {text}) and publish again. Nothing was written.",
+                                { caseId: String(caseId), named: String(named), text: "{text}" }) };
     return { ok: true, text, began_as: "machine_draft", draft: d.draft_id, adopted_as_drafted: text === d.text };
   }
 
@@ -1282,10 +1267,7 @@ export class CaseAuthoring {
       const proj = str(project);
       if (!proj)
         return { ok: false, reason: "NO_PUBLISHING_PROJECT",
-                 detail: "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is "
-                       + "what supplies the standard of evidence this case is held to, read from that project "
-                       + "alone at this moment — so a publication naming no project is one whose bar nobody "
-                       + "declared, and an absent publisher is not a publisher of none." };
+                 detail: localize("case-authoring.index.a_case_is_a_production_of_a_project", "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment — so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none.") };
       /* record-core R37's read contract, through membership's one sight rule (its R43). */
       const pb = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
                            proj, ...gate.args);
@@ -1320,7 +1302,7 @@ export class CaseAuthoring {
         const text = this.#liveText(id);
         if (text === null)
           return { ok: false, reason: "NO_DOCUMENT", target: id,
-                   detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+                   detail: localize("case-authoring.index.this_inquiry_has_no_readable_bundle", "this inquiry has no readable bundle.md, so its state cannot be moved") };
         const fm = parseFrontmatter(text).data || {};
         const head = this.record.head(id);
         /* CASE-4 / DEC-72 and REC-135 / §7.1 item 4: ONLY A CONCLUDED FINDING MAY BE A CASE MEMBER, and `concluded` is
@@ -1334,35 +1316,19 @@ export class CaseAuthoring {
                    relationship: conc.relationship, why: conc.why,
                    stance: conc.stance, concluded_elsewhere: conc.concluded_elsewhere,
                    concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
-                   detail: "only a CONCLUDED finding may be a case member: a material set cannot be "
-                     + "asserted over a question with no conclusion, and `concluded` is asked of the "
-                     + "PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). "
+                   detail: localize("case-authoring.index.only_a_concluded_finding_may_be", "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). ")
                      + (conc.why === "question_not_case_bearing"
-                     ? `This question is ${b.current_state}, and a case cannot be asserted over one the team `
-                       + `has set down or carried forward. Reopen it (op=reopen) or work the children a `
-                       + `division produced (DEC-28); a conclusion a project wrote while the question was `
-                       + `open does not survive the question leaving the states a case can rest on. `
+                     ? localize("case-authoring.index.this_question_is_state", "This question is {state}, and a case cannot be asserted over one the team has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ", { state: String(b.current_state) })
                      : conc.why === "project_withdrew_its_conclusion"
-                     ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none `
-                       + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
-                       + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
+                     ? localize("case-authoring.index.proj_concluded_this_question_and_withdrew", "{proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project={proj}). ", { proj: String(proj) })
                      : conc.why === "project_stance_undetermined"
-                     ? `${proj}'s latest entry about this question names an act your team's Civicsmith does not know, so `
-                       + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
-                     : `${proj} has not concluded this question. A conclusion belongs to the project's `
-                       + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
-                       + `written in the question's own bytes with no project, are both readable here and `
-                       + `neither is this project's. Conclude it for this project `
-                       + `(op=conclude&project=${proj}&version=<reading>). `)
+                     ? localize("case-authoring.index.proj_latest_entry_names_an_act", "{proj}'s latest entry about this question names an act your team's Civicsmith does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ", { proj: String(proj) })
+                     : localize("case-authoring.index.proj_has_not_concluded_this_question", "{proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (§7.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project={proj}&version=<reading>). ", { proj: String(proj) }))
                      + (conc.concluded_elsewhere.length
-                       ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE `
-                         + `concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) — `
-                         + `information, never this project's stance (§7.1 item 8). `
+                       ? localize("case-authoring.index.count_other_projects_this_viewer_can_see", "{count} other project(s) this viewer can see HAVE concluded it ({projects}) — information, never this project's stance (§7.1 item 8). ",
+                                  { count: String(conc.concluded_elsewhere.length), projects: conc.concluded_elsewhere.map((o) => o.project).join(", ") })
                        : "")
-                     + "A finding already in a published case is REOPENED first (op=reopen) and concluded "
-                     + "again, which is what makes the next edition a separate document carrying its own "
-                     + "conclusion, its own falsifier and its own freshly authored completeness "
-                     + "(DEC-12, DEC-72)." };
+                     + localize("case-authoring.index.a_finding_already_in_a_published_case", "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72).") };
         /* R8 — REC-157 / §7.1 item 9: a finding in a case at its current bytes is asked whether some edition pinning
            them ALREADY RECORDS the conclusion this act would record, compared on the SAME answer the gate above was
            decided on (`conc`, never re-read). The refusal itself is asked below, once the case is known (D-442). */
@@ -1392,8 +1358,8 @@ export class CaseAuthoring {
     /* DEC-49 REGION is-counsel-matter-published */
     return { ok: false, reason: "COUNSEL_MATTER_NOT_PUBLISHED", code: "COUNSEL_MATTER_NOT_PUBLISHED", check: row.check ?? null,
              translation: row.translation ?? null, projects: counsel,
-             detail: localize("case-authoring.index.map_a_counsel_matter_is", "{map}: a counsel matter is never published, and this case would rest on one. Nothing was prepared.", { map: String(counsel.map((c) => (c.publishing ? `${c.project} (the publishing project)`
-                       : `${c.project} (holding ${c.members.join(", ")})`)).join("; ")) }) };
+             detail: localize("case-authoring.index.map_a_counsel_matter_is", "{map}: a counsel matter is never published, and this case would rest on one. Nothing was prepared.", { map: String(counsel.map((c) => (c.publishing ? localize("case-authoring.index.project_the_publishing_project", "{project} (the publishing project)", { project: String(c.project) })
+                       : localize("case-authoring.index.project_holding_members", "{project} (holding {members})", { project: String(c.project), members: c.members.join(", ") }))).join("; ")) }) };
     /* END DEC-49 REGION is-counsel-matter-published */
   }
 
@@ -1406,9 +1372,7 @@ export class CaseAuthoring {
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
     if (roles != null && !roleMap)
       return { ok: false, reason: "BAD_ROLES", allowed: MEMBER_ROLES,
-               detail: "roles is a map from finding id to designation — {\"INQ-…\": \"load_bearing\"} — one entry "
-                     + "per member of this case. It is not a list: a list would be positional against the "
-                     + "roster, and a partition that can silently reorder is not one anybody authored." };
+               detail: localize("case-authoring.index.roles_is_a_map_from_finding_id", 'roles is a map from finding id to designation — {"INQ-…": "load_bearing"} — one entry per member of this case. It is not a list: a list would be positional against the roster, and a partition that can silently reorder is not one anybody authored.') };
     const memberRoles = [];
     for (const p of prepared) {
       const r = roleMap ? str(roleMap[p.id]) : "";
@@ -1451,7 +1415,7 @@ export class CaseAuthoring {
           if (got.grade === null || rank(got.grade) > rank(want))
             shortfalls.push({ ok: false, reason: "BELOW_PROJECT_STRENGTH", target: m.target, axis,
                      project: proj, required: want, reached: got.grade, state: got.state,
-                     detail: localize("case-authoring.index.target_is_load_bearing_in", "{target} is LOAD-BEARING in this case and reaches {axis} {v1}, against {proj}'s declared standard of '{want}'. A case rests on its load-bearing findings, so those are what the project's bar is asked of. A finding below the bar may still travel with this case — designate it SUPPORTING and it is published, marked as not carrying the case (DEC-72). That is the honest move and never severing the citation.", { target: String(m.target), axis: String(axis), v1: String(got.grade === null ? got.state + " (no grade)" : "'" + got.grade + "'"), proj: String(proj), want: String(want) }) });
+                     detail: localize("case-authoring.index.target_is_load_bearing_in", "{target} is LOAD-BEARING in this case and reaches {axis} {v1}, against {proj}'s declared standard of '{want}'. A case rests on its load-bearing findings, so those are what the project's bar is asked of. A finding below the bar may still travel with this case — designate it SUPPORTING and it is published, marked as not carrying the case (DEC-72). That is the honest move and never severing the citation.", { target: String(m.target), axis: String(axis), v1: String(got.grade === null ? localize("case-authoring.index.state_no_grade", "{state} (no grade)", { state: String(got.state) }) : "'" + got.grade + "'"), proj: String(proj), want: String(want) }) });
         }
       }
     }
@@ -1532,7 +1496,7 @@ export class CaseAuthoring {
     const first = answer && answer.ok === false ? answer : null;
     const ratify = text === null
       ? { reached: false, refusals: [],
-          why: "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first" }
+          why: localize("case-authoring.index.ratification_pre_flight_reads_the_document", "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first") }
       : this.#ratifyPreflight(text, str(a.author), given.viewer ?? null);
     /* The independent reads, each over the same arguments, each stopping only where its own prerequisite refuses. */
     const found = [];
@@ -1650,7 +1614,7 @@ export class CaseAuthoring {
       return { reached: true, refusals: out.refusals.filter((x) => x && typeof x === "object"),
                publish_at: out.publish_at && typeof out.publish_at === "object" ? out.publish_at : null };
     const undetermined = out && out.ok === false ? out
-      : { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: "ratification's pre-flight gave no answer" };
+      : { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: localize("case-authoring.index.ratification_pre_flight_gave_no_answer", "ratification's pre-flight gave no answer") };
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? word("case-authoring.why.ratification_pre_flight") };
   }
 
@@ -1659,13 +1623,12 @@ export class CaseAuthoring {
      the ceremony shows it. */
   #preflightSteps(a, answer, seen, ratify, notice = null, rests = null, account = null) {
     const ok = !!(answer && answer.ok === true);
-    const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
+    const notReached = ok ? null : localize("case-authoring.index.not_reached_op_publish_refuses_first", "not reached: op=publish refuses first ({reason})", { reason: String(answer ? answer.reason : localize("case-authoring.index.no_answer", "no answer")) });
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
                                                target: a.target ?? null, viewer: a.viewer ?? null, author: a.author ?? null });
     return [
       { step: 1, name: word("case-authoring.name.becomes_permanent"),
-        says: "Signing publishes this case edition, and each finding in it at the version pinned here. A published "
-            + "edition is never withdrawn or edited: it is corrected only by a later edition."
+        says: localize("case-authoring.index.signing_publishes_this_case_edition", "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.")
             /* R42 (DEC-111; K1031 (3)): the plain sentence until the UX design stream gives the words. */
             /* R34 (DEC-112 (4)): the plain sentence until the UX design stream gives the words. */
             + ` ${REPUBLISH_SENTENCE}`
@@ -1746,8 +1709,8 @@ export class CaseAuthoring {
         publish_at: ratify.reached && ratify.publish_at ? ratify.publish_at : null,
         ...(ratify.reached && ratify.publish_at ? {} : { publish_at_stated: ratify.reached
           ? PUBLISH_AT_UNANSWERED_SENTENCE : PUBLISH_AT_NOT_REACHED_SENTENCE }),
-        next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
-                 : "op=publish first" },
+        next: ok ? localize("case-authoring.index.op_caseratify_over_op_publish_document", "op=caseratify over op=publish's document (case {caseId}, edition {edition})", { caseId: String(answer.caseId), edition: String(answer.edition) })
+                 : localize("case-authoring.index.op_publish_first", "op=publish first") },
     ];
   }
 

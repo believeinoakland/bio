@@ -44,7 +44,7 @@ export const CASE_CITATION_WORDS = Object.freeze({
   only_capture: word("case-authoring.only_capture"),
   undetermined: word("case-authoring.undetermined.version_undetermined_pin"),
   no_capture: word("case-authoring.no_capture"),
-  no_bytes: "a question, which has no bytes (DEC-21)",
+  no_bytes: localize("case-authoring.document.a_question_which_has_no_bytes", "a question, which has no bytes (DEC-21)"),
 });
 
 /** R32 (DEC-85): what the ceremony shows before the act for a highlighted candidate. The document's own words for a
@@ -94,8 +94,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
   const pending = Array.isArray(lens.pins_proposed) ? lens.pins_proposed : [];
   const pendingStated = pending.length === 0
     ? word("case-authoring.document.adoption_scope_pinned")
-    : "each row is an adoption in this scope whose pinned revision the team had proposed and not "
-      + "accepted when this case was signed; that revision was not in force at signing";
+    : localize("case-authoring.document.each_row_is_an_adoption", "each row is an adoption in this scope whose pinned revision the team had proposed and not accepted when this case was signed; that revision was not in force at signing");
   const frozenOf = (m) => (frozen && frozen.get(m)) || null;
   const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
   const fm = [
@@ -304,16 +303,14 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     ...roster.map((m) => {
       const c = concOf.get(m) || null;
-      const whose = !c ? "NO CONCLUSION WAS RECORDED FOR THIS MEMBER"
+      const whose = !c ? localize("case-authoring.document.no_conclusion_was_recorded_for", "NO CONCLUSION WAS RECORDED FOR THIS MEMBER")
         : c.relationship === "project"
         ? word("case-authoring.body.concluded_reading", { project: String(c.project), by: String(c.by ? ` (${c.by})` : ""), at: String(c.at ? ` on ${c.at}` : ""), unnamed: String(c.version ?? "(unnamed)") })
-        : "concluded in the question's own bytes, naming no project — read as the NO-PROJECT "
-          + "relationship's conclusion, which is not this project's (§7.1 item 5)";
+        : localize("case-authoring.document.concluded_in_the_questions_own_bytes", "concluded in the question's own bytes, naming no project — read as the NO-PROJECT relationship's conclusion, which is not this project's (§7.1 item 5)");
       const claim = !c || !c.claim ? "" : c.claim.state === "adopted"
         ? localize("case-authoring.document.the_claim_adopted_text", " The claim adopted: {text}", { text: String(c.claim.text) })
         : localize("case-authoring.document.the_claim_is_undetermined_v1", " The claim is UNDETERMINED: {v1}", { v1: String(c.claim.detail
-            || "this conclusion names no reading, so which claim was concluded cannot be established "
-             + "from the record. It is stated rather than filled in.") });
+            || localize("case-authoring.document.this_conclusion_names_no_reading", "this conclusion names no reading, so which claim was concluded cannot be established from the record. It is stated rather than filled in.")) });
       const fals = !c ? "" : c.falsifier
         ? localize("case-authoring.document.what_would_falsify_it_falsifier", " What would falsify it: {falsifier}", { falsifier: String(c.falsifier) })
         : c.falsifier_override
@@ -344,14 +341,14 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     ...((excluded || []).length
       ? (excluded || []).map((r) =>
-          `- ${r.target ? r.target + " — " : ""}${r.description || "(named above)"}: ${r.reason}`)
+          `- ${r.target ? r.target + " — " : ""}${r.description || localize("case-authoring.document.named_above", "(named above)")}: ${r.reason}`)
       : [word("case-authoring.body.material_excluded_case")]),
     "",
     word("case-authoring.body.position_putting_case", { position: String(position), justification: String(justification) }),
     "",
     /* R14 (`case-inputs` R3): WHERE the name came from as well as the name, which makes UNDETERMINED readable rather than blank. ABOVE
        the acknowledgement prose, whose head the splice starts from, so a later acknowledgement leaves it alone. */
-    `**Who wrote this statement.** ${statementByStated}`,
+    localize("case-authoring.document.who_wrote_this_statement", "**Who wrote this statement.** {stated}", { stated: String(statementByStated) }),
     "",
     ...ackBodyLines(acks, project),
     "",
@@ -364,8 +361,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     word("case-authoring.body.record_looked_measure"),
     "",
     ...searched.levels.map((l) =>
-      word("case-authoring.body.level_subject_recorded", { level: String(l.level), subject_kind: String(l.subject_kind), outcome: String(l.outcome.replace(/_/g, " ").toUpperCase()), subjects: String(l.subjects), looked: String(l.looked), never_looked: String(l.never_looked), undetermined: String(l.undetermined), unidentified_clause: String(l.unidentified ? `, ${l.unidentified} referent(s) this case rests on that could not be `
-                        + `resolved to a subject at all` : ""), detail: String(l.detail) })),
+      word("case-authoring.body.level_subject_recorded", { level: String(l.level), subject_kind: String(l.subject_kind), outcome: String(l.outcome.replace(/_/g, " ").toUpperCase()), subjects: String(l.subjects), looked: String(l.looked), never_looked: String(l.never_looked), undetermined: String(l.undetermined), unidentified_clause: String(l.unidentified ? localize("case-authoring.document.referents_this_case_rests_on", ", {unidentified} referent(s) this case rests on that could not be resolved to a subject at all", { unidentified: String(l.unidentified) }) : ""), detail: String(l.detail) })),
     "",
     searched.summary.subjects === 0
       ? word("case-authoring.body.case_names_subject")
@@ -379,14 +375,18 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...roster.flatMap((m) => {
       const z = frozenOf(m);
       if (!z) return [localize("case-authoring.document.m_no_frozen_strength_was", "- **{m}** — NO FROZEN STRENGTH WAS RECORDED FOR THIS MEMBER.", { m: String(m) })];
-      return [`- **${m}** (its edition ${z.edition}):`,
+      const stateWords = (x) => (x.state === "graded"
+        ? localize("case-authoring.document.grade_grade", "grade {grade}", { grade: String(x.grade) }) : String(x.state).toUpperCase());
+      return [localize("case-authoring.document.m_its_edition", "- **{m}** (its edition {edition}):", { m: String(m), edition: String(z.edition) }),
         ...z.axes.map((axis) => {
           const a = z.pair[axis];
-          return `  - ${axis}: ${a.state === "graded" ? `grade ${a.grade}` : a.state.toUpperCase()}`
-            + `${a.weakest ? `, no stronger than ${a.weakest.target_id}` : ""}. ${a.detail || ""}`.trimEnd();
+          return localize("case-authoring.document.axis_state_weakest_detail", "  - {axis}: {state}{weakest}. {detail}",
+            { axis: String(axis), state: stateWords(a),
+              weakest: a.weakest ? localize("case-authoring.document.no_stronger_than", ", no stronger than {target}", { target: String(a.weakest.target_id) }) : "",
+              detail: String(a.detail || "") }).trimEnd();
         }),
-        ...z.grounds.map(([axis, g]) => `  - ${axis}, group '${g.ground ?? "(unnamed)"}': `
-          + `${g.state === "graded" ? `grade ${g.grade}` : String(g.state).toUpperCase()}`)];
+        ...z.grounds.map(([axis, g]) => localize("case-authoring.document.axis_group_ground_state", "  - {axis}, group '{ground}': {state}",
+          { axis: String(axis), ground: String(g.ground ?? "(unnamed)"), state: stateWords(g) }))];
     }),
     "",
     /* D-84 — THE MANIFEST IN PROSE, named by its pairs and its hash, as it stood at this act. */
@@ -407,9 +407,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     /* REC-219 / §3 rule 18: the second fact, in prose, when there is something to say. */
     ...(pending.length
       ? ["",
-         word("case-authoring.body.adoption_pinned_proposed", { adoptions: String(pending.length === 1 ? "one adoption" : `${pending.length} adoptions`) }),
+         word("case-authoring.body.adoption_pinned_proposed", { adoptions: String(pending.length === 1 ? localize("case-authoring.document.one_adoption", "one adoption") : localize("case-authoring.document.count_adoptions", "{count} adoptions", { count: String(pending.length) })) }),
          "",
-         ...pending.map((x) => word("case-authoring.body.pinned_revision_standing", { bundle_id: String(x.bundle_id), scope: String(x.scope), revision: String(x.revision), state: String(x.pinned_state ?? "an unrecorded state") }))]
+         ...pending.map((x) => word("case-authoring.body.pinned_revision_standing", { bundle_id: String(x.bundle_id), scope: String(x.scope), revision: String(x.revision), state: String(x.pinned_state ?? localize("case-authoring.document.an_unrecorded_state", "an unrecorded state")) }))]
       : []),
     "",
     "## Citations",
@@ -434,21 +434,19 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     /* THE ABSENT BAR IS PRINTED AS ABSENT, IN A SENTENCE (R26): an absent bar is not a bar of zero. */
     bar.declared
       ? word("case-authoring.body.case_production_held", { project: String(project), bar: String(barAxisWords(bar)), bar3: String(`${bar.detail || ""}`.trim()) })
-      : `This case is ${project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. `
-        + `An absent bar is not a bar of zero: this case claims no cleared standard, and a reader `
-        + localize("case-authoring.document.weighs_each_findings_own_frozen", "weighs each finding's own frozen strength on its own. {v1}", { v1: String(bar.detail || "") }).trim(),
+      : localize("case-authoring.document.this_case_is_project_production", "This case is {project}'s production. NO STANDARD OF EVIDENCE WAS DECLARED for it. An absent bar is not a bar of zero: this case claims no cleared standard, and a reader weighs each finding's own frozen strength on its own. {detail}", { project: String(project), detail: String(bar.detail || "") }).trim(),
     "",
     "## Session Log",
     "",
-    `### Session ${at} | Case published | ${author}`,
-    `Trigger: op=publish, case ${caseId} edition ${edition}`,
+    localize("case-authoring.document.session_at_case_published_author", "### Session {at} | Case published | {author}", { at: String(at), author: String(author) }),
+    localize("case-authoring.document.trigger_op_publish_case", "Trigger: op=publish, case {caseId} edition {edition}", { caseId: String(caseId), edition: String(edition) }),
     localize("case-authoring.document.published_by_project_this_case", "Published by: {project} (this case is that project's production, DEC-72)", { project: String(project) }),
     word("case-authoring.body.findings_case", { roster: String(roster.join(", ")) }),
-    `Load-bearing: ${roster.filter((m) => roleOf.get(m) === "load_bearing").join(", ")}`,
-    `Supporting: ${roster.filter((m) => roleOf.get(m) !== "load_bearing").join(", ") || "none"}`,
-    `Excluded: ${(excluded || []).length} item(s).`,
+    localize("case-authoring.document.load_bearing_list", "Load-bearing: {list}", { list: roster.filter((m) => roleOf.get(m) === "load_bearing").join(", ") }),
+    localize("case-authoring.document.supporting_list", "Supporting: {list}", { list: roster.filter((m) => roleOf.get(m) !== "load_bearing").join(", ") || localize("case-authoring.document.none", "none") }),
+    localize("case-authoring.document.excluded_count_items", "Excluded: {count} item(s).", { count: String((excluded || []).length) }),
     /* D-442 / rule 12 (b): THE PUBLISH RECEIPT IS THE CASE DOCUMENT'S HISTORY, never the finding's (R23). */
-    ...roster.map((m) => word("case-authoring.body.pinned_written", { member: String(m), pin: String(pins.get(m) ?? "(unpinned)"), edition_clause: String(frozenOf(m) ? `, its edition ${frozenOf(m).edition}` : "") })),
+    ...roster.map((m) => word("case-authoring.body.pinned_written", { member: String(m), pin: String(pins.get(m) ?? "(unpinned)"), edition_clause: String(frozenOf(m) ? localize("case-authoring.document.its_edition", ", its edition {edition}", { edition: String(frozenOf(m).edition) }) : "") })),
     "",
   ];
   return fm.join("\n") + body.join("\n");
@@ -461,7 +459,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
  *  agreement between two engines, never a check of accuracy (workbooks R8). No section when the findings reach none. */
 export const CALCULATION_STATE_WORDS = Object.freeze({
   agrees: word("case-grammar.agrees"),
-  differs: "recomputed at publication, and the result DIFFERS from the one stored",
+  differs: localize("case-authoring.document.recomputed_at_publication_and_the", "recomputed at publication, and the result DIFFERS from the one stored"),
   unbound: word("case-authoring.unbound.recomputed_publication_least"),
   not_recomputed: word("workbooks.recomputed"),
 });
@@ -481,7 +479,7 @@ export function calculationBodyLines(rows) {
     ...(books ? [word("case-authoring.document.workbook_read_case"), ""] : []),
     ...rows.map((r) => `- ${r.calc}: ${(isWorkbookRow(r) ? WORKBOOK_STATE_WORDS : CALCULATION_STATE_WORDS)[r.recompute]
         ?? r.recompute}${isWorkbookRow(r) && r.method_version ? ` (${r.method_version})` : ""}.`
-      + (r.disclosed != null ? ` Disclosed by the team: ${r.disclosed}` : "")),
+      + (r.disclosed != null ? localize("case-authoring.document.disclosed_by_the_team", " Disclosed by the team: {disclosed}", { disclosed: String(r.disclosed) }) : "")),
     ""];
 }
 

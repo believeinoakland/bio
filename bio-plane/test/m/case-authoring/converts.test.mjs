@@ -9,7 +9,7 @@ import { world, V, AUTHORED } from "./fixture.mjs";
 import { searchedSection } from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
 import { LENS_HEAD } from "../../../src/case-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -122,7 +122,7 @@ test("R14, R15 (d84-case-manifest): with no lens adopted the manifest is stated 
                     fm.bias_manifest.scope_id, fm.bias_manifest_bundles],
     [false, word("bias.manifest_force"), null, "project", P, []]);
   assert.match(text, /^## Bias Manifest$/m);
-  assert.ok(text.includes(`NO MANIFEST WAS IN FORCE for ${P}`));
+  assert.ok(text.includes(word("case-authoring.body.manifest_force_case", { scope_id: P })));
   assert.deepEqual([r.bias_manifest.in_force, r.bias_manifest.stated], [false, word("bias.manifest_force")]);
   assert.deepEqual([typeof fm.bias_acknowledgement, new RegExp(`^${LENS_HEAD}$`, "m").test(text), fm.completeness.acknowledged,
                     fm.completeness_acknowledgements], ["string", true, 0, []]);
@@ -182,7 +182,7 @@ test("R2 (caseproduction; D54): the owner fence is keyed on the pair — a joine
   const before = w.snapshot();
   const ruth = w.publish(P, "bo", [Q]);
   assert.deepEqual([ruth.ok, ruth.reason], [false, "NOT_THE_PROJECT_OWNER"]);
-  assert.ok(ruth.detail.includes("contributes to the work without putting the project's name on it"));
+  assert.equal(ruth.detail, localize("case-authoring.index.publishing_is_proj_s_own", "publishing is {proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.", { proj: P }));
   const wrong = w.publish(OTHER, "alice", [Q]);
   assert.deepEqual([wrong.ok, wrong.reason, wrong.project], [false, "NOT_THE_PROJECT_OWNER", OTHER],
     "alice owns a project, and not this one");
