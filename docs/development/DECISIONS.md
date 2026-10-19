@@ -5751,3 +5751,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) The four act labels (`act.explore.label.document`, `act.heldcaptures.label.held`, `act.reconcile.label.money`, `act.transcribe.label.document`) are the generator's false matches, as DEC-370's: each `act.${op}.label.${screen}` pattern filled by words the module holds for other ends. They join `NOT_READ` for screens-settings; the lists are regenerated (that module loses exactly these four). (2) The four `screen.members.*` rows stay as they are: only their keys carry the drawing's sample names, and their English is already placeholders ("Removing {member} as an administrator", "{n} administrators: {members}.", "Agree: remove {member} as an administrator", "counted in the {n}, doesn't vote"). screens-settings draws all four on the members screen's administrator-removal panel (`members.mjs` on `tranche/T51`, the removal's heading, its count line, the Agree button's label and the one facing removal's note, lines 228 to 233, `S + "removing.teo.as.an.administrator"` and the rest); the drawing is SCR.members' removal state. The module's own `keys.mjs` lacks them, which is what R39 trips on: adding them there is screens-settings' CHANGE.
 reasoning recorded in: this entry; `screens/words-reads.src.mjs`, `screens/words-reads.json`.
 owed: by screens-settings (BOB's CHANGE): the four `screen.members.*` keys added to `keys.mjs`.
+
+### DEC-372 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B394, from SKILLS #26 J6; K4152)
+for: design
+question: `skills.skilldoctrine.wherever_a_member_writes_in` ends the draft label at "asked by" with nothing after it: the `<handle>` the source row carries was dropped by the build.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: a `{handle}` placeholder, set aside: the code gives this sentence no values, so the braces would show (DEC-369's fault); the literal `<handle>`, set aside: `build_words.mjs` strips anything in angle brackets as markup.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: the label is said in words, meaning unchanged: its words arrive labeled "Draft · the assistant's, asked by" and the asking member's handle, saved only when the member keeps them. A scan of every row's source finds no other wording that lost an angle-bracketed name in the build (the others sit in notes).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.
