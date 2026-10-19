@@ -1089,7 +1089,7 @@ export class Events {
 
   /** R26: one event, by its id or an alias of it. */
   readEvent({ eventId, viewer = null } = {}) {
-    if (!said(eventId)) return refuse("NO_EVENT", "an event is read by its id (op=event&id=EVT-…)");
+    if (!said(eventId)) return refuse("NO_EVENT", localize("events.index.an_event_is_read_by", "an event is read by its id (op=event&id=EVT-…)"));
     const id = this.#resolve(eventId);
     const v = id ? this.#eventView(id, viewer) : null;
     if (!v) return { ok: true, found: false, event_id: eventId };
@@ -1353,10 +1353,10 @@ export class Events {
     const und = (why, extra = {}) => ({ ok: true, proceeding, at: at ?? null, stage: "undetermined", why, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : (e.entity.proceeding || null);
     const kind = facet && facet.kind;
-    if (!kind) return und(word("events.und.proceeding_kind_held"));
+    if (!kind) return und(localize("events.und.proceeding_kind_held", "the proceeding's kind is not held, so no flow can be read for it"));
     const flows = this.view().proceeding_flows;
     const flow = Array.isArray(flows) ? flows.find((f) => f && f.kind === kind) : isObj(flows) ? flows[kind] : null;
-    if (!flow || !Array.isArray(flow.stages)) return und(word("events.und.active_profile_holds", { kind }));
+    if (!flow || !Array.isArray(flow.stages)) return und(localize("events.und.active_profile_holds", "no active profile holds a flow for proceedings of kind {kind}", { kind: String(kind) }));
     const point = spanOfBound(at, this.zone());
     if (!point || point.bad) return refuse("BAD_DATE", point && point.bad ? point.bad : localize("events.index.a_status_is_read_as", "a status is read as of a date"));
     const events = this.#eventsOfEntity(proceeding, viewer);
@@ -1369,9 +1369,9 @@ export class Events {
         else if (place === "open" || place === "nowhere") open.push({ event_id: ev.event_id, stage: st.stage, when: ev.when, i });
       }
     });
-    if (!reached && !open.length) return und(word("events.und.held_event_bears"));
+    if (!reached && !open.length) return und(localize("events.und.held_event_bears", "no held event bears on this proceeding's flow on that date"));
     const later = open.filter((o) => !reached || o.i > reached.i);
-    if (later.length) return und(word("events.und.order_deciding_events"), { events: later.map(({ i, ...x }) => x) });
+    if (later.length) return und(localize("events.und.order_deciding_events", "the order of the deciding events against that date is undetermined at the precision held"), { events: later.map(({ i, ...x }) => x) });
     return { ok: true, proceeding, at, kind, stage: reached.stage.stage, label: reached.stage.label,
              rests_on: rests.filter((x) => x.stage === reached.stage.stage), citation: flow.citation ?? null };
   }

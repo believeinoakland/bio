@@ -15,3 +15,9 @@ Size (session_016Bd2g2kmHNsaxikJ2F4Zmh): test runs 8, module lines 2778
 ## J1 · COMPLETE
 
 events CR-7 complete on job/T51/events: R54 keys, owner words from the list, 5+60 words findings and other refusal sentences converted, tests rewritten, R54 test added. Events 86/86; users' 35 reds are identical on tranche/T51 (inherited). All checks 0 failures. REPORT items (diagnostic strings, missing label.connectionkinds.event_* rows, proceedingStatusAt string whys, timeline item why now keyed) are in my record.
+
+## Completion after B2 (CHANGE)
+
+(1) NO_EVENT's detail was already read through `localize("events.index.an_event_is_read_by", …)` (my J1 report wrongly listed it as unconverted). (2) `proceedingStatusAt`'s four `und()` reasons now read through `localize` at their sites with the list's own ids (they stay strings). (3), (4) no act of mine. Merged `tranche/T51`. Events 86 pass, 0 fail; format, architecture, coverage (54 of 54), ownership 0 failures; no words finding in events.
+
+Size (session_016Bd2g2kmHNsaxikJ2F4Zmh): test runs 10, module lines 2778
