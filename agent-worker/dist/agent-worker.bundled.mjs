@@ -8221,7 +8221,7 @@ var WORD_ROWS = Object.freeze([
   ["lines.index.a_line_is_read_by", "a line is read by its id (LIN-...)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_line_is_recorded_by", "a line is recorded by the act's stamped author", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_line_names_both_its", "a line names both its ends (from and to), each a registered entity", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
-  ["lines.index.a_line_rests_on_a", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony (a statement)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
+  ["lines.index.a_line_rests_on_a", "a line rests on a passage (a capture and its extent), a system rule (a rule and its source) or a member's testimony (a statement)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_line_row_is_an", "a line row is an object", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_line_runs_between_two", "a line runs between two different entities", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_lines_kind_is_one", "a line's kind is one of {LINE_KINDS}; money given or received is a money fact, never a line", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
@@ -8238,7 +8238,7 @@ var WORD_ROWS = Object.freeze([
   ["lines.index.a_statement_is_recorded_by", "a statement is recorded by the act's stamped author", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_system_register_row_states", "a {system} register row states its own record instant (recorded_at)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_system_rule_names_the", "a system rule names the rule it applies", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
-  ["lines.index.a_system_rules_source_is", "a system rule's source is a held capture or a profile entry {profile, entry}", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
+  ["lines.index.a_system_rules_source_is", "a system rule's source is a held capture or a profile entry (a profile and an entry in it)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_title_is_the_posts", "a title is the post's title as the basis words it, a non-blank string", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_validity_carries_its_zone", "a validity carries its zone, and no zone is stated and the active profiles give none", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.a_validitys_precision_is_one", "a validity's precision is one of {PRECISIONS}", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
@@ -8248,7 +8248,7 @@ var WORD_ROWS = Object.freeze([
   ["lines.index.an_entity_of_kind", "an entity of kind {kinds}", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.an_event_bound_names_the", "an event bound names the edge start or end of the event's when", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.any_registered_entity", "any registered entity", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
-  ["lines.index.at_is_a_day_an", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
+  ["lines.index.at_is_a_day_an", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time (a value, its precision and its time zone)", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.bad_is_not_one_of", "{bad} is not one of {within}", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
   ["lines.index.capture_sha", "capture {sha}", "DEC-347: reviewed from code (B349): member: Citation label for a saved source copy; shown beside a link's basis.", null, false, "design"],
   ["lines.index.direction_is_from_to_or", "direction is from, to or both", "DEC-347: reviewed from code (B349): detail: Builder diagnostic beside a refusal code; not shown to members.", null, false, "design"],
@@ -20957,6 +20957,9 @@ var WORD_ROWS = Object.freeze([
   ["promotion.gate.the_case_document_catalogue_could", "the case-document catalogue could not judge this document, so it is not passed: {String}", null, null, false, "code"],
   ["promotion.index.cut_was_produced_by_cut", "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.", null, null, false, "code"],
   ["promotion.index.empty_neither_text_a_string", "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.", null, null, false, "code"],
+  ["promotion.index.machine_cannot_reopen", "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member.", null, null, false, "code"],
+  ["promotion.index.not_set_down", "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.", null, null, false, "code"],
+  ["promotion.index.project_name_taken", "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.", null, null, false, "code"],
   ["promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith", null, null, false, "code"],
   ["promotion.index.the_base_this_revision_names", "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.", null, null, false, "code"],
   ["promotion.index.the_sha256_sent_for_map", "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.", null, null, false, "code"],
@@ -52133,12 +52136,12 @@ async function checkInfo2Contract(ctx, findings) {
 var INFO2_GRAMMAR = Object.freeze({ ids: Object.freeze(["C-18.6", "C-18.7"]), arm: checkInfo2Contract });
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.78.0";
+var CATALOG_VERSION = "1.79.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1918,
-  digest: "31b4a129bc1b2c99b586c27c455d014fe1570c4287e4cc77c501e071f0d5864f"
+  rows: 1923,
+  digest: "c5885eafaf5dbb471372fe8077398100993b6b49cae2be0c44d77d5f4e0a5d46"
 });
 var te3 = new TextEncoder();
 
@@ -56254,6 +56257,7 @@ var Extraction = class _Extraction {
   #testified = false;
   #counted = false;
   #host = null;
+  #provenance = null;
   #migrationRun = null;
   #readHooks = null;
   #transcriber = null;
@@ -56275,6 +56279,7 @@ var Extraction = class _Extraction {
     this.membership = membership;
     this.calibration = calibration;
     this.env = env || {};
+    this.#provenance = provenance;
     if (promotion) this.joinPromotion(promotion);
     if (calibration) this.listenToCalibration(calibration);
     if (provenance) this.joinTestimony(provenance);
@@ -57009,6 +57014,8 @@ var Extraction = class _Extraction {
     const chain = reading && reading.text_source !== void 0 ? reading.text_source : null;
     const withheld = !!row3.bundle_id && this.#redactor(viewer)(row3.bundle_id) === null;
     const text_units = withheld ? void 0 : this.unitsOf(row3.capture_sha).units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated }));
+    const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(row3.capture_sha) : null;
+    const bytes = home && this.#redactor(viewer)(home.bundleId) !== null ? home.bytes : void 0;
     return {
       ok: true,
       found: true,
@@ -57042,7 +57049,8 @@ var Extraction = class _Extraction {
       },
       reading_history: this.#readingHistoryOf(row3.capture_sha),
       ...this.#unreadOf(row3.capture_sha, reading, viewer, row3.bundle_id, row3.capture_format),
-      ...text_units ? { text_units } : {}
+      ...text_units ? { text_units } : {},
+      ...bytes === void 0 ? {} : { bytes }
     };
   }
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
