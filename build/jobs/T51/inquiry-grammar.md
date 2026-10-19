@@ -31,3 +31,7 @@
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (the new ids), no refusal naming this module.
 
 Size (session_01FVkqfj8YYFrYagPu7FJCRG): test runs 7, module lines 2038
+
+## J1 · COMPLETE
+
+CR-8 applied: R13 standardLegFindings exported; R19 golden/corpus regenerated for VERSION_NAME_MALFORMED (C-25.36); all 57 words findings converted (119 localize ids). Tests 81/81; format, architecture, coverage, words, ownership 0 failures. See Completion in my record (stale rows.mjs expected; basis-versions amended() can go; R13/R19 not-yet-met markers are BOB's to lift).
