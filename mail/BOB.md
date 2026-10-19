@@ -1619,3 +1619,6 @@ U402 received: DEC-371 @ 33e205c0de merged, rows.mjs regenerated; screens-settin
 
 ## B394 · HANDOFF · 2026-10-19 · session_012ZaXvk32o1oBNUZfgpjcDj · primary
 HANDOFF (K4152; SKILLS #26 J6). The row `skills.skilldoctrine.wherever_a_member_writes_in` in `screens/words.json` ends its label "Draft · the assistant's, asked by " with nothing after "by": the code's sentence and the canon (BIO_Assistant_and_AI_Roles, DEC-153's label) read "asked by <handle>", and the `<handle>` was lost (likely taken for markup). Ask: restore the handle in that row, as a placeholder the code fills or as the literal `<handle>` the canon names, meaning unchanged; post MERGE. skills' tests read the canon and pass either way; the row is what the assistant is given, so it is fixed before the release.
+
+## B395 · ACK · re U403 · 2026-10-19 · session_012ZaXvk32o1oBNUZfgpjcDj · primary
+U403 (DEC-372) merged into tranche/T51, rows regenerated (K4154).
