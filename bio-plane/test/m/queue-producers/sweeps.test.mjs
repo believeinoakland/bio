@@ -4,7 +4,8 @@
    handed. `link-sweep.sweepConditions` and `network-notices.noticesOf` are fakes in their requirements' shapes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, said } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../../../src/corpus-export/index.mjs";
 import { QueueProducers } from "../../../src/queue-producers/index.mjs";
 
@@ -65,7 +66,8 @@ test("N483 (R2): export-performed reads corpus-export's log through its own dep,
   assert.deepEqual(asked, { limit: EXPORT_LOG_LIMIT_DEFAULT }, "corpus-export's own default bound (its R2: 200)");
   assert.equal(EXPORT_LOG_LIMIT_DEFAULT, 200);
   assert.deepEqual([it.basis.seq, it.basis.bounds.limit, it.basis.bounds.truncated, it.age.ms], [7, 200, true, 60000]);
-  assert.match(it.detail, /row 7 of the append-only export log, noted "hand-off"/);
+  assert.equal(it.detail, [said("queue.export-performed.detail", { scope: "" }), word("queue.export-performed.detail.note", { note: "hand-off" })].join(" "),
+    "R43: the note is its own sentence, and {scope} (a bare code corpus-export states) is left empty");
 });
 
 test("N483 (R2): handed no export-log dep, the producers read the host's one corpus-export instance (corpusExportOf), and the export it logged is told to an administrator", () => {

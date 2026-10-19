@@ -7,7 +7,8 @@
    R9, R22, R37; ai-runs R28); `refs`, `bundles` and membership's sight are real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, dayWord } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const INQ = "INQ-2026-4000-shared";
 const drawing = (list, extra = {}) => Object.assign(list, { bound: 32, truncated: false, ...extra });
@@ -52,6 +53,12 @@ test("R2: stance-changed-here-not-elsewhere is a comparison, never a count: one 
     ["document", "stance", true], "no act moving another project's stance is offered, and the gap is declared");
   assert.deepEqual(it.options, [{ id: "opt", on: [INQ] }]);
   assert.deepEqual(it.basis.bounds.inquiries_truncated, false);
+  /* R43: the sentences by key; the date and the author each only when the stance carries it */
+  const K = "queue.stance-changed-here-not-elsewhere";
+  assert.equal(it.summary, word(`${K}.summary.one`, { project: "A", version: "opening account" }));
+  assert.equal(it.detail, [word(`${K}.detail`, { question: "the transfer question", n: 2, project: "A", version: "opening account" }),
+    word(`${K}.detail.at`, { date: dayWord("2026-07-03") }), word(`${K}.detail.by`, { who: "ruth" })].join(" "));
+  assert.deepEqual([it.summary_key, it.detail_key], [`${K}.summary.one`, `${K}.detail`]);
   // both diverge: two items, each naming the other's actual reading
   st.B = { version: "the audit alone", at: "2026-07-04T00:00:00Z", by: "bob" };
   items = ofKind(w.read(null, "class:admin"), "stance-changed-here-not-elsewhere");
@@ -95,7 +102,13 @@ test("R2: new-version-arrived-from-another-team reads the team from the run's co
     [["PRJ-B"], [["PRJ-A", "authored_here"]]], "A's reading is not filed under A, and the removal is declared");
   assert.deepEqual([items[1].case.ancestors.map((a) => a.id), items[1].case.excluded.map((e) => e.id)], [["PRJ-A"], ["PRJ-B"]], "the mirror");
   assert.deepEqual([items[0].age.state, items[0].age.since], ["determined", "2026-07-03T00:00:00Z"]);
-  assert.ok(/is not a reading being adopted/.test(items[0].detail));
+  const V = "queue.new-version-arrived-from-another-team";
+  assert.equal(items[0].summary, word(`${V}.summary`, { version: "opening account", question: "the transfer question", project: "A" }));
+  assert.equal(items[0].detail, [word(`${V}.detail`, { question: "the transfer question", n: 2, project: "A", version: "opening account" }),
+    word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-03") })].join(" "),
+    "the reading's state is a bare code in basis-versions and the list holds no key for it: its sentence is left out (named in the REPORT)");
+  assert.equal(items[1].detail, [word(`${V}.detail`, { question: "the transfer question", n: 2, project: "B", version: "the audit alone" }),
+    word(`${V}.detail.hidden`), word(`${V}.detail.by`, { who: "ruth" }), word(`${V}.detail.at`, { date: dayWord("2026-07-04") })].join(" "));
   assert.deepEqual([items[1].basis.state, items[1].basis.hidden], ["accepted", true], "a hidden reading is returned and flagged, never filtered");
   assert.deepEqual(r.facts.unattributed, { count: 2, inquiries: [INQ] },
     "D-266: the silence is counted, both ways of being unattributable, as an exact figure, naming no reading");
@@ -122,7 +135,10 @@ test("R2: shared-inquiry-concluded-by-another-project tells the other projects a
   assert.deepEqual(aboutA.basis.elsewhere.map((e) => [e.project, e.state, e.version]),
     [["PRJ-B", "concluded", "the audit"], ["PRJ-D", "not_concluded", null]]);
   assert.deepEqual([aboutA.subject.kind, aboutA.subject.id, aboutA.basis.claim], ["project_conclusion", "PRJ-A", "it followed the process"]);
-  assert.ok(/NOTHING about what any other project stands on or has concluded has moved/.test(aboutA.detail));
+  const C = "queue.shared-inquiry-concluded-by-another-project";
+  assert.equal(aboutA.summary, word(`${C}.summary`, { project: "A", question: "the transfer question", version: "paper trail" }));
+  assert.equal(aboutA.detail, [word(`${C}.detail`, { question: "the transfer question", n: 3, project: "A", version: "paper trail" }),
+    word(`${C}.detail.by`, { who: "ruth" }), word(`${C}.detail.at`, { date: dayWord("2026-07-07") })].join(" "));
   assert.deepEqual(aboutA.age, { state: "determined", since: "2026-07-07T00:00:00Z", ms: NOW - Date.parse("2026-07-07T00:00:00Z") });
   // B withdraws: the others are no longer told B concluded, and A's notice shows B withdrawn, never "not concluded"
   delete concluded["PRJ-B"];

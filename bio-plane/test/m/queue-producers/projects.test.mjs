@@ -33,7 +33,7 @@ const ask = (w, who, comment = null, project = "PRJ-1") => {
   return r;
 };
 
-test("R41: an invited member has one OBLIGATION project-invitation per invitation, keyed OBLIGATION::project-invitation::<project>::<member>, to her and nobody else, with no project home, naming the project (the unnamed summary, the inviter unanswered by any read) and offering projectjoin; its age is her own row's created", () => {
+test("R41: an invited member has one OBLIGATION project-invitation per invitation, keyed OBLIGATION::project-invitation::<project>::<member>, to her and nobody else, with no project home, naming the project and its inviter (R44) and offering projectjoin; its age is her own row's created", () => {
   const w = parkside();
   invite(w, "bob");
   w.run(`UPDATE project_participants SET created=? WHERE project_id='PRJ-1' AND member_id='bob'`, iso(NOW - 3600000));
@@ -42,14 +42,14 @@ test("R41: an invited member has one OBLIGATION project-invitation per invitatio
   const it = items[0];
   assert.deepEqual([it.class, it.kind, it.recipients], ["OBLIGATION", "project-invitation", ["bob"]]);
   assert.deepEqual(it.subject, { kind: "project", id: "PRJ-1", name: "Parkside" });
-  assert.equal(it.summary, word("queue.project-invitation.summary.unnamed", { project: "Parkside" }), "no inviter is named (DEC-309 (1))");
+  assert.equal(it.summary, word("queue.project-invitation.summary", { who: "ann", project: "Parkside" }), "R44: the inviter is named by handle");
+  assert.deepEqual([it.summary_key, it.detail_key], ["queue.project-invitation.summary", "queue.project-invitation.detail"]);
   assert.equal(it.detail, word("queue.project-invitation.detail"));
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3600000), ms: 3600000 }, "the invitation's instant");
   assert.deepEqual(it.case.ancestors, [], "no project home"); assert.equal(it.case.ungrouped, true);
   assert.deepEqual(it.options, [{ id: "projectjoin", label: word("act.projectjoin.label.queue"), weight: "single" }]);
   assert.equal(it.options[0].label, "Join");
-  assert.equal(it.basis.inviter, null, "no read gives the inviter to the invited member");
-  assert.doesNotMatch(JSON.stringify([it.summary, it.detail]), /ann/, "no handle of the inviter in the words");
+  assert.deepEqual(it.basis.inviter, { member: "ann", handle: "ann", founder: false }, "R44: project-roster answers the inviter (its R35)");
 });
 
 test("R41: joining clears the item, as does removal; a member joined to the project, or invited to none, has no item; another member sees none; no member, none", () => {
