@@ -9411,10 +9411,10 @@
   "INQ-2026-0131-versions-bad": {
    "versions": [
     {
-     "check": "C-25.2",
+     "check": "C-25.36",
      "severity": "error",
      "message": "basis_versions[0].name '' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
-     "code": "VERSION_NAME_NOT_UNIQUE"
+     "code": "VERSION_NAME_MALFORMED"
     },
     {
      "check": "C-25.15",
@@ -9455,10 +9455,10 @@
      "message": "required core field 'visuals' is missing"
     },
     {
-     "check": "C-25.2",
+     "check": "C-25.36",
      "severity": "error",
      "message": "basis_versions[0].name '' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
-     "code": "VERSION_NAME_NOT_UNIQUE"
+     "code": "VERSION_NAME_MALFORMED"
     },
     {
      "check": "C-25.15",
@@ -9531,10 +9531,10 @@
      "message": "required core field 'visuals' is missing"
     },
     {
-     "check": "C-25.2",
+     "check": "C-25.36",
      "severity": "error",
      "message": "basis_versions[0].name '' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
-     "code": "VERSION_NAME_NOT_UNIQUE"
+     "code": "VERSION_NAME_MALFORMED"
     },
     {
      "check": "C-25.15",
@@ -9607,10 +9607,10 @@
      "message": "required core field 'visuals' is missing"
     },
     {
-     "check": "C-25.2",
+     "check": "C-25.36",
      "severity": "error",
      "message": "basis_versions[0].name '' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
-     "code": "VERSION_NAME_NOT_UNIQUE"
+     "code": "VERSION_NAME_MALFORMED"
     },
     {
      "check": "C-25.15",
@@ -11000,6 +11000,574 @@
      "check": "C-2.2",
      "severity": "error",
      "message": "required core field 'visuals' is missing"
+    }
+   ],
+   "none-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ]
+  },
+  "INQ-2026-0133-version-name-long": {
+   "versions": [
+    {
+     "check": "C-25.36",
+     "severity": "error",
+     "message": "basis_versions[0].name 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
+     "code": "VERSION_NAME_MALFORMED"
+    },
+    {
+     "check": "C-25.15",
+     "severity": "error",
+     "message": "basis_version_legs[0] names version 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn', which is not in basis_versions[]",
+     "code": "VERSION_ORPHAN_ROW"
+    }
+   ],
+   "both": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.36",
+     "severity": "error",
+     "message": "basis_versions[0].name 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
+     "code": "VERSION_NAME_MALFORMED"
+    },
+    {
+     "check": "C-25.15",
+     "severity": "error",
+     "message": "basis_version_legs[0] names version 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn', which is not in basis_versions[]",
+     "code": "VERSION_ORPHAN_ROW"
+    }
+   ],
+   "both-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ],
+   "nosubject": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.36",
+     "severity": "error",
+     "message": "basis_versions[0].name 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
+     "code": "VERSION_NAME_MALFORMED"
+    },
+    {
+     "check": "C-25.15",
+     "severity": "error",
+     "message": "basis_version_legs[0] names version 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn', which is not in basis_versions[]",
+     "code": "VERSION_ORPHAN_ROW"
+    }
+   ],
+   "nosubject-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ],
+   "none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.36",
+     "severity": "error",
+     "message": "basis_versions[0].name 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name",
+     "code": "VERSION_NAME_MALFORMED"
+    },
+    {
+     "check": "C-25.15",
+     "severity": "error",
+     "message": "basis_version_legs[0] names version 'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn', which is not in basis_versions[]",
+     "code": "VERSION_ORPHAN_ROW"
+    }
+   ],
+   "none-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ]
+  },
+  "INQ-2026-0134-version-name-twice": {
+   "versions": [
+    {
+     "check": "C-25.1",
+     "severity": "error",
+     "message": "basis_versions[0] ('first') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept",
+     "repairable": true,
+     "repairs": [
+      "describe what this reading of the evidence is and why it differs from the others"
+     ],
+     "code": "VERSION_NO_DESCRIPTION"
+    },
+    {
+     "check": "C-25.2",
+     "severity": "error",
+     "message": "basis_versions[1] names 'first', which basis_versions[0] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name",
+     "repairable": true,
+     "repairs": [
+      "rename this version",
+      "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
+     ],
+     "code": "VERSION_NAME_NOT_UNIQUE"
+    },
+    {
+     "check": "C-25.5",
+     "severity": "error",
+     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
+     "repairable": true,
+     "repairs": [
+      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
+      "or put every leg in one ground and say relationship: and"
+     ],
+     "code": "VERSION_PARTITION_INCOMPLETE"
+    }
+   ],
+   "both": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.1",
+     "severity": "error",
+     "message": "basis_versions[0] ('first') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept",
+     "repairable": true,
+     "repairs": [
+      "describe what this reading of the evidence is and why it differs from the others"
+     ],
+     "code": "VERSION_NO_DESCRIPTION"
+    },
+    {
+     "check": "C-25.2",
+     "severity": "error",
+     "message": "basis_versions[1] names 'first', which basis_versions[0] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name",
+     "repairable": true,
+     "repairs": [
+      "rename this version",
+      "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
+     ],
+     "code": "VERSION_NAME_NOT_UNIQUE"
+    },
+    {
+     "check": "C-25.5",
+     "severity": "error",
+     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
+     "repairable": true,
+     "repairs": [
+      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
+      "or put every leg in one ground and say relationship: and"
+     ],
+     "code": "VERSION_PARTITION_INCOMPLETE"
+    }
+   ],
+   "both-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ],
+   "nosubject": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.1",
+     "severity": "error",
+     "message": "basis_versions[0] ('first') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept",
+     "repairable": true,
+     "repairs": [
+      "describe what this reading of the evidence is and why it differs from the others"
+     ],
+     "code": "VERSION_NO_DESCRIPTION"
+    },
+    {
+     "check": "C-25.2",
+     "severity": "error",
+     "message": "basis_versions[1] names 'first', which basis_versions[0] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name",
+     "repairable": true,
+     "repairs": [
+      "rename this version",
+      "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
+     ],
+     "code": "VERSION_NAME_NOT_UNIQUE"
+    },
+    {
+     "check": "C-25.5",
+     "severity": "error",
+     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
+     "repairable": true,
+     "repairs": [
+      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
+      "or put every leg in one ground and say relationship: and"
+     ],
+     "code": "VERSION_PARTITION_INCOMPLETE"
+    }
+   ],
+   "nosubject-none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    }
+   ],
+   "none": [
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'produced_by' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'references' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'state_history' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'annotations_open' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'reeval_pending' is missing"
+    },
+    {
+     "check": "C-2.2",
+     "severity": "error",
+     "message": "required core field 'visuals' is missing"
+    },
+    {
+     "check": "C-25.1",
+     "severity": "error",
+     "message": "basis_versions[0] ('first') carries no description: every version carries a textual description of the composition, held to a commit message's standard — what changed and why — because it is what survives a conversation that was deliberately not kept",
+     "repairable": true,
+     "repairs": [
+      "describe what this reading of the evidence is and why it differs from the others"
+     ],
+     "code": "VERSION_NO_DESCRIPTION"
+    },
+    {
+     "check": "C-25.2",
+     "severity": "error",
+     "message": "basis_versions[1] names 'first', which basis_versions[0] already names: a version name is unique WITHIN ITS INQUIRY (global uniqueness would make naming absurd), and derived_from reads by name",
+     "repairable": true,
+     "repairs": [
+      "rename this version",
+      "or, if this is an edit of the other, derive it: give it its own name and derived_from the original"
+     ],
+     "code": "VERSION_NAME_NOT_UNIQUE"
+    },
+    {
+     "check": "C-25.5",
+     "severity": "error",
+     "message": "version 'first' has 1 leg with no ground while 0 grounds are named: a version CARRIES its ground partition, so the partition is total — a leg nobody placed sitting beside branches somebody did is a relationship the record would have to guess at, and the guess that makes a finding stronger is the one it must never make",
+     "repairable": true,
+     "repairs": [
+      "give every leg of this version a ground — a leg needed whatever else holds belongs in every ground",
+      "or put every leg in one ground and say relationship: and"
+     ],
+     "code": "VERSION_PARTITION_INCOMPLETE"
     }
    ],
    "none-none": [
