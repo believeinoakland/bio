@@ -100,8 +100,13 @@ export class Queue {
       if (stmt.trim()) this.sql.exec(stmt);
     /* R55: a store made before the instants of a case's muted kinds were kept lacks their column; it is added, and the
        kinds muted before it answer no instant (`at: null`), never back-filled. */
-    const have = this.#rows(`PRAGMA table_info(queue_state)`).map((c) => c.name);
-    if (have.length && !have.includes("muted_at")) this.sql.exec(`ALTER TABLE queue_state ADD COLUMN muted_at TEXT`);
+    /* R59 (T51): likewise `snoozed_at`, the instant a snooze was made; R58 (T51): likewise the item mutes' `item_kind`,
+       `item_title` and `item_subject`, each null for a row made before it was kept. */
+    for (const [table, column] of [["queue_state", "muted_at"], ["queue_state", "snoozed_at"], ["queue_item_mutes", "item_kind"],
+                                   ["queue_item_mutes", "item_title"], ["queue_item_mutes", "item_subject"]]) {
+      const have = this.#rows(`PRAGMA table_info(${table})`).map((c) => c.name);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+    }
   }
 
   /* ------------------------------------------------------------------ the providers (Uses), reached lazily */
@@ -805,8 +810,7 @@ export class Queue {
                reason: door === "exploreapprove" ? "an_ask_is_answered_by_its_act" : "an_account_notice_is_quieted",
                instead: door,
                detail: door === "exploreapprove"
-                 ? "one of your accounts may explore today, and the ask is yours as its owner: approve it "
-                   + "(op=exploreapprove), or let the day pass and it lapses. No team's list holds it."
+                 ? localize("queue.index.one_of_your_accounts_may", "one of your accounts may explore today, and the ask is yours as its owner: approve it (op=exploreapprove), or let the day pass and it lapses. No team's list holds it.")
                  : localize("queue.index.this_is_about_an_account", "this is about an account and is told to whom it concerns; no team's list holds it and there is no team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once you have read it.") };
     }
     /* R12 (T45; action-producers R9): a member who left had items routed to them; the take-ups lead its options, so
@@ -814,9 +818,7 @@ export class Queue {
     if (Queue.QUIETED_FINDINGS.includes(item.kind))
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_departure_is_taken_up_not_disposed", instead: "queuemute",
-               detail: "this tells the project's owners that a member who left had items routed to them. There is "
-                     + "nothing here for a team to set aside: take up the items you choose (the acts this item offers "
-                     + "first), and quiet it for yourself (op=queuemute, naming this item) once you have read it." };
+               detail: localize("queue.index.this_tells_the_projects_owners", "this tells the project's owners that a member who left had items routed to them. There is nothing here for a team to set aside: take up the items you choose (the acts this item offers first), and quiet it for yourself (op=queuemute, naming this item) once you have read it.") };
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
@@ -920,8 +922,7 @@ export class Queue {
           localize("queue.index.this_projects_conclusion_may_not", "this project's conclusion may not hold together with a conclusion you cannot see. It is not set aside: your project can ask to resolve it (DEC-85)."));
       case "tension-after-publication":
         return closed("a_published_tension_is_disclosed", { instead: "publish" },
-          "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it "
-          + "or the conflict is resolved.");
+          localize("queue.index.a_finding_this_case_published", "a finding this case published rests on a conflict found since. It leaves when a later edition discloses it or the conflict is resolved."));
       default:
         return null;
     }
@@ -933,11 +934,53 @@ export class Queue {
     return this.#producers.feedItems(args);
   }
 
+  /** R60 (T51; DEC-330 A62): the feeds the answer was assembled from, each with the classes it can raise: `tasks` (R8),
+   *  `queue-producers`' own feeds by the ids its R45 names, and `notice-producers` (R51). A feed that can raise a class and did
+   *  not answer withholds that class's all-clear; the classes are the catalogue's (R1) for each feed's kinds, over-stated
+   *  where a feed raises more than one, which only ever withholds an all-clear. */
+  static QUEUE_FEEDS = Object.freeze([
+    ["tasks", ["OBLIGATION"]], ["bias-debts", ["OBLIGATION"]], ["proposals", ["FINDING"]], ["shared-inquiries", ["FINDING"]],
+    ["leads", ["FINDING"]], ["exports", ["FINDING"]], ["references", ["FINDING"]], ["objectives", ["FINDING"]],
+    ["sources", ["FINDING"]], ["machinery", ["OBLIGATION", "CONDITION"]], ["contradictions", ["OBLIGATION", "FINDING"]],
+    ["signing-keys", ["OBLIGATION"]], ["action", ["OBLIGATION", "FINDING", "CONDITION"]], ["attribution", ["OBLIGATION"]],
+    ["docket", ["OBLIGATION", "FINDING"]], ["cited-cases", ["FINDING", "CONDITION"]], ["wizards", ["OBLIGATION", "FINDING"]],
+    ["schedule", ["FINDING"]], ["places", ["CONDITION"]], ["projects", ["OBLIGATION"]],
+    ["notice-producers", ["OBLIGATION", "FINDING"]]]);
+
+  /** R60: one row `{feed, classes, answered, failed}` for each feed in QUEUE_FEEDS, then one for any other feed id the
+   *  producers name. `facts` is `queue-producers`' (its R45: `failed` `[{feed, reason}]` and `absent` the feed ids no provider
+   *  is composed for), `noticed` is R51's read. `answered` is true only when the feed's read returned and named no failure, and
+   *  never when it is absent; `failed` is what the feed named: the reason codes of R45's entries, or `notice-producers`' failed
+   *  producers. A read that said nothing of failure names none. */
+  #feedRows(facts, noticed) {
+    const codes = new Map();
+    const absent = new Set();
+    const note = (feed, code) => { if (typeof feed === "string" && feed) codes.set(feed, [...(codes.get(feed) || []), code]); };
+    for (const e of Array.isArray(facts.failed) ? facts.failed : [])
+      if (typeof e === "string") note(e, "failed");
+      else if (e && typeof e === "object") note(e.feed, typeof e.reason === "string" && e.reason ? e.reason : "failed");
+    for (const e of Array.isArray(facts.absent) ? facts.absent : []) {
+      const feed = typeof e === "string" ? e : e && typeof e === "object" ? e.feed : null;
+      if (typeof feed === "string" && feed) absent.add(feed);
+    }
+    const known = new Set(Queue.QUEUE_FEEDS.map(([f]) => f));
+    const rows = [...Queue.QUEUE_FEEDS, ...[...new Set([...codes.keys(), ...absent])].filter((f) => !known.has(f))
+      .sort().map((f) => [f, [...Queue.QUEUE_CLASSES]])].map(([feed, classes]) => {
+      if (feed === "tasks") return { feed, classes: [...classes], answered: true, failed: [] };
+      if (feed === "notice-producers")
+        return { feed, classes: [...classes], answered: noticed.failed.length === 0 && noticed.absent !== true,
+                 failed: [...noticed.failed] };
+      const failed = codes.get(feed) || [];
+      return { feed, classes: [...classes], answered: failed.length === 0 && !absent.has(feed), failed: [...failed] };
+    });
+    return rows;
+  }
+
   /** R51: `notice-producers.noticeItems`, as `{items, facts, failed}`. Its contract is never to throw; were it to, the
    *  read is named failed whole rather than taking the feed down, and contributes no item. */
   #noticeItems(args) {
     const np = this.#notices;
-    if (!np || typeof np.noticeItems !== "function") return { items: [], facts: {}, failed: [] };
+    if (!np || typeof np.noticeItems !== "function") return { items: [], facts: {}, failed: [], absent: true };
     let r;
     try { r = np.noticeItems(args); } catch { return { items: [], facts: {}, failed: ["noticeItems"] }; }
     const facts = r && r.facts && typeof r.facts === "object" ? r.facts : {};
@@ -963,11 +1006,20 @@ export class Queue {
    *  columns and the contract carries both: `subject` is what the item is
    *  about, `case` is where it is filed. Collapsing them is how a queue
    *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false } = {}) {
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null, muted = false, answered = false,
+              aside = false, after = null } = {}) {
+    const flag = (v) => v === true || v === "true" || v === "1";
     /* R55 (N1094; DEC-240 (D3)): the muted list, in place of the feed: asked for by `muted: true` (or the query's "true" or
        "1"), it answers what this member has muted and takes neither `sort` nor `limit`. */
-    if (muted === true || muted === "true" || muted === "1")
+    if (flag(muted))
       return this.#mutedList(typeof member === "string" && member.trim() ? member.trim() : null, viewer);
+    /* R59 (T51; DEC-330 A61): what left this member's queue because of her, or because another did it for everyone, in place
+       of the feed, as the muted list is (it takes neither `sort` nor `limit`). */
+    if (flag(answered))
+      return this.#answeredList(typeof member === "string" && member.trim() ? member.trim() : null, viewer, this.#nowMs(nowMs));
+    /* R61 (T51; DEC-330 A63): the set-aside findings of both scopes, in place of the feed, paged by `after` and `limit`. */
+    if (flag(aside))
+      return this.#asideList(viewer, this.#nowMs(nowMs), limit, after);
     /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
        a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
     const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
@@ -989,17 +1041,7 @@ export class Queue {
     const items = [];
     /* R56 (N1123): the title of the bundle a subject names, when the viewer may see it, else null; asked once per id, through
        the one gate (D-15), and never of a bundle this viewer may not see (R33). */
-    const titleGate = viewerPredicate(viewer);
-    const titles = new Map();
-    const titleOf = (id) => {
-      if (typeof id !== "string" || !id.trim()) return null;
-      const key = id.trim();
-      if (!titles.has(key)) {
-        const row = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${titleGate.sql})`, key, ...titleGate.args);
-        titles.set(key, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
-      }
-      return titles.get(key);
-    };
+    const titleOf = this.#titleReader(viewer);
 
     /* ---------------------------------------------------- OBLIGATION · tasks
        REC-30: the CASE set was gated from birth (#queueAncestors) but the
@@ -1045,7 +1087,7 @@ export class Queue {
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
           : { state: "undetermined", reason: "unparseable_created",
-              detail: "the task row carries a created stamp this producer cannot read as an instant" },
+              detail: localize("queue.index.the_task_row_carries_a", "the task row carries a created stamp this producer cannot read as an instant") },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
         options: this.#queueOptions([subject], viewer, identity),
@@ -1126,23 +1168,17 @@ export class Queue {
        * that claims too much — and whose set would GROW with the function. The
        * helper sits ABOVE the marker so its own variable-coded return is not
        * inside the governed span, and every code below is a STRING LITERAL at
-       * its site, as the old DEC-49 guard's arm C (`civicos-ui/check-refusal-codes.mjs`,
-       * deleted in T20) needed in order to COMPARE them (PL-3's convention, REC-71's
-       * measurement); the R11 tests compare code, check and translation now. */
+       * its site, so a test can COMPARE them (PL-3's convention, REC-71's measurement);
+       * the R11 tests compare code, check and translation. */
       if (!Queue.QUEUE_CLASSES.includes(it.class))
         return refusal("NO_CLASS",
           localize("queue.index.every_queue_item_says_which", "every queue item says which of {map} it is, and this one carries {v1}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.", { map: String(Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")), v1: String(it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))) }),
           { id: it.id ?? null });
       if (classOfKind(it.kind) === null)
         return refusal("NO_SUCH_KIND",
-          `${it.kind === undefined || it.kind === null || it.kind === ""
-              ? "this item carries no kind at all"
-              : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. `
-          + `The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute `
-          + `refuses against, what op=affordances publishes, and what carries the sentence a member `
-          + `reads instead of the slug. A kind invented at a producer would reach a surface with no `
-          + `words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that `
-          + `no code has ever used.`,
+          it.kind === undefined || it.kind === null || it.kind === ""
+            ? localize("queue.index.this_item_carries_no_kind", "this item carries no kind at all. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.")
+            : localize("queue.index.kind_is_not_a_kind", "'{kind}' is not a kind this record's catalogue names. The vocabulary is queuestate.mjs's three lists and nothing else — it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.", { kind: String(String(it.kind).slice(0, 60)) }),
           { id: it.id ?? null, kind: it.kind ?? null });
       if (classOfKind(it.kind) !== it.class)
         return refusal("KIND_MISCLASSED",
@@ -1348,11 +1384,11 @@ export class Queue {
      * it, with nothing anywhere in the answer saying so — indistinguishable
      * from a finding the record never derived, which is exactly what D-79
      * forbids and exactly the sparse-level failure CLAUDE.md makes a first-class
-     * obligation. The surface had noticed and had done the only thing it could:
-     * `civicos-ui/app.html` keeps a page-local Map of the dispositions IT
-     * performed and renders them under the queue. That is honest and it is a
+     * obligation. A surface could only keep a page-local Map of the dispositions
+     * IT performed and render them under the queue, which is honest and is a
      * SECOND PLACE A FACT IS STATED (D-21/DEC-8) that survives neither a reload
-     * nor a second member. The record holds the fact; the op now publishes it.
+     * nor a second member. The record holds the fact; the op publishes it
+     * (`disposed` here, and R61's `aside` list whole, unbounded by this block's 64).
      *
      * **IT PUBLISHES THE DECISION AND ASSERTS NOTHING ABOUT THE GAP.** Whether
      * the underlying finding would fire again today is deliberately NOT claimed
@@ -1388,6 +1424,11 @@ export class Queue {
       ...scopedDisposed,
     ];
     const disposedOut = dispAll.slice(0, dispCap);
+    /* R60 (T51; DEC-330 A62): which feeds answered, and the per-class all-clear: a class is clear only when every feed that can
+       raise it answered and the unsuppressed feed (before the limit's cut) holds no item of it. A muted item is not a failure. */
+    const feeds = this.#feedRows(facts, noticed);
+    const classesAnswered = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, feeds.filter((f) => f.classes.includes(c)).every((f) => f.answered)]));
+    const allClear = Object.fromEntries(Queue.QUEUE_CLASSES.map((c) => [c, classesAnswered[c] && !items.some((i) => i.class === c)]));
     return {
       ok: true, member: me, items: out,
       /* REC-57: `truncated` was already here and is UNTOUCHED — this op is the
@@ -1405,6 +1446,10 @@ export class Queue {
       class_labels: QUEUE_CLASS_LABELS,
       /* R54 (N1047; DEC-226 (1)): the kinds a surface files under a named section, not under "no case". */
       sections: QUEUE_SECTIONS,
+      /* R60 (T51; DEC-330 A62): the feeds this answer was assembled from and whether each answered; a surface says "looked and
+         found none" for a class exactly when `all_clear` holds for it, and names a failed feed by its id. Asking again is the
+         retry: no state is kept between asks. */
+      feeds, all_answered: feeds.every((f) => f.answered), classes_answered: classesAnswered, all_clear: allClear,
       classes_deferred: Queue.QUEUE_CLASSES_DEFERRED,
       ancestor_depth_bound: Queue.QUEUE_ANCESTOR_DEPTH,
       /* REC-21. What this member has chosen not to be told about, REPORTED
@@ -1424,7 +1469,7 @@ export class Queue {
            on `suppressed`) could be neither named nor undone — the case form's
            unmute takes the kinds. A map BESIDE `cases` rather than objects IN
            it, because every reader of `cases` holds it as a list of ids (the
-           module's R14 tests and civicos-ui); this adds and moves nothing. */
+           module's R14 tests and the screens); this adds and moves nothing. */
         case_kinds: Object.fromEntries([...mutes.keys()].sort()
           .map((c) => [c, [...mutes.get(c)].sort()])),
         /* D-125: every item id this member muted, whether or not it is live
@@ -1585,9 +1630,7 @@ export class Queue {
                            bound: settled.limit ?? cap, truncated: settled.truncated === true,
                            ...(settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {}),
                            detail: localize("queue.index.bias_debts_settled_in_the", "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted.") },
-             detail: "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one "
-                   + "member's resolution clears the item for everyone, and this is where everyone else reads that "
-                   + "it happened." };
+             detail: localize("queue.index.to_dos_that_left_the", "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened.") };
   }
 
   /** The case a personal preference may be attached to, resolved through the
@@ -1605,7 +1648,7 @@ export class Queue {
   #queueCaseFor(caseId, viewer) {
     const id = typeof caseId === "string" ? caseId.trim() : "";
     if (!id) return { ok: false, reason: "NO_CASE",
-                      detail: "a personal preference is keyed (member, case); name the case it is about" };
+                      detail: localize("queue.index.a_personal_preference_is_keyed", "a personal preference is keyed (member, case); name the case it is about") };
     const gate = viewerPredicate(viewer);
     /* `FROM bundles b` and not `FROM bundles`: viewerPredicate compiles a
        predicate over the alias `b`, which is the shape every other gated read in
@@ -1624,6 +1667,164 @@ export class Queue {
              state: row.current_state ?? null,
              known_state: !!(spec && spec.edges
                && Object.prototype.hasOwnProperty.call(spec.edges, row.current_state)) };
+  }
+
+  /** R56: a reader of the title of a bundle by id, for this viewer: the bundle's title when the viewer may see it, else null
+   *  (never of a bundle they may not, R33); asked once per id, through the one gate (D-15). */
+  #titleReader(viewer) {
+    const gate = viewerPredicate(viewer);
+    const titles = new Map();
+    return (id) => {
+      if (typeof id !== "string" || !id.trim()) return null;
+      const key = id.trim();
+      if (!titles.has(key)) {
+        const row = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, key, ...gate.args);
+        titles.set(key, row && typeof row.title === "string" && row.title.trim() ? row.title : null);
+      }
+      return titles.get(key);
+    };
+  }
+
+  /** R58 (T51): the item `itemId` as this member's current feed holds it, for the mute to store with its row: its kind, the
+   *  title of its subject (R56) and the subject's id, each null when the item is not among her feed's items (not live, or
+   *  already muted). Looked up once; never throws. */
+  #liveItem(member, viewer, itemId) {
+    const none = { kind: null, title: null, subject: null };
+    try {
+      const f = this.queueFeed({ member, viewer, limit: 500 });
+      const it = f && f.ok === true && Array.isArray(f.items) ? f.items.find((i) => i && i.id === itemId) : null;
+      if (!it) return none;
+      const sub = it.subject && typeof it.subject === "object" ? it.subject : {};
+      const title = typeof sub.title === "string" && sub.title.trim() ? sub.title : null;
+      return { kind: typeof it.kind === "string" && it.kind ? it.kind : null, title,
+               subject: title !== null && typeof sub.id === "string" && sub.id ? sub.id : null };
+    } catch { return none; }
+  }
+
+  /** R59, R61: rows newest first by `at` (as a time, not as text), the undated after the dated, ties in the order `tie`
+   *  gives (a text per row). */
+  static #newestFirst(tie) {
+    const ms = (x) => { const t = typeof x.at === "string" ? Date.parse(x.at) : NaN; return Number.isFinite(t) ? t : null; };
+    return (a, b) => {
+      const ma = ms(a), mb = ms(b);
+      if (ma !== mb) return ma === null ? 1 : mb === null ? -1 : mb - ma;
+      const ta = tie(a), tb = tie(b);
+      return ta < tb ? -1 : ta > tb ? 1 : 0;
+    };
+  }
+
+  /** R59 (T51; DEC-330 A61, K3806; `tasks` R6, R3; amends R39): what left this member's queue because of her, or because
+   *  another member did it for everyone, in place of the feed: `{ok, answered, count, window_days, bound, truncated}`, newest
+   *  first, within R39's window and bound. Four kinds of row, each `act`: `resolved` (R39's tasks that were hers, assigned to
+   *  her or unassigned or resolved by her, and its settled bias debts; `by` the member who resolved it, null when none did,
+   *  `by_you` true when she did), `forwarded` (a to-do she forwarded, from the task's own history: `to` is the task's
+   *  assignee now when the entry is its latest forward, else null), `snoozed` (each case she snoozed whose snooze is still in
+   *  the future) and `set_aside` (each finding she dismissed or deferred in the window). Only `resolved` rows are about other
+   *  members' acts; the rest are the asker's own. A caller with no member gets `resolved` rows only. A row names no subject
+   *  or case the viewer may not see (R33). Reads only; never throws on stored text. */
+  #answeredList(member, viewer, now) {
+    const cap = Queue.QUEUE_RESOLVED_MAX, days = Queue.QUEUE_RESOLVED_WINDOW_DAYS;
+    const sinceMs = now - days * 86400000;
+    const since = stampInstant("second", sinceMs);
+    const gate = viewerPredicate(viewer);
+    const titleOf = this.#titleReader(viewer);
+    const inWindow = (at) => { const t = typeof at === "string" ? Date.parse(at) : NaN; return Number.isFinite(t) && t >= sinceMs; };
+    const rows = [];
+    const resolved = this.#tasks.resolvedTasks({ viewer, since, limit: 1000 });
+    for (const t of resolved) {
+      const by = [...(t.history || [])].reverse().find((h) => h && h.event === "resolved");
+      const resolvedBy = by && typeof by.actor === "string" ? by.actor : null;
+      if (member && t.assignee !== member && t.assignee !== "unassigned" && resolvedBy !== member) continue;
+      rows.push({ act: "resolved", id: t.id, class: "OBLIGATION", kind: t.kind, title: titleOf(t.refers_to),
+                  by: resolvedBy, by_you: member !== null && resolvedBy === member, at: t.resolved_at ?? (by ? by.at : null) });
+    }
+    const settled = this.#bias.settled({ gate, since, limit: cap }) || {};
+    for (const d of Array.isArray(settled.debts) ? settled.debts : [])
+      rows.push({ act: "resolved", id: `OBLIGATION::bias-debt::${d.run}`, class: "OBLIGATION", kind: "bias-debt",
+                  title: titleOf(d.context_id), by: d.actor ?? null, by_you: member !== null && d.actor === member,
+                  at: d.settled_at ?? null, settled_kind: d.settled_kind ?? null });
+    if (member) {
+      const seen = new Set();
+      for (const t of [...this.#tasks.recentTasks({ viewer, limit: 1000, statuses: Queue.TASK_LIVE_STATUSES }), ...resolved]) {
+        if (seen.has(t.id)) continue;
+        seen.add(t.id);
+        const hist = Array.isArray(t.history) ? t.history : [];
+        const latest = hist.reduce((m, h, i) => (h && h.event === "forwarded" ? i : m), -1);
+        hist.forEach((h, i) => {
+          if (h && h.event === "forwarded" && h.actor === member && inWindow(h.at))
+            rows.push({ act: "forwarded", id: t.id, kind: t.kind, title: titleOf(t.refers_to), to: i === latest ? t.assignee : null,
+                        at: h.at });
+        });
+      }
+      for (const r of this.#rows(`SELECT case_id, snoozed_until, snoozed_at FROM queue_state WHERE member_id=? AND snoozed_until IS NOT NULL`, member)) {
+        const until = Date.parse(r.snoozed_until);
+        if (!(Number.isFinite(until) && until > now)) continue;
+        const c = this.#one(`SELECT b.bundle_id, b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.case_id, ...gate.args);
+        if (!c) continue;
+        rows.push({ act: "snoozed", case: { id: c.bundle_id, title: typeof c.title === "string" && c.title.trim() ? c.title : null },
+                    until: r.snoozed_until, at: r.snoozed_at ?? null });
+      }
+      for (const r of this.#rows(`SELECT project_id, finding_id, state, at FROM finding_dispositions WHERE decided_by=?`, member)) {
+        if (!inWindow(r.at) || !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.project_id, ...gate.args)) continue;
+        rows.push({ act: "set_aside", scope: "project", project: r.project_id, finding: r.finding_id, state: r.state, at: r.at });
+      }
+      const feed = this.#progressions.proposalsFeed(now) || {};
+      for (const d of Array.isArray(feed.dispositions) ? feed.dispositions : [])
+        if (d && d.decided_by === member && (d.state === "dismissed" || d.state === "deferred") && inWindow(d.at))
+          rows.push({ act: "set_aside", scope: "instance", project: null, finding: `FINDING::${d.key}`, state: d.state, at: d.at });
+    }
+    rows.sort(Queue.#newestFirst((x) => `${x.act}\u0000${x.id ?? x.finding ?? x.case.id}\u0000${x.project ?? ""}`));
+    const page = rows.slice(0, cap);
+    return { ok: true, answered: page, count: page.length, window_days: days, bound: cap, truncated: rows.length > cap };
+  }
+
+  /** R61 (T51; DEC-330 A63, K3839; amends R15): every set-aside finding of both scopes in place of the feed, newest first by
+   *  `at` then `scope`, `project` and `finding`, each `{scope, finding, project, key, state, reason, decided_by, at,
+   *  definition_version, title}`: an instance row is `progressions.proposalsFeed`'s `dispositions[]` (its R18) with the version
+   *  it judged, a project row is `finding_dispositions`' with `definition_version: null`. Not cut at R15's 64: paged by `after`
+   *  (the previous page's `next`, an opaque cursor naming the last row) and `limit` (default 200, at most 500). A row whose
+   *  project, or a bundle its finding's id names, the viewer may not see is left out and not counted (R33); its `title` is the
+   *  title of the first visible bundle the finding's id names, else null. */
+  #asideList(viewer, now, limit, after) {
+    const cap = clampLimit(limit, 200, 500);
+    const gate = viewerPredicate(viewer);
+    const titleOf = this.#titleReader(viewer);
+    const sees = (id) => !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+    const exists = (id) => !!this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, id);
+    const rows = [];
+    const feed = this.#progressions.proposalsFeed(now) || {};
+    for (const d of Array.isArray(feed.dispositions) ? feed.dispositions : [])
+      if (d && (d.state === "dismissed" || d.state === "deferred"))
+        rows.push({ scope: "instance", finding: `FINDING::${d.key}`, project: null, key: d.key, state: d.state, reason: d.reason ?? null,
+                    decided_by: d.decided_by ?? null, at: d.at ?? null, definition_version: d.definition_version ?? null, title: null });
+    for (const r of this.#rows(`SELECT project_id, finding_id, state, reason, decided_by, at FROM finding_dispositions`)) {
+      if (!sees(r.project_id)) continue;
+      /* the bundles the finding's id names: one the viewer may not see leaves the row out, the first they may names its title */
+      const named = String(r.finding_id).split(/::|@|#/).filter((x) => x && exists(x));
+      if (named.some((x) => !sees(x))) continue;
+      rows.push({ scope: "project", finding: r.finding_id, project: r.project_id, key: `${r.project_id}::${r.finding_id}`, state: r.state,
+                  reason: r.reason ?? null, decided_by: r.decided_by ?? null, at: r.at ?? null, definition_version: null,
+                  title: named.length ? titleOf(named[0]) : null });
+    }
+    const cmp = Queue.#newestFirst((x) => `${x.scope}\u0000${x.project ?? ""}\u0000${x.finding}`);
+    rows.sort(cmp);
+    let from = 0;
+    if (typeof after === "string" && after) {
+      let c = null;
+      try { c = JSON.parse(Buffer.from(after, "base64url").toString("utf8")); } catch { c = null; }
+      if (c && typeof c === "object" && typeof c.scope === "string" && typeof c.finding === "string") {
+        const mark = { at: typeof c.at === "string" ? c.at : null, scope: c.scope, project: typeof c.project === "string" ? c.project : null,
+                       finding: c.finding };
+        from = rows.findIndex((x) => cmp(x, mark) > 0);   // the rows after the cursor's place in the one total order
+        if (from < 0) from = rows.length;
+      }
+    }
+    const page = rows.slice(from, from + cap);
+    const truncated = from + cap < rows.length;
+    const last = page.at(-1);
+    return { ok: true, aside: page, count: page.length,
+             next: truncated && last ? Buffer.from(JSON.stringify({ at: last.at, scope: last.scope, project: last.project, finding: last.finding }), "utf8").toString("base64url") : null,
+             truncated };
   }
 
   /** R55 (T50; N1094; DEC-240 (D3); amends R14, R19, R20): what this member has muted and nobody else's, one row per kind
@@ -1645,8 +1846,16 @@ export class Queue {
         rows.push({ kind, case: { id: c.bundle_id, title: typeof c.title === "string" && c.title.trim() ? c.title : null },
                     at: ats[kind] ?? null });
     }
-    for (const r of this.#rows(`SELECT item_id, item_class, muted_at FROM queue_item_mutes WHERE member_id=?`, member))
-      rows.push({ item: r.item_id, class: r.item_class, at: r.muted_at ?? null });
+    /* R58 (T51): an item's row names it: its `kind` as her feed held it when she muted it, else the id's second segment where
+       `classOfKind` names it a kind of the row's class, else null; and its `title`, the title recorded with the mute, never
+       back-filled, and null when its subject is a bundle she may no longer see (R33). */
+    for (const r of this.#rows(`SELECT item_id, item_class, muted_at, item_kind, item_title, item_subject FROM queue_item_mutes WHERE member_id=?`, member)) {
+      const seg = String(r.item_id).split("::")[1];
+      const kind = typeof r.item_kind === "string" && r.item_kind ? r.item_kind : (seg && classOfKind(seg) === r.item_class ? seg : null);
+      const shown = typeof r.item_title === "string" && r.item_title.trim() && typeof r.item_subject === "string" && r.item_subject
+        && this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, r.item_subject, ...gate.args);
+      rows.push({ item: r.item_id, class: r.item_class, kind, title: shown ? r.item_title : null, at: r.muted_at ?? null });
+    }
     /* newest first by the instant (as a time, not as text), the undated after them; ties in a fixed order. */
     const ms = (x) => { const t = x.at === null ? NaN : Date.parse(x.at); return Number.isFinite(t) ? t : null; };
     const tie = (x) => (x.item !== undefined ? `1\u0000${x.item}` : `0\u0000${x.case.id}\u0000${x.kind}`);
@@ -1703,8 +1912,7 @@ export class Queue {
          ends up believing the wrong thing is silenced. */
       if (named.length > 0 || (typeof caseId === "string" && caseId.trim()))
         return { ok: false, reason: "BAD_KIND", item: itemId,
-          detail: "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are "
-                + "two different preferences and this plane will not guess which one you meant" };
+          detail: localize("queue.index.name_either_one_item_item", "name EITHER one item (`item`) OR kinds on a case (`case` + `kinds`), not both: they are two different preferences and this plane will not guess which one you meant") };
       /* The class is the id's own first segment; an OBLIGATION's id is an
          opaque task id with none, so `tasks` is asked to NAME it — the refusal
          must say OBLIGATION rather than merely "unknown". */
@@ -1728,7 +1936,7 @@ export class Queue {
     for (const sb of subjects) {
       if (sb.kind !== undefined && sb.kind.includes(","))
         return { ok: false, reason: "BAD_KIND", kind: sb.kind, case: c.id,
-          detail: "a kind is a slug and may not contain a comma; the stored set is comma-separated" };
+          detail: localize("queue.index.a_kind_is_a_slug", "a kind is a slug and may not contain a comma; the stored set is comma-separated") };
       if (sb.cls === null)
         return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
@@ -1753,10 +1961,19 @@ export class Queue {
         `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
       if (unmute) this.sql.exec(
         `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
-      else this.sql.exec(
-        `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at`,
-        me, itemId, cls, stamp);
+      else {
+        /* R58 (T51; amends R20): the item is looked up once among her current feed's items, and its kind, its subject's
+           title (R56) and that subject's id are stored with the row; an item that is not live (or is already muted, so is not
+           in her feed) stores none, and a re-mute keeps what the row already held. */
+        const live = this.#liveItem(me, viewer, itemId);
+        this.sql.exec(
+          `INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at, item_kind, item_title, item_subject)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(member_id, item_id) DO UPDATE SET muted_at=excluded.muted_at,
+             item_kind=COALESCE(excluded.item_kind, item_kind), item_title=COALESCE(excluded.item_title, item_title),
+             item_subject=COALESCE(excluded.item_subject, item_subject)`,
+          me, itemId, cls, stamp, live.kind, live.title, live.subject);
+      }
       return {
         ok: true, member: me, form: "item", item: itemId, item_class: cls,
         muted_items: [...this.#queueItemMutes(me)].sort(),
@@ -1836,8 +2053,7 @@ export class Queue {
       if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
         if (!isCalendarDate(text))
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a "
-                  + "real day" };
+            detail: localize("queue.index.until_must_be_an_instant", "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a real day") };
         const zone = this.#zone();
         if (zone === null)
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
@@ -1846,7 +2062,7 @@ export class Queue {
         const range = dayRange(text, text, zone);
         if (typeof today !== "string" || !range || typeof range.start !== "string")
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "the day could not be read in this copy's time zone; send an instant instead" };
+            detail: localize("queue.index.the_day_could_not_be", "the day could not be read in this copy's time zone; send an instant instead") };
         if (text < today)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id, today,
             detail: localize("queue.index.that_day_is_before_today", "that day is before today ({today}) where this team is; a snooze that has already expired is not a snooze, it would report as deferred while deferring nothing", { today: String(today) }) };
@@ -1856,11 +2072,10 @@ export class Queue {
         ms = /^\d{4}-\d{2}-\d{2}T/.test(text) ? Date.parse(text) : NaN;
         if (!Number.isFinite(ms))
           return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)" };
+            detail: localize("queue.index.until_must_be_an_instant_2", "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)") };
         if (ms <= nowMs)
           return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id,
-            detail: "a snooze that has already expired is not a snooze; it would report as deferred while "
-                  + "deferring nothing" };
+            detail: localize("queue.index.a_snooze_that_has_already", "a snooze that has already expired is not a snooze; it would report as deferred while deferring nothing") };
       }
       iso = new Date(ms).toISOString();
       if (day !== null) dated = { day, lapsed: ms <= nowMs };
@@ -1868,11 +2083,11 @@ export class Queue {
     const row = this.#one(
       `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
     this.sql.exec(
-      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, snoozed_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(member_id, case_id) DO UPDATE SET snoozed_until=excluded.snoozed_until,
-                                                     last_seen=excluded.last_seen`,
-      me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp);
+                                                     last_seen=excluded.last_seen, snoozed_at=excluded.snoozed_at`,
+      me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp, iso === null ? null : stamp);   /* R59: when it was made */
     return {
       ok: true, member: me, case: c.id, case_type: c.type, snoozed_until: iso, at: stamp,
       ...(dated ? { until_day: dated.day } : {}),
@@ -2049,8 +2264,7 @@ export class Queue {
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
-               detail: "deferring or dismissing the record's own question is recorded with a reason, in the "
-                     + "member's own words — a disposition with no reason ages a finding with no account of why" };
+               detail: localize("queue.index.deferring_or_dismissing_the_records", "deferring or dismissing the record's own question is recorded with a reason, in the member's own words — a disposition with no reason ages a finding with no account of why") };
     if (why.length > Queue.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
                detail: localize("queue.index.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(Queue.EDGE_REASON_MAX) }) };
@@ -2215,7 +2429,7 @@ export function queueOps(q, url, body) {
   return {
     /* R53 (N983): judged at this module's clock; a `now` in the query or the body is never read. */
     queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort"),
-                              muted: s("muted") }),
+                              muted: s("muted"), answered: s("answered"), aside: s("aside"), after: s("after") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),
@@ -2229,8 +2443,9 @@ export function queueOps(q, url, body) {
  *  the app reads them there (K1717, K1863). Pure; never throws on a well-formed answer. */
 export function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
-  /* R55: the muted list is the answer in place of the feed: it has no items to decorate. */
-  if (Array.isArray(r.muted)) return { status: 200, result: r };
+  /* R55, R59, R61: the muted list, what a member answered and the set-aside findings are each the answer in place of the
+     feed: they have no items to decorate. */
+  if (Array.isArray(r.muted) || Array.isArray(r.answered) || Array.isArray(r.aside)) return { status: 200, result: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
