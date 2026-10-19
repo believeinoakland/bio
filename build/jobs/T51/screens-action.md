@@ -37,3 +37,12 @@ REPORT, re B4 and B5. B5's rows are drawn: the due labels, `shell.readonly.noun.
 **The shell refuses `hold` on the tranche as it stands:** the registry generated at `20c8001300` lacks `actionholdrelease` on `hold`, so `checkScreens` throws and every suite of this module fails to boot until BOB re-takes the registry (wizard-scripts). I ran with the registry regenerated locally from the design's `registry.json` (not committed): 130 of 133 pass; the 3 red are R27's, which wait on interface-shell's `cs.readonly`. Words 0, coverage 35 of 35.
 Still waiting on: the registry re-take, interface-shell (`cs.readonly`, `help: [k1, k2]`), op-declarations (`holdsdue`, `approvedunsent`, `checkpointsdue` for "our move").
 Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 70, module lines 3260
+
+## J4 · COMPLETE
+
+COMPLETE (T51-122, screens-action), re B7. tranche/T51 merged; no local stand-in remains. Suite against the real providers: 133 of 133 pass.
+Entries applied: R24 to R35 (actionnew, plan list, the silence asked about, the read-only sentence, kinds worded twice, request's door, dash-action, the guide/templates/pressure on action, hold with its release, holdnotice, counsel, no template before an action exists); DEC-342; the design's DEC-359 rows (labels, nouns, Expect/Source, notes, "more", ways of sending); the 4 words findings.
+Checks: format 0, architecture 0, coverage 35 of 35, ownership 0, words (my module, and over the tree no line names it) 0; setup-words build --check says rows.mjs is stale on an op-declarations row (not mine; expected before the layer close).
+Deferred, with why: (1) "our move" from `approvedunsent` and `checkpointsdue`: neither answer's shape is stated in a requirement I can read as a contract, so "our move" stays read from `filingsfor`'s drafts (an approved, unsent text is a draft at step send/second, so approvedunsent adds nothing); the checkpoint half waits on a stated shape: BOB to state it or declare it not needed. (2) The kit's `help: [k1, k2]` option: my three sections' tooltips (own markup) and the second help sentences (as notes) still work; moving them to the kit is a cosmetic change for the next touch. (3) "Replies to read" (`screen.dash-action.tile.came`) is not drawn: no provider defines it. (4) R27 on `plan`, `request`, `start-send`: acts the shell's gate lets a reader see (`itemtakeup`, `optionstartpreview`, `addresseesuggest`) stay drawn; only `action`'s reminder is withheld.
+Found in other modules: none new since J2/J3.
+Size (session_01694DjkFk3Xc4UJ3gbq7ezF): test runs 75, module lines 3260
