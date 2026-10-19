@@ -52,6 +52,7 @@ test("R75 two owners, one standing down: pressing Stand down opens the vote in p
   assert.ok(says(e, "screen.project.the.change.waits.for.ana", { member: "dev" }), "and what the change waits for");
   assert.ok(!says(e, "screen.project.standdown.agreed", { member: "dev" }), "nobody has agreed");
   assert.ok(!says(e, "refusal.VOTES_SHORT"), "control: no short-vote refusal before one is answered");
+  assert.ok(says(live, "screen.project.scale.now") && says(e, "screen.project.dev.is.standing.down.as", { member: "mai" }), "R75 the (now) marker and the standing-down subtitle");
   assert.ok(says(live, "screen.project.2.of.2.the.departing") && says(live, "screen.project.both.agree.a.resignation.the"), "the two-owner row in the drawing's words");
   assert.ok(says(main(p), "screen.project.how.it.changes.with.the") && says(main(p), "screen.project.owners.follow.the.same.rule"));
   /* each owner, and whether she has voted (nobody has) */
@@ -121,7 +122,9 @@ test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down
   const e = stateE(p);
   const live = main(p).querySelector('[data-arith="owners"] tr[aria-current="true"]');
   const row = MATH(3);
-  assert.deepEqual([...live.querySelectorAll("td")].map((td) => td.textContent).slice(1), [`${row.votesNeeded}/${row.owners}`, `${row.eligibleVoters}/${row.owners}`], "the live row is the answer's: 2 of 3, 2 may vote");
+  assert.deepEqual([...live.querySelectorAll("td")].map((td) => td.textContent).slice(1), [word("screen.project.scale.takes", { votes: String(row.votesNeeded), owners: String(row.owners) }), word("screen.project.scale.who", { voters: String(row.eligibleVoters), owners: String(row.owners) })], "the live row is the answer's: 2 of 3, 2 may vote, by their keys");
+  assert.ok(live.querySelector("td").textContent.includes(word("screen.project.scale.now")), "the live row carries the (now) marker");
+  assert.ok(says(e, "screen.project.dev.is.standing.down.as", { member: "rosa" }), "the state-e subtitle names who is standing down");
   assert.ok(says(e, "project.owners.pending.remove", { who: "rosa", by: "dev", date: day("2026-10-09"), agreed: "dev", awaiting: "mai" }));
   assert.ok(says(e, "screen.project.1.of.2.have.agreed", { n: "1", total: String(row.votesNeeded) }), "k of m have agreed so far");
   assert.ok(says(e, "screen.project.standdown.takes", { n: String(row.votesNeeded), total: String(row.owners) }), "what it takes, from the live row");

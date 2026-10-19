@@ -386,9 +386,9 @@ function render(cs, view) {
       const total = change && Number.isFinite(Number(change.need)) && Number(change.need) > 0 ? Number(change.need) : need;
       const arithTable = `<table class="mk-table" data-arith="owners"><thead><tr><th>${W("screen.project.scale.head.owners")}</th><th>${W("screen.project.scale.head.takes")}</th><th>${W("screen.project.scale.head.why")}</th></tr></thead><tbody>${table.map((t) => {
         const k = Number(t.owners);
-        const votes = k === 2 ? W("screen.project.2.of.2.the.departing") : k >= 3 ? `${cs.esc(t.votesNeeded)}/${cs.esc(t.owners)}` : "";
-        const why = k === 1 ? W("screen.project.the.last.owner.stays") : k === 2 ? W("screen.project.both.agree.a.resignation.the") : `${cs.esc(t.eligibleVoters)}/${cs.esc(t.owners)}`;
-        return `<tr data-owners="${cs.esc(t.owners)}"${k === n ? " aria-current=\"true\"" : ""}><td>${cs.esc(t.owners)}</td><td>${votes}</td><td>${why}</td></tr>`;
+        const votes = k === 2 ? W("screen.project.2.of.2.the.departing") : k >= 3 ? W("screen.project.scale.takes", { votes: String(t.votesNeeded), owners: String(t.owners) }) : "";
+        const why = k === 1 ? W("screen.project.the.last.owner.stays") : k === 2 ? W("screen.project.both.agree.a.resignation.the") : W("screen.project.scale.who", { voters: String(t.eligibleVoters), owners: String(t.owners) });
+        return `<tr data-owners="${cs.esc(t.owners)}"${k === n ? " aria-current=\"true\"" : ""}><td>${cs.esc(t.owners)}${k === n ? " " + W("screen.project.scale.now") : ""}</td><td>${votes}</td><td>${why}</td></tr>`;
       }).join("")}</tbody></table>`;
       const check = (i, key, fills, meta, why) => `<div data-check="${i}" data-holds="${holds[i - 1] ? "yes" : "no"}">${cs.row(holds[i - 1] ? "✓" : cs.mark("gap", "refused", { reason: why || "" }),
         W(key, fills), "", holds[i - 1] ? meta : "")}</div>`;
@@ -402,7 +402,7 @@ function render(cs, view) {
       const waitLine = change ? `<p class="mk-small" data-pending="remove">${W("project.owners.pending.remove", { who: P.who(cs, standing), by: P.who(cs, change.proposed_by || ""),
         date: dateOf(change.proposed_at), agreed: agreed.map((h) => P.who(cs, h)).join(", "),
         awaiting: (Array.isArray(change.awaiting) ? change.awaiting : seated.map((o) => o.handle).filter((h) => h !== standing && !agreed.includes(String(h)))).map((h) => P.who(cs, h)).join(", ") })}</p>` : "";
-      return cs.sec("screen.project.standdown.heading", `<div id="state-e" data-state-e="votes">${takes}${cs.sheet(voters)}`
+      return cs.sec("screen.project.standdown.heading", `<div id="state-e" data-state-e="votes"><p data-standing="down">${W("screen.project.dev.is.standing.down.as", { member: P.who(cs, leaver) })}</p>${takes}${cs.sheet(voters)}`
           + (count > 0 && total > 0 ? `<p data-agreed="so-far"><b>${W("screen.project.1.of.2.have.agreed", { n: String(count), total: String(total) })}</b></p>` : "") + waitLine
           + (change && change.short === true ? `<p class="cs-gap" data-gap="refused" data-refusal="VOTES_SHORT" role="alert">${W("refusal.VOTES_SHORT")}</p>` : "")
           + `<p class="mk-small">${W("screen.project.how.many.owners.must.agree.explain")} ${W("screen.project.a.count.you.can.check.explain")}</p></div>`)
@@ -426,7 +426,7 @@ function render(cs, view) {
     const rev = revs.length && revs[revs.length - 1] && typeof revs[revs.length - 1].json === "object" && revs[revs.length - 1].json ? revs[revs.length - 1].json : {};
     const tell = "screen.project.notice.heading";
     /* the five levels as the plane states them, each by its key (a table key is an identifier, never a sentence) */
-    const LEVEL = { "Very active": "network-notices.active", Active: "network-notices.level.active", "Some work": "network-notices.some_work",
+    const LEVEL = { "Very active": "network-notices.level.very_active", Active: "network-notices.level.active", "Some work": "network-notices.level.some_work",
       Quiet: "network-notices.level.quiet", Dormant: "network-notices.level.dormant" };
     const STATUS = { open: "network-notices.status.open", stopped: "network-notices.status.stopped", closed: "network-notices.status.closed", lapsed: "network-notices.status.lapsed" };
     const dateOf = (iso) => (iso ? { html: cs.date(String(iso), { year: true }) } : "");
@@ -843,7 +843,8 @@ const words = Object.freeze([
   "screen.project.how.many.owners.must.agree.explain", "screen.project.a.count.you.can.check.explain", "screen.project.1.of.2.have.agreed", "screen.project.agree.dev.stands.down.as", "screen.project.by.standing.down.17.october",
   "screen.project.the.change.waits.for.ana", "screen.project.this.takes.2.of.2", "screen.project.with.two.owners.standing.down",
   ...["heading", "beforevote", "takes", "agreed", "notyet"].map((k) => "screen.project.standdown." + k),
-  ...["owners", "takes", "why"].map((k) => "screen.project.scale.head." + k), "screen.project.ownerstand.required",
+  ...["owners", "takes", "why"].map((k) => "screen.project.scale.head." + k), "screen.project.scale.now", "screen.project.scale.takes", "screen.project.scale.who",
+  "screen.project.dev.is.standing.down.as", "screen.project.ownerstand.required",
   ...["heading", "legend.welcome", "legend.sign", "thenotice", "change", "stop", "lapsed.on", "missed", "your.team.has.two.other", "tell.the.network.we.are", "an.owner.can.publish.a", "it.is.public.and.it", "only.an.owner.can.do",
     "you.sign.it.in.your", "it.names.no.member.only", "what.the.notice.says", "what.the.team.is.working", "one.line.up.to.280",
     "nothing.is.filled.in.from", "a.few.words.more.optional", "one.line.up.to.120", "the.matter.it.belongs.to", "one.line.up.to.120.2",
@@ -856,8 +857,8 @@ const words = Object.freeze([
     "if.you.stop.where.the", "one.line.up.to.280.2", "it.is.published.with.the", "a.change.is.a.new", "a.stop.is.signed.too",
     "neither.removes.what.was.published", "this.project.already.has.an", "change.that.one.or.stop", "the.date.is.before.the",
     "your.teams.public.address.or", "an.administrator.can.finish.setting", "this.project.is.closed", "a.closed.project.can.only"].map((k) => "screen.project.notice." + k),
-  "screen.connect.outward", "network-notices.others_working_welcome", "network-notices.active", "network-notices.some_work",
-  ...["active", "quiet", "dormant"].map((k) => "network-notices.level." + k), ...["open", "stopped", "closed", "lapsed"].map((k) => "network-notices.status." + k),
+  "screen.connect.outward", "network-notices.others_working_welcome",
+  ...["very_active", "active", "some_work", "quiet", "dormant"].map((k) => "network-notices.level." + k), ...["open", "stopped", "closed", "lapsed"].map((k) => "network-notices.status." + k),
   "network-notices.week_counts_holds", "network-notices.counted_assistant_work", "state.item.published.name", "mark.outward.means",
   "mark.gap.refused.name", "mark.gap.refused.means", "shell.icon.clock", "shell.cancel", "signing.ceremony.declined", "conformance.rests", "conformance.falsify",
   ...["NOTICE_ALREADY_OPEN", "NOTICE_NOT_OPEN", "NOTICE_NOT_THE_OWNER", "NOTICE_NO_GROUP_SLUG", "NOTICE_NO_INSTANCE_KEY", "NOTICE_PROJECT_CLOSED",

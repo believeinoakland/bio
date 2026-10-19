@@ -240,7 +240,7 @@ test("R77 an open notice is drawn to an owner as published: its wording, when, s
   assert.equal(pub.querySelector('[data-notice="wording"]').textContent, WORDING);
   assert.ok(says(pub, "state.item.published.name") && pub.textContent.includes(day("2026-10-17")), "published");
   assert.ok(says(pub, "screen.project.notice.working.on.it.since.3", { date: day("2026-10-03") }) && says(pub, "network-notices.others_working_welcome"));
-  assert.equal(pub.querySelector('[data-notice="level"]').textContent, word("network-notices.active"), "the level of the five, in its words");
+  assert.equal(pub.querySelector('[data-notice="level"]').textContent, word("network-notices.level.very_active"), "the level of the five, in its words");
   assert.ok(says(pub, "network-notices.status.open"), "the notice's state, by its key");
   assert.ok(says(s, "screen.project.notice.thenotice"), "the notice's heading");
   assert.ok(says(pub, "screen.project.notice.as.the.teams.civicsmith.worked", { date: day("2026-10-17") }), "as worked out on its date");
@@ -262,8 +262,8 @@ test("R77 an open notice is drawn to an owner as published: its wording, when, s
 
 test("R77 the level words: the five levels by their keys where the list holds them, none composed where it does not; a lapse running, a missed monthly and a case count of none each draw only what the answer holds", async () => {
   const levelOf = async (level) => section(await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ level: { level, as_of: "2026-10-17" } })) } }), TELL).querySelector('[data-notice="level"]');
-  assert.equal((await levelOf("Very active")).textContent, word("network-notices.active"));
-  assert.equal((await levelOf("Some work")).textContent, word("network-notices.some_work"));
+  assert.equal((await levelOf("Very active")).textContent, word("network-notices.level.very_active"));
+  assert.equal((await levelOf("Some work")).textContent, word("network-notices.level.some_work"));
   assert.equal((await levelOf("Active")).textContent, word("network-notices.level.active"));
   assert.equal((await levelOf("Quiet")).textContent, word("network-notices.level.quiet"));
   assert.equal((await levelOf("Dormant")).textContent, word("network-notices.level.dormant"));
@@ -278,7 +278,7 @@ test("R77 the level words: the five levels by their keys where the list holds th
   /* a monthly missed for want of a key: the last attested level with its date stands, marked */
   const missed = await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ missed_monthlies: [{ month: "2026-11", at: "2026-11-01T00:00:00Z" }] })) } });
   assert.equal(section(missed, TELL).querySelector('[data-notice="published"]').getAttribute("data-missed"), "1");
-  assert.ok(says(section(missed, TELL), "screen.project.notice.missed", { level: word("network-notices.active"), date: day("2026-10-17") }), "the missed check, with the last level attested and its date");
+  assert.ok(says(section(missed, TELL), "screen.project.notice.missed", { level: word("network-notices.level.very_active"), date: day("2026-10-17") }), "the missed check, with the last level attested and its date");
   assert.ok(!section(lapsing, TELL).querySelector('[data-notice="missed"]'), "control: no missed line when none was missed");
   assert.ok(says(section(missed, TELL), "screen.project.notice.as.the.teams.civicsmith.worked", { date: day("2026-10-17") }));
 });
