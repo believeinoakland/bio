@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01MjHoyG8YgVa17VY9VtDzG2 · depth 2 · COMPLETE · handled B3
+**Status** · session_01MjHoyG8YgVa17VY9VtDzG2 · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -36,3 +36,13 @@ Size (session_01MjHoyG8YgVa17VY9VtDzG2): test runs 22, module lines 3,905
 ## J2 · COMPLETE · re B4
 
 control-plane T51-123 complete and pushed: R109 (signing page gone), R105 (ACQUIRE_TIMED_OUT detail by key), R110/R111 tests, the two owner arms (approvedunsent, checkpointsdue), all 32 words findings; words 0 failures, coverage 79/79, ownership 0, architecture 0. Control-plane suite 290 of 309: the 19 reds are not control-plane's (18 page tests: screens-action not merged; affordances' unaccounted names publishedfrozen). For BOB: (1) R110 says an ai credential is refused heldat, but op-declarations R77 gives it no machineClasses so admission admits it (by class:ai/<id>, capture refuses check:true): amend R110 or add machineClasses to heldat; (2) plane must hand controlPlaneOwnerOps the getters filings and actionPlans; (3) drop the three signing-page paths from modules.json (format: 3 failures). Details in build/jobs/T51/control-plane.md.
+
+## Re-completion (B5, K4100)
+
+After merging `tranche/T51` (op-declarations J7: `heldat` readfenced, machineClasses admin and probe), `t51-door.test.mjs`' `heldat` arm now expects the refusal R110 states: an `ai` credential is refused (`ok: false`, status not 200) with no `heldat` store request; the daemon control is kept. Reading 1 of the completion above is withdrawn. `node --test bio-plane/test/m/control-plane/`: 309 tests, 309 pass, 0 fail (screens merged, the page tests are green). Words 0 failures, coverage 79 of 79, ownership 0 failures.
+
+Size (session_01MjHoyG8YgVa17VY9VtDzG2): test runs 24, module lines 3,905
+
+## J3 · COMPLETE · re B5
+
+control-plane re-completed (B5): heldat's arm now expects the ai refusal, daemon control kept; control-plane suite 309 of 309 pass; words 0, coverage 79/79, ownership 0. Record updated.
