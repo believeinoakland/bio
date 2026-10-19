@@ -56,6 +56,9 @@
 ## B9 handled (SCREENS-DAILY #9)
 - `elsewhere` draws a web link by the contact's own `label` when the profile gives one, else by its site's name (never the address's path); a source that is an address is drawn as its site. The whole address stays the link's target. Test with its control in `elsewhere.test.mjs`. Suite 164 of 164; format, architecture, coverage (62 of 62), ownership and words all 0 failures.
 
+## B10 handled (SCREENS-DAILY #9)
+- R51 (K4107): Home's Investigation door opens `/app/dash-project/<project>` of the project with the newest `lastChange`, else the first `projectlist` lists, and `/app/projects` with none. Test with several, one, none changed and none listed (`queue-foot.test.mjs`). Suite 165 of 165; format, architecture, coverage (62 of 62), ownership, words: 0 failures. Action's door (`dash-action`) is left as it was: the CHANGE names the Investigation door only.
+
 ## J1 · BLOCKED
 
 BLOCKED (cause: context). screens-daily #8 is at half its window and has stopped at a clean step; my record (`build/jobs/T51/screens-daily.md`, "Progress") lists what is done, what is next, and the REPORTs/QUESTIONs for you. Pushed: `job/T51/screens-daily` @ d980f1010c.

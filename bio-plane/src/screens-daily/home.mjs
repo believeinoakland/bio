@@ -308,7 +308,9 @@ export const home = Object.freeze({
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const actionGroup = forGroup.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const more = view.parts.homeReadings(cs, view, { ok: ok, failed: failed, rd: rd, projects: plist, admin: admin });
-    const investigation = area("investigation", "/app/dash-project",
+    // R51 (K4107): `dash-project` is a subject screen, so the door names a project: the newest changed, else the first listed; with none, `projects`.
+    const dashOf = latest || plist[0];
+    const investigation = area("investigation", dashOf ? "/app/dash-project/" + encodeURIComponent(String(dashOf.id)) : "/app/projects",
       forMe.filter(function (it) { return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready"; }).length + invited.length,
       [rd(plist.length, "screen.home.rd.project", "screen.home.rd.projects"), rd(counted, "screen.home.rd.question", "screen.home.rd.questions")].concat(more.investigation.rds),
       (latest ? [cs.w("screen.home.line.lastchange", { project: { html: cs.ref("project", String(latest.id), String(latest.name || latest.id), []) }, date: { html: cs.date(String(latest.lastChange)) } })] : []).concat(more.investigation.lines),
