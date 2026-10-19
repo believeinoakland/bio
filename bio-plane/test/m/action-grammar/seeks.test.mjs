@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as AG from "../../../src/action-grammar/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { pushed, GROWN_COUNTS, ZONE } from "./fixture.mjs";
 import { NOW, TODAY } from "./corpus.mjs";
 
@@ -99,7 +100,7 @@ test("R13: seeksFindings pushes nothing for well-formed seeks whose every stage 
 test("R13: seeks on another kind than records_request is one finding, and nothing more is asked of it; negative control: the same seeks on a records request is clean", () => {
   for (const kind of ["other", "request_for_comment", "cpra_request", "bylaw_complaint", undefined]) {
     const got = seeks([ITEM, null, ITEM], FACTS, { action_kind: kind }).findings;
-    assert.deepEqual(got, [finding(`seeks is stated on a '${String(kind)}' action: only a records_request names the stages it asks the records for (R13)`,
+    assert.deepEqual(got, [finding(localize("action-grammar.checks.seeks_is_stated_on_a", "seeks is stated on a '{String}' action: only a records_request names the stages it asks the records for (R13)", { String: String(kind) }),
       ["remove seeks, or make the kind records_request"])], String(kind));
   }
   assert.deepEqual(seeks([ITEM]).findings, []);
@@ -177,9 +178,7 @@ test("R13: an item whose stage facts says its progression does not declare is on
 test("R13: every finding is C-117.29 SEEKS_REFUSED's: the row is held in ACTION_CATALOGUE_CHECKS, its where names seeksFindings in this module, and its translation names no op, ruling, check number or place", () => {
   assert.deepEqual(ROW, {
     check: "C-117.29", where: "src/action-grammar/checks.mjs seeksFindings > is-seeks",
-    translation: "A records request may name the stages it asks the records for: one to twelve different entries, each naming a "
-      + "progression, an entity and a stage in at most 200 characters each, and each stage one its progression declares. Only a "
-      + "records request names them. This write named them otherwise, so nothing was written.",
+    translation: word("refusal.SEEKS_REFUSED"),
   });
   /* the function its where names is this module's export, and it is the one that pushes the row's findings (below) */
   assert.equal(typeof AG.seeksFindings, "function");
@@ -213,9 +212,7 @@ test("R14: the row C-32.21 MACHINE_CANNOT_STATE_SEEKS is held in RECORDS_LAW_FEN
   assert.deepEqual(Object.keys(row), ["check", "where", "translation"]);
   assert.equal(row.check, "C-32.21");
   assert.equal(row.where, "src/actions/index.mjs #seeksFence > is-machine-state-seeks");
-  assert.equal(row.translation, "Which stages a records request asks the records for is a statement a member makes and answers for. "
-    + "The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to "
-    + "consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself.");
+  assert.equal(row.translation, word("refusal.MACHINE_CANNOT_STATE_SEEKS"));
   assert.match(row.translation, /automated/);
   assert.match(row.translation, /no member is named/);
   assert.match(row.translation, /propose/);

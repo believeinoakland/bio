@@ -204,7 +204,7 @@ export function seeksFindings(fm, facts, findings) {
     return;
   }
   if (!Array.isArray(fm.seeks) || !fm.seeks.length) {
-    push(`seeks is not a list of 1 to ${SEEKS_MAX} {progression, entity, stage} entries (R13)`);
+    push(localize('action-grammar.checks.seeks_is_not_a_list_of', 'seeks is not a list of 1 to {SEEKS_MAX} {progression, entity, stage} entries (R13)', { SEEKS_MAX: String(SEEKS_MAX) }));
     return;
   }
   if (fm.seeks.length > SEEKS_MAX)
@@ -410,8 +410,7 @@ export function governingLawsOf(fm) {
      names no law itself (no outward text of this module names one). */
   const kindNames = fm && fm.action_kind === 'cpra_request';
   return { state: 'undetermined', laws: [], by: null, at: null,
-           stated: word('action-grammar.undetermined_member_stated', { value: String(kindNames ? ' This action\'s kind, as written, named the records law it was made under; the '
-                              + 'record names no law from it, and nothing else is inferred from the kind.' : '') }) };
+           stated: word('action-grammar.undetermined_member_stated', { value: kindNames ? localize('action-grammar.checks.kind_as_written_named', ' This action\'s kind, as written, named the records law it was made under; the record names no law from it, and nothing else is inferred from the kind.') : '' }) };
 }
 
 /** D-149: C-2.10's governing-law arm. Judges the SHAPE of `governing_laws[]` and the coherence of its
@@ -509,9 +508,9 @@ export const LAW_PROPOSAL_WHY_MAX = 240;
  *  anyone. */
 const COUNTERPARTY_STATES = ['named', 'audience', 'undetermined'];
 /* The one placeholder, compared case-folded and trimmed. It is the exact string
-   `mdFor` wrote in `civicos-ui/app.html` and `src/setup.mjs` until this item
-   deleted it, so a bundle carrying it was written by a machine that had no
-   counterparty and said one anyway. */
+   `mdFor` wrote in `civicos-ui/app.html` and `src/setup.mjs` until it was
+   deleted from both, so a bundle carrying it was written by a machine that had
+   no counterparty and said one anyway. */
 const COUNTERPARTY_PLACEHOLDER = word('action-grammar.named');
 /** REC-24 (g): WHAT A `responds_to` EDGE MUST CARRY, written as
  *  supersedesEdgeFindings' twin and for its stated reason — the first PRODUCER
@@ -628,7 +627,7 @@ export function counterpartyFindings(fm, findings) {
     }
     if (entityId && !ENTITY_ID_RE.test(entityId))
       findings.push(f('C-2.10', 'error',
-        `counterparty.entity_id '${entityId.slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        localize('action-grammar.checks.counterparty_entity_id_string_is', "counterparty.entity_id '{String}' is not a subject registry key (ENT-YYYY-NNNN)", { String: entityId.slice(0, 40) }),
         ['point entity_id at the office in the subject registry, or omit it: it is optional']));
     holderFindings(cp, kind, findings, REPAIRS);
   } else if (cp.state === 'audience') {
@@ -793,11 +792,7 @@ export function consequenceState(fm) {
   if (!evidence.length) {
     return { claim, state: 'unproven', determined: false, grade: null, evidence: [],
              description, at,
-             detail: 'UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so '
-                   + 'the causal link is asserted from sequence alone. That is not a low score and not a '
-                   + 'failure — it is what we have not established. Cite something outside us (a statement '
-                   + 'naming the report, a staff memo, a hearing record) and it becomes a claim like any '
-                   + 'other (DEC-14).' };
+             detail: localize('action-grammar.checks.unproven_this_action_claims_impact', 'UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so the causal link is asserted from sequence alone. That is not a low score and not a failure — it is what we have not established. Cite something outside us (a statement naming the report, a staff memo, a hearing record) and it becomes a claim like any other (DEC-14).') };
   }
   return { claim, state: 'established', determined: true, grade: null, evidence,
            description, at,
@@ -1082,12 +1077,12 @@ export function bearingFindings(claims, legTargets, findings) {
   const refused = (message) => findings.push(coded(message, 'BEARING_REFUSED',
     [localize('action-grammar.checks.lay_the_reply_out_once', 'lay the reply out once per claim the action put, each with one of: {BEARINGS}', { BEARINGS: String(BEARINGS.join(', ')) })]));
   if (!Array.isArray(claims) || !claims.length || claims.length > BEARING_CLAIMS_MAX) {
-    refused(`claims is not a list of 1 to ${BEARING_CLAIMS_MAX} {claim, bearing, note?} entries (R24)`); return;
+    refused(localize('action-grammar.checks.claims_is_not_a_list_of', 'claims is not a list of 1 to {BEARING_CLAIMS_MAX} {claim, bearing, note?} entries (R24)', { BEARING_CLAIMS_MAX: String(BEARING_CLAIMS_MAX) })); return;
   }
   const seen = new Set();
   claims.forEach((c, i) => {
     const at = `claims[${i}]`;
-    if (!isBlock(c) || extraKeys(c, ['claim', 'bearing', 'note']).length) { refused(`${at} is not a {claim, bearing, note?} entry (R24)`); return; }
+    if (!isBlock(c) || extraKeys(c, ['claim', 'bearing', 'note']).length) { refused(localize('action-grammar.checks.claims_i_is_not_a', '{at} is not a {claim, bearing, note?} entry (R24)', { at })); return; }
     if (typeof c.claim !== 'string' || !legs.includes(c.claim)) { refused(localize('action-grammar.checks.at_claim_string_is_not', '{at}.claim \'{String}\' is not one of the action\'s legs (R24)', { at: String(at), String: String(String(c.claim ?? '').slice(0, 60)) })); return; }
     if (seen.has(c.claim)) { refused(localize('action-grammar.checks.at_repeats_the_claim_claim', '{at} repeats the claim \'{claim}\' (R24)', { at: String(at), claim: String(c.claim.slice(0, 60)) })); return; }
     seen.add(c.claim);
@@ -1184,7 +1179,7 @@ export function checkActionExtension(ctx, findings) {
     /* R7 (T45; N882; Actions D15): who owes the date, when stated; absent reads undetermined, never defaulted. */
     if (e.owed_by !== undefined && e.owed_by !== null && !CLOCK_OWED_BY.includes(e.owed_by))
       findings.push(f('C-11.1', 'error', `clock[${i}].owed_by '${String(e.owed_by).slice(0, 40)}' is not one of: ${CLOCK_OWED_BY.join(', ')}`,
-        ['state who owes the date: the team, the body, or undetermined']));
+        [localize('action-grammar.checks.state_who_owes_the_date', 'state who owes the date: the team, the body, or undetermined')]));
     if (today && DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
       findings.push(f('C-11.1', 'error', `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
         ['mark overdue', 'mark met', 'mark waived with reason']));
@@ -1421,8 +1416,7 @@ export const LIFECYCLE_CHECKS = {
   FEE_ESTIMATE_WITHOUT_QUOTE: {
     check: 'C-94.7',
     where: 'src/actions/index.mjs actionCorrespond > is-lifecycle-grammar',
-    translation: 'A fee estimate is a quote: record the amount and the currency as quoted, and the request it '
-      + 'answers.',
+    translation: word('refusal.FEE_ESTIMATE_WITHOUT_QUOTE'),
   },
   DUE_HALF_STATED: {
     check: 'C-94.8',
@@ -1448,9 +1442,7 @@ export const LIFECYCLE_CHECKS = {
   LIFECYCLE_TOKEN_MALFORMED: {
     check: 'C-94.12',
     where: 'src/actions/index.mjs actionCorrespond > is-lifecycle-token',
-    translation: 'A stage, the entry it follows, an outcome and a due date are each written as one short token of '
-      + 'lower-case letters, digits, underscores or hyphens, at most forty characters. One of them was not, so '
-      + 'nothing was written.',
+    translation: word('refusal.LIFECYCLE_TOKEN_MALFORMED'),
   },
 };
 
@@ -1679,9 +1671,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   PRESSURE_REFUSED: {
     check: 'C-117.15',
     where: 'src/actions/index.mjs #pressureRefusal > is-pressure',
-    translation: 'A pressure mark says which kind it is (legal, retaliation, discrediting or other) and carries a note '
-      + 'of up to 500 characters with no quotation mark, backslash or line break. This one did not, so nothing was '
-      + 'written.',
+    translation: word('refusal.PRESSURE_REFUSED'),
   },
   PRESSURE_NOT_RECEIVED: {
     check: 'C-117.16',
