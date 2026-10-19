@@ -18,9 +18,11 @@ const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session
 /* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
 const DOOR = { source: "src-test", country: null };
 /* (T41; R70, R72) `handlechange` and `captureupload` too: membership and capture compare the bare member id */
+/* membership's roster acts (its family's kind `roster`), plus its own-handle change and the administrator's read of the two doors
+   (R54), and capture's own acts; membership's other `by` ops (`lookedsince`, `lookedat`) take the expression */
 const MEMBER_ID_BY = [
-  ...Object.entries(O.OP_FAMILIES.membership.kinds).filter(([, kind]) => ["own", "roster", "ownread"].includes(kind)).map(([op]) => op),
-  ...O.OP_FAMILIES.capture.acts];
+  ...Object.entries(O.OP_FAMILIES.membership.kinds).filter(([, kind]) => kind === "roster").map(([op]) => op),
+  "handlechange", "joindoors", ...O.OP_FAMILIES.capture.acts];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,

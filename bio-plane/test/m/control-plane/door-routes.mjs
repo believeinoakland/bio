@@ -40,7 +40,7 @@ export async function routesForSessions(ops, bodyOf, { refuseMachines = () => tr
       assert.equal(inner.length, 1, `${op}/${s.name}`);
       assert.equal(inner[0].ns, "bio");
       for (const k of ["viewer", "by"]) {
-        if (declared.includes(k)) assert.equal(inner[0].params[k], s[k], `${op}/${s.name}: ${k} stamped from the session`);
+        if (declared.includes(k)) assert.equal(inner[0].params[k], s[k], `${op}/${s.name}: ${k} is the session's own`);
         else assert.equal(Object.hasOwn(inner[0].params, k), false, `${op}/${s.name}: ${k} not declared, not passed`);
       }
       for (const k of ["author", "identity"])

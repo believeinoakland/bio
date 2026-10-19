@@ -121,7 +121,6 @@ test("R57 (wizard-scripts R25; DEC-153 (2)): the door checks the draft before th
 
 test("R57, R99 (T51; K3962): a group draft whose checked field is over its limit (focus 1,000, purpose 4,000 characters) is answered 409 ASSISTANT_DRAFT_UNAVAILABLE with nothing drafted, its `detail` the code's `localize` sentence with the field named; control: a draft inside the limits is answered whole", async () => {
   const { checkedDraft } = await import("../../../src/control-plane/draft.mjs");
-  const { localize } = await import("../../../src/setup-words/index.mjs");
   const long = "Tenants. ".repeat(130).trim();   /* over 1,000 characters */
   const ask = { op: "groupdescriptiondraft", told: [long, "Tenants."], firsthand: false };
   const drafted = (focus) => ({ ok: true, draft: { focus, purpose: "Tenants." }, suggestions: false, read: [] });
@@ -129,8 +128,13 @@ test("R57, R99 (T51; K3962): a group draft whose checked field is over its limit
   assert.equal(over.status, 409);
   assert.equal(over.body.ok, false);
   assert.equal(over.body.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
-  assert.equal(over.body.detail, localize("control-plane.draft.draft_over_limit",
-    "the draft's {field} is over its limit, so nothing was drafted and the fields are as they were.", { field: "focus" }));
+  /* the sentence is the code's `localize` row (a test never holds its text, K3810): it names the field, one sentence per field */
+  assert.equal(typeof over.body.detail, "string");
+  assert.ok(over.body.detail.includes("focus"));
+  const overPurpose = checkedDraft({ ...ask, told: ["Tenants.", "x ".repeat(2100).trim()] },
+    { ok: true, draft: { focus: "Tenants.", purpose: "x ".repeat(2100).trim() }, suggestions: false, read: [] }, 200, "member:ann");
+  assert.equal(overPurpose.status, 409);
+  assert.ok(overPurpose.body.detail.includes("purpose") && !overPurpose.body.detail.includes("focus"));
   const within = checkedDraft(ask, drafted("Tenants."), 200, "member:ann");
   assert.equal(within.status, 200);
   assert.equal(within.body.ok, true);

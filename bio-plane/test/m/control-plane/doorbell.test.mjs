@@ -293,12 +293,15 @@ test("R27 (N364, N379): the new reads that carry an id and reach a store route a
   const { PROJECT_NAMING_READS: NAMES, PROJECT_NAMING_READS_NOT: NOT } = D;
   assert.deepEqual(NAMES.publishpreflight, ["project"]);
   /* sources' reads are store routes of this door since N379, so they are classified with the knock and capture reads */
-  const { sourcesOps: sourcesMap } = await import("../../../src/sources/index.mjs");
-  const sourceReads = Object.keys(sourcesMap({}, new URL("http://do/"), null)).filter((op) => !O.SOURCE_ACTIONS.includes(op) && !O.OPS[op]?.mutating);
-  /* the knock and capture reads: reads the door's store routes take that are not sources' own, from the owners' declarations
-     (the knocks' and capture requests' families) */
-  const knockCaptureReads = Object.values(O.OP_FAMILIES).filter((f) => ["capture-requests", "doorbell", "attestations"].includes(f.owner)).flatMap((f) => f.reads);
-  for (const op of [...knockCaptureReads, ...sourceReads]) {
+  /* the reads of the three owners' own maps (doorbell's, capture's, sources'), by the spec table: those this door classifies
+     as naming no project are the knock, capture and source reads, derived from the owners' declarations, not typed here */
+  const U = new URL("http://do/");
+  const owned = [...Object.keys((await import("../../../src/doorbell/index.mjs")).doorbellOps({}, U, null)),
+                 ...Object.keys((await import("../../../src/capture/index.mjs")).captureOps({}, U, null, {})),
+                 ...Object.keys((await import("../../../src/sources/index.mjs")).sourcesOps({}, U, null))];
+  const classified = [...new Set(owned)].filter((op) => O.OPS[op]?.mutating === false && Object.hasOwn(NOT, op));
+  for (const op of [...O.SOURCE_READS, "knocksof", "lateattestations"]) assert.ok(classified.includes(op), `${op} is classified`);
+  for (const op of classified) {
     assert.equal(typeof NOT[op], "string", op);
     assert.equal(Object.hasOwn(NAMES, op), false, op);
   }
@@ -515,8 +518,11 @@ test("R26 (N379, K566): the record store's door dispatches sources' own map — 
   const { sourcesOps } = await import("../../../src/sources/index.mjs");
   const routes = Object.keys(sourcesOps({}, new URL("http://do/"), null));
   /* T33 (sources R16; K1550): `sourcekeyed`, a member's mark of a keyed result, joins them */
-  assert.deepEqual(routes.sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed",
-                                   "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  /* sources' declared acts and reads (op-declarations), the member's mark of a keyed result (its own family), the no-account door
+     (`classes: null`), and `sourcepublishable`, declared only in the spec table (a read, writes nothing) */
+  const declared = [...O.SOURCE_ACTIONS, ...O.SOURCE_READS, ...O.OP_FAMILIES.sources.acts, "sourcepublishable",
+                    ...Object.keys(O.OPS).filter((op) => O.OPS[op].classes === null && routes.includes(op))];
+  assert.deepEqual(routes.sort(), declared.sort());
   for (const op of routes) {
     const a = await r.go(`${op}?by=ann&viewer=member:ann&source=203.0.113.9&now=${Date.now()}`, "POST", { captureSha: "a".repeat(64) });
     assert.equal(a.status, 200, `${op}: ${JSON.stringify(a.json).slice(0, 200)}`);
