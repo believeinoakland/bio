@@ -49,3 +49,7 @@ CHANGE B2 applied: publicOp hands bootstrapOp the resolved admin caller; door.te
 - Merged `tranche/T51`. control-plane's change (the owner arms) is not on the tranche yet: with `origin/job/T51/control-plane` merged uncommitted (then aborted) the suite is 266/266 after the door.test fix; on the tranche alone two tests fail until it merges (the new one, and `op=sweeps` link-sweep R5, which control-plane's change also fixes). You merge plane after control-plane.
 - Checks: format, architecture, coverage 66/66, words: 0 failures.
 - Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 10, module lines 2308
+
+## J3 · COMPLETE
+
+CHANGE B3 applied: filings and actionPlans getters handed to controlPlaneOwnerOps; both ops answer through the plane. 266/266 with control-plane's branch merged uncommitted; on the tranche alone 2 tests wait for control-plane to merge (merge it first).
