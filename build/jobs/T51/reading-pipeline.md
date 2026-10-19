@@ -70,3 +70,13 @@ COMPLETE: T51-190 (reading-pipeline words pass), applied on B3's answer (K3987).
 **Tests and checks:** `node --test test/m/reading-pipeline/*.test.mjs test/m/extraction/read.test.mjs`: `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding each `pass 1, fail 0`; tier-pagewise probe exit 0. `format`: `0 failures`; `architecture`: `0 failures`; `coverage`: `34 of 34 live requirement ids named; 0 failures`; `ownership`: `0 failures`; `checks/run.mjs`: no line naming reading-pipeline.
 
 Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 6, module lines 1795
+
+## J4 · COMPLETE
+
+COMPLETE (B4, K3989): the member-readable literals are keyed. `tranche/T51` merged into the branch.
+
+`localize` ids added in `index.mjs`: `reading-pipeline.index.pages_not_asked_request` (tier3LoopNote's not-asked sentence, with count, pages, limit), `.ai_declined`, `.ai_reading_label` (the exported `AI_READING_LABEL`, English unchanged), `.placement_not_read` (`images_why`), `.reading_not_composed`, `.no_capture_digest`, `.bytes_not_held`, `.entry_no_text`, `.entry_not_read_bytes`, `.document_not_read_text` with `.multipart` and `.non_textual_large` for its reason. English unchanged. No test held these sentences, so no test changed. Left as is: `LAYER_FIDELITY_SOURCE`, `NAMED_ENGINE_SOURCE`, `AI_TRANSCRIPTION_SOURCE` (stored chain text, signed grammar, K1333), `refused` fallback in `refusalSays` (a code, not a sentence).
+
+Checks: `checks/words.mjs` for the module `inline 0, plain 0, testcopy 0, unkeyed 0; 0 failures`; module tests `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding `pass 1, fail 0` each; probe exit 0; format, architecture, coverage (34 of 34), ownership `0 failures`; `checks/run.mjs` names nothing in reading-pipeline. `rows.mjs` is stale for the new `reading-pipeline.index.*` ids (expected).
+
+Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 9, module lines 1800
