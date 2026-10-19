@@ -718,6 +718,20 @@
     "text": "an image past the memory bound",
     "why": "a codec mapping key, not a sentence (B343, PDF-PIXELS #6 J1)"
    }
+  ],
+  "capture": [
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 699,
+    "text": "the incremental hash and the block hash of the same bytes differ",
+    "why": "a builder's diagnostic on a 500 internal fault, never shown to a member (B346, CAPTURE #37 J2)"
+   },
+   {
+    "file": "bio-plane/src/capture/index.mjs",
+    "line": 1832,
+    "text": "no reservation was offered, and an unreserved admission is the overrun D-492 closed",
+    "why": "the render allowance's internal decision reference, never shown to a member (B346, CAPTURE #37 J3)"
+   }
   ]
  }
 }
