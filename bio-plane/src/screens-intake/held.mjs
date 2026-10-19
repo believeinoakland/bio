@@ -6,7 +6,9 @@
 function heldReads() {
   return { held: { op: "heldcaptures", query: { limit: 50 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
-           aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+           aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+           /* R40 (membership R17, R147): the handles an upload's uploader is named by; the stamp names a member by id */
+           members: { op: "memberlist" } };
 }
 
 function renderHeld(cs, view) {
@@ -46,17 +48,21 @@ function renderHeld(cs, view) {
         + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>" : "")
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
   };
-  /* R35 (N1185; DEC-299 (8); DEC-323): an upload's row names who uploaded it and when, never `upload:<hex>`, and its size by
-     `size.kb` / `size.mb` / `size.small`, after the uploader in the same row. The uploader and the size are what the row
-     answers (`capture.actor`, `capture.bytes`); a row answering none draws neither. */
+  /* R35, R40 (N1185, N1235; DEC-299 (8); DEC-323): an upload's row names who uploaded it and when, never `upload:<hex>`, and its size
+     by `size.kb` / `size.mb` / `size.small`, after the uploader in the same row. The uploader, the day and the size are the row's
+     own `actor`, `retrieved` and `bytes` (`capture` R77); the uploader is named by the handle `memberlist` gives for the stamp's
+     member (its `member:` prefix removed), never by the id; a row answering none of them draws none. */
+  const roster = view.data.members && view.data.members.state === "ok" && view.data.members.value && Array.isArray(view.data.members.value.members)
+    ? view.data.members.value.members : [];
   const source = (r) => {
     const s = r.source;
     if (!s || !s.address) return "";
     if (!(s.via === "upload" || /^upload:/.test(String(s.address)))) return ` · ${cs.w("screen.held.from", { address: s.address })}`;
-    const c = r.capture || {}, who = String(c.actor || c.by || r.uploaded_by || "").replace(/^member:/, "");
-    const n = Number.isFinite(c.bytes) ? c.bytes : Number.isFinite(r.bytes) ? r.bytes : null;
+    const id = typeof r.actor === "string" ? r.actor.replace(/^member:/, "") : "";
+    const handle = id ? ((roster.find((m) => m && m.member_id === id) || {}).handle || "") : "";
+    const n = Number.isFinite(r.bytes) ? r.bytes : null;
     const size = n === null ? "" : n < 1024 ? cs.w("size.small") : n >= 1048576 ? cs.w("size.mb", { n: (n / 1048576).toFixed(1) }) : cs.w("size.kb", { n: String(Math.round(n / 1024)) });
-    const by = who ? cs.w("document.uploaded.by", { member: who, date: { html: r.collected_since ? cs.date(r.collected_since) : "" } }) : "";
+    const by = handle && r.retrieved ? cs.w("document.uploaded.by", { member: handle, date: { html: cs.date(r.retrieved) } }) : "";
     return by || size ? ` · ${[by, size].filter(Boolean).join(" · ")}` : "";
   };
   /* R11 (capture R77's `capture`): the row's grade as one mark, as provenance states it (a received or authored capture
