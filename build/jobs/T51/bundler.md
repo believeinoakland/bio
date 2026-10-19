@@ -150,3 +150,13 @@ Other modules, found by checks/run.mjs (not changed here; described against thei
 - words: 15 inline findings, all in instance-setup (12) and promotion (3).
 - Consumer: installer-steps' MEMBER_OBJECTS can go once the release carries agent-worker's Durable Objects (BOB's note 1). The installer's workerDescriptor already reads the new durable_objects field (F10).
 - Release output changes at the next cut: agent-worker gains a signed worker.json; agent-runner and file-scanner parts gain durable_objects.
+
+## J8 · COMPLETE
+
+CR-15 · bundler is done; it is pushed to job/T51/bundler (d8666b580e).
+
+Applied: (K4011) the R38 real-fleet arm skips a member whose build records no word table only when no setup-words rows input is bundled, so the arm fails for a member that reads the table and records none; (K4073) the deleted embed-signpage.mjs reference is gone from the fleet-bundle header; (K4094) workerPart states the member's own Durable Objects and migrations as durable_objects {bindings, migrations}, cross-script bindings left out, other shapes refused by name. Two new R25 tests; the existing tests pass unchanged. Nothing deferred.
+
+Tests: bundler, release, and the four bundler system files, 0 failures. format 0; architecture 0; coverage 38 of 38; ownership 0. checks/run.mjs shows only other modules' findings (in the REPORT).
+
+Record: build/jobs/T51/bundler.md. Size (session_01Gz6er9hUWEo63Fj3mY19bH): test runs 5, module lines 4024.
