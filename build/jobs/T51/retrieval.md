@@ -99,3 +99,11 @@ T51-203 retrieval (words) complete. Applied: the 1 handlist and 19 plain finding
 Tests: node --test over bio-plane/test/m/retrieval: 167 of 167 pass. citation recorded.test: 12 of 12. Checks: architecture 0 failures; format 0; coverage 79 of 79 ids; ownership 0 failures; words for retrieval: 0 testcopy, 0 handlist, 0 missingkey, 0 marker, 15 plain (REPORTed); setup-words --check: rows.mjs stale, the expected note, no refusal naming retrieval.
 
 Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 6, module lines 2924
+
+## Completion (B6, K4002)
+
+Localized through `localize`, each `en` byte-identical to its text: the refusal details at `index.mjs` 1248, 1252, 1257, 1329/1348 (one id, `retrieval.index.selection_readable_by_credential`), 1350, 1471, and the registration details 296 and 405; `NO_FTS_ID`'s detail at 1073. `search.test.mjs` compares that detail with `localize` by equality. The five start-up registration sentences (293, 306, 318, 331, 367) are left as B6 (2) says.
+
+Tests: `bio-plane/test/m/retrieval/`, 167 of 167 pass; citation `recorded.test.mjs`, 12 of 12. Checks: words for retrieval shows only the five registration sentences; architecture 0 failures; format 0; coverage 79 of 79; `setup-words --check` names no retrieval refusal (rows stale, expected); ownership re-run below.
+
+Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924

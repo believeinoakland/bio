@@ -166,7 +166,7 @@ test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visi
   assert.equal(bad.ok, false);
   assert.deepEqual(bad.findings.map((f) => [f.bundleId, f.finding]),
     [["INFO-1", "NO_FTS_ID"], ["INFO-2", "NO_INDEX_ROW"], ["INFO-3", "DIVERGED"]]);
-  assert.equal(bad.findings[0].detail, "the record has no text index key");
+  assert.equal(bad.findings[0].detail, localize("retrieval.index.record_no_text_index_key", "the record has no text index key"));
   const div = bad.findings[2];
   assert.deepEqual(div.columns, ["body"]);
   assert.deepEqual(div.chars.body[0], "tampered".length);
