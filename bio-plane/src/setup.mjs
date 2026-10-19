@@ -43,8 +43,8 @@ import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
 import { isMachineIdentity } from "./record-grammar/index.mjs";
-/* R94 (T50; N1084): the translation workspace is `translations`'; this module keeps its delegates, the registration of the
-   member's language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
+/* R94 (T50; N1084; CR-12): the translation workspace is `translations'`; this module keeps one delegate (`readingLanguage`),
+   the registration of the member's language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
 import { translationsOf } from "./translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "./translations/checks.mjs";
 /* R76 (T45; grammar doubt 11): whether a records law's stages are stages of a records request is action-grammar's check
@@ -2411,9 +2411,9 @@ export class InstanceSetup {
 
 
   /* =====================================================================
-   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696). These delegates answer what it answers, as
-   * given, for the callers that have not re-pointed (`store-door`'s `translationdraft` route, the plane's draft door, the
-   * nine routes below); each goes when its last caller does. The workspace's code, tables and rows are its own.
+   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696). One delegate remains, for the caller that has
+   * not re-pointed (the plane's `ask`, reading the member's language, `plane/ask.mjs`); it goes when that caller does.
+   * The workspace's code, tables, rows and routes are `translations`' own.
    * ===================================================================== */
 
   /* R94: `translations`' one instance on this storage, built over this module's own record, membership, ai-accounts,
@@ -2435,17 +2435,7 @@ export class InstanceSetup {
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
     return this.#languageRegistered;
   }
-  translationDraftRefusal(a) { return this.#translations().translationDraftRefusal(a); }
-  translationDraft(a) { return this.#translations().translationDraft(a); }
   readingLanguage(a) { return this.#translations().readingLanguage(a); }
-  translationDraftRecord(a) { return this.#translations().translationDraftRecord(a); }
-  translationGrant(a) { return this.#translations().translationGrant(a); }
-  translationAdopt(a) { return this.#translations().translationAdopt(a); }
-  translationConfirm(a) { return this.#translations().translationConfirm(a); }
-  translationRevert(a) { return this.#translations().translationRevert(a); }
-  translationMark(a) { return this.#translations().translationMark(a); }
-  translations(a) { return this.#translations().translations(a); }
-  interfaceWords(a) { return this.#translations().interfaceWords(a); }
 
   /* =====================================================================
    * UPDATES OF THE GROUP'S CIVICSMITH (R88–R91; T48; N1047; K3158, Bob's; DEC-226; K3189; `build/plan/draft-updates.md`).
@@ -2613,21 +2603,13 @@ export class InstanceSetup {
     return {
       team_name: text(() => this.groupIdentityPublic().display_name),
       installed_at: text(() => this.#runningOut().installed_at),
-      last_used_at: text(() => this.#lastActivity()),
+      last_used_at: text(() => this.#credentials().lastActivity()),
       count_projects: count(() => this.#countProjects()),
       count_documents: count(() => (this.#deps.provenance ?? provenanceOf(this.#ctx)).counts(null).register),
       count_published: count(() => { const l = this.#publicRead().publishedList(); return Array.isArray(l && l.cases) ? l.cases.length : null; }),
       count_members: count(() => { const l = this.#membership().memberList({ administer: false });
         return Array.isArray(l && l.members) ? l.members.filter((x) => x && x.status === "active").length : null; }),
     };
-  }
-  /* R95: the newest `last_active` of any session `credentials` holds (its R65: activity is any request not marked
-     background), as an instant; null when none is held or none has recorded one. `credentials` answers no such read, so
-     its table is read here, read only. */
-  #lastActivity() {
-    const r = this.#one(`SELECT max(last_active) AS at FROM sessions`);
-    const ms = r && r.at !== null && r.at !== undefined ? Number(r.at) : NaN;
-    return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
   }
   /* R95: every project the record holds, paged whole through record-core's `listByType`. */
   #countProjects() {
@@ -2991,16 +2973,6 @@ export function instanceSetupOps(m, url, body) {
     grouplanguages: () => m.groupLanguages(),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
     declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
-    /* R94: the translation ops and the door's store-internal record route (no spec), served through the delegates. */
-    translationdraft: () => m.translationDraft({ ...(body || {}), by: q("by") }),
-    translationdraftrecord: () => m.translationDraftRecord({ ...(body || {}), by: q("by") }),
-    translationgrant: () => m.translationGrant({ ...(body || {}), by: q("by") }),
-    translationadopt: () => m.translationAdopt({ ...(body || {}), by: q("by") }),
-    translationconfirm: () => m.translationConfirm({ ...(body || {}), by: q("by") }),
-    translationrevert: () => m.translationRevert({ ...(body || {}), by: q("by") }),
-    translationmark: () => m.translationMark({ ...(body || {}), by: q("by") }),
-    translations: () => m.translations({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
-    interfacewords: () => m.interfaceWords({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
     /* R89, R90 (T48; N1047): the update notice and the administrators' three choices; `by` and `viewer` are the stamps. */
     updatenotice: () => m.updateNotice({ viewer: q("viewer") }),
     updatestart: () => m.updateStart({ ...(body || {}), by: q("by") }),

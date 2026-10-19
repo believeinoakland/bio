@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01BpRJeMjqjhQP41hsLRJzbh · depth 2 · COMPLETE · handled B2
+**Status** · session_014RUYYmkPmsWz2WmzcUC1Mk · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT · re B1
 
@@ -30,3 +30,79 @@ Size (session_01BpRJeMjqjhQP41hsLRJzbh): test runs 34, module lines 3632
 COMPLETE (re B2). Merged tranche/T51 (K4084). The twelve codemod calls now pass `reason:` and `next:` (`{what}` and `{confirmed}` unchanged), and seven tests with them (`words.test.mjs` among them). `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match the source; no codemod id of this module is named by no call, so there was nothing to drop. instance-setup 193 pass, 0 fail. format 0; architecture 0; coverage 69 of 69; ownership 0 (2 files). `checks/words.mjs`: plain 0, testcopy 0, marker 0; inline 12 left, all the leaf's `setup-fleet.mjs` texts (:30, 32, 35–38, 42, 44, 55, 64, 66, 67): R97 requires them in the leaf with their keys (K405: it cannot read the word list), so only the design's `unkeyed` list or a check exemption clears them: BOB's call.
 
 Size (session_01BpRJeMjqjhQP41hsLRJzbh): test runs 41, module lines 3637
+
+## J4 · QUESTION
+
+QUESTION (re B3, item 2): the leaf's twelve texts (`setup-fleet.mjs`:30–67) cannot be read by key as the code stands, and I have not changed them.
+
+- R97 keeps the leaf importing nothing (K405), and its control says the import list is empty, so the leaf cannot call `word()`.
+- Bundler R38 keeps the rows a literal `word(...)` call names, but the call needs `word` in scope.
+- Fact against R97's own test premise: `newgroup/src/words.mjs` already imports `word` and `hasWord` from `bio-plane/src/setup-words/index.mjs`, so the installer bundle does pull `setup-words`.
+
+Options:
+A. Accept the twelve by name, as CR-12 says ("until then accepted by name"). No code change; `checks/words.mjs` keeps 12 `copy` findings for this module.
+B. The leaf takes a lookup argument, and its callers pass `word`: `newgroup/src/index.mjs`:953 and `ui.mjs`:150 (installer's module), plus the plane's screens. Touches another module.
+C. The leaf imports `setup-words/index.mjs` like the installer's `words.mjs` does. This amends R97 and K405 (the "imports nothing" rule), so it needs your ruling.
+
+My recommendation: A now. C is one import and would clear the twelve, but it reverses K405, so it is your call, not mine.
+
+Until you answer, the leaf keeps its texts as R97 has them. Everything else in B3 is done and reported in the COMPLETE.
+
+## J5 · REPORT · re B3
+
+REPORT (re B3): what I found in other modules while doing CR-12. None of it is changed by me.
+
+1. `plane/src/ask.mjs`:369 calls `instanceSetupOf(ctx, env).readingLanguage(...)`. It is the one delegate caller left, so I kept `readingLanguage` (the other ten are gone). Plane's job re-points that call to `translationsOf(ctx).readingLanguage`; then I delete the last delegate and `#translations()` in my next job. Please sequence it.
+2. `test/m/plane/door.test.mjs`:142 (the R1, R5 test "instance-setup's forty-five routes") is now red: instance-setup's map holds 36 routes, not 45, because the nine translation route lines left (CR-12). The test's drive list still counts the nine. Plane's job sets the count to 36 and drops the translation drives from the instance-setup comparison, since `translationsOps` answers them through `store.mjs`. This is the one failure I cause outside my module; I did not edit the test.
+3. Reds in the whole-tree `checks/run.mjs`, not mine: coverage: agent-harness R17; agent-runner R36, R37, R38, R40; extraction R77; installer-steps R26, R31; journey-check R19; screens-inquiry R81, R82; setup-words R19. Words: `promotion/index.mjs`:194, 1151, 1184 (inline).
+4. Test note for my own tests (no action for you): the fixture's default `credentials` stub is `{}`, so a `last_used_at` read through `boot()` answers null. The R95 test now hands a real `credentials` reader over the same store; the fixture is unchanged.
+
+## J6 · COMPLETE · re B3
+
+COMPLETE (re B3). CR-12 done in its two parts that are mine; item 2 waits on your answer to J4.
+
+Entries applied:
+- Item 1: `bootstrapfacts`' `last_used_at` reads `credentials.lastActivity()` (CR-16, K4116). The module's own `sessions` read (`#lastActivity`) is gone. The R95 test hands a real `credentials` reader over the same store and checks the instant (2026-10-14T17:45:00.000Z).
+- Item 3: ten of the eleven translation delegates are deleted. `readingLanguage` stays, for `plane/src/ask.mjs`:369 (J5, item 1). The nine translation route lines leave `instanceSetupOps`; plane's `store.mjs` already answers those routes through `translationsOps`, which it did before. Search of the whole tree for callers of the removed delegates and routes found none except that one.
+- R94's test now asks the nine routes of `translations` (the map instance-setup holds none of them); `exports.test.mjs`'s route list drops them.
+- Item 2 (the leaf's twelve texts): not changed; see J4. R97 and its control are as they were.
+
+Deferred: item 2 (J4). Found in other modules, reported in J5: plane's `ask.mjs` caller of `readingLanguage`; plane's `door.test.mjs`:142 red (45 → 36 routes); the whole-tree coverage and words findings.
+
+Tests and checks:
+- instance-setup: `node --test test/m/instance-setup/*.test.mjs`: 193 pass, 0 fail (t51: 11 pass).
+- plane `door.test.mjs`: 5 pass, 1 fail (the R1, R5 route count, J5 item 2; not my file).
+- `checks/format.mjs`: 175 modules, 0 failures.
+- `checks/architecture.mjs instance-setup`: 27 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 69 of 69 live ids named by a test; 0 failures.
+- `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 5 files changed by instance-setup, 0 failures.
+- `checks/run.mjs /home/user/bio`: instance-setup's findings are the twelve leaf copies (item 2) only; the rest are in other modules (J5 item 3).
+
+Commit `b6401a7fff` on `job/T51/instance-setup`, pushed.
+
+Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 5, module lines 3607
+
+## J7 · COMPLETE · re B4
+
+COMPLETE (re B4). R98 is met; the CHANGE's R99 waits for plane's CR-24, as you scheduled it.
+
+Entries applied:
+- R98 (B4, option C): `setup-fleet.mjs` imports `setup-words/index.mjs` and nothing else. Its twelve texts are `word(key)` of R97's keys (`HOSTING_CONTROL`, `FORGOT_HELP`, `HOSTING_RECOVERY_DEPLOYER`); the `keys` fields are unchanged. The installer's bundle carries those keys because `newgroup/scripts/build.mjs` keeps the literal `word("…")` calls of every bundled module.
+- Tests: the R97 "imports nothing" control is replaced by R98's control (the only import is setup-words; no plane or store module). The N234 test loads the leaf as the module, not as a data: URL. Each text still equals `word(key)`.
+- Tranche merged before the change (B4 names R98 there).
+
+Checks and tests:
+- instance-setup: `node --test test/m/instance-setup/*.test.mjs`: 193 pass, 0 fail.
+- installer `requirements`, `t47`, `t48`, `t50`, `t51`: 101 tests, 96 pass, 0 fail. I did not run the whole installer suite, and `npm run embed` was not run. `newgroup/src/release.mjs` still embeds the earlier bundle text, which is a generated artifact: the installer's build should regenerate it. I did not touch it.
+- `checks/format.mjs`: 175 modules, 0 failures.
+- `checks/architecture.mjs instance-setup`: 27 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 70 of 71 live ids named; the gap is R99, which is due at the later CHANGE. Expected until then.
+- `checks/words.mjs`: instance-setup has 0 inline findings. Seven testcopy findings remain, all in `file-safety`, not this module.
+- `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 6 files changed by instance-setup, 0 failures.
+
+Found, not mine (no change made):
+- Installer tests do not copy any leaf text. The only match is the generated `release.mjs` above.
+
+Commit `55489f90f3` on `job/T51/instance-setup`, pushed.
+
+Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 8, module lines 3607
