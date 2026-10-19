@@ -3,6 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as RR from "../../../src/run-rules/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { WORD } from "./words.mjs";
 import { AI_RUN_CHECKS as OBSERVATION_LOG_ROWS } from "../../../src/observation-log/index.mjs";
 
 const { AI_RUNS_CHECKS, AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS,
@@ -221,18 +223,14 @@ test("R20 (T40; N812; K2373, K2400): AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING
 
 test("R11, R20 (DEC-149, T34-86): a string a member reads names the group's Civicsmith as \"your group's Civicsmith\" — C-33.29 and C-109.1 say it (C-109.9 retired, R20), and STANDARD_BASIS' none-recorded needs no name; no translation or vocabulary sentence of this module says instance, copy, plane or server", () => {
   const named = {
-    AI_RUN_CAPABILITY_UNAVAILABLE: "Nothing was run, because your team's Civicsmith could not find an account to run it under. "
-      + "That is a fact about our setup and not an answer about your question: no searching happened, so nothing here "
-      + "should be read as having looked and found nothing.",
-    AI_RUN_MODE_NOT_DEPLOYED: "Nothing was run, because the kind of work this run asked for is not switched on for your "
-      + "team's Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been "
-      + "checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.",
+    AI_RUN_CAPABILITY_UNAVAILABLE: WORD("refusal.AI_RUN_CAPABILITY_UNAVAILABLE"),
+    AI_RUN_MODE_NOT_DEPLOYED: WORD("refusal.AI_RUN_MODE_NOT_DEPLOYED"),
   };
   for (const [code, text] of Object.entries(named)) {
     assert.equal(AI_RUNS_CHECKS[code].translation, text, code);
     assert.equal(translationOf(code), text, code);
   }
-  assert.equal(RR.STANDARD_BASIS["none-recorded"], "no bar was recorded when this run was formed, and none is filled in afterwards");
+  assert.equal(RR.STANDARD_BASIS["none-recorded"], localize("run-rules.rules.basis_none_recorded", "no bar was recorded when this run was formed, and none is filled in afterwards"));
   /* every member-facing sentence this module holds: its rows' translations and its vocabularies' values */
   const OLD = /\b(instances?|cop(y|ies)|planes?|servers?)\b/i;
   const member = [...Object.entries(AI_RUNS_CHECKS).map(([c, r]) => [c, r.translation]),
