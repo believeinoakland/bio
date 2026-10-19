@@ -18,7 +18,7 @@
  * only the group's own (R15). At start it registers as `steps`' due holder (R16). T46: R1's items carry an entry's
  * time of day and zone (R19, N918), and the standing proposals are read before one is adopted (R20, N925). T47: every
  * day is read in `actions.actionZone` (R21, N960); `dueAtOf` is exported (R22, N965); R3's items name the clock's venue
- * (R23, N968). An
+ * (R23, N968). T51 (N1088, K3189): `clocksRunning` counts the pending entries for Home (R24). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -116,6 +116,8 @@ export const GROUP_OWN_KINDS = Object.freeze(["dependency", "window"]);
 /** R18: `ourDeadlines`' two bounds, as R1's. */
 export const OUR_DEADLINES_MAX = 500;
 export const OUR_DEADLINES_ACTIONS_MAX = 500;
+/** R24: the most actions `clocksRunning` reads. */
+export const CLOCKS_RUNNING_ACTIONS_MAX = 500;
 /** R18, R7: the longest words a stated entry carries in one field. */
 export const CLOCK_TEXT_MAX = 500;
 /** R16: the viewer this module reads a step with in process (steps' own registration hands it no viewer). */
@@ -544,6 +546,30 @@ export class ActionClocks {
     });
     return { ok: true, from: f0, to: t0, items: page.items, limit: max, actions_limit: OUR_DEADLINES_ACTIONS_MAX,
              truncated: page.truncated, cursor: page.cursor };
+  }
+
+  /** R24 (T51; N1088, K3189, K4059; DEC-218, DEC-219; for `screens-daily` R64): the `pending` clock entries of the visible
+   *  actions not `resolved` or `abandoned`, counted in all and by each entry's `owed_by` (R18), each count with `next`, the
+   *  earliest such entry's date (null when none). Reads at most 500 actions (`truncated` stated). Writes nothing. */
+  clocksRunning({ viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
+    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b
+      WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql})
+      ORDER BY b.bundle_id LIMIT ?`, ...CLOSED_ACTION_STATES, ...gate.args, CLOCKS_RUNNING_ACTIONS_MAX + 1);
+    const by_owed = Object.fromEntries(CLOCK_OWED_BY.map((k) => [k, { count: 0, next: null }]));
+    let total = 0;
+    for (const r of rows.slice(0, CLOCKS_RUNNING_ACTIONS_MAX)) {
+      const fm = this.#heldFm(r.bundle_id) || {};
+      for (const e of Array.isArray(fm.clock) ? fm.clock : []) {
+        if (!e || typeof e !== "object" || e.status !== "pending") continue;
+        const b = by_owed[owedOf(e)];
+        total++;
+        b.count++;
+        if (isDay(e.date) && (b.next === null || e.date < b.next)) b.next = e.date;
+      }
+    }
+    return { ok: true, total, by_owed, actions_limit: CLOCKS_RUNNING_ACTIONS_MAX, truncated: rows.length > CLOCKS_RUNNING_ACTIONS_MAX };
   }
 
   /* ================================================================ one date, one reminder (R16, R17) */
@@ -1467,7 +1493,7 @@ export function actionClocksOwns(t) {
 
 /** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
  *  up: `op=reminderset` (R4), `op=reminderanswer` (R6), `op=clockadopt` (R13), `op=clockstate` (R18, T45), and the
- *  reads `op=clocksics` (R14), `op=clocklateness` (R15) and `op=clockproposals` (R20, T46). `viewer` and `author` are
+ *  reads `op=clocksics` (R14), `op=clocklateness` (R15), `op=clockproposals` (R20, T46) and `op=clocksrunning` (R24, T51). `viewer` and `author` are
  *  the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -1492,5 +1518,6 @@ export function actionClocksOps(m, url, body) {
                                    viewer: q("viewer") }),
     clocklateness: () => m.lateness({ from: pick("from"), to: pick("to"), project: pick("project"), viewer: q("viewer") }),
     clockproposals: () => m.clockProposalsFor({ action: pick("action"), viewer: q("viewer") }),
+    clocksrunning: () => m.clocksRunning({ viewer: q("viewer") }),
   };
 }
