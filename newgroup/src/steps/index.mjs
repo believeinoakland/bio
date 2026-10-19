@@ -17,3 +17,4 @@ export * from "./verify.mjs";
 export * from "./logs.mjs";
 export * from "./images.mjs";
 export * from "./signers.mjs";
+export * from "./words.mjs";

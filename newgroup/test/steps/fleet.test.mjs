@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers, namesFor, ARMED_SIGNERS, containerDescriptor, containerClasses, workerDescriptor,
   vpcServiceOk, VPC_BINDING, VPC_MEMBER, objectMigrations, MEMBER_OBJECTS, imageWhy, lacksOf, IMAGE_UNPULLABLE, BINDING_OF, WAIT_BOUND_MINUTES,
   CONTAINER_PART, WORKER_PART } from "../../src/steps/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { session, sink, immediateTimers, account, heldCopy, sequence, release, chosen, sha, armWith, restoreSigners, SIGNER, STRANGER, VERSION,
   RUNNER, SCANNER, DESCRIPTOR, SCANNER_CLASSES, SCANNER_WORKER, IMAGE, VPC_ID, realFetch, jres, cferr, MEMBER_SRC, WASM } from "./world.mjs";
@@ -103,7 +104,7 @@ test("R17: each failing condition installs none and says which; the install is n
 test("R17: an unknown part type leaves that member out alone; a failing member degrades alone and is named; a fleet statement with a member dropped does not verify", async () => {
   let f = await fleet({ rel: { badType: "ocr-worker" } });
   assert.deepEqual(f.result.left.map((l) => l.member), ["ocr-worker"]);
-  assert.ok(f.result.left[0].why.includes("assets/x.wasm"));
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.part"));
   assert.deepEqual([...f.result.done].sort(), ALL.filter((m) => m !== "ocr-worker").sort());
   f.w.restore();
   f = await fleet({ rel: { missing: "pdf-worker" } });
@@ -245,10 +246,10 @@ test("R20: a release whose container descriptors name ghcr.io images installs ev
   const ghcr = "ghcr.io/civicos/agent-runner@sha256:" + "a".repeat(64);
   const f = await fleet({ rel: { container: true, scanner: true, descriptor: { ...DESCRIPTOR, image: ghcr }, scannerParts: Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, { ...c, image: "ghcr.io/civicos/" + c.class_name.toLowerCase() + "@sha256:" + "d".repeat(64) }])) } });
   assert.deepEqual(f.result.left.map((l) => l.member).sort(), [RUNNER, SCANNER].sort());
-  assert.ok(f.result.left.every((l) => l.out === true && l.why.includes(IMAGE_UNPULLABLE)));
+  assert.ok(f.result.left.every((l) => l.out === true && l.why.includes(word("installer.image.unpullable", { part: l.member }))));
   assert.equal(imageWhy(ghcr), IMAGE_UNPULLABLE);
   assert.ok(f.result.left.find((l) => l.member === SCANNER).why.includes(lacksOf(SCANNER)), "what the copy then lacks is said beside the reason");
-  assert.ok(!f.result.left.find((l) => l.member === RUNNER).why.includes(lacksOf(RUNNER) || "\u0000"));
+  assert.equal(lacksOf(RUNNER), "", "the assistant lacks nothing without agent-runner");
   assert.equal(f.result.done.length, ALL.length - 2);
   assert.equal(f.result.imageLags.length, 0);
   f.w.restore();
@@ -304,7 +305,7 @@ test("R20: a descriptor that does not read, a part not named for its class, or a
   assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, class_name: "1bad" })).ok, false);
   assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, bind: [{ member: "m", binding: "lower" }] })).ok, false);
   assert.equal(containerDescriptor(enc([])).ok, false);
-  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, image: "docker.io/x/y:latest" })).ok, false);
+  assert.equal(containerDescriptor(enc({ ...DESCRIPTOR, image: "docker.io/x/y:latest" }), RUNNER).ok, false);
   assert.deepEqual(containerDescriptor(enc(DESCRIPTOR)).d.bind, DESCRIPTOR.bind);
   const parts = SCANNER_CLASSES.map((c) => ({ path: `container/${c.class_name}.json` }));
   const bytes = Object.fromEntries(SCANNER_CLASSES.map((c) => [`container/${c.class_name}.json`, enc(c)]));
@@ -375,27 +376,27 @@ test("R22: a release without the Worker part installs the member without bucket 
   assert.deepEqual(workerDescriptor(enc({})), { ok: true, d: { r2_buckets: [], crons: [] } });
 });
 
-test("R23: a good VPC id binds SECURITY_VPC; a refused one installs the member without it and says REACH_NOT_BOUND; an id with no scanner installed is said; no id, no binding and no note", async () => {
+test("R23: a good VPC id binds SECURITY_VPC; a refused one installs the member without it and says so; an id with no scanner installed is said; no id, no binding and no note", async () => {
   assert.equal(vpcServiceOk(VPC_ID), true);
   assert.equal(vpcServiceOk("01234567-89ab-cdef-0123-456789abcdef"), true);
   for (const bad of [undefined, "", "xyz", VPC_ID + "0", 5]) assert.equal(vpcServiceOk(bad), false);
   assert.equal(VPC_MEMBER, SCANNER);
   let f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID } });
   assert.deepEqual(byName(uploadOf(f.w, "file-scanner-grp").meta, VPC_BINDING), { type: "vpc_service", name: VPC_BINDING, service_id: VPC_ID });
-  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.connected", { member: SCANNER })), "the connection is said");
   f.w.restore();
   f = await fleet({ rel: { scanner: true }, ctx: { vpc: VPC_ID }, acct: { refuseVpc: true } });
   assert.ok(f.result.done.includes(SCANNER));
   assert.equal(byName(f.w.puts.filter((p) => p.name === "file-scanner-grp").at(-1).meta, VPC_BINDING), undefined);
   assert.equal(f.w.puts.filter((p) => p.name === "file-scanner-grp").length, 2, "uploaded again without it");
-  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.refused", { member: SCANNER, said: "VPC service not found or not permitted <b>by the fake</b>" })));
   f.w.restore();
   f = await fleet({ rel: { members: ALL.filter((m) => m !== SCANNER) }, ctx: { vpc: VPC_ID } });
-  assert.ok(f.emit.last("fleet").label.includes("REACH_NOT_BOUND"), "an id named when no scanner was installed is said");
+  assert.ok(f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.unused", { member: SCANNER })), "an id named when no scanner was installed is said");
   assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
   f.w.restore();
   f = await fleet({ rel: { scanner: true } });
-  assert.ok(!f.emit.last("fleet").label.includes("REACH_NOT_BOUND"));
+  assert.ok(!f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.unused", { member: SCANNER })) && !f.emit.last("fleet").label.includes(word("installer.fleet.note.vpc.connected", { member: SCANNER })));
   assert.equal(f.w.puts.some((p) => byName(p.meta, VPC_BINDING)), false);
   f.w.restore();
 });
