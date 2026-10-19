@@ -62,7 +62,7 @@ test("R112 the sweep's row index.mjs:139: the detail of NOT_AN_ADMIN names the a
   assert.equal(w.m.hostingAccessSet({ holders: "x", by: "ann" }).detail,
     sentence(localize("member-roster.index.recording_who_holds_hosting_access", "recording who holds hosting access (4.8)")));
   const caps = w.m.memberCaps({ memberId: "ann", capabilities: [], by: "ann" });
-  assert.equal(caps.detail, sentence("setting a member's capabilities"));
+  assert.equal(caps.detail, sentence(localize("member-roster.index.setting_a_members_capabilities", "setting a member's capabilities")));
 });
 
 test("R112 the sweep's row index.mjs:801: a registered signer is not an owner; the detail names the case, the project and the signer", async () => {

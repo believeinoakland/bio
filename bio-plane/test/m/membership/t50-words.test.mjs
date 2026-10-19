@@ -12,8 +12,11 @@ import { Membership, WORD_KEYS, MEMBERSHIP_CHECKS, CUSTODIAL_CHECKS, MEMBER_ID_C
   from "../../../src/membership/index.mjs";
 import { word, hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SENTENCE_KEYS } from "../../../src/membership/words.mjs";
+import { WORD_KEYS as MEMBER_WORD_KEYS } from "../../../src/member-roster/index.mjs";
 import { rowKey, rowWord, keyed } from "../../../src/member-roster/words.mjs";
 
+/* the keys held across the two modules: membership reads its own, member-roster its (DEC-345) */
+const HELD = [...WORD_KEYS, ...MEMBER_WORD_KEYS];
 const TABLES = Object.fromEntries(Object.entries(membership).filter(([name]) => /_CHECKS$/.test(name)));
 /* a key's words as the list gives them, placeholders in place */
 const raw = (key) => WORD_ROWS.find((r) => r[0] === key)[1];
@@ -23,7 +26,7 @@ const reads = async () => JSON.parse(await readFile(
 test("R151 every key the module reads is held by setup-words (hasWord), each once; none is empty", () => {
   assert.ok(Object.isFrozen(WORD_KEYS));
   assert.equal(new Set(WORD_KEYS).size, WORD_KEYS.length, "no key twice");
-  assert.ok(WORD_KEYS.length >= 60, String(WORD_KEYS.length));
+  assert.ok(new Set(HELD).size >= 60, String(new Set(HELD).size));
   for (const key of WORD_KEYS) {
     assert.equal(hasWord(key), true, key);
     assert.match(word(key, Object.fromEntries((raw(key).match(/\{(\w+)\}/g) ?? []).map((p) => [p.slice(1, -1), "x"]))), /\S/, key);
@@ -57,7 +60,7 @@ test("R151 every refusal row's translation is the words of its key (refusal.<COD
       assert.equal(hasWord(key), true, `${table}.${code}: ${key}`);
       assert.equal(row.translation, raw(key), `${table}.${code}`);
       assert.equal(row.translation, rowWord(code));
-      assert.ok(WORD_KEYS.includes(key), key);
+      assert.ok(HELD.includes(key), key);
     }
   assert.equal(n, 47, "every row read");
   assert.deepEqual([rowKey("HANDLE_CHECK_PAUSED"), rowKey("NOT_AN_ADMIN")], ["handle.refused.paused", "refusal.NOT_AN_ADMIN"]);
@@ -155,5 +158,5 @@ test("R151 the module's source modules hold no sentence of their own: every key 
   assert.ok(Object.isFrozen(SENTENCE_KEYS));
   /* control: the rows of the other tables are read too */
   for (const table of [MEMBER_ID_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS])
-    for (const code of Object.keys(table)) assert.ok(WORD_KEYS.includes(rowKey(code)), code);
+    for (const code of Object.keys(table)) assert.ok(HELD.includes(rowKey(code)), code);
 });

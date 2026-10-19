@@ -10,6 +10,10 @@ import { world, V } from "./fixture.mjs";
 import { Membership, viewerPredicate, hiddenBundles, MEMBERSHIP_CHECKS, PROJECT_VISIBILITY_CHECKS, WORD_KEYS }
   from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { WORD_KEYS as MEMBER_WORD_KEYS } from "../../../src/member-roster/index.mjs";
+
+/* the keys held across the two modules: membership reads its own, member-roster its (DEC-345) */
+const HELD = [...WORD_KEYS, ...MEMBER_WORD_KEYS];
 
 const { SIGHT_FULL: FULL, SIGHT_EXISTENCE: EXISTENCE, SIGHT_NONE: NONE } = Membership;
 const wordsJson = async () =>
@@ -229,10 +233,10 @@ test("R126 R123 T41 T46 R151 HANDLE_CHECK_PAUSED's translation is the words of h
   const en = (k) => words.find((x) => x.key === k).en;
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, en("handle.refused.paused"), "the key's words, placeholder left");
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.check, "C-96.48");
-  assert.ok(WORD_KEYS.includes("handle.refused.paused"));
+  assert.ok(HELD.includes("handle.refused.paused"));
   /* negative control (T46, DEC-197): no row reads handle.refused.notmember or handle.refused.unchecked, nor reads handle.fixed */
   for (const key of ["handle.refused.notmember", "handle.refused.unchecked", "handle.fixed"])
-    assert.equal(WORD_KEYS.includes(key), false, key);
+    assert.equal(HELD.includes(key), false, key);
   for (const code of ["HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_UNCHECKED"]) assert.equal(code in MEMBERSHIP_CHECKS, false, code);
 });
 
