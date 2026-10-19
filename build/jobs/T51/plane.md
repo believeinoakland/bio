@@ -28,3 +28,7 @@
 - format 0 failures; architecture 0 failures; coverage 66 of 66; ownership 22 files, 0 failures; words (plane) 0 failures; `setup-words build --check`: stale rows, expected.
 
 Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 5, module lines 2295
+
+## J1 · COMPLETE
+
+T51-125 applied; plane suite 264/264, migrate-released 1/1; format, architecture, coverage (66/66), ownership and words checks 0 failures. Details and findings for other modules in the record.
