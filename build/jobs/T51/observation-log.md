@@ -55,3 +55,31 @@ Words after T51-200 (observation-log): items for the design stream (K3944). The 
    - test/m/observation-log/vocabulary.test.mjs (R36, render-deferred) asserts the opening "a render your team's" and the ending "conditionsRenderDeferred" instead of the whole sentence. R36's exact-wording pin is weaker until a words.json row exists for observation-log.vocabulary.condition_render_deferred; if the design adds that row, the test can pin it with hasWord.
 
 5. rows.mjs is stale for the 70 new ids (`setup-words/build.mjs --check` says so, as B2 expects). BOB regenerates it at the layer close.
+
+## J3 · COMPLETE
+
+Entries applied (BOB B2, T51-200): every sentence this module shows a member goes through `word(key)` or `localize(id, en, vars)`.
+- The words check's findings for this module are all fixed: 7 inline (sentences filled from a template) and 41 plain. `node checks/words.mjs /home/user/bio observation-log` reads 0 failures (it read inline 0, plain 0, testcopy 0).
+- Beyond the findings, I converted the sentences the check does not count, as R13 binds (punctuated sentences, refusal details, the sentences stored in a log row's detail): about 70 new localize ids, plus word() for the sentences whose words.json row is identical to the code's text.
+- Text is unchanged character for character. A differential run of the old and new vocabulary over 878,457 input combinations compared equal (exports, causesNotRuledOut, contentAxisFor, checkObservation, contentObservationsFor, readerRunObservation, resolutionObservation, derivationObservation, derivationStatement, observationCoverage). It caught one row that differed and I reverted that one. The index-side texts were checked by reading the diff.
+- Where a words.json row differs from the code's text, the code's text is kept under a new id. Those rows, and the wire hints I left as they are, are in the REPORT for BOB (K3944).
+- Two tests no longer hold a sentence (the REPORT item 4).
+- Deferred: none in this module.
+
+Found in other modules (not changed): nothing specific. The full `node checks/run.mjs /home/user/bio` run shows 3,728 words failures and 30 coverage failures in other modules; none names observation-log.
+
+Commits on job/T51/observation-log: 37ccba91f7 (the conversion), f6c5cef3ae (the merge of tranche/T51 at 940517d41e). Pushed.
+
+Tests: `node --test test/m/observation-log/` (bio-plane): 78 pass, 0 fail, before and after the merge.
+Checks:
+- `node checks/format.mjs /home/user/bio`: 175 modules, 174 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio observation-log`: 0 failures.
+- `node checks/coverage.mjs /home/user/bio observation-log`: 38 of 38 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio observation-log tranche/T51 job/T51/observation-log`: 5 files changed by observation-log; 0 failures.
+- `node checks/words.mjs /home/user/bio observation-log`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: architecture 0 failures; no observation-log line in its output.
+- `node bio-plane/src/setup-words/build.mjs --check`: rows.mjs stale for the new ids (expected; BOB regenerates at the layer close); no refusal names this module.
+
+Reading: the requirements (whole), T51-200 and BOB's B2 notes, the words-pass findings, and my own code (index.mjs, vocabulary.mjs, checks.mjs and schema.mjs, whole; schema.mjs was not changed).
+
+Size (session_017p9yDiKdDPqfnyWK37NQsk): test runs 2, module lines 3105
