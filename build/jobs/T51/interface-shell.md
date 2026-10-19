@@ -43,3 +43,15 @@ COMPLETE for `interface-shell` in T51 (entry T51-113), with B7's accepted reds.
 **Tests and checks.** `node --test bio-plane/test/m/interface-shell/`: 192 tests, 187 pass, 5 fail (above). Screen modules' suites: same failures on the tranche tip and on this branch (compared). format 0 failures; architecture 0; coverage 100 of 100 ids; ownership 0; words over all L11 modules: only the SSH armour names this module; setup-words `--check`: stale-rows note only.
 
 Size (session_013DxfQ6fDiQby41EDQ4zZH8): test runs 40, module lines 2650
+
+## J3 · COMPLETE
+
+COMPLETE (after B8) for `interface-shell` in T51.
+
+`tranche/T51` merged (wizard-scripts, 77-screen registry). No local registry patch existed. The R101, R102 and R95 term tests now boot and pass (two test fixes of mine: the public pages' sessionless test, and the acts made for the nine pages).
+
+**Suite:** 192 tests, 190 pass, 2 fail: the two R100 tests, waiting on `op-declarations` R76 (`BROWSER_ACTS`), accepted by name (B7); re-run on its CHANGE.
+
+**R73 (t50.test.mjs:40), red since the new registry, not mine:** the nine modules' real SCREENS are composed, and `screens-action` still names `actionhold` on `action`; the registry now lists it on `hold` (R31 there: "actionhold is no longer drawn on action"). The throw is `checkScreens` doing its job; it goes green when screens-action moves the act.
+
+format, architecture, coverage and ownership: 0 failures (unchanged files outside tests and `index.mjs` PATHS).
