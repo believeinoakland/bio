@@ -37,7 +37,7 @@ import { membershipOf, listenerRefusal, MODULE_ORDER } from "../membership/index
 import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
 import { noSuchStandard, standardsOf } from "../standards/index.mjs";
 import { noSuchEvent, eventsOf } from "../events/index.mjs";
-import { linesOf } from "../lines/index.mjs";
+import { linesOf, reasonText } from "../lines/index.mjs";
 import { noSuchFact, moneyOf } from "../money/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent } from "../content/index.mjs";
@@ -1450,9 +1450,11 @@ export class Duties {
       if (!at) { why = word("duties.why.event_date_recorded"); continue; }
       try { h = this.lines.holderAt({ office: obligor, at, viewer: Duties.#reader(viewer) }); } catch { h = null; }
       if (h && h.ok !== false && said(h.holder)) { if (h.holder === dec) return { value: true, holding: h.line ? h.line.line_id ?? null : null }; continue; }
-      why = h && h.ok !== false && Array.isArray(h.lines) && h.lines.length && said(h.undetermined)
-        ? word("duties.text.decider_person_held", { undetermined: String(h.undetermined) })
-        : word("duties.text.decider_person_holding", { undetermined: String(h && said(h.undetermined) ? ` (${h.undetermined})` : "") });
+      /* lines R24: an undetermined holder carries its reason as a key; read it into words here */
+      const undetermined = h && h.ok !== false && h.undetermined === true ? reasonText(h.why) : null;
+      why = Array.isArray(h && h.lines) && h.lines.length && undetermined !== null
+        ? word("duties.text.decider_person_held", { undetermined })
+        : word("duties.text.decider_person_holding", { undetermined: undetermined !== null ? ` (${undetermined})` : "" });
     }
     return why ? { value: "undetermined", why } : { value: false };
   }
