@@ -37,9 +37,7 @@ async function fetchVerified(url, wantSha, what, onWait = null) {
 }
 
 /* R37 (CR-22; K4094, K4121): a member's Durable Objects are the ones its signed `Worker` part states (`workerDescriptor`
-   reads `durable_objects`), and no others. The installer keeps no table of its own: a part that states none deploys none.
-   The export stays, empty, only until CR-23 drops installer's re-export of it. */
-export const MEMBER_OBJECTS = Object.freeze({});
+   reads `durable_objects`), and no others. The installer keeps no table of its own: a part that states none deploys none. */
 /* The migration a member's upload carries, given the tag the script holds now (null: it holds none): every step after that
    tag, in order, in one `steps` list ending at the last tag; nothing when it already holds the last. */
 export function objectMigrations(heldTag, objects) {
