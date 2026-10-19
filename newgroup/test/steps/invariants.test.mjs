@@ -105,7 +105,7 @@ test("R35: two interleaved loadFleet calls over two stub sources see only their 
   assert.deepEqual(la.members.map((m) => m.m.member), ["pdf-worker"]);
   assert.deepEqual(lb.members.map((m) => m.m.member).sort(), ["agent-worker", "ocr-worker"]);
   assert.deepEqual(seen.a, ["pdf-worker.bundled.mjs"]);
-  assert.ok(seen.b.every((p) => !p.startsWith("pdf-worker")) && seen.b.length === 3);
+  assert.ok(seen.b.every((p) => !p.startsWith("pdf-worker")) && seen.b.length === 4, "ocr-worker's bundle and part, agent-worker's bundle and Worker part");
   const again = await Promise.all([la.members[0].bytes(), lb.members[0].bytes()]);
   assert.equal(new TextDecoder().decode(again[0].bundle), "export default { a: 1 };");
   assert.ok(seen.a.length === 2 && seen.b.length > 3 && seen.a.every((p) => p === "pdf-worker.bundled.mjs"), "a member's bytes come from its own source");

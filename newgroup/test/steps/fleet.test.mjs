@@ -7,7 +7,7 @@ import { fetchVerified, SourceUnavailable, loadFleet, installFleet, bindMembers,
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { session, sink, immediateTimers, account, heldCopy, sequence, release, chosen, sha, armWith, restoreSigners, SIGNER, STRANGER, VERSION,
-  RUNNER, SCANNER, DESCRIPTOR, SCANNER_CLASSES, SCANNER_WORKER, IMAGE, VPC_ID, realFetch, jres, cferr, MEMBER_SRC, WASM } from "./world.mjs";
+  RUNNER, SCANNER, DESCRIPTOR, SCANNER_CLASSES, SCANNER_WORKER, AGENT_OBJECTS, IMAGE, VPC_ID, realFetch, jres, cferr, MEMBER_SRC, WASM } from "./world.mjs";
 
 const NAMES = namesFor("grp");
 const ALL = FLEET_BINDINGS.map(([m]) => m);
@@ -421,10 +421,25 @@ test("R24: the upload of agent-worker carries SEGMENTS and CHECKS with both migr
   const held = await fleet({ acct: { pre: { grp: [], "agent-worker-grp": [] }, preTags: { "agent-worker-grp": "v1" }, preClasses: { "agent-worker-grp": ["SegmentDriver"] } } });
   assert.deepEqual(uploadOf(held.w, "agent-worker-grp").meta.migrations, { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["CheckRecord"] }] });
   held.w.restore();
-  assert.deepEqual(objectMigrations("agent-worker", "v2"), null);
-  assert.deepEqual(objectMigrations("pdf-worker", null), null);
-  assert.deepEqual(objectMigrations("agent-worker", null).steps.length, 2);
-  assert.equal(Object.isFrozen(MEMBER_OBJECTS), true);
+  assert.deepEqual(objectMigrations("v2", AGENT_OBJECTS), null);
+  assert.equal(objectMigrations(null, undefined), null, "control: a member stating no objects gets no migration");
+  assert.deepEqual(objectMigrations(null, AGENT_OBJECTS).steps.length, 2);
+});
+
+test("R37: a member's Durable Objects are those its signed Worker part states and no others: a part stating fewer deploys fewer, and a part stating none deploys none", async () => {
+  let f = await fleet({ rel: { agentWorker: { r2_buckets: [], crons: [], durable_objects: { bindings: [{ name: "SEGMENTS", class_name: "SegmentDriver" }],
+    migrations: [{ tag: "v1", classes: ["SegmentDriver"] }] } } } });
+  let meta = uploadOf(f.w, "agent-worker-grp").meta;
+  assert.deepEqual(meta.bindings.filter((b) => b.type === "durable_object_namespace"), [{ type: "durable_object_namespace", name: "SEGMENTS", class_name: "SegmentDriver" }],
+    "the bindings are the part's, not the remembered two");
+  assert.deepEqual(meta.migrations, { new_tag: "v1", steps: [{ new_sqlite_classes: ["SegmentDriver"] }] });
+  f.w.restore();
+  f = await fleet({ rel: { agentWorker: { r2_buckets: [], crons: [] } } });
+  meta = uploadOf(f.w, "agent-worker-grp").meta;
+  assert.equal(meta.bindings.some((b) => b.type === "durable_object_namespace"), false, "control: a part stating none binds none");
+  assert.equal(meta.migrations, undefined, "control: and migrates none, never a remembered one");
+  f.w.restore();
+  assert.deepEqual(MEMBER_OBJECTS, {}, "the installer's own table is gone");
 });
 
 test("R25: an instance_type in container.json is passed to the create call and to a rollout; none is created without the field; an unreadable one leaves the member out", async () => {
@@ -455,16 +470,16 @@ test("R20 (F10): a class a later release adds to an installed container member i
   f.w.restore();
 });
 
-test("R24 (F10): a member's Durable Objects are read from its signed Worker part when it states them, else the installer's table; a malformed statement leaves the member out", async () => {
+test("R24 (F10): a member's Durable Objects are read from its signed Worker part when it states them; a malformed statement leaves the member out", async () => {
   const objects = { bindings: [{ name: "EXTRA", class_name: "ExtraObj" }], migrations: [{ tag: "v1", classes: ["FileScanner", "SafeViewRenderer"] }, { tag: "v2", classes: ["ExtraObj"] }] };
   const held = { pre: { grp: [], "file-scanner-grp": [] }, preClasses: { "file-scanner-grp": ["FileScanner", "SafeViewRenderer"] }, preTags: { "file-scanner-grp": "v1" } };
   let f = await fleet({ rel: { scanner: true, scannerWorker: { ...SCANNER_WORKER, durable_objects: objects } }, acct: held });
   const meta = uploadOf(f.w, "file-scanner-grp").meta;
   assert.deepEqual(meta.bindings.find((b) => b.name === "EXTRA"), { type: "durable_object_namespace", name: "EXTRA", class_name: "ExtraObj" });
   assert.deepEqual(meta.migrations, { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["ExtraObj"] }] });
-  assert.equal(byName(uploadOf(f.w, "agent-worker-grp").meta, "SEGMENTS").class_name, "SegmentDriver", "a member that states none keeps the table");
+  assert.equal(byName(uploadOf(f.w, "agent-worker-grp").meta, "SEGMENTS").class_name, "SegmentDriver", "agent-worker deploys the objects its own part states");
   f.w.restore();
-  assert.deepEqual(objectMigrations("x", "v1", objects), { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["ExtraObj"] }] });
+  assert.deepEqual(objectMigrations("v1", objects), { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["ExtraObj"] }] });
   f = await fleet({ rel: { scanner: true, scannerWorker: { ...SCANNER_WORKER, durable_objects: { bindings: [{ name: "lower", class_name: "X" }], migrations: [] } } } });
   assert.deepEqual(f.result.left.map((l) => l.member), [SCANNER]);
   assert.equal(f.result.left[0].why, word("installer.fleet.why.program"));

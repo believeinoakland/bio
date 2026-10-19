@@ -36,33 +36,26 @@ async function fetchVerified(url, wantSha, what, onWait = null) {
   return bytes;
 }
 
-/* R59 (T50; N1162; K3704; `agent-worker` R91, R109 and its configuration): the Durable Objects agent-worker holds of its own,
-   bound and migrated by the install and the update: `SEGMENTS` (class `SegmentDriver`, migration `v1`), so a run's segment
-   outlives the request that started it, and `CHECKS` (class `CheckRecord`, migration `v2`), the member's check record. The
-   migrations are the member's own configuration's, in its order, each a tag with the class it creates. */
-export const MEMBER_OBJECTS = Object.freeze({
-  "agent-worker": Object.freeze({
-    bindings: Object.freeze([{ name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }]),
-    migrations: Object.freeze([{ tag: "v1", classes: ["SegmentDriver"] }, { tag: "v2", classes: ["CheckRecord"] }]),
-  }),
-});
+/* R37 (CR-22; K4094, K4121): a member's Durable Objects are the ones its signed `Worker` part states (`workerDescriptor`
+   reads `durable_objects`), and no others. The installer keeps no table of its own: a part that states none deploys none.
+   The export stays, empty, only until CR-23 drops installer's re-export of it. */
+export const MEMBER_OBJECTS = Object.freeze({});
 /* The migration a member's upload carries, given the tag the script holds now (null: it holds none): every step after that
    tag, in order, in one `steps` list ending at the last tag; nothing when it already holds the last. */
-export function objectMigrations(member, heldTag, objects) {
-  const o = objects ?? MEMBER_OBJECTS[member];
-  if (!o) return null;
-  const at = heldTag ? o.migrations.findIndex((x) => x.tag === heldTag) : -1;
-  const rest = o.migrations.slice(at + 1);
+export function objectMigrations(heldTag, objects) {
+  if (!objects) return null;
+  const at = heldTag ? objects.migrations.findIndex((x) => x.tag === heldTag) : -1;
+  const rest = objects.migrations.slice(at + 1);
   if (!rest.length) return null;
   return { ...(heldTag ? { old_tag: heldTag } : {}), new_tag: rest.at(-1).tag, steps: rest.map((x) => ({ new_sqlite_classes: [...x.classes] })) };
 }
-const objectBindings = (member, objects) => ((objects ?? MEMBER_OBJECTS[member])?.bindings || []).map((b) => ({ type: "durable_object_namespace", name: b.name, class_name: b.class_name }));
+const objectBindings = (objects) => (objects?.bindings || []).map((b) => ({ type: "durable_object_namespace", name: b.name, class_name: b.class_name }));
 
 async function uploadMember(token, acct, slug, m, version, bundle, partBytes, extra = {}) {
   const names = extra.names;
-  /* R59: the member's own Durable Objects (agent-worker), migrated from the tag the script holds. */
+  /* R37: the member's own Durable Objects, as its Worker part states them, migrated from the tag the script holds. */
   const held = extra.heldTag ?? null;
-  const migrations = extra.migrations ?? objectMigrations(m.member, held, extra.objects);
+  const migrations = extra.migrations ?? objectMigrations(held, extra.objects);
   const meta = {
     main_module: "index.mjs",
     /* COPIED from the signed manifest, which copied it from the member's own
@@ -79,8 +72,8 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes, ex
          over the network; it is the name the group chose. R64: another member is the Worker under this copy's names. */
       ...(m.services || []).map((sv) => ({ type: "service", name: sv.binding,
         service: sv.service === "bio-plane" ? slug : (extra.fleet && extra.fleet.has(sv.service) ? names.member(sv.service) : sv.service) })),
-      /* R59 (agent-worker's own objects). */
-      ...objectBindings(m.member, extra.objects),
+      /* R37 (the member's own objects, as its part states them). */
+      ...objectBindings(extra.objects),
       /* R38: a container member's Durable Object class, bound cross-script into each member its descriptor names. */
       ...(extra.bindings || []),
     ],

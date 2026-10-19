@@ -97,7 +97,7 @@ export function workerDescriptor(bytes) {
     return { ok: false, why: word("installer.fleet.why.program") };
   if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
     return { ok: false, why: word("installer.fleet.why.program") };
-  /* F10: a member's own Durable Objects, bindings and migrations in order, as its signed release states them; none stated, the installer's table is used. */
+  /* R37: a member's own Durable Objects, bindings and migrations in order, as its signed release states them; none stated, none deployed. */
   const objects = d.durable_objects;
   if (objects !== undefined && !(objects && Array.isArray(objects.bindings) && Array.isArray(objects.migrations)
       && objects.bindings.every((b) => b && BINDING_NAME.test(b.name) && CLASS_NAME.test(b.class_name))
