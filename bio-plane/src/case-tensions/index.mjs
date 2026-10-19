@@ -75,7 +75,7 @@ export const PUBLICATION_DOORS = Object.freeze(["pins", "preparations", "caseDoc
 const pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
 const HEX64 = /^[0-9a-f]{64}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
-const NO_PROVIDER = "no module has registered the publication provider, so this module reads no case";
+const NO_PROVIDER = localize("case-tensions.index.no_module_has_registered", "no module has registered the publication provider, so this module reads no case");
 
 export class CaseTensions {
   #deps;
@@ -562,12 +562,11 @@ export class CaseTensions {
     /* DEC-49 REGION is-attribute-act */
     if (!who || isMachineIdentity(who))
       return refusal("ATTRIBUTION_NOT_A_MEMBER",
-        who ? localize("case-tensions.index.who_is_a_machine_credential", "'{who}' is a machine credential, and how a member's words are attributed is that member's own choice", { who: String(who.slice(0, 60)) }) : `this call carries nobody; the plane stamps who chose from the credential`);
+        who ? localize("case-tensions.index.who_is_a_machine_credential", "'{who}' is a machine credential, and how a member's words are attributed is that member's own choice", { who: String(who.slice(0, 60)) }) : localize("case-tensions.index.this_call_carries_nobody", "this call carries nobody; the plane stamps who chose from the credential"));
     const lv = typeof level === "string" ? level.trim() : "";
     if (!lv)
       return refusal("ATTRIBUTION_NO_LEVEL",
-        `no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md §4): choose one of `
-        + `${ATTRIBUTION_LEVELS.join(", ")}`, { allowed: ATTRIBUTION_LEVELS });
+        localize("case-tensions.index.no_level_was_chosen", "no level was chosen. There is no default (MEMBER-KNOWLEDGE-DESIGN.md §4): choose one of {ATTRIBUTION_LEVELS}", { ATTRIBUTION_LEVELS: String(ATTRIBUTION_LEVELS.join(", ")) }), { allowed: ATTRIBUTION_LEVELS });
     /* DEC-88 (C-92.13): the author's words on why this level, stored as written. Blank is empty after trim; the
        bound counts code points (K1030, K1050's reading). Asked before the level is judged, so nothing is written. */
     const why = typeof reason === "string" ? reason : null;
@@ -576,9 +575,9 @@ export class CaseTensions {
       return refusal("ATTRIBUTION_NO_REASON",
         why == null
           ? (reason === undefined || reason === null
-              ? "give the reason you choose this level, in your own words (reason=…)"
+              ? localize("case-tensions.index.give_the_reason_you_choose", "give the reason you choose this level, in your own words (reason=…)")
               : localize("case-tensions.index.the_reason_must_be_your", "the reason must be your words, as text; a {v1} was sent", { v1: String(typeof reason) }))
-          : !why.trim() ? "the reason is blank. Say in your own words why you choose this level"
+          : !why.trim() ? localize("case-tensions.index.the_reason_is_blank", "the reason is blank. Say in your own words why you choose this level")
           : localize("case-tensions.index.the_reason_is_chars_characters", "the reason is {chars} characters, over the {ATTRIBUTION_REASON_MAX} a choice's reason is kept to. Refused rather than cut", { chars: String(chars), ATTRIBUTION_REASON_MAX: String(ATTRIBUTION_REASON_MAX) }), { limit: ATTRIBUTION_REASON_MAX });
     if (!ATTRIBUTION_LEVELS.includes(lv))
       return refusal("ATTRIBUTION_LEVEL_UNKNOWN",
@@ -633,8 +632,7 @@ export class CaseTensions {
         localize("case-tensions.index.cid_edition_ed_is_already", "{cid} edition {ed} is already signed, and a signed edition answers forever; your choice applies to the next edition, which inherits it until you change it (§4.3)", { cid: String(cid), ed: String(ed) }), { ...named, caseId: cid, edition: ed });
     if (lv === "name" && !(me.handle && String(me.handle).trim()))
       return refusal("ATTRIBUTION_NAME_NO_HANDLE",
-        `'name' publishes the handle you appear under in this record, and you have none (§4.6). Choose another `
-        + `level, or set a handle first`, named);
+        localize("case-tensions.index.name_publishes_the_handle", "'name' publishes the handle you appear under in this record, and you have none (§4.6). Choose another level, or set a handle first"), named);
     /* END DEC-49 REGION is-attribute-edition */
     const prior = this.attributionInForce(cid, ed, subject);
     const when = stampInstant("second");

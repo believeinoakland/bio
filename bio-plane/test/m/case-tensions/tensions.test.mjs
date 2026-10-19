@@ -52,7 +52,7 @@ test("R4 a tension formed after ratification appears, with its case, edition, me
   const r = w.ct.caseTensions({ project: proj });
   assert.deepEqual(w.snapshot(), snap, "it writes nothing");
   assert.deepEqual([r.ok, r.wrote, r.project, r.limit, r.cursor], [true, false, proj, CASE_TENSIONS_MAX, null]);
-  assert.match(r.says, /No strength is composed/);
+  assert.equal(r.says, word("case-tensions.says.contradiction_found_published"));
   assert.equal(r.cases.length, 1);
   const one = r.cases[0];
   assert.deepEqual([one.case, one.edition, one.project], [CASE, 1, proj]);

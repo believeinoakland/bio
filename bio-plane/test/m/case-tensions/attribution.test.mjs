@@ -8,6 +8,7 @@ import { world, V, NOW, sha, storage } from "./fixture.mjs";
 import { ATTRIBUTION_ACT_CHECKS, ATTRIBUTION_REASON_MAX, migrateCaseTensions } from "../../../src/case-tensions/index.mjs";
 import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, attributionFrontmatterLines, unnamedSourceStatement }
   from "../../../src/case-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const F = "INQ-2026-0001", CASE = "CASE-2026-0001";
 const REASON = "I would rather the group speak for these words.";
@@ -65,8 +66,7 @@ test("R5 every refusal of the act, in order, carries its code, its check and its
 test("R5 C-92.13: a reason absent, not a string, blank or over 2,000 code points is refused ATTRIBUTION_NO_REASON with nothing written, asked after the level is given and before it is judged", () => {
   const { w, obs } = reached();
   const row = ATTRIBUTION_ACT_CHECKS.ATTRIBUTION_NO_REASON;
-  assert.deepEqual([row.check, row.translation], ["C-92.13", "Choosing how a published case shows who said your observation "
-    + "records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."]);
+  assert.deepEqual([row.check, row.translation], ["C-92.13", word("refusal.ATTRIBUTION_NO_REASON")]);
   assert.equal(ATTRIBUTION_REASON_MAX, 2000);
   const held = docOf(w).doc_sha;
   for (const [label, reason] of [["absent", undefined], ["null", null], ["a number", 7], ["an object", { why: "x" }],
@@ -115,7 +115,7 @@ test("R5 a choice is recorded per case, observation and edition, dated, with its
   w.prepare("CASE-2026-0002", 1, { roles: [{ target: F, version_sha: w.head(F) }] });
   const none = w.op("attribute", { by: "ann" }, { caseId: "CASE-2026-0002", edition: 1, observation: obs, level: "group", reason: REASON });
   assert.deepEqual([none.ok, none.case_document.reauthored], [true, false]);
-  assert.match(none.case_document.why, /no attribution statements/);
+  assert.equal(none.case_document.why, word("case-tensions.why.case_document_carries"));
 });
 
 test("R5 the level in force is the latest choice at or before the edition, and each level publishes its own value, never the member id; unchosen is stated with why", () => {
@@ -130,13 +130,13 @@ test("R5 the level in force is the latest choice at or before the edition, and e
   const { w: w2, obs: o2, proj: p2 } = reached();
   const none = w2.ct.attributionStatements(CASE, 1, p2, [o2])[0];
   assert.deepEqual([none.level, none.shown, none.chosen_at_edition], [null, null, null]);
-  assert.match(none.why, /chosen no level/);
+  assert.equal(none.why, word("case-tensions.why.author_chosen_level"));
   /* a level whose value cannot be produced is unchosen with its reason */
   attribute(w2, { obs: o2, level: "name", by: "ann" });
   w2.st.sql.exec(`UPDATE members SET handle=NULL WHERE member_id='ann'`);
   const lost = w2.ct.attributionStatements(CASE, 1, p2, [o2])[0];
   assert.deepEqual([lost.level, lost.shown], [null, null]);
-  assert.match(lost.why, /holds no handle/);
+  assert.equal(lost.why, word("case-tensions.why.author_chose_edition", { level: "name", edition: "1", level3: "handle" }));
   for (const level of ATTRIBUTION_LEVELS) {
     const { w: wl, obs: ol, proj: pl } = reached();
     attribute(wl, { obs: ol, level, by: "ann" });
@@ -293,6 +293,6 @@ test("R7 the same refusals: C-92.4 for a capture the edition does not state as W
   w.sign(CASE, 1, { roster: [] });
   expect(attributeCapture(w), "ATTRIBUTION_EDITION_RATIFIED");
   const t = ATTRIBUTION_ACT_CHECKS;
-  assert.match(t.ATTRIBUTION_NOT_AN_OBSERVATION.translation, /Withheld/);
-  assert.match(t.ATTRIBUTION_NOT_THE_AUTHOR.translation, /attested/);
+  assert.equal(t.ATTRIBUTION_NOT_AN_OBSERVATION.translation, word("refusal.ATTRIBUTION_NOT_AN_OBSERVATION"));
+  assert.equal(t.ATTRIBUTION_NOT_THE_AUTHOR.translation, word("refusal.ATTRIBUTION_NOT_THE_AUTHOR"));
 });
