@@ -25,7 +25,7 @@ test("R8 R14 each refusal carries its row in the module's own table, family C-12
   const w = world();
   const got = new Map();
   const src = { captureSha: w.held("INFO-2026-0001", sha("source")), extent: { kind: "document" } };
-  const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
+  const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9", effective_from: "2026-09-01" };
   const draft = (x = {}) => w.lf.ruleDraft({ section: "deadlines", entry: DL, source: src, reason: "r", by: V("bob"), ...x });
   const rule = draft().rule;
   const drafted = draft({ entry: { ...DL, rule: "kept_drafted" } }).rule;
@@ -67,9 +67,7 @@ const NAMES_THE_COPY = /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b/i;
 
 test("R8 R2 R3 DEC-149: each member-facing string names the group's Civicsmith or needs no name (C-126.2's translation, factStatus's note, the undetermined horizon's why)", () => {
   /* C-126.2 (NO_SUCH_FACT): reworded to need no name */
-  assert.equal(LOCAL_FACTS_CHECKS.NO_SUCH_FACT.translation, "No local fact of the active jurisdiction profiles answers to that path. "
-    + "A path names one profile's holiday year (of its office calendar or of a named closure list), an office's hours or the "
-    + "time zone. Nothing was written.");
+  assert.equal(LOCAL_FACTS_CHECKS.NO_SUCH_FACT.translation, word("refusal.NO_SUCH_FACT"));
   for (const [code, r] of Object.entries(LOCAL_FACTS_CHECKS)) assert.doesNotMatch(r.translation, NAMES_THE_COPY, code);
   const w = world();
   assert.doesNotMatch(w.act("nowhere", "confirm").translation, NAMES_THE_COPY);

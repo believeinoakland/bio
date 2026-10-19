@@ -19,13 +19,9 @@ export const LOCAL_FACTS_WORDS = Object.freeze({
   'refusal.FACT_HOW_REFUSED': word("refusal.FACT_HOW_REFUSED"),
   'refusal.FACT_VALUE_REFUSED': word("refusal.FACT_VALUE_REFUSED"),
   'refusal.MACHINE_CANNOT_DRAFT_RULE': word("refusal.MACHINE_CANNOT_DRAFT_RULE"),
-  'refusal.RULE_SECTION_UNKNOWN': "A team's rule is either a deadline or a legal fact, and this is neither. Nothing was "
-    + "written.",
-  'refusal.RULE_ENTRY_INVALID': "This rule isn't in the form a deadline or a legal fact takes: {errors}. Nothing was "
-    + "written.",
-  'refusal.RULE_NO_SOURCE': "A rule is drafted from its source: name the captured document and the part of it that "
-    + "states the rule. Either no such capture is held where you can see it, or that part isn't in it. Nothing was "
-    + "written.",
+  'refusal.RULE_SECTION_UNKNOWN': word("refusal.RULE_SECTION_UNKNOWN"),
+  'refusal.RULE_ENTRY_INVALID': word("refusal.RULE_ENTRY_INVALID", { errors: "{errors}" }),
+  'refusal.RULE_NO_SOURCE': word("refusal.RULE_NO_SOURCE"),
   'refusal.RULE_IN_PROFILE': word("refusal.RULE_IN_PROFILE"),
   'refusal.RULE_NO_REASON': word("refusal.RULE_NO_REASON"),
   'refusal.NO_SUCH_GROUP_RULE': word("refusal.NO_SUCH_GROUP_RULE"),
