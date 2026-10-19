@@ -20,7 +20,8 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { buildSync } from "esbuild";
+import { build } from "esbuild";
+import { bundleOptions } from "../scripts/build.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
@@ -31,6 +32,8 @@ import { run, release, armWith, restoreSigners, SIGNER, bump, sha } from "./fixt
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
 const WORKER_MB = 128;
+/* R33 (T51; N1240): the live memory of an install and of an update at the release's real size stays below 112 MB of the 128. */
+const LIVE_MB = 112;
 const here = (f) => fileURLToPath(new URL(f, import.meta.url));
 
 /* The release's real size, with bytes 0x80-0x9F in it as UTF-8 writes U+0080..U+009F, and still stating its limits and
@@ -86,8 +89,9 @@ let bundle = null, repo = null, repoFleet = null;
 const real = here("../../release");
 const prepare = async () => {
   if (bundle) return;
-  /* The file a Worker would run: the installer built as `npm run build` builds it (ASCII source, the release as one literal). */
-  buildSync({ entryPoints: [here("../src/index.mjs")], bundle: true, format: "esm", platform: "neutral", outfile: join(dir, "installer.mjs"), logLevel: "silent" });
+  /* The file a Worker would run: the installer built as `npm run build` builds it (ASCII source, the release as one literal, the
+     word rows cut to the installer's own keys, R72). */
+  await build({ ...(await bundleOptions()), outfile: join(dir, "installer.mjs") });
   bundle = join(dir, "installer.mjs");
   /* A signed 21 MB release for the repository to serve: newer than the built-in, naming no fleet. */
   const bytes = Buffer.from(REAL);
@@ -114,7 +118,7 @@ async function child(scenario) {
 }
 const within = (r, what) => {
   if (process.env.R33_REPORT) console.log(`R33 peak: ${what}: ${r.peakMB} MB live (baseline ${r.baselineMB}), resident growth ${r.rssGrowthMB} MB; ${JSON.stringify(r.samples)}`);
-  assert.ok(r.peakMB < WORKER_MB, `${what}: live memory peaked at ${r.peakMB} MB (baseline ${r.baselineMB} MB; limit ${WORKER_MB} MB): ${JSON.stringify(r.samples)}`);
+  assert.ok(r.peakMB < LIVE_MB, `${what}: live memory peaked at ${r.peakMB} MB (baseline ${r.baselineMB} MB; limit ${LIVE_MB} MB): ${JSON.stringify(r.samples)}`);
   /* And what the act added to the process's resident high-water mark, which sees what no sample point does. */
   assert.ok(r.rssGrowthMB < WORKER_MB, `${what}: the act took the process ${r.rssGrowthMB} MB above where loading the installer left it (limit ${WORKER_MB} MB)`);
 };

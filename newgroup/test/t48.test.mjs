@@ -249,7 +249,7 @@ test("R55 a refused upload is the stop with Cloudflare's own words, \"Try again\
 });
 
 test("R43 (T48) the installer's ARMED_SIGNERS are `signatures`' RELEASE_KEYS, the fresh release key and the offline recovery key and no other, read from there and held in no second list; arming a test key for one act never changes the shipped list", async () => {
-  const fresh = await import("../src/signers.mjs?t48=" + Date.now());
+  const fresh = await import("../src/steps/signers.mjs?t48=" + Date.now());
   assert.deepEqual([...fresh.ARMED_SIGNERS], [...RELEASE_KEYS]);
   assert.equal(RELEASE_KEYS.length, 2);
   assert.deepEqual(RELEASE_KEYS.map((k) => k.split(" ")[2]), ["bio-release", "bio-release-recovery"]);

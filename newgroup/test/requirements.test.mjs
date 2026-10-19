@@ -21,7 +21,7 @@ import { RELEASE_SOURCE, RELEASE_BYTES } from "./release-text.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease, releaseContainers, binaryLiteral } from "../scripts/embed-release.mjs";
 import vm from "node:vm";
 import { word, hasWord } from "../src/words.mjs";
-import { WAIT_BOUND_MINUTES } from "../src/cfx.mjs";
+import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,

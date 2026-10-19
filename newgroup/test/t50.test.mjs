@@ -8,9 +8,10 @@ import { fileURLToPath } from "node:url";
 import * as installer from "../src/index.mjs";
 import { CFG } from "../src/index.mjs";
 import { word, hasWord, KEYS } from "../src/words.mjs";
-import { WAIT_BOUND_MINUTES } from "../src/cfx.mjs";
+import { WAIT_BOUND_MINUTES } from "../src/steps/api.mjs";
 import { ASSISTANT_NEEDS, ASSISTANT_OFFER } from "../src/ui.mjs";
-import { partsLeftOut, leftOutNotice, IMAGE_UNPULLABLE } from "../src/images.mjs";
+import { partsLeftOut, leftOutNotice } from "../src/images.mjs";
+import { IMAGE_UNPULLABLE } from "../src/steps/images.mjs";
 import { RELEASE_VERSION, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { FLEET_BINDINGS, HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 import { WORD_ROWS } from "../../bio-plane/src/setup-words/rows.mjs";
@@ -569,9 +570,9 @@ test("R72 words by key and 'team': every key the installer reads is held by setu
   const arr = text.slice(at + "WORD_ROWS = Object.freeze(".length, text.indexOf("].map(", at) + 1);
   const rows = (await import("node:vm")).runInNewContext("(" + arr + ")");
   const keep = new Set(await bundledKeys());
-  assert.ok(rows.length > 100 && rows.length < 400, `${rows.length} rows, not the whole list`);
-  assert.deepEqual(Array.from(rows, (r) => r[0]).filter((k) => !keep.has(k)), [], "no row the installer does not read");
   assert.ok(WORD_ROWS.length > 5000);
+  assert.ok(rows.length > 100 && rows.length < WORD_ROWS.length / 5, `${rows.length} rows, not the whole list`);
+  assert.deepEqual(Array.from(rows, (r) => r[0]).filter((k) => !keep.has(k)), [], "no row the installer does not read");
   for (const k of KEYS) assert.ok(rows.some((r) => r[0] === k), `${k} is in the bundle`);
 });
 

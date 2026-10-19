@@ -110,3 +110,34 @@ test("R79 the invitation page is built from the keys: its committed file is exac
   assert.ok(committed.includes(h(word("installer.invite.title")).replace(/&#39;/g, "'")));
   assert.notEqual(committed.replace(word("installer.invite.button"), "Click here"), invitePage(), "an inline sentence is not the output");
 });
+
+/* ------------------------------------------------------------------------------------------------ R80 */
+
+const OLD_EXPORTS = ["ARMED_SIGNERS", "ASSISTANT_BINDING", "ASSISTANT_OWN_ACCOUNTS", "BROWSER_BINDING", "CFG", "CONTAINER_PART", "HANDOVER_PATH",
+  "INSTANCE_AI_BINDING", "MEMBER_BINDING", "MEMBER_OBJECTS", "OWN_HOSTS_BINDING", "PER_REQUEST_DATASET", "PROFILES_BINDING", "RETIRED_BINDINGS",
+  "RETIRED_CLAUDE_BINDING", "SEAL_BINDING", "SourceUnavailable", "VPC_BINDING", "VPC_MEMBER", "WORKER_PART", "assetResponse", "containerClasses",
+  "containerDescriptor", "default", "filterExcludes", "instanceAiOk", "memberLimits", "objectMigrations", "planeLimits", "reportsBuilds",
+  "vpcServiceOk", "workerDescriptor"];
+
+test("R80 the installer delegates the account and the fleet to installer-steps and answers as before: `src/index.mjs` exports exactly the names it exported before the split, every moved one being the very value installer-steps exports (no copy); the module's own source and scripts stay under 4,000 lines; control: a name missing, or a copy of a moved name, is found", async () => {
+  const index = await import("../src/index.mjs");
+  const steps = await import("../src/steps/index.mjs");
+  assert.deepEqual(Object.keys(index).sort(), [...OLD_EXPORTS].sort(), "the export names equal the old list");
+  const moved = OLD_EXPORTS.filter((n) => n in steps);
+  assert.ok(moved.length >= 20, `most of the old list moved (${moved.length})`);
+  for (const n of moved) assert.ok(index[n] === steps[n], `${n} is installer-steps' own, not a copy`);
+  /* No other file of the module's source holds a name installer-steps exports, except by re-exporting that same value. */
+  const { readdirSync, readFileSync } = await import("node:fs");
+  for (const f of readdirSync(new URL("../src/", import.meta.url)).filter((x) => /\.mjs$/.test(x) && x !== "release.mjs" && x !== "index.mjs")) {
+    const mod = await import("../src/" + f);
+    for (const [n, v] of Object.entries(mod)) if (n in steps) assert.ok(v === steps[n], `${f}: ${n} is a copy of installer-steps'`);
+  }
+  /* P6: the module's own source (not installer-steps') and its scripts. */
+  const lines = (dir, skip = []) => readdirSync(new URL(dir, import.meta.url)).filter((x) => /\.mjs$/.test(x) && !skip.includes(x))
+    .reduce((n, x) => n + readFileSync(new URL(dir + x, import.meta.url), "utf8").split("\n").length, 0);
+  assert.ok(lines("../src/", ["release.mjs"]) + lines("../scripts/") < 4000, "under P6's size");
+  /* Control: the list notices a name missing and a copy. */
+  assert.notDeepEqual([...Object.keys(index), "extra"].sort(), [...OLD_EXPORTS].sort());
+  const copied = (f) => (...a) => f(...a);
+  assert.ok(copied(index.planeLimits) !== steps.planeLimits, "a copy of a moved function is a different value, which the loop above would name");
+});
