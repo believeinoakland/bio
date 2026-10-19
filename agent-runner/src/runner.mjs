@@ -5,7 +5,6 @@ import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DETAIL_MAX, QUIET, PATH, passed, scrub } from './env.mjs';
-import { localize } from '../../bio-plane/src/setup-words/index.mjs';
 
 export const RELAY_SERVER = 'relay';
 export { DETAIL_MAX, scrub };
@@ -38,15 +37,15 @@ export function shapeFault(r) {
   if (!str(r.system)) return 'system must be a string';
   if (!str(r.prompt) || !r.prompt) return 'prompt must be a non-empty string';
   if (!Number.isInteger(r.max_turns) || r.max_turns < 1 || r.max_turns > MAX_TURNS_BOUND)
-    return localize('agent-runner.runner.max_turns_must_be_an', 'max_turns must be an integer from 1 to {MAX_TURNS_BOUND}', { MAX_TURNS_BOUND: String(MAX_TURNS_BOUND) });
-  if (r.effort !== undefined && !EFFORTS.includes(r.effort)) return localize('agent-runner.runner.effort_must_be_one_of', 'effort must be one of {EFFORTS}', { EFFORTS: String(EFFORTS.join(', ')) });
+    return `max_turns must be an integer from 1 to ${MAX_TURNS_BOUND}`;
+  if (r.effort !== undefined && !EFFORTS.includes(r.effort)) return `effort must be one of ${EFFORTS.join(', ')}`;
   if (!Array.isArray(r.tools)) return 'tools must be an array';
   const seen = new Set();
   for (const t of r.tools) {
     if (!t || !TOOL_NAME.test(t.name) || seen.has(t.name)) return 'each tool needs a distinct name of [A-Za-z0-9_-]{1,64}';
-    if (!str(t.description)) return localize('agent-runner.runner.tool_name_description_must_be', 'tool {name}: description must be a string', { name: String(t.name) });
+    if (!str(t.description)) return `tool ${t.name}: description must be a string`;
     if (!t.input_schema || typeof t.input_schema !== 'object' || Array.isArray(t.input_schema))
-      return localize('agent-runner.runner.tool_name_input_schema_must', 'tool {name}: input_schema must be an object', { name: String(t.name) });
+      return `tool ${t.name}: input_schema must be an object`;
     seen.add(t.name);
   }
   return null;
@@ -73,7 +72,7 @@ export function imageFault(b) {
   const s = b.source;
   if (!s || typeof s !== 'object' || Array.isArray(s) || s.type !== 'base64')
     return 'an image block must be {type: "image", source: {type: "base64", media_type, data}}';
-  if (s.media_type !== IMAGE_MEDIA_TYPE) return localize('agent-runner.runner.an_image_blocks_media_type', 'an image block\'s media_type must be {IMAGE_MEDIA_TYPE}', { IMAGE_MEDIA_TYPE: String(IMAGE_MEDIA_TYPE) });
+  if (s.media_type !== IMAGE_MEDIA_TYPE) return `an image block's media_type must be ${IMAGE_MEDIA_TYPE}`;
   if (!base64(s.data)) return 'an image block\'s data must be base64';
   return null;
 }
@@ -88,7 +87,7 @@ export function toolContent(r) {
   for (const b of r.content) {
     if (!b || b.type !== 'image') { content.push(b); continue; }
     const fault = imageFault(b);
-    if (fault) return { content: [{ type: 'text', text: localize('agent-runner.runner.the_picture_was_not_passed', 'the picture was not passed: {fault}', { fault: String(fault) }) }], fault: true };
+    if (fault) return { content: [{ type: 'text', text: `the picture was not passed: ${fault}` }], fault: true };
     content.push({ type: 'image', data: b.source.data, mimeType: b.source.media_type });
   }
   return { content };
@@ -104,7 +103,7 @@ export function relayServer(sdk, tools, relay) {
   }));
   server.server.setRequestHandler(sdk.CallToolRequestSchema, async (req) => {
     const { name, arguments: input } = req.params;
-    if (!named.has(name)) return { content: [{ type: 'text', text: localize('agent-runner.runner.no_tool_named_name', 'no tool named {name}', { name: String(name) }) }], isError: true };
+    if (!named.has(name)) return { content: [{ type: 'text', text: `no tool named ${name}` }], isError: true };
     const r = await relay(name, input ?? {});
     const { content, fault } = toolContent(r);
     return r.is_error || fault ? { content, isError: true } : { content };
@@ -153,7 +152,7 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
     if (ended) return null;
     const dir = await mkdtemp(join(tmpRoot, 'agent-runner-'));
     let stderr = '', authFailed = false;
-    const refused = () => answer(fail('SIGNIN_TOKEN_REFUSED', localize('agent-runner.runner.anthropic_refused_this_members_claude', 'Anthropic refused this member\'s Claude sign-in: connect Claude again')));
+    const refused = () => answer(fail('SIGNIN_TOKEN_REFUSED', 'Anthropic refused this member\'s Claude sign-in: connect Claude again'));
     try {
       for (const d of ['home', 'tmp', 'work', 'claude']) await mkdir(join(dir, d));
       const relay = (name, input) => new Promise((resolve, reject) => {
@@ -199,7 +198,7 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
       if (!ok && authFailed) return refused();
       if (!result) return answer(fail('SDK_ERROR', scrub(stderr || 'the query ended with no result', secret)));
       if (result.subtype === 'error_max_turns')
-        return answer(fail('MAX_TURNS', localize('agent-runner.runner.stopped_after_num_turns_turns', 'stopped after {num_turns} turns (max_turns {max_turns})', { num_turns: String(result.num_turns), max_turns: String(request.max_turns) })));
+        return answer(fail('MAX_TURNS', `stopped after ${result.num_turns} turns (max_turns ${request.max_turns})`));
       if (!ok) {
         const why = (result.errors && result.errors.join('; ')) || result.result || result.subtype;
         return answer(fail('SDK_ERROR', scrub(why, secret)));
