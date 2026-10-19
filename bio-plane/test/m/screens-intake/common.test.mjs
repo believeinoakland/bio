@@ -30,6 +30,7 @@ const VALUES = {
   opencaptures: { ok: true, captures: [{ session: "S-1", locator: "https://x.example/a", primary_sha: SHA, started: "2026-10-01T00:00:00Z", outstanding: 2 }], truncated: false },
   search: { hits: [{ bundle_id: "INQ-2026-0001-q", title: "Q?" }] },
   captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
+  projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
   memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
 };
 const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },

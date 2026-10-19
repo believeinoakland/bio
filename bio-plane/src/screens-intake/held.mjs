@@ -8,7 +8,9 @@ function heldReads() {
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
            aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R40 (membership R17, R147): the handles an upload's uploader is named by; the stamp names a member by id */
-           members: { op: "memberlist" } };
+           members: { op: "memberlist" },
+           /* B6: a row names its project by the project's name, never by its record id */
+           projects: { op: "projectlist" } };
 }
 
 function renderHeld(cs, view) {
@@ -43,7 +45,7 @@ function renderHeld(cs, view) {
     return (parts ? `<span class="meta">${cs.w("screen.held.archive", { parts: { html: parts } })}</span>` : "")
       + door
       + (Array.isArray(r.files) && r.files.length ? `<ul class="mk-list">`
-      + r.files.map((f) => `<li>${cs.ref("capture", f.sha256, f.name || f.document, [])}`
+      + r.files.map((f) => `<li>${cs.ref("capture", f.sha256, f.name || cs.w("screen.held.untitled").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [])}`
         + (f.grade ? ` ${cs.grade("capture", f.grade)}` : "")
         + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>" : "")
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
@@ -52,6 +54,13 @@ function renderHeld(cs, view) {
      by `size.kb` / `size.mb` / `size.small`, after the uploader in the same row. The uploader, the day and the size are the row's
      own `actor`, `retrieved` and `bytes` (`capture` R77); the uploader is named by the handle `memberlist` gives for the stamp's
      member (its `member:` prefix removed), never by the id; a row answering none of them draws none. */
+  const projectRows = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.projects)
+    ? view.data.projects.value.projects : [];
+  /* B6: the project's name; a project the viewer's list does not name is not named at all (no slug, no id) */
+  const projectOf = (r) => {
+    const p = r.project ? projectRows.find((x) => x && x.id === r.project) : null;
+    return p && p.name ? cs.w("screen.held.project", { project: p.name }) : r.project ? "" : cs.w("screen.held.noproject");
+  };
   const roster = view.data.members && view.data.members.state === "ok" && view.data.members.value && Array.isArray(view.data.members.value.members)
     ? view.data.members.value.members : [];
   const source = (r) => {
@@ -90,7 +99,7 @@ function renderHeld(cs, view) {
     key: (r) => r.bundle_id,
     pick: true,
     cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
-      + `<span class="meta">${grade(r)} ${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
+      + `<span class="meta">${grade(r)} ${[age(r.age_days), projectOf(r)].filter(Boolean).join(" · ")}`
       + source(r) + "</span>"
       + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
@@ -111,7 +120,7 @@ function renderHeld(cs, view) {
       cells: (r) => {
         const a = r.set_aside || {};
         return [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
-          + `<span class="meta">${grade(r)} ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}</span>`
+          + `<span class="meta">${grade(r)} ${projectOf(r)}</span>`
           + `<span>${cs.w("screen.held.asideby", { author: a.author || "", reason: a.reason || "" })}${a.at ? ` ${cs.date(a.at)}` : ""}</span>`];
       },
       acts: (r) => cs.act("heldrestore", { data: { id: r.bundle_id } }),
