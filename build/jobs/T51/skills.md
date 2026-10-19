@@ -76,3 +76,12 @@ Note for the record of this job: I started on a stale local job branch by mistak
 - **Checks:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail. Words check for `skills`: 0 failures. Exports: no existing export changed; three added (`DEC27_LIMIT`, `STATUS_REPORT_LOAD_WHEN`, `draftsAbsentSentence`). Architecture 0 failures; coverage 51 of 51; ownership 0 failures.
 
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 4, module lines 2923
+
+## J4 · COMPLETE
+
+B3 settled and COMPLETE again (commit HEAD on job/T51/skills, pushed).
+- R45 absent_because: now equal to draftsAbsentSentence(DRAFTS), the product's own sentence builder, exported from skilldoctrine.mjs.
+- R25 translation: run-rules source read dropped; equality with translationOf kept.
+- Item 2 accepted.
+Checks: skills tests 130/130; words skills 0; exports unchanged (three added); architecture 0; coverage 51/51; ownership 0.
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 4, module lines (see record).
