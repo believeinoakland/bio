@@ -63,3 +63,11 @@ COMPLETE (after B9) for `interface-shell` in T51.
 B9 applied: `shell.readonly` takes `{members}` and draws `shell.readonly.members` as the reference to `members` (plain where that screen is not registered); the team-name wrap rule is the design's now, so the shell's `STYLE` carries none (the R65 test is back to its original selectors); terms read `screen.glossary.<term>.name` as built (R95 test uses the real rows). `refusal.DIGEST_MISMATCH.download` is the screen's word for R98's answer `{code: "DIGEST_MISMATCH"}` (the shell returns the code and the two digests; the screen picks the word).
 
 Suite: 192 tests, 189 pass, 3 fail: the two R100 tests (op-declarations R76 not merged; accepted B7) and R73 (screens-action still names `actionhold` on `action`; its job's). Checks: format, architecture, coverage, ownership 0 failures; words check lists only the SSH armour (unkeyed list, B371).
+
+## J5 · COMPLETE
+
+COMPLETE (after B10) for `interface-shell` in T51.
+
+R100 fixed. Two causes: (1) the kit looked for a browser act's rows under `act.<act>.label.<screen>` and `.does`; the table holds them as `act.owed_<act>.label.<screen>` and `act.owed_<act>.does`, so the kit now reads those for a browser act (and the page carries those words); (2) my test's fixture screen closed over the act's name, which a self-contained screen cannot (the render is now built by source). 
+
+Suite: 192 tests, 192 pass (the R73 red cleared with screens-action's merge). screens-inquiry 226/226 and screens-publish 134/134 pass. format, architecture, coverage (100 of 100), ownership and the words check: 0 failures. No accepted reds remain.
