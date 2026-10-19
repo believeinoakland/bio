@@ -221,7 +221,7 @@ export const HELD_PAGE_WAIT_MS = 5000;
 const HELD_PAGE_LANES = 8;
 /* R88 (T51): a vouched row is not asked of R78's examination, so its eligibility reads undetermined with this basis. A
    builder's diagnostic: screens draw `standing` and `vouched`, not this sentence. */
-const VOUCHED_BASIS = "this document is already vouched for, so whether it could be vouched for in a batch is not asked";
+const VOUCHED_BASIS = localize("capture.index.vouched_basis", "this document is already vouched for, so whether it could be vouched for in a batch is not asked");
 /* R88 (T51): the state a vouched document is at (released through `ratification`). */
 const VOUCHED_STATE = "verified";
 /* R91: what a wait answers when it ran out first. */
@@ -628,7 +628,7 @@ export class Capture {
   async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null } = {}) {
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written" };
+               detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
     /* DEC-49 REGION is-upload-stated */
     if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
       const row = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
@@ -649,7 +649,7 @@ export class Capture {
                detail: localize("capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", { say: String(say("capture.response.group_civicsmith_evidence")) }) };
     }
     const reader = uploadReader(bytes);
-    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
+    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: localize("capture.index.upload_no_bytes", "the upload carried no bytes; nothing was written") };
     /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
        parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
     const whole = createSha256();
@@ -680,7 +680,7 @@ export class Capture {
         if (total > CAPTURE_MAX) {
           await reader.cancel();
           return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: CAPTURE_MAX,
-                   detail: "the file exceeds what this surface will capture even in parts; nothing was written" };
+                   detail: localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
         }
         whole.update(value);
         held.push(value); heldBytes += value.length;
@@ -690,9 +690,9 @@ export class Capture {
     } catch {
       await reader.cancel();
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
-               detail: "the file's bytes could not be read whole or held under their own digest, so nothing was written" };
+               detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
     }
-    if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: "the file has no bytes; nothing was written" };
+    if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: localize("capture.index.file_no_bytes", "the file has no bytes; nothing was written") };
     const sha = whole.hex();
     const multipart = parts.length > 1;
     if (!multipart && parts[0].sha256 !== sha)
@@ -713,7 +713,7 @@ export class Capture {
       return r && r.recorded === true ? r : null;
     };
     const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
-                         detail: "the acquisition receipt could not be written, so nothing was filed" };
+                         detail: localize("capture.index.receipt_not_written", "the acquisition receipt could not be written, so nothing was filed") };
     const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
     if (existed) {
       /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
@@ -776,7 +776,7 @@ export class Capture {
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: word("capture.upload.asserts", { by: String(by), at: String(at) }),
-        evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+        evidence: localize("capture.index.upload_receipt_evidence", "the upload's receipt: its digest, taken as the bytes arrived, and its instant"),
         bound: false, via: UPLOAD_VIA,
       }],
       capture: {
@@ -856,7 +856,7 @@ export class Capture {
     if (!v.ok) {
       const { ok: _ok, reason, ...rest } = v;
       return { ok: false, reason: `SIG_${reason}`, ...rest, captureSha: sha, status: 400,
-               detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written" };
+               detail: localize("capture.index.signature_not_verified", "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written") };
     }
     const when = at && ISO_INSTANT.test(at) ? at : stampSecond();
     const seq = this.#tx(() => {
@@ -894,7 +894,7 @@ export class Capture {
    *  are held (a capture held in parts counts when provenance holds its receipt, provenance R5). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-    if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
+    if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: localize("capture.index.reattest_needs_sha", "reattest takes the sha256 of a capture the record holds") };
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const p = this.provenance;
     const holds = async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null);
@@ -1076,18 +1076,18 @@ export class Capture {
     const looking = check === true;
     if (looking && (typeof member !== "string" || !memberIdOf(member).trim() || isMachineIdentity(member)))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched" };
+               detail: localize("capture.index.heldat_member_act", "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched") };
     const undetermined = (basis, asOf = null, differs = false) =>
       ({ state: "undetermined", basis, as_of: asOf, earlier_differs: differs });
     let found;
     try { found = this.#heldAtRead({ address, sha256, viewer }); }
     catch {
       return { ok: true, held: null, copy: null, versions: null, truncated: false,
-               changed: undetermined("the record could not be read, so whether it holds this, and whether the source has changed, is not known") };
+               changed: undetermined(localize("capture.index.heldat_record_unreadable", "the record could not be read, so whether it holds this, and whether the source has changed, is not known")) };
     }
     if (!found)
       return { ok: true, held: false, copy: null, versions: 0, truncated: false,
-               changed: undetermined("the record holds no copy of this that you may see, so there is nothing to compare") };
+               changed: undetermined(localize("capture.index.heldat_no_copy_seen", "the record holds no copy of this that you may see, so there is nothing to compare")) };
     const { copy, receipt, kind, versions, truncated, differs } = found;
     const asOf = copy.as_of;
     delete copy.as_of;
@@ -1096,14 +1096,14 @@ export class Capture {
       return { ok: true, ...base, changed: undetermined(
         localize("capture.index.the_record_holds_this_copy", "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone", { asOf: String(asOf) }), asOf, differs) };
     const no = (basis) => ({ ok: true, ...base, changed: undetermined(basis, asOf, differs) });
-    if (!receipt.address) return no("this copy has no address to look at");
+    if (!receipt.address) return no(localize("capture.index.heldat_no_address", "this copy has no address to look at"));
     if (receipt.via !== "direct" || kind === null || kind === "rendered" || !receipt.plain_address)
-      return no(receipt.via !== "direct" ? "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it"
-              : kind === "rendered" ? "this copy is a rendered capture, which a plain look at the site cannot be compared with"
-              : kind === null ? "the record cannot say how this copy was captured, so a plain look at the site is not compared with it"
-              : "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it");
+      return no(receipt.via !== "direct" ? localize("capture.index.heldat_not_plain_fetch", "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it")
+              : kind === "rendered" ? localize("capture.index.heldat_rendered", "this copy is a rendered capture, which a plain look at the site cannot be compared with")
+              : kind === null ? localize("capture.index.heldat_capture_unknown", "the record cannot say how this copy was captured, so a plain look at the site is not compared with it")
+              : localize("capture.index.heldat_export", "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it"));
     if (!isPublicHttpsLocator(receipt.address))
-      return no("this copy has no public address to look at");
+      return no(localize("capture.index.heldat_no_public_address", "this copy has no public address to look at"));
     /* One governed request, conditional on the validators of the copy's own filed fetch when it has them; nothing is filed. */
     const validators = this.validatorsOf({ addressNorm: receipt.address_norm, captureSha: copy.sha256 });
     const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
@@ -1114,15 +1114,15 @@ export class Capture {
     };
     let g;
     try { g = await governedFetch(this, receipt.address, "heldat", null, { headers: conditional }); }
-    catch { await outcome("fetch_failed"); return no("the request for the address did not complete, so the source was not looked at"); }
+    catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_request_incomplete", "the request for the address did not complete, so the source was not looked at")); }
     if (g.refusedByGovernor) {
       await outcome("governed");
-      return no("the host is being given time between requests, so the source was not looked at");
+      return no(localize("capture.index.heldat_host_paced", "the host is being given time between requests, so the source was not looked at"));
     }
     const res = g.res;
     const drop = async () => { try { await res.body?.cancel?.(); } catch { /* gone */ } };
     const looks = (state, extra = {}) => ({ ok: true, ...base, changed: { state, basis: state === "unchanged"
-      ? "the site still gives the same document as this copy" : "the site now gives a different document from this copy",
+      ? localize("capture.index.heldat_same_document", "the site still gives the same document as this copy") : localize("capture.index.heldat_changed_document", "the site now gives a different document from this copy"),
       as_of: asOf, looked_at: looked, ...extra, earlier_differs: differs } });
     if (res.status === 304 && conditional) { await drop(); await outcome("success", 304); return looks("unchanged"); }
     if (!res.ok || !res.body) {
@@ -1137,10 +1137,10 @@ export class Capture {
         if (done) break;
         total += value.length;
         if (total > CAPTURE_MAX) { try { await reader.cancel(); } catch { /* gone */ } await outcome("success", res.status);
-          return no("the document at the address is larger than this surface compares, so it was not looked at whole"); }
+          return no(localize("capture.index.heldat_too_large", "the document at the address is larger than this surface compares, so it was not looked at whole")); }
         h.update(value);
       }
-    } catch { await outcome("fetch_failed"); return no("the document did not arrive whole, so the source was not looked at"); }
+    } catch { await outcome("fetch_failed"); return no(localize("capture.index.heldat_not_whole", "the document did not arrive whole, so the source was not looked at")); }
     await outcome("success", res.status);
     const served = h.hex();
     return served === copy.sha256 ? looks("unchanged") : looks("changed", { served_sha256: served });
@@ -1641,7 +1641,7 @@ export class Capture {
     }
     /* END DEC-49 REGION is-held-act-reasoned */
     if (!Array.isArray(ids) || ids.length === 0)
-      return { ok: false, reason: "NO_IDS", status: 400, detail: "name at least one document; nothing was written" };
+      return { ok: false, reason: "NO_IDS", status: 400, detail: localize("capture.index.names_no_document", "name at least one document; nothing was written") };
     if (ids.length > PER_ITEM_MAX)
       return { ok: false, reason: "TOO_MANY_IDS", status: 400, max: PER_ITEM_MAX, count: ids.length,
                detail: localize("capture.index.at_most_per_item_max", "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written", { PER_ITEM_MAX: String(PER_ITEM_MAX) }) };
@@ -1722,7 +1722,7 @@ export class Capture {
                                 detail: "no document you may see answers to these ids; nothing was written" };
     const notAside = [...standing].filter(([, r]) => r.standing).map(([id]) => id);
     if (notAside.length) return { ok: false, reason: "NOT_SET_ASIDE", ids: notAside, status: 409,
-                                  detail: "these documents are not set aside; nothing was written" };
+                                  detail: localize("capture.index.not_set_aside", "these documents are not set aside; nothing was written") };
     /* The set-aside each restore undoes is the document's latest act (it is set aside now); its questions carry over. */
     const undone = new Map([...standing.keys()].map((id) => [id, this.#rows(
       `SELECT q.question FROM held_act_questions q
@@ -1762,7 +1762,7 @@ export class Capture {
                documents, limit: cap, truncated, next: truncated ? cursorOf([last.at, last.bundle_id, String(last.seq)]) : null };
     } catch {
       return { ok: false, reason: "HELD_ACTS_UNREADABLE", question: typeof question === "string" ? question : null, acts: null,
-               detail: "the set-asides recorded with this question could not be read" };
+               detail: localize("capture.index.held_acts_unreadable", "the set-asides recorded with this question could not be read") };
     }
   }
 
@@ -2386,8 +2386,7 @@ export class Capture {
              SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
                FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
             host, o.address_norm, cur.sha256, o.sha256,
-            "a later direct capture of this host fetched different bytes for this address; "
-              + "this earlier capture reused the old ones, which are now unverified against the source", now,
+            localize("capture.index.reuse_posthoc_unverified", "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source"), now,
             host, o.address_norm);
           this.#sql.exec(
             `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
@@ -2563,7 +2562,7 @@ export class Capture {
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: localize("capture.index.kind_must_be_one_of", "kind must be one of: {TASK_KINDS}", { TASK_KINDS: String(TASK_KINDS.join(", ")) }) };
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
-      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
+      return { ok: false, reason: "BAD_CAPTURE_SHA", detail: localize("capture.index.sha_identifies_event", "a capture sha256 identifies the event; a record does not exist yet at capture time") };
     const text = boundedSubject(subject) || say("capture.text.capture_whose_authority");
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
     const now = at && ISO_INSTANT.test(at) ? at : stampSecond();

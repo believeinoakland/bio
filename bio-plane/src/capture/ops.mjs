@@ -7,6 +7,7 @@
 import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { say } from "./words.mjs";
+import { localize } from "../setup-words/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 
 /** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
@@ -83,7 +84,7 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
     const d = await crypto.subtle.digest("SHA-256", body);
     const digest = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
     if (digest !== sha)
-      return json({ ok: false, reason: "INTEGRITY", detail: "body hash does not match the sha256 parameter",
+      return json({ ok: false, reason: "INTEGRITY", detail: localize("capture.ops.body_hash_mismatch", "body hash does not match the sha256 parameter"),
                     expected: sha, got: digest, store: storeName, tokenClass: cls }, 400);
     const existing = await env.CAPTURES.head(k);
     if (existing) return json({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
