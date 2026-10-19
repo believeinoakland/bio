@@ -16138,12 +16138,22 @@ var WORD_ROWS = Object.freeze([
   ["calculations.index.v1_is_a_hypothesis_hunches", `"{v1}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, null, null, false, "code"],
   ["calculations.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.", null, null, false, "code"],
   ["calculations.index.your_teams_civicsmith_has_no_2", "your team's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.", null, null, false, "code"],
+  ["calibration.calibration.a_calibration_carries_the_date", "a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a reader whether anybody has looked recently", null, null, false, "code"],
   ["calibration.calibration.a_calibration_is_an_object", "a calibration is an object; got {v1}", null, null, false, "code"],
   ["calibration.calibration.a_calibration_names_the_engine", `a calibration names the ENGINE and the VERSION it measured. A measurement of "the OCR" is a measurement of nothing re-runnable: an external service retrains under an unchanged name (DEC-35's own argument against Textract), which is exactly why the pair is required and why neither half is enough alone`, null, null, false, "code"],
+  ["calibration.calibration.a_calibration_names_who_ran", "a calibration names who ran the probe. An unattributed measurement is one nobody can ask to be re-run", null, null, false, "code"],
+  ["calibration.calibration.an_announcement_signal_is_an", "an announcement signal is an object", null, null, false, "code"],
+  ["calibration.calibration.an_announcement_signal_names_the", "an announcement signal names the engine it is about", null, null, false, "code"],
+  ["calibration.calibration.an_announcement_signal_names_where", "an announcement signal names WHERE it was observed. It is somebody else's statement about their own product and the record keeps it as that", null, null, false, "code"],
   ["calibration.calibration.cap_string_is_not_one", "cap '{String}' is not one of {BASIS_GRADES}, and a calibration does not invent a scale of its own \u2014 transcription fidelity bounds the capture axis and there is no third one (DEC-4)", null, null, false, "code"],
   ["calibration.calibration.this_announcement_carries_a_fidelity", "this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing else \u2014 it may never stand in for a probe, and it may never itself set or change a grade. Record the announcement, then run the probe", null, null, false, "code"],
   ["calibration.calibration.this_calibration_carries_no_field", "this calibration carries no {field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter", null, null, false, "code"],
   ["calibration.calibration.this_engine_now_measures_better", "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)", null, null, false, "code"],
+  ["calibration.calibration.this_engine_now_measures_worse", "this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)", null, null, false, "code"],
+  ["calibration.index.next_probe_at_cadence", "The next probe is due at its own cadence", null, null, false, "code"],
+  ["calibration.index.nothing_has_ever_probed", "Nothing has ever probed it, so a probe is due immediately", null, null, false, "code"],
+  ["calibration.index.registering_names_the_engine", "registering a calibration subject names the engine to be probed", null, null, false, "code"],
+  ["calibration.index.registering_names_the_probe", "registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated", null, null, false, "code"],
   ["calibration.index.this_call_asks_the_new", "this call asks the new measurement to re-grade the transcriptions already made by {String}. A calibration records what an engine scores; it never moves a grade, in EITHER direction \u2014 a grade rises or falls only by an authored act (DEC-4, no machine mints a grade). Record the measurement, then read op=calibrationdrift for exactly which transcriptions a member should look at", null, null, false, "code"],
   ["capture-requests.checks.this_asked_for_the_page", "This asked for the page as a visitor would see it in a form your team's Civicsmith does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued.", null, null, false, "code"],
   ["capture-requests.checks.this_request_described_the_site", `This request described the site it asks for in a way your team's Civicsmith does not recognise. It reads site_kind: "personal" for a private person's own site, "platform" for a page on a platform that asks for a login, or nothing for an ordinary public page. Nothing was queued.`, null, null, false, "code"],
@@ -16676,10 +16686,31 @@ var WORD_ROWS = Object.freeze([
   ["content.extent-core.a_slide_shape_extent_names", "a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names '{String}'", null, null, false, "code"],
   ["content.extent-core.an_image_extents_page_is", "an image extent's page is a 0-based integer. This one names '{String}'", null, null, false, "code"],
   ["content.extent-core.an_images_part_is_the", "an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names '{String}'", null, null, false, "code"],
+  ["content.extent-core.capture_is_not_an_office", "this capture is {kind}, not an office container, so its own bytes hold no embedded media part and a part reference names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole{pdf}", null, null, false, "code"],
   ["content.extent-core.cited_as_says_whether_a", "cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says '{String}'", null, null, false, "code"],
+  ["content.extent-core.doc_para_names_which_paragraph", "a doc-para extent names which paragraph, as a 0-based integer. This one names '{para}'", null, null, false, "code"],
+  ["content.extent-core.doc_para_run_unreadable", "a doc-para extent's run is a 0-based integer or absent. A run that is present and unreadable is worse than none, because it looks like a span somebody chose", null, null, false, "code"],
+  ["content.extent-core.doc_table_cell_unreadable", "a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose", null, null, false, "code"],
+  ["content.extent-core.doc_table_names_which_table", "a doc-table extent names which table, as a 0-based ordinal in document order. This one names '{table}'", null, null, false, "code"],
+  ["content.extent-core.dom_names_a_region", "extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate", null, null, false, "code"],
+  ["content.extent-core.embedded_image_text_has_no", "this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image \u2014 the container's transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it", null, null, false, "code"],
   ["content.extent-core.extent_kind_kind_human_is", "extent kind '{kind}' ({human}) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85", null, null, false, "code"],
   ["content.extent-core.extent_kind_string_is_not", "extent kind '{String}' is not one of: {keys}", null, null, false, "code"],
+  ["content.extent-core.image_names_both_part_and_page", "an image extent names EITHER the embedded part's content hash OR a page and rectangle, and this one names both \u2014 one image stated twice, where the two can disagree", null, null, false, "code"],
+  ["content.extent-core.image_names_neither_part_nor_page", "an image extent names the embedded part's content hash (in a container) or the page it is on (in a PDF), and this one names neither", null, null, false, "code"],
+  ["content.extent-core.image_rect_unreadable", "an image extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose", null, null, false, "code"],
+  ["content.extent-core.kind_not_held", "this record does not hold which kind of document this capture is", null, null, false, "code"],
+  ["content.extent-core.kind_unheld_part_undetermined", "{kind_why} \u2014 so whether this part is a member of the document's own bytes is UNDETERMINED, admitted and stated rather than guessed either way", null, null, false, "code"],
+  ["content.extent-core.no_extent_was_supplied", "no extent was supplied and none could be read from the leg", null, null, false, "code"],
+  ["content.extent-core.office_container_no_image_list", "this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed", null, null, false, "code"],
   ["content.extent-core.only_an_image_can_be", "only an image can be cited as its bytes. A {kind} extent addresses text, and reading 'bytes' here as 'text' would silently change what the citation claims, so it is refused", null, null, false, "code"],
+  ["content.extent-core.pdf_page_names_which_page", "a pdf-page extent names which page, as a 0-based integer. This one names '{page}'", null, null, false, "code"],
+  ["content.extent-core.pdf_page_rect_unreadable", "a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose", null, null, false, "code"],
+  ["content.extent-core.sheet_cell_names_which_cell", "a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names '{cell}'", null, null, false, "code"],
+  ["content.extent-core.sheet_cell_names_which_sheet", "a sheet-cell extent names which sheet, as the workbook spells it. This one names '{sheet}'", null, null, false, "code"],
+  ["content.extent-core.sheet_range_names_which_cells", "a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names '{range}'", null, null, false, "code"],
+  ["content.extent-core.sheet_range_names_which_sheet", "a sheet-range extent names which sheet, as the workbook spells it. This one names '{sheet}'", null, null, false, "code"],
+  ["content.extent-core.slide_shape_unreadable", "a slide-shape extent's shape is a 0-based integer or absent. A shape that is present and unreadable is worse than none, because it looks like an element somebody chose", null, null, false, "code"],
   ["content.extent-core.this_captures_page_set_holds", "this capture's page set holds {pageCount} page(s) (0-{v1}) and the extent names page {page}", null, null, false, "code"],
   ["content.extent-core.this_captures_page_set_holds_2", "this capture's page set holds {pageCount} page(s) (0-{v1}) and the image extent names page {page}", null, null, false, "code"],
   ["content.extent-core.this_record_holds_no_extraction", "this record holds no extraction chain for the capture this leg cites, so there is no transcription over {describeExtent} for the citation to point at", null, null, false, "code"],
@@ -16688,26 +16719,80 @@ var WORD_ROWS = Object.freeze([
   ["content.extent.an_envelope_extent_names_which_2", "an envelope extent names which item, as a 0-based ordinal among items of its kind at the same part and anchor. This one names '{String}'", null, null, false, "code"],
   ["content.extent.an_envelope_item_is_anchored", "an envelope item is anchored at a paragraph or a slide ({ENVELOPE_ANCHOR_KINDS}) or at nothing. This one is anchored at '{String}'", null, null, false, "code"],
   ["content.extent.an_envelope_item_is_cited", "an envelope item is cited as the envelope and never as '{String}': a tracked change, comment, core property or speaker note is not the document's body", null, null, false, "code"],
+  ["content.extent.core_property_names_which", "a core-property envelope item names which property (creator, lastModifiedBy, title), and this one names none", null, null, false, "code"],
+  ["content.extent.envelope_item_human", "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body", null, null, false, "code"],
+  ["content.extent.envelope_items_no_list", "this record persists no list of a capture's envelope items to bound one against (they arrive as text units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated", null, null, false, "code"],
+  ["content.extent.no_page_set", "this record holds no page set for this capture", null, null, false, "code"],
+  ["content.extent.no_page_set_2", "this record holds no page set for this capture", null, null, false, "code"],
+  ["content.extent.no_paragraph_count", "this record holds no paragraph count for this capture", null, null, false, "code"],
+  ["content.extent.no_sheet_list", "this record holds no sheet list for this capture's workbook", null, null, false, "code"],
+  ["content.extent.no_slide_list", "this record holds no slide list for this capture's deck", null, null, false, "code"],
+  ["content.extent.no_table_list", "this record holds no table list for this capture", null, null, false, "code"],
   ["content.extent.only_an_envelope_item_is", "only an envelope item is cited as the envelope. A {kind} extent addresses the document's body, and reading it as an annotation would change what the citation claims", null, null, false, "code"],
+  ["content.extent.page_rotated_clause", ". The page is shown rotated {rotate} degrees; a rect is measured on the unrotated page, from its MediaBox corners, not from the turned view", null, null, false, "code"],
   ["content.extent.this_kind_extent_states_its", "this {kind} extent states its rect in space '{String}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read", null, null, false, "code"],
   ["content.extent.this_record_holds_no_extraction", "this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at", null, null, false, "code"],
   ["content.extent.this_record_holds_no_row", "this record holds no row and column grid for sheet '{want}' (a format that fixes no maximum table size states none)", null, null, false, "code"],
   ["content.extent.this_record_holds_no_row_2", "this record holds no row and column grid for table {table}", null, null, false, "code"],
   ["content.extent.this_record_holds_no_shape", "this record holds no shape count for slide {slide}", null, null, false, "code"],
+  ["content.index.a_region_of_page", "a region of page {page}", null, null, false, "code"],
+  ["content.index.attestation_raises_ceiling", "an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one", null, null, false, "code"],
   ["content.index.bundleid_is_not_a_document", "{bundleId} is not a document, so it has no part to point at. The content axis ranges over documents (DEC-21): an inquiry rests on things, it is not a thing with pages. This is stated rather than met with a document-extent row invented for it (IC-83 AMENDMENT 2)", null, null, false, "code"],
   ["content.index.bytes_b_typed_over_the", "{bytes} B typed, over the {TRANSCRIPTION_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: a typing silently truncated would be text the member did not type, standing in their name", null, null, false, "code"],
+  ["content.index.candidate_same_extent_compared", "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for a candidate and never evidence of identity", null, null, false, "code"],
+  ["content.index.candidate_same_extent_newer", "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity", null, null, false, "code"],
+  ["content.index.capture_axis_answered_once", "the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at \u2014 so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture", null, null, false, "code"],
+  ["content.index.capture_metadata_could_not", "the capture's metadata could not be read", null, null, false, "code"],
+  ["content.index.capture_not_office_document", "the capture is not an office document", null, null, false, "code"],
   ["content.index.capture_short_is_itemised_as", "capture {short} is itemised as a {v1} and not as a PDF, so this record holds no list of images painted on its pages and whether an image is painted at this address is UNDETERMINED and stated, not refused", null, null, false, "code"],
+  ["content.index.cited_text_no_longer_held", "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told", null, null, false, "code"],
+  ["content.index.connection_ask_earnedbasis", "ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the record earns between THIS document and THAT question's subject, and it has no value independent of a question", null, null, false, "code"],
+  ["content.index.connection_empty_level_question", "the question \u2014 a connection grade is earned against an inquiry's subject entity, and this read resolves a ROW rather than a LEG", null, null, false, "code"],
+  ["content.index.connection_no_captured_resolution", "connection \u2014 no captured resolution of this document to the subject", null, null, false, "code"],
+  ["content.index.container_extent_format_entry", "the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints", null, null, false, "code"],
+  ["content.index.container_image_list_before_wire", "the container's image list (this capture was acquired before the wire carried it \u2014 FW-19)", null, null, false, "code"],
+  ["content.index.container_own_extent_absent", "the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)", null, null, false, "code"],
+  ["content.index.content_requires_id", "content requires ?id=<content_id>", null, null, false, "code"],
+  ["content.index.crop_taken_from_bytes", "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back", null, null, false, "code"],
+  ["content.index.derived_rendition_for_display", "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop is not itself evidence", null, null, false, "code"],
   ["content.index.describeextent_is_a_part_no", "{describeExtent} is a part no typing can be checked against \u2014 a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good", null, null, false, "code"],
+  ["content.index.document_reread_text_under", "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading", null, null, false, "code"],
+  ["content.index.document_table_list_before_wire", "the document's table list (this capture was acquired before the wire carried it \u2014 FW-19)", null, null, false, "code"],
+  ["content.index.every_sheet_row_column_extent", "every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid \u2014 OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not", null, null, false, "code"],
+  ["content.index.every_slide_shape_count", "every slide's shape count (this capture was acquired before the wire read that figure, no slide's part in it could be read, or the deck was over the text size bound and only its length was read \u2014 D-359, COFF-13), so a slide past the deck is bounded and a shape within a known slide is not", null, null, false, "code"],
+  ["content.index.evidence_store_holds_no", "the evidence store holds no object under this row's capture, so no crop was made", null, null, false, "code"],
+  ["content.index.exact_typing_already_recorded", ". This exact typing by {who} was already recorded, and is found rather than written again", null, null, false, "code"],
+  ["content.index.format_registry_could_not", "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED", null, null, false, "code"],
+  ["content.index.image_could_not_be_cut", "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason is beside this one", null, null, false, "code"],
+  ["content.index.image_member_of_container", "this row cites an image that is a member of a container (an embedded part), whose bytes are the image itself rather than a rectangle of a page; there is nothing to cut out of it", null, null, false, "code"],
   ["content.index.lab_cites_describeextent_of_target", "{lab} cites {describeExtent} of '{target}', and this record holds no capture of that document at all{v1}", null, null, false, "code"],
   ["content.index.lab_names_v1_on_target", "{lab} names {v1} on '{target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)", null, null, false, "code"],
   ["content.index.label_names_content_id_id", "{label} names content_id '{id}\u2026', and this record holds no such part. The id is an address taken over the document, the passage and the transcription chain, so nothing can be found for one nothing minted", null, null, false, "code"],
   ["content.index.label_rests_on_targetid_and", "{label} rests on '{targetId}' and names a part of '{bundle_id}' ({ref}): the leg and the part it points at are about two different documents", null, null, false, "code"],
+  ["content.index.marking_passage_citable", "marking a passage citable names the document the passage is in", null, null, false, "code"],
+  ["content.index.no_capture_resolves_subject", "no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at all. Absence here is a fact about what the recogniser matched, never evidence about what the document says", null, null, false, "code"],
   ["content.index.no_cited_passage_by_the", "no cited passage by the id '{cid}' is readable here.", null, null, false, "code"],
+  ["content.index.no_content_row_addressed", "no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) \u2014 it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet", null, null, false, "code"],
+  ["content.index.no_content_row_addressed_2", "no content row is addressed by this id in this record", null, null, false, "code"],
+  ["content.index.no_content_row_by_that", "this record holds no content row by that id", null, null, false, "code"],
   ["content.index.no_document_is_addressed_by", "no document is addressed by {bundleId} in this record", null, null, false, "code"],
   ["content.index.no_document_is_addressed_by_2", "no document is addressed by {target} in this record", null, null, false, "code"],
+  ["content.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image", null, null, false, "code"],
+  ["content.index.no_minter_names_who", "a content row records WHO marked the passage as citable, and this call carries nobody. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it \u2014 which is refused rather than filled in", null, null, false, "code"],
+  ["content.index.no_portion_was_selected", "no portion was selected. A transcription is of a PART the member read \u2014 a page or a region of one, or the whole document NAMED as such \u2014 and a typing with no stated part would be read as covering all of it", null, null, false, "code"],
+  ["content.index.no_reading_of_that", "this record holds no reading of that capture", null, null, false, "code"],
   ["content.index.no_transcription_readable_here_is", "no transcription readable here is addressed by content_id '{id}\u2026'", null, null, false, "code"],
+  ["content.index.nobody_has_read_newer", "nobody has read the newer capture yet, so the record holds no text of it at any extent to test against \u2014 that is a fact about this record, not about the document", null, null, false, "code"],
   ["content.index.nothing_in_this_store_has", "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says", null, null, false, "code"],
   ["content.index.nothing_in_this_store_has_2", "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says", null, null, false, "code"],
+  ["content.index.pass_bundleid_info_document", "pass bundleId=<INFO-\u2026>: the document whose page you transcribed", null, null, false, "code"],
+  ["content.index.pass_contentid_content_id", "pass contentId=<the content id op=transcribe returned>", null, null, false, "code"],
+  ["content.index.position_within_reading", "position within the reading \u2014 reading_refs records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)", null, null, false, "code"],
+  ["content.index.reading_carries_container_extent", "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded", null, null, false, "code"],
+  ["content.index.reading_holds_no_office", "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)", null, null, false, "code"],
+  ["content.index.record_does_not_hold_format", "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED", null, null, false, "code"],
+  ["content.index.row_cells_could_not", "the row's cells could not be read", null, null, false, "code"],
+  ["content.index.row_cited_under_earlier", "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited", null, null, false, "code"],
   ["content.index.target_is_not_a_document", "{target} is not a document, so it has no page to transcribe (DEC-21)", null, null, false, "code"],
   ["content.index.the_content_read_is_fixed", "the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried {unknown}, which it refuses rather than ignores \u2014 a parameter silently dropped is a filter the caller believes was applied", null, null, false, "code"],
   ["content.index.the_row_cites_a_extent", "the row cites a {extent_kind} extent, which names no cells of a sheet", null, null, false, "code"],
@@ -16721,12 +16806,24 @@ var WORD_ROWS = Object.freeze([
   ["content.index.this_record_holds_no_list", "this record holds no list of the images the pages of capture {short} paint \u2014 a PDF acquired before D-420 persisted none, and nothing was persisted at all for a capture no format entry itemised \u2014 so whether an image is painted at this address is UNDETERMINED and stated, not refused. Re-acquiring the document records the list", null, null, false, "code"],
   ["content.index.this_row_cites_a_extent", "this row cites a {extent_kind} extent, and only an image on a PDF page has a crop", null, null, false, "code"],
   ["content.index.this_row_is_a_members", "this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than {transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed", null, null, false, "code"],
+  ["content.index.transcriber_nobody", "this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty one means the act arrived by a route that does not attribute it", null, null, false, "code"],
+  ["content.index.under_the_capture_the_leg", " under the capture the leg names ({capture}\u2026)", null, null, false, "code"],
   ["content.index.v1_is_an_inquiry_rather", "{v1} is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at \u2014 the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it", null, null, false, "code"],
   ["content.index.v1_so_it_states_no", "{v1}, so it states no office metadata", null, null, false, "code"],
+  ["content.index.version_chains_visible_to", "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them", null, null, false, "code"],
   ["content.index.who_is_a_machine_credential", "'{who}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind", null, null, false, "code"],
   ["content.index.who_typed_describeextent_what_a", "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}", null, null, false, "code"],
   ["content.index.who_typed_this_transcription_at", "{who} typed this transcription ({at}). An attestation is a SECOND member checking it against the page; the typist's own is not evidence and would raise the ceiling on one member's word", null, null, false, "code"],
+  ["content.notice.chain_unread", "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none", null, null, false, "code"],
+  ["content.notice.cited_extent_unreadable", "the cited passage's extent could not be read back from its row", null, null, false, "code"],
+  ["content.notice.cited_passage_held_only", "the cited passage's text is held only to the per-unit cap, so the whole passage is not held", null, null, false, "code"],
+  ["content.notice.every_unit_identical", "every unit of the newer version's text is byte-identical at the same position", null, null, false, "code"],
+  ["content.notice.image_cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with", null, null, false, "code"],
   ["content.notice.in_the_newer_version_why", "in the newer version {why}", null, null, false, "code"],
+  ["content.notice.newer_capture_matched", "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it", null, null, false, "code"],
+  ["content.notice.newer_capture_undetermined", "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved \u2014 look at the newer version and decide", null, null, false, "code"],
+  ["content.notice.newer_text_divided", "the newer version's text is byte-identical, divided into different units", null, null, false, "code"],
+  ["content.notice.newer_unit_truncated", "a unit of the newer version is held only to the per-unit cap, so the passage may be in the part not held", null, null, false, "code"],
   ["content.notice.the_newer_versions_text_is", "the newer version's text is held only in part (its index reads {said}), so the passage may be in the part not held", null, null, false, "code"],
   ["content.notice.the_record_does_not_hold", "the record does not hold the newer version's text whole (its index reads {said})", null, null, false, "code"],
   ["content.notice.the_record_holds_no_text", "the record holds no text of the newer version (its index reads {said}), so where the passage went cannot be looked for", null, null, false, "code"],
@@ -17277,14 +17374,19 @@ var WORD_ROWS = Object.freeze([
   ["extraction.drift.this_text_was_graded_under", "this text was graded under calibration {calibration_id} of {engine} {version} (fidelity {v1}, measured {at}). A probe on {at_2} measured that engine at {v2}, which is WEAKER \u2014 so what this transcription may support is now less than the record says. NOTHING HAS BEEN RE-GRADED: a grade moves by an authored act and never by a machine (DEC-4). This names the work; a member does it", null, null, false, "code"],
   ["extraction.extractrun.a_proposed_reading_earned_grade", "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more", null, null, false, "code"],
   ["extraction.extractrun.an_ai_step_names_what", "an ai() step names WHAT performed the derivation, and this proposal names nothing. The chain exists to carry that fact: a calibration is OF a function and a version, and neither can be recovered from the word 'ai'", null, null, false, "code"],
+  ["extraction.extractrun.position_unreadable", "this proposal states WHERE it read the reference and the address cannot be read in IC-1's element-reference vocabulary. An address nothing resolves is worse than the honest absence, because it looks like a binding and joins to nothing", null, null, false, "code"],
   ["extraction.extractrun.string_is_not_one_of", "'{String}' is not one of the EXTRACT functions this repository emits ({keys}). A function is in that roster when something produces it, so a name that is not there names no producer", null, null, false, "code"],
   ["extraction.extractrun.string_is_not_one_of_2", "'{String}' is not one of {BASIS_GRADES}. A step's cap is the strongest transcription fidelity it can support and it is a MEASUREMENT \u2014 absent means undetermined and stated, never a letter chosen to get past this line", null, null, false, "code"],
+  ["extraction.extractrun.undetermined_ceiling", "undetermined ceiling of the capture its quote is read from", null, null, false, "code"],
   ["extraction.index.a_re_read_replaces_this", "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.", null, null, false, "code"],
   ["extraction.index.a_transcription_replaces_this_captures", "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.", null, null, false, "code"],
   ["extraction.index.length_transcription_s_were_graded", "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)", null, null, false, "code"],
+  ["extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again", null, null, false, "code"],
   ["extraction.index.no_ocr_member_is_bound", "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).", null, null, false, "code"],
+  ["extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced", null, null, false, "code"],
   ["extraction.index.ocr_stringify_is_not_a", "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.", null, null, false, "code"],
   ["extraction.index.op_pagetranscribe_writes_this_captures", "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).", null, null, false, "code"],
+  ["extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now", null, null, false, "code"],
   ["extraction.index.the_ais_part_for_transcribing", "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.", null, null, false, "code"],
   ["extraction.index.this_record_holds_no_reading", "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.", null, null, false, "code"],
   ["extraction.index.this_record_holds_no_reading_2", "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.", null, null, false, "code"],
@@ -18944,6 +19046,21 @@ var WORD_ROWS = Object.freeze([
   ["reading-guides.index.id_comes_with_every_copy", "{id} comes with every copy of Civicsmith and no team can change it. Nothing was written.", null, null, false, "code"],
   ["reading-guides.index.module_already_provides_the_channel", "{module} already provides the channel between teams", null, null, false, "code"],
   ["reading-guides.index.no_team_slug_is_recorded", "no team slug is recorded, so an offer cannot be labeled. Nothing was sent.", null, null, false, "code"],
+  ["reading-pipeline.index.ai_declined", "the AI declined{reason}", null, null, false, "code"],
+  ["reading-pipeline.index.ai_reading_label", "the AI's reading", null, null, false, "code"],
+  ["reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read", null, null, false, "code"],
+  ["reading-pipeline.index.decoded_glyphs", "{glyphs} decoded glyph(s)", null, null, false, "code"],
+  ["reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", null, null, false, "code"],
+  ["reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", null, null, false, "code"],
+  ["reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", null, null, false, "code"],
+  ["reading-pipeline.index.multipart", "multipart", null, null, false, "code"],
+  ["reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read", null, null, false, "code"],
+  ["reading-pipeline.index.non_textual_large", "non-textual or too large", null, null, false, "code"],
+  ["reading-pipeline.index.pages_not_asked_request", "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next", null, null, false, "code"],
+  ["reading-pipeline.index.placement_not_read", "a placement the structure op reported could not be read as {shape}", null, null, false, "code"],
+  ["reading-pipeline.index.read_one_undivided_string", " \u2014 no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at", null, null, false, "code"],
+  ["reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", null, null, false, "code"],
+  ["reading-pipeline.index.reported_characters", "{reported} character(s) its producer counted and no text this merge can read", null, null, false, "code"],
   ["reading-pipeline.readingprov.which_no_reading_provenance_it", "{which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED \u2014 it is not inferred from the document-level tier or from the chain", null, null, false, "code"],
   ["record-core.checks.a_part_of_your_teams", "A part of your team's Civicsmith tried to report a figure another part already reports, or to register its figures twice, so the second registration was refused and the first still stands. {BUILD_FAULT}", null, null, false, "code"],
   ["record-core.checks.a_part_of_your_teams_10", "A part of your team's Civicsmith tried to reserve an identifier outside the change that would use it, so nothing was reserved: a reservation is kept only with the change it belongs to. {BUILD_FAULT}", null, null, false, "code"],
@@ -49472,7 +49589,7 @@ var CALIBRATION_CHECKS = {
   CAL_UNNAMED: {
     check: "C-42.2",
     where: "src/calibration.mjs checkCalibration > is-calibration-shape",
-    translation: "A measurement has to say exactly what it measured \u2014 which engine, and which version of it. Services are retrained and re-released under the same name, so the name alone cannot tell a later reader whether the thing you measured is the thing that read their document."
+    translation: word("refusal.CAL_UNNAMED")
   },
   CAL_UNDATED: {
     check: "C-42.3",
@@ -49535,7 +49652,7 @@ function drifted(verdict) {
         verdict,
         raises_obligation: true,
         regrades: false,
-        why: `this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)`
+        why: localize("calibration.calibration.this_engine_now_measures_worse", "this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)")
       };
     case DRIFT.BETTER:
       return {
@@ -49549,14 +49666,14 @@ function drifted(verdict) {
         verdict,
         raises_obligation: false,
         regrades: false,
-        why: `this measurement agrees with the one it supersedes, so nothing rests on a superseded number`
+        why: word("calibration.why.measurement_agrees_supersedes")
       };
     default:
       return {
         verdict: DRIFT.INCOMPARABLE,
         raises_obligation: false,
         regrades: false,
-        why: `these two measurements cannot be compared \u2014 a malformed calibration or a different engine \u2014 so no direction can be claimed, and an obligation raised on an uncomparable pair would name transcriptions for a reason nobody could check`
+        why: word("calibration.why.two_measurements_cannot")
       };
   }
 }
@@ -50671,91 +50788,94 @@ CREATE TABLE IF NOT EXISTS reading_migrations (
 `;
 
 // ../bio-plane/src/extraction/words.mjs
-var WORD_KEYS3 = Object.freeze([
-  "capture.picture.unread",
-  "document.unread.pages",
-  "extraction.basis.file_link_assigned",
-  "extraction.text.ai_asked_transcribe",
-  "extraction.undetermined.calibration_module_reachable",
-  "extraction.unread.format_group_civicsmith",
-  "extraction.unread.stored_bytes_read",
-  "extraction.unread.stored_bytes_read_reader",
-  "extraction.why.authored_observation_indexed",
-  "extraction.why.earlier_unit_holds",
-  "extraction.why.group_civicsmith_did",
-  "extraction.why.group_civicsmith_read",
-  "extraction.why.page_document_lacks",
-  "extraction.why.reading_recorded_record",
-  "extraction.why.record_reading_capture",
-  "extraction.why.record_reading_capture_written",
-  "extraction.why.transcription_store_rests",
-  "extraction.why.unit_names_extent",
-  "refusal.NO_SHA",
-  "refusal.REEXTRACT_AGENT_REFUSED",
-  "refusal.REEXTRACT_FLAG_MALFORMED",
-  "refusal.REEXTRACT_NOT_CAPABLE",
-  "refusal.REEXTRACT_NOT_READ",
-  "refusal.REEXTRACT_NO_OCR_MEMBER",
-  "transcribe.done",
-  "transcribe.failed",
-  "transcribe.label",
-  "transcribe.none",
-  "transcribe.notsent",
-  "transcribe.picture.unprepared",
-  "transcribe.picture.why.progressive",
-  "transcribe.picture.why.toolarge",
-  "transcribe.reason.badaccount",
-  "transcribe.reason.needsapikey",
-  "transcribe.reason.noaccount",
-  "transcribe.reason.requestfault",
-  "transcribe.refused",
-  "transcribe.refused.notdeployed",
-  "transcribe.why.ended",
-  "transcribe.why.evidenceabsent",
-  "transcribe.why.norender",
-  "transcribe.why.silent",
-  "transcribe.why.unbound"
-]);
-var KEYS = new Set(WORD_KEYS3);
+var RAW_PLACEHOLDERS = Object.freeze({ pages: "{pages}", why: "{why}", reason: "{reason}" });
+var READ = Object.freeze({
+  "capture.picture.unread": (v) => word("capture.picture.unread", v),
+  "document.unread.pages": (v) => word("document.unread.pages", v),
+  "extraction.basis.file_link_assigned": (v) => word("extraction.basis.file_link_assigned", v),
+  "extraction.text.ai_asked_transcribe": (v) => word("extraction.text.ai_asked_transcribe", v),
+  "extraction.undetermined.calibration_module_reachable": (v) => word("extraction.undetermined.calibration_module_reachable", v),
+  "extraction.unread.format_group_civicsmith": (v) => word("extraction.unread.format_group_civicsmith", v),
+  "extraction.unread.stored_bytes_read": (v) => word("extraction.unread.stored_bytes_read", v),
+  "extraction.unread.stored_bytes_read_reader": (v) => word("extraction.unread.stored_bytes_read_reader", v),
+  "extraction.why.authored_observation_indexed": (v) => word("extraction.why.authored_observation_indexed", v),
+  "extraction.why.earlier_unit_holds": (v) => word("extraction.why.earlier_unit_holds", v),
+  "extraction.why.group_civicsmith_did": (v) => word("extraction.why.group_civicsmith_did", v),
+  "extraction.why.group_civicsmith_read": (v) => word("extraction.why.group_civicsmith_read", v),
+  "extraction.why.page_document_lacks": (v) => word("extraction.why.page_document_lacks", v),
+  "extraction.why.reading_recorded_record": (v) => word("extraction.why.reading_recorded_record", v),
+  "extraction.why.record_reading_capture": (v) => word("extraction.why.record_reading_capture", v),
+  "extraction.why.record_reading_capture_written": (v) => word("extraction.why.record_reading_capture_written", v),
+  "extraction.why.transcription_store_rests": (v) => word("extraction.why.transcription_store_rests", v),
+  "extraction.why.unit_names_extent": (v) => word("extraction.why.unit_names_extent", v),
+  "extractrun.holds_number_date": (v) => word("extractrun.holds_number_date", v),
+  "extractrun.number_date_named": (v) => word("extractrun.number_date_named", v),
+  "extractrun.says.machine_credential_marked": (v) => word("extractrun.says.machine_credential_marked", v),
+  "extractrun.says.passage_machine_marked": (v) => word("extractrun.says.passage_machine_marked", v),
+  "extractrun.why.earned_nothing_proposal": (v) => word("extractrun.why.earned_nothing_proposal", v),
+  "extractrun.why.earned_proposal_names": (v) => word("extractrun.why.earned_proposal_names", v),
+  "extractrun.why.earned_proposal_names_name": (v) => word("extractrun.why.earned_proposal_names_name", v),
+  "extractrun.why.earned_proposal_quote": (v) => word("extractrun.why.earned_proposal_quote", v),
+  "extractrun.why.earned_undetermined_proposal": (v) => word("extractrun.why.earned_undetermined_proposal", v),
+  "refusal.NO_SHA": (v) => word("refusal.NO_SHA", v),
+  "refusal.REEXTRACT_AGENT_REFUSED": (v) => word("refusal.REEXTRACT_AGENT_REFUSED", v),
+  "refusal.REEXTRACT_FLAG_MALFORMED": (v) => word("refusal.REEXTRACT_FLAG_MALFORMED", v),
+  "refusal.REEXTRACT_NOT_CAPABLE": (v) => word("refusal.REEXTRACT_NOT_CAPABLE", v),
+  "refusal.REEXTRACT_NOT_READ": (v) => word("refusal.REEXTRACT_NOT_READ", v),
+  "refusal.REEXTRACT_NO_OCR_MEMBER": (v) => word("refusal.REEXTRACT_NO_OCR_MEMBER", v),
+  "transcribe.done": (v) => word("transcribe.done", v),
+  "transcribe.failed": (v) => word("transcribe.failed", v),
+  "transcribe.label": (v) => word("transcribe.label", v),
+  "transcribe.none": (v) => word("transcribe.none", v),
+  "transcribe.notsent": (v) => word("transcribe.notsent", v),
+  "transcribe.picture.unprepared": (v) => word("transcribe.picture.unprepared", v),
+  "transcribe.picture.why.progressive": (v) => word("transcribe.picture.why.progressive", v),
+  "transcribe.picture.why.toolarge": (v) => word("transcribe.picture.why.toolarge", v),
+  "transcribe.reason.badaccount": (v) => word("transcribe.reason.badaccount", v),
+  "transcribe.reason.needsapikey": (v) => word("transcribe.reason.needsapikey", v),
+  "transcribe.reason.noaccount": (v) => word("transcribe.reason.noaccount", v),
+  "transcribe.reason.requestfault": (v) => word("transcribe.reason.requestfault", v),
+  "transcribe.refused": (v) => word("transcribe.refused", v),
+  "transcribe.refused.notdeployed": (v) => word("transcribe.refused.notdeployed", v),
+  "transcribe.why.ended": (v) => word("transcribe.why.ended", v),
+  "transcribe.why.evidenceabsent": (v) => word("transcribe.why.evidenceabsent", v),
+  "transcribe.why.norender": (v) => word("transcribe.why.norender", v),
+  "transcribe.why.silent": (v) => word("transcribe.why.silent", v),
+  "transcribe.why.unbound": (v) => word("transcribe.why.unbound", v)
+});
+var WORD_KEYS3 = Object.freeze(Object.keys(READ));
 var asked = /* @__PURE__ */ new Set();
 function say(key, vars = {}) {
-  if (!KEYS.has(key)) throw new Error(`extraction: ${key} is not one of this module's word keys`);
+  if (!Object.hasOwn(READ, key)) throw new Error(`extraction: ${key} is not one of this module's word keys`);
   asked.add(key);
-  return word(key, vars);
+  return READ[key](vars);
 }
 var rowWord2 = (code) => say(`refusal.${code}`);
-var rawWords = (keys) => {
-  const en = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-  return Object.freeze(Object.fromEntries(keys.map((k) => {
-    if (!en.has(k)) throw new Error(`extraction: setup-words holds no word ${k}`);
-    return [k, en.get(k)];
-  })));
-};
 
 // ../bio-plane/src/extraction/checks.mjs
-var TRANSCRIBE_WORDS = rawWords([
-  "transcribe.refused.notdeployed",
-  "transcribe.label",
-  "transcribe.none",
-  "transcribe.done",
-  "document.unread.pages",
-  "transcribe.notsent",
-  "transcribe.why.unbound",
-  "transcribe.why.evidenceabsent",
-  "transcribe.why.norender",
-  "transcribe.refused",
-  "transcribe.failed",
-  "transcribe.why.silent",
-  "transcribe.why.ended",
-  "transcribe.picture.unprepared",
-  "transcribe.picture.why.progressive",
-  "transcribe.picture.why.toolarge",
-  "capture.picture.unread",
-  "transcribe.reason.requestfault",
-  "transcribe.reason.noaccount",
-  "transcribe.reason.badaccount",
-  "transcribe.reason.needsapikey"
-]);
+var TRANSCRIBE_WORDS = Object.freeze({
+  "transcribe.refused.notdeployed": word("transcribe.refused.notdeployed", RAW_PLACEHOLDERS),
+  "transcribe.label": word("transcribe.label", RAW_PLACEHOLDERS),
+  "transcribe.none": word("transcribe.none", RAW_PLACEHOLDERS),
+  "transcribe.done": word("transcribe.done", RAW_PLACEHOLDERS),
+  "document.unread.pages": word("document.unread.pages", RAW_PLACEHOLDERS),
+  "transcribe.notsent": word("transcribe.notsent", RAW_PLACEHOLDERS),
+  "transcribe.why.unbound": word("transcribe.why.unbound", RAW_PLACEHOLDERS),
+  "transcribe.why.evidenceabsent": word("transcribe.why.evidenceabsent", RAW_PLACEHOLDERS),
+  "transcribe.why.norender": word("transcribe.why.norender", RAW_PLACEHOLDERS),
+  "transcribe.refused": word("transcribe.refused", RAW_PLACEHOLDERS),
+  "transcribe.failed": word("transcribe.failed", RAW_PLACEHOLDERS),
+  "transcribe.why.silent": word("transcribe.why.silent", RAW_PLACEHOLDERS),
+  "transcribe.why.ended": word("transcribe.why.ended", RAW_PLACEHOLDERS),
+  "transcribe.picture.unprepared": word("transcribe.picture.unprepared", RAW_PLACEHOLDERS),
+  "transcribe.picture.why.progressive": word("transcribe.picture.why.progressive", RAW_PLACEHOLDERS),
+  "transcribe.picture.why.toolarge": word("transcribe.picture.why.toolarge", RAW_PLACEHOLDERS),
+  "capture.picture.unread": word("capture.picture.unread", RAW_PLACEHOLDERS),
+  "transcribe.reason.requestfault": word("transcribe.reason.requestfault", RAW_PLACEHOLDERS),
+  "transcribe.reason.noaccount": word("transcribe.reason.noaccount", RAW_PLACEHOLDERS),
+  "transcribe.reason.badaccount": word("transcribe.reason.badaccount", RAW_PLACEHOLDERS),
+  "transcribe.reason.needsapikey": word("transcribe.reason.needsapikey", RAW_PLACEHOLDERS)
+});
 var AGENT_WORKER_REASONS = Object.freeze({
   BAD_BODY: "transcribe.reason.requestfault",
   BAD_SHA: "transcribe.reason.requestfault",
@@ -51651,7 +51771,7 @@ async function readingProvenance({
     pages_why: null
   };
   if (text2 == null) {
-    out.why = "no text surface answered for this document, so no text was classified and there is nothing to digest";
+    out.why = word("reading-pipeline.why.text_surface_answered");
     out.pages_why = out.why;
     return out;
   }
@@ -51699,7 +51819,7 @@ async function readingProvenance({
       }
     }
   } else {
-    out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read that differs is attributed to the document, not to a page";
+    out.pages_why = word("reading-pipeline.text_carries_per");
     const c = chainTierOf(chain, -1);
     if (flat.text.length) credit(
       c && c.tier != null ? c.tier : out.text_tier,
@@ -51743,7 +51863,7 @@ function compareProvenance(prior, next) {
     return {
       state: "differs",
       changed: [],
-      says: `the re-read classified different text (earlier: ${pp}; now: ${np}); the text carries no per-page grain, so which part of the document changed is not said`
+      says: word("reading-pipeline.says.read_classified_different", { pp: String(pp), np: String(np) })
     };
   }
   const before = new Map(prior.pages.map((p) => [p.page, p]));
@@ -51768,7 +51888,7 @@ function compareProvenance(prior, next) {
     return {
       state: "differs",
       changed,
-      says: "the re-read classified different text but no page's text differs, so the difference is in how the pages were joined into the text the reader was handed"
+      says: word("reading-pipeline.says.read_classified_different_text")
     };
   const says = changed.map((g) => {
     const pgs = describePages(g.pages);
@@ -51967,7 +52087,7 @@ function mergeTier3Text(base, ocr, eligible, { kept: kept2 = [] } = {}) {
         refused: [],
         refusedWhy: [],
         unanswered: [],
-        why: word("reading-pipeline.why.document_text_merged", { base_glyphs: String(baseGlyphs === null ? `${reported} character(s) its producer counted and no text this merge can read` : `${baseGlyphs} decoded glyph(s)`) })
+        why: word("reading-pipeline.why.document_text_merged", { base_glyphs: String(baseGlyphs === null ? localize("reading-pipeline.index.reported_characters", "{reported} character(s) its producer counted and no text this merge can read", { reported: String(reported) }) : localize("reading-pipeline.index.decoded_glyphs", "{glyphs} decoded glyph(s)", { glyphs: String(baseGlyphs) })) })
       };
     return {
       ok: true,
@@ -52060,7 +52180,7 @@ function tier3Note(m, memberNote, layerPages) {
   const say3 = [];
   const kept2 = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
-    say3.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(m.filled.length), kept: String(kept2 ? `; the ${kept2 === 1 ? "page" : "pages"} that already had text kept it` : "") }));
+    say3.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(m.filled.length), kept: String(kept2 ? word("reading-pipeline.already_text_kept", { kept: kept2 === 1 ? "page" : "pages" }) : "") }));
   if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
     say3.push(word("reading-pipeline.page_already_held", { appended: String(m.appended.length), appended_2: String(m.appended.length === 1 ? "that page is" : "those pages are") }));
   if (m.unanswered.length)
@@ -52132,7 +52252,11 @@ function tier3LoopNote(loop) {
   const say3 = [];
   const named = (ps) => describePages(ps.filter(Number.isInteger));
   if (loop.notAsked.length)
-    say3.push(`${loop.notAsked.length} of them (${named(loop.notAsked)}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
+    say3.push(localize(
+      "reading-pipeline.index.pages_not_asked_request",
+      "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next",
+      { count: String(loop.notAsked.length), pages: String(named(loop.notAsked)), limit: String(OCR_INVOCATIONS_PER_REQUEST) }
+    ));
   if (loop.threw)
     say3.push(word("reading-pipeline.call_failed_page", { at: String(named([loop.threw.at])), rest: String(loop.threw.rest.length), rest_2: String(named(loop.threw.rest)) }));
   if (loop.refused.length)
@@ -52194,11 +52318,11 @@ function withKeptPages(text2, kept2, seed) {
 function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
-    return { ok: false, why: `the OCR member declined to transcribe this document${typeof r.reason === "string" ? ` (${r.reason})` : ""}` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }) };
   if (!(typeof r.engine === "string" && r.engine) || !(typeof r.version === "string" && r.version))
-    return { ok: false, why: `the OCR member did not name its engine and version, so nothing it produced could be re-run or calibrated later` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_name") };
   if (!(typeof r.cap === "string" && r.cap) || !(typeof r.measured_by === "string" && r.measured_by))
-    return { ok: false, why: `the OCR member reported no MEASURED fidelity for itself; a transcription's ceiling is a measurement, never a default` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_reported") };
   const pages = Array.isArray(r.pages) ? r.pages : [];
   let anchorless = 0, kept2 = 0, floored = 0, undetermined2 = 0;
   const outPages = [];
@@ -52233,7 +52357,7 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
     });
   }
   if (!outPages.length)
-    return { ok: false, why: `the OCR member returned no page this record could anchor, so nothing it produced can be checked against the document` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_returned") };
   const chain = appendStep(
     [{ step: "pixels", cap: r.cap, measured_by: r.measured_by, calibration }],
     {
@@ -52365,9 +52489,9 @@ async function tier3Extend(env, {
       }
     } else if (keepSeeded().ok && seeded.length) {
       const rest = unanswered.length;
-      ocrNote = word("reading-pipeline.page_document_without_text", { seeded: String(seeded.length), rest: String(rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your team's Civicsmith, so nothing is claimed about what they say` : "") });
+      ocrNote = word("reading-pipeline.page_document_without_text", { seeded: String(seeded.length), rest: String(rest ? word("reading-pipeline.text_layer_read", { rest: String(rest) }) : "") });
     } else {
-      ocrNote = "this document has no text layer to read and no OCR engine is installed in your team's Civicsmith, so nothing is claimed about what it says";
+      ocrNote = word("reading-pipeline.document_text_layer");
     }
   }
   const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
@@ -52375,7 +52499,7 @@ async function tier3Extend(env, {
 }
 var TRANSCRIBE_USE = "transcribe";
 var AI_TRANSCRIPTION_SOURCE = "unmeasured: the AI's reading of a page that is only a picture is undetermined until its accuracy is measured (text-chain R104; BIO_Investigation_v0_1.md \xA76)";
-var AI_READING_LABEL = "the AI's reading";
+var AI_READING_LABEL = localize("reading-pipeline.index.ai_reading_label", "the AI's reading");
 function tier4Pages(text2) {
   const pages = text2 && Array.isArray(text2.pages) ? text2.pages : [];
   const marks = text2 && Array.isArray(text2.undetermined) ? text2.undetermined : [];
@@ -52424,7 +52548,7 @@ async function tier4Extend(transcription, { sha, storeName, i2text, chain, wired
     return not(refusalSays(r2));
   };
   if (!pages.length) {
-    out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked to transcribe";
+    out.aiNote = word("reading-pipeline.page_left_civicsmith");
     return out;
   }
   const { member = null, project = null, accounts = null, credentials = null, useCheck = null, transcribe = null } = transcription;
@@ -52461,9 +52585,9 @@ async function tier4Extend(transcription, { sha, storeName, i2text, chain, wired
     return not(word("reading-pipeline.reached"));
   }
   const r = res && typeof res === "object" ? res : {};
-  if (r.ok !== true) return not(`the AI declined${typeof r.reason === "string" ? ` (${r.reason})` : ""}`);
+  if (r.ok !== true) return not(localize("reading-pipeline.index.ai_declined", "the AI declined{reason}", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }));
   const engine = typeof r.engine === "string" ? r.engine.trim() : "";
-  if (!engine) return not("the AI's answer did not name the model that read the pages, so nothing it produced could be re-run or measured later");
+  if (!engine) return not(word("reading-pipeline.answer_name_model"));
   const version = typeof r.version === "string" && r.version.trim() ? r.version.trim() : null;
   const answered = (Array.isArray(r.pages) ? r.pages : []).filter((p) => p && Number.isInteger(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => ({ page: p.page, text: p.text, undetermined: [] }));
   const m = mergeTier3Text(i2text, { pages: answered }, pages);
@@ -52705,7 +52829,7 @@ function readingFromWire({
     const entities = wired.parse_error ? [] : readEntities(wiredEntities);
     const wtype = wired.doctype.type;
     const positioned = entities.filter((e) => e.source).length;
-    const posNote = !entities.length ? null : positioned === entities.length ? word("reading-pipeline.reference_carries_read", { positioned: String(positioned), entities: String(entities.length) }) : positioned ? word("reading-pipeline.references_carry_read", { positioned: String(positioned), entities: String(entities.length) }) : word("reading-pipeline.no_reference_carries_where_it", { position_why: String(wired.position_why || "this reader does not say where") });
+    const posNote = !entities.length ? null : positioned === entities.length ? word("reading-pipeline.reference_carries_read", { positioned: String(positioned), entities: String(entities.length) }) : positioned ? word("reading-pipeline.references_carry_read", { positioned: String(positioned), entities: String(entities.length) }) : word("reading-pipeline.no_reference_carries_where_it", { position_why: String(wired.position_why || word("reading-pipeline.reader_say")) });
     reading = {
       content_type: wtype.key,
       reader_version: wtype.version ?? null,
@@ -52717,7 +52841,7 @@ function readingFromWire({
       text_source: chain,
       text_tier: wiredTier,
       text_container: fmt,
-      basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (tier2note ? ` \u2014 ${tier2note}` : "") + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
+      basis: (wired.parse_error ? word("reading-pipeline.why.reader_parse_text", { key: String(wtype.key), fmt: String(fmt), parse_error: String(wired.parse_error) }) : entities.length ? word("reading-pipeline.why.read_reader_tier", { key: String(wtype.key), version: String(wtype.version), fmt: String(fmt), chain: String(describeChain(chain)), wired_tier: String(wiredTier), why: String(wired.why) }) : word("reading-pipeline.why.reader_found_entities", { key: String(wtype.key), fmt: String(fmt), wired_tier: String(wiredTier) })) + (tier2note ? ` \u2014 ${tier2note}` : "") + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
       ...tier3Candidate ? { tier3_candidate: true } : {},
       position_parts: wired.position_parts ?? 0,
       position_why: positioned ? null : wired.position_why || null
@@ -52786,7 +52910,7 @@ function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {}) {
       container: "pdf",
       levels: ["images"],
       images: placements,
-      ...placements ? {} : { images_why: pdfPaints.why || "a placement the structure op reported could not be read as {page, rect}" }
+      ...placements ? {} : { images_why: pdfPaints.why || localize("reading-pipeline.index.placement_not_read", "a placement the structure op reported could not be read as {shape}", { shape: "{page, rect}" }) }
     };
   }
   return containerExtent;
@@ -52846,7 +52970,7 @@ async function read(document, {
   try {
     return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription });
   } catch (e) {
-    const reading = failed(document, null, `the reading could not be composed (${String(e && e.message || e).slice(0, 200)}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
+    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }));
     reading.metadata = null;
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
@@ -52888,8 +53012,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     reading2.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading: reading2 };
   };
-  if (!sha) return early(failed(doc, null, "the document names no capture digest, so there are no bytes to read"));
-  if (!evidence) return early(failed(doc, null, "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read"));
+  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read")));
+  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store")));
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: word("acquisition.why.evidence_store_read") }));
   const bytes = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
@@ -52898,7 +53022,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes)
-    return early(failed(doc, docType, got.why || "the capture's bytes are not held in the evidence store, so nothing was read"));
+    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read")));
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
@@ -52923,9 +53047,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           facts: facts || {},
           at: retrieved,
           title,
-          basis: entities.length ? word("reading-pipeline.why.read_reader", { key: String(docType.type.key), version: String(docType.type.version), entities: String(entities.some((e) => e.source) ? "" : " \u2014 no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at") }) : word("reading-pipeline.why.reader_found_entities_document", { key: String(docType.type.key) }),
+          basis: entities.length ? word("reading-pipeline.why.read_reader", { key: String(docType.type.key), version: String(docType.type.version), entities: String(entities.some((e) => e.source) ? "" : localize("reading-pipeline.index.read_one_undivided_string", " \u2014 no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at")) }) : word("reading-pipeline.why.reader_found_entities_document", { key: String(docType.type.key) }),
           position_parts: 0,
-          position_why: entities.some((e) => e.source) ? null : "the text was read back as one decoded string, which carries no container structure, so where in the document a reference was read cannot be said"
+          position_why: entities.some((e) => e.source) ? null : word("reading-pipeline.text_read_back")
         };
       } catch (e) {
         reading = {
@@ -53058,14 +53182,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           };
         }
       }
-      reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`].filter(Boolean).join(" \u2014 ")) };
+      reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })].filter(Boolean).join(" \u2014 ")) };
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
       if (aiRead) reading.ai_transcription = aiRead;
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), so nothing is claimed about its text`, { page_count: null, page_boxes: null, container_extent: null });
+      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { page_count: null, page_boxes: null, container_extent: null });
       textUnits = null;
       textUnitsOverBound = 0;
       textUnitsSkipped = null;
@@ -53076,7 +53200,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     reading = failed(
       doc,
       docType,
-      `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
+      localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
       { page_count: null, page_boxes: null, container_extent: null }
     );
   }
@@ -54184,7 +54308,7 @@ var Extraction = class _Extraction {
         says: describeChain(chain)
       } : {
         recorded: false,
-        why: `this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced`
+        why: localize("extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced")
       },
       reading_history: this.#readingHistoryOf(row3.capture_sha),
       ...this.#unreadOf(row3.capture_sha, reading, viewer, row3.bundle_id, row3.capture_format),
@@ -54570,7 +54694,7 @@ var Extraction = class _Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again";
+    if (!ev) return localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again");
     const doc = this.#storedDocument(row3.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return "the capture's bytes are not held in the evidence store";
@@ -54857,7 +54981,7 @@ var Extraction = class _Extraction {
           observed: w.observed ?? null,
           compared: w.compared ?? null,
           after_read: w.afterRead ?? null,
-          candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now"
+          candidates: localize("extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now")
         };
       }
     }
@@ -55297,7 +55421,7 @@ var CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pa
 // ../bio-plane/src/content/extent.mjs
 var CONTENT_EXTENT_KINDS2 = Object.freeze({
   ...CONTENT_EXTENT_KINDS,
-  envelope: { landed: true, human: "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body" }
+  envelope: { landed: true, human: localize("content.extent.envelope_item_human", "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body") }
 });
 var ENVELOPE_ITEM_KINDS = Object.freeze({
   "tracked-change": word("content.tracked_change"),
@@ -55326,9 +55450,9 @@ var SHEET_KINDS = Object.freeze(["sheet-cell", "sheet-range"]);
 // ../bio-plane/src/content/notice.mjs
 var VERSION_NOTICE_STATES = Object.freeze({
   no_newer_capture: word("content.no_newer_capture"),
-  newer_capture_matched: "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it",
-  newer_capture_undetermined: "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved \u2014 look at the newer version and decide",
-  chain_unread: "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none"
+  newer_capture_matched: localize("content.notice.newer_capture_matched", "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it"),
+  newer_capture_undetermined: localize("content.notice.newer_capture_undetermined", "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved \u2014 look at the newer version and decide"),
+  chain_unread: localize("content.notice.chain_unread", "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none")
 });
 var VERSION_NOTICE_GRADES = Object.freeze({
   A: { affects: "unaffected", says: word("content.says.passage_text_byte") },
@@ -55343,6 +55467,18 @@ var VERSION_NOTICE_GRADES = Object.freeze({
     says: word("content.says.change_touches_passage")
   }
 });
+
+// ../bio-plane/src/content/ops.mjs
+var CONTENT_OP_NAMES = Object.freeze([
+  "content",
+  "contentcrop",
+  "contentmint",
+  "textattest",
+  "attesttext",
+  "transcribe",
+  "transcriptionattest",
+  "transcription"
+]);
 
 // ../bio-plane/src/content/index.mjs
 var TRANSCRIPTION_MAX_BYTES = 128 * 1024;

@@ -5503,6 +5503,13 @@
       "line": 1914
     },
     {
+      "id": "calibration.calibration.a_calibration_carries_the_date",
+      "en": "a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a reader whether anybody has looked recently",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 191
+    },
+    {
       "id": "calibration.calibration.a_calibration_is_an_object",
       "en": "a calibration is an object; got {v1}",
       "module": "calibration",
@@ -5517,39 +5524,102 @@
       "line": 188
     },
     {
+      "id": "calibration.calibration.a_calibration_names_who_ran",
+      "en": "a calibration names who ran the probe. An unattributed measurement is one nobody can ask to be re-run",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 210
+    },
+    {
+      "id": "calibration.calibration.an_announcement_signal_is_an",
+      "en": "an announcement signal is an object",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 333
+    },
+    {
+      "id": "calibration.calibration.an_announcement_signal_names_the",
+      "en": "an announcement signal names the engine it is about",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 335
+    },
+    {
+      "id": "calibration.calibration.an_announcement_signal_names_where",
+      "en": "an announcement signal names WHERE it was observed. It is somebody else's statement about their own product and the record keeps it as that",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 338
+    },
+    {
       "id": "calibration.calibration.cap_string_is_not_one",
       "en": "cap '{String}' is not one of {BASIS_GRADES}, and a calibration does not invent a scale of its own — transcription fidelity bounds the capture axis and there is no third one (DEC-4)",
       "module": "calibration",
       "file": "bio-plane/src/calibration.mjs",
-      "line": 196
+      "line": 194
     },
     {
       "id": "calibration.calibration.this_announcement_carries_a_fidelity",
       "en": "this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing else — it may never stand in for a probe, and it may never itself set or change a grade. Record the announcement, then run the probe",
       "module": "calibration",
       "file": "bio-plane/src/calibration.mjs",
-      "line": 357
+      "line": 343
     },
     {
       "id": "calibration.calibration.this_calibration_carries_no_field",
       "en": "this calibration carries no {field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter",
       "module": "calibration",
       "file": "bio-plane/src/calibration.mjs",
-      "line": 205
+      "line": 203
     },
     {
       "id": "calibration.calibration.this_engine_now_measures_better",
       "en": "this engine now measures BETTER. Nothing is raised and nothing moves: a grade rises only by an authored act, so an automatic upgrade here would be your team's Civicsmith making a claim nobody authored (DEC-4)",
       "module": "calibration",
       "file": "bio-plane/src/calibration.mjs",
-      "line": 278
+      "line": 272
+    },
+    {
+      "id": "calibration.calibration.this_engine_now_measures_worse",
+      "en": "this engine now measures WORSE than the calibration these transcriptions were graded under, so legs resting on the old cap OVERCLAIM. The record names exactly which transcriptions those are and changes none of them: what a worse measurement establishes is a reason for a member to look, not a new letter to stamp (DEC-4, no machine mints a grade)",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration.mjs",
+      "line": 269
+    },
+    {
+      "id": "calibration.index.next_probe_at_cadence",
+      "en": "The next probe is due at its own cadence",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration/index.mjs",
+      "line": 49
+    },
+    {
+      "id": "calibration.index.nothing_has_ever_probed",
+      "en": "Nothing has ever probed it, so a probe is due immediately",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration/index.mjs",
+      "line": 48
+    },
+    {
+      "id": "calibration.index.registering_names_the_engine",
+      "en": "registering a calibration subject names the engine to be probed",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration/index.mjs",
+      "line": 363
+    },
+    {
+      "id": "calibration.index.registering_names_the_probe",
+      "en": "registering a calibration subject names the PROBE that will measure it. A subject with no probe is a promise to measure something by some means nobody stated",
+      "module": "calibration",
+      "file": "bio-plane/src/calibration/index.mjs",
+      "line": 366
     },
     {
       "id": "calibration.index.this_call_asks_the_new",
       "en": "this call asks the new measurement to re-grade the transcriptions already made by {String}. A calibration records what an engine scores; it never moves a grade, in EITHER direction — a grade rises or falls only by an authored act (DEC-4, no machine mints a grade). Record the measurement, then read op=calibrationdrift for exactly which transcriptions a member should look at",
       "module": "calibration",
       "file": "bio-plane/src/calibration/index.mjs",
-      "line": 209
+      "line": 214
     },
     {
       "id": "capture-requests.checks.this_asked_for_the_page",
@@ -9252,413 +9322,1022 @@
       "en": "a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 421
+      "line": 413
     },
     {
       "id": "content.extent-core.an_image_extents_page_is",
       "en": "an image extent's page is a 0-based integer. This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 492
+      "line": 477
     },
     {
       "id": "content.extent-core.an_images_part_is_the",
       "en": "an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 488
+      "line": 473
+    },
+    {
+      "id": "content.extent-core.capture_is_not_an_office",
+      "en": "this capture is {kind}, not an office container, so its own bytes hold no embedded media part and a part reference names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole{pdf}",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 704
     },
     {
       "id": "content.extent-core.cited_as_says_whether_a",
       "en": "cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 443
+      "line": 434
+    },
+    {
+      "id": "content.extent-core.doc_para_names_which_paragraph",
+      "en": "a doc-para extent names which paragraph, as a 0-based integer. This one names '{para}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 399
+    },
+    {
+      "id": "content.extent-core.doc_para_run_unreadable",
+      "en": "a doc-para extent's run is a 0-based integer or absent. A run that is present and unreadable is worse than none, because it looks like a span somebody chose",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 402
+    },
+    {
+      "id": "content.extent-core.doc_table_cell_unreadable",
+      "en": "a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 455
+    },
+    {
+      "id": "content.extent-core.doc_table_names_which_table",
+      "en": "a doc-table extent names which table, as a 0-based ordinal in document order. This one names '{table}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 451
+    },
+    {
+      "id": "content.extent-core.dom_names_a_region",
+      "en": "extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 284
+    },
+    {
+      "id": "content.extent-core.embedded_image_text_has_no",
+      "en": "this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image — the container's transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 515
     },
     {
       "id": "content.extent-core.extent_kind_kind_human_is",
       "en": "extent kind '{kind}' ({human}) is named in the grammar and what it covers cannot yet be evaluated, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 293
+      "line": 291
     },
     {
       "id": "content.extent-core.extent_kind_string_is_not",
       "en": "extent kind '{String}' is not one of: {keys}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 290
+      "line": 288
+    },
+    {
+      "id": "content.extent-core.image_names_both_part_and_page",
+      "en": "an image extent names EITHER the embedded part's content hash OR a page and rectangle, and this one names both — one image stated twice, where the two can disagree",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 469
+    },
+    {
+      "id": "content.extent-core.image_names_neither_part_nor_page",
+      "en": "an image extent names the embedded part's content hash (in a container) or the page it is on (in a PDF), and this one names neither",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 470
+    },
+    {
+      "id": "content.extent-core.image_rect_unreadable",
+      "en": "an image extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 482
+    },
+    {
+      "id": "content.extent-core.kind_not_held",
+      "en": "this record does not hold which kind of document this capture is",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 721
+    },
+    {
+      "id": "content.extent-core.kind_unheld_part_undetermined",
+      "en": "{kind_why} — so whether this part is a member of the document's own bytes is UNDETERMINED, admitted and stated rather than guessed either way",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 721
+    },
+    {
+      "id": "content.extent-core.no_extent_was_supplied",
+      "en": "no extent was supplied and none could be read from the leg",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 281
+    },
+    {
+      "id": "content.extent-core.office_container_no_image_list",
+      "en": "this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 724
     },
     {
       "id": "content.extent-core.only_an_image_can_be",
       "en": "only an image can be cited as its bytes. A {kind} extent addresses text, and reading 'bytes' here as 'text' would silently change what the citation claims, so it is refused",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 446
+      "line": 437
+    },
+    {
+      "id": "content.extent-core.pdf_page_names_which_page",
+      "en": "a pdf-page extent names which page, as a 0-based integer. This one names '{page}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 295
+    },
+    {
+      "id": "content.extent-core.pdf_page_rect_unreadable",
+      "en": "a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 300
+    },
+    {
+      "id": "content.extent-core.sheet_cell_names_which_cell",
+      "en": "a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names '{cell}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 392
+    },
+    {
+      "id": "content.extent-core.sheet_cell_names_which_sheet",
+      "en": "a sheet-cell extent names which sheet, as the workbook spells it. This one names '{sheet}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 389
+    },
+    {
+      "id": "content.extent-core.sheet_range_names_which_cells",
+      "en": "a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names '{range}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 444
+    },
+    {
+      "id": "content.extent-core.sheet_range_names_which_sheet",
+      "en": "a sheet-range extent names which sheet, as the workbook spells it. This one names '{sheet}'",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 441
+    },
+    {
+      "id": "content.extent-core.slide_shape_unreadable",
+      "en": "a slide-shape extent's shape is a 0-based integer or absent. A shape that is present and unreadable is worse than none, because it looks like an element somebody chose",
+      "module": "content",
+      "file": "bio-plane/src/content/extent-core.mjs",
+      "line": 416
     },
     {
       "id": "content.extent-core.this_captures_page_set_holds",
       "en": "this capture's page set holds {pageCount} page(s) (0-{v1}) and the extent names page {page}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 314
+      "line": 310
     },
     {
       "id": "content.extent-core.this_captures_page_set_holds_2",
       "en": "this capture's page set holds {pageCount} page(s) (0-{v1}) and the image extent names page {page}",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 502
+      "line": 486
     },
     {
       "id": "content.extent-core.this_record_holds_no_extraction",
       "en": "this record holds no extraction chain for the capture this leg cites, so there is no transcription over {describeExtent} for the citation to point at",
       "module": "content",
       "file": "bio-plane/src/content/extent-core.mjs",
-      "line": 562
+      "line": 543
     },
     {
       "id": "content.extent.an_envelope_extent_names_the",
       "en": "an envelope extent names the part of the container the item's bytes sit in (word/comments.xml, docProps/core.xml). This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 458
+      "line": 456
     },
     {
       "id": "content.extent.an_envelope_extent_names_which",
       "en": "an envelope extent names which kind of item, one of {keys}. This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 455
+      "line": 453
     },
     {
       "id": "content.extent.an_envelope_extent_names_which_2",
       "en": "an envelope extent names which item, as a 0-based ordinal among items of its kind at the same part and anchor. This one names '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 461
+      "line": 459
     },
     {
       "id": "content.extent.an_envelope_item_is_anchored",
       "en": "an envelope item is anchored at a paragraph or a slide ({ENVELOPE_ANCHOR_KINDS}) or at nothing. This one is anchored at '{String}'",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 468
+      "line": 466
     },
     {
       "id": "content.extent.an_envelope_item_is_cited",
       "en": "an envelope item is cited as the envelope and never as '{String}': a tracked change, comment, core property or speaker note is not the document's body",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 433
+      "line": 431
+    },
+    {
+      "id": "content.extent.core_property_names_which",
+      "en": "a core-property envelope item names which property (creator, lastModifiedBy, title), and this one names none",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 462
+    },
+    {
+      "id": "content.extent.envelope_item_human",
+      "en": "an item of the document's envelope (a tracked change, comment, core property or speaker notes), not its body",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 52
+    },
+    {
+      "id": "content.extent.envelope_items_no_list",
+      "en": "this record persists no list of a capture's envelope items to bound one against (they arrive as text units), so whether this item exists rests on the index that found it: UNDETERMINED, admitted and stated",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 392
+    },
+    {
+      "id": "content.extent.no_page_set",
+      "en": "this record holds no page set for this capture",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 359
+    },
+    {
+      "id": "content.extent.no_page_set_2",
+      "en": "this record holds no page set for this capture",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 361
+    },
+    {
+      "id": "content.extent.no_paragraph_count",
+      "en": "this record holds no paragraph count for this capture",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 373
+    },
+    {
+      "id": "content.extent.no_sheet_list",
+      "en": "this record holds no sheet list for this capture's workbook",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 364
+    },
+    {
+      "id": "content.extent.no_slide_list",
+      "en": "this record holds no slide list for this capture's deck",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 376
+    },
+    {
+      "id": "content.extent.no_table_list",
+      "en": "this record holds no table list for this capture",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 383
     },
     {
       "id": "content.extent.only_an_envelope_item_is",
       "en": "only an envelope item is cited as the envelope. A {kind} extent addresses the document's body, and reading it as an annotation would change what the citation claims",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 434
+      "line": 432
+    },
+    {
+      "id": "content.extent.page_rotated_clause",
+      "en": ". The page is shown rotated {rotate} degrees; a rect is measured on the unrotated page, from its MediaBox corners, not from the turned view",
+      "module": "content",
+      "file": "bio-plane/src/content/extent.mjs",
+      "line": 313
     },
     {
       "id": "content.extent.this_kind_extent_states_its",
       "en": "this {kind} extent states its rect in space '{String}'; the grammar addresses PDF default user space only (points, the page as the file lays it out), so the rect is not converted and not read as points. A text-recognition anchor is in the pixels of the frame it read",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 427
+      "line": 425
     },
     {
       "id": "content.extent.this_record_holds_no_extraction",
       "en": "this record holds no extraction chain for the capture this citation names, so there is no transcription over {describeExtent} for the citation to point at",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 474
+      "line": 472
     },
     {
       "id": "content.extent.this_record_holds_no_row",
       "en": "this record holds no row and column grid for sheet '{want}' (a format that fixes no maximum table size states none)",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 369
+      "line": 368
     },
     {
       "id": "content.extent.this_record_holds_no_row_2",
       "en": "this record holds no row and column grid for table {table}",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 387
+      "line": 386
     },
     {
       "id": "content.extent.this_record_holds_no_shape",
       "en": "this record holds no shape count for slide {slide}",
       "module": "content",
       "file": "bio-plane/src/content/extent.mjs",
-      "line": 380
+      "line": 379
+    },
+    {
+      "id": "content.index.a_region_of_page",
+      "en": "a region of page {page}",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 367
+    },
+    {
+      "id": "content.index.attestation_raises_ceiling",
+      "en": "an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 792
     },
     {
       "id": "content.index.bundleid_is_not_a_document",
       "en": "{bundleId} is not a document, so it has no part to point at. The content axis ranges over documents (DEC-21): an inquiry rests on things, it is not a thing with pages. This is stated rather than met with a document-extent row invented for it (IC-83 AMENDMENT 2)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 468
+      "line": 455
     },
     {
       "id": "content.index.bytes_b_typed_over_the",
       "en": "{bytes} B typed, over the {TRANSCRIPTION_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: a typing silently truncated would be text the member did not type, standing in their name",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 953
+      "line": 926
+    },
+    {
+      "id": "content.index.candidate_same_extent_compared",
+      "en": "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for a candidate and never evidence of identity",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1171
+    },
+    {
+      "id": "content.index.candidate_same_extent_newer",
+      "en": "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1120
+    },
+    {
+      "id": "content.index.capture_axis_answered_once",
+      "en": "the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at — so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 725
+    },
+    {
+      "id": "content.index.capture_metadata_could_not",
+      "en": "the capture's metadata could not be read",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1285
+    },
+    {
+      "id": "content.index.capture_not_office_document",
+      "en": "the capture is not an office document",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1282
     },
     {
       "id": "content.index.capture_short_is_itemised_as",
       "en": "capture {short} is itemised as a {v1} and not as a PDF, so this record holds no list of images painted on its pages and whether an image is painted at this address is UNDETERMINED and stated, not refused",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 313
+      "line": 303
+    },
+    {
+      "id": "content.index.cited_text_no_longer_held",
+      "en": "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 848
+    },
+    {
+      "id": "content.index.connection_ask_earnedbasis",
+      "en": "ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the record earns between THIS document and THAT question's subject, and it has no value independent of a question",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 786
+    },
+    {
+      "id": "content.index.connection_empty_level_question",
+      "en": "the question — a connection grade is earned against an inquiry's subject entity, and this read resolves a ROW rather than a LEG",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 785
+    },
+    {
+      "id": "content.index.connection_no_captured_resolution",
+      "en": "connection — no captured resolution of this document to the subject",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1397
+    },
+    {
+      "id": "content.index.container_extent_format_entry",
+      "en": "the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 312
+    },
+    {
+      "id": "content.index.container_image_list_before_wire",
+      "en": "the container's image list (this capture was acquired before the wire carried it — FW-19)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 290
+    },
+    {
+      "id": "content.index.container_own_extent_absent",
+      "en": "the container's own extent — no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 295
+    },
+    {
+      "id": "content.index.content_requires_id",
+      "en": "content requires ?id=<content_id>",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 760
+    },
+    {
+      "id": "content.index.crop_taken_from_bytes",
+      "en": "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1328
+    },
+    {
+      "id": "content.index.derived_rendition_for_display",
+      "en": "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop is not itself evidence",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1335
     },
     {
       "id": "content.index.describeextent_is_a_part_no",
       "en": "{describeExtent} is a part no typing can be checked against — a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
+      "line": 920
+    },
+    {
+      "id": "content.index.document_reread_text_under",
+      "en": "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 863
+    },
+    {
+      "id": "content.index.document_table_list_before_wire",
+      "en": "the document's table list (this capture was acquired before the wire carried it — FW-19)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 288
+    },
+    {
+      "id": "content.index.every_sheet_row_column_extent",
+      "en": "every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid — OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one — D-359), so an unknown SHEET is bounded and a cell within a known sheet is not",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 292
+    },
+    {
+      "id": "content.index.every_slide_shape_count",
+      "en": "every slide's shape count (this capture was acquired before the wire read that figure, no slide's part in it could be read, or the deck was over the text size bound and only its length was read — D-359, COFF-13), so a slide past the deck is bounded and a shape within a known slide is not",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 294
+    },
+    {
+      "id": "content.index.evidence_store_holds_no",
+      "en": "the evidence store holds no object under this row's capture, so no crop was made",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1317
+    },
+    {
+      "id": "content.index.exact_typing_already_recorded",
+      "en": ". This exact typing by {who} was already recorded, and is found rather than written again",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
       "line": 947
+    },
+    {
+      "id": "content.index.format_registry_could_not",
+      "en": "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1384
+    },
+    {
+      "id": "content.index.image_could_not_be_cut",
+      "en": "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason is beside this one",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1324
+    },
+    {
+      "id": "content.index.image_member_of_container",
+      "en": "this row cites an image that is a member of a container (an embedded part), whose bytes are the image itself rather than a rectangle of a page; there is nothing to cut out of it",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1309
     },
     {
       "id": "content.index.lab_cites_describeextent_of_target",
       "en": "{lab} cites {describeExtent} of '{target}', and this record holds no capture of that document at all{v1}",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 557
+      "line": 544
     },
     {
       "id": "content.index.lab_names_v1_on_target",
       "en": "{lab} names {v1} on '{target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 544
+      "line": 531
     },
     {
       "id": "content.index.label_names_content_id_id",
       "en": "{label} names content_id '{id}…', and this record holds no such part. The id is an address taken over the document, the passage and the transcription chain, so nothing can be found for one nothing minted",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 515
+      "line": 502
     },
     {
       "id": "content.index.label_rests_on_targetid_and",
       "en": "{label} rests on '{targetId}' and names a part of '{bundle_id}' ({ref}): the leg and the part it points at are about two different documents",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 520
+      "line": 507
+    },
+    {
+      "id": "content.index.marking_passage_citable",
+      "en": "marking a passage citable names the document the passage is in",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 448
+    },
+    {
+      "id": "content.index.no_capture_resolves_subject",
+      "en": "no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at all. Absence here is a fact about what the recogniser matched, never evidence about what the document says",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1398
     },
     {
       "id": "content.index.no_cited_passage_by_the",
       "en": "no cited passage by the id '{cid}' is readable here.",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1216
+      "line": 1185
+    },
+    {
+      "id": "content.index.no_content_row_addressed",
+      "en": "no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) — it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 764
+    },
+    {
+      "id": "content.index.no_content_row_addressed_2",
+      "en": "no content row is addressed by this id in this record",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1303
+    },
+    {
+      "id": "content.index.no_content_row_by_that",
+      "en": "this record holds no content row by that id",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1249
     },
     {
       "id": "content.index.no_document_is_addressed_by",
       "en": "no document is addressed by {bundleId} in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 465
+      "line": 452
     },
     {
       "id": "content.index.no_document_is_addressed_by_2",
       "en": "no document is addressed by {target} in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 921
+      "line": 895
+    },
+    {
+      "id": "content.index.no_evidence_store_set_up",
+      "en": "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1313
+    },
+    {
+      "id": "content.index.no_minter_names_who",
+      "en": "a content row records WHO marked the passage as citable, and this call carries nobody. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it — which is refused rather than filled in",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 446
+    },
+    {
+      "id": "content.index.no_portion_was_selected",
+      "en": "no portion was selected. A transcription is of a PART the member read — a page or a region of one, or the whole document NAMED as such — and a typing with no stated part would be read as covering all of it",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 904
+    },
+    {
+      "id": "content.index.no_reading_of_that",
+      "en": "this record holds no reading of that capture",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1273
     },
     {
       "id": "content.index.no_transcription_readable_here_is",
       "en": "no transcription readable here is addressed by content_id '{id}…'",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 992
+      "line": 965
+    },
+    {
+      "id": "content.index.nobody_has_read_newer",
+      "en": "nobody has read the newer capture yet, so the record holds no text of it at any extent to test against — that is a fact about this record, not about the document",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1057
     },
     {
       "id": "content.index.nothing_in_this_store_has",
       "en": "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 343
+      "line": 332
     },
     {
       "id": "content.index.nothing_in_this_store_has_2",
       "en": "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 348
+      "line": 337
+    },
+    {
+      "id": "content.index.pass_bundleid_info_document",
+      "en": "pass bundleId=<INFO-…>: the document whose page you transcribed",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 893
+    },
+    {
+      "id": "content.index.pass_contentid_content_id",
+      "en": "pass contentId=<the content id op=transcribe returned>",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 966
+    },
+    {
+      "id": "content.index.position_within_reading",
+      "en": "position within the reading — reading_refs records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1400
+    },
+    {
+      "id": "content.index.reading_carries_container_extent",
+      "en": "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1379
+    },
+    {
+      "id": "content.index.reading_holds_no_office",
+      "en": "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1283
+    },
+    {
+      "id": "content.index.record_does_not_hold_format",
+      "en": "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1385
+    },
+    {
+      "id": "content.index.row_cells_could_not",
+      "en": "the row's cells could not be read",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1260
+    },
+    {
+      "id": "content.index.row_cited_under_earlier",
+      "en": "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1251
     },
     {
       "id": "content.index.target_is_not_a_document",
       "en": "{target} is not a document, so it has no page to transcribe (DEC-21)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 920
+      "line": 894
     },
     {
       "id": "content.index.the_content_read_is_fixed",
       "en": "the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried {unknown}, which it refuses rather than ignores — a parameter silently dropped is a filter the caller believes was applied",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 776
+      "line": 759
     },
     {
       "id": "content.index.the_row_cites_a_extent",
       "en": "the row cites a {extent_kind} extent, which names no cells of a sheet",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1287
+      "line": 1254
     },
     {
       "id": "content.index.the_typed_text_is_empty",
       "en": "the typed text is empty. Nothing is prefilled: the text is what the member read off {describeExtent}, typed by them",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 950
+      "line": 923
     },
     {
       "id": "content.index.this_attestation_fault_the_note",
       "en": "this attestation {fault}. The note is the attestor's own words on what they compared — the page or passage read, and against what — and it is kept with the attestation, so a later reader can weigh it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 353
+      "line": 342
     },
     {
       "id": "content.index.this_attestation_of_transcriber_s",
       "en": "this attestation of {transcriber}'s typing {fault}. The note is the attestor's own words on what they compared — the typed text against which page or region — and it is kept with the attestation",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1020
+      "line": 993
     },
     {
       "id": "content.index.this_leg_cites_describeextent_and",
       "en": "this leg cites {describeExtent} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for {bundle_id}, and it is the DOCUMENT's, not this portion's",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1446
+      "line": 1401
     },
     {
       "id": "content.index.this_re_read_staled_n",
       "en": "this re-read staled {n} rows and {STALE_GRADED_MAX} were graded; the other {ungraded} (the capture's stale rows whose content_id sorts after ungraded_after) were marked stale and not graded, so whether the re-read changed their passages is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 885
+      "line": 861
     },
     {
       "id": "content.index.this_record_holds_no_capture",
       "en": "this record holds no capture of {bundleId}, so there are no bytes for a content row to address. A content id is hash(capture, extent, chain) and there is no capture to hash. Absence here is a fact about what was captured and never evidence about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 472
+      "line": 459
     },
     {
       "id": "content.index.this_record_holds_no_capture_2",
       "en": "this record holds no capture of {target}, so there is no copy to have typed from. Absence here is a fact about what was captured, never about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 926
+      "line": 900
     },
     {
       "id": "content.index.this_record_holds_no_list",
       "en": "this record holds no list of the images the pages of capture {short} paint — a PDF acquired before D-420 persisted none, and nothing was persisted at all for a capture no format entry itemised — so whether an image is painted at this address is UNDETERMINED and stated, not refused. Re-acquiring the document records the list",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 314
+      "line": 304
     },
     {
       "id": "content.index.this_row_cites_a_extent",
       "en": "this row cites a {extent_kind} extent, and only an image on a PDF page has a crop",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1342
+      "line": 1308
     },
     {
       "id": "content.index.this_row_is_a_members",
       "en": "this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than {transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 812
+      "line": 791
+    },
+    {
+      "id": "content.index.transcriber_nobody",
+      "en": "this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty one means the act arrived by a route that does not attribute it",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 888
+    },
+    {
+      "id": "content.index.under_the_capture_the_leg",
+      "en": " under the capture the leg names ({capture}…)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 545
     },
     {
       "id": "content.index.v1_is_an_inquiry_rather",
       "en": "{v1} is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at — the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 582
+      "line": 569
     },
     {
       "id": "content.index.v1_so_it_states_no",
       "en": "{v1}, so it states no office metadata",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1315
+      "line": 1282
+    },
+    {
+      "id": "content.index.version_chains_visible_to",
+      "en": "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1191
     },
     {
       "id": "content.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 912
+      "line": 887
     },
     {
       "id": "content.index.who_typed_describeextent_what_a",
       "en": "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 974
+      "line": 947
     },
     {
       "id": "content.index.who_typed_this_transcription_at",
       "en": "{who} typed this transcription ({at}). An attestation is a SECOND member checking it against the page; the typist's own is not evidence and would raise the ceiling on one member's word",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1015
+      "line": 988
+    },
+    {
+      "id": "content.notice.chain_unread",
+      "en": "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 27
+    },
+    {
+      "id": "content.notice.cited_extent_unreadable",
+      "en": "the cited passage's extent could not be read back from its row",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 176
+    },
+    {
+      "id": "content.notice.cited_passage_held_only",
+      "en": "the cited passage's text is held only to the per-unit cap, so the whole passage is not held",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 130
+    },
+    {
+      "id": "content.notice.every_unit_identical",
+      "en": "every unit of the newer version's text is byte-identical at the same position",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 212
+    },
+    {
+      "id": "content.notice.image_cited_as_bytes",
+      "en": "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 178
     },
     {
       "id": "content.notice.in_the_newer_version_why",
       "en": "in the newer version {why}",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 194
+      "line": 188
+    },
+    {
+      "id": "content.notice.newer_capture_matched",
+      "en": "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 25
+    },
+    {
+      "id": "content.notice.newer_capture_undetermined",
+      "en": "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved — look at the newer version and decide",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 26
+    },
+    {
+      "id": "content.notice.newer_text_divided",
+      "en": "the newer version's text is byte-identical, divided into different units",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 214
+    },
+    {
+      "id": "content.notice.newer_unit_truncated",
+      "en": "a unit of the newer version is held only to the per-unit cap, so the passage may be in the part not held",
+      "module": "content",
+      "file": "bio-plane/src/content/notice.mjs",
+      "line": 244
     },
     {
       "id": "content.notice.the_newer_versions_text_is",
       "en": "the newer version's text is held only in part (its index reads {said}), so the passage may be in the part not held",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 250
+      "line": 242
     },
     {
       "id": "content.notice.the_record_does_not_hold",
       "en": "the record does not hold the newer version's text whole (its index reads {said})",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 215
+      "line": 209
     },
     {
       "id": "content.notice.the_record_holds_no_text",
       "en": "the record holds no text of the newer version (its index reads {said}), so where the passage went cannot be looked for",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 248
+      "line": 240
     },
     {
       "id": "content.notice.why_so_there_is_nothing",
       "en": "{why}, so there is nothing to compare",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 191
+      "line": 185
     },
     {
       "id": "content.notice.why_so_there_is_nothing_2",
       "en": "{why}, so there is nothing to compare",
       "module": "content",
       "file": "bio-plane/src/content/notice.mjs",
-      "line": 209
+      "line": 203
     },
     {
       "id": "corpus-export.index.a_rendering_is_one_of",
@@ -13466,7 +14145,7 @@
       "en": "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more",
       "module": "extraction",
       "file": "bio-plane/src/extractrun.mjs",
-      "line": 351
+      "line": 349
     },
     {
       "id": "extraction.extractrun.an_ai_step_names_what",
@@ -13474,6 +14153,13 @@
       "module": "extraction",
       "file": "bio-plane/src/extractrun.mjs",
       "line": 224
+    },
+    {
+      "id": "extraction.extractrun.position_unreadable",
+      "en": "this proposal states WHERE it read the reference and the address cannot be read in IC-1's element-reference vocabulary. An address nothing resolves is worse than the honest absence, because it looks like a binding and joins to nothing",
+      "module": "extraction",
+      "file": "bio-plane/src/extractrun.mjs",
+      "line": 359
     },
     {
       "id": "extraction.extractrun.string_is_not_one_of",
@@ -13487,70 +14173,98 @@
       "en": "'{String}' is not one of {BASIS_GRADES}. A step's cap is the strongest transcription fidelity it can support and it is a MEASUREMENT — absent means undetermined and stated, never a letter chosen to get past this line",
       "module": "extraction",
       "file": "bio-plane/src/extractrun.mjs",
-      "line": 401
+      "line": 397
+    },
+    {
+      "id": "extraction.extractrun.undetermined_ceiling",
+      "en": "undetermined ceiling of the capture its quote is read from",
+      "module": "extraction",
+      "file": "bio-plane/src/extractrun.mjs",
+      "line": 349
     },
     {
       "id": "extraction.index.a_re_read_replaces_this",
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1371
+      "line": 1370
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1572
+      "line": 1570
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1741
+      "line": 1739
+    },
+    {
+      "id": "extraction.index.no_evidence_store_set_up",
+      "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 1279
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1375
+      "line": 1374
+    },
+    {
+      "id": "extraction.index.no_text_provenance_recorded",
+      "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 981
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1361
+      "line": 1360
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1567
+      "line": 1565
+    },
+    {
+      "id": "extraction.index.reread_candidates_frontier",
+      "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
+      "module": "extraction",
+      "file": "bio-plane/src/extraction/index.mjs",
+      "line": 1483
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1578
+      "line": 1576
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1380
+      "line": 1379
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1583
+      "line": 1581
     },
     {
       "id": "file-safety.index.a_safe_view_is_made",
@@ -25145,11 +25859,116 @@
       "line": 642
     },
     {
+      "id": "reading-pipeline.index.ai_declined",
+      "en": "the AI declined{reason}",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 730
+    },
+    {
+      "id": "reading-pipeline.index.ai_reading_label",
+      "en": "the AI's reading",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 633
+    },
+    {
+      "id": "reading-pipeline.index.bytes_not_held",
+      "en": "the capture's bytes are not held in the evidence store, so nothing was read",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1245
+    },
+    {
+      "id": "reading-pipeline.index.decoded_glyphs",
+      "en": "{glyphs} decoded glyph(s)",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 220
+    },
+    {
+      "id": "reading-pipeline.index.document_not_read_text",
+      "en": "the document was not read as text ({why}), so no reading was attempted",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1399
+    },
+    {
+      "id": "reading-pipeline.index.entry_no_text",
+      "en": "the {fmt} entry produced no text from these bytes",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1383
+    },
+    {
+      "id": "reading-pipeline.index.entry_not_read_bytes",
+      "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1395
+    },
+    {
+      "id": "reading-pipeline.index.multipart",
+      "en": "multipart",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1399
+    },
+    {
+      "id": "reading-pipeline.index.no_capture_digest",
+      "en": "the document names no capture digest, so there are no bytes to read",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1229
+    },
+    {
+      "id": "reading-pipeline.index.non_textual_large",
+      "en": "non-textual or too large",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1399
+    },
+    {
+      "id": "reading-pipeline.index.pages_not_asked_request",
+      "en": "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request — their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 356
+    },
+    {
+      "id": "reading-pipeline.index.placement_not_read",
+      "en": "a placement the structure op reported could not be read as {shape}",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1104
+    },
+    {
+      "id": "reading-pipeline.index.read_one_undivided_string",
+      "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1273
+    },
+    {
+      "id": "reading-pipeline.index.reading_not_composed",
+      "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 1182
+    },
+    {
+      "id": "reading-pipeline.index.reported_characters",
+      "en": "{reported} character(s) its producer counted and no text this merge can read",
+      "module": "reading-pipeline",
+      "file": "bio-plane/src/reading-pipeline/index.mjs",
+      "line": 219
+    },
+    {
       "id": "reading-pipeline.readingprov.which_no_reading_provenance_it",
       "en": "{which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED — it is not inferred from the document-level tier or from the chain",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/readingprov.mjs",
-      "line": 219
+      "line": 217
     },
     {
       "id": "record-core.checks.a_part_of_your_teams",
