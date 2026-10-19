@@ -259,7 +259,7 @@ export class Doorbell {
         return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.secret_presented") };
       const key = this.#knockerKey({ create: false });
       if (!key) return { knocker_digest: null, pseudonym: null,
-                         basis: "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised" };
+                         basis: localize("doorbell.index.no_secret_recognised", "no knock carrying a secret has been received by your team's Civicsmith, so no secret is recognised") };
       const knocker_digest = await Doorbell.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
     } catch { return { knocker_digest: null, pseudonym: null, basis: word("doorbell.basis.digest_computed") }; }
@@ -355,7 +355,7 @@ export class Doorbell {
   doorbellTally({ viewer = null, now = null } = {}) {
     if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
-               detail: "the doorbell's tally is read by a signed-in member; nothing was read" };
+               detail: localize("doorbell.index.tally_member_only", "the doorbell's tally is read by a signed-in member; nothing was read") };
     const at = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const today = new Date(at).toISOString().slice(0, 10);
     const oldest = new Date(Date.parse(`${today}T00:00:00Z`) - (TALLY_DAYS - 1) * 86400000).toISOString().slice(0, 10);
@@ -415,7 +415,7 @@ export class Doorbell {
     let bytes;
     try {
       bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te.encode(String(content ?? ""));
-    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country); }
+    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: localize("doorbell.index.content_did_not_decode", "the content did not decode") }, nowMs, country); }
     /* R10, R14: a weak secret before the rate: nothing is stored, and nothing counted but the tallies (R19, R20). */
     if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
     const sha = hexOf(await crypto.subtle.digest("SHA-256", bytes));
@@ -431,7 +431,7 @@ export class Doorbell {
         if (!held) { await bucket.put(key, bytes, { sha256: await crypto.subtle.digest("SHA-256", bytes) }); stored = true; }
       } catch (e) {
         return { ok: false, reason: "KNOCK_NOT_STORED", status: 502,
-                 detail: "the material could not be stored, so nothing was received and no inbox row was written" };
+                 detail: localize("doorbell.index.material_not_stored", "the material could not be stored, so nothing was received and no inbox row was written") };
       }
     }
     /* R14: the knocker's continuity. A supplied secret is used; `generateSecret` makes one of 128 random bits, shown
@@ -574,7 +574,7 @@ export class Doorbell {
   async #pull({ knockId, by, at = null, within = null, viewer = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
-               detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written" };
+               detail: localize("doorbell.index.no_puller_named", "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written") };
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
     const row = this.#one(`SELECT * FROM inbox WHERE knock_id = ?`, knockId);
     if (!row) return this.#noSuchKnock(knockId);
@@ -608,7 +608,7 @@ export class Doorbell {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503, knockId,
-               detail: "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+               detail: localize("doorbell.index.no_evidence_storage_knock", "this team's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written") };
     }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
@@ -626,13 +626,13 @@ export class Doorbell {
     if (bytes && hexOf(await crypto.subtle.digest("SHA-256", bytes)) !== row.sha256) bytes = null;
     if (!bytes) {
       const a = evidenceAbsent(row.sha256, "bio", { knockId, status: 404,
-        detail: "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written" });
+        detail: localize("doorbell.index.knock_bytes_no_longer_held", "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written") });
       return a.body;
     }
     const sha = row.sha256;
     try { if (!(await ev.head(sha))) await ev.put(sha, bytes); }
     catch { return { ok: false, reason: "PULL_NOT_STORED", status: 502, knockId,
-                     detail: "the knock's bytes could not be held under their own digest, so nothing was written" }; }
+                     detail: localize("doorbell.index.bytes_not_held_digest", "the knock's bytes could not be held under their own digest, so nothing was written") }; }
     const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
     const address = `knock:${knockId}`;
     /* N615 (K1683, K1773): the origin `doctypeFor` is handed. `"member"` is only for bytes a member supplied by their own
@@ -653,7 +653,7 @@ export class Doorbell {
                                                                             via: DOORBELL_VIA, retrievalLocator: null }));
         if (!receipt || receipt.recorded !== true)
           return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
-                   detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
+                   detail: localize("doorbell.index.receipt_not_written", "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed") };
         this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
                           pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
                        when, by, sha, by, when, JSON.stringify(document), reason, knockId);
@@ -718,11 +718,11 @@ export class Doorbell {
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: localize("doorbell.index.these_bytes_were_received_at", "these bytes were received at the doorbell of your team's Civicsmith as knock {knock_id} at {received}, and brought into the record by {by} at {at}; they were received, not fetched from any address", { knock_id: String(row.knock_id), received: String(row.received), by: String(by), at: String(at) }),
-        evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+        evidence: localize("doorbell.index.knock_receipt_evidence", "the knock's receipt: its digest, taken as the bytes arrived, and its instant"),
         bound: false, via: DOORBELL_VIA,
       }],
       capture: {
-        method: "doorbell knock, received, hashed at receipt",
+        method: localize("doorbell.index.capture_method_label", "doorbell knock, received, hashed at receipt"),
         grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
         actor_class: "member", actor: by,
         sha256: row.sha256, encoding: "binary", bytes: row.bytes,
@@ -739,7 +739,7 @@ export class Doorbell {
    *  sentence and never an identity: no contact is answered (R16). At most `limit` (N90), paged by `after`. */
   knocksOf({ pseudonym, limit = null, after = null } = {}) {
     if (typeof pseudonym !== "string" || !pseudonym)
-      return { ok: false, reason: "NO_PSEUDONYM", detail: "knocksOf names the pseudonym whose knocks it lists" };
+      return { ok: false, reason: "NO_PSEUDONYM", detail: localize("doorbell.index.knocks_of_names_pseudonym", "knocksOf names the pseudonym whose knocks it lists") };
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 2) : ["", ""];
     if (!from) return badCursor();
