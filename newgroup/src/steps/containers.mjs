@@ -36,31 +36,31 @@ export const WORKER_PART = "Worker";
 const DESCRIPTOR_PARTS = new Set([CONTAINER_PART, WORKER_PART]);
 const containerPartsOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
 /* R57: what a container member left out then lacks, said after its reason; nothing for a member the assistant does not need. */
-const withLacks = (m, why) => { const l = containerPartsOf(m).length ? lacksOf(m.member) : ""; return l ? `${why}${/[.!?]$/.test(why) ? "" : "."} ${l}` : why; };
+const lacksFor = (m) => (containerPartsOf(m).length ? lacksOf(m.member) : "");
 const CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
 const BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
 const INSTANCE_TYPE = /^[a-z][a-z0-9-]{0,31}$/;
 const CLASS_PATH = /^container\/([A-Za-z_$][A-Za-z0-9_$]{0,63})\.json$/;
 
 /* The descriptor, read and checked; `{ok: true, d}` or `{ok: false, why}` in words. */
-export function containerDescriptor(bytes, part) {
+export function containerDescriptor(bytes) {
   let d;
-  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: word("installer.fleet.why.container") }; }
-  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: word("installer.fleet.why.container") };
-  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: word("installer.fleet.why.container") };
+  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: word("installer.fleet.why.container.parse") }; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: word("installer.fleet.why.container.parse") };
+  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: word("installer.fleet.why.container.class") };
   /* R38 (T46): an image the account cannot pull, or one not pinned by digest, is said in words a group can read. */
   const imageNot = imageWhy(d.image);
-  if (imageNot) return { ok: false, why: imageSaid(imageNot, part) };
-  if (d.scheduling_policy !== "default") return { ok: false, why: word("installer.fleet.why.container") };
+  if (imageNot) return { ok: false, why: imageSaid(imageNot) };
+  if (d.scheduling_policy !== "default") return { ok: false, why: word("installer.fleet.why.container.policy") };
   if (!Number.isInteger(d.max_instances) || d.max_instances < 1 || d.max_instances > 1000)
-    return { ok: false, why: word("installer.fleet.why.container") };
+    return { ok: false, why: word("installer.fleet.why.container.size") };
   /* R60 (T50; N1170; `bundler` R33): the size the member's configuration declares, passed on as stated; none stated, none sent. */
   if (d.instance_type !== undefined && (typeof d.instance_type !== "string" || !INSTANCE_TYPE.test(d.instance_type)))
-    return { ok: false, why: word("installer.fleet.why.container") };
+    return { ok: false, why: word("installer.fleet.why.container.size") };
   const bind = d.bind === undefined ? [] : d.bind;
   if (!Array.isArray(bind) || !bind.every((b) => b && typeof b.member === "string" && b.member
       && typeof b.binding === "string" && BINDING_NAME.test(b.binding)))
-    return { ok: false, why: word("installer.fleet.why.container") };
+    return { ok: false, why: word("installer.fleet.why.container.bindings") };
   return { ok: true, d: { class_name: d.class_name, image: d.image, max_instances: d.max_instances, bind,
     ...(d.instance_type === undefined ? {} : { instance_type: d.instance_type }) } };
 }
@@ -69,16 +69,16 @@ export function containerDescriptor(bytes, part) {
    `{ok: false, why}`. With two or more, each part's path names its class and the class names differ; any part that
    does not read leaves the whole member out (a member missing a part its statement names never reaches here: the
    part's fetch fails first). Each class's why names the class. */
-export function containerClasses(parts, bytesOf, part) {
-  if (parts.length === 1) return ((r) => r.ok ? { ok: true, classes: [r.d] } : r)(containerDescriptor(bytesOf(parts[0].path), part));
+export function containerClasses(parts, bytesOf) {
+  if (parts.length === 1) return ((r) => r.ok ? { ok: true, classes: [r.d] } : r)(containerDescriptor(bytesOf(parts[0].path)));
   const classes = [];
   for (const p of parts) {
     const at = CLASS_PATH.exec(p.path);
-    if (!at) return { ok: false, why: word("installer.fleet.why.container") };
-    const r = containerDescriptor(bytesOf(p.path), part);
+    if (!at) return { ok: false, why: word("installer.fleet.why.container.path") };
+    const r = containerDescriptor(bytesOf(p.path));
     if (!r.ok) return r;
-    if (r.d.class_name !== at[1]) return { ok: false, why: word("installer.fleet.why.container") };
-    if (classes.some((c) => c.class_name === r.d.class_name)) return { ok: false, why: word("installer.fleet.why.container") };
+    if (r.d.class_name !== at[1]) return { ok: false, why: word("installer.fleet.why.container.path") };
+    if (classes.some((c) => c.class_name === r.d.class_name)) return { ok: false, why: word("installer.fleet.why.container.duplicate") };
     classes.push(r.d);
   }
   return { ok: true, classes };
@@ -135,12 +135,12 @@ async function containerConditions(token, acct, { scope, plan }) {
   return { ok: true, leftover: !!p.leftover };
 }
 
-/* Why the conditions failed, said for the container member `part`. */
-function conditionWhy(c, part) {
-  if (c.code === "nopermission") return word("installer.image.nopermission", { part });
-  if (c.code === "permissionunknown") return word("installer.image.permissionunknown", { part, said: c.said });
-  if (c.code === "freeplan") return word("installer.image.freeplan", { part });
-  return word("installer.image.planunknown", { part, said: c.said });
+/* Why the conditions failed, as the fragment the left-out list shows. */
+function conditionWhy(c) {
+  if (c.code === "nopermission") return word("installer.fleet.why.nopermission");
+  if (c.code === "permissionunknown") return word("installer.fleet.why.permissionunknown");
+  if (c.code === "freeplan") return word("installer.fleet.why.freeplan");
+  return word("installer.fleet.why.planunknown");
 }
 
 /* The Containers application for one class's namespace, created with the image, or rolled out to it. The application is named
@@ -153,7 +153,7 @@ async function placeContainer(token, acct, m, d, appName, names) {
   const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
   const script = names.member(m.member);
   const ns = (Array.isArray(spaces) ? spaces : []).find((n) => n && n.script === script && n.class === d.class_name);
-  if (!ns || !ns.id) throw new Error(word("installer.image.noclass", { part: m.member }));
+  if (!ns || !ns.id) throw new Error(word("installer.fleet.why.class"));
   const apps = await cf(token, `/accounts/${acct}/containers/applications`);
   const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === appName);
   const config = { image: d.image, ...(d.instance_type ? { instance_type: d.instance_type } : {}) };
@@ -181,4 +181,4 @@ async function setSchedules(token, acct, script, crons) {
   return cf(token, `/accounts/${acct}/workers/scripts/${script}/schedules`,
     { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))) });
 }
-export { DESCRIPTOR_PARTS, containerPartsOf, withLacks, WORKER_PART_LACKS, containerConditions, conditionWhy, placeContainer, setSchedules };
+export { DESCRIPTOR_PARTS, containerPartsOf, lacksFor, WORKER_PART_LACKS, containerConditions, conditionWhy, placeContainer, setSchedules };
