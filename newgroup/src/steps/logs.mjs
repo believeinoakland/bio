@@ -1,4 +1,5 @@
 /* R30: no Logpush job may keep a record of each request of the copy's Workers. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { cf } from "./api.mjs";
 
 /* R46 (T36; K1892 "no log", K1946 T8) — NO LOG OF WHO OPENED WHICH FILE.
@@ -33,31 +34,28 @@ async function logpushCheck(token, acct, names) {
   let jobs;
   try { jobs = await cf(token, `/accounts/${acct}/logpush/jobs`); }
   catch (e) { return { state: "undetermined", why: e.message }; }
-  if (!Array.isArray(jobs)) return { state: "undetermined", why: "the list came back unreadable" };
+  if (!Array.isArray(jobs)) return { state: "undetermined", why: word("installer.logs.unreadable") };
   const named = jobs.filter((j) => j && j.dataset === PER_REQUEST_DATASET && !filterExcludes(j.filter, names));
   return named.length ? { state: "named", jobs: named } : { state: "clear" };
 }
-const logLag = (j, names) => `the Logpush job ${JSON.stringify(String(j.name || "(unnamed)"))} (id ${j.id ?? "unknown"}${j.enabled === false ? ", paused" : ""}) `
-  + `keeps a record of each request to your team's Civicsmith (its dataset is ${PER_REQUEST_DATASET}, and its filter does not leave out `
-  + `${names.join(", ")}), which would be a log of who opened which file: delete it, or give it a filter that leaves those Workers out`;
+const logLag = (j, names) => {
+  const vars = { name: String(j.name || word("installer.lag.logjob.unnamed")), id: j.id ?? word("installer.lag.logjob.unknownid"), dataset: PER_REQUEST_DATASET, programs: names.join(", ") };
+  return j.enabled === false ? word("installer.lag.logjob.paused", vars) : word("installer.lag.logjob", vars);
+};
 /* The step itself: listed, said, and its named jobs returned as lags for the verdict (R15's rule: no success over one). */
 async function logsStep(emit, token, acct, names) {
-  await emit.step("logs", "Checking that no log on your account records who opened which file");
+  await emit.step("logs", word("installer.step.logs"));
   const r = await logpushCheck(token, acct, names);
   if (r.state === "clear") {
-    emit.ok("logs", "No Logpush job on your Cloudflare account keeps a record of each request to your team's Civicsmith.");
+    emit.ok("logs", word("installer.logs.clear"));
     return { lags: [], state: r.state };
   }
   if (r.state === "undetermined") {
-    emit.no("logs", "Undetermined: the installer could not read your account's Logpush jobs (Cloudflare said: " + r.why + "), so it cannot "
-      + "say whether one keeps a record of each request to your team's Civicsmith, which would be a log of who opened which file. "
-      + "To check it yourself: in the Cloudflare dashboard, open Analytics & Logs, then Logpush, and look for a job over "
-      + "Workers Trace Events; none should cover " + names.join(", ") + ".");
+    emit.no("logs", word("installer.logs.undetermined", { said: r.why, programs: names.join(", ") }));
     return { lags: [], state: r.state };
   }
   const lags = r.jobs.map((j) => logLag(j, names));
-  emit.no("logs", (lags.length === 1 ? "A Logpush job on your Cloudflare account" : lags.length + " Logpush jobs on your Cloudflare account")
-    + " would keep a log of who opened which file: " + lags.join("; ") + ".");
+  emit.no("logs", lags.length === 1 ? word("installer.logs.named.one", { list: lags.join("; ") }) : word("installer.logs.named.other", { n: lags.length, list: lags.join("; ") }));
   return { lags, state: r.state };
 }
 

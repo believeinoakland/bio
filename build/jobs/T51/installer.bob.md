@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ RESUME (K4073). INSTALLER #17 stopped at half its window (J2); you are its next 
 ## B4 · CHANGE
 
 CHANGE (K4079): installer-steps is merged into tranche/T51 (newgroup/src/steps/, newgroup/test/steps/). Do your step 2 now: merge tranche/T51, delete the moved ranges (map §2), the barrel imports and §5 re-exports, re-point the test imports (§8), realsize's bound at 112 MB (R33), R80's test; every suite unchanged first, then words; post COMPLETE. installer-steps then gets its second-stage CHANGE.
+
+## B5 · CHANGE
+
+CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: `screen.install.cf.logs` (the sixth scope's line, drawn); `installer.update.retired` {parts} (R74's retired container part); retired: `installer.fact.unknown`, `installer.tryagain.install`, `installer.team.unrecorded.address` (your branch reads none; the tranche's old code does, so its tests are red until you merge); `installer.fact.unknown.older` stays; the `screen.install.*` rows are the design's own `install` screen's and need no reader; `installer.remove.done`'s note says the progress line.
