@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, cursor } from "./fixture.mjs";
 import { membershipBeside } from "../../../src/extraction/filemembership.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 
@@ -74,7 +75,7 @@ test("R30, R55, R56: the membership is served with its label, beside the links; 
     [["https://agendas.example.org/item/1", "https://agendas.example.org/file/1"],
      ["https://agendas.example.org/item/2", "https://agendas.example.org/file/2"]]);
   for (const p of m.pending) { assert.equal(p.derived, "containment"); assert.equal(p.established, false); assert.equal(p.stored, false); }
-  assert.match(m.says, /never the publisher.s own link/);
+  assert.equal(m.says, localize("connections.index.membership_read_says", "an agenda item's membership in a file, derived from where the file is printed; the publisher linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link"));
   /* Shapes come from the profile: with none stated, nothing is derived and the reason is said. */
   const w2 = world();
   const [ag2] = w2.doc("INFO-2026-0010-agenda", ["the agenda"]);

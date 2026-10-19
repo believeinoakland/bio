@@ -13,7 +13,7 @@ import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, M
          CONNECTIONS_TABLES, THEME_ID_RE, THEME_REF_RE, themeLegFindings, mentionedMethod, registeredNeighbours }
   from "../../../src/connections/index.mjs";
 import { MENTIONED_UNDATED } from "../../../src/connections/mentioned.mjs";
-import { localize } from "../../../src/setup-words/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const E = "ENT-2026-0001", F = "ENT-2026-0002";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b", C = "INFO-2026-0003-c", H = "INFO-2026-0050-h";
@@ -187,7 +187,7 @@ test("R64: a capped derivation answers so — every item through an entity last 
   assert.equal(r.items[0].truncated, true);
   assert.equal(r.truncated, true);
   assert.deepEqual(r.bounds.map(({ why, ...x }) => x), [{ entity: E, documents: 2, document_limit: 2, resolution_rows: 3, pair_limit: 1 }]);
-  assert.match(r.bounds[0].why, /stopped at its bound.*not the whole/);
+  assert.equal(r.bounds[0].why, word("connections.last_derivation_stopped", { entry: E, documents: "2", document_limit: "2", pair_limit: "1", resolution_rows: "3" }));
   w.k.derive({ entityId: E });
   const whole = ask(w, { node, viewer: V("alice") });
   assert.equal(whole.items.length, 3);
@@ -225,7 +225,7 @@ test("R65: an entity concerned by more than 32 documents is a hub — its co-men
   w.k.derive({ entityId: G, limit: 5000 }); w.k.derive({ entityId: E });
   const m = ask(w, { node: docs[0], viewer: MACHINE });
   assert.deepEqual(m.hubs.map(({ why, ...h }) => h), [{ entity: G, set_size: 33 }]);
-  assert.match(m.hubs[0].why, /more than 32.*step around/);
+  assert.equal(m.hubs[0].why, word("connections.why.documents_see_concern", { size: "33", entry: G, co_mention_hub: String(CO_MENTION_HUB) }));
   assert.deepEqual(m.items.map((i) => i.derived.inputs[0].entity), [E], "only the co-mention through E is an item");
   assert.equal(m.hub, undefined, "`hub` keeps connection-grammar's meaning: the node's own set over 1,000");
   /* For a member the hidden document is not counted: 32 is no hub, and its co-mentions are answered. */
@@ -241,7 +241,7 @@ test("R65: a node whose own set exceeds connection-grammar's BOUNDS.hub is answe
   const r = ask(w, { node: big, viewer: MACHINE });
   assert.deepEqual(r.items, []);
   assert.equal(r.hub.set_size, BOUNDS.hub + 1);
-  assert.match(r.hub.why, /named, never expanded/);
+  assert.equal(r.hub.why, word("connections.why.document_mentioned_together", { items: String(r.hub.set_size), hub: String(BOUNDS.hub) }));
   const reg = createRegistry();
   reg.registerOwner({ owner: "connections", kinds: MENTIONED_KINDS.map((x) => ({ ...x })), neighbours: (x) => w.k.neighbours(x) });
   assert.deepEqual(reg.neighbours({ owner: "connections", node: big, kinds: [MENTIONED_KIND], at: "2026-10-01", viewer: MACHINE, scope: null }), r,
@@ -249,7 +249,7 @@ test("R65: a node whose own set exceeds connection-grammar's BOUNDS.hub is answe
   const warn = hubWorld(w, "INFO-2026-0901-y", WARN_BAND, "ENT-2026-8");
   const ww = ask(w, { node: warn, viewer: MACHINE });
   assert.equal(ww.items.length, WARN_BAND); assert.equal(ww.set_size, WARN_BAND);
-  assert.match(ww.says, /answered whole/);
+  assert.equal(ww.says, word("connections.says.document_mentioned_together", { items: String(ww.set_size) }));
   assert.equal(ww.next, undefined);
   const under = hubWorld(w, "INFO-2026-0902-v", WARN_BAND - 1, "ENT-2026-9");
   assert.equal(ask(w, { node: under, viewer: MACHINE }).set_size, undefined);

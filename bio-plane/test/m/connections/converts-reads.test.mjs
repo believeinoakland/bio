@@ -66,7 +66,7 @@ test("R7, R10, R13, R52 (converts content-reads): a document-extent row is reach
   }
   assert.equal(g.connection_grade, "B", "the strongest reaching grade");
   assert.equal(g.established, true); assert.equal(g.needs_confirmation, false);
-  assert.match(g.why, /^3 connection\(s\) were established .*the strongest of them \(B\)/);
+  assert.equal(g.why, localize("connections.index.connection_established_reference", "{reaching} connection(s) were established by a reference read inside {ref}; the grade is the strongest of them ({grade}), which states how that connection was established and nothing about how credible either document is", { reaching: "3", ref: g.why.match(/read inside (.+?); the grade/)[1], grade: "B" }));
   assert.equal(g.truncated, false);
   /* Bounded like every read: the first `limit` by grade, truncated measured by one more. */
   const two = w.k.portionGrade({ contentId: doc, limit: 2, viewer: MACHINE });

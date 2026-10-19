@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { THEME_CHECKS, THEME_ID_RE, THEME_WITHDRAW_CHECKS, themeLegFindings, THEME_READ_LIMIT_DEFAULT,
          THEME_READ_LIMIT_MAX } from "../../../src/connections/index.mjs";
+import { localize, word } from "../../../src/setup-words/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
 const CAP = 131072;
@@ -31,7 +32,7 @@ test("R39, R35: declare refuses C-81.2 machine or absent, C-81.3 no test, C-81.4
   assert.equal(ok.ok, true); assert.match(ok.theme_id, THEME_ID_RE);
   assert.equal(ok.name, "  Two spaces "); assert.equal(ok.test, "exactly\nas written");
   assert.equal(ok.declared_by_handle, "h_alice"); assert.equal(ok.evidence, false);
-  assert.match(ok.says, /never the basis of a claim/);
+  assert.equal(ok.says, word("connections.says.theme_declared_test", { who: "h_alice" }));
   assert.equal(w.k.declareTheme({ name: "x".repeat(CAP), test: "t", declarer: "alice" }).ok, true, "at the cap is admitted");
   for (const c of Object.values(THEME_CHECKS)) assert.ok(c.translation && /^C-81\.\d+$/.test(c.check));
 });
@@ -55,7 +56,7 @@ test("R40, R35: place refuses C-81.7, C-81.6, C-81.8, C-81.9 in order; records m
   assert.equal(d.state, "member"); assert.equal(d.target_kind, "document"); assert.equal(d.confirmed_hunch, false);
   const again = w.k.placeInTheme({ theme: t.theme_id, target: A, placer: "alice", viewer: V("alice") });
   assert.equal(again.already, true); assert.equal(again.placed_by_handle, "h_bob", "the first placer stands");
-  assert.match(again.says, /nothing changed/);
+  assert.equal(again.says, word("connections.says.already_member_theme", { target: A }));
 });
 
 test("R41: propose refuses C-81.10 with no proposer, then as R40; records a hunch C; never demotes membership", () => {
@@ -149,7 +150,7 @@ test("R44: one theme — C-81.6 for an unknown id or viewer; members and hunches
   const hid = w.k.readThemes({ id: t.theme_id, viewer: V("bob") });
   assert.deepEqual(hid.members.map((m) => m.target), [A]);
   assert.equal(JSON.stringify(hid).includes(B), false);
-  assert.match(hid.says, /1 member\(s\) you can see/); assert.match(hid.says, /hunches|hunch\(es\)/);
+  assert.equal(hid.says, word("connections.says.member_declared_lens", { members: "1", hunches: String(hid.hunches.length) }));
 });
 
 test("R45: every reading and says shows the handle, never the member id or cover, except with the affirmative administer stamp; a machine is itself", () => {
@@ -167,11 +168,11 @@ test("R45: every reading and says shows the handle, never the member id or cover
   assert.equal(adm.declared_by, "alice"); assert.equal(adm.declared_by_cover, "Cover alice");
   assert.equal(adm.members[0].placed_by, "bob"); assert.equal(adm.members[0].placed_by_cover, "Cover bob");
   const says = w.k.placeInTheme({ theme: t.theme_id, target: "INFO-2026-0002-b", placer: "bob", viewer: V("bob") }).says;
-  assert.match(says, /h_bob/); assert.doesNotMatch(says, /on bob's/);
+  assert.equal(says, localize("connections.themes.target_is_a_member_of", "{target} is a member of the theme \"{name}\" on {name_2}'s judgement that it passes the test{v1}. Membership connects it to the theme's other members through this lens only, and is never a basis leg", { target: "INFO-2026-0002-b", name: t.name.slice(0, 80), name_2: "h_bob", v1: ", confirming a proposal" }));
   const w2 = world();
   w2.st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('nh','c','member','active','t','t')`);
   const nh = w2.k.declareTheme({ name: "n", test: "t", declarer: "nh" });
-  assert.equal(nh.declared_by_handle, null); assert.match(nh.says, /whose handle is not recorded/);
+  assert.equal(nh.declared_by_handle, null); assert.equal(nh.says, word("connections.says.theme_declared_test", { who: word("connections.member_handle_recorded") }));
 });
 
 test("R46: themeLegFindings — a leg naming a theme, a membership in one, or carrying theme/themes gets one C-81.1 error and true; any other leg false; never throws", () => {

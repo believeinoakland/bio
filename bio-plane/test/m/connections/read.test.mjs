@@ -4,6 +4,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, PORTION_GRADES_MAX } from "../../../src/connections/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+
+/* The members' sentences these checks name, each as the product renders it (setup-words R14): the pair's lead and its
+   nobody-chosen tail, by the rule or unrecorded. */
+const RULE_LEAD = localize("connections.index.pair_selection_by_rule", "each end is the strongest-graded mention of the subject in its document; between equal grades the tie goes to the first reference by sort order, which says nothing about relevance. It is a machine selection and not the mention on point");
+const UNRECORDED_LEAD = localize("connections.index.pair_selection_unrecorded", "each end is the strongest-graded mention of the subject in its document; this row was derived before the tie-break was recorded, when equal grades went to the scan's row order, which is not a basis. Re-deriving the subject's connections records it. It is a machine selection and not the mention on point");
+const NOBODY = (lead) => localize("connections.says.nobody_chosen", "{lead}, which nobody has chosen", { lead });
 
 const E = "ENT-2026-0001";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
@@ -67,16 +74,16 @@ test("R6: selection states the method and tie-break, or that the row predates th
   const { a, b } = pair(w, { pagesA: [2, 5] });
   let sel = w.k.read({ entityId: E, viewer: V("x") }).connections[0].determining_pair.selection;
   assert.equal(sel.method, "strongest-graded"); assert.equal(sel.tie_break, "first-reference-by-sort");
-  assert.match(sel.says, /which nobody has chosen$/);
+  assert.equal(sel.says, NOBODY(RULE_LEAD));
   w.st.sql.exec(`UPDATE connections SET pair_rule = NULL`);
   sel = w.k.read({ entityId: E, viewer: V("x") }).connections[0].determining_pair.selection;
-  assert.equal(sel.tie_break, null); assert.match(sel.says, /derived before the tie-break was recorded/);
+  assert.equal(sel.tie_break, null); assert.equal(sel.says, NOBODY(UNRECORDED_LEAD));
   w.k.derive({ entityId: E });
   const occ = w.rows(`SELECT occurrence FROM reading_refs WHERE capture_sha=? ORDER BY seq`, a)[1].occurrence;
   w.k.choose({ capture: a, other: b, entity: E, ref: "Ord. 1", occurrence: occ, author: "alice", viewer: V("alice") });
   sel = w.k.read({ entityId: E, viewer: V("x") }).connections[0].determining_pair.selection;
-  assert.doesNotMatch(sel.says, /which nobody has chosen/);
-  assert.match(sel.says, /a member \(alice\) chose Ord\. 1 \(read at page 6\) as the mention on point/);
+  assert.notEqual(sel.says, NOBODY(RULE_LEAD));
+  assert.ok(sel.says.includes(localize("connections.end_member_chose_mention", "on end {side} a member ({chosen_by}) chose {ref}{ref_2} as the mention on point", { side: a < b ? "a" : "b", chosen_by: "alice", ref: "Ord. 1", ref_2: " (read at page 6)" })));
   assert.equal(sel.chosen, false, "chosen is about the machine's pair");
   /* The reading drops page 6: the choice lapses, stated on id=, sha256= and content= alike. */
   w.st.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=? AND seq=1`, a);
@@ -84,7 +91,7 @@ test("R6: selection states the method and tie-break, or that the row predates th
   const byC = w.k.read({ captureSha: a, viewer: V("x") }).connections[0];
   const side = a < b ? "a" : "b";
   for (const c of [byE, byC]) {
-    assert.equal(c.on_point[side].lapsed, true); assert.match(c.on_point[side].why, /no longer carries it at that place/);
+    assert.equal(c.on_point[side].lapsed, true); assert.equal(c.on_point[side].why, localize("connections.why.member_chose_mention", "a member chose this mention as on point, and this document no longer carries it {value}for this subject, so the choice cannot answer and the machine's selection is read as unchosen", { value: "at that place " }));
     assert.match(c.determining_pair.selection.says, /LAPSED/);
   }
   const cid = w.mint(A, a, { kind: "pdf-page", page: 2 });
@@ -101,7 +108,7 @@ test("R7: an unknown content row is CONNECTION_PAIR_NO_CONTENT (C-49.3); a docum
   assert.equal(r.translation, CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_NO_CONTENT.translation);
   const doc = w.mint(A, a, { kind: "document" });
   const g = w.k.portionGrade({ contentId: doc, viewer: V("x") });
-  assert.equal(g.reaching.length, 1); assert.match(g.reaching[0].why, /whole document/);
+  assert.equal(g.reaching.length, 1); assert.equal(g.reaching[0].why, localize("connections.index.whole_document_citation", "this citation is of the whole document, so every connection the document has is inside it"));
   assert.equal(g.connection_grade, "A");
 });
 
@@ -146,7 +153,7 @@ test("R8: more than 5,000 mentions are not all read, and the unread are treated 
                    FROM resolutions WHERE capture_sha=? AND ref LIKE 'm%'`, a);
   const g = w.k.portionGrade({ contentId: out, viewer: V("x") });
   assert.equal(g.undetermined[0].code, "CONNECTION_PAIR_MENTION_UNCHOSEN");
-  assert.match(g.undetermined[0].why, /not every mention of the subject in this document was read/);
+  assert.ok(g.undetermined[0].why.includes(localize("connections.pair.not_every_mention_read", "not every mention of the subject in this document was read, and one may be inside it")));
 });
 
 test("R9: a standing choice on the cited end answers instead; its grade is the weaker of the chosen mention's and the other end's; a lapse is stated with the places", () => {
@@ -176,19 +183,21 @@ test("R10, R11: connection_grade is the strongest reaching grade else null; the 
   const [solo] = w.doc("INFO-2026-0009-s", ["solo"]);
   const none = w.k.portionGrade({ contentId: w.mint("INFO-2026-0009-s", solo, { kind: "pdf-page", page: 1 }), viewer: V("x") });
   assert.equal(none.connection_grade, null); assert.equal(none.established, false); assert.equal(none.needs_confirmation, false);
-  assert.match(none.why, /end of no connection/);
+  assert.equal(none.why, localize("connections.document_end_connection", "this document is an end of no connection, so there is nothing for {ref} to earn from", { ref: none.why.match(/nothing for (.+) to earn from$/)[1] }));
   const { a, b } = pair(w, { pagesA: [2] });
   const p2 = w.k.portionGrade({ contentId: w.mint(A, a, { kind: "pdf-page", page: 2 }), viewer: V("x") });
   assert.equal(p2.connection_grade, "A"); assert.equal(p2.established, true); assert.equal(p2.needs_confirmation, false);
   assert.deepEqual(Object.keys(p2.counts), ["connections", "reaching", "undetermined", "outside"]);
   for (const k of ["limit", "truncated", "stale"]) assert.ok(k in p2, k);
   const out = w.k.portionGrade({ contentId: w.mint(A, a, { kind: "pdf-page", page: 5 }), viewer: V("x") });
-  assert.equal(out.connection_grade, null); assert.match(out.why, /were established by references read outside/);
+  assert.equal(out.connection_grade, null); assert.ok(out.why.includes(localize("connections.index.connection_established_reach_all", "all {outside} of this document's connections were established by references read outside {ref}, so none of them reaches this citation", { outside: out.counts.outside, ref: out.why.match(/read outside (.+), so none/)[1] })));
   const unp = w.k.portionGrade({ contentId: w.mint(B, b, { kind: "pdf-page", page: 0 }), viewer: V("x") });
-  assert.match(unp.why, /cannot be placed.*not the same as none/);
+  assert.equal(unp.why, localize("connections.index.connection_established_reach_cannot", "no connection is established to reach {ref}: {undetermined} cannot be placed (the record does not hold where the determining reference was read) and {outside} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none — reading this document with positions is what would settle it", { ref: unp.why.match(/to reach (.+?):/)[1], undetermined: String(unp.counts.undetermined), outside: String(unp.counts.outside) }));
   w.resolve(a, A, "Other", E, "C"); w.read(a, A, "Other", [5]);
   const unch = w.k.portionGrade({ contentId: w.mint(A, a, { kind: "pdf-page", page: 5 }), viewer: V("x") });
-  assert.match(unch.why, /nobody has chosen which mention is on point/);
+  const unchosenN = unch.undetermined.filter((u) => u.code === "CONNECTION_PAIR_MENTION_UNCHOSEN").length;
+  const REF = unch.why.match(/to reach (.+?):/)[1];
+  assert.equal(unch.why, localize("connections.index.connection_established_reach", "no connection is established to reach {ref}: {unchosen_n} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on {ref_2}, and nobody has chosen which mention is on point{undetermined}; {outside} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none", { ref: REF, unchosen_n: String(unchosenN), ref_2: REF, undetermined: unch.undetermined.length > unchosenN ? localize("connections.index.cannot_be_placed", "; {count} cannot be placed", { count: String(unch.undetermined.length - unchosenN) }) : "", outside: String(unch.outside.length) }));
   /* R11: the grade is the connection's; no capture or testimony grade is mixed in, and a null is never ranked. */
   assert.ok(["A", "B", "C", "D", null].includes(p2.connection_grade));
   assert.equal("capture_grade" in p2, false);
@@ -304,9 +313,9 @@ test("R16: append-only — a new choice supersedes the current one in one act, o
   const before = w.row(`SELECT a_ref, a_pos, b_ref, b_pos FROM connections`);
   const first = w.k.choose({ ...base, occurrence: o1 });
   assert.equal(first.wrote, true); assert.equal(first.superseded, null);
-  assert.equal(first.machine_pair_ref, "Ord. 1"); assert.match(first.says, /^recorded: /);
+  assert.equal(first.machine_pair_ref, "Ord. 1"); assert.ok(first.says.startsWith(localize("connections.index.v1_recorded", "recorded: ")));
   const again = w.k.choose({ ...base, occurrence: o1 });
-  assert.equal(again.wrote, false); assert.match(again.says, /nothing was written/);
+  assert.equal(again.wrote, false); assert.ok(again.says.startsWith(localize("connections.index.v1_nothing_written", "already the choice, so nothing was written: ")));
   const second = w.k.choose({ ...base, occurrence: o2, author: "bob" });
   assert.equal(second.wrote, true); assert.equal(second.superseded.chosen_by, "alice");
   assert.equal(w.count("connection_pair_choices"), 2);
