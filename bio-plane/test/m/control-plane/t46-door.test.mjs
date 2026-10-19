@@ -5,6 +5,7 @@
    every request the plane makes, with stand-in objects for plane's RPC methods (`draft`, `groupFields`,
    `dispatchMemberRun`) and a stand-in `AGENT_WORKER` binding for the sign-in. */
 import { test } from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
@@ -183,7 +184,7 @@ function runWorld({ answer } = {}) {
     asked.push({ ns: id, ...rest });
     return answer ? answer(args)
       : args.by !== "member:ann" ? { run: args.run, dispatched: false, found: true, status: "running", code: "AI_RUN_NOT_PRINCIPAL",
-                                     check: "C-22.12", translation: "not yours", detail: "a run is continued by its principal alone" }
+                                     check: "C-22.12", translation: "not yours", detail: word("ai-runs.note.run_continued_principal") }
       : { run: args.run, found: true, dispatched: true, status: "running", dispatch: { state: "DISPATCHED" } };
   } });
   return { ...w, agent, asked };
@@ -265,9 +266,9 @@ test("R76 (T46; DEC-162; instance-setup R79; op-declarations R50): `infolevelset
 test("R17, R29 (T46; K3003): the acts that record their own clock (`aicredentialmint`, `transcribe`, `airunopen`, `airunclose` and the seventeen others whose owner reads `at` as its record's time) never receive a caller's `at`, in the address or the body, so no caller dates its own act; the rest of the body reaches the owner; an op whose `at` is a date the caller states (`milestonereminder`'s day) keeps it (negative control)", async () => {
   const AT = "1999-01-01T00:00:00Z";
   const { w } = callers();
-  const ACT_CLOCK = ["aicredentialmint", "transcribe", "transcriptionattest", "contentmint", "attesttext", "airunopen", "airuntick",
-    "airunclose", "airunverify", "stepsrunai", "grouptestset", "ailimitset", "exploreapprove", "biasdebtresolve", "captureaccount",
-    "queuemute", "queuesnooze", "contradictionpropose", "contradictionrecommend", "extractpropose", "scanbatch"];
+  /* the module's own list of such acts, imported, never hand-typed here (K3268) */
+  const { ACT_CLOCK_OPS: ACT_CLOCK } = await import("../../../src/control-plane/index.mjs");
+  assert.equal(ACT_CLOCK.length, 21, "the module's list is read whole");
   for (const op of ACT_CLOCK) {
     w.env.calls.length = 0;
     /* each by a caller its row admits: a member's session, else the daemon (the scan's) */

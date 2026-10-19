@@ -32,11 +32,11 @@ function assertOwnOrigin(header, where) {
   return scripts[0].slice(7, -1);
 }
 
-test("R51 (answer-envelope R6): the signer page and the page at `/` (bio's and scratch's; the interface page since T47, R82) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
+test("R51 (answer-envelope R6): the page at `/` (bio's and scratch's; the interface page since T47, R82) and the page an unknown address draws (`/sign` since T51, R109, R104; 404) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
   const { env } = world();
-  for (const [path, params] of [["/sign", {}], ["/sign/", {}], ["/", {}], ["/", { store: "scratch" }]]) {
+  for (const [path, params, status] of [["/sign", {}, 404], ["/sign/", {}, 404], ["/", {}, 200], ["/", { store: "scratch" }, 200]]) {
     const r = await call(env, { path, params });
-    assert.equal(r.status, 200, path);
+    assert.equal(r.status, status, path);
     assert.match(r.headers.get("content-type"), /^text\/html/, path);
     assertOwnOrigin(r.headers.get("content-security-policy"), `${path} ${JSON.stringify(params)}`);
   }

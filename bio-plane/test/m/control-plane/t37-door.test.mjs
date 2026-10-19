@@ -4,11 +4,12 @@
    `AGENT_WORKER` binding that records each request it is sent and a stand-in object `draft` (plane's `draftOnObject`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { call, opCalls, FORGED } from "./harness.mjs";
+import { O, call, opCalls, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
 
-const TRANSLATION_OPS = ["translationgrant", "translationadopt", "translationconfirm", "translationrevert", "translationmark",
-                         "translations", "interfacewords"];
+/* instance-setup's translation ops (R66), as op-declarations declares them for it; `translationdraft` is R57's */
+const TRANSLATION_OPS = Object.keys(O.OP_FAMILIES["instance-setup"].kinds)
+  .filter((op) => (op.startsWith("translation") && op !== "translationdraft") || op === "interfacewords");
 const PHOTO_OPS = ["obscuremark", "photomarks"];
 
 /* The stand-in binding: records each request (its path and parsed body) and answers as `reply(path, body)` says. */

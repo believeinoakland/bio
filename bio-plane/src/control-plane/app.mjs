@@ -35,8 +35,8 @@ export function appPage(req, { interfacePage, screens, options = {}, status = 20
 }
 
 /* R104 (T50; N1174, B-14; DEC-299 (11), DEC-301 (3); interface-shell R79): AN ADDRESS OUTSIDE THE TEAM'S PAGES DRAWS A PAGE.
-   A GET or HEAD of a path that is not `/`, not `/app` or below it, not `/api` or below it, not `/version`, `/sign` or
-   `/favicon.ico` (answered before this is asked), carries no `op=` and names no op draws the interface's public
+   A GET or HEAD of a path that is not `/`, not `/app` or below it, not `/api` or below it, not `/version` or
+   `/favicon.ico` (answered before this is asked; `/sign` is no route, R109, so it is an unknown address like any other), carries no `op=` and names no op draws the interface's public
    "nothing is here" page with status 404: the page is the shell's own (it reads the address and draws `unavailable` in
    the public frame, no session read), so this answers the same page the other routes do, at that status. `/doorbell`
    and `/tour` (a trailing slash allowed) are the doorbell's and the tour's own addresses, the same page at 200. A path

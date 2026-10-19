@@ -6,6 +6,7 @@
    store door does (its route map, `aiAccountsOps`). R97's and R98's ops are declared by `op-declarations` (R71, R72), whose
    merge in layer 11 comes before this module's. */
 import { test } from "node:test";
+import { T48_FAMILIES } from "../../../src/op-declarations/t48.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
@@ -138,7 +139,11 @@ test("R96 (control): `stepsource` and `stepsourcewithdraw` still take no `member
 
 test("R96 (R29): an op that declares `member` in the address has the caller's copy there deleted and the session's set, whether or not its body `member` is kept: `accountreference`, `accountreferenceset`, `accountreferenceremove`, `stepsource`, `stepsourcewithdraw`", async () => {
   const declared = Object.keys(O.OP_STAMPS).filter((op) => O.OP_STAMPS[op].includes("member"));
-  for (const op of ["accountreference", "accountreferenceset", "accountreferenceremove", "stepsource", "stepsourcewithdraw"])
+  /* the ops t48.mjs declares with the `member` stamp: ai-accounts' three account-reference ops (`extra`) and connections' two acts (its actor) */
+  const MEMBER_ADDRESSED = [...Object.keys(T48_FAMILIES.find((f) => f.owner === "ai-accounts").extra),
+                            ...Object.keys(T48_FAMILIES.find((f) => f.owner === "connections").ops)];
+  assert.equal(MEMBER_ADDRESSED.length, 5);
+  for (const op of MEMBER_ADDRESSED)
     assert.ok(declared.includes(op), `${op} declares the member stamp`);
   const w = world({ answer: (c) => ok({ ok: true, route: c.route }) });
   for (const op of declared.filter((o) => OPS[o] && OPS[o].machineClasses?.length === 0 && OPS[o].classes?.includes("member"))) {

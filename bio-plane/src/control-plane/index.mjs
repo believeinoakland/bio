@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R108). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R111). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -59,7 +59,6 @@ import { AiRuns } from "../ai-runs/index.mjs";
 import { word } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
-import { SIGN_HTML } from "../signpage.mjs";
 import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
@@ -672,11 +671,7 @@ export function makeFetch(hooks = {}) {
        and gets the page. The legacy root query API (/?op=...) still answers,
        for the one deployment that predates this, and should be dropped once
        that instance is gone. */
-    /* The signing page, served by the group's own instance. It is the same
-       self-contained file a release ships, with no network calls, and
-       it holds no secret: keys are made and used in the visitor's browser.
-       Serving it means the instance can LINK to it, which is the difference
-       between a step an ordinary person can follow and one they cannot. */
+    /* R109 (T51; K3807): no route serves a signing page; `/sign` is an unknown address (R104). */
     /* Which version is this? A plain GET, no token, no op parameter, no JSON
        field to know the name of. `op=bootstrap` has always carried the version
        and always will, but "call bootstrap and read the version field" is not
@@ -690,13 +685,11 @@ export function makeFetch(hooks = {}) {
        icon, so it answers 204 with no body, beside `/version`, before any op is read: never `UNKNOWN_OP`. */
     if (req.method === "GET" && url.pathname === "/favicon.ico")
       return new Response(null, { status: 204 });
-    if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
-      return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     /* R82 (T47; N1002; amends R1, R81): `GET /` with no `op` is a person in a browser, and gets the interface's page
        (`interfacePage`; the page draws `front` or Home, interface-shell R32), under R75's gates and policy, `no-store`.
        No route serves the setup page. The namespace and address gates run first, as on `/app` (admission R1, R20; D-475:
-       `/?store=nonsense` is refused by name, and nothing below reaches this route). `/version` and `/sign` address no
-       namespace and are left ungated. */
+       `/?store=nonsense` is refused by name, and nothing below reaches this route). `/version` addresses no
+       namespace and is left ungated. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);   /* admission R1 */
@@ -758,7 +751,7 @@ export function makeFetch(hooks = {}) {
     }
     /* DEC-49 REGION is-unknown-op
        D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
-       FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
+       FIRST key after `ok`: a client reads the sentence to tell
        an older plane from a refusal (I3), and R2's test (`test/m/control-plane/
        doors.test.mjs`) holds both at the interface. */
     if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),
@@ -2262,9 +2255,9 @@ export function makeFetch(hooks = {}) {
                       store: storeName, tokenClass: cls }, 400);
       }
     }
-    /* R105 (T50; K3770): THE DOOR ANSWERS `acquire` WITHIN A BOUND, 25 seconds: past it the answer is the refusal
-       `ACQUIRE_TIMED_OUT` (its member words owed by the design lane, so it carries no sentence of this module's), never a
-       silent stop. The handler is not cancelled: a capture it goes on to file stands, and the member's next look finds it. */
+    /* R105 (T50; T51: N1234, DEC-329 (5); K3770): THE DOOR ANSWERS `acquire` WITHIN A BOUND, 25 seconds: past it the answer
+       is the refusal `ACQUIRE_TIMED_OUT`, its `detail` read by `word("refusal.ACQUIRE_TIMED_OUT")` as R99 reads
+       `AGENT_WORKER_UNBOUND`'s (no sentence of this module's), never a silent stop. The handler is not cancelled: a capture it goes on to file stands, and the member's next look finds it. */
     const bounded = (work) => {
       if (op !== "acquire") return work;
       let timer;
@@ -2272,7 +2265,7 @@ export function makeFetch(hooks = {}) {
       return Promise.race([work, late]).then((got) => {
         clearTimeout(timer);
         return got === "late" ? json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op,
-                                       store: storeName, tokenClass: cls }, 504) : got;
+                                       store: storeName, tokenClass: cls, detail: word("refusal.ACQUIRE_TIMED_OUT") }, 504) : got;
       }, (e) => { clearTimeout(timer); throw e; });
     };
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
@@ -2798,7 +2791,7 @@ export function makeFetch(hooks = {}) {
         /* D-78: surfaced_by is the ACTOR CLASS, decided by the SERVER and never
            taken from the caller's assertion. A focus opened by an assistant (a
            machine credential) honestly records `agent`; one opened by a member
-           records `human`. Both bundle writers (setup.mjs, civicos-ui) emit a
+           records `human`. Both bundle writers (setup.mjs, the member interface) emit a
            literal `human`, and the store byte-trusts bundle.md, so the honest
            place to decide it is HERE, at the trust boundary, beside author,
            owner and by — the same delete-and-restamp discipline, and the reason
@@ -3433,7 +3426,7 @@ export function makeFetch(hooks = {}) {
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
-export { PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
+export { ACT_CLOCK_OPS, PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
          storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
 /* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
    (`members-pin.test.mjs`); the door itself calls admission directly. */

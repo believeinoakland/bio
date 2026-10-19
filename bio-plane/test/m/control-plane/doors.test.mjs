@@ -2,13 +2,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, defaultHooks, refused } from "./harness.mjs";
-import { SIGN_HTML } from "../../../src/signpage.mjs";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const { OPS } = O;
 const PUBLIC = Object.keys(OPS).filter((k) => OPS[k].classes === null);
 
 
-test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version answers VERSION or 0.0.0 as plain text, /sign answers the signing page", async () => {
+test("R1: routing: OPTIONS answers 204 with access-control-allow-origin *, /version answers VERSION or 0.0.0 as plain text", async () => {
   const { env } = world();
   const o = await call(env, { method: "OPTIONS", path: "/api", op: "index" });
   assert.equal(o.status, 204);
@@ -22,17 +23,44 @@ test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version 
   }
   const unset = world({ omit: ["VERSION"] });
   assert.equal((await call(unset.env, { path: "/version" })).text.trim(), "0.0.0");
-  for (const p of ["/sign", "/sign/"]) {
-    const s = await call(env, { path: p });
-    assert.equal(s.status, 200);
-    assert.match(s.headers.get("content-type"), /^text\/html/);
-    /* answer-envelope R6 (F17): the page as shipped, each script element given this response's nonce */
-    const nonce = /'nonce-([^']+)'/.exec(s.headers.get("content-security-policy") || "")?.[1];
-    assert.ok(nonce, "a nonce");
-    assert.equal(s.text.replaceAll(` nonce="${nonce}"`, ""), SIGN_HTML);
-  }
-  /* none of the three asks the store anything */
+  /* none of these asks the store anything */
   assert.equal(env.calls.length, 0);
+});
+
+test("R109 (T51-123; K3807, K3814, K3835; amends R1, R104): the signing page is not served: `/sign` and `/sign/` answer as any unknown address does (R104's page, 404, no-store, the page policy), `/api/sign` and `/?op=sign` answer UNKNOWN_OP as JSON (R2), the deleted files are found nowhere in this module's paths; controls: `/version` and `/app` answer as before, an address under `/app/` that begins with `sign` is the interface's page", async () => {
+  const { env } = world();
+  const nonce = (r) => /'nonce-([^']+)'/.exec(r.headers.get("content-security-policy") || "")?.[1];
+  const strip = (r) => r.text.replaceAll(nonce(r) ?? "\0", "NONCE");
+  const unknown = await call(env, { path: "/nonesuch" });
+  assert.equal(unknown.status, 404);
+  const app = await call(env, { path: "/app" });
+  assert.equal(app.status, 200);
+  for (const path of ["/sign", "/sign/"]) {
+    const r = await call(env, { path });
+    assert.equal(r.status, 404, path);
+    assert.match(r.headers.get("content-type"), /^text\/html/, path);
+    assert.equal(r.headers.get("cache-control"), "no-store", path);
+    assert.ok(nonce(r), `${path}: the page policy and its nonce`);
+    assert.equal(strip(r), strip(unknown), `${path}: the page any unknown address draws`);
+    assert.equal(strip(r), strip(app), `${path}: the interface's own page`);
+    assert.equal(/<title>[^<]*signing keys/i.test(r.text), false, `${path}: no signing page`);
+  }
+  for (const asked of [{ path: "/api/sign" }, { path: "/", op: "sign" }, { path: "/sign", op: "sign" }]) {
+    refused(await call(env, asked), 400, "UNKNOWN_OP", "C-69.1");
+  }
+  assert.equal(env.calls.length, 0);
+  /* the deleted files are found nowhere in this module's paths */
+  const src = (rel) => fileURLToPath(new URL(`../../../src/${rel}`, import.meta.url));
+  for (const rel of ["signpage.mjs", "sign-release.html"]) assert.equal(existsSync(src(rel)), false, rel);
+  assert.equal(existsSync(fileURLToPath(new URL("../../../scripts/embed-signpage.mjs", import.meta.url))), false);
+  /* controls */
+  assert.equal((await call(env, { path: "/version" })).text.trim(), "9.8.7");
+  assert.equal((await call(env, { path: "/app" })).status, 200);
+  for (const path of ["/app/sign", "/app/signature/x"]) {
+    const r = await call(env, { path });
+    assert.equal(r.status, 200, path);
+    assert.equal(strip(r), strip(app), path);
+  }
 });
 
 test("R1, R82 (T47; N1002): GET / with no op answers interface-shell's page (`interfacePage` over the screen modules' screens, the page `/app` answers), text/html, cache-control: no-store, under the page policy, whatever namespace it names (R1's gate first) and with no store asked; no route serves the setup page (control: none of setupPage's text)", async () => {

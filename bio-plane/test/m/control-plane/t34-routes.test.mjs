@@ -14,8 +14,11 @@ const { instanceSetupOf } = await import("../../../src/setup.mjs");
 const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
 const CHECKS = await import("../../../src/answer-envelope/checks.mjs");
+const { word, hasWord, WORD_ROWS } = await import("../../../src/setup-words/index.mjs");
 
 const { OPS } = O;
+/* an owner's ops as op-declarations declares them for it, filtered (K3268: never a hand-typed list of another module's ops) */
+const familyOps = (owner, pick) => Object.entries(O.OP_FAMILIES[owner].kinds).filter(([op, kind]) => pick(op, kind)).map(([op]) => op);
 const OP_STAMPS = O.OP_STAMPS || {};
 const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
 const answering = (routes, result) => (c) => (routes.includes(c.route)
@@ -76,8 +79,8 @@ test("R54 (membership R110; admission R16): `groupdescription` is public and rea
 });
 
 test("R54, R29 (op-declarations R22; membership R84): membership's ten administrator acts reach its map with `by` the session's own member — the founder `admin`, a member their id — and a machine credential's `class:<cls>`, which membership refuses NOT_AN_ADMIN; a caller's own `by`, in the query or the body, never reaches it (negative control: the forged value is looked for and absent)", async () => {
-  const acts = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
+  const acts = familyOps("membership", (op, kind) => kind === "roster");
+  assert.equal(acts.length, 10, "membership declares ten administrator acts");
   const { env, S } = world();
   let checked = 0;
   for (const op of acts) {
@@ -115,7 +118,8 @@ test("R54, R2 (membership R106; op-declarations R6): `checkaddressees` is never 
 test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops are routed through tasks' own map in the record store's door, each admitted only from a member's session, with the stamps op-declarations declares set from the session and none taken from the caller (negative control: a machine credential is refused before the store, and a forged stamp is absent)", async () => {
   const URL0 = new URL("http://do/");
   const routes = Object.keys(D.controlPlaneRoutes(null, URL0, null));
-  const ops = ["checkrequest", "checktake", "checkrecord", "checkrequests", "checksof"];
+  const ops = familyOps("tasks", (op) => op.startsWith("check"));
+  assert.equal(ops.length, 5, "tasks declares five check-request ops");
   const { env, S } = world();
   for (const op of ops) {
     assert.ok(routes.includes(op), `${op} is routed`);
@@ -148,7 +152,8 @@ test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops 
 
 test("R56, R30 (credentials R33, R34, R36; admission R19): the group key's six ops reach credentials' map from a session only (`groupswitchset` retired, T41: R56's clause, tested in `t41-door`), `groupkeyset`'s key from the body alone — one sent in the query never reaches the store's address — and no answer or refusal carries the key, `groupkeyset`'s own included (negative control: the key is looked for in every answer and inner request)", async () => {
   const { env, S } = world();
-  const ops = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
+  const ops = familyOps("ai-accounts", (op) => op.startsWith("groupkey"));
+  assert.equal(ops.length, 6, "ai-accounts declares the group key's six ops");
   for (const op of ops) {
     assert.deepEqual(OPS[op]?.machineClasses, [], op);
     env.calls.length = 0;
@@ -311,24 +316,20 @@ test("R57, R29 (op-declarations R15, R29): `groupdescriptiondraft`, `writinghelp
 test("R22, R32, R33 (DEC-149, K1821; T34-87): the door's own rows call the group's Civicsmith by name — \"this group's Civicsmith\" in the rows any caller can receive, a caller with no credential included (C-69.1–C-69.4), \"your group's Civicsmith\" in the founder's claim rows (C-68.2–C-68.4), the hold (C-69.5) and the replay (C-66.6) — as do the silence's detail and the three one-time answers; none says this copy, this instance, this plane or the plane (negative control: the old words match the pattern)", async () => {
   const OLD = /this copy|the copy\b|this instance|this plane|the plane\b/i;
   const rows = { ...CHECKS.DISPATCH_CHECKS, ...CHECKS.BOOTSTRAP_CHECKS, ...CHECKS.REPLAY_CHECKS };
-  const byName = {
-    UNKNOWN_OP: "This team's Civicsmith has no operation by that name.",
-    STORE_DID_NOT_ANSWER: "This team's Civicsmith could not consult its own records just now",
-    PLANE_INTERNAL_ERROR: "That is a fault in this team's Civicsmith,",
-    STORE_INTERNAL_ERROR: "This team's Civicsmith failed inside its own record",
-    PURGE_HOLD_IN_PLACE: "Your team's Civicsmith is preserving records under a litigation hold",
-    BOOTSTRAP_CREDENTIAL_UNSET: "Your team's Civicsmith has no administrator token set",
-    BOOTSTRAP_CREDENTIAL_PUBLISHED: "Whoever installed your team's Civicsmith sets a fresh one",
-    BOOTSTRAP_CREDENTIAL_MISMATCH: "the one your team's Civicsmith holds, so it was not claimed",
-    REPLAY_UNVERIFIED: "your team's Civicsmith could not check that against the history it holds",
-  };
-  for (const [code, words] of Object.entries(byName)) {
-    assert.ok(rows[code].translation.includes(words), code);
+  /* each code's sentence is the row `refusal.<code>` of the words list, compared by equality, never held here */
+  const byName = ["UNKNOWN_OP", "STORE_DID_NOT_ANSWER", "PLANE_INTERNAL_ERROR", "STORE_INTERNAL_ERROR", "PURGE_HOLD_IN_PLACE",
+                  "BOOTSTRAP_CREDENTIAL_UNSET", "BOOTSTRAP_CREDENTIAL_PUBLISHED", "BOOTSTRAP_CREDENTIAL_MISMATCH", "REPLAY_UNVERIFIED"];
+  for (const code of byName) {
+    assert.ok(hasWord(`refusal.${code}`), code);
+    assert.equal(rows[code].translation, word(`refusal.${code}`), code);
     assert.doesNotMatch(rows[code].translation, OLD, code);
     assert.equal(M.dec49Row(code).translation, rows[code].translation, `${code} decorates with its own words`);
   }
   for (const row of Object.values(rows)) assert.doesNotMatch(row.translation, OLD, row.check);
-  assert.ok(M.STORE_SILENT_DETAIL.startsWith("this team's Civicsmith could not consult its own record,"));
+  /* the silence's detail is a row of the words list (a code-written sentence's row), found by its sentence, never held here */
+  const silentRow = WORD_ROWS.find((r) => r[1] === M.STORE_SILENT_DETAIL);
+  assert.ok(silentRow && hasWord(silentRow[0]), "STORE_SILENT_DETAIL is a row of the words list");
+  assert.equal(word(silentRow[0]), M.STORE_SILENT_DETAIL);
   assert.doesNotMatch(M.STORE_SILENT_DETAIL, OLD);
   /* the one-time answers, as a caller receives them */
   const { env, S } = world();

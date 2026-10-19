@@ -5,10 +5,11 @@
    over the harness's store, which records every request the plane makes. R103's ops are declared by `op-declarations` R73,
    whose merge in layer 11 comes before this module's. */
 import { test } from "node:test";
+import { T50_SHARES, T50_FAMILIES } from "../../../src/op-declarations/t50.mjs";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, makeFetch, defaultHooks, refused, aik, cred, hex64, FORGED } from "./harness.mjs";
 import { ok, routesForSessions } from "./door-routes.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { callerViewer, admit, aiCredentialPresented, presentedCredential } from "../../../src/admission/index.mjs";
 import { ARCHIVE_CHECKS } from "../../../src/acquisition/index.mjs";
 const { inbandQuartet } = await import("../../../src/inband.mjs");
@@ -70,9 +71,9 @@ test("R102 (T50; N933; public-read R36): the review copy's group fields are read
 
 /* ================================================================ R103 */
 
-const T50_OPS = Object.freeze(["watchitem", "secondlook", "secondlookclear", "lookedat", "browse", "opencaptures", "capturegrade",
-  "inquirypartition", "instances", "projectstakeset", "projectstake", "projectownersgone", "actionstake", "actioninquiry",
-  "stakeatpreparation"]);
+/* the 15 ops of op-declarations R73, assembled from t50.mjs's own declarations (K3268) */
+const T50_OPS = Object.freeze([...Object.values(T50_SHARES).flatMap((x) => Object.keys(x.ops)), ...T50_FAMILIES.flatMap((f) => Object.keys(f.ops))]);
+if (T50_OPS.length !== 15) throw new Error(`R73 declares 15 ops, found ${T50_OPS.length}`);
 const T50_BODY = { watchitem: { item: "ITEM-1", on: true }, secondlook: { item: "ITEM-1", note: "n" }, secondlookclear: { item: "ITEM-1", flag: "f" },
                    projectstakeset: { projectId: "PRJ-1", stake: "the lease" }, actionstake: { target: "ACT-1", stake: "the lease" },
                    actioninquiry: { action: "ACT-1", question: "Q-1" } };
@@ -341,7 +342,7 @@ test("R108 (control): a short answer arrives whole and byte for byte as the plan
   assert.deepEqual(dropped(d.w), []);
 });
 
-test("R105 (T50; K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded)", async () => {
+test("R105 (T50; T51: N1234, DEC-329 (5); K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, its `detail` read by the design's key `refusal.ACQUIRE_TIMED_OUT`, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded and carries neither the code nor the detail)", async () => {
   const w = world();
   const slow = { ...defaultHooks(), acquireBoundMs: 60,
     async gatedOp(ctx) {
@@ -353,9 +354,15 @@ test("R105 (T50; K3770): the door answers `acquire` within its bound, 25 seconds
   const late = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, params: { wait: "long" }, body: { locator: "https://example.org/big" } });
   assert.equal(late.status, 504, late.text);
   assert.deepEqual([late.json.ok, late.json.reason, late.json.code, late.json.op], [false, "ACQUIRE_TIMED_OUT", "ACQUIRE_TIMED_OUT", "acquire"]);
+  assert.ok(hasWord("refusal.ACQUIRE_TIMED_OUT"), "the design holds the key");
+  assert.equal(late.json.detail, word("refusal.ACQUIRE_TIMED_OUT"));
   const quick = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, body: { locator: "https://example.org/small" } });
   assert.equal(quick.status, 200);
   assert.equal(quick.json.result.done, true);
   const other = await call(w.env, { op: "list", token: w.S.ann, hooks: slow });
   assert.equal(other.status, 200);
+  for (const r of [quick, other]) {
+    assert.equal(JSON.stringify(r.json).includes("ACQUIRE_TIMED_OUT"), false);
+    assert.equal(r.json.detail, undefined);
+  }
 });

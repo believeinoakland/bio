@@ -21,6 +21,7 @@ const served = (headers) => new Response(BYTES, { status: 200, headers: { "conte
 
 /* every op file-safety's map serves (its R5–R38), read from the map itself */
 const FILE_SAFETY_OPS = Object.keys(fileSafetyOps(null, new URL("http://do/"), null, {})).sort();
+const familyOps = (owner, pick) => Object.entries(O.OP_FAMILIES[owner].kinds).filter(([op, kind]) => pick(op, kind)).map(([op]) => op);
 const BYTE_OPS = ["openoriginal", "openwithwarning", "safeview", "safecopy"];
 
 function callers() {
@@ -114,8 +115,10 @@ test("R53 (T36; instance-setup R53), R63: `assistantset` and `securitycount` are
 
 test("R60, R63, R29 (op-declarations R31, R33): standards' three in-force-through ops, calculations' two spot-check ops and credentials' two keep-away ops reach the store's route of their own name for every caller their specs admit, each declared stamp set from the credential whatever the caller forged, the body's own fields kept; standards' acts carry the author in the body (standards R50 reads it there); a caller their specs refuse reaches no store", async () => {
   const { w, list } = callers();
-  const ops = ["standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof", "spotcheckvisit", "spotcheck",
-               "aikeepaway", "aikeepawaystate"];
+  /* the owners' own declarations: standards' in-force-through ops, calculations' spot checks, the account owner's keep-away */
+  const ops = [...familyOps("standards", (op) => op.includes("inforcethrough")), ...familyOps("calculations", (op) => op.startsWith("spotcheck")),
+               ...familyOps("ai-accounts", (op) => op.startsWith("aikeepaway"))];
+  assert.equal(ops.length, 7);
   let reached = 0;
   const seenOps = new Set();
   for (const op of ops) {
@@ -206,7 +209,7 @@ test("R61, R29 (op-declarations R32): every one of file-safety's 23 ops reaches 
   }
   assert.deepEqual([...seenOps].sort(), FILE_SAFETY_OPS, "every op reaches its route for some caller");
   /* the member-session-only ops refuse every machine credential (op-declarations R32's machineClasses: []) */
-  for (const op of ["openoriginal", "openwithwarning", "deepercheck", "safecopyrequest", "releasescanhold"]) {
+  for (const op of familyOps("file-safety", (op, kind) => kind === "sightact" || op === "releasescanhold")) {
     w.env.calls.length = 0;
     const r = await call(w.env, { op, token: w.env.ADMIN_TOKEN, method: "POST", params: { capture: SHA }, body: {} });
     assert.ok([401, 403].includes(r.status), `${op}: ${r.status}`);

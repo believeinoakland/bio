@@ -96,8 +96,12 @@ test("R17, R29 (N407; ratification R18): op=publishpreflight carries the agent c
 
 test("R17, R29 (K921; op-declarations R8): filing-templates' admitted acts (FILING_TEMPLATES_ACTIONS) are stamped author (the positional identity, class:<cls> or class:ai/<tokenId> for a machine; filing-templates reads it as author and by) and viewer; templatepropose (TEMPLATE_PROPOSAL_ACTIONS) proposer, the label, also as the author key filing-templates reads it from; factconfirm (LOCAL_FACTS_ACTIONS) its body `by`, the positional expression, an empty body included; the reads (FILING_TEMPLATES_READS, LOCAL_FACTS_READS) the viewer; a caller's copies never reach the store", async () => {
   const { FILING_TEMPLATES_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, FILING_TEMPLATES_READS, LOCAL_FACTS_READS } = O;
-  assert.deepEqual([...FILING_TEMPLATES_ACTIONS].sort(), ["templateapprove", "templatedraft", "templategrantrevoke", "templateretire",
-                                                         "templatereviewgrant", "templaterevise", "templatesubmit"]);
+  /* the admitted acts are the acts filing-templates' own map serves that the spec table admits by credential (classes set,
+     mutating), the proposal apart (its own array): derived from the owner's map, not typed here */
+  const { filingTemplatesOps } = await import("../../../src/filing-templates/index.mjs");
+  const served = Object.keys(filingTemplatesOps({}, new URL("http://do/"), null))
+    .filter((op) => OPS[op]?.mutating && Array.isArray(OPS[op].classes) && !TEMPLATE_PROPOSAL_ACTIONS.includes(op));
+  assert.deepEqual([...FILING_TEMPLATES_ACTIONS].sort(), served.sort());
   assert.deepEqual([[...TEMPLATE_PROPOSAL_ACTIONS], [...LOCAL_FACTS_ACTIONS], [...FILING_TEMPLATES_READS], [...LOCAL_FACTS_READS].sort()],
                    [["templatepropose"], ["factconfirm"], ["templates"], ["factsdue", "factstatus"]]);
   const reads = [...FILING_TEMPLATES_READS, ...LOCAL_FACTS_READS];
