@@ -12,7 +12,7 @@ import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity
          GRADE_SOURCES } from "../record-grammar/index.mjs";
 import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar, registerInquiryGrammar, IMPORTED_FINDING_RE,
          importedLegFindings, calculationLegFindings, occurrenceLegFindings, derivedConnectionLegFindings,
-         DERIVATION_FIELDS, parseOccurrenceRef, DERIVED_CONNECTION_ID_RE, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
+         standardLegFindings, DERIVATION_FIELDS, parseOccurrenceRef, DERIVED_CONNECTION_ID_RE, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
 import { themeLegFindings } from "../connections/index.mjs";
 import { legContentId, legExtent } from "../content/index.mjs";
 import { canonicalExtent } from "../textchain.mjs";
@@ -353,6 +353,7 @@ export function basisVersionFindings(fm, findings) {
          derived, so it states none and no part. Role and note are asked as of any leg. */
       const derived = !imported && (calculationLegFindings(lbl, leg, findings) || occurrenceLegFindings(lbl, leg, findings)
                                     || derivedConnectionLegFindings(lbl, leg, findings));
+      let standard = false;
       if (imported || derived) {
         /* judged by R11's arm, its findings C-21.3; or by the derived arm just run */
       } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
@@ -361,14 +362,17 @@ export function basisVersionFindings(fm, findings) {
         push('VERSION_LEG_SELF', localize('basis-versions.grammar.basis_version_legs_li_version_2', 'basis_version_legs[{li}] (version \'{name}\') rests on {t}, which is this inquiry: a question is not evidence for its own answer, in any account of it', { li: String(li), name: String(name), t: String(t) }));
       } else {
         const tt = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
-        if (tt !== 'information' && tt !== 'inquiry')
+        /* R10 (K3873; N1251): a held standard is judged by `inquiry-grammar` R13's arm, never refused for its kind; the grade
+           and extent arms then stay silent on a leg it refused (a second complaint about one broken field helps nobody) */
+        if (tt === 'standard') standard = standardLegFindings(lbl, leg, findings);
+        else if (tt !== 'information' && tt !== 'inquiry')
           push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_3', 'basis_version_legs[{li}] (version \'{name}\').target \'{t}\' is a {tt}: a leg rests on information, a calculation, a duty occurrence, a derived connection or another inquiry, nothing else (D-184)', { li: String(li), name: String(name), t: String(t), tt: String(tt) }));
       }
       if (!BASIS_ROLES.includes(leg.role))
         push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_4', 'basis_version_legs[{li}] (version \'{name}\').role \'{String}\' is not one of: {BASIS_ROLES}', { li: String(li), name: String(name), String: String(String(leg.role).slice(0, 40)), BASIS_ROLES: String(BASIS_ROLES.join(', ')) }));
       /* the grade and extent arms do not ask a leg on another group's finding (R11's arm refuses either outright) or a
          derived one (its arm did) */
-      if (!imported && !derived) {
+      if (!imported && !derived && !standard) {
         if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
           push('VERSION_LEG_NOT_CITABLE', localize('basis-versions.grammar.basis_version_legs_li_version_5', 'basis_version_legs[{li}] (version \'{name}\').grade \'{String}\' is not one of: {BASIS_GRADES} (absent or null means undetermined, and is STATED as such)', { li: String(li), name: String(name), String: String(String(leg.grade).slice(0, 40)), BASIS_GRADES: String(BASIS_GRADES.join(', ')) }));
         if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))

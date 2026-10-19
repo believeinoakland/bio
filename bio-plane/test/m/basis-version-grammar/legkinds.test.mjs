@@ -1,10 +1,11 @@
 /* basis-version-grammar R3 (T51; N1215; K3873; DEC-330 A40): every kind of leg (a calculation, a duty occurrence and a
    derived connection judged by inquiry-grammar's arms for them), and the composition that freezes a derived connection's
    five fields (R5). Copied from `basis-versions`' `legkinds-compare.test.mjs`, the findings halves; the arms that drive a
-   promotion or the compare read stay there. The standard half is R10 (not yet met). */
+   promotion or the compare read stay there. The standard half is R10. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { basisVersionFindings, versionsIn, sameComposition, isDerivedKindRef } from "../../../src/basis-version-grammar/index.mjs";
+import { standardLegFindings } from "../../../src/inquiry-grammar/index.mjs";
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { codes, fm, findingsOf } from "./helper.mjs";
 
@@ -54,7 +55,30 @@ test("R3, R5: the composition of a version holding a derived connection freezes 
   assert.ok(!versionsIn(withLegs(leg(LEDGER)))[0].composition.includes("leg_derivation"), "every other leg adds no line");
 });
 
-test("R3 (control, until R10): a leg on a standard is refused for its kind today", () => {
-  const f = []; basisVersionFindings(withLegs(leg(LEDGER), leg("STD-2026-0007-meetings-law")), f);
-  assert.ok(f.some((x) => x.code === "VERSION_LEG_NOT_CITABLE"));
+const STD = "STD-2026-0007-meetings-law";
+
+test("R10, R3: a version whose leg is a held standard with a capture grade raises no finding, and is never refused VERSION_LEG_NOT_CITABLE for its kind; a part stated is judged by inquiry-grammar's own function", () => {
+  const capture = { grade: "B", grade_axis: "capture", grade_source: "capture" };
+  assert.deepEqual(codes(withLegs(leg(LEDGER), leg(STD, capture))), []);
+  assert.deepEqual(codes(withLegs(leg(STD))), [], "an ungraded standard leg");
+  assert.deepEqual(codes(withLegs(leg(STD, { target_portion: "s1/s2" }))), [], "with a portion path");
+  const [v] = versionsIn(withLegs(leg(LEDGER), leg(STD, capture)));
+  assert.equal(v.legs[1].target_type, "standard");
+  /* a part stated that is not a portion path is the finding inquiry-grammar's function names, whatever it is */
+  const viaOwn = []; standardLegFindings("x", { target: STD, target_portion: "x".repeat(2000) }, viaOwn);
+  assert.ok(viaOwn.length > 0, "the stated part is not a portion path");
+  const got = codes(withLegs(leg(STD, { target_portion: "x".repeat(2000) })));
+  assert.deepEqual(got, viaOwn.map((x) => x.code), "this module raises exactly that function's findings");
+  assert.ok(!got.includes("VERSION_LEG_NOT_CITABLE"));
+});
+
+test("R10, R3 (control): a standard leg stating a testimony or connection axis or a hunch source is STANDARD_LEG_AXIS and nothing else; a lead leg is still refused by name; an information leg is judged as before", () => {
+  for (const x of [{ grade: "B", grade_axis: "testimony", grade_source: "capture" }, { grade: "B", grade_axis: "connection", grade_source: "capture" },
+                   { grade: "B", grade_axis: "capture", grade_source: "hunch" }])
+    assert.deepEqual(codes(withLegs(leg(STD, x))), ["STANDARD_LEG_AXIS"], JSON.stringify(x));
+  assert.equal(codes(withLegs(leg("LEAD-2026-0001-x")))[0], "LEAD_NOT_EVIDENCE");
+  assert.ok(codes(withLegs(leg(LEDGER, { grade: "E" }))).includes("VERSION_LEG_NOT_CITABLE"), "an information leg's grade vocabulary is asked as before");
+  assert.ok(codes(withLegs(leg(STD, { role: "maybe" }))).includes("VERSION_LEG_NOT_CITABLE"), "the role is asked of a standard leg too");
+  const f = []; basisVersionFindings(withLegs(leg(STD, { grade: "B", grade_axis: "testimony", grade_source: "capture" })), f);
+  assert.equal(f[0].check, "C-2.8", "inquiry-grammar's own finding");
 });
