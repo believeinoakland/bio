@@ -220,8 +220,8 @@ test("R14, R31: mutes apply to every item, item mutes first, never to an obligat
   w.member("alice"); w.bundle("INQ-1", "inquiry"); w.bundle("INF-1"); w.leg("INQ-1", "INF-1");
   w.task("TASK-2026-0001-a", "INF-1");
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','INQ-1','authority-undetermined,render-deferred')`);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','CONDITION::governor-holding-host::h.example','CONDITION',?)`, iso(NOW));
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','TASK-2026-0001-a','OBLIGATION',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','CONDITION::governor-holding-host::h.example','CONDITION',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','TASK-2026-0001-a','OBLIGATION',?)`, iso(NOW));
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), ["TASK-2026-0001-a"], "an obligation is never suppressed, even with rows naming it");
   assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.scope, s.case]),
