@@ -340,14 +340,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     inst.refreshT[n] = setTimeout(() => refreshNow(inst, n), REFRESH_MS);
     /* the line expires on its own: a redraw once the answer is older than `list.fresh` may claim */
     if (inst.refreshT["fresh:" + n] !== undefined) clearTimeout(inst.refreshT["fresh:" + n]);
-    inst.refreshT["fresh:" + n] = setTimeout(() => { if (live(inst) && inst.fresh[n] && Date.now() - inst.fresh[n] > FRESH_MS) draw(); }, FRESH_MS + 1000);
+    inst.refreshT["fresh:" + n] = setTimeout(() => {
+      if (!live(inst) || !inst.fresh[n] || Date.now() - inst.fresh[n] <= FRESH_MS) return;
+      /* patched out in place, never redrawn: a redraw would empty an act's open reason field */
+      for (const el of doc.getElementById("cs-root").querySelectorAll("[data-fresh]")) if (el.parentNode) el.parentNode.removeChild(el);
+    }, FRESH_MS + 1000);
   }
   const typingNow = () => {
     const el = doc.activeElement, root = doc.getElementById("cs-root");
     if (!el || !root || !root.contains(el)) return false;
     return el.localName === "textarea" || (el.localName === "input" && !["checkbox", "radio", "button", "submit", "reset", "file", "range", "color", "image"].includes(el.type));
   };
-  const formOpen = () => !!doc.getElementById("cs-root").querySelector(".mk-slot .cs-reason, .mk-slot .cs-dialog");
+  const formOpen = () => { const root = doc.getElementById("cs-root"); return !!(root.querySelector(".mk-slot .cs-reason") || root.querySelector(".mk-slot .cs-dialog")); };
   async function refreshNow(inst, n) {
     delete inst.refreshT[n];
     if (!live(inst) || (inst.unavail && inst.unavail !== "nothing")) return;
