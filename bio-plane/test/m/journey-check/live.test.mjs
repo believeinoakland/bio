@@ -16,6 +16,8 @@ import { FAIL } from "../../../src/journey-check/walker.mjs";
 import { sweepScreens } from "../../../src/journey-check/screens.mjs";
 import { developerWords, assetsCommit, designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
 import { fakePlane } from "./fake-plane.mjs";
+import { STEP_NAMES } from "../../../src/journey-check/investigation.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const SRC = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
@@ -52,7 +54,7 @@ test("R5 control and R6 control: correct roles pass; each role walks every worki
     }
   }
   assert.equal(r.walk.pairs.length, WORKING.length * WIDTHS.length * 2);
-  assert.match(r.report, new RegExp(`${r.walk.pairs.length} pairs, LIVE beside DESIGN`), "the pairs are listed for BOB");
+  assert.ok(r.report.includes(localize("journey-check.walker.length_pairs_live_beside_design", "{length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):", { length: String(r.walk.pairs.length) })), "the pairs are listed for BOB");
   /* the walk keeps secret what is six characters or more (walker.keepSecret): a password; "mai" is a handle, and a word of a screen id */
   for (const v of Object.values(ENV).filter((x) => x.length >= 6)) assert.equal(r.report.includes(v), false, "a credential printed");
 });
@@ -173,15 +175,15 @@ test("R6: text a person must never read: a slug, a language tag, a record id, a 
 /* R12: the live arm walks R9 and R10 through the real sign-in, whose code the person types (`codeOf`). Against the fake
    plane, which draws R9's steps 2 to 4 only, the walk reaches the sign-in and goes no further than the plane draws. */
 async function investigated(codeOf) {
-  const fp = await fakePlane({ admins: { ada: true } });
+  const fp = await fakePlane({ admins: { ada: true }, assistantControls: true });
   try {
     const out = join(dir, String(Math.random()).slice(2));
-    const r = await runLive({ base: fp.base, env: ENV, out, commit: COMMIT, screens: only("members"), codeOf });
+    const r = await runLive({ base: fp.base, env: ENV, out, commit: COMMIT, screens: only("members"), codeOf, assistant: true });
     return { r, fp, printed: r.report + readFileSync(join(out, "report.json"), "utf8") };
   } finally { await fp.close(); }
 }
 
-test("R12: with no sign-in completed, step 4 fails by name before any later act", { timeout: 300000 }, async () => {
+test("R12 (with the assistant working, R20's switch set): with no sign-in completed, step 4 fails by name before any later act", { timeout: 300000 }, async () => {
   const asked = [];
   const { r, fp } = await investigated(async (role, address) => { asked.push([role, new URL(address).host]); return null; });
   const steps = r.walk.steps.filter((s) => s.journey === "R9 as administrator");
@@ -195,7 +197,7 @@ test("R12: with no sign-in completed, step 4 fails by name before any later act"
   assert.ok(!r.walk.steps.some((s) => /^(?:[5-9]|1[0-2]) · /.test(s.label)), "no later act");
 });
 
-test("R12 control: the code the person types connects, and no token or code is in any output", { timeout: 300000 }, async () => {
+test("R12 control (the switch set): the code the person types connects, and no token or code is in any output", { timeout: 300000 }, async () => {
   const CODE = "sentinel-code-" + "7".repeat(24) + "#state-sentinel";
   const { r, fp, printed } = await investigated(async () => CODE);
   const four = r.walk.steps.find((s) => s.label.startsWith("4 · connect"));
@@ -206,4 +208,53 @@ test("R12 control: the code the person types connects, and no token or code is i
   for (const v of Object.values(ENV).filter((x) => x.length >= 6)) assert.equal(printed.includes(v), false, "a credential printed");
   /* the walk goes on to step 5, which this plane does not draw */
   assert.ok(r.walk.steps.some((s) => s.label.startsWith("5 · ")), r.report);
+});
+
+test("R20 (live arm): while the assistant does not work, R9's step 4 and all of R10 are reported as not walked, each with its screen's not-ready state asserted, and no step fails", { timeout: 300000 }, async () => {
+  const fp = await fakePlane({ admins: { ada: true } });
+  try {
+    const out = join(dir, String(Math.random()).slice(2));
+    const r = await runLive({ base: fp.base, env: ENV, out, commit: COMMIT, screens: only("members") });
+    const ready = r.walk.steps.filter((s) => /^assistant not ready: /.test(s.label));
+    assert.ok(ready.length >= 2 && ready.every((s) => s.ok), r.report);
+    for (const n of [STEP_NAMES.connect, STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk])
+      assert.ok(r.walk.notes.includes(localize("journey-check.walker.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name: n })), `${n}: ${r.walk.notes.join(" | ")}`);
+    assert.ok(!r.walk.steps.some((s) => /^4 · connect/.test(s.label)), "the sign-in was not tried");
+    assert.deepEqual(fp.codes, [], "nothing was sent as a code");
+    assert.ok(r.walk.pairs.length > 0);
+  } finally { await fp.close(); }
+});
+
+test("R20 control (live arm): connect's sign-in drawn while the assistant does not work is the assistant's own step (K4086): reported not walked, never failed", { timeout: 300000 }, async () => {
+  const fp = await fakePlane({ admins: { ada: true }, assistantControls: true });
+  try {
+    const r = await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, screens: only("members") });
+    assert.ok(!r.walk.failures.some((f) => /draws an assistant control that cannot work/.test(f.detail)), r.report);
+    assert.ok(r.walk.notes.some((n) => n.startsWith(STEP_NAMES.connect)), r.report);
+    assert.deepEqual(fp.codes, [], "the sign-in was not tried");
+  } finally { await fp.close(); }
+});
+
+test("R22 (live arm): both dashboards are walked from Home's doors, drawn and not \"Nothing is here\"; control: a Home with no door, and a dashboard that draws \"Nothing is here\", fail by name", { timeout: 300000 }, async () => {
+  const ok = await walked({ admins: { ada: true } }, { screens: only("members", "dash-project", "dash-action") });
+  assert.ok(ok.walk.steps.filter((s) => /^dashboard dash-/.test(s.label)).length === 2 && ok.walk.steps.filter((s) => /^dashboard dash-/.test(s.label)).every((s) => s.ok), ok.report);
+  assert.equal(ok.ok, true, ok.report);
+  const none = await walked({ admins: { ada: true }, doors: false }, { screens: only("members") });
+  assert.ok(none.walk.failures.some((f) => /Home draws no door to dash-project/.test(f.detail)), none.report);
+  const nothing = await walked({ admins: { ada: true }, dashNothing: true }, { screens: only("members") });
+  assert.ok(nothing.walk.failures.some((f) => /dash-project draws "Nothing is here"/.test(f.detail)), nothing.report);
+});
+
+test("R25 (live arm): /sign answers 404 with the nothing-is-here page; control: a /sign that answers a form fails by name", { timeout: 300000 }, async () => {
+  const ok = await walked({ admins: { ada: true } }, { screens: only("members") });
+  const sign = ok.walk.steps.find((s) => /^sign: \/sign/.test(s.label));
+  assert.ok(sign && sign.ok, ok.report);
+  const bad = await walked({ admins: { ada: true }, signPage: true }, { screens: only("members") });
+  assert.ok(bad.walk.failures.some((f) => /\/sign does not answer the interface's nothing-is-here page|\/sign holds a signing page/.test(f.detail)), bad.report);
+});
+
+test("R28 (live arm): a screen whose tab title is not the word of its screen fails by name; control: the clean walk passes the titles", { timeout: 300000 }, async () => {
+  assert.equal((await cleanWalk()).walk.failures.filter((f) => f.kind === FAIL.DEC340).length, 0);
+  const walk = (await cleanWalk()).walk;
+  assert.ok(walk.steps.some((s) => s.journey === "R28 the public pages"), "the public pages are walked signed out");
 });

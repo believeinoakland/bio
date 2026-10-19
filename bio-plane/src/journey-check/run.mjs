@@ -3,15 +3,24 @@
    administrator and as a member, each verified by `whoami`, and sweeps every working screen beside the design mock.
    Each answers the walk (its steps, its failures, its report); R3's guard runs before anything is written. */
 import { join, dirname, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { readdir } from "node:fs/promises";
 import http from "node:http";
 import https from "node:https";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
+import { drawnState } from "./screens.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
-import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
-  signInBy, sweepAsFounder, walkSite } from "./journeys.mjs";
-import { walkAdministrator, walkMemberJourney, walkUnassisted, journey29Live } from "./investigation.mjs";
-import { sweepScreens } from "./screens.mjs";
+import { ABSENCE, walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
+  signInBy, sweepAsFounder, walkSite, walkDashboards, walkSignGone } from "./journeys.mjs";
+import { walkAdministrator, walkMemberJourney, walkUnassisted, journey29Live, notReady, STEP_NAMES } from "./investigation.mjs";
+import { sweepScreens, addressOf, registryScreens } from "./screens.mjs";
+import { dec340Limits, publicPages } from "./checks.mjs";
+import { escapedOnPage, pseudoRoute } from "./pseudo.mjs";
+import { walkPublished } from "./published.mjs";
+import { walkStates } from "./states.mjs";
+import { PLAN_TITLE, QUESTION, OWN_PROJECT, OWN_QUESTION, OWN_READING, UPLOAD_NAME, UPLOAD_TEXT } from "./investigation.mjs";
+import { GROUP_NAME, SLUG } from "./journeys.mjs";
+import { NOTICE_PASSAGE, HEAT_PASSAGE } from "./city.mjs";
 import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs, JOURNEY_29, stepName } from "./design.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -66,12 +75,12 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
 
 /* The local arm (R1 (a), R9–R11), with no account. `world` starts the world, `launch` the browser; `model: false` binds
    the runner with no fake model (R11's control), `segments: false` agent-worker with no `SEGMENTS` binding (R15's
-   control); `parts` names which walks follow journey 28 and R9 (all by default: `journey 3`, `R10`, `R16`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
+   control); `assistant` is R20's one switch: false (the default, K3717) reports every step that needs the assistant as not walked, with its not-ready state asserted; true walks R9 and R10 whole. `parts` names which walks follow journey 28 and R9 (all by default: `journey 3`, `R10`, `R16`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
    3, then the journey to a first conclusion as administrator (R9) and as the member journey 28 joined (R10), then the
    sweep. Whatever stops the walk (a step, the guard's refusal, a world or a browser that cannot start), the browser and
    the world, with their servers and Miniflare instances, are closed before it answers. */
-export const PARTS = Object.freeze(["journey 3", "R10", "R16", "sweep", "R13"]);
-export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, segments = true, parts = PARTS } = {}) {
+export const PARTS = Object.freeze(["journey 3", "R10", "R16", "sweep", "R13", "R27"]);
+export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, segments = true, parts = PARTS, assistant = false } = {}) {
   const { localWorld, INSTALLER_ORIGIN, SITE_ORIGIN } = await import("./local.mjs");
   const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com", new URL(SITE_ORIGIN).host] });
   const who = credentials();
@@ -110,10 +119,15 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     /* each journey that stops has said why; the next is still walked, and the sweep after them */
     const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
     const made = {};
-    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made, segments: bound }).catch(going);
+    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made, segments: bound, assistant }).catch(going);
     if (parts.includes("R10")) {
       walk.journey = "R10 as member";
-      if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
+      if (!assistant) await (async () => {
+        await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
+        await notReady(walk, mai.page, copy, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect", assistantSignin: true,
+          names: [STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk] });
+      })().catch(going);
+      else if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
       else await (async () => {
         await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
         await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: made.project, segments: bound });
@@ -121,14 +135,48 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     }
     /* R16: journey 29's search path, with no assistant, to a conclusion on her own reading */
     if (parts.includes("R16")) await walkUnassisted(walk, founder.page, { base: copy, founder: who.founder }).catch(going);
+    /* R22, R25: the dashboards from Home's doors, and the old signing page gone */
+    if (parts.includes("sweep")) {
+      walk.journey = "R22 the dashboards";
+      await walkDashboards(walk, founder.page, copy).catch(going);
+      walk.journey = "R25 the old pages";
+      await walkSignGone(walk, founder.page, copy).catch(going);
+    }
     /* the sweep with her handle held (a founder who could not choose one was swept handleless above) */
     if (parts.includes("sweep") && who.founder.handle) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
+    /* R27: every screen at both widths drawn with the pseudo rows, any sentence that escaped the list reported */
+    if (parts.includes("R27")) {
+      walk.journey = "R27 the pseudo-locale walk";
+      const ps = await device(walk, b, async (ctx) => { await route(ctx); await pseudoRoute(ctx, { host: walk.copyHost, fetchCopy: (req) => world.fetchCopy(req) }); });
+      /* jurisdiction profiles' display names are data, not sentences (B3) */
+      const profiles = await Promise.all((await readdir(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "jurisdictions", "profiles")))
+        .filter((f) => f.endsWith(".mjs")).map(async (f) => (await import(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "jurisdictions", "profiles", f)).href)).default?.name));
+      const entered = [...profiles.filter(Boolean), PLAN_TITLE, QUESTION, OWN_PROJECT, OWN_QUESTION, OWN_READING, UPLOAD_NAME, UPLOAD_TEXT.trim(), GROUP_NAME, SLUG, NOTICE_PASSAGE, HEAT_PASSAGE,
+        "Roof repairs at 14 Lakeshore Row", "Mai, from flat 4", "Teo, from flat 9", "Interpreting, Spanish and English",
+        "Water has come through the ceiling of flat 4 since Monday; reported twice.", "Flat 4, second floor", "Housing notice 2026-118: repair order, 14 Lakeshore Row",
+        "Housing notice 2026-131: heating order, 14 Lakeshore Row", "When did the tenants first report the leak to the landlord?", "The city withdrawing or amending notice",
+        "The city's notice orders", "City repair order", "Flat 4, 14 Lakeshore Row", "My note of when the water came through the ceiling.",
+        "The copy is the notice the city published at that address", "Recorded by the release walk.", "This is what the tenants need answered.", "Tenants of 14 Lakeshore Row report water coming in."];
+      await signInBy(walk, ps.page, copy, who.founder, "R27 · she signs in on a device that draws the pseudo rows").catch(going);
+      for (const s of sweepScreens()) {
+        const said = new Set();
+        await walk.step(ps.page, `pseudo screen ${s.id}`, async (p) => {
+          for (const width of WIDTHS) {
+            await p.setViewportSize(viewportOf(width));
+            await p.goto(new URL(addressOf(s.id), copy).href); await settle(p);
+            for (const e of await escapedOnPage(p, { entered })) if (!said.has(e.text) && said.add(e.text)) walk.fail(FAIL.PSEUDO, localize("journey-check.run.id_at_width_px_element", "{id} at {width}px: {element}: \"{text}\" escaped the word list", { id: String(s.id), width: String(width), element: String(e.element), text: String(e.text) }));
+          }
+        }, { expect: [ABSENCE] }).catch(going);
+      }
+    }
     /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
     if (parts.includes("R13")) {
       walk.journey = "R13 design journey 29";
       const mock = await designMock(b, { dir: join(out, "design") });
       try {
-        for (const f of await journeyPairs(walk, b, mock, { out, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
+        for (const f of await walkStates(walk, b, mock, { out, page: founder.page, base: copy })) walk.pairs.push(f);
+        walk.journey = "R13 design journey 29";
+        for (const f of await journeyPairs(walk, b, mock, { out, notWalked: !assistant, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
       } finally { await mock.close(); }
     }
   } catch (e) {
@@ -158,7 +206,7 @@ export async function askCode(role, address) {
 
 /* R12: the administrator's journey (R9) and the member's (R10), each signed in by her own credentials on her own device,
    connecting her own subscription through the real sign-in. A journey that stops has said why. */
-async function investigateLive(walk, b, base, { founder, member, codeOf }) {
+async function investigateLive(walk, b, base, { founder, member, codeOf, assistant = false }) {
   const devices = [];
   const device = async () => {
     const ctx = await b.newContext({ viewport: viewportOf(1280) });
@@ -175,9 +223,18 @@ async function investigateLive(walk, b, base, { founder, member, codeOf }) {
     const made = {};
     await (async () => {
       await signInBy(walk, admin, base, founder, "1 · sign in by her handle");
-      return walkAdministrator(walk, admin, { base, founder, made, codeOf: (address) => codeOf("administrator", address) });
+      return walkAdministrator(walk, admin, { base, founder, made, assistant, codeOf: (address) => codeOf("administrator", address) });
     })().catch(going);
     walk.journey = "R10 as member";
+    if (!assistant) {
+      const mine = await device();
+      await (async () => {
+        await signInBy(walk, mine, base, member, "she signs in by her handle");
+        await notReady(walk, mine, base, { label: "assistant not ready: her connect screen", path: "/app/connect", screen: "connect", assistantSignin: true,
+          names: [STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk] });
+      })().catch(going);
+      return;
+    }
     if (!made.project) { walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made"); return; }
     const mine = await device();
     await (async () => {
@@ -187,6 +244,29 @@ async function investigateLive(walk, b, base, { founder, member, codeOf }) {
   } finally { for (const c of devices) await c.close().catch(() => {}); }
 }
 
+/* R28 (interface-shell R102): the nine named public pages, opened with no session at 1280 and 390 px, each drawn page's title the
+   word of its screen and no weight mark in it; a page that needs a subject the instance does not name here draws its
+   "Nothing is here" at its bare address and is noted, never passed. */
+export async function publicPass(walk, b, base, { pages = publicPages(), registry = registryScreens() } = {}) {
+  walk.journey = "R28 the public pages";
+  const ctx = await b.newContext({ viewport: viewportOf(1280) });
+  try {
+    await ctx.route("**/*", (r) => (new URL(r.request().url()).host === walk.copyHost ? r.continue() : (walk.foreign(r.request().url()), r.abort("blockedbyclient"))));
+    const page = walk.watch(await ctx.newPage());
+    for (const id of pages) {
+      await walk.step(page, `public page ${id}`, async (p) => {
+        for (const width of WIDTHS) {
+          await p.setViewportSize(viewportOf(width));
+          await p.goto(new URL(addressOf(id), base).href); await settle(p);
+          const st = await drawnState(p, id);
+          if (!st.drawn) { if (width === WIDTHS[0]) walk.notes.push(localize("journey-check.run.id_not_drawn_signed_out", "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})", { id: String(id), why: String(st.why) })); continue; }
+          for (const l of await dec340Limits(p, id, { isPublic: true, phone: width <= 390 })) walk.fail(FAIL.DEC340, localize("journey-check.run.id_at_width_px_kind", "{id} at {width}px: {kind}: {detail}", { id: String(id), width: String(width), kind: String(l.kind), detail: String(l.detail) }));
+        }
+      }, { expect: [/^(?:NOT_FOUND|NO_SUCH_[A-Z_]+|[A-Z_]+_NOT_FOUND|NOT_VISIBLE|NOT_A_PARTICIPANT)$/, 401, 403, 404] }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
+    }
+  } finally { await ctx.close().catch(() => {}); }
+}
+
 /* The live arm (R1 (b), R5, R6, R12): `base` a named test instance; the credentials are read from the environment and never
    printed: JOURNEY_ADMIN_HANDLE, JOURNEY_ADMIN_PASSWORD, JOURNEY_MEMBER_HANDLE, JOURNEY_MEMBER_PASSWORD. It reaches the
    instance directly (R5). Each role signs in, `whoami` must answer it as that role, and it walks every working screen;
@@ -194,7 +274,7 @@ async function investigateLive(walk, b, base, { founder, member, codeOf }) {
    (R6). The administrator must be drawn every act the member is, and somewhere an act the member is not. `screens`
    narrows the sweep; `commit` names the mock's commit (the interface's ASSETS_COMMIT when not given). */
 export async function runLive({ base, env = process.env, out = join(OUT, "live"), fetchOf = directFetch, launch = browser,
-  screens = null, commit = undefined, investigate = true, codeOf = askCode } = {}) {
+  screens = null, commit = undefined, investigate = true, codeOf = askCode, assistant = false } = {}) {
   const walk = new Walk({ out, arm: "live" });
   const need = ["JOURNEY_ADMIN_HANDLE", "JOURNEY_ADMIN_PASSWORD", "JOURNEY_MEMBER_HANDLE", "JOURNEY_MEMBER_PASSWORD"];
   for (const k of need) if (env[k]) walk.keepSecret(env[k]);
@@ -233,12 +313,19 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
             walk.fail(FAIL.ROLE, localize("journey-check.run.the_role_s_credential_signs", "the {role}'s credential signs in a session whoami answers with administer: {v1}", { role: String(role), v1: String(!!who.administer) }));
             return;
           }
+          if (administer) {
+            walk.journey = `as ${role}`;
+            await walkDashboards(walk, page, base).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
+            await walkSignGone(walk, page, base).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
+          }
           await sweep(walk, page, base, { screens: working, journey: `as ${role}`, each: async (p, s, drawn) => {
             acts[role].set(s.id, await drawnActs(p));
             if (!drawn) return;
             for (const width of WIDTHS) {
               if (width !== 1280) { await p.setViewportSize(viewportOf(width)); await p.reload(); await settle(p); }
               for (const l of await pageLimits(p, { width, slugs })) walk.fail(l.kind, `${s.id} at ${width}px: ${l.detail}`);
+              /* R28 (DEC-340): the screen's title, the explanations, the masthead's name, Projects' controls */
+              for (const l of await dec340Limits(p, s.id, { isPublic: false, phone: width <= 390 })) walk.fail(FAIL.DEC340, localize("journey-check.run.id_at_width_px_kind", "{id} at {width}px: {kind}: {detail}", { id: String(s.id), width: String(width), kind: String(l.kind), detail: String(l.detail) }));
               const live = await p.screenshot();
               const design = await mock.draw(s.id, width);
               if (!design) walk.fail(FAIL.DESIGN, localize("journey-check.run.id_the_design_mock_at", "{id}: the design mock at {commit} draws no such screen", { id: String(s.id), commit: String(mock.commit) }));
@@ -252,15 +339,20 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
       };
       await sweepAs("administrator", env.JOURNEY_ADMIN_HANDLE, env.JOURNEY_ADMIN_PASSWORD, true);
       await sweepAs("member", env.JOURNEY_MEMBER_HANDLE, env.JOURNEY_MEMBER_PASSWORD, false);
+      /* R28: the named public pages, signed out, at both widths */
+      await publicPass(walk, b, base);
+      /* R24: the published frame, where the instance holds a published case; R21: the carried states beside the design's */
+      await walkPublished(walk, b, base, mock, { out });
+      for (const f of await walkStates(walk, b, mock, { out })) walk.pairs.push(f);
       /* R12: R9 and R10 on the instance, each through its real subscription sign-in, whose code the person types */
       if (investigate) await investigateLive(walk, b, base, {
         founder: { handle: env.JOURNEY_ADMIN_HANDLE, password: env.JOURNEY_ADMIN_PASSWORD },
-        member: { handle: env.JOURNEY_MEMBER_HANDLE, password: env.JOURNEY_MEMBER_PASSWORD }, codeOf });
+        member: { handle: env.JOURNEY_MEMBER_HANDLE, password: env.JOURNEY_MEMBER_PASSWORD }, codeOf, assistant });
       /* R18 (K3747): journey 29's steps the design marks for the assistant, which the walk did not reach while the assistant does
          not work, are reported as not walked, never failed */
       walk.journey = "R18 design journey 29";
       for (const [k, st] of (await mock.allSteps(JOURNEY_29)).entries())
-        if (st.only === "ai" && !journey29Live(walk, st)) walk.notes.push(localize("journey-check.run.stepname_not_walked_the_assistant", "{stepName}: not walked, the assistant does not work (K3717)", { stepName: String(stepName(JOURNEY_29, k, st)) }));
+        if (st.only === "ai" && !journey29Live(walk, st)) walk.notWalked(stepName(JOURNEY_29, k, st));
       /* R5: the acts only an administrator is drawn */
       walk.journey = "roles";
       if (acts.administrator.size && acts.member.size) {

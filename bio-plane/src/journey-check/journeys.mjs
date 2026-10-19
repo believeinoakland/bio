@@ -6,7 +6,7 @@
 import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
-import { requireWord, wordPattern, byWord } from "./words.mjs";
+import { requireWord, wordPattern, byWord, drawsWord } from "./words.mjs";
 import { localize } from "../setup-words/index.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
@@ -443,4 +443,38 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
       const at = adminAsName(await p.locator("body").innerText(), { except });
       if (at.length) walk.fail(FAIL.ADMIN_NAME, localize("journey-check.journeys.id_draws_admin_as_a", "{id} draws admin as a name: {map}", { id: String(s.id), map: String(at.map((a) => `…${a.at}…`).join(" | ")) }));
     } });
+}
+
+/* ---------- R22, R25: the dashboards, and the signing page gone ---------- */
+
+/* R22 (K3815; screens-inquiry R79, screens-action R30): `dash-project` and `dash-action` opened from Home's own doors as
+   working screens, drawn, neither drawing "Nothing is here" (interface-shell R61) nor the failed state. */
+export const DASHBOARDS = Object.freeze(["dash-project", "dash-action"]);
+export async function walkDashboards(walk, page, base) {
+  for (const id of DASHBOARDS) {
+    await walk.step(page, localize("journey-check.journeys.dashboard_id_opened_from_the_door", "dashboard {id}: opened from the door on Home", { id: String(id) }), async (p) => {
+      await open(walk, p, base, "/app", "home");
+      const door = p.locator(`#cs-main a[href^="/app/${id}"]`).first();
+      try { await door.waitFor({ state: "visible", timeout: 8000 }); } catch { throw new Error(`Home draws no door to ${id}`); }
+      await door.click();
+      await settle(p);
+      await requireDrawn(walk, p, id);
+      const main = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
+      if (drawsWord(main, "shell.unavailable.nothing.title")) throw new Error(`${id} draws "Nothing is here"`);
+      if (await p.locator('#cs-main [data-state="failed"]').count()) throw new Error(`${id} draws the failed state`);
+    });
+  }
+}
+
+/* R25 (K3807, K3835; control-plane R109): `/sign` is requested once on the copy, expecting 404, and answers the interface's
+   "nothing is here" page, holding no signing page. */
+export async function walkSignGone(walk, page, base) {
+  await walk.step(page, "sign: /sign answers the nothing-is-here page", async (p) => {
+    const res = await p.goto(new URL("/sign", base).href);
+    await settle(p);
+    if (!res || res.status() !== 404) throw new Error(`/sign answered ${res ? res.status() : "nothing"}, not 404`);
+    const main = (await p.locator("body").innerText()).replace(/\s+/g, " ");
+    if (!drawsWord(main, "shell.unavailable.nothing.title")) throw new Error("/sign does not answer the interface's nothing-is-here page");
+    if (await p.locator("#cs-main :is(form, input, textarea, select, [type=file])").count()) throw new Error("/sign holds a signing page");
+  }, { expect: [404] });
 }

@@ -9,7 +9,8 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { settle, StepFailed } from "./walker.mjs";
 import { act, control, type, open, requireDrawn } from "./journeys.mjs";
-import { requireWord, requireAnyWord, byWord, wordPattern, word } from "./words.mjs";
+import { requireWord, requireAnyWord, byWord, wordPattern, word, drawsWord } from "./words.mjs";
+import { developerWords } from "./design.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
 import { localize } from "../setup-words/index.mjs";
 
@@ -146,6 +147,27 @@ async function captureAndVouch(walk, page, base, { question, password }) {
   return document;
 }
 
+/* R23 (K3815; usability review B-11, B-30, B-31): the first page of the document the walk captured reads "Page 1", in the page
+   bar's words (`document.read.page`) and in the passage's place (`screen.document.passage.where`), each by its key (R14); a
+   capture that states no page draws no page number, and the step notes that it had none. Every screen's text is also scanned
+   for a page numbered 0 (walker.mjs, `PAGE_ZERO`). */
+export async function firstPage(walk, page, document) {
+  await walk.step(page, "document: its first page reads Page 1", async (p) => {
+    await p.goto(document); await settle(p);
+    await requireDrawn(walk, p, "document");
+    const text = (await p.locator("#cs-main").innerText()).replace(/\s+/g, " ");
+    const first = (key, vars) => {
+      const re = wordPattern(key, vars);
+      const m = new RegExp(re.source, "g").exec(text);
+      return m ? Number(/\d+/.exec(m[0])[0]) : null;
+    };
+    const bar = first("document.read.page", {}), place = first("screen.document.passage.where", {});
+    if (bar !== null && bar !== 1) throw new Error(`the page bar reads page ${bar} first, not Page 1 (document.read.page)`);
+    if (place !== null && place !== 1) throw new Error(`the first passage's place reads page ${place}, not Page 1 (screen.document.passage.where)`);
+    if (bar === null && place === null) walk.notes.push("document: the capture states no page, so none is drawn");
+  }, { expect: READING_EXPECTS });
+}
+
 /* Steps 7 and 8: the document opened and its words seen in its Passages (extraction R76, K3399); the passage found with
    Find-in (from the document's own "Find in this"), for the question, and cited from the result as supporting it
    (screens-daily R24: the role chosen, none preselected). The question then holds the passage. */
@@ -241,22 +263,100 @@ async function concludeOn(walk, page, { question, project }) {
   });
 }
 
+/* R20 (K3717, K3718 (2), K3747): while the assistant does not work, every step that needs it is reported as not walked, never
+   as failed, and the screen it would have used is asserted in its declared not-ready state (interface-shell R20): no
+   assistant control drawn anywhere (absent, not greyed), and, where the screen says why the assistant cannot work here,
+   in the words of `refusal.AGENT_WORKER_UNBOUND` or `refusal.ASSISTANT_REMOTE_NOT_READY`, never a code. A screen that
+   draws an assistant control that cannot work fails by name. */
+export const ASSISTANT_OPS = Object.freeze(["subscriptionsignin", "disclosureshown", "accountconnect", "airunopen", "planask", "ask"]);
+export const ASSISTANT_SHELL = Object.freeze(["dock"]);
+export const NOT_READY_KEYS = Object.freeze(["refusal.AGENT_WORKER_UNBOUND", "refusal.ASSISTANT_REMOTE_NOT_READY"]);
+
+/* The assistant controls `page` draws (present in the document, shown or not), and what it says where it says why. */
+export async function assistantControls(page) {
+  return page.evaluate(([ops, shell]) => ({
+    acts: ops.filter((op) => document.querySelector(`[data-act="${op}"]`)),
+    shell: shell.filter((k) => document.querySelector(`[data-shell="${k}"]`)),
+    said: [...document.querySelectorAll('[role="alert"], .mk-msg, [data-refusal], [data-state="withheld"]')]
+      .map((e) => e.textContent.replace(/\s+/g, " ").trim()).filter(Boolean),
+  }), [ASSISTANT_OPS, ASSISTANT_SHELL]);
+}
+
+/* The not-ready assertion on the screen at `path`, as a step of its own labelled `label`; `names` are the walk's steps
+   that would have used it, each reported as not walked. */
+export async function notReady(walk, page, base, { label, path, screen, names, assistantSignin = false }) {
+  for (const n of names) walk.notWalked(n);
+  /* a screen that fails its assertion has said so by name; the journey goes on, as the assistant is not part of it */
+  await walk.step(page, label, async (p) => {
+    await open(walk, p, base, path, screen);
+    const drawn = await assistantControls(p);
+    const bad = [...drawn.acts.map((op) => `act ${op}`), ...drawn.shell.map((k) => `the ${k} button`)];
+    /* B3 (K4086): `connect`'s disclosure and sign-in are the assistant's own sign-in, drawn though not working (K3717): an
+       assistant step, reported not walked above, never a failure */
+    if (assistantSignin) for (const op of ["subscriptionsignin", "disclosureshown", "accountconnect"]) { const i = bad.indexOf(`act ${op}`); if (i >= 0) bad.splice(i, 1); }
+    if (bad.length) throw new Error(`${screen} draws an assistant control that cannot work while the assistant does not: ${bad.join(", ")}`);
+    for (const t of drawn.said) {
+      const code = developerWords(t).find((w) => w.what === "a refusal code");
+      if (code) throw new Error(`${screen} says why the assistant cannot work in a code, ${code.word}, not in the words of ${NOT_READY_KEYS.join(" or ")}`);
+    }
+  }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
+}
+
+/* The conclusion on the member's own reading (R16, `screens-inquiry` R50): the choice "Write the reading yourself" beside
+   the readings, its field and help, the reading written, the question concluded and drawn as hers. */
+async function concludeOwn(walk, page, { label, question, reading, falsifier, commentary }) {
+  await walk.step(page, label, async (p) => {
+    await p.goto(question); await settle(p);
+    const form = p.locator('#cs-main [data-conclude="form"]').first();
+    try { await form.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`the question offers no way to conclude after a citation, on ${where(p)}`); }
+    if (!(await form.evaluate((d) => d.open))) await form.locator("summary").first().click();
+    /* the reading choice: "Write the reading yourself" is offered beside the readings, with or without an assistant */
+    const choice = form.locator("select").filter({ has: p.locator("option", { hasText: wordPattern("question.conclude.own.choice") }) }).first();
+    try { await choice.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error("the reading choice does not offer the member's own reading (question.conclude.own.choice)"); }
+    await choice.selectOption({ label: word("question.conclude.own.choice") });
+    await requireWord(p, "question.conclude.own.field", { within: "#cs-main" });
+    await requireWord(p, "question.conclude.own.help", { within: "#cs-main" });
+    await form.getByLabel(wordPattern("question.conclude.own.field")).first().fill(reading);
+    await act(p, "conclude", { fields: { "question-conclude-falsifier": falsifier, "question-conclude-commentary": commentary }, reason: "The notice answers the question." });
+    await requireWord(p, "question.concluded.by", { within: "#cs-main" });
+    await requireWord(p, "question.reading.by.member", { within: "#cs-main" });
+  });
+}
+
 /** R9: the administrator's journey, from her claimed group (journey 28 has claimed it and signed her in by her handle,
  *  step 1) to a first conclusion. `codeOf` (live arm, R12) asks the person for the sign-in's code. Answers the
  *  project's and question's addresses. */
-export async function walkAdministrator(walk, page, { base, founder, codeOf = null, made = {}, segments = null }) {
+export async function walkAdministrator(walk, page, { base, founder, codeOf = null, made = {}, segments = null, assistant = false }) {
   walk.journey = "R9 as administrator";
   const { project, question } = await projectAndQuestion(walk, page, base, { title: PROJECT_TITLE, question: QUESTION });
   /* the project exists from here on: R10 invites a member to it even when a later step of this journey stops (`made`) */
   made.project = project; made.question = question;
-  await connectSubscription(walk, page, base, { password: founder.password, codeOf });
+  if (assistant) await connectSubscription(walk, page, base, { password: founder.password, codeOf });
+  else await notReady(walk, page, base, { label: "assistant not ready: the connect screen", path: "/app/connect", screen: "connect", assistantSignin: true, names: [STEP_NAMES.connect] });
   const document = await captureAndVouch(walk, page, base, { question, password: founder.password });
+  await firstPage(walk, page, document);
   await readAndCite(walk, page, { document, question });
-  await runAndRead(walk, page, { question, segments });
-  await ask(walk, page, { words: "What did the city order the landlord to do, and by when?" });
-  await concludeOn(walk, page, { question, project });
+  if (assistant) {
+    await runAndRead(walk, page, { question, segments });
+    await ask(walk, page, { words: "What did the city order the landlord to do, and by when?" });
+    await concludeOn(walk, page, { question, project });
+  } else {
+    await notReady(walk, page, base, { label: "assistant not ready: the question's dock", path: new URL(question).pathname, screen: "question", names: [STEP_NAMES.run, STEP_NAMES.read] });
+    await notReady(walk, page, base, { label: "assistant not ready: the Ask screen", path: "/app/answers", screen: "answers", names: [STEP_NAMES.ask] });
+    /* step 12 on the member's own reading, which needs no assistant (R16, screens-inquiry R50) */
+    await concludeOwn(walk, page, { label: "12 · conclude on her own reading, as the project's", question, reading: ADMIN_READING,
+      falsifier: "The city withdrawing or amending notice 2026-118", commentary: "The city's notice orders the landlord to repair the roof within 28 days." });
+  }
   return { project, question };
 }
+
+/* The names R20 gives the steps it reports as not walked. */
+export const STEP_NAMES = Object.freeze({
+  connect: "R9 step 4, connect an assistant by her own Claude subscription", run: "R9 step 9, run the assistant on the question from the dock",
+  read: "R9 step 10, read its run's answer and its suggested reading", ask: "R9 step 11, Ask, and read the answer",
+  memberConnect: "R10, she connects her own Claude subscription", memberRun: "R10, her own run is dispatched on that sign-in",
+  memberProjectai: "R10, the project's assistant page, as hers (projectai)", memberPlan: "R10, plan help, as hers (planask)", memberAsk: "R10, Ask, as hers",
+});
 
 /** R10: the same journey as a member, invited to the group (journey 28 joined her) and to the project: her own Claude
  *  subscription connected, her own run dispatched on it, and the project's assistant page (`projectai`), plan help
@@ -319,6 +419,7 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
    address, the copy vouched for, its passage cited, and the conclusion made on her own reading, which the screen offers
    beside the readings to conclude on (`question.conclude.own.choice`, `.field`, `.help`) and draws as hers
    (`question.reading.by.member`). Each is asserted by its key (R14). The steps are labelled "no assistant · …". */
+export const ADMIN_READING = "The city's notice 2026-118 orders the roof repaired within 28 days.";
 export const OWN_PROJECT = "Heating at 14 Lakeshore Row";
 export const OWN_QUESTION = "Has the landlord been ordered to restore the heating of flat 6 at 14 Lakeshore Row?";
 export const OWN_READING = "The city's notice 2026-131 orders the landlord to restore the heating of flat 6 within 7 days.";
@@ -358,23 +459,8 @@ export async function walkUnassisted(walk, page, { base, founder }) {
     await requireWord(p, "screen.held.released", { vars: { count: 1 }, within: "#cs-main" });
   });
   await readAndCite(walk, page, { document, question, phrase: OWN_FIND_PHRASE, passage: HEAT_PASSAGE, prefix: NO_ASSISTANT });
-  await walk.step(page, own("conclude on her own reading"), async (p) => {
-    await p.goto(question); await settle(p);
-    const form = p.locator('#cs-main [data-conclude="form"]').first();
-    try { await form.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`the question offers no way to conclude after a citation, on ${where(p)}`); }
-    if (!(await form.evaluate((d) => d.open))) await form.locator("summary").first().click();
-    /* the reading choice: "Write the reading yourself" is offered beside the readings, with or without an assistant */
-    const choice = form.locator("select").filter({ has: p.locator("option", { hasText: wordPattern("question.conclude.own.choice") }) }).first();
-    try { await choice.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error("the reading choice does not offer the member's own reading (question.conclude.own.choice)"); }
-    await choice.selectOption({ label: word("question.conclude.own.choice") });
-    await requireWord(p, "question.conclude.own.field", { within: "#cs-main" });
-    await requireWord(p, "question.conclude.own.help", { within: "#cs-main" });
-    await form.getByLabel(wordPattern("question.conclude.own.field")).first().fill(OWN_READING);
-    await act(p, "conclude", { fields: { "question-conclude-falsifier": "The city withdrawing or amending notice 2026-131",
-      "question-conclude-commentary": "The city's notice orders the heating restored within 7 days." }, reason: "The notice answers the question." });
-    await requireWord(p, "question.concluded.by", { within: "#cs-main" });
-    await requireWord(p, "question.reading.by.member", { within: "#cs-main" });
-  });
+  await concludeOwn(walk, page, { label: own("conclude on her own reading"), question, reading: OWN_READING,
+    falsifier: "The city withdrawing or amending notice 2026-131", commentary: "The city's notice orders the heating restored within 7 days." });
   return { project, question };
 }
 

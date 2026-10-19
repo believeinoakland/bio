@@ -7,11 +7,22 @@
    R12: `projects`, `project`, `question` and `connect` draw just enough of R9's steps 2 to 4 to reach the sign-in:
    a project and a question opened by `promote`, and the subscription's sign-in (`subscriptionsignin`: a link to
    Anthropic's page, then the code typed), each drawing the words the walk asserts, through `word`. `codes` records each
-   code the plane was sent. */
+   code the plane was sent. R20: `connect` draws that sign-in only with `assistantControls: true` (the assistant works);
+   otherwise it draws no assistant control, as the interface does while the assistant is not reachable. R22: Home draws the
+   doors to `dash-project` and `dash-action` (`doors: false` draws none). R22: `dashNothing: true` draws "Nothing is here" on `dash-project`. R25: `/sign` answers 404 with the interface's
+   nothing-is-here page, or, with `signPage: true`, a page holding a form. */
 import { createServer } from "node:http";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordOf, publicPages } from "../../../src/journey-check/checks.mjs";
+import { registryScreens } from "../../../src/journey-check/screens.mjs";
 
-const WORDS = { empty: word("question.empty.heading"), connected: word("screen.connect.own.subscription", { plan: "Pro", date: "14 October 2026" }) };
+const WORDS = { empty: word("question.empty.heading"), nothing: word("shell.unavailable.nothing.title"), connected: word("screen.connect.own.subscription", { plan: "Pro", date: "14 October 2026" }) };
+
+/* R28: each screen's tab title, the word of its screen (interface-shell R102): the public form on a public page */
+const PUBLIC = new Set(publicPages());
+const TITLES = Object.fromEntries(registryScreens().map((s) => [s.id, PUBLIC.has(s.id)
+  ? wordOf("page.title.public", { page: wordOf(`screen.${s.id}.name`), team: "Lakeshore Tenants" })
+  : wordOf("page.title", { screen: wordOf(`screen.${s.id}.name`), team: "Lakeshore Tenants" })]));
 
 const CSS = `body{margin:0;font:16px sans-serif}.cs-frame{display:block;width:100%}.cs-testband{display:block;padding:4px}
 .cs-main{display:block;padding:16px 16px 80px}.cs-tabs{position:fixed;left:0;right:0;bottom:0;height:48px;display:flex;background:#eee}
@@ -23,7 +34,7 @@ const FLAW = {
   words: "<p>Could not read this, because NO_CALC.</p>",
 };
 
-export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = {}) {
+export async function fakePlane({ admins = {}, flaws = {}, adminActs = true, assistantControls = false, doors = true, signPage = false, dashNothing = false } = {}) {
   const seen = [], codes = [];
   const sessions = new Map();
   const page = (body) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
@@ -40,12 +51,13 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
   const id = location.pathname === "/app" ? "home" : location.pathname.slice(5).split("/")[0];
   const who = await (await fetch("/api/?op=whoami", { headers: { authorization: "Bearer " + sessionStorage.getItem("t") } })).json();
   const flaws = ${JSON.stringify(flaws)}, FLAW = ${JSON.stringify(FLAW)};
+  document.title = ${JSON.stringify(TITLES)}[id] || document.title;
   const f = flaws[id];
   const acts = '<button class="cs-btn" data-act="testify" type="button">Testify</button>'
     + (${JSON.stringify(adminActs)} && who.result.administer && id === "members" ? '<button class="cs-btn" data-act="memberadd" type="button">Invite a member</button>' : "");
   document.getElementById("root").innerHTML = '<div class="cs-frame" id="cs-frame">'
     + '<div class="cs-testband' + (f === "band" ? " cs-narrow" : "") + '" role="note">A test instance</div>'
-    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (FLAW[f] || "")) + '</main>'
+    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (id === "home" && ${JSON.stringify(doors)} ? '<a href="/app/dash-project">Investigation</a> <a href="/app/dash-action">Action</a>' : "") + (FLAW[f] || "")) + '</main>'
     + '<nav class="cs-tabs' + (f === "tabs" ? " cs-flow" : "") + '"><a class="cs-tab" href="/app">Home</a><a class="cs-tab" href="/app/queue">Queue</a></nav></div>';
   const on = (op, fn) => { for (const b of document.querySelectorAll('[data-act="' + op + '"]')) b.onclick = fn; };
   on("promote", () => { const t = document.querySelector("#projects-title, #project-question");
@@ -59,12 +71,13 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
 })();
 const W = ${JSON.stringify(WORDS)};
 var STEPS = {
+  'dash-project': () => '<h1 class="t-title">Investigation</h1>' + (${JSON.stringify(dashNothing)} ? '<p>' + W.nothing + '</p>' : '<p>Your projects</p>'),
   projects: () => '<h1 class="t-title">Projects</h1><input id="projects-title"><button class="cs-btn" data-act="promote" type="button">Start a project</button>',
   project: () => '<h1 class="t-title">' + sessionStorage.getItem("projects-title") + '</h1><textarea id="project-question"></textarea><button class="cs-btn" data-act="promote" type="button">Open a question</button>',
   question: () => '<h1 class="t-title">' + sessionStorage.getItem("project-question") + '</h1><p>' + W.empty + '</p>',
-  connect: () => '<h1 class="t-title">The assistant</h1><button class="cs-btn" data-act="subscriptionsignin" type="button">Open the sign-in page</button>'
+  connect: () => '<h1 class="t-title">The assistant</h1>' + (${JSON.stringify(assistantControls)} ? '<button class="cs-btn" data-act="subscriptionsignin" type="button">Open the sign-in page</button>'
     + '<p id="mc-link" hidden><a href="https://claude.ai/oauth/authorize?code=true" target="_blank">Open it in a new tab</a></p>'
-    + '<input id="mc-code0" type="password"><button class="cs-btn" data-act="subscriptionsignin" type="button">Connect</button><p id="mc-done" hidden>' + W.connected + '</p>',
+    + '<input id="mc-code0" type="password"><button class="cs-btn" data-act="subscriptionsignin" type="button">Connect</button><p id="mc-done" hidden>' + W.connected + '</p>' : ''),
 };</script>`);
   const server = createServer(async (req, res) => {
     const u = new URL(req.url, "http://x");
@@ -94,6 +107,8 @@ var STEPS = {
     }
     if (u.pathname === "/app/assets/civicsmith.css") return send(200, "text/css", CSS);
     if (u.pathname === "/") return send(200, "text/html", front);
+    if (u.pathname === "/sign") return send(404, "text/html", signPage ? page(`<main id="cs-main"><form><input type="file"><button>Sign</button></form></main>`)
+      : page(`<main id="cs-main" data-screen="unavailable"><h1 class="t-title">${WORDS.nothing}</h1></main>`));
     if (u.pathname === "/app" || u.pathname.startsWith("/app/")) return send(200, "text/html", app);
     send(404, "text/plain", "not found");
   });
