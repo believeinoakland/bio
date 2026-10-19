@@ -39,3 +39,19 @@ Your deferred item 1, settled (K4010): a test never reads another module's sourc
 ## B4 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B5 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the completion round (§5.7 (0); P10 as amended, K3915): **CR-26 · skills** (read the entry line whole). Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/skills.md` (read whole). No requirement changes; your entry fixes a red the tranche's full module run found (K2704), traced by BOB's reading worker.
+BOB's notes for this job:
+1. (K4149; full module run) 13 tests (R28–R31, R33, R34, R36, R39, R43, R45, R49: `planning`, `action`, `filing`, `edition`, `investigation`, `lookup`, `ask`, `writing`, `translation`, `readtranslation` tests) compare each layer's rendered text (read through `localize`, the word rows) with the canon by R21's normaliser; since the design's DEC-355 rows (K4072) the rows say "team" where canon says "group" (Bob's K3472: "team" in every text people read) and American "labeled" (DEC-221). The canon is not reworded (it is reference; its wording is Bob's). The tests compare through the same word conversion the rows carry (group→team in the team sense, labelled→labeled), each with a control that a genuinely changed word still fails; R21's provided behaviour is unchanged unless you find it must change (then a QUESTION first).
+2. The local walk runs once more after this round (Bob, K4111): do not run `journey.test.mjs`.
+Your layer has closed; this round runs as a layer (§5.3 to §5.6). Nothing found here waits for the next tranche (K3915): a flaw in your module is fixed in this job, one in another module is a REPORT.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a test asserts the key or reads the text from the word table, never copies it. Every refusal a control. Report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Never edit a generated artifact (manifest §14); report one you make stale.
+Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio skills tranche/T51 job/T51/skills`. Your Size line counts only your module's own code (K2513).
