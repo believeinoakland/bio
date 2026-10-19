@@ -6,6 +6,8 @@
    determination's id, and `<determination>~<escalation>` once an escalation is opened. Every function here is self-
    contained (interface-shell R21 (1)). */
 
+import { readOnly } from "./send-steps.mjs";
+
 export const matter = Object.freeze({
   id: "matter",
 
@@ -34,6 +36,7 @@ export const matter = Object.freeze({
   },
 
   parts: {
+    readOnly: readOnly,
     det: function (view) { return String(view.subject || "").split("~")[0]; },
     outcome: function (o) { return ["compliant", "noncompliant", "unclear"].includes(o) ? o : "undetermined"; },
     measure: function (cs, p) {
@@ -56,7 +59,7 @@ export const matter = Object.freeze({
     return cs.state("determination", function (d) {
       const act = d.act || {};
       const actor = act.actor ? [act.actor.role, act.actor.body].filter(Boolean).join(", ") : "";
-      const head = cs.title(null) + '<p class="mk-sub">' + cs.esc(act.event || act.id || "") + (actor ? " · " + cs.w("screen.matter.by", { actor: actor }) : "")
+      const head = P.readOnly(cs, "screen.matter.name") + cs.title(null) + '<p class="mk-sub">' + cs.esc(act.event || act.id || "") + (actor ? " · " + cs.w("screen.matter.by", { actor: actor }) : "")
         + (act.when ? " · " + cs.date(act.when) : "") + "</p>";
 
       // R6: the determination: each standard, what it requires and what the act did, its outcome, either way alike.

@@ -65,6 +65,34 @@ export function readFiling(cs, view, filing) {
   return L[filing];
 }
 
+/** R27: the kit's read-only sentence for a member who may read and not act, the screen's own name its noun (`shell.readonly`,
+ *  `interface-shell` R94); "" for a member who may act. */
+export function readOnly(cs, noun) {
+  return typeof cs.readonly === "function" ? cs.readonly(String(noun).replace(/^screen\.(.+)\.name$/, "shell.readonly.noun.$1")) : "";
+}
+
+/** R28: a kind in its words, `screen.action.kind.<kind>` (or `screen.start-send.kind.<kind>` with `lower`), else the profile's
+ *  own label from `action_kind_labels`, else "" (a kind with neither is not drawn, and is never worded "Other"). */
+export function kindWord(cs, kind, lower, labels) {
+  const key = (lower ? "screen.start-send.kind." : "screen.action.kind.") + kind;
+  if (cs.w(key) !== cs.esc(key)) return cs.w(key);
+  const own = labels && typeof labels[kind] === "string" ? labels[kind].trim() : "";
+  return own ? cs.esc(own) : "";
+}
+
+/** R28: the kinds the vocabulary offers (`affordances`' `action_kind`, read at each call) as `cs.choice` options: a kind with
+ *  words by its key, a profile's own by its label (record data), a kind with neither not at all. */
+export function kindsOf(cs, view, lower) {
+  const vocab = view.data.vocab;
+  const v = vocab && vocab.state === "ok" && vocab.value && vocab.value.vocabularies ? vocab.value.vocabularies : {};
+  const labels = v.action_kind_labels && typeof v.action_kind_labels === "object" ? v.action_kind_labels : {};
+  return (Array.isArray(v.action_kind) ? v.action_kind : []).map(function (k) {
+    const key = (lower ? "screen.start-send.kind." : "screen.action.kind.") + k;
+    const own = typeof labels[k] === "string" ? labels[k].trim() : "";
+    return cs.w(key) !== cs.esc(key) ? { value: k, key: key } : own ? { value: k, text: own } : null;
+  }).filter(Boolean);
+}
+
 /** R21: "Sent with" and "In this matter", from `stakeatpreparation` (`filings` R62: `group_stake`, `matter_stake`) and the
  *  team's name from `groupidentity`. A stake that cannot be read says so in its fold, open whenever drawn, never none. */
 export function stakeLines(cs, view) {
@@ -102,8 +130,8 @@ export function stakeAsk(cs, view) {
   const save = cs.act("actionstake", { label: "stake.action.save" });
   if (!save) return "";
   const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : {};
-  const kind = ["records_request", "request_for_comment"].includes(a.kind) ? a.kind : "other";
-  const words = cs.w("screen.start-send.kind." + kind);
+  const voc = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies : {};
+  const words = view.parts.kindWord(cs, a.kind || "other", true, voc.action_kind_labels);
   const m = r.value.matter_stake;
   const own = m && typeof m === "object" && m.source === "action" && typeof m.stake === "string" && m.stake !== "undetermined" ? m.stake : "";
   const undetermined = r.value.governing_tier === "undetermined"
@@ -278,3 +306,37 @@ export const RECORD_SENT = Object.freeze({
   },
   refusals: { SENT_REFERENCE_MALFORMED: "screen.request.reference.malformed", SECOND_APPROVAL_NEEDED: "screen.start-send.waitsecond" },
 });
+
+/** The assistant's help with one own-words field (`wizard-scripts` R27, DEC-153): drawn only while it is reachable, by the
+ *  screen that owns the field (`data-id` the field, `data-field` its name, `data-forop` the act the words are for). Nothing is
+ *  kept until the member saves; the draft is labelled machine work and replaces nothing she did not ask to have worded. */
+export const WRITE_HELP = Object.freeze({
+  op: "writinghelp", rereads: [], reasonField: "told",
+  send: function (view, el, cs) {
+    view.ui.helpId = el.dataset.id;
+    return { body: { op: el.dataset.forop, field: el.dataset.field, told: String(cs.value(el.dataset.id) || "").trim() } };
+  },
+  done: function (view, answer, cs) {
+    const a = answer && answer.result !== undefined ? answer.result : answer;
+    if (a && typeof a.text === "string" && view.ui.helpId) cs.fill(view.ui.helpId, a.text, { label: "screen.start-send.draft.machine" });
+  },
+});
+
+/** A read a screen makes itself, once per query and token, kept in the page's memory (`view.ui.later`); answers
+ *  `{state: "loading" | "ok" | "failed", value?, refusal?}`. */
+export function later(cs, view, key, op, query, token) {
+  const L = view.ui.later || (view.ui.later = {});
+  const q = JSON.stringify(query) + "#" + (token || "");
+  if (!L[key] || L[key].q !== q) {
+    L[key] = { q: q, state: "loading" };
+    const settle = function (o) { L[key] = Object.assign({ q: q }, o); cs.set("later", L); };
+    cs.call(op, { query: query }).then(function (a) {
+      const r = a && a.result !== undefined ? a.result : a;
+      if (!r || r.ok === false) {
+        const code = String((r && (r.code || r.reason)) || "");
+        settle({ state: "failed", refusal: { code: code, words: cs.esc((r && r.translation) || code) } });
+      } else settle({ state: "ok", value: r });
+    }, function () { settle({ state: "failed", refusal: null }); });
+  }
+  return L[key];
+}
