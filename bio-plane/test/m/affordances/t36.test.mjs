@@ -1,8 +1,9 @@
 /* affordances, T36 (T36-31; N726, DEC-174 (3), DEC-99; T37-27: N776, DEC-182; T38-31: DEC-183, K2300; T41-52: DEC-188 (7), (8), U145, K2484;
    T43-17: DEC-189, DEC-190, K2704; T44-9: DEC-191, N878, K2732; T46-45: DEC-194 (2), DEC-197, N937, N934, K2960; T47-49: N992, DEC-198,
-   DEC-199, K3062, K3143; T49-14: DEC-229 to DEC-241, DEC-245, DEC-246, N1072, K2999, K3366; T50-19: N1108, N1125, N1147, K3745): R48, R53,
-   R54, R56, R57 and R61, the one table of what each act does, R62, its sentences read by key, R64 to R66, the T50 acts' help, and R49, its
-   publication in the answer with no target, the very object.
+   DEC-199, K3062, K3143; T49-14: DEC-229 to DEC-241, DEC-245, DEC-246, N1072, K2999, K3366; T50-19: N1108, N1125, N1147, K3745; T51-99: DEC-330, DEC-340,
+   U348, U366, K3810, K3935): R48, R53, R54, R56, R57 and R61, the one table of what each act does, R62, its sentences read by key, R64 to R66,
+   the T50 acts' help, R69, the seven browser acts, R70, the table re-generated at the design commit `8c5e692e19`, and R49, its publication in
+   the answer with no target, the very object.
 
    Since T50 the table is checked against the word list, not against a copy of the design's English (R62): each op is held under the key R48
    reads it by, its help is exactly `word(key)`, and the design's own `reads` list for this module (DEC-258) says which keys those are. */
@@ -15,7 +16,7 @@ import * as G from "../../../src/op-grades/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
-const { ACT_HELP, ACT_HELP_KEYS, affordancesAnswer } = A;
+const { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS, affordancesAnswer } = A;
 const SCREENS = new URL("../../../../docs/development/ux-substrate/screens/", import.meta.url);
 const READS = JSON.parse(readFileSync(new URL("words-reads.json", SCREENS), "utf8")).modules.affordances;
 
@@ -27,6 +28,12 @@ const OWED_NOW = ["versionconsider", "versionreject", "versionrevert", "versionc
 /* R66 (T50; DEC-309 (5)): five more acts the design now explains; R64: `reauth` (DEC-264); R65: `secondlookclear` */
 const R66_OPS = ["aliaswithdraw", "factconfirm", "projectrequest", "projectrequestwithdraw", "projectrequestanswer"];
 const T50_NEW = ["secondlookclear", "reauth", ...R66_OPS];
+/* R70 (T51; DEC-340, U366): the four entries the design re-took at `8c5e692e19`: two with new texts, two new. R62: four more ops whose `does` words the
+   design's reads list gives this module (declared ops, held under their own names) */
+const R70_OPS = ["actionhold", "holdnoticesent", "holdnoticeprepare", "counselpacket"];
+const READS_NEW = ["noticeprepare", "noticepost", "signeradd", "versionnotice"];
+/* R69 (T51): the seven browser acts, the design keeping the `owed_` in the key of each */
+const R69_ACTS = ["revisioncompare", "hashcopy", "linkopen", "pubfloorset", "pubfloorclear", "pubprint", "reviewexport"];
 /* R48's named keys. PR #14 withdrew the five op-less texts and `claimidentity`'s, and dropped `assistantset` (DEC-182 (1)–(3)); DEC-189
    removed the texts of the four ops retired in T41 (DEC-188 (8)). None is in the design, and none is held. */
 const WITHDRAWN = ["projectcreated", "countask", "registerproceeding", "deadlinecompute", "claimidentity"];
@@ -141,6 +148,10 @@ test("R48 R53 R54 R56 R57 R61 R62: ACT_HELP is a frozen module constant holding 
     "handlechange's design text held": { ...ACT_HELP, handlechange: word("act.handlechange.does") },
     "a text re-worded here": { ...ACT_HELP, exploreapprove: ACT_HELP.exploreapprove.replace("today", "now") },
     "projectownervotes given a text": { ...ACT_HELP, projectownervotes: ACT_HELP.queuemute },
+    "a fifth entry with no op (R70)": { ...ACT_HELP, notanop: ACT_HELP.queuemute },
+    "a browser act left out (R69)": without("pubprint"),
+    "a browser act held under owed_ (R69)": rekey("hashcopy", "owed_hashcopy"),
+    "a re-taken entry left out (R70)": without("counselpacket"),
   };
   for (const [what, table] of Object.entries(variants)) assert.equal(meetsR48(table), false, what);
 });
@@ -263,7 +274,8 @@ test("R48 R53 R61 R65: no key is an alias or a retired op; every alias the list 
   assert.deepEqual(keys.filter((k) => k.startsWith("owed_")), []);
   /* founderhandleset (op-declarations R71, T49) and the T50 acts (R73; op-grades T50-18) are held under their ops now, graded once those merge */
   const NOT_YET_GRADED = ["founderhandleset", ...OWED_NOW_T50, "secondlookclear"];
-  for (const k of keys.filter((k) => !NOT_YET_GRADED.includes(k)))
+  /* R69: the browser acts are no ops, so op-grades neither grades nor names them */
+  for (const k of keys.filter((k) => !NOT_YET_GRADED.includes(k) && !R69_ACTS.includes(k)))
     assert.ok(gradedOrPublished(k) || UNGATED.includes(k), `${k} is an op op-grades grades or names`);
   for (const k of UNGATED) assert.equal(gradedOrPublished(k), false, `${k} is ungated`);
 });
@@ -312,4 +324,61 @@ test("R57 R61: ACT_HELP holds the design in DEC-221's American spelling, no held
   assert.equal(meetsR48({ ...ACT_HELP, testify: ACT_HELP.testify.replace("labeled", "labelled") }), false);
   assert.equal(meetsR48(Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "updateskip"))), false);
   assert.equal(meetsR48({ ...ACT_HELP, selftest: ACT_HELP.queuemute }), false);
+});
+
+test("R69: the seven browser acts (revisioncompare, hashcopy, linkopen, pubfloorset, pubfloorclear, pubprint, reviewexport) are held in ACT_HELP "
+   + "under their own names, each answering the design's `act.owed_<name>.does` word; none is an act or a graded op, so the catalogue and R12's "
+   + "three lists neither carry nor miss one; BROWSER_ACTS names exactly the seven", () => {
+  assert.deepEqual([...BROWSER_ACTS], R69_ACTS);
+  assert.ok(Object.isFrozen(BROWSER_ACTS));
+  for (const name of R69_ACTS) {
+    assert.equal(ACT_HELP_KEYS[name], `act.owed_${name}.does`, `${name}: the design keeps the owed_ in its key`);
+    assert.ok(hasWord(ACT_HELP_KEYS[name]), name);
+    assert.equal(ACT_HELP[name], word(`act.owed_${name}.does`), name);
+    assert.equal(Object.hasOwn(ACT_HELP, `owed_${name}`), false, `${name} is held under its name`);
+    /* control: none is an op the plane grades or publishes, so it is in no registry R12 counts */
+    assert.equal(gradedOrPublished(name), false, `${name} is not an op`);
+  }
+  const answer = affordancesAnswer({ kinds: [], gate: { needs: () => null, mode: () => "session" } });
+  assert.equal(answer.act_help, ACT_HELP);
+  for (const name of R69_ACTS) {
+    assert.equal(answer.catalog.some((a) => a.id === name) || answer.capture_acts.some((a) => a.id === name)
+                 || answer.set_acts.some((a) => a.id === name), false, `${name} is in no list of acts`);
+    assert.ok(Object.hasOwn(answer.act_help, name), `${name} is drawn from act_help`);
+  }
+  /* R12: the totality over a table of ops neither lists nor misses one of them (they are no ops) */
+  const none = A.unaccounted([]);
+  for (const list of Object.values(none)) assert.deepEqual(list.filter((op) => R69_ACTS.includes(op)), []);
+  /* controls: a table without one of them departs, and one holding an eighth under another name departs */
+  const without = (op) => Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
+  for (const name of R69_ACTS) assert.equal(meetsR48(without(name)), false, name);
+  assert.equal(meetsR48({ ...ACT_HELP, eighthbrowseract: ACT_HELP.hashcopy }), false);
+});
+
+test("R70: ACT_HELP is re-generated at the design commit `8c5e692e19`: actionhold and holdnoticesent are held with the design's texts, "
+   + "holdnoticeprepare and counselpacket are new entries, each answering its `act.<op>.does` word and the text of mock-acts.js at that commit; "
+   + "R62's four more (noticeprepare, noticepost, signeradd, versionnotice) are held under their own names", () => {
+  const FILE = readFileSync(new URL("mock-acts.js", SCREENS), "utf8");
+  /* the file's entry for an op: `  <op>: '<text>',` with the quote escaped as in a JavaScript string */
+  const fileText = (op) => {
+    const m = new RegExp(`^\\s+${op}:\\s*'((?:[^'\\\\]|\\\\.)*)'`, "m").exec(FILE);
+    return m ? m[1].replace(/\\(.)/g, "$1") : null;
+  };
+  for (const op of R70_OPS) {
+    assert.equal(ACT_HELP_KEYS[op], `act.${op}.does`, op);
+    assert.ok(hasWord(ACT_HELP_KEYS[op]), `${op}: the list holds its text`);
+    assert.equal(ACT_HELP[op], word(`act.${op}.does`), op);
+    assert.equal(ACT_HELP[op], fileText(op), `${op}: the table equals the file's entry`);
+  }
+  for (const op of READS_NEW) {
+    assert.equal(ACT_HELP_KEYS[op], `act.${op}.does`, op);
+    assert.equal(ACT_HELP[op], word(`act.${op}.does`), op);
+  }
+  /* `ACT_HELP_ABSENT` keeps none of them (op-declarations R34); the partition holds against this table, so each is held here */
+  for (const op of [...R70_OPS, ...READS_NEW]) assert.ok(Object.hasOwn(ACT_HELP, op), op);
+  /* controls (K874): a table without one of the four, or with an old text, departs; a fifth entry with no op departs */
+  const without = (op) => Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== op));
+  for (const op of R70_OPS) assert.equal(meetsR48(without(op)), false, op);
+  assert.equal(meetsR48({ ...ACT_HELP, actionhold: ACT_HELP.actionhold + " and more" }), false);
+  assert.equal(meetsR48({ ...ACT_HELP, afifthentry: ACT_HELP.actionhold }), false);
 });
