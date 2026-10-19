@@ -148,7 +148,7 @@ test("R4 a duty arising in a proceeding or report names it, and carries reported
   const response = w.passage("response");                 /* the body's response: its quoted passage */
   row(w.declare({ arising_in: ent(55) }), "ARISING_IN_NOT_HELD");
   row(w.declare({ arising_in: E.clerk }), "ARISING_IN_NOT_HELD", "an entity that is not a proceeding");
-  row(w.declare({ arising_in: SHA("a capture never held") }), "ARISING_IN_NOT_HELD", "a capture the record does not hold");
+  row(w.declare({ arising_in: SHA("a capture never held") }), "ARISING_IN_NOT_HELD", "arising_in not held");
   row(w.declare({ arising_in: E.case, reported_status: [{ status: "implemented", extent: SHA("no such passage") }] }), "EXTENT_NOT_HELD");
   const a = w.declare({ arising_in: E.case, reported_status: [{ status: "will_not_implement", extent: response.contentId }] });
   assert.equal(a.ok, true);
