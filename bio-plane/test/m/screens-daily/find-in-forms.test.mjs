@@ -141,7 +141,7 @@ test("R48: after a record the acknowledgement is drawn with a link to the screen
 });
 
 test("R48: a match found in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so; a person named in a passage by a held alias says so", async () => {
-  const sheet = { kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", recorded: [],
+  const sheet = { kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", row: 10, recorded: [],
     cells: [{ cell: "A10", value: "Total", type: "string" }, { cell: "B10", value: null, type: "formula", formula: "=SUM(B2:B9)", cached: null }] }] };
   const named = { ...PERSON, items: [{ ...PERSON.items[0], correspondence: "name_in_passage" }] };
   const p = await shown([sheet, named]);
@@ -153,4 +153,16 @@ test("R48: a match found in a sheet says its sheet and row and draws its cells a
   const plain = await shown([PERSON]);
   assert.ok(!text(plain).includes(word("findin.match.nameinpassage")));
   assert.ok(!text(plain).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })));
+});
+
+test("R62: a sheet match draws the match's own row, whatever its extent says; a match answering none draws the sheet and its cells without a row number and parses nothing", async () => {
+  const mk = (extra) => ({ kind: "money", count: 1, items: [{ kind: "money", words: "Total", capture_sha: SHA, title: "Budget", extent: { "sheet-range": "A10:B10" }, sheet: "Summary", recorded: [],
+    cells: [{ cell: "A10", value: "Total", type: "string" }], ...extra }] });
+  const withRow = await shown([mk({ row: 12 })]);
+  assert.ok(text(withRow).includes(word("findin.match.sheet", { sheet: "Summary", row: "12" })), "row 12 whatever the extent");
+  assert.ok(!text(withRow).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })));
+  const none = await shown([mk({ row: null })]);
+  assert.ok(text(none).includes(word("findin.match.sheet.norow", { sheet: "Summary" })), "no row number");
+  assert.ok(text(none).includes("Total"), "its cells are still drawn");
+  assert.ok(!text(none).includes(word("findin.match.sheet", { sheet: "Summary", row: "10" })), "control: the extent's A10 is not parsed into a row");
 });

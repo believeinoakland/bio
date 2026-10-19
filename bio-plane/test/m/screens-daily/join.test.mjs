@@ -13,7 +13,7 @@ const CREATE = { whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_pr
 const ROSTER = ok({ members: [{ member_id: "admin", handle: null, founder: true, role: "admin", status: "active" },
   { member_id: "rosa", handle: "rosa", role: "admin", status: "active" }, { member_id: "mai", handle: "mai", role: "member", status: "active" }] });
 const BASE = { groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
-  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-1", version: 1, name: "Check a claim" }], doors: [{ door: "problem", scripts: ["WIZ-1"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
+  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-1", version: 1, name: "Trace the deed" }], doors: [{ door: "problem", scripts: ["WIZ-1"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
   memberlist: ROSTER };
 const INVITED = ok({ ok: true, projects: [{ id: "PROJ-7", name: "Library hours", stage: "forming", participation: "invited" }] });
 const DIRECTORY = ok({ ok: true, projects: [{ id: "PROJ-9", name: "Pothole repairs", request: null }, { id: "PROJ-8", name: "Bus stops", request: { state: "open", asked: "2026-10-10T10:00:00Z" } }] });
@@ -124,7 +124,9 @@ test("R43: Find's Theme filter lists what was placed in the chosen theme, then i
   assert.ok(p.doc.getElementById("finder-theme"), "the Theme choice");
   assert.deepEqual(p.doc.getElementById("finder-theme").querySelectorAll("option").map((o) => o.textContent), [word("theme.filter.any"), "Deferred maintenance"]);
   assert.ok(text(p).includes(word("theme.filter.help")));
-  await press(p, "themeread", { values: { "finder-theme": "THM-1" } });
+  // R54: the choice reads at once, with no second press.
+  const pickTheme = async (v) => { const el = p.doc.getElementById("finder-theme"); el.value = v; p.fire(el, "change"); await settle(); };
+  await pickTheme("THM-1");
   assert.equal(last(p, "themeread").query.id, "THM-1");
   const heads = main(p).querySelectorAll("section h2").map((h) => h.textContent);
   assert.deepEqual(heads, [word("theme.placed"), word("theme.hunches")], "what was placed, then its hunches apart");
@@ -132,6 +134,6 @@ test("R43: Find's Theme filter lists what was placed in the chosen theme, then i
   assert.ok(text(p, placed).includes("Work orders") && !text(p, placed).includes("Budget memo"));
   assert.ok(text(p, hunches).includes("Budget memo") && text(p, hunches).includes(word("theme.hunch.note")));
   // Control: back to "Any theme" lists the browse again.
-  await press(p, "themeread", { values: { "finder-theme": "" } });
+  await pickTheme("");
   assert.ok(!text(p).includes(word("theme.placed")));
 });

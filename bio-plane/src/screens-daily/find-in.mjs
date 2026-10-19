@@ -138,13 +138,10 @@ export const findIn = Object.freeze({
             + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
           // R48 (8): a match in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so;
           // a person named in the passage by a held alias says so.
-          const rowOf = function () {
-            if (typeof it.row === "number" || typeof it.row === "string") return String(it.row);
-            const text = Object.keys(extent).map(function (x) { return typeof extent[x] === "string" ? extent[x] : ""; }).join(" ");
-            const m = /[A-Z]+(\d+)/.exec(text);
-            return m ? m[1] : "";
-          };
-          const sheet = typeof it.sheet === "string" && it.sheet ? '<span class="meta">' + cs.w("findin.match.sheet", { sheet: it.sheet, row: rowOf() }) + "</span>"
+          // R62: the row is the match's own `row` (retrieval-browse R8), never parsed from its extent; a match answering none (a
+          // column result, or a match in a unit's own text) draws the sheet and its cells without a row number.
+          const hasRow = typeof it.row === "number" || (typeof it.row === "string" && it.row !== "");
+          const sheet = typeof it.sheet === "string" && it.sheet ? '<span class="meta">' + (hasRow ? cs.w("findin.match.sheet", { sheet: it.sheet, row: String(it.row) }) : cs.w("findin.match.sheet.norow", { sheet: it.sheet })) + "</span>"
             + (Array.isArray(it.cells) ? '<span class="meta">' + it.cells.map(function (c) {
               return c && c.value === null && c.cached === null ? '<span class="muted">' + cs.w("findin.cell.uncalculated", { cell: String(c.cell || "") }) + "</span>"
                 : "<span>" + cs.esc(String(c && c.value !== undefined && c.value !== null ? c.value : "")) + "</span>";

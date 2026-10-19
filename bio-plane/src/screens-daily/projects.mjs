@@ -71,14 +71,37 @@ export const projects = Object.freeze({
     // R29 (D25): a project the member is invited to is set apart, with "Join"; the rest are the member's own.
     const all = pr && pr.state === "ok" && pr.value && Array.isArray(pr.value.projects) ? pr.value.projects : [];
     const place = view.parts.participation(cs, view, all);
-    const invitedList = all.filter(function (p) { return p && place[String(p.id)] === "invited"; });
+    // R63 (DEC-340, U366): the list is narrowed in the page, by the words in a project's name (case-folded, every word present)
+    // and by `mine` (project-roster R38); nothing is sent and nothing in any project changes.
+    const ui = view.ui || {};
+    // The words typed are page memory like a choice (`choice:<id>`), handed over by the kit's typed-input hook, so the list narrows
+    // as it is typed (DEC-359: a field of the kit, no act and no registry row).
+    if (typeof ui["choice:projects-search"] !== "string") ui["choice:projects-search"] = "";
+    const typed = ui["choice:projects-search"];
+    const words = typed.toLowerCase().split(/\s+/).filter(Boolean);
+    const filter = ["in", "own"].indexOf(ui["choice:projects-filter"]) >= 0 ? ui["choice:projects-filter"] : "all";
+    const narrowed = function (p) {
+      if (!p) return false;
+      const name = String(p.name || p.id || "").toLowerCase();
+      if (!words.every(function (w) { return name.indexOf(w) >= 0; })) return false;
+      const m = p.mine && typeof p.mine === "object" ? p.mine : {};
+      return filter === "in" ? m.in === true : filter === "own" ? m.owner === true : true;
+    };
+    const finding = all.length
+      ? '<div class="mk-acts" style="align-items:flex-end">' + cs.field("projects-search", "screen.projects.search.label", { value: typed, help: "screen.projects.search.help",
+          typing: function (cs, view, value) { cs.set("choice:projects-search", String(value)); } })
+        + cs.choice("projects-filter", "screen.projects.filter.label", [["all", "screen.projects.filter.all"], ["in", "screen.projects.filter.in"], ["own", "screen.projects.filter.own"]], { value: "all", acts: {} })
+        + '<p class="mk-small muted">' + cs.w("screen.projects.filter.help") + "</p>"
+        + "</div>" : "";
+    const invitedList = all.filter(function (p) { return narrowed(p) && place[String(p.id)] === "invited"; });
     const rows = view.parts.projectRows(cs, view, "screen.projects", true);
     const rowsJoin = view.parts.projectRows(cs, view, "screen.projects", true, "act.projectjoin.label.projects", place);
     const invited = invitedList.length
       ? cs.sec("projects.invited.head", rowsJoin({ projects: invitedList }), { help: "projects.invited.says" }) : "";
-    return cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.projects.sub") + "</p>" + invited
+    return cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.projects.sub") + "</p>" + finding + invited
       + cs.state("projects", function (v) {
-        const rest = (v.projects || []).filter(function (p) { return !(p && place[String(p.id)] === "invited"); });
+        const rest = (v.projects || []).filter(function (p) { return narrowed(p) && !(p && place[String(p.id)] === "invited"); });
+        if (!rest.length && !invitedList.length) return '<p class="cs-state" data-state="empty">' + cs.w("projects.empty.sub") + "</p>";
         return rest.length || !invitedList.length ? rows(Object.assign({}, v, { projects: rest })) : "";
       }, { empty: "projects.empty.sub" }) + findableHtml + start + themes + imported;
   },

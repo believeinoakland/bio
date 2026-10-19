@@ -24,11 +24,15 @@ const QUEUE_KINDS = ["question-find", "step-later-found", "step-date-due", "step
   "litigation-hold.docket", "project-invitation", "project-request"];
 // DEC-227's order of the kinds of places `elsewhere` lists (R15).
 const ELSEWHERE_KINDS = ["legalaid", "selfhelp", "service", "agency", "representative", "tipline"];
+// R55: the item states the table draws a chip for (the design's sixteen).
+const ITEM_STATES = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned"];
 const MARKS = (kinds) => kinds.flatMap((k) => [`mark.${k}.name`, `mark.${k}.means`]);
 const ACTS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 const KEYED_QUEUE = [...QUEUE_KINDS.flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`]), "queue.project-invitation.summary.unnamed"];
 // R50: a kind's plain name on the muted list (DEC-309 (1)), every `queue.kind.*` the list of words holds.
 const KIND_NAMES = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.kind."));
+// R60: the feeds the word list names (`queue.feed.<id>`), the ones `queue-states.mjs` can name when one did not answer.
+const KIND_FEEDS = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.feed."));
 // R42: the ways into a project, and who to ask; R50: the team's own passed date.
 const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.join.lead", "screen.home.join.nocreate", "screen.home.join.none",
   "queue.project-invitation.summary.unnamed", "queue.project-invitation.detail", "projects.findable.meta", "projects.request.asked", "act.projectrequest.label.home",
@@ -58,13 +62,18 @@ const WORDS_OF = {
     ...SOURCES, "home.first.name", ...KEYED_QUEUE, "action.noreply.title", "queue.step-cost-shared.detail",
     ...START, "file.trigger.home", "screen.home.title.needed",
     "screen.home.script", "home.ready.title", "screen.home.invite", "screen.home.saywho", "screen.home.first.invite", "screen.home.first.identity", "screen.home.first.project",
-    "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "screen.home.request.grant", "screen.home.request.decline",
+    "act.promote.here.home", ...JOIN, ...OURS, "home.strip.ours_passed.one", "home.strip.ours_passed.other", "home.strip.ours_passed.opens", "screen.home.request.grant", "screen.home.request.decline",
     "act.projectrequestanswer.label.home",
     "screen.home.strip.you", "screen.home.strip.group", "screen.home.needsyou", "screen.home.needsyou.holds", "screen.home.needsgroup", "screen.home.needsgroup.holds",
     "screen.home.open", "screen.home.why", "screen.home.fieldfirst", "screen.home.move.admin", "screen.home.move.member", "screen.home.move.anyone",
     "screen.home.areas", "screen.home.areas.holds", ...["investigation", "action", "members", "administration"].map((a) => `screen.home.area.${a}`),
     "screen.home.area.need.one", "screen.home.area.need.many",
     ...["project", "projects", "question", "questions", "ours", "group", "member", "members", "admin", "admins", "invited", "release"].map((r) => `screen.home.rd.${r}`),
+    // R64: Home's remaining readings: documents, cases, people followed, clocks running, the edition line, expertise, the security level.
+    ...["document", "documents", "case", "cases", "followed.one", "followed.other", "clock", "clocks", "security", "level.ordinary", "level.raised", "level.high"].map((r) => `screen.home.rd.${r}`),
+    "screen.home.area.ourmove", "screen.home.area.theirmove", "screen.home.area.edition", "screen.home.area.expertise",
+    ...["person", "confirmed", "declared"].map((k) => `screen.home.area.expertise.${k}`),
+    ...["published", "comments", "comments.one", "draftonly", "draftonly.comments", "draftonly.comments.one"].map((k) => `screen.home.area.edition.${k}`),
     "screen.home.line.lastchange", "screen.home.line.places", "screen.home.line.languages", "screen.home.line.aiused", "screen.home.line.ailimit",
     "screen.home.projects", "screen.home.since", "screen.home.since.holds", "screen.home.since.changed", ...PROJECT_ROWS("screen.home")],
   elsewhere: [...SHARED, "screen.elsewhere.name", "screen.elsewhere.purpose", "elsewhere.title", "elsewhere.says", "elsewhere.records_nothing",
@@ -84,18 +93,29 @@ const WORDS_OF = {
     "screen.queue.note", "screen.queue.note.once", "screen.queue.nocase", "screen.queue.empty", "screen.queue.more", "screen.queue.more.one", "screen.queue.open",
     "screen.queue.hint.how", "screen.queue.hint.matched", "screen.queue.hint.method", "screen.queue.hint.trust", "screen.queue.hint.rate", "screen.queue.hint.rate.none",
     "screen.queue.hint.not", "screen.queue.hint.not.text", "screen.queue.forward.to", "screen.queue.snooze.until", "screen.queue.reminder.on", "screen.queue.fieldfirst",
-    "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop"],
+    "screen.queue.why", "screen.queue.question", "screen.queue.projectkey", "screen.queue.unsent.pickup", "screen.queue.unsent.keep", "screen.queue.unsent.drop",
+    // R58 to R61: choosing several items, what was answered, the feeds' honesty and the set-aside findings.
+    "queue.multi.entry", "queue.multi.choose", "queue.multi.head", "queue.multi.head2", "queue.multi.chosen", "queue.multi.chosen.one", "queue.multi.done",
+    "queue.multi.forward", "queue.multi.snooze", "queue.multi.snooze.help", "queue.multi.dismiss", "queue.multi.refused", "queue.multi.result", "queue.multi.result.one",
+    "queue.multi.why.letter", "queue.multi.why.check", "queue.answered.forwarded.unnamed", "queue.multi.back", "screen.finder.pick", "screen.finder.pickfirst", "shell.unread",
+    "queue.answered.title", "queue.answered.head", "queue.answered.heading", "queue.answered.help", "queue.answered.byyou", "queue.answered.bymember", "queue.answered.byother",
+    "queue.answered.forwarded", "queue.answered.snoozed", "queue.answered.snoozed.meta", "time.at", "time.clock", "time.am", "time.pm",
+    "queue.aside.help", "queue.aside.help2", "queue.aside.dismissed", "queue.aside.dismissed.bymember", "queue.aside.deferred", "queue.aside.deferred.bymember", "queue.aside.v2",
+    "progression.finding.state.dismissed", "queue.allclear.withheld", "queue.allclear.failed", "queue.allclear.failed2", "queue.allclear.failed.feed", "queue.tryagain",
+    ...KIND_FEEDS, ...["todo", "noticed", "status"].flatMap((k) => [`queue.none.${k}`, `queue.none.${k}2`]), "screen.queue.uptodate", "screen.queue.gohome"],
   projects: [...SHARED, "screen.projects.name", "screen.projects.purpose", "screen.projects.sub", "screen.imported.name", ...ACTS("projects", ["promote", "projectjoin"]),
     "projects.empty.sub", "projects.empty.note", "projects.invited.head", "projects.invited.says", "projects.findable.head", "projects.findable.says", "projects.findable.meta",
     "projects.request.asked", "act.projectrequest.label.projects", "act.projectrequestwithdraw.label.projects", "screen.projects.nocreate", "member.founder.unnamed",
     "theme.section", "theme.across", "theme.never.evidence", "theme.every", ...START, "file.trigger.projects", "screen.projects.title.needed",
+    "screen.projects.search.label", "screen.projects.search.help", "screen.projects.filter.label", "screen.projects.filter.help",
+    "screen.projects.filter.all", "screen.projects.filter.in", "screen.projects.filter.own",
     ...PROJECT_ROWS("screen.projects")],
   finder: [...SHARED, "screen.finder.name", "screen.finder.purpose", "mark.origin.search.name", "mark.origin.search.means", "mark.gap.nobody.name", "mark.gap.nobody.means",
     ...ACTS("finder", ["search", "select", "findin", "selectionrelease", "frontier", "calculationcreate"]),
     "screen.finder.sub", "screen.finder.words", "screen.finder.wordsfirst", "screen.finder.total.one", "screen.finder.total.many", "screen.finder.noresult",
     "screen.finder.covers", "screen.finder.captureit", "screen.finder.widen", "screen.finder.pick", "screen.finder.held.one", "screen.finder.held.many",
     "screen.finder.until", "screen.finder.nobody", "screen.finder.nobody.one", "screen.finder.nobody.none", "screen.finder.count.question", "screen.finder.count.from", "screen.finder.count.to",
-    "screen.finder.counted", "screen.finder.pickfirst", "screen.finder.holdfirst",
+    "screen.finder.counted", "screen.finder.pickfirst", ...["legend", "support", "against", "cited", "newly_against", "set_changed", "added_since", "gone_since", "back", "back.help"].map((k) => `screen.finder.cite.${k}`), "screen.finder.holdfirst",
     // R44, R45: the browse, its marks, and Watch, Flag and Clear.
     "find.query.placeholder", "find.browse.says", "find.browse.new.means", "find.browse.nosince", "find.browse.nosince.summary", "find.browse.more", "find.browse.showmore",
     "find.kind.label", "find.kind.all", "find.kind.document", "find.kind.question", "find.kind.action", "find.kind.entity", "find.kind.plan",
@@ -105,6 +125,23 @@ const WORDS_OF = {
     "act.owed_watchitem.label.finder", "act.owed_watchitem.does", "act.owed_secondlook.label.finder", "act.owed_secondlook.does",
     "act.secondlookclear.label.finder", "act.secondlookclear.does", "act.watchitem.off.does",
     "refusal.MARK_NO_ITEM", "refusal.MARK_NO_SUCH_ITEM", "refusal.MACHINE_CANNOT_MARK", "refusal.SECOND_LOOK_NO_NOTE", "refusal.SECOND_LOOK_NOT_OPEN",
+    // R54 to R57: the words field and choices, the table, the scope and the three routes, what was covered, and citing the held set.
+    "find.query.help", "list.fresh", "screen.finder.showas", "screen.finder.showas.list", "screen.finder.showas.table", "screen.finder.table.view.help",
+    "screen.finder.table.intro", "screen.finder.table.count.one", "screen.finder.table.count.other", "screen.finder.table.sorting", "shell.sort",
+    ...["item", "kind", "state", "updated"].flatMap((c) => [`column.finder.${c}.name`, `column.finder.${c}.shows`]),
+    ...ITEM_STATES.flatMap((k) => [`state.item.${k}.name`, `state.item.${k}.means`, `state.item.${k}.can`]), ...ITEM_STATES.filter((k) => !["waiting", "flagged", "watched", "planned", "active"].includes(k)).map((k) => `state.item.${k}.cannot`),
+    ...["open", "paused", "closed"].flatMap((k) => [`screen.plan.state.${k}`, `state.plan.${k}.means`, `state.plan.${k}.can`]),
+    "screen.find-in.lookin", "screen.finder.scope.help", "screen.finder.scope.everything", "screen.finder.scope.cases",
+    "screen.finder.route.fields", "screen.finder.route.fields.holds.one", "screen.finder.route.fields.holds.other", "screen.finder.route.passages",
+    "screen.finder.route.passages.holds.one", "screen.finder.route.passages.holds.other", "screen.finder.route.subjects.holds.one", "screen.finder.route.subjects.holds.other",
+    "screen.finder.subjects.heading", "screen.finder.subjects.help", "screen.finder.named.nodoc", "screen.finder.named.nodoc.one", "screen.finder.route.apart",
+    "screen.finder.route.cross", "screen.finder.route.cross.heading", ...["source", "office", "ordinance", "parcel", "contract", "fund", "program", "place", "proceeding"].map((k) => `find.row.kind.${k}`),
+    "screen.finder.covered.heading", "screen.finder.covered.levels", "screen.finder.covered.rests", "screen.finder.covered.read", "screen.finder.covered.read.says.one",
+    "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
+    "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
+    "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
+      "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",
+      "cites_every_document_you_hold_together_i", "you_choose_the_question_and_how_they_bea", "cites_every_document_you_hold_together_i.2", "one_already_cited_is_left_as_it_was_and_"].map((k) => `screen.finder.a17.${k}`),
     // R43: the Theme filter.
     "theme.filter", "theme.filter.any", "theme.filter.help", "act.themeread.label.finder", "act.themeread.does", "theme.placed", "theme.hunches", "theme.hunch.note"],
   "find-in": [...SHARED, "screen.find-in.name", "screen.find-in.purpose", "mark.origin.search.name", "mark.origin.search.means", "mark.origin.accepted.name", "mark.origin.accepted.means",
@@ -126,7 +163,7 @@ const WORDS_OF = {
     ...["assessed", "collected", "encumbered", "incurred", "paid"].map((k) => `label.moneystages.${k}`),
     "screen.money.f.stage", "money.flow.step", "screen.find-in.flow.help", "screen.money.f.payer", "screen.money.f.payee", "findin.fieldneeded",
     "findin.recorded", "screen.find-in.recorded.fact", "screen.person.name", "screen.timeline.name", "screen.standard.name", "screen.money.name",
-    "passage.facts.count", "passage.facts.count.one", "findin.match.sheet", "findin.cell.uncalculated", "findin.match.nameinpassage"],
+    "passage.facts.count", "passage.facts.count.one", "findin.match.sheet", "findin.match.sheet.norow", "findin.cell.uncalculated", "findin.match.nameinpassage"],
   answers: [...SHARED, "screen.answers.name", "screen.answers.purpose", "screen.finder.words", "screen.finder.none", "screen.finder.wordsfirst", "mark.origin.search.name", "mark.origin.search.means",
     ...ACTS("answers", ["ask", "ruleanswer", "search", "standingquestionset", "standingquestionend"]), "act.search.label.finder",
     "ai.refused.limit", "ai.refused.limit.unjudged", "ai.refused.off", "ai.refused.projectkeptaway", "ai.refused.signinnotconnected", "refusal.ANSWER_MALFORMED",
