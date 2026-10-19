@@ -80,3 +80,36 @@ Ask each provider for: trial credits or a test plan; written confirmation of the
 - **Q4 (testing)** becomes "define the suite, the thresholds and the characterization procedures", then run them on sample accounts as they arrive.
 - **Q5 (what a member sees)** gains: evidence display (grade, source, date), the test-and-send screen, and the leader's list management.
 - **Q6** includes the signed suite and the key custody for the bundle.
+
+## 8 · Refinement 2026-10-19 (Bob): tests run in a locked Civicsmith container that also generates and locks the bundle
+Bob's direction: "AI tests run and submitted by outside teams/members will run in a locked CS container that can't (easily) be hacked. The results bundle will be generated and locked in the same context."
+
+**What this fixes.** It replaces §5 steps 1–5's "the team's copy runs the harness" with one sealed unit: a Civicsmith-built container image holds the suite, the harness, the scorer's inputs, and the bundle sealer. The team supplies only what is theirs (provider endpoint, key, plan, model) and receives only the sealed bundle.
+
+**What already exists to build on (from `NOTES.md` §Q1).** `agent-runner` already is a digest-pinned container image run as a Durable Object container: no built-in tools, no settings sources, nothing persisted, one WebSocket in, an egress allow-list naming only the hosts it needs (R10), logging of refused egress (R34), no credential held beyond one conversation (R8, R9), and a "nothing survives a conversation" rule. The test container is the same pattern with a different image: egress allowed only to the one provider host under test and to Civicsmith's issuer, key held in memory for one run, nothing written to disk, no shell.
+
+**The container, concretely.**
+1. Image built and digest-pinned by Civicsmith; the release names the digest; the test screen starts only that digest.
+2. Input in: provider host, key, model, plan declaration. Key lives in memory for the run and is never written to the bundle or logs (scrubbed as `agent-runner` R29 does).
+3. At start it requests a **challenge** (nonce plus item selection) from a Civicsmith issuer; items arrive sealed to the container's ephemeral key. Expected answers never reach it.
+4. It runs the suite, recording the raw exchange (bodies, provider request ids, rate-limit headers, usage, timings).
+5. It builds the bundle and **seals it to Civicsmith's public key inside the container**, adds a signature by an ephemeral key generated in the container whose public half and the image digest are in the manifest, then emits only the sealed file. The team can see the plaintext manifest first (what will be sent) but cannot alter the sealed contents.
+6. Scoring happens on Civicsmith's side from the opened bundle.
+
+**The question the container does not settle: whose account runs it?**
+| Option | How it works | Tamper resistance | Problems |
+|---|---|---|---|
+| **X · In the team's own Cloudflare account** (like the copy itself) | team starts the pinned image from the test screen | **Tamper-evident, not tamper-proof**: the team owns the platform and could in principle swap the image or read container memory, and nothing in what was read gives remote attestation of an image (Cloudflare Containers attestation: **OPEN**, not found in what was read) | cost lands on the team's account (Containers plan/pricing **OPEN**); key never leaves the team's account, which is the best fit with providers' key-transfer terms |
+| **Y · In Civicsmith's account** (a hosted test service) | the team sends endpoint and key to a Civicsmith service that runs the container | strongest: Civicsmith controls the platform, image, signing key and scoring | the team's key leaves its account: Mistral §2.2(h) "buy, sell, or transfer API keys … with a third party", Fireworks 3.4(d), Together 4.3(d), OpenRouter 7(4)/§7.14 and others read as barring or not addressing it (OPEN, counsel); Civicsmith bears compute and abuse risk (an open relay to arbitrary hosts unless egress is limited to a vetted provider list and rate-limited); Civicsmith becomes a custodian of third parties' keys |
+| **Z · Same image run by the team locally** (Docker on the team's machine) | the team runs the digest-pinned image beside their local model or private endpoint | same as X | needed for local/private models a Worker cannot reach; team needs Docker |
+
+**Findings to weigh (facts, not decisions).**
+- A seal inside a container only protects against a party who does *not* control the container's host. Against the team itself, X and Z give evidence (digest, nonce, request ids reconcilable with the provider's own billing, ephemeral signature) but not proof; Y gives proof of what ran but costs the key-custody and terms problems.
+- The key-transfer clauses make Y risky *for outside teams' production keys*. A mitigation to test, not assume: a dedicated test key with a low spend cap that the team revokes afterward (OpenRouter's OAuth issues user-owned keys; OpenAI and Google offer per-project keys with limits). Whether providers' terms allow a third party to hold such a key briefly is OPEN for each; a written answer from the provider would settle it (§2 step 1).
+- Using Y only for **Civicsmith-run** tests on accounts Bob holds (the sample accounts) is clean and gives the *Reproduced* grade; X/Z results stay *Reported* until reproduced.
+
+**Recommendation (for Bob via BOB; provisional).** Build the sealed container once and run it in X (and Z for local models) for outside teams, graded Reported; run the same image under Civicsmith's control (Y) only on Civicsmith's own sample accounts, graded Reproduced. Revisit offering Y to outside teams when provider confirmations on key handling exist. This keeps every team's key inside its own account and still gives Bob comparable, tamper-evident bundles.
+
+**New requirement text for AIR15/AIR16** (replace the "copy runs the harness" wording): the suite runs only inside a digest-pinned Civicsmith container that holds the key in memory for one run, limits egress to the provider under test and the issuer, builds and seals the bundle inside itself, and records the digest, nonce and an ephemeral signing key in the manifest; the grade of a result is Reproduced only when Civicsmith ran it on an account it controls.
+
+**Open for later:** Cloudflare Containers plan, price and limits per run; whether any attestation of the running image exists; sealed-box format and key custody for Civicsmith's private key; how a Docker run reports its digest honestly; what a team sees while a run is in progress (Q5).
