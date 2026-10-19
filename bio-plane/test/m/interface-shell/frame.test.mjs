@@ -32,7 +32,7 @@ test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your gr
   assert.equal(m.querySelector('a[href="/app/find"]').textContent, word("shell.search"));
   assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
   assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(word("shell.level.button.prompt")));
-  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 2 }));
+  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 3 }), "R96: the sum of the queue's three kinds");
   assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
   /* R60: never the slug: "Your group" when no display name */
@@ -48,7 +48,7 @@ test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven p
   assert.equal(band.textContent, word("mark.path.working.name") + " " + word("shell.band.working"), "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
-  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name")), "the shell's places, in its order");
+  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name") + (k === "queue" ? "3" : "")), "the shell's places, in its order (R96: the queue's count on Queue alone)");
   rail.forEach((a, i) => assert.ok(a.getAttribute("data-tip").length > 10, i));
   assert.equal(p.root().querySelectorAll("main").length, 1);
   const tabs = p.root().querySelectorAll(".cs-tabs a");

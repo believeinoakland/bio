@@ -63,3 +63,11 @@ B369: (1) `screen.members.removal.heading` "What it takes", `.removal.agreed` "{
 And DEC-361 (U391): MERGE `709dbaec7a` (DEC-361): the consistency read of DEC-355 to DEC-360's rows. Rewordings only, plus two `.one` rows: eighteen `wizard-scripts.refusal.*` close with "Nothing was written."; `screen.grouprules.bears.help1` "unchecked"; `queue.feed.action`, `queue.feed.wizards`; `installer.update.retired` ("They came from an earlier release, and this one no longer uses them."); `screen.members.agree.remove.teo.as.administrator` "Agree: remove {member} as an administrator"; `screen.home.todo.vouch.noplace` takes "the", with `screen.dash-project.next.vouch.noplace.one` and `screen.home.todo.vouch.noplace.one` for one photo; `screen.document.a30.tally.one` "1 of them leads". Checks as U390.
 
 The agreed/hasn't voted rows and grouprules' headings you asked for (J3 items 1, 2) are these. R61's DEC-357 fold is BOB's wording edit, made at your merge.
+
+## B8 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
+
+## B9 · CHANGE
+
+CHANGE (K4094): journey-check's pseudo-locale walk (R27) finds slugs drawn as text on setup's scanner list: the legends 'google-web-risk', 'opswat-deep-cdr' (setup-words R13; R6 a slug is not a name). Draw each provider's display name, never its id. The catalogue's own labels and hints are file-scanner's sentences (CR-17), not yours: draw them as you read them until it merges.

@@ -23,6 +23,7 @@ import { answersOf, ownerOf } from "../answers/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { membershipOf, notAnAdmin } from "../membership/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
+import { translationsOf } from "../translations/index.mjs";
 import { DISPATCH_CHECKS } from "../answer-envelope/checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 import { localize } from "../setup-words/index.mjs";
@@ -305,7 +306,7 @@ function underGrant(store, grant, asked, op, body, answer) {
    at the door. So `assistantFor` answers `{refusal}` (keep-away), `{declined, on}` (askAccount's refusal) or
    `{assistant}`. */
 const ACCOUNT_UNREAD = Object.freeze({ ok: false, reason: "ACCOUNT_UNREADABLE",
-  detail: "the account that would serve this draft could not be read; nothing was used" });
+  detail: localize("store-door.dispatch.the_account_that_would_serve", "the account that would serve this draft could not be read; nothing was used") });
 async function assistantFor(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
   const away = aiAccountsOf(ctx).aiKeptAway({ use: "draft" });
@@ -330,7 +331,7 @@ async function usageOwner(ctx, member, mode) {
 function adminRefusal(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
   if (membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member)) return null;
-  return notAnAdmin(member, "asking the assistant to draft the team's description");
+  return notAnAdmin(member, localize("store-door.dispatch.asking_the_assistant_to_draft", "asking the assistant to draft the team's description"));
 }
 
 /* R1: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R2;
@@ -463,12 +464,12 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     /* R10 (N669; K2200, K2201): both directions; instance-setup's own first refusal (the direction, the language, a
        machine, `TRANSLATION_NOT_GRANTED` or, for `to_english`, `NOT_AN_ADMIN`, the word) before keep-away. */
     translationdraft: async () => {
-      const setup = instanceSetupOf(ctx);
+      const translations = translationsOf(ctx);
       const args = { language: b.language, direction: b.direction, keys: b.keys, key: b.key, by: q("by") };
-      const first = setup.translationDraftRefusal(args);
+      const first = translations.translationDraftRefusal(args);
       if (first) return first;
       const a = await assistantFor(ctx, q("by"));
-      return a.refusal ?? a.declined ?? setup.translationDraft({ ...args, assistant: a.assistant });
+      return a.refusal ?? a.declined ?? translations.translationDraft({ ...args, assistant: a.assistant });
     },
     /* (K2574; wizard-scripts R27) keep-away first, here; the account's or limit's refusal handed on as `assistant.refusal` */
     writinghelp: async () => {

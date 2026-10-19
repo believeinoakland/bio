@@ -5,11 +5,12 @@
    `setup-words`' `word` (R70); a test holds no English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
@@ -228,7 +229,7 @@ test("R76 the masthead's explanations button names itself and its setting (shell
     assert.ok(name && name.trim(), "an accessible name: " + el.outerHTML.slice(0, 80));
     assert.ok(String(el.getAttribute("data-tip") || "").startsWith("<b>" + name), "shown on a tap: " + name);
   }
-  assert.match(scriptOf(p.html) + p.html, /\.cs-mast \.mk-grp\{white-space:normal;overflow-wrap:anywhere/, "the name wraps onto a second line");
+  assert.ok(!/white-space:\s*nowrap/.test(((r) => r ? r[0] : "")(/\.mk-grp[^}]*\}/.exec(ASSET_FILES["shell.css"].body))), "the design's own rule lets the name wrap onto a second line (K4084)");
   /* no explanation of an act button equals its label or the sentence drawn beside it */
   for (const path of ["/app", "/app/document/c1", "/app/held"]) {
     const q = await boot({ screens: ALL, path, plane: { image: ok({ title: "A lease", pages: 1, grade: "B", why: "w", project: { id: "P1", title: "P" }, passages: [] }), heldcaptures: ok({ items: [{ id: "h1", title: "T", at: "2026-10-01" }] }) } });
@@ -435,21 +436,22 @@ test("R82 explanations read the design's keys: the To-do count by shell.queue.wa
   const f = await boot({ screens: ALL, plane: { queue: httpError(500) } });
   assert.equal(f.root().querySelector('.cs-mast [data-kind="todo"]'), null, "no count");
   assert.ok(![...f.root().querySelectorAll("[data-tip]")].some((e) => /\{|undefined|NaN/.test(e.getAttribute("data-tip"))), "no sentence with an empty fill");
-  const zero = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "FINDING" }] }) } });
+  const zero = await boot({ screens: ALL, plane: { queue: ok({ items: [{ id: "x", class: "OTHER" }] }) } });
   assert.equal(zero.root().querySelector('.cs-mast [data-kind="todo"]'), null, "R60: never a count at zero");
 });
 
 /* ---------- R83 ---------- */
 
 test("R83 a refusal is drawn in its own words and shell.unread is for no refusal: a coded refusal with no key and no translation is refusal.uncatalogued, its code and the reference; with a key its word alone; with a translation that alone; a 500 with no body draws shell.unread; control: the form keeps what was typed", async () => {
+  assert.equal(hasWord("refusal.UNHELD_CODE"), false, "the code is one no row holds, so the uncatalogued path is proved");
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(await words(refused("NO_AMOUNT", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " NO_AMOUNT " + word("refusal.reference", { ref: "01234567" }));
-  assert.equal(await words(refused("NO_AMOUNT")), word("refusal.uncatalogued") + " NO_AMOUNT");
+  assert.equal(await words(refused("UNHELD_CODE", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " UNHELD_CODE " + word("refusal.reference", { ref: "01234567" }));
+  assert.equal(await words(refused("UNHELD_CODE")), word("refusal.uncatalogued") + " UNHELD_CODE");
   assert.equal(await words(refused("NOT_AN_ADMIN", "ignored")), word("refusal.NOT_AN_ADMIN"));
-  assert.equal(await words(refused("NO_AMOUNT", "Its own words.")), "Its own words.");
+  assert.equal(await words(refused("UNHELD_CODE", "Its own words.")), "Its own words.");
   assert.equal(await words(httpError(500)), word("shell.unread"));
   assert.equal(await words({ status: 200, json: { ok: false, reason: "ZZ_REASON" } }), word("refusal.uncatalogued") + " ZZ_REASON", "a reason as well as a code");
-  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("NO_AMOUNT", null, 400) } });
+  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("UNHELD_CODE", null, 400) } });
   p.doc.getElementById("home-title").value = "Typed";
   await p.click(btn(p, "promote"));
   const reason = p.root().querySelector('[data-slot="m:0"] textarea');
@@ -507,7 +509,10 @@ test("R86 a first load settles quickly: the working frame is drawn before the fi
   assert.equal(times.whoami, 0);
   assert.equal(times.bootstrap, 0);
   await p.clock.tick(500);
-  for (const op of ["interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "projectdirectory"]) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
+  /* everything else sent: the frame's own reads (the module's SHELL_OPS) and the screen's, all in flight on whoami's answer */
+  const rest = Object.keys(times).filter((op) => op !== "whoami" && op !== "bootstrap");
+  assert.equal(rest.filter((op) => SHELL_OPS.includes(op)).length, 8, "the frame's eight reads");
+  for (const op of rest) assert.equal(times[op], 500, op + ": in flight on whoami's answer, with the others and the screen's reads");
   assert.ok(times.projectdirectory < 1000, "the screen's first read leaves after one round trip, not two");
   await p.clock.tick(500);
   assert.ok(p.root().querySelector("#cs-main section"), "the screen settles on its reads");
