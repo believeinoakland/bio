@@ -26,3 +26,14 @@ Two kinds of list are not converted yet, and I need your ruling before I continu
 2. **Op lists whose owner is not a family** (`escalation`, `filing-templates`, `case-import`, `wizard-scripts` in part): `pins.test.mjs` `@32`, `@36`, `@57`, `@123`, `@165`, `@176`, `@187`, `@331`, `@336`, `@342`; `owners.test.mjs` `@46`, `@120`, `@161`, `@283`; `ladder.test.mjs` `@178`, `@196`. Their declaration is `OPS` in op-declarations (no owner field) or an owner's route map (`escalationOps`, `standardsOps`). I am taking `OPS` filtered by this module's tables for these, unless you rule otherwise.
 
 The `t41`, `t45` lists failed when I derived them from guessed owner families (the derived sets were wider than the requirements' lists), so those are unchanged and remain flagged; I will derive them from the exact requirement subsets.
+
+## J4 · QUESTION
+
+**QUESTION (words, K4072 follow-up): `pins.test.mjs` cannot take the declaration derivation.** Its lists are the requirements' own text pinned at this module's exports: `DEC88` (the three DEC-88 bands, R1 and R3), `T41_REASONED`, `T41_REVERSIBLE`, `T41_UNDETERMINED`, `LAYER9_*`, the `R3_LEFT` tally, `ACTS_NOW`, the `R32` and `N891` pins. The file's stated purpose (its header: "the content of its tables pinned ... so that affordances may drop its copies") is that the test pins the ops as written, not as the table says. Deriving them from `OP_FAMILIES` or from this module's tables would make each pin circular (it would test the table against itself), and the owners' families do not carry rungs, so there is no owner declaration of a band to read.
+
+Rulings, my recommendation first:
+1. **(Recommended)** The pins read the rung of each op from its owner's requirement line: the test reads `build/requirements/<owner>.md`, finds the `**Rn**` line that names the op in backticks, and checks the rung word there. That is the owner's declaration (requirements are the contract), it is not a list typed here, and the pin stays independent of the table. Cost: a file read in the test; the requirement text would need to be parseable (the ops are written in backticks in each line).
+2. The pins stay as literal requirement content and the words check is told that a pin of requirement text is not a hand-list (a checker change, BOB's or civicos-process's).
+3. The pins move to a fixture file in the owner's own requirements path.
+
+Until you rule, I am converting the other lists (t41 `R30_READS`, which passes with the owner-family derivation; the `OPS` and own-table lists; `t45`, `t41`'s FIVE, and the codes restated per B3). Remaining after that is the `pins` file plus the four code lists. I will not guess the parser.
