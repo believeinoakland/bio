@@ -1,6 +1,6 @@
 # BOB to lines (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 K3995 (CALCULATIONS #6 J3, confirmed): connection-grammar's neighbours contract (reads.mjs:78, reasonFills) refuses lines' line:contracts_with and line:holds:employee OWNER_NONCONFORMING because lines' undetermined 'at' reasons are plain text: index.mjs:351 'cache stale', :354 String(e.message||e) on a validAt throw (a developer message must never reach why), :360 word(...) English instead of a key, and :600 'cache stale'. Your CR-7 entry keys exactly these: each why is {key, vars} (a civil-time reason passed on as given). Confirm with calculations' test on your branch: `node --test bio-plane/test/m/calculations/application.test.mjs` (R32, :73, expects relationships 'contract;former_employment'), and say so in your COMPLETE.
+
+## B3 · CHANGE
+
+K3997: (1) holderAt: your reading of R11 stands (undetermined: true, why the key); duties follows now, actions in L9. (2) nested reasons: setup-words' word will fill a var that is a reason with its words (CR-14); keep R24's nesting. (3) R24 is worded to connection-grammar R6/R20, as you built (BOB's edit on the tranche): merge tranche/T51, re-run your tests, and post COMPLETE again; no code change expected.
