@@ -25,3 +25,7 @@ T51-140 · publication: complete.
 - `node checks/run.mjs /home/user/bio`: architecture `0 failures` over 3578 product files; no publication failure; the 22 coverage failures above are other modules'.
 
 **Size (session_012cEVybgodVvn1Sr4P4VDf9): test runs 4, module lines 2444** (code lines, comments and blanks excluded; 4470 lines in all across `deliverer.mjs` and `publication/`).
+
+## J2 · REPORT
+
+Started on T51-234. One edge for BOB (a uses edge is BOB's): publication's code now imports setup-words (deliverer.mjs, and checks.mjs/index.mjs next), and the architecture check fails with 'setup-words, which publication does not declare in uses'. Please add "setup-words" to publication's uses in build/modules.json (as for case-carriage, K3911) and the requirements' Uses list if wanted. I carry on with the words conversion meanwhile and merge tranche/T51 when it lands.
