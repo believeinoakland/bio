@@ -28,3 +28,30 @@ Tests: `node --test bio-plane/test/m/retrieval-browse/` 51 pass, 0 fail; the wor
 For the `modules.json` row (yours to fill, K1043): paths `["bio-plane/src/retrieval-browse/"]`; tests `["bio-plane/test/m/retrieval-browse/"]`; uses `["setup-words","civil-time","calc-grammar","record-grammar","record-core","membership","promotion","provenance","capture","extraction","content","entities","events","standards","money","people","query-language"]` — the map's fourteen plus promotion, capture and query-language, which the tests' fixture needs (all earlier than 70, all already in retrieval's uses).
 For T51-42: the tests that stay in retrieval are `op=findin`/`op=browse` through `retrievalRoutes`, `selectionRead` and `findIn` over a real selection, the real-`recordedBy` test and `BROWSE_ID_CHUNK === SELECTION_ID_CHUNK`; R14's control is T51-42's. The sentences no key holds are listed in the record for the design lane (K3366). Nothing deferred; no generated artifact made stale.
 Size (session_016KXEuu4bL97DYXetKZYwhK): test runs 12, module lines 1363
+
+## Completion (T51-263, words)
+
+**Entries applied.** The 25 `plain` findings in `build/plan/words-pass/retrieval-browse.md`, each judged a sentence a member reads (a refusal's `detail`, or a `not_read`, `undetermined` or `recorded_not_read` reason, all carried in an answer a member sees), so each is read through `localize('retrieval-browse.<file>.<slug>', en, vars)` where it is answered, with its `en` the sentence as it stood (no answer changes). Nineteen ids, one per distinct sentence (`browse.viewer_missing`, `browse.since_is_an_instant`, `browse.marks_not_registered`, `browse.marks_not_registered_list`, `browse.marks_another_shape` (three sites), `browse.marks_promise`, `browse.scope_viewer_missing`, `find.viewer_missing`, `find.scope_missing`, `find.term_missing`, `find.capture_not_held`, `find.project_not_held`, `findin.not_extracted` (four sites), `findin.no_text` (two), `findin.no_matcher_unstated`, `findin.no_text_typed_cells`, `findin.not_minutes_or_agenda`, `findin.no_text_unit_for_name`, `findin.no_cells_named`), plus `browse.new_since_needs_since` and `findin.read_another_shape`, which the check does not count (a punctuated sentence each) but R13 binds, so they are converted too. `NO_CELLS_WHY` is no longer a module constant: it is read at its one use in `placed`.
+
+**Test copies.** Four test sentences (`findin.test.mjs`: the two `not extracted` reasons, `not minutes or an agenda`, `no text: ... to search`) now compare with the same `localize` call (the id and the `en` as literals at the call, exempt from the test-copy arm). Short regex fragments in the tests (`/no text/`, `/another shape/`, `/threw/`) are not sentences and are left.
+
+**Judged not member-facing.** None. The module's developer `throw new Error` lines (the `WORD_KEYS` guard, the `deps.sql` fault) are programming faults, not answers a member reads. The eight matching-lexicon phrases stay unkeyed in source (the design's own `unkeyed` list for this module).
+
+**Deferred.** None.
+
+**For BOB (reports, none blocks):**
+1. *Requirements text superseded (for BOB's file, not edited by this job).* `build/requirements/retrieval-browse.md` Suggestions, the cut, says the strings `findin.mjs` and `browse.mjs` hold "that no key holds ... stay as they are; each sentence no key holds is a REPORT to BOB". K3964 binds them now: they are `localize` reads. BOB may wish to restate that clause.
+2. *Wording for the design lane (K3944).* `retrieval-browse.findin.read_another_shape` is "the read answered another shape than events R49's". A member reads it in `recorded_not_read`, and it names a requirement id. The en is kept exactly as it stood; a wording change is a word-table edit (K3810 (2)), and the design may want to reword it.
+3. *Generated artifacts.* `bio-plane/src/setup-words/rows.mjs` is stale for the new ids: `setup-words/build.mjs --check` says so (a stale-rows note, as expected, not a refusal naming this module). BOB regenerates at the layer close. Nothing else stale.
+4. *Other modules.* None found in this pass.
+
+**Tests and checks** (from `civicos-process`, against `/home/user/bio`, after commit `3cfecfabab`):
+- `node --test bio-plane/test/m/retrieval-browse/`: 51 tests, 51 pass, 0 fail.
+- `node checks/words.mjs /home/user/bio retrieval-browse`: `inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0 ... 0 failures` (it was 25 failures plus 0 test copies before the job).
+- `node checks/architecture.mjs /home/user/bio retrieval-browse`: `15 product files, 70 relative imports; 0 failures`.
+- `node checks/coverage.mjs /home/user/bio retrieval-browse`: `18 of 18 live requirement ids named by a test; 0 failures`.
+- `node checks/ownership.mjs /home/user/bio retrieval-browse tranche/T51 job/T51/retrieval-browse`: `6 files changed by retrieval-browse; 0 failures` (five module files, plus the job record from `mail start`).
+- `node checks/run.mjs /home/user/bio`: format `0 failures`; architecture `0 failures`; channels `0 failures`; coverage `30 failures`; words `3776 failures`. None of the failures names `retrieval-browse` (grepped). The coverage and words failures are other modules' (the words check's tree-wide failures are inherited from the other 173 modules, whose words pass is in their own jobs).
+- `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (see 3).
+
+Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 1, module lines 1365
