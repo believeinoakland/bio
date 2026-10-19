@@ -49,6 +49,7 @@ Terms. A **report** is one accepted submission, with its reference (`ref`). A **
 
 - `instance-setup` (L11, earlier): `GROUP_SLUG_RE` (R3's slug grammar), imported, never copied.
 - `test-support` (test helpers only, as `installer`).
+- `setup-words` (L1): `word`, `localize`, the word table's readers (setup-words R13, K3930; K4068).
 
 No other module. Every edge points earlier (this module directly after `installer`). No module uses it; the plane does not compose it.
 
