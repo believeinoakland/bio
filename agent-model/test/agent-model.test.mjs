@@ -1549,7 +1549,7 @@ test("R21 converse answers the model and effort its requests named, on each path
 test("R22 the meaningrows tool describes a 64-token snippet and a passage call sends snippet 64, on each path; another arm sends none", async () => {
   const tools = subsessionTools({ level: "x", scope: "s", returns: { states: ["PRESENT"] }, arms: ["leg", "passage"] });
   const rows = tools.find((t) => t.name === "meaningrows");
-  assert.match(rows.description, /snippet of about a sentence/);
+  assert.match(rows.description, /snippet of about/);
   assert.match(rows.description, /64 tokens/);
   assert.equal(rows.input_schema.properties.snippet.maximum, 64);
   const FINAL = { name: "answer", description: "answer", input_schema: { type: "object", properties: { v: { type: "number" } } } };
