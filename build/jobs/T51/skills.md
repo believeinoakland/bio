@@ -94,3 +94,12 @@ Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 4, module lines (see record).
 - **Checks:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail. Exports: no existing export changed; the three added in the earlier change are the only differences. Format 0 failures; architecture 0 failures; coverage 51 of 51; ownership 0 failures.
 
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 5, module lines 2913
+
+## J5 · COMPLETE
+
+B4 settled and COMPLETE again (pushed to job/T51/skills, HEAD 2dcf7d3797).
+- Merged tranche/T51 (merge commit, no rebase).
+- Words check for skills: 0 failures; three folded chains converted to localize (en unchanged).
+- 7 unkeyed inline strings reported as the design's unkeyed list, not failures; no change judged.
+- Tests 130/130; exports unchanged (earlier three added); format, architecture, coverage 51/51, ownership all 0 failures.
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 5, module lines (see record).
