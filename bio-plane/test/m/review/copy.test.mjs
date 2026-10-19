@@ -5,8 +5,10 @@ import { standard, P, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_LIST_MAX, REVIEW_TEXT_MAX, noReviewCopy,
          caseIdentitySentence, reviewOf } from "../../../src/review/index.mjs";
 import { caseInputsOf, statementSha, withheldWriterStated } from "../../../src/case-inputs/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
+const NO_FINDING = localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.");
 const draft = (w, extra = {}, author = "ann") => w.r.act({ act: "draft", author, project: P, statement: "S", ...extra });
 const grant = (w, d, n) => w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: `R${n}`, secretSha: SECRET(n) });
 const AUTHORED = { scope: "the scope", statement: "the statement", excluded: [{ id: "X", why: "w" }], subjectPosition: "neutral",
@@ -63,9 +65,9 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
       text: "---\ntitle: a\n---\nA's text" },
     { target: "INQ-2026-0002-b", present: true, object_type: "inquiry", state: "open", role: null, text: null },
     { target: "PROJ-2026-0009-z", present: false, role: "supporting",
-      detail: "this draft names a finding its editor cannot read, or one that does not exist." },
+      detail: NO_FINDING },
     { target: "INQ-2026-0404-none", present: false, role: "supporting",
-      detail: "this draft names a finding its editor cannot read, or one that does not exist." },
+      detail: NO_FINDING },
   ];
   /* the recipient, a member who could see z (quinn cannot read P's drafts; an administrator invited to P and z both,
      who has standing in P's drafts and sight of z under D54), and ed */
