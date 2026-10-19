@@ -15,27 +15,27 @@ export const LIBRARY_APPROVED = Object.freeze({ by: "Bob", at: "2026-10-06" });
  *  adopted it when under which ruling: T37's four from PR #14's merge (`e08cd35ecb`), T41's two from PR #19's
  *  (`3660c18803`; DEC-188 (8), DEC-184; K2484). */
 export const LIBRARY_ADOPTED = Object.freeze([
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-c887066cc553dd41.name"), word("wizard.WIZ-426b9c2e8b128b6b.name"), word("wizard.WIZ-33b5887790b7561b.name"), word("wizard.WIZ-a15d174f7a2c1dc5.name")]), version: 2,
+  Object.freeze({ ids: Object.freeze(["WIZ-c887066cc553dd41", "WIZ-426b9c2e8b128b6b", "WIZ-33b5887790b7561b", "WIZ-a15d174f7a2c1dc5"]), version: 2,
                   source: "e08cd35ecb", approved: Object.freeze({ by: "BOB", at: "2026-10-08", ruling: "K2241" }) }),
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-74328804ddae3503.name"), word("wizard.WIZ-8e7e2fac33d069f8.name")]), version: 2,
+  Object.freeze({ ids: Object.freeze(["WIZ-74328804ddae3503", "WIZ-8e7e2fac33d069f8"]), version: 2,
                   source: "3660c18803", approved: Object.freeze({ by: "BOB", at: "2026-10-10", ruling: "K2241" }) }),
   /* T46 (R30; DEC-194 (4); N913): Start and send's step on `communicationprepare` names no template */
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-a8c349d7d71b6bb0.name")]), version: 2,
+  Object.freeze({ ids: Object.freeze(["WIZ-a8c349d7d71b6bb0"]), version: 2,
                   source: "3f40899950", approved: Object.freeze({ by: "BOB", at: "2026-10-12", ruling: "K2241" }) }),
   /* T47 (R32; DEC-198 (2); N992): Connect sends the code by `subscriptionsignin`, an API key by `accountreferenceset`, and
      disconnects by `subscriptiondisconnect`, from PR #31's merge */
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-74328804ddae3503.name")]), version: 3,
+  Object.freeze({ ids: Object.freeze(["WIZ-74328804ddae3503"]), version: 3,
                   source: "a0fab7abf0", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
   /* T47 (R36; DEC-205 (3), DEC-207 (10), DEC-208 (2), DEC-213 (1); K3062, K3127): the newest of the two required flows at
      PR #33's head as merged into `tranche/T47` at L11's START (6f0d88d8d5): Set up and claim's step 1 on the Workers Paid
      plan and step 14 on `hostingaccessset`; the ceremony's steps 9–11 re-worded */
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-c887066cc553dd41.name"), word("wizard.WIZ-426b9c2e8b128b6b.name")]), version: 3,
+  Object.freeze({ ids: Object.freeze(["WIZ-c887066cc553dd41", "WIZ-426b9c2e8b128b6b"]), version: 3,
                   source: "f90b187c7b", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
   /* T48 (R38; DEC-220, DEC-221; K3190, K3192 D1): the newest of the two at PR #34's merge (`4664e8efd4`): Set up and claim's
      step 3 with no act (the self-test runs within install) and Start and send in DEC-221's spelling */
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-c887066cc553dd41.name")]), version: 4,
+  Object.freeze({ ids: Object.freeze(["WIZ-c887066cc553dd41"]), version: 4,
                   source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
-  Object.freeze({ names: Object.freeze([word("wizard.WIZ-a8c349d7d71b6bb0.name")]), version: 3,
+  Object.freeze({ ids: Object.freeze(["WIZ-a8c349d7d71b6bb0"]), version: 3,
                   source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
 ]);
 /** R33, R41 (T47, T50; DEC-198 (4), DEC-266; N992, N1130): the commit of the library whose `doors` are carried as the front
@@ -52,11 +52,11 @@ export const LIBRARY_RETAKEN = Object.freeze([
  *  version 1, from the commit of the library it is taken from, approved by BOB on the date of the adoption; none
  *  required (R22's three stay the only required ones). */
 export const LIBRARY_ADDED = Object.freeze([
-  Object.freeze({ names: Object.freeze(["Comment for the group", word("wizard.WIZ-bd7bde2c61b6badb.name"), word("wizard.WIZ-33cece8a68e76f58.name"),
-                                        word("wizard.WIZ-d0cdcee9437b213b.name"), word("wizard.WIZ-a17835c4d8235f65.name")]),
+  Object.freeze({ ids: Object.freeze(["WIZ-f06504b9133b8d61", "WIZ-bd7bde2c61b6badb", "WIZ-33cece8a68e76f58",
+                                        "WIZ-d0cdcee9437b213b", "WIZ-a17835c4d8235f65"]),
                   source: "3f40899950", approved: Object.freeze({ by: "BOB", at: "2026-10-12", ruling: "K2241" }) }),
   /* T48 (R38; DEC-226 (5); K3190): the update wizard, at version 1, from PR #34's merge */
-  Object.freeze({ names: Object.freeze(["Update your group's Civicsmith"]),
+  Object.freeze({ ids: Object.freeze(["WIZ-7de505135a9ecd4f"]),
                   source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
 ]);
 /** R22: the three required scripts, by name (DEC-148). */
@@ -130,26 +130,26 @@ export function libraryFromFile(file, commit = null) {
 export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRARY_ADOPTED, added = LIBRARY_ADDED, retaken = LIBRARY_RETAKEN) {
   const base = libraryFromFile(baseFile, baseCommit);
   const read = new Map((Array.isArray(newer) ? newer : []).map((n) => [n.commit, libraryFromFile(n.file, n.commit)]));
-  const files = new Map([...read].map(([c, list]) => [c, new Map(list.map((e) => [e.name, e]))]));
-  const fileAt = (source, name, what) => {
+  const files = new Map([...read].map(([c, list]) => [c, new Map(list.map((e) => [e.id, e]))]));
+  const fileAt = (source, id, what) => {
     const from = files.get(source);
-    if (!from) throw new Error(`library: '${name}' is ${what} from ${source}, which is not given`);
-    const n = from.get(name);
-    if (!n) throw new Error(`library: '${name}' is ${what} but the file at ${source} does not hold it`);
+    if (!from) throw new Error(`library: '${id}' is ${what} from ${source}, which is not given`);
+    const n = from.get(id);
+    if (!n) throw new Error(`library: '${id}' is ${what} but the file at ${source} does not hold it`);
     return n;
   };
-  const out = base.map((e) => adopted.filter((x) => x.names.includes(e.name)).reduce((held, a) => {
-    if (a.version <= held.version) throw new Error(`library: '${e.name}' version ${a.version} does not follow version ${held.version}`);
-    const n = fileAt(a.source, e.name, "adopted");
+  const out = base.map((e) => adopted.filter((x) => x.ids.includes(e.id)).reduce((held, a) => {
+    if (a.version <= held.version) throw new Error(`library: '${e.id}' version ${a.version} does not follow version ${held.version}`);
+    const n = fileAt(a.source, e.id, "adopted");
     const { version, steps, author, approved, source } = held;
     return { ...n, version: a.version, approved: { ...a.approved }, earlier: [...(held.earlier || []), { version, steps, author, approved, source }] };
   }, e));
   for (const a of Array.isArray(added) ? added : []) {
-    for (const name of a.names) {
-      if (out.some((e) => e.name === name)) throw new Error(`library: '${name}' is added but the library already holds it`);
-      const n = fileAt(a.source, name, "added");
-      const order = read.get(a.source).map((e) => e.name);
-      const next = order.slice(order.indexOf(name) + 1).map((x) => out.findIndex((e) => e.name === x)).find((i) => i >= 0);
+    for (const id of a.ids) {
+      if (out.some((e) => e.id === id)) throw new Error(`library: '${id}' is added but the library already holds it`);
+      const n = fileAt(a.source, id, "added");
+      const order = read.get(a.source).map((e) => e.id);
+      const next = order.slice(order.indexOf(id) + 1).map((x) => out.findIndex((e) => e.id === x)).find((i) => i >= 0);
       out.splice(next === undefined ? out.length : next, 0, { ...n, required: false, version: 1, approved: { ...a.approved } });
     }
   }
