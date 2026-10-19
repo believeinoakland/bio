@@ -53,7 +53,7 @@ jobs:
           # The suites outside test/m that T20 kept (N466, K932; LEGACY-TESTS #18): run from the root.
           # several-cases-choice needs ssh-keygen (openssh-client, on the runner image).
           echo "::group::kept suites"
-          if node --test bio-plane/test/*.test.mjs bio-plane/test/system/*.test.mjs civicos-ui/test/*.test.mjs; then
+          if node --test bio-plane/test/*.test.mjs bio-plane/test/system/*.test.mjs; then
             echo "kept suites: passed"; else failed="$failed kept-suites"; fi
           echo "::endgroup::"
           # Every module's own tests, read from build/modules.json, so a module is never left out (K1692).
