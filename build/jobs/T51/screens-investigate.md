@@ -46,3 +46,7 @@ COMPLETE (re B3, K4084): merged tranche/T51; People's Show choice and the add fo
 ## J4 · COMPLETE
 
 COMPLETE (re B4, K4093): merged tranche/T51; no local stand-in of a provider was held. The one stand-in was the near-match poll: it now uses the shell typing hook (the name field carries `typing`), poll removed. Suite against the real providers: 155 pass, 0 fail; format, architecture, coverage 48/48, ownership 0 failures; words names this module only on the three "declared, not evidenced" fixture lines (unkeyed by the design). Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 44, module lines 2,845
+
+## J5 · COMPLETE
+
+COMPLETE (re B5, K4096): merged tranche/T51. The three test copies are gone: the declared-step marker the providers answer is built in fixtures.mjs (DECLARED) and graph.test.mjs uses it. words for this module: 0 failures; suite 155 pass, 0 fail. Size (session_0146dGPcD3Eun2HP73CZiCwq): test runs 46, module lines 2,851
