@@ -5451,3 +5451,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: (1) `screens/words-reads-handoffs.json` gains the 195 sites the words check counts on tranche/T51, each whole, by module id with its job's reason: publish-schedule 1 (a wiring diagnostic), case-account 2 (start-up wiring, R17), public-read 5 (registerGroupIdentity's two; publication's container manifest's three, bytes a hash pins), case-checker 27 (the case-file formats' specification, wire grammar), case-grammar 160 (signed case-document sentences, pinned per format). B354's items the check does not count (case-catalogue's and ratification's developer descriptions, public-read's other API-caller and registration details, case-disclosures' BAD_COMPLETENESS) need no entry. (2) Orphans dropped, as DEC-347 and DEC-350 did: case-inputs' seven "acknowledgment" rows and `case-disclosures.document_case_findings` (B354 asked), and 69 `case-grammar.*` rows whose signed text case-grammar now carries in code (K4024): no module, test or page reads them, so they leave the table and case-grammar's (and case-authoring's one) stale reads list. `case-grammar.by.case_owner` stays: public-read's tensions test reads it. (3) The words check on tranche/T51 then reads 0 on publish-schedule, case-inputs, case-catalogue, case-account, ratification, public-read, case-disclosures, case-checker and case-authoring; case-grammar keeps 12 counted copies: signed sentences whose words equal rows that live code reads elsewhere (the timeline's lane names, the tension states, case-disclosures' and case-inputs' sentences, `filings.group_named`, `sources.known_group_recorded`, `case.outcomes.head`, `case-grammar.agrees`, `case-grammar.by.case_owner`). They are on the unkeyed list, but the check counts a copy whatever the list says.
 reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-mod-1.src.py`, `screens/words-mod-2.src.py`, `screens/words-mod-3.src.py`, `screens/words-reads-mod-1.json` to `-3.json`, `screens/words-reads.json`.
 owed: (BOB, civicos-process) the words check accepts a copy that the design's unkeyed list names with a signed-text reason, so case-grammar's 12 read 0 without a member row being reworded away from the signed document.
+
+### DEC-352 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B357, RW's batch; K4037)
+for: design
+question: Member-roster's two refusal details that only a direct API caller reaches (TARGET_NOT_AN_ADMIN's for adminRemove, EXPERTISE_IS_NOT_ASSIGNED's for memberAdd with expertise): rows or the unkeyed list?
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: rows for a member; rejected, since no screen sends either op that way and both name ops (wire grammar); list entries; not needed, since the words check does not count them.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: neither gets a row nor an entry, as DEC-351 did for the details the check does not count (`bio-plane/src/member-roster/index.mjs` 819 and 903 on tranche/T51). The member's own refusals for these cases stay those the screens draw (`refusal.TARGET_NOT_AN_ADMIN`, `refusal.EXPERTISE_IS_NOT_ASSIGNED` where worded). If the check later counts them, they go on member-roster's unkeyed list with this reason.
+reasoning recorded in: this entry.
+owed: nothing.
