@@ -88,3 +88,8 @@ Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 8, module lines 3358
 ## J4 · QUESTION
 
 CR-25 is done and pushed (R22 Action block by address; R29 pseudo walk proved on the real screens, pseudo.test.mjs; suite 83/83; format, words, ownership 0; coverage only R19). One red: architecture, 8 failures, all pseudo.test.mjs imports not in journey-check's uses in modules.json (interface-shell + its test harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's test fixture, jurisdictions' Oakland profile). R29 requires drawing the real screens through the interface harness with the real catalogue and Oakland profile, so I need them. Please add them to journey-check's uses (modules.json is yours), then send CHANGE to re-run architecture; my best reading is that this is the only way to meet R29. Nothing else is open.
+
+## COMPLETE (CR-25, after B8)
+Merged `tranche/T51` (modules.json `uses` now covers the test's imports). Architecture 0, ownership 0, words 0, format 0; coverage only R19. Suite without `journey.test.mjs`: 83 pass, 0 fail; `pseudo.test.mjs` 7 pass after the fold narrowing.
+Groups: A (Home without an Action door) → "R22 (live arm)" in live.test.mjs (`doors: "project"` passes with the note, `"blockonly"` fails); B (fetched catalogue sentences, `setup`/`security` data, closed fold) → pseudo.test.mjs "R29 (a)", "`setup`", "`security`"; C (`elsewhere` rows, `places` chooser with covers) → pseudo.test.mjs "`places`", "`elsewhere`"; D (comma lists, multi-word fills) → pseudo.test.mjs "R29 (b)" and "Home".
+Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 9, module lines 3358
