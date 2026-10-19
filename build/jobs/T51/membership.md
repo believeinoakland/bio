@@ -1,6 +1,6 @@
 # membership (T51)
 
-**Status** · session_018652bxpkEPx4gMoCSpbHne · depth 2 · COMPLETE · handled B4
+**Status** · session_018mYefzYbzbFYsZ9Kx9F2np · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -90,3 +90,80 @@ Size (session_018652bxpkEPx4gMoCSpbHne): test runs 14, module lines 1626
 **COMPLETE** again, for B4 (CHANGE, K3980). `tranche/T51` merged (no conflict). The six test copies now compare with `localize` by id (`t35-words` three, plus the hosting-access act; `t46-handles-doors` the doors act) or carry a non-sentence message (`t19-enrol-boot`). `checks/words.mjs /home/user/bio membership`: 0 failures. `membership` suites 172 pass, 0 fail. Coverage 49 of 49, architecture and ownership 0 failures. No source change; module lines 1626.
 
 Size (session_018652bxpkEPx4gMoCSpbHne): test runs 3, module lines 1626
+
+## J6 · COMPLETE
+
+**COMPLETE**, RW (words, B5), on `job/T51/membership` (commit `058368a0a2`); `tranche/T51` merged first (no conflict).
+
+**Entries applied**
+1. **Finding (the one the check lists).** `membership/index.mjs` ~1127: a refusal's `detail` ("the member named holds no participation in this project…") was a two-literal `+` chain, counted as an inline sentence. It now reads `localize("membership.index.the_member_named_holds_no", en)`; the English is unchanged. New id, fixed once. No table key or code was touched.
+2. **Other findings:** none. `words.mjs membership` lists 0 findings (before: 1 inline).
+
+**Deferred**: none in this module.
+
+**Inherited red (not this job's, unchanged by it)**: `test/m/membership/t50-words.test.mjs` R151 "the keys it reads are the `reads` list for it in words-reads.json" fails on `tranche/T51` before this job's edit, and fails the same way with the edit reverted. It compares `WORD_KEYS` with the `membership` `reads` list in `docs/development/ux-substrate/screens/words-reads.json`; the design's split of that entry (DEC-345, U373, K3981) is the pending merge that should bring the two into line. Nothing in `membership` changes it, and I did not edit the list.
+
+**Found in other modules** (not changed): `checks/run.mjs` on `/home/user/bio` shows 1,629 words failures and 22 coverage failures, none in `membership`. Architecture 0 failures; format 0 failures; channels 0 failures.
+
+**Setup-words**: `setup-words/build.mjs --check` reports `rows.mjs` stale for the new `membership.index.the_member_named_holds_no` row (expected; BOB regenerates at the layer close). No refusal naming `membership`.
+
+**Checks**, from the process repository:
+- `checks/words.mjs /home/user/bio membership`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio membership`: 0 failures.
+- `checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`: 0 failures (1 file changed by membership, in its paths).
+- `checks/run.mjs /home/user/bio`: architecture 0, format 0, channels 0; no finding names `membership`.
+
+**Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 171 pass; 1 fail, the inherited R151 reads-list test above (the same test fails with the edit reverted).
+
+**Raw lines of source**: `bio-plane/src/membership/` four files: 1,625 (unchanged by RW).
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 5, module lines 1625
+
+## J7 · BLOCKED
+
+**BLOCKED** (cause: tests), for B6 (CHANGE, K4036: membership's `WORD_KEYS` as its own keys only). Code reverted; the branch is at J6's commit `058368a0a2` plus the merge of `tranche/T51`. Nothing pushed for B6.
+
+**What I did.** `WORD_KEYS` built from membership's own rows (`MEMBERSHIP_CHECKS` minus member-roster's codes, plus the project and case-authority tables) and `SENTENCE_KEYS`, without member-roster's 46 keys. That set is exactly the 15 keys of `membership`'s `reads` list in `words-reads.json`, so R151's reads-list test (`t50-words.test.mjs`:36) passes.
+
+**What stays red with that change.** Four assertions in the R151/R123 tests assert that `WORD_KEYS` contains member-roster's rows too, so no single `WORD_KEYS` passes them unchanged alongside the reads-list test:
+1. `t50-words.test.mjs`:26 `WORD_KEYS.length >= 60` (now 15).
+2. `t50-words.test.mjs`:60 every refusal row's key is in `WORD_KEYS`; fails on `refusal.BAD_MEMBER_ID`, a member-roster row.
+3. `t50-words.test.mjs`:158 every table's code is in `WORD_KEYS`; fails on `MEMBER_ID_RESERVED`.
+4. `t41-sight-words.test.mjs`:232 `WORD_KEYS` includes `handle.refused.paused` (`HANDLE_CHECK_PAUSED`, a member-roster row).
+
+So "R151's test passes unchanged, module suite green" cannot hold: the reads-list test needs 15 keys, and tests 1 to 4 need the union. Current suite with the change: 168 pass, 4 fail (the four above); without it, the only red is the inherited reads-list test.
+
+**Ruling needed (BOB).** My proposal: membership's `WORD_KEYS` is its 15 own keys (DEC-345, as B6 says), and tests 1 to 4 are re-pointed, not weakened: each asserts the key is held in the union of `membership`'s `WORD_KEYS` and `member-roster`'s `WORD_KEYS` (the same strength, the member-roster half read from its own declaration, K3268), and test 1's `>= 60` becomes the union's count. The reads-list test stays unchanged. I will make that change on your go, or on a different ruling if you pick one (for example, keep the union and change the design's `reads` entry instead, which is the design stream's and not mine to edit).
+
+**Size**: no change to the module's source from this job; module lines 1625 as at J6.
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 4, module lines 1625
+
+## J8 · COMPLETE
+
+**COMPLETE**, for B7 (ANSWER to J7, K4037), on `job/T51/membership` (commit `0751660c3e`); `tranche/T51` merged first.
+
+**Entries applied**
+1. **`WORD_KEYS` is the module's own keys (DEC-345).** `index.mjs`: its own rows (`MEMBERSHIP_CHECKS` minus member-roster's codes; the project and case-authority tables) and `SENTENCE_KEYS`, which is exactly the 15 keys of `membership`'s `words-reads.json` entry. Member-roster's keys stay on member-roster's own `WORD_KEYS`.
+2. **Four union assertions re-pointed, not weakened.** `t50-words.test.mjs` (the count bound, the refusal-row loop, the table-codes loop) and `t41-sight-words.test.mjs` (`handle.refused.paused` and the negative control) now check against `HELD = [...WORD_KEYS, ...member-roster's WORD_KEYS]`, read from member-roster's own export (K3268). The count bound is now the union's count (≥ 60). The reads-list test (`t50-words.test.mjs`:36) is unchanged and passes.
+3. **Test copy found by `run.mjs`.** `t35-words.test.mjs`:65 held member-roster's sentence "setting a member's capabilities"; it now reads `localize("member-roster.index.setting_a_members_capabilities", …)`, the id member-roster's `index.mjs` uses (K3810). The membership words check (`words.mjs membership`) listed no testcopy for it; `run.mjs` on the tranche did, so I fixed it.
+
+**Deferred**: none.
+
+**Found in other modules** (not changed): none new. `run.mjs` on `/home/user/bio` has no finding naming `membership`.
+
+**Checks**, from the process repository:
+- `format.mjs /home/user/bio`: 0 failures.
+- `architecture.mjs /home/user/bio membership`: 0 failures.
+- `coverage.mjs /home/user/bio membership`: 49 of 49 live ids named; 0 failures.
+- `words.mjs /home/user/bio membership`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`: 0 failures (5 files changed by membership, all in its paths or its record).
+- `run.mjs /home/user/bio`: no line names `membership`.
+- `setup-words/build.mjs --check`: stale-rows note only (expected; BOB regenerates at the layer close).
+
+**Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 172 pass, 0 fail (the R151 reads-list test passes unchanged).
+
+**Raw lines of source**: `bio-plane/src/membership/` four files: 1,627 (was 1,625; the import swap and the own-keys block).
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 8, module lines 1627

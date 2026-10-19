@@ -21,7 +21,7 @@ import { Members, membersOf, membersOps, ROOT_ADMIN, CAPABILITIES, adminMath, li
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 import { rowKey, SENTENCE_KEYS } from "./words.mjs";
-import { WORD_KEYS as MEMBER_WORD_KEYS } from "../member-roster/index.mjs";
+import { MEMBER_ROSTER_ROWS } from "../member-roster/checks.mjs";
 
 /* R154: the refusal-row tables, each the union of this module's rows and `member-roster`'s, every code one row (K231). */
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
@@ -31,12 +31,14 @@ export { listenerRefusal, notAnAdmin, noSuchMember, MODULE_ORDER, moduleOrderFro
 export const MEMBERSHIP_EXEMPT_TABLES = MEMBER_EXEMPT_TABLES;
 export const MEMBERSHIP_DECLARED_TABLES = MEMBER_DECLARED_TABLES;
 
-/* R151: every key this module reads, each held by `setup-words` (`hasWord`): its rows' (`refusal.<CODE>`, or the key
-   `words.mjs` names) and the sentences it answers beside them, with `member-roster`'s. */
+/* R151: every key this module reads, each held by `setup-words` (`hasWord`): its own rows' (`refusal.<CODE>`, or the key
+   `words.mjs` names) and the sentences it answers beside them. `member-roster` reads its own rows, so its keys are its
+   `WORD_KEYS` (DEC-345), not these; the membership table's codes that are member-roster's are left out here. */
+const MEMBER_ROSTER_CODES = new Set(Object.keys(MEMBER_ROSTER_ROWS.MEMBERSHIP_CHECKS));
 export const WORD_KEYS = Object.freeze([...new Set([
-  ...[MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS]
-      .flatMap((table) => Object.keys(table).map(rowKey)),
-  ...SENTENCE_KEYS, ...MEMBER_WORD_KEYS])]);
+  ...[MEMBERSHIP_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS]
+      .flatMap((table) => Object.keys(table).filter((code) => !MEMBER_ROSTER_CODES.has(code)).map(rowKey)),
+  ...SENTENCE_KEYS])]);
 import { recordOf } from "../record-core/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -1124,8 +1126,7 @@ export class Membership {
       const row = MEMBERSHIP_CHECKS.TARGET_NOT_A_PARTICIPANT;
       return { ok: false, reason: "TARGET_NOT_A_PARTICIPANT", code: "TARGET_NOT_A_PARTICIPANT", check: row.check,
                translation: row.translation, handle,
-               detail: "the member named holds no participation in this project, so there is nobody to remove "
-                     + "(7.7). Nothing was written." };
+               detail: localize("membership.index.the_member_named_holds_no", "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.") };
     }
     /* END DEC-49 REGION is-remove-target-participant */
     if (p.owner) return { ok: false, reason: "OWNER",
