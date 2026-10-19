@@ -60,15 +60,15 @@ export function sweepGrammar(s, ids) {
   if (!s || typeof s !== 'object' || Array.isArray(s)) return out;
   const seen = ids instanceof Set ? ids : new Set();
   for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, localize('link-sweep.checks.carries_string_which_is_not', 'carries \'{String}\', which is not a sweep\'s field ({SWEEP_FIELDS})', { String: String(String(k).slice(0, 40)), SWEEP_FIELDS: String(SWEEP_FIELDS.join(', ')) }));
-  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, 'is missing');
+  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, localize('link-sweep.checks.is_missing', 'is missing'));
   if ('id' in s) {
-    if (typeof s.id !== 'string' || !SWEEP_ID_RE.test(s.id)) bad('id', 'must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit');
+    if (typeof s.id !== 'string' || !SWEEP_ID_RE.test(s.id)) bad('id', localize('link-sweep.checks.must_be_1_to_40', 'must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit'));
     else if (seen.has(s.id)) bad('id', localize('link-sweep.checks.id_is_not_unique_within', '\'{id}\' is not unique within the file', { id: String(s.id) }));
     else seen.add(s.id);
   }
   if ('title' in s && (typeof s.title !== 'string' || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
     bad('title', localize('link-sweep.checks.must_be_a_nonempty_single', 'must be a nonempty single line of at most {title} characters', { title: String(SWEEP_BOUNDS.title) }));
-  if ('ratified' in s && typeof s.ratified !== 'boolean') bad('ratified', 'must be boolean');
+  if ('ratified' in s && typeof s.ratified !== 'boolean') bad('ratified', localize('link-sweep.checks.must_be_boolean', 'must be boolean'));
   const list = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
   let sources = null;
   if ('sources' in s) {
@@ -89,7 +89,7 @@ export function sweepGrammar(s, ids) {
   }
   if ('match' in s) {
     const m = s.match;
-    if (typeof m !== 'object' || m === null || Array.isArray(m)) bad('match', 'must be an object');
+    if (typeof m !== 'object' || m === null || Array.isArray(m)) bad('match', localize('link-sweep.checks.must_be_an_object', 'must be an object'));
     else {
       for (const k of Object.keys(m)) if (!['terms', 'paths', 'formats'].includes(k)) bad('match', localize('link-sweep.checks.carries_string_which_is_not_2', 'carries \'{String}\', which is not terms, paths or formats', { String: String(String(k).slice(0, 40)) }));
       if (m.terms !== undefined) {
@@ -120,7 +120,7 @@ export function sweepGrammar(s, ids) {
     const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
     if (typeof b !== 'object' || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== 'per_run' && k !== 'backlog')
         || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
-      bad('budget', `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(' to ')}, backlog an integer ${SWEEP_BOUNDS.backlog.join(' to ')}`);
+      bad('budget', localize('link-sweep.checks.must_be_budget', 'must be {per_run, backlog}: per_run an integer {per_run_range}, backlog an integer {backlog_range}', { per_run_range: String(SWEEP_BOUNDS.per_run.join(' to ')), backlog_range: String(SWEEP_BOUNDS.backlog.join(' to ')) }));
   }
   return out;
 }

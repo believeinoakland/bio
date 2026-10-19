@@ -48,8 +48,8 @@ function parse(src) {
   const peek = () => cs[i], eat = () => cs[i++];
   const escape = (inClass) => {
     const c = eat();
-    if (c === undefined) throw new Refused("a trailing backslash", "the expression ends with a backslash");
-    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
+    if (c === undefined) throw new Refused(localize("link-sweep.sweep-match.a_trailing_backslash", "a trailing backslash"), localize("link-sweep.sweep-match.the_expression_ends_with_a", "the expression ends with a backslash"));
+    if (/[1-9]/.test(c) || c === "k") throw new Refused(localize("link-sweep.sweep-match.a_backreference", "a backreference"), localize("link-sweep.sweep-match.escape_refers_back_to_a", "\\{c} refers back to a group, and a backreference cannot be matched in linear time", { c }));
     const low = c.toLowerCase();
     if (CLASS[low]) { const f = CLASS[low]; return c === low ? f : (x) => !f(x); }
     if (!inClass && (c === "b" || c === "B")) return { assert: c };
@@ -57,11 +57,11 @@ function parse(src) {
     if (ctl !== undefined) return ctl;
     if (c === "x" || c === "u") {
       const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
-      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
+      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(localize("link-sweep.sweep-match.escape_without_hex_digits", "\\{c} without {n} hex digits", { c, n }), localize("link-sweep.sweep-match.escape_needs_hex_digits", "\\{c} needs {n} hex digits", { c, n }));
       i += n;
       return String.fromCharCode(parseInt(h, 16));
     }
-    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
+    if (/[A-Za-z]/.test(c)) throw new Refused(localize("link-sweep.sweep-match.the_escape", "the escape \\{c}", { c }), localize("link-sweep.sweep-match.escape_a_term_reads", "\\{c} is not an escape a term reads", { c }));
     return c;
   };
   const klass = () => {
@@ -70,7 +70,7 @@ function parse(src) {
     let first = true;
     for (;;) {
       let c = eat();
-      if (c === undefined) throw new Refused("an unclosed class", "a [ has no closing ]");
+      if (c === undefined) throw new Refused(localize("link-sweep.sweep-match.an_unclosed_class", "an unclosed class"), localize("link-sweep.sweep-match.a_has_no_closing", "a [ has no closing ]"));
       if (c === "]" && !first) break;
       first = false;
       let lo = c === "\\" ? escape(true) : c;
@@ -78,7 +78,7 @@ function parse(src) {
         eat();
         c = eat();
         const hi = c === "\\" ? escape(true) : c;
-        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
+        if (typeof hi !== "string" || hi < lo) throw new Refused(localize("link-sweep.sweep-match.a_reversed_or_open", "a reversed or open range"), localize("link-sweep.sweep-match.a_range_in_a_class", "a range in a class runs backwards or ends in a class"));
         items.push([lo, hi]);
         continue;
       }
@@ -93,13 +93,13 @@ function parse(src) {
       if (peek() === "?") {
         eat();
         const k = eat();
-        if (k === "=" || k === "!") throw new Refused("a lookahead", localize("link-sweep.sweep-match.k_looks_ahead_which_a", "(?{k} looks ahead, which a term may not", { k: String(k) }));
-        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
-        if (k === "<") { while (peek() !== undefined && peek() !== ">") eat(); if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >"); }
-        else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, localize("link-sweep.sweep-match.v1_is_not_a_group", "(?{v1} is not a group a term reads", { v1: String(k ?? "") }));
+        if (k === "=" || k === "!") throw new Refused(localize("link-sweep.sweep-match.a_lookahead", "a lookahead"), localize("link-sweep.sweep-match.k_looks_ahead_which_a", "(?{k} looks ahead, which a term may not", { k: String(k) }));
+        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused(localize("link-sweep.sweep-match.a_lookbehind", "a lookbehind"), localize("link-sweep.sweep-match.k_looks_behind_which", "(?<{k} looks behind, which a term may not", { k: String(peek()) }));
+        if (k === "<") { while (peek() !== undefined && peek() !== ">") eat(); if (eat() !== ">") throw new Refused(localize("link-sweep.sweep-match.an_unclosed_group_name", "an unclosed group name"), localize("link-sweep.sweep-match.a_named_group_s", "a named group's name has no closing >")); }
+        else if (k !== ":") throw new Refused(localize("link-sweep.sweep-match.the_group_k", "the group (?{k}", { k: String(k ?? "") }), localize("link-sweep.sweep-match.v1_is_not_a_group", "(?{v1} is not a group a term reads", { v1: String(k ?? "") }));
       }
       const x = alt();
-      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
+      if (eat() !== ")") throw new Refused(localize("link-sweep.sweep-match.an_unclosed_group", "an unclosed group"), localize("link-sweep.sweep-match.a_paren_has_no_closing", "a ( has no closing )"));
       return x;
     }
     if (c === "[") return klass();
@@ -110,8 +110,8 @@ function parse(src) {
       if (e && e.assert) return { t: "assert", k: e.assert };
       return typeof e === "function" ? { t: "char", test: e } : lit(e);
     }
-    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
-    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
+    if ("*+?{".includes(c)) throw new Refused(localize("link-sweep.sweep-match.a_quantifier_with_nothing", "a quantifier with nothing to repeat"), localize("link-sweep.sweep-match.c_repeats_nothing", "{c} repeats nothing", { c }));
+    if (c === ")") throw new Refused(localize("link-sweep.sweep-match.an_unopened_group", "an unopened group"), localize("link-sweep.sweep-match.a_closes_no_group", "a ) closes no group"));
     return lit(c);
   };
   const lit = (ch) => { const f = fold(ch); return { t: "char", test: (x) => fold(x) === f }; };
@@ -126,12 +126,12 @@ function parse(src) {
       if (!m) return x;   // a brace that opens no count is a literal, as JavaScript reads it
       min = Number(m[1]); max = m[2] ? (m[3] === "" ? Infinity : Number(m[3])) : min;
       if (min > TERM_REPEAT_MAX || (max !== Infinity && max > TERM_REPEAT_MAX) || max < min)
-        throw new Refused("a count past the bound", localize("link-sweep.sweep-match.a_count_is_at_most", "a count is at most {TERM_REPEAT_MAX} and never runs backwards", { TERM_REPEAT_MAX: String(TERM_REPEAT_MAX) }));
+        throw new Refused(localize("link-sweep.sweep-match.a_count_past_the_bound", "a count past the bound"), localize("link-sweep.sweep-match.a_count_is_at_most", "a count is at most {TERM_REPEAT_MAX} and never runs backwards", { TERM_REPEAT_MAX: String(TERM_REPEAT_MAX) }));
       i += m[0].length - 1;
     } else return x;
     eat();
     if (peek() === "?") eat();   // a lazy quantifier matches the same texts
-    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
+    if (x.t === "assert") throw new Refused(localize("link-sweep.sweep-match.a_repeated_assertion", "a repeated assertion"), localize("link-sweep.sweep-match.an_anchor_or_word", "an anchor or word boundary cannot be repeated"));
     return quant({ t: "rep", x, min, max });
   };
   const seq = () => {
@@ -145,7 +145,7 @@ function parse(src) {
     return xs.length === 1 ? xs[0] : { t: "alt", xs };
   };
   const tree = alt();
-  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
+  if (i < cs.length) throw new Refused(localize("link-sweep.sweep-match.an_unopened_group", "an unopened group"), localize("link-sweep.sweep-match.a_closes_no_group", "a ) closes no group"));
   return tree;
 }
 
@@ -153,7 +153,7 @@ function parse(src) {
    | {op: "match"}. `emit` answers [entry, holes], where holes are the states whose dangling exit is patched later. */
 function compile(tree) {
   const prog = [];
-  const add = (s) => { if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", localize("link-sweep.sweep-match.the_term_compiles_to_more", "the term compiles to more than {TERM_PROGRAM_MAX} states", { TERM_PROGRAM_MAX: String(TERM_PROGRAM_MAX) })); prog.push(s); return prog.length - 1; };
+  const add = (s) => { if (prog.length >= TERM_PROGRAM_MAX) throw new Refused(localize("link-sweep.sweep-match.an_expression_past_the_bound", "an expression past the bound"), localize("link-sweep.sweep-match.the_term_compiles_to_more", "the term compiles to more than {TERM_PROGRAM_MAX} states", { TERM_PROGRAM_MAX: String(TERM_PROGRAM_MAX) })); prog.push(s); return prog.length - 1; };
   const patch = (holes, to) => { for (const [s, k] of holes) prog[s][k] = to; };
   const emit = (n) => {
     if (n.t === "char") { const s = add({ op: "char", test: n.test, next: -1 }); return [s, [[s, "next"]]]; }

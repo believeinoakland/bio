@@ -9,6 +9,7 @@ import { listWorld, sha, infoMd, sweepDef, NOW_MS } from "./fixture.mjs";
 import { sweepGrammar, compileTerm, inScope, SWEEP_CHECKS, MATCH_TEXT_MAX, TERM_PROGRAM_MAX }
   from "../../../src/link-sweep/index.mjs";
 import { listFormats } from "../../../src/formats.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const findingsOf = (def, ids = new Set()) => sweepGrammar(def, ids);
 const PROJ = "PROJ-2026-0900-sweeps";
@@ -107,10 +108,16 @@ test("R2 a term: a literal or a /regular expression/, both without regard to cas
   assert.equal(t("/a.c/", "a\nc"), false);
   assert.equal(compileTerm("/x/").kind, "regex");
   assert.equal(compileTerm("/").kind, "literal", "a lone slash is a literal");
-  for (const [term, construct] of [["/(a)\\1/", "a backreference"], ["/(?<n>a)\\k<n>/", "a backreference"],
-                                  ["/(?<=a)b/", "a lookbehind"], ["/(?<!a)b/", "a lookbehind"], ["/a(?=b)/", "a lookahead"],
-                                  ["/a(?!b)/", "a lookahead"], ["/(a/", "an unclosed group"], ["/[a/", "an unclosed class"],
-                                  ["/*a/", "a quantifier with nothing to repeat"], ["/a{2,101}/", "a count past the bound"]]) {
+  const backreference = localize("link-sweep.sweep-match.a_backreference", "a backreference");
+  const lookbehind = localize("link-sweep.sweep-match.a_lookbehind", "a lookbehind");
+  const lookahead = localize("link-sweep.sweep-match.a_lookahead", "a lookahead");
+  for (const [term, construct] of [["/(a)\\1/", backreference], ["/(?<n>a)\\k<n>/", backreference],
+                                  ["/(?<=a)b/", lookbehind], ["/(?<!a)b/", lookbehind], ["/a(?=b)/", lookahead],
+                                  ["/a(?!b)/", lookahead],
+                                  ["/(a/", localize("link-sweep.sweep-match.an_unclosed_group", "an unclosed group")],
+                                  ["/[a/", localize("link-sweep.sweep-match.an_unclosed_class", "an unclosed class")],
+                                  ["/*a/", localize("link-sweep.sweep-match.a_quantifier_with_nothing", "a quantifier with nothing to repeat")],
+                                  ["/a{2,101}/", localize("link-sweep.sweep-match.a_count_past_the_bound", "a count past the bound")]]) {
     const c = compileTerm(term);
     assert.equal(c.ok, false, term);
     assert.equal(c.construct, construct, term);
@@ -143,7 +150,7 @@ test("R2 a term's matching time is linear in its text's length whatever the term
     assert.ok(ms < 1500, `${term} took ${ms} ms over ${MATCH_TEXT_MAX} characters`);
   }
   /* the program is bounded at compile time, so the bound above holds for every term */
-  assert.equal(compileTerm("/(((a{1,100}){1,100}){1,100})/").construct, "an expression past the bound");
+  assert.equal(compileTerm("/(((a{1,100}){1,100}){1,100})/").construct, localize("link-sweep.sweep-match.an_expression_past_the_bound", "an expression past the bound"));
   assert.ok(TERM_PROGRAM_MAX <= 4000);
   /* the rest is not read */
   assert.equal(compileTerm("needle").test("x".repeat(MATCH_TEXT_MAX) + "needle"), false);
