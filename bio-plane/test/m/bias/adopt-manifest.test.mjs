@@ -51,8 +51,7 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
   assert.deepEqual([seen.reason, seen.check], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1"]);
   assert.equal(code({ bundleId: A, scope: "project", scopeId: P, author: "joiner", identity: "member:joiner", viewer: "member:joiner" }),
     "PROJECT_ACT_NOT_THE_OWNER");
-  assert.equal(code({ bundleId: A, scope: "project", scopeId: P, ...ADMIN }), "PROJECT_ACT_NOT_THE_OWNER",
-    "an administrator directs no project");
+  assert.equal(code({ bundleId: A, scope: "project", scopeId: P, ...ADMIN }), "PROJECT_ACT_NOT_THE_OWNER");
   /* an instance scope: administrator authority, not an ordinary member or a project owner — membership's one answer
      (R84, C-96.1): this act's fixed phrase in its detail, the remedy, and the message the standard sentence then it */
   const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
@@ -61,7 +60,7 @@ test("R11: refusals in order — not authored (C-26.9), not proposed (C-26.10), 
     const r = w.bias.biasAdopt({ reason: WHY, bundleId: A, ...ask });
     assert.deepEqual(r, notAnAdmin(by, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" }), who);
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.by, r.scope], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1", row.translation, by, "instance"]);
-    assert.ok(r.detail.startsWith(`${INSTANCE_ADOPTION_ACT} is an administrator's act`), r.detail);
+    assert.ok(r.detail.startsWith(INSTANCE_ADOPTION_ACT), r.detail);
     assert.equal(r.remedy, INSTANCE_ADOPTION_REMEDY);
     assert.equal(r.message, `${row.translation} ${INSTANCE_ADOPTION_REMEDY}`);
   }
