@@ -157,8 +157,7 @@ export function contradictionFindings(fm) {
         const incomplete = (field, detail) => find("RESOLUTION_INCOMPLETE", detail, field);
         /* A resolution written as a single value gives none of the fields its kind needs, and is not in that form. */
         if (!isMap(block))
-          incomplete("resolution", "`resolution` is a block of fields (`kind` and what that kind needs), not a single "
-            + "value.");
+          incomplete("resolution", localize("inquiry.contradiction.resolution_is_a_block_of", "`resolution` is a block of fields (`kind` and what that kind needs), not a single value."));
         else {
           for (const k of Object.keys(block))
             if (!RESOLUTION_FIELDS.includes(k))

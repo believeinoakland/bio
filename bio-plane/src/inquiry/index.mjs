@@ -2063,8 +2063,7 @@ export class Inquiry {
                  detail: localize("inquiry.index.each_child_is_named_with", "each child is named with a canonical INQ- id: a division produces questions, and the id grammar is what makes them addressable by everything that will cite them.") };
     if (new Set(ids).size !== ids.length)
       return { ok: false, reason: "BAD_CHILD_ID", target, children: ids,
-               detail: "two children carry the same id: a leg apportioned to a child named twice has one "
-                     + "home, not two." };
+               detail: localize("inquiry.index.two_children_carry_the_same", "two children carry the same id: a leg apportioned to a child named twice has one home, not two.") };
     if (ids.includes(target))
       return { ok: false, reason: "BAD_CHILD_ID", target,
                detail: localize("inquiry.index.a_divisions_child_cannot_be", "a division's child cannot be the parent itself: the parent is terminal and the children are what carry the question forward.") };
