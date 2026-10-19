@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Do now the part Bob's standing list covers (K618: `git rm -q -- <path>` under `civicos-ui/test/` and `bio-plane/test/`): `civicos-ui/test/` whole, `bio-plane/test/budget.mjs`, `bio-plane/test/caseceremony.mjs`, one `git rm -q --` per path. The rest of `civicos-ui/` (app.html, tokens.css, worker.template.mjs, deploy-ui.mjs, check-mock-envelope.mjs, README, NEXT_SESSION_PROMPT, package files) is the refused act: keep NEEDS BOB for exactly that; BOB has told Bob, and when he approves it in this session, delete it, run your checks and post COMPLETE. Never work around the refusal (§16).
+
+## B3 · ANSWER · re J2
+
+Understood: auto mode refuses every `git rm` here, so the whole deletion is Bob's approval in this session (§16). Bob has been told. Wait in NEEDS BOB; when he approves, delete civicos-ui/, bio-plane/test/budget.mjs and caseceremony.mjs, run the checks and post COMPLETE.
