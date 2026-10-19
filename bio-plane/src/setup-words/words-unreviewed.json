@@ -575,6 +575,76 @@
       "line": 510
     },
     {
+      "id": "action-clocks.count.amount_unit_after_anchor",
+      "en": "{amount} {unit} after {anchor}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 330
+    },
+    {
+      "id": "action-clocks.count.amount_unit_before_anchor",
+      "en": "{amount} {unit} before {anchor}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 329
+    },
+    {
+      "id": "action-clocks.count.and_between_candidates",
+      "en": " and ",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 336
+    },
+    {
+      "id": "action-clocks.count.by_who",
+      "en": " by {who}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 295
+    },
+    {
+      "id": "action-clocks.count.calendar_status",
+      "en": "calendar {status}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 337
+    },
+    {
+      "id": "action-clocks.count.count_day_plural",
+      "en": "{count} day{plural}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 326
+    },
+    {
+      "id": "action-clocks.count.observed_practice",
+      "en": "observed practice",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 310
+    },
+    {
+      "id": "action-clocks.count.received_to_rule",
+      "en": "received {to} ({rule})",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 335
+    },
+    {
+      "id": "action-clocks.count.recorded_kind",
+      "en": "recorded {kind}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 275
+    },
+    {
+      "id": "action-clocks.count.sent_entry",
+      "en": "sent entry",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 275
+    },
+    {
       "id": "action-clocks.count.the_closure_list_list_year",
       "en": ": the closure list '{list}', {year}",
       "module": "action-clocks",
@@ -582,25 +652,347 @@
       "line": 176
     },
     {
+      "id": "action-clocks.count.the_start",
+      "en": "the start",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 328
+    },
+    {
+      "id": "action-clocks.count.unknown",
+      "en": "unknown",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 316
+    },
+    {
+      "id": "action-clocks.ics.calendar_name",
+      "en": "Deadlines",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/ics.mjs",
+      "line": 101
+    },
+    {
       "id": "action-clocks.index.a_deadline_is_put_on",
       "en": "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1044
+      "line": 1035
     },
     {
       "id": "action-clocks.index.a_deadline_is_put_on_2",
       "en": "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1126
+      "line": 1113
+    },
+    {
+      "id": "action-clocks.index.a_reminder_is_a_member",
+      "en": "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 841
+    },
+    {
+      "id": "action-clocks.index.action_id",
+      "en": "Action: {id}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1245
+    },
+    {
+      "id": "action-clocks.index.another_member_is_writing",
+      "en": "another member is writing to this action right now. Nothing was written; try again shortly.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1178
+    },
+    {
+      "id": "action-clocks.index.basis_kind_is_one_of",
+      "en": "basis_kind is one of {BASIS_KINDS}: every deadline names its basis. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1127
+    },
+    {
+      "id": "action-clocks.index.because_why",
+      "en": ", because {why}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1424
+    },
+    {
+      "id": "action-clocks.index.before_is_a_date",
+      "en": "before= is a date, YYYY-MM-DD",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 432
+    },
+    {
+      "id": "action-clocks.index.by_who",
+      "en": " by {who}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1423
+    },
+    {
+      "id": "action-clocks.index.computed_fact",
+      "en": "computed fact",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1349
+    },
+    {
+      "id": "action-clocks.index.date_is_not_a_calendar_day",
+      "en": "date '{date}' is not a calendar day written YYYY-MM-DD. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1059
+    },
+    {
+      "id": "action-clocks.index.deadline",
+      "en": "Deadline",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1245
+    },
+    {
+      "id": "action-clocks.index.due_at_is_a_time_on",
+      "en": "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1146
+    },
+    {
+      "id": "action-clocks.index.due_zone_is_a_time_zone",
+      "en": "due_zone is a time zone's name (Area/Location). Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1150
+    },
+    {
+      "id": "action-clocks.index.due_zone_is_stated_with_a_due_at",
+      "en": "due_zone is stated with a due_at. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1154
+    },
+    {
+      "id": "action-clocks.index.entry_names_no_clock_entry",
+      "en": "entry {entry} names no clock entry of this action with a YYYY-MM-DD date: a reminder is set on a dated deadline. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 873
+    },
+    {
+      "id": "action-clocks.index.field_belongs_to_another_basis_kind",
+      "en": "{field} belongs to another basis kind than '{kind}'. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1142
+    },
+    {
+      "id": "action-clocks.index.field_is_at_most",
+      "en": "{field} is at most {max} characters. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1121
+    },
+    {
+      "id": "action-clocks.index.field_is_required",
+      "en": "{field} is required: 1 to {max} characters. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1120
+    },
+    {
+      "id": "action-clocks.index.from_and_to_are_calendar_days",
+      "en": "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 520
+    },
+    {
+      "id": "action-clocks.index.from_names_no_reminder_of_yours",
+      "en": "from {from} names no reminder of yours on this entry: you change or remove only a reminder you set. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 886
+    },
+    {
+      "id": "action-clocks.index.held_in_place",
+      "en": ", held in {place}",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1426
+    },
+    {
+      "id": "action-clocks.index.it_is_undetermined",
+      "en": "it is undetermined",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1050
+    },
+    {
+      "id": "action-clocks.index.lead_lead",
+      "en": " (lead {lead})",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1424
+    },
+    {
+      "id": "action-clocks.index.name_one_to_max_actions",
+      "en": "name one to {max} actions (actions=<id>,<id>). Nothing was read.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1232
+    },
+    {
+      "id": "action-clocks.index.no_active_profile_states",
+      "en": "no active profile states a deadline '{rule}' for an action of kind '{kind}'",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 696
+    },
+    {
+      "id": "action-clocks.index.no_reminder_of_yours_on",
+      "en": "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 998
+    },
+    {
+      "id": "action-clocks.index.no_rule_was_named",
+      "en": "no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '{kind}'",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 697
+    },
+    {
+      "id": "action-clocks.index.no_standing_proposal_key",
+      "en": "no standing proposal '{key}' on this action: name the key op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1045
+    },
+    {
+      "id": "action-clocks.index.none",
+      "en": "(none)",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 873
+    },
+    {
+      "id": "action-clocks.index.not_stated",
+      "en": ": not stated",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1427
+    },
+    {
+      "id": "action-clocks.index.on_day_is_not_a_date",
+      "en": "on '{day}' is not a date written YYYY-MM-DD. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 880
+    },
+    {
+      "id": "action-clocks.index.on_day_is_not_a_date_after_today",
+      "en": "on '{day}' is not a date written YYYY-MM-DD after today ({today}): a further reminder is for a later day. Nothing was answered.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1002
+    },
+    {
+      "id": "action-clocks.index.on_is_the_day_to",
+      "en": "on= is the day to be reminded, YYYY-MM-DD; with no day, name the reminder to remove as from=. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 878
+    },
+    {
+      "id": "action-clocks.index.one_action_at_a_time",
+      "en": "one action at a time: pass target=<action id>",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 685
     },
     {
       "id": "action-clocks.index.owed_by_is_one_of",
       "en": "owed_by is one of {CLOCK_OWED_BY}. Nothing was written.",
       "module": "action-clocks",
       "file": "bio-plane/src/action-clocks/index.mjs",
-      "line": 1144
+      "line": 1129
+    },
+    {
+      "id": "action-clocks.index.owed_by_value_is_one_of",
+      "en": "owed_by '{value}' is one of {CLOCK_OWED_BY}. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1065
+    },
+    {
+      "id": "action-clocks.index.standard_id_state",
+      "en": " (standard {id}, {state})",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1422
+    },
+    {
+      "id": "action-clocks.index.the_other_side",
+      "en": "the other side",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1426
+    },
+    {
+      "id": "action-clocks.index.the_proposed_deadline_has_no_date",
+      "en": "the proposed deadline has no date: {why}. A member states such an entry by their own revision of the action, with its basis. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1050
+    },
+    {
+      "id": "action-clocks.index.the_rule_is_not_held",
+      "en": "the rule is not held with a primary source: UNMEASURED is not a basis",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/count.mjs",
+      "line": 279
+    },
+    {
+      "id": "action-clocks.index.this_action_has_no_readable_document",
+      "en": "this action has no readable bundle.md. Nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1182
+    },
+    {
+      "id": "action-clocks.index.this_action_holds_max_reminders_answered",
+      "en": "this action holds {max} reminders, the most it holds. Nothing was answered.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1009
+    },
+    {
+      "id": "action-clocks.index.this_action_holds_max_reminders_changed",
+      "en": "this action holds {max} reminders, the most it holds. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 891
+    },
+    {
+      "id": "action-clocks.index.this_actions_clock_block_is_not",
+      "en": "this action's clock block is not in a shape this grammar can extend in place; appending never rewrites the rest of the document, so nothing was written.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 1191
+    },
+    {
+      "id": "action-clocks.index.this_call_carries_nobody",
+      "en": "this call carries nobody: the proposer is stamped from the credential that asked.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 684
     },
     {
       "id": "action-clocks.index.this_clock_entry_is_proposed",
@@ -610,214 +1002,249 @@
       "line": 731
     },
     {
+      "id": "action-clocks.index.you_already_hold_a_reminder",
+      "en": "you already hold a reminder on this entry for {day}. Nothing was changed.",
+      "module": "action-clocks",
+      "file": "bio-plane/src/action-clocks/index.mjs",
+      "line": 888
+    },
+    {
       "id": "action-grammar.checks.a_records_law_in_the",
       "en": "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1860
+      "line": 1850
     },
     {
       "id": "action-grammar.checks.a_risk_tier_tells_whoever",
       "en": "A risk tier tells whoever reads this action whether it is safe to file, needs caution, or must not be filed without a lawyer, and somebody has to be answerable for that judgement. The credential that asked here is an automated one: it can carry forward the tier a member set, and where no member has set one it can leave the tier unstated, but it cannot set, change or remove one. Sign in to state the tier yourself.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1224
+      "line": 1219
     },
     {
       "id": "action-grammar.checks.action_kind_action_kind_is",
       "en": "action_kind '{action_kind}' is not a kind your team's Civicsmith offers",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1152
+      "line": 1147
     },
     {
       "id": "action-grammar.checks.an_action_says_who_it",
       "en": "An action says who it is addressed to: an office by its official role and the body it belongs to; a reporter, an organisation or another team by a role and the organisation; an audience described in words; or an undetermined addressee with a few words on what is known and what would settle it. This write carried a placeholder, a bare name outside those shapes, a person, or an addressee that said two things at once, so nothing was written. Leaving the addressee out is allowed while the action is a draft.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1584
+      "line": 1576
     },
     {
       "id": "action-grammar.checks.at_bearing_string_is_not",
       "en": "{at}.bearing '{String}' is not one of: {BEARINGS} (R24)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1094
+      "line": 1089
     },
     {
       "id": "action-grammar.checks.at_carries_a_speaker_on",
       "en": "{at} carries a speaker on a '{String}' entry: a speaker spoke for the team in a sending (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1034
+      "line": 1029
     },
     {
       "id": "action-grammar.checks.at_carries_found_elsewhere_on",
       "en": "{at} carries found_elsewhere on a '{String}' entry: a response found elsewhere is something received (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1023
+      "line": 1018
     },
     {
       "id": "action-grammar.checks.at_carries_the_offices_status",
       "en": "{at} carries the office's status with no outcome: the office's own wording is quoted beside a received entry's outcome, never in its place (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1009
+      "line": 1004
     },
     {
       "id": "action-grammar.checks.at_claim_string_is_not",
       "en": "{at}.claim '{String}' is not one of the action's legs (R24)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1091
+      "line": 1086
     },
     {
       "id": "action-grammar.checks.at_found_elsewhere_is_not",
       "en": "{at}.found_elsewhere is not one of {FOUND_ELSEWHERE_KINDS}, with a found_elsewhere_note of at most {FIELD_TEXT_MAX} characters and no quotation mark, backslash or line break (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1027
+      "line": 1022
     },
     {
       "id": "action-grammar.checks.at_note_is_longer_than",
       "en": "{at}.note is longer than {FIELD_TEXT_MAX} characters (R24)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1095
+      "line": 1090
     },
     {
       "id": "action-grammar.checks.at_office_status_string_is",
       "en": "{at}.office_status '{String}' is not a status the team's jurisdiction profile holds for this kind (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1018
+      "line": 1013
     },
     {
       "id": "action-grammar.checks.at_office_words_is_not",
       "en": "{at}.office_words is not the office's wording of 1 to {FIELD_TEXT_MAX} characters with no quotation mark, backslash or line break (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1012
+      "line": 1007
     },
     {
       "id": "action-grammar.checks.at_records_a_response_found",
       "en": "{at} records a response found elsewhere with no artifact_sha: it is held as a capture, never as an account alone (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1029
+      "line": 1024
     },
     {
       "id": "action-grammar.checks.at_repeats_the_claim_claim",
       "en": "{at} repeats the claim '{claim}' (R24)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1092
+      "line": 1087
     },
     {
       "id": "action-grammar.checks.at_speaker_is_not_a",
       "en": "{at}.speaker is not a member id of 1 to {SPEAKER_MAX} characters (R22)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1036
+      "line": 1031
+    },
+    {
+      "id": "action-grammar.checks.claims_i_is_not_a",
+      "en": "{at} is not a {claim, bearing, note?} entry (R24)",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1085
+    },
+    {
+      "id": "action-grammar.checks.claims_is_not_a_list_of",
+      "en": "claims is not a list of 1 to {BEARING_CLAIMS_MAX} {claim, bearing, note?} entries (R24)",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1080
     },
     {
       "id": "action-grammar.checks.clock_i_date_date_is",
       "en": "clock[{i}].date '{date}' is not YYYY-MM-DD",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1179
+      "line": 1174
     },
     {
       "id": "action-grammar.checks.copied_holds_length_addressees_at",
       "en": "copied holds {length} addressees; at most {COPIED_MAX} (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 912
+      "line": 907
     },
     {
       "id": "action-grammar.checks.copied_i_is_not_a",
       "en": "copied[{i}] is not a named addressee: an office, a press, organisation or group by role, never an audience or an undetermined one (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 917
+      "line": 912
     },
     {
       "id": "action-grammar.checks.copied_i_is_the_office",
       "en": "copied[{i}] is the office the action is addressed to: the addressee is not also copied (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 928
+      "line": 923
     },
     {
       "id": "action-grammar.checks.copied_i_repeats_an_earlier",
       "en": "copied[{i}] repeats an earlier copied addressee (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 924
+      "line": 919
     },
     {
       "id": "action-grammar.checks.counterparty_description_is_not_1",
       "en": "counterparty.description is not 1 to {AUDIENCE_DESCRIPTION_MAX} characters with no quote, backslash or line break (R9, arm: audience)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 639
+      "line": 638
+    },
+    {
+      "id": "action-grammar.checks.counterparty_entity_id_string_is",
+      "en": "counterparty.entity_id '{String}' is not a subject registry key (ENT-YYYY-NNNN)",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 630
     },
     {
       "id": "action-grammar.checks.counterparty_holder_is_not_the",
       "en": "counterparty.holder is not the reporter's name, 1 to {HOLDER_NAME_MAX} characters and no quote, backslash or line break (R9, arm: holder)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 678
+      "line": 677
     },
     {
       "id": "action-grammar.checks.counterparty_is_a_named_kind",
       "en": "counterparty is a named {kind} with no {v1}: a {kind_2} addressee is stated by a role and the organisation it belongs to, never a person by name (R9, arm: {kind_3})",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 625
+      "line": 624
     },
     {
       "id": "action-grammar.checks.counterparty_is_a_named_kind_2",
       "en": "counterparty is a named {kind} and carries {k}: only an office carries one (R9, arm: {kind_2})",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 627
+      "line": 626
     },
     {
       "id": "action-grammar.checks.counterparty_is_an_audience_and",
       "en": "counterparty is an audience and carries {map}: an audience is described, never named (R9, arm: audience)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 643
+      "line": 642
     },
     {
       "id": "action-grammar.checks.counterparty_is_what_and_carries",
       "en": "counterparty is {what} and carries holder: only a reporter is named, as the holder of the press role (R9, arm: holder)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 671
+      "line": 670
     },
     {
       "id": "action-grammar.checks.counterparty_kind_string_is_not",
       "en": "counterparty.kind '{String}' is not one of: {ADDRESSEE_KINDS} (R9, arm: kind)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 613
+      "line": 612
     },
     {
       "id": "action-grammar.checks.counterparty_state_is_undetermined_and",
       "en": "counterparty.state is undetermined and it carries {map}: the block asserts a counterparty and denies having one in the same breath (R9, arm: undetermined)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 655
+      "line": 654
     },
     {
       "id": "action-grammar.checks.each_entry_is_dated_as",
       "en": "Each entry is dated as recorded and names the entry it follows. Your team's Civicsmith derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgement about the body.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 742
+      "line": 741
+    },
+    {
+      "id": "action-grammar.checks.kind_as_written_named",
+      "en": " This action's kind, as written, named the records law it was made under; the record names no law from it, and nothing else is inferred from the kind.",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 413
     },
     {
       "id": "action-grammar.checks.law_is_not_a_citation",
@@ -838,84 +1265,91 @@
       "en": "lay the reply out once per claim the action put, each with one of: {BEARINGS}",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1083
+      "line": 1078
     },
     {
       "id": "action-grammar.checks.marking_a_reply_as_a",
       "en": "Marking a reply as a threat, retaliation, discrediting or legal harassment is a member's judgement, and somebody answers for it. The credential that asked here is an automated one, so it cannot mark one. Sign in to mark it yourself.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1677
+      "line": 1669
+    },
+    {
+      "id": "action-grammar.checks.minutes_are_kept_only_on",
+      "en": "Minutes can be kept only on a received reply to a public comment. This entry is not one, so remove the minutes, or record the reply on the public comment it answers. Nothing was written.",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1861
     },
     {
       "id": "action-grammar.checks.outcome_a_dated_first_party",
       "en": "OUTCOME: a dated first-party fact about the body, carried at full strength. It makes no causal claim, so there is nothing here to establish (DEC-14).",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 780
+      "line": 779
     },
     {
       "id": "action-grammar.checks.partners_holds_length_entries_at",
       "en": "partners holds {length} entries; at most {PARTNERS_MAX} (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 944
+      "line": 939
     },
     {
       "id": "action-grammar.checks.partners_i_carries_extra_a",
       "en": "partners[{i}] carries {extra}: a partner is an organisation by role, never a person (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 949
+      "line": 944
     },
     {
       "id": "action-grammar.checks.partners_i_entity_id_string",
       "en": "partners[{i}].entity_id '{String}' is not a subject registry key (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 953
+      "line": 948
     },
     {
       "id": "action-grammar.checks.partners_i_k_is_not",
       "en": "partners[{i}].{k} is not 1 to {PARTNER_TEXT_MAX} characters with no quote, backslash or line break (R20)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 951
+      "line": 946
     },
     {
       "id": "action-grammar.checks.press_terms_k_string_is",
       "en": "press_terms.{k} '{String}' is not a local date and time (YYYY-MM-DDTHH:MM) (R21)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 982
+      "line": 977
     },
     {
       "id": "action-grammar.checks.press_terms_note_is_not",
       "en": "press_terms.note is not at most {FIELD_TEXT_MAX} characters with no quote, backslash or line break (R21)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 984
+      "line": 979
     },
     {
       "id": "action-grammar.checks.press_terms_on_record_string",
       "en": "press_terms.on_record '{String}' is not one of: {PRESS_RECORD_TERMS} (R21)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 980
+      "line": 975
     },
     {
       "id": "action-grammar.checks.reply_owed_is_stated_with",
       "en": "reply_owed is stated with reply_owed_reason, the member's reason of 1 to {REPLY_OWED_REASON_MAX} characters with no quotation mark, backslash or line break, and the reason only with it (R23)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1058
+      "line": 1053
     },
     {
       "id": "action-grammar.checks.reply_owed_string_is_not",
       "en": "reply_owed '{String}' is not true or false (R23)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1052
+      "line": 1047
     },
     {
       "id": "action-grammar.checks.risk_tier_history_ord_by",
@@ -967,6 +1401,13 @@
       "line": 225
     },
     {
+      "id": "action-grammar.checks.seeks_is_not_a_list_of",
+      "en": "seeks is not a list of 1 to {SEEKS_MAX} {progression, entity, stage} entries (R13)",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 207
+    },
+    {
       "id": "action-grammar.checks.seeks_is_stated_on_a",
       "en": "seeks is stated on a '{String}' action: only a records_request names the stages it asks the records for (R13)",
       "module": "action-grammar",
@@ -978,49 +1419,70 @@
       "en": "stages[{i}].stage '{String}' is not a stage of a records request: one of {ALL_STAGES} (R25)",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1113
+      "line": 1108
+    },
+    {
+      "id": "action-grammar.checks.state_who_owes_the_date",
+      "en": "state who owes the date: the team, the body, or undetermined",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1182
     },
     {
       "id": "action-grammar.checks.that_stage_does_not_belong",
       "en": "That stage does not belong to this kind of entry. A request, a fee-waiver request, an appeal or a court filing is something sent; an acknowledgement, a fee estimate, a decision, an extension notice, a production or a denial is something received. A non-response carries no stage.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1392
+      "line": 1387
     },
     {
       "id": "action-grammar.checks.the_action_already_has_that",
       "en": "The action already has that risk tier, so there is nothing to revise. The history records changes; it has not been touched.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1488
+      "line": 1480
     },
     {
       "id": "action-grammar.checks.the_ground_stated_for_acting",
       "en": "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1735
+      "line": 1725
+    },
+    {
+      "id": "action-grammar.checks.the_minutes_are_malformed_the",
+      "en": "The minutes are malformed: the meeting is not one line of 1 to 200 characters, or the passage is not an extent of a capture. Correct each part to that form, then record the minutes again. Nothing was written.",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 1867
     },
     {
       "id": "action-grammar.checks.the_offices_own_wording_of",
       "en": "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1780
+      "line": 1770
+    },
+    {
+      "id": "action-grammar.checks.unproven_this_action_claims_impact",
+      "en": "UNPROVEN: this action claims IMPACT and rests on no evidence outside our own action, so the causal link is asserted from sequence alone. That is not a low score and not a failure — it is what we have not established. Cite something outside us (a statement naming the report, a staff memo, a hearing record) and it becomes a claim like any other (DEC-14).",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/checks.mjs",
+      "line": 795
     },
     {
       "id": "action-grammar.checks.whether_a_reply_is_owed",
       "en": "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1850
+      "line": 1840
     },
     {
       "id": "action-grammar.checks.which_law_governs_a_records",
       "en": "Which law governs a records request is a judgement a member makes and answers for. The credential that asked here is an automated one: it can write the request as a records request that names no law, and it can propose the law for a member to consider, but it cannot state the law, and cannot change or remove one. Sign in to state the law yourself.",
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/checks.mjs",
-      "line": 1513
+      "line": 1505
     },
     {
       "id": "action-grammar.grammar.a_request_for_comment_states",
@@ -1028,6 +1490,13 @@
       "module": "action-grammar",
       "file": "bio-plane/src/action-grammar/grammar.mjs",
       "line": 190
+    },
+    {
+      "id": "action-grammar.grammar.action_basis_i_target_string_is",
+      "en": "action_basis[{i}].target '{String}' is not a canonical record id",
+      "module": "action-grammar",
+      "file": "bio-plane/src/action-grammar/grammar.mjs",
+      "line": 164
     },
     {
       "id": "action-grammar.grammar.action_basis_i_target_target",
@@ -1079,11 +1548,137 @@
       "line": 32
     },
     {
+      "id": "action-holds.index.a_field_is_at_most",
+      "en": "{name} is at most {max} characters and cannot contain a quote, a backslash, or a newline",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 807
+    },
+    {
+      "id": "action-holds.index.a_hold_is_placed_at_exactly",
+      "en": "a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 253
+    },
+    {
+      "id": "action-holds.index.a_hold_is_placed_at_one",
+      "en": "a hold is placed at one place: pass target=<action id> (and ord=<entry position> for one entry), or project=<project id>",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 248
+    },
+    {
+      "id": "action-holds.index.a_hold_is_released_by",
+      "en": "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 397
+    },
+    {
+      "id": "action-holds.index.a_hold_notice_is_recorded",
+      "en": "a hold notice is recorded for a hold in place, and the hold at this place is not in place: none has been placed there, or it was released. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 106
+    },
+    {
+      "id": "action-holds.index.a_litigation_hold_is_one",
+      "en": "a litigation hold is one of {states}, with a reason of 1 to {max} characters and no quote, backslash or line break. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 388
+    },
+    {
+      "id": "action-holds.index.a_pressure_mark_is_kind_note",
+      "en": "a pressure mark is {kind, note}: kind one of {kinds}, the note 1 to {max} characters with no quote, backslash or line break. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 196
+    },
+    {
+      "id": "action-holds.index.artifact_sha_is_a_sha256",
+      "en": "artifact_sha is a sha256 hash (64 hex characters)",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 804
+    },
+    {
+      "id": "action-holds.index.marking_pressure_directed_at_the",
+      "en": "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 194
+    },
+    {
+      "id": "action-holds.index.no_correspondence_entry_of_that",
+      "en": "no correspondence entry of that action stands at that position, so no hold can be placed on it. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 266
+    },
+    {
+      "id": "action-holds.index.no_correspondence_entry_stands_at",
+      "en": "no correspondence entry stands at that position. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 223
+    },
+    {
+      "id": "action-holds.index.not_one",
+      "en": "not one",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 199
+    },
+    {
+      "id": "action-holds.index.one_action_at_a_time_pass",
+      "en": "one action at a time: pass target=<action id>",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 210
+    },
+    {
       "id": "action-holds.index.pressure_is_marked_on_a",
       "en": "pressure is marked on a received entry; this one is {v1}. Nothing was written.",
       "module": "action-holds",
       "file": "bio-plane/src/action-holds/index.mjs",
       "line": 199
+    },
+    {
+      "id": "action-holds.index.projects_is_a_list_of_1",
+      "en": "projects is a list of 1 to {max} distinct project ids (PROJ-…), each named once. Nothing was read.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 483
+    },
+    {
+      "id": "action-holds.index.projects_is_a_list_of_at",
+      "en": "projects is a list of at most {max} distinct project ids (PROJ-…). Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 484
+    },
+    {
+      "id": "action-holds.index.recording_that_the_hold_notice",
+      "en": "recording that the hold notice was sent is a member's statement of what she did; a machine credential may not make it. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 825
+    },
+    {
+      "id": "action-holds.index.saying_whether_a_litigation_hold",
+      "en": "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 386
+    },
+    {
+      "id": "action-holds.index.that_docket_entry_carries_no",
+      "en": "that docket entry carries no legal-pressure mark you can see, so it is no place for a hold. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 280
     },
     {
       "id": "action-holds.index.that_entry_is_already_marked",
@@ -1093,137 +1688,200 @@
       "line": 230
     },
     {
+      "id": "action-holds.index.the_actions_marks_could_not",
+      "en": "the actions' marks could not be read; this is not an empty list",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 731
+    },
+    {
+      "id": "action-holds.index.the_dockets_marks_could_not",
+      "en": "the docket's marks could not be read, so whether that entry is marked cannot be said. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 277
+    },
+    {
+      "id": "action-holds.index.the_dockets_marks_could_not_list",
+      "en": "the docket's marks could not be read; this is not an empty list",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 756
+    },
+    {
+      "id": "action-holds.index.the_governing_view_could_not",
+      "en": "the governing view could not be read, so the legal facts on a threat letter cannot be said; this is not an empty list",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 968
+    },
+    {
+      "id": "action-holds.index.the_litigation_holds_could_not",
+      "en": "the litigation holds could not be read, so whether these projects are held cannot be said. Ask again.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 567
+    },
+    {
       "id": "action-holds.index.this_places_hold_is_already",
       "en": "this place's hold is already released; a release ends a hold in place. Nothing was written.",
       "module": "action-holds",
       "file": "bio-plane/src/action-holds/index.mjs",
-      "line": 414
+      "line": 419
+    },
+    {
+      "id": "action-holds.index.what_prompted_a_hold_is",
+      "en": "what prompted a hold is a pressure mark, a pressure record, a docket entry marked as legal pressure, or a counsel matter, standing at the place the hold is placed; this names none you can see there. Nothing was written.",
+      "module": "action-holds",
+      "file": "bio-plane/src/action-holds/index.mjs",
+      "line": 326
     },
     {
       "id": "action-plans.checks.a_judgement_names_a_scenario",
       "en": "A judgement names a scenario of the plan, one of its phases that has a checkpoint, met or not_met, and a note of up to 500 characters. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 189
-    },
-    {
-      "id": "action-plans.checks.a_phase_has_an_id",
-      "en": "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, when another matter's track reaches a point, or when an obligation's occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.",
-      "module": "action-plans",
-      "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 169
+      "line": 187
     },
     {
       "id": "action-plans.checks.a_phase_starts_after_or",
       "en": "A phase starts after, or a judgement leads to, a phase of the same scenario, or a matter the plan is about. The one named is neither. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 181
+      "line": 179
     },
     {
       "id": "action-plans.checks.an_addressee_is_an_office",
       "en": "An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic organization by role and organisation, or a described audience. It is never a private individual. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 105
+      "line": 103
     },
     {
       "id": "action-plans.checks.whether_a_checkpoints_condition_was",
       "en": "Whether a checkpoint's condition was met is the team's own judgement. An assistant may not make it. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/checks.mjs",
-      "line": 185
+      "line": 183
     },
     {
       "id": "action-plans.index.a_plan_is_about_at",
       "en": "a plan is about at least one matter, and that is its last. Close the plan instead. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 738
+      "line": 735
     },
     {
       "id": "action-plans.index.a_proposal_names_who_made",
       "en": "a proposal names who made it, and this one came with no stamped caller. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 810
+      "line": 807
     },
     {
       "id": "action-plans.index.a_source_named_is_not",
       "en": "a source named is not a finding, determination, standard, consequence, plan or option this caller can see. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 894
+      "line": 891
     },
     {
       "id": "action-plans.index.action_plans_provider_was_not",
       "en": "action-plans: {provider} was not given",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2334
+      "line": 2329
     },
     {
       "id": "action-plans.index.id_goes_outside_the_team",
       "en": "{id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to {REASON_MAX} characters with no quotation mark, backslash or line break. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1451
+      "line": 1448
     },
     {
       "id": "action-plans.index.matter_i_is_already_in",
       "en": "matter {i} is already in the open plan {plan_id} of this project. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 408
+      "line": 406
+    },
+    {
+      "id": "action-plans.index.matter_is_neither",
+      "en": "matter {i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 360
+    },
+    {
+      "id": "action-plans.index.matter_named_twice",
+      "en": "matter {i} is named twice. Nothing was written.",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 359
     },
     {
       "id": "action-plans.index.phase_id_addresses_someone_outside",
       "en": "phase {id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1928
+      "line": 1925
     },
     {
       "id": "action-plans.index.phase_index_holds_an_option",
       "en": "phase {index} holds an option the team has not chosen: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1240
+      "line": 1237
     },
     {
       "id": "action-plans.index.phase_index_names_a_phase",
       "en": "phase {index} names a phase or a matter this scenario does not hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1244
+      "line": 1241
     },
     {
       "id": "action-plans.index.phase_v1_is_not_a",
       "en": "phase {v1} is not a phase this scenario can hold: {detail}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1236
+      "line": 1233
+    },
+    {
+      "id": "action-plans.index.regulated_dates_list",
+      "en": "regulated dates are a list of at most {max} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 462
     },
     {
       "id": "action-plans.index.run_string_is_not_a",
       "en": "run {String} is not a planning run of this plan. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 2320
+      "line": 2315
     },
     {
       "id": "action-plans.index.that_checkpoint_was_judged_judged",
       "en": "that checkpoint was judged {judged} by {author}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1394
+      "line": 1391
     },
     {
       "id": "action-plans.index.the_plan_holds_no_scenario",
       "en": "the plan holds no scenario {String}. Nothing was written.",
       "module": "action-plans",
       "file": "bio-plane/src/action-plans/index.mjs",
-      "line": 1193
+      "line": 1190
+    },
+    {
+      "id": "action-plans.says.phase_leads_here_not_led",
+      "en": "the phase that leads here has not led here yet, so no occurrence is read",
+      "module": "action-plans",
+      "file": "bio-plane/src/action-plans/index.mjs",
+      "line": 1285
     },
     {
       "id": "action-producers.index.a_checkpoint_come_due_is",
@@ -1363,14 +2021,77 @@
       "en": "a question is opened from an action by a member; a machine credential may not open one. Nothing was written.",
       "module": "action-records",
       "file": "bio-plane/src/action-records/index.mjs",
-      "line": 774
+      "line": 767
+    },
+    {
+      "id": "action-records.index.action_no_project",
+      "en": "this action belongs to no project, so there is nowhere to open a question from it. Nothing was written.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 775
     },
     {
       "id": "action-records.index.changes_opened_by_who_from",
       "en": "Changes: opened by {who} from the action {action} in the project {project}.",
       "module": "action-records",
       "file": "bio-plane/src/action-records/index.mjs",
-      "line": 802
+      "line": 794
+    },
+    {
+      "id": "action-records.index.correspond_machine_fence",
+      "en": "a correspondence entry is a named member's statement that this exchange happened — and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 158
+    },
+    {
+      "id": "action-records.index.entry_bad_date_time",
+      "en": "an entry is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 174
+    },
+    {
+      "id": "action-records.index.entry_capture_and_account",
+      "en": "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13).",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 179
+    },
+    {
+      "id": "action-records.index.entry_neither_capture_nor",
+      "en": "an entry carries either an artifact_sha that resolves in the register or an account with an author.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 182
+    },
+    {
+      "id": "action-records.index.is_n_laws_stated_by",
+      "en": "is {n} law(s) stated by a member",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 439
+    },
+    {
+      "id": "action-records.index.is_undetermined",
+      "en": "is UNDETERMINED",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 439
+    },
+    {
+      "id": "action-records.index.it_names_n_stages_a",
+      "en": "it names {n} stage(s) a member stated",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 494
+    },
+    {
+      "id": "action-records.index.ledger_bad_date",
+      "en": "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 175
     },
     {
       "id": "action-records.index.no_action_answers_to_that",
@@ -1380,186 +2101,389 @@
       "line": 102
     },
     {
+      "id": "action-records.index.no_action_one_action",
+      "en": "one action at a time: pass action=<action id>",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 768
+    },
+    {
+      "id": "action-records.index.no_member_has_stated",
+      "en": "no member has stated what it seeks",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 494
+    },
+    {
+      "id": "action-records.index.no_target_one_action",
+      "en": "one action at a time: pass target=<action id>",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 409
+    },
+    {
+      "id": "action-records.index.promise_machine_cannot_record",
+      "en": "a promise the team made to a person is recorded by a member; a machine credential may not record one. Nothing was written.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 671
+    },
+    {
+      "id": "action-records.index.receipt_bad_date",
+      "en": "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 145
+    },
+    {
+      "id": "action-records.index.receipt_capture_and_testimony",
+      "en": "a receipt is held as the captured bytes OR a named member's account, never both.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 146
+    },
+    {
+      "id": "action-records.index.receipt_machine_cannot_correspond",
+      "en": "a receipt is a named member's record that the team's sending reached its addressee. A machine credential may not record one. Sign in as a member.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 144
+    },
+    {
+      "id": "action-records.index.receipt_neither_capture_nor",
+      "en": "a receipt is held as captured bytes the register holds, or as a named member's account.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 147
+    },
+    {
+      "id": "action-records.index.receipt_unregistered_artifact",
+      "en": "this hash names no capture in this store. Capture it first, or record a named account instead.",
+      "module": "action-records",
+      "file": "bio-plane/src/action-records/index.mjs",
+      "line": 148
+    },
+    {
       "id": "action-records.index.the_question_is_1_to",
       "en": "the question is 1 to {ACTION_QUESTION_MAX} characters on one line. Nothing was written.",
       "module": "action-records",
       "file": "bio-plane/src/action-records/index.mjs",
-      "line": 777
+      "line": 770
+    },
+    {
+      "id": "action-replies.index.arising_form",
+      "en": "arising is {project} or {plan, matter}",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 60
+    },
+    {
+      "id": "action-replies.index.arose_linked",
+      "en": "this link is already recorded",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 377
+    },
+    {
+      "id": "action-replies.index.arose_not_reply",
+      "en": "the entry named is not a reply received",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 366
+    },
+    {
+      "id": "action-replies.index.entry_not_reply",
+      "en": "the entry named is not a reply received on this request",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 61
+    },
+    {
+      "id": "action-replies.index.machine_bearing",
+      "en": "a reply is laid out by a member; a machine may propose a layout",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 222
+    },
+    {
+      "id": "action-replies.index.machine_link",
+      "en": "what arose from a response is linked by a member",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 358
+    },
+    {
+      "id": "action-replies.index.machine_quoting",
+      "en": "what a reply says about being quoted is recorded by a member",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 275
+    },
+    {
+      "id": "action-replies.index.no_author",
+      "en": "this call carries nobody. The plane stamps the proposer from the credential that asked, and a proposal nobody can be named for is one the record could say nothing about.",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 58
+    },
+    {
+      "id": "action-replies.index.not_rfc_laid_out",
+      "en": "this action is not a request for comment; only a reply to one is laid out claim by claim",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 165
+    },
+    {
+      "id": "action-replies.index.not_rfc_quoting",
+      "en": "this action is not a request for comment; only a reply to one can ask not to be quoted",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 175
+    },
+    {
+      "id": "action-replies.index.one_action_at_a_time",
+      "en": "one action at a time: pass target=<action id>",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 57
+    },
+    {
+      "id": "action-replies.index.quoting_shape",
+      "en": "quotable is true or false, and with false the reply's own words that say so",
+      "module": "action-replies",
+      "file": "bio-plane/src/action-replies/index.mjs",
+      "line": 188
     },
     {
       "id": "actions.index.a_machine_write_may_move",
       "en": "a machine write may move a pending clock entry whose date, or stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 780
+      "line": 788
     },
     {
       "id": "actions.index.a_named_counterparty_is_an",
       "en": "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 742
+      "line": 750
+    },
+    {
+      "id": "actions.index.a_premise_override_is_a",
+      "en": "a premise override is a member's open statement that the team acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 819
     },
     {
       "id": "actions.index.a_resolved_action_names_how",
       "en": "a resolved action names how it ended: one of {RESOLUTIONS}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 748
+      "line": 756
     },
     {
       "id": "actions.index.action_kind_string_is_not",
       "en": "action_kind '{String}' is not a kind your team's Civicsmith offers: one of {kinds}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 714
+      "line": 722
     },
     {
       "id": "actions.index.an_action_recorded_for_a",
       "en": "an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to {v1}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 846
+      "line": 852
     },
     {
       "id": "actions.index.an_action_recorded_for_a_2",
       "en": "an action recorded for a breach rests on a conformance determination, and no determination can be read on your team's Civicsmith yet, so none could be found. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1240
+      "line": 1329
     },
     {
       "id": "actions.index.an_entry_carries_the_captured",
       "en": "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the team can defend.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 3164
+      "line": 3284
     },
     {
       "id": "actions.index.clock_i_date_date_is",
       "en": "clock[{i}].date '{date}' is not YYYY-MM-DD",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 758
+      "line": 766
     },
     {
       "id": "actions.index.contact_names_a_member_of",
       "en": "contact names a member of your team by member id, and this one names none. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 167
+      "line": 175
     },
     {
       "id": "actions.index.copied_i_entity_id_names",
       "en": "copied[{i}].entity_id names a person or no office the subject registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 980
+      "line": 985
     },
     {
       "id": "actions.index.copied_i_entity_id_not",
       "en": "copied[{i}].entity_id: not an office entity (R9, arm: office)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 981
+      "line": 986
     },
     {
       "id": "actions.index.correspondence_artifact_sha_sha_does",
       "en": "correspondence artifact_sha '{sha}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1168
+      "line": 1257
     },
     {
       "id": "actions.index.counterparty_entity_id_eid_names",
       "en": "counterparty.entity_id '{eid}' names a person in the subject registry: an action is addressed to an office, an organisation or an audience, never a private individual (R9, arm: person)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 736
+      "line": 744
     },
     {
       "id": "actions.index.counterparty_entity_id_eid_names_2",
       "en": "counterparty.entity_id '{eid}' names {v1}: an office addressee's entity is an office entity (R9, arm: office)",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 739
+      "line": 747
     },
     {
       "id": "actions.index.direction_is_one_of_correspondence",
       "en": "direction is one of {CORRESPONDENCE_DIRECTIONS}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1596
+      "line": 1685
+    },
+    {
+      "id": "actions.index.marking_pressure_directed_at_the",
+      "en": "marking pressure directed at the team is a member's judgement; a machine credential may not mark it. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 2037
     },
     {
       "id": "actions.index.message_nothing_was_written",
       "en": "{message}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 839
+      "line": 845
+    },
+    {
+      "id": "actions.index.minutes_are_the_meeting_one",
+      "en": "minutes are a meeting, a date and a passage: the meeting named on one line of 1 to 200 characters with no quote or backslash, the day it was held, and the passage of the minutes as a capture and the part of it. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 1780
     },
     {
       "id": "actions.index.nothing_arrived_so_there_are",
       "en": "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1609
+      "line": 1698
     },
     {
       "id": "actions.index.pressure_is_marked_on_a",
       "en": "pressure is marked on a received entry; this one is {v1}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1929
+      "line": 2043
     },
     {
       "id": "actions.index.rel_rel_target_target_status",
       "en": "  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: \"{v1}\"",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 577
+      "line": 585
     },
     {
       "id": "actions.index.speaker_is_the_member_id",
       "en": "speaker is the member id of the member who spoke for the team in this sending. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1887
+      "line": 2002
     },
     {
       "id": "actions.index.stage_stage_is_not_one",
       "en": "stage '{stage}' is not one the law this request is made under lists, as your team's jurisdiction states it. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1807
+      "line": 1921
     },
     {
       "id": "actions.index.text_session_log_entry",
       "en": "{text}\n## Session Log\n\n{entry}",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 599
+      "line": 607
+    },
+    {
+      "id": "actions.index.the_passage_has_a_part",
+      "en": "the passage has a part that cannot be kept on the reply's entry: name it by its kind and the fields that kind has. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 1790
     },
     {
       "id": "actions.index.the_record_asserts_only_what",
       "en": "the record asserts only what was quoted, by whom, when, and for which request. It sets quotes side by side and judges none of them (DEC-24).",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 2406
+      "line": 2517
+    },
+    {
+      "id": "actions.index.the_teams_contact_for_an",
+      "en": "the team's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 865
+    },
+    {
+      "id": "actions.index.this_action_states_that_the",
+      "en": "this action states that the body owes the team no reply, so silence is never recorded as a non-response. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 1820
     },
     {
       "id": "actions.index.this_actions_part_holds_count",
       "en": "this action's {part} holds {count} entries; an action holds at most {limit}. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 1112
+      "line": 1201
     },
     {
       "id": "actions.index.v1_a_risk_tier_is",
       "en": "{v1} A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.",
       "module": "actions",
       "file": "bio-plane/src/actions/index.mjs",
-      "line": 656
+      "line": 664
+    },
+    {
+      "id": "actions.index.whether_a_body_owes_the",
+      "en": "whether a body owes the team a reply is a member's statement; a machine credential may not set or change it. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 1026
+    },
+    {
+      "id": "actions.index.who_spoke_for_the_team",
+      "en": "who spoke for the team in a sending is a member's statement; a machine credential may not set it. Nothing was written.",
+      "module": "actions",
+      "file": "bio-plane/src/actions/index.mjs",
+      "line": 1071
     },
     {
       "id": "admission.index.no_member_of_this_team",
@@ -13889,6 +14813,13 @@
       "line": 218
     },
     {
+      "id": "conformance.checks.a_determination_is_recorded_only",
+      "en": "A determination is recorded only by the determination act, and never edited: a correction is a new determination that supersedes it. Nothing was written.",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/checks.mjs",
+      "line": 222
+    },
+    {
       "id": "conformance.checks.a_determination_rests_on_findings",
       "en": "A determination rests on findings of three kinds: published by this project in a ratified case edition; checked for publication and held unsigned by this project; or another team's finding this team has accepted at the edition named. The finding named is none of these. Nothing was written.",
       "module": "conformance",
@@ -13910,60 +14841,74 @@
       "line": 190
     },
     {
+      "id": "conformance.index.a_determination_measures_the_act",
+      "en": "a determination measures the act against at least one standard the record holds (R14). Nothing was written.",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/index.mjs",
+      "line": 748
+    },
+    {
       "id": "conformance.index.a_determination_rests_on_at",
       "en": "a determination rests on at least one finding: published, checked and held, or accepted from another team (R14). Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 659
+      "line": 658
     },
     {
       "id": "conformance.index.another_teams_determination_is_never",
       "en": "another team's determination is never adopted as this team's: a member of this team determines, against standards in this team's record. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 362
+      "line": 361
     },
     {
       "id": "conformance.index.id_is_a_determination_of",
       "en": "{id} is a determination of {act_id}, and this names {event}. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 970
+      "line": 968
     },
     {
       "id": "conformance.index.id_was_not_in_force",
       "en": "{id} was not in force on {date}{v1}. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 765
+      "line": 763
     },
     {
       "id": "conformance.index.name_which_side_of_the",
       "en": "name which side of the question states what the standard requires, a or b: your team's Civicsmith never chooses it. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1759
+      "line": 1757
+    },
+    {
+      "id": "conformance.index.no_office_entity_is_held",
+      "en": "no office entity is held for this role and body, so the actor stands as the office's role and body only",
+      "module": "conformance",
+      "file": "bio-plane/src/conformance/index.mjs",
+      "line": 123
     },
     {
       "id": "conformance.index.only_a_member_who_has",
       "en": "only a member who has joined the project records its determinations. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 292
+      "line": 291
     },
     {
       "id": "conformance.index.the_act_names_no_event",
       "en": "the act names no event: a government act is the event that records what was done. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 465
+      "line": 464
     },
     {
       "id": "conformance.index.whether_standard_binds_v1_is",
       "en": "whether {standard} binds {v1} is undetermined ({v2}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.",
       "module": "conformance",
       "file": "bio-plane/src/conformance/index.mjs",
-      "line": 1073
+      "line": 1071
     },
     {
       "id": "connection-grammar.conformance.a_hunch_is_returned_with",
@@ -14915,77 +15860,119 @@
       "en": "A part is recorded addressed or not_addressed.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/checks.mjs",
-      "line": 81
+      "line": 79
+    },
+    {
+      "id": "consequences.checks.a_reason_is_at_most_500",
+      "en": "A reason is at most 500 characters: say why in a sentence or two. Nothing was written.",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/checks.mjs",
+      "line": 77
     },
     {
       "id": "consequences.checks.a_revision_says_why",
       "en": "A revision says why.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/checks.mjs",
-      "line": 77
+      "line": 76
     },
     {
       "id": "consequences.checks.say_in_your_own_words",
       "en": "Say in your own words what changed: at most 2,000 characters. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/checks.mjs",
-      "line": 94
+      "line": 92
     },
     {
       "id": "consequences.checks.saying_the_teams_action_caused",
       "en": "Saying the team's action caused the change is a statement in your own words, at most 2,000 characters. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/checks.mjs",
-      "line": 99
+      "line": 97
     },
     {
       "id": "consequences.checks.whether_the_cause_rests_only",
       "en": "Whether the cause rests only on the team's own acts could not be checked, so it is not recorded. You may state the sequence of events instead. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/checks.mjs",
-      "line": 102
+      "line": 100
+    },
+    {
+      "id": "consequences.index.a_carry_names_one",
+      "en": "a carry names one of {success}, {addressed} or {cure}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1369
     },
     {
       "id": "consequences.index.a_cause_rests_on_1",
       "en": "a cause rests on 1 to {evidence} items of evidence this record holds and you may see.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1205
+      "line": 1197
+    },
+    {
+      "id": "consequences.index.a_computation_names_its",
+      "en": "a computation names its op, one of {ops}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 642
+    },
+    {
+      "id": "consequences.index.a_computation_operands_are",
+      "en": "a computation's operands are a list, each {content, figure} (the content id whose passage holds the figure, and the figure as read), a money fact (its id) or {calculation, key} (a calculation's result, named by its key)",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 645
     },
     {
       "id": "consequences.index.a_consequence_is_recorded_addressed",
       "en": "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1010
+      "line": 1004
     },
     {
       "id": "consequences.index.a_machine_may_prepare_a",
       "en": "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 618
+      "line": 616
     },
     {
       "id": "consequences.index.a_measures_unit_is_one",
       "en": "a measure's unit is one of {UNITS}. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 239
+      "line": 238
     },
     {
       "id": "consequences.index.a_part_is_recorded_addressed",
       "en": "a part is recorded {ADDRESSED_STATES}. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 985
+      "line": 979
+    },
+    {
+      "id": "consequences.index.a_person_a_document",
+      "en": "a person a document names: answered by this module's reads only to a viewer who may see the passage naming them (R16)",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1638
+    },
+    {
+      "id": "consequences.index.a_person_is_named_only",
+      "en": "a person is named only on kind \"person\", and this is {kind}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 222
     },
     {
       "id": "consequences.index.a_rationale_is_at_most",
       "en": "a rationale is at most {RATIONALE_MAX} characters. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 624
+      "line": 622
     },
     {
       "id": "consequences.index.a_reason_is_at_most",
@@ -14999,77 +15986,133 @@
       "en": "a reason is at most {STATEMENT_MAX} characters.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 991
+      "line": 985
     },
     {
       "id": "consequences.index.a_reason_is_at_most_3",
       "en": "a reason is at most {STATEMENT_MAX} characters.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1083
+      "line": 1077
     },
     {
       "id": "consequences.index.a_revision_of_a_success",
       "en": "a revision of a success record says why.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1081
+      "line": 1075
+    },
+    {
+      "id": "consequences.index.a_role_is_an_office",
+      "en": "a role is an office, {role, body}: the office and the body it belongs to",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 221
     },
     {
       "id": "consequences.index.a_success_record_is_a",
       "en": "a success record is a member's statement; a machine may compute a figure for a member to adopt, and never records one.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1132
+      "line": 1126
+    },
+    {
+      "id": "consequences.index.a_success_records_figures",
+      "en": "a success record's figures are a list, each {label, basis: {op, operands}}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1169
     },
     {
       "id": "consequences.index.a_success_rests_on_evidence",
       "en": "a success rests on evidence: content or findings this record holds and you may see.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1152
+      "line": 1146
     },
     {
       "id": "consequences.index.acting_on_a_consequence_is",
       "en": "acting on a consequence is work inside {project}, and {str} has not joined it.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 518
+      "line": 516
+    },
+    {
+      "id": "consequences.index.an_affected_is_described",
+      "en": "an affected is described",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 219
+    },
+    {
+      "id": "consequences.index.an_affected_is_kind",
+      "en": "an affected is {kind, description, role?, person?}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 217
+    },
+    {
+      "id": "consequences.index.an_affected_person_names",
+      "en": "an affected person names the person entity",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 454
     },
     {
       "id": "consequences.index.an_assessed_value_says_why",
       "en": "an assessed value says why: a rationale of at most {RATIONALE_MAX} characters. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 622
+      "line": 620
     },
     {
       "id": "consequences.index.bundle_id_s_latest_statement",
       "en": "{bundle_id}'s latest statement is {v1}, not addressed.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1390
+      "line": 1382
     },
     {
       "id": "consequences.index.calc_grammar_refuses_the_computation",
       "en": "calc-grammar refuses the computation: {why}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 744
+      "line": 740
     },
     {
       "id": "consequences.index.carrying_an_outcome_into_a",
       "en": "carrying an outcome into a case's next edition is a member's act.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1372
+      "line": 1364
+    },
+    {
+      "id": "consequences.index.entity_is_not_a_person",
+      "en": "{entity} is not a person this record holds",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 453
     },
     {
       "id": "consequences.index.every_item_of_the_causes",
       "en": "every item of the cause's evidence is the team's own act, which is never evidence that it caused the change; the sequence of events may be stated instead.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1213
+      "line": 1205
+    },
+    {
+      "id": "consequences.index.figure_i_is_computed_from",
+      "en": "figure {i} ({label}) is computed from cited sources, never stated: give its computation {op, operands}.{NOTHING}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1176
+    },
+    {
+      "id": "consequences.index.figure_i_is_label",
+      "en": "figure {i} is {label, basis: {op, operands}}, its label words of at most 200 characters",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1172
     },
     {
       "id": "consequences.index.id_has_been_revised_by",
@@ -15083,14 +16126,28 @@
       "en": "{id} has been revised by {next}; act on that one.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1531
+      "line": 1523
     },
     {
       "id": "consequences.index.id_s_outcome_for_v1",
       "en": "{id}'s outcome for {v1} is {v2}, not noncompliant: a consequence is what a breach did.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 564
+      "line": 562
+    },
+    {
+      "id": "consequences.index.is_not_a_kind_of_affected",
+      "en": "{kind} is not a kind of affected",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 218
+    },
+    {
+      "id": "consequences.index.kind_one_of",
+      "en": "{why}: kind one of {kinds}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 216
     },
     {
       "id": "consequences.index.no_consequence_part_answers_to",
@@ -15100,144 +16157,193 @@
       "line": 165
     },
     {
+      "id": "consequences.index.no_inquiry_is_named_whose",
+      "en": "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 403
+    },
+    {
       "id": "consequences.index.no_standing_cure_is_linked",
       "en": "no standing cure is linked to {v1} for {v2}.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1537
+      "line": 1529
+    },
+    {
+      "id": "consequences.index.operand_i_why",
+      "en": "operand {i}: {why}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 676
+    },
+    {
+      "id": "consequences.index.operand_i_why_2",
+      "en": "operand {i} {why}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 664
+    },
+    {
+      "id": "consequences.index.per_axis_never_composed",
+      "en": "per axis, never composed (DEC-44)",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 866
     },
     {
       "id": "consequences.index.recording_a_success_is_work",
       "en": "recording a success is work inside {project}, and {str} has not joined it.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1138
+      "line": 1132
+    },
+    {
+      "id": "consequences.index.that_the_teams_action_caused",
+      "en": "that the team's action caused the change is stated in the member's words, 1 to {STATEMENT_MAX} characters.{NOTHING}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 1193
     },
     {
       "id": "consequences.index.the_operands_result_is_in",
       "en": "the operands' result is in {dims}, and the measure is of {unit}{v1}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 761
+      "line": 757
+    },
+    {
+      "id": "consequences.index.the_record_says_why",
+      "en": "the record says why.{NOTHING}",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 176
     },
     {
       "id": "consequences.index.the_sequence_of_events_is",
       "en": "the sequence of events is the member's text.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1144
+      "line": 1138
     },
     {
       "id": "consequences.index.the_weakest_operand_is_w",
       "en": "the weakest operand is {w} ({v1} {ref}), whose {v2} is {grade} ({route}); a computation is as strong as its weakest figure (DEC-21)",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 780
+      "line": 776
     },
     {
       "id": "consequences.index.the_weakest_operands_capture_grade",
       "en": "the weakest operand's capture grade is {grade}; a computation is as strong as its weakest figure (DEC-21)",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1625
+      "line": 1617
     },
     {
       "id": "consequences.index.the_weakest_operands_grade_is",
       "en": "the weakest operand's grade is {grade}; a computation is as strong as its weakest figure (DEC-21)",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1600
+      "line": 1592
     },
     {
       "id": "consequences.index.v1_a_harmed_person_is",
       "en": "{v1}: a harmed person is a registered person entity.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 455
+      "line": 453
     },
     {
       "id": "consequences.index.v1_is_over_its_cap",
       "en": "{v1} is over its cap of {v2}.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1159
+      "line": 1153
     },
     {
       "id": "consequences.index.v1_no_success_record_answers",
       "en": "{v1}no success record answers to that id here; one you may not see is answered exactly as one that does not exist.{v2}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1526
+      "line": 1518
     },
     {
       "id": "consequences.index.v1_redress_as_a_figure",
       "en": "{v1} redress as a figure; say it in words, with evidence.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 995
+      "line": 989
+    },
+    {
+      "id": "consequences.index.what_an_assessment_rests",
+      "en": "what an assessment rests on is a list of content ids or findings, possibly empty",
+      "module": "consequences",
+      "file": "bio-plane/src/consequences/index.mjs",
+      "line": 625
     },
     {
       "id": "consequences.index.what_changed_is_stated_in",
       "en": "what changed is stated in the member's words, 1 to {STATEMENT_MAX} characters.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1142
+      "line": 1136
     },
     {
       "id": "consequences.index.what_content_or_findings_this",
       "en": "{what} content or findings this record holds and you may see.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 443
+      "line": 441
     },
     {
       "id": "consequences.index.when_the_change_took_place",
       "en": "when the change took place is a real calendar date, YYYY-MM-DD, or an EDTF band of dates.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1148
+      "line": 1142
     },
     {
       "id": "consequences.index.whether_a_consequence_has_been",
       "en": "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 977
+      "line": 971
     },
     {
       "id": "consequences.index.whether_a_part_is_addressed",
       "en": "whether a part is addressed or not is said with a reason.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 989
+      "line": 983
     },
     {
       "id": "consequences.index.whether_the_causes_evidence_is",
       "en": "whether the cause's evidence is only the team's own acts could not be read, so the cause is not accepted; the sequence of events may be stated instead.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 1210
+      "line": 1202
     },
     {
       "id": "consequences.index.why_a_person_is_recorded",
       "en": "{why}: a person is recorded as affected only as a document in the record names them.{NOTHING}",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 458
+      "line": 456
     },
     {
       "id": "consequences.index.why_nothing_was_written",
       "en": "{why}. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 242
+      "line": 241
     },
     {
       "id": "consequences.index.why_nothing_was_written_2",
       "en": "{why}. Nothing was written.",
       "module": "consequences",
       "file": "bio-plane/src/consequences/index.mjs",
-      "line": 279
+      "line": 278
     },
     {
       "id": "content.extent-core.a_slide_shape_extent_names",
@@ -20721,32 +21827,81 @@
       "line": 135
     },
     {
+      "id": "escalation.index.basis_undetermined",
+      "en": "the record does not state (undetermined)",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 1546
+    },
+    {
+      "id": "escalation.index.clock_entry_past_undetermined",
+      "en": "whether this action's clock entry is past is undetermined (actions R12: no time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is not triggered by time on it",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 450
+    },
+    {
+      "id": "escalation.index.consequence_state_undetermined",
+      "en": "of a state the record does not state (undetermined)",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 205
+    },
+    {
+      "id": "escalation.index.date_undetermined",
+      "en": "on a date the record does not state (undetermined)",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 1546
+    },
+    {
+      "id": "escalation.index.determination_states",
+      "en": " The determination states: {disagreement}.",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 1523
+    },
+    {
+      "id": "escalation.index.doubt_and_reason",
+      "en": "{doubt}; and {why}",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 673
+    },
+    {
       "id": "escalation.index.escalation_provider_was_not_given",
       "en": "escalation: {provider} was not given",
       "module": "escalation",
       "file": "bio-plane/src/escalation/index.mjs",
-      "line": 1766
+      "line": 1751
+    },
+    {
+      "id": "escalation.index.its_state_is",
+      "en": "; its state is {state}",
+      "module": "escalation",
+      "file": "bio-plane/src/escalation/index.mjs",
+      "line": 1540
     },
     {
       "id": "escalation.index.offices_holding_an_oversees_or",
       "en": "offices holding an oversees or appoints line to the actor's office, or to an organisation it is part of, valid on this day: the targets the record supports. They are offered; a member chooses, and the profile is read only where no line is held.",
       "module": "escalation",
       "file": "bio-plane/src/escalation/index.mjs",
-      "line": 716
+      "line": 708
     },
     {
       "id": "escalation.index.this_escalation_has_ended_nothing",
       "en": "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.",
       "module": "escalation",
       "file": "bio-plane/src/escalation/index.mjs",
-      "line": 1722
+      "line": 1707
     },
     {
       "id": "escalation.index.whether_the_consequences_are_addressed",
       "en": "whether the consequences are addressed is undetermined: {why}. A team that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.",
       "module": "escalation",
       "file": "bio-plane/src/escalation/index.mjs",
-      "line": 1275
+      "line": 1262
     },
     {
       "id": "events.follow.a_register_import_reads_one",
@@ -22681,81 +23836,340 @@
       "line": 132
     },
     {
-      "id": "filing-templates.checks.a_templates_kind_is_written",
-      "en": "A template's kind is written as a kind is: lower-case letters, digits and underscores.",
-      "module": "filing-templates",
-      "file": "bio-plane/src/filing-templates/checks.mjs",
-      "line": 48
-    },
-    {
-      "id": "filing-templates.checks.name_the_reviewer_and_their",
-      "en": "Name the reviewer and their organisation, each in one line of at most 200 characters.",
-      "module": "filing-templates",
-      "file": "bio-plane/src/filing-templates/checks.mjs",
-      "line": 136
-    },
-    {
-      "id": "filing-templates.checks.this_kind_is_filed_with",
-      "en": "This kind is filed with a court, so no template the team files in its own name is kept for it until a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.",
-      "module": "filing-templates",
-      "file": "bio-plane/src/filing-templates/checks.mjs",
-      "line": 218
-    },
-    {
       "id": "filing-templates.index.a_comment_is_1_to",
       "en": "a comment is 1 to {COMMENT_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 1092
+      "line": 1094
+    },
+    {
+      "id": "filing-templates.index.a_comment_names_who_wrote_it",
+      "en": "a comment names who wrote it: this call carries nobody",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1094
+    },
+    {
+      "id": "filing-templates.index.a_draft_is_revised_by_a_joined_participant",
+      "en": "a draft is revised by a joined participant of its project",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 706
+    },
+    {
+      "id": "filing-templates.index.a_draft_is_submitted_by_a_joined_participant",
+      "en": "a draft is submitted by a joined participant of its project",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 792
+    },
+    {
+      "id": "filing-templates.index.a_drafts_notes_are_edited_by_revising_it",
+      "en": "a draft's notes are edited by revising it (op=templaterevise, notes=)",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1100
+    },
+    {
+      "id": "filing-templates.index.a_filing_source_is_the_approved_drafts_id_and_sha",
+      "en": "a filing source is {filing, sha}: the approved draft's id and its text's SHA-256",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 644
+    },
+    {
+      "id": "filing-templates.index.a_filings_text_becomes_a_template_only_through_filings",
+      "en": "a filing's text becomes a template only through filings' own act (op=templatesave)",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 642
     },
     {
       "id": "filing-templates.index.a_is_not_a_member",
       "en": "'{a}' is not a member who can read the template",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 802
+      "line": 804
+    },
+    {
+      "id": "filing-templates.index.a_kind_is_lower_case_letters_digits_and_underscores",
+      "en": "a kind is lower-case letters, digits and underscores, beginning with a letter",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 537
+    },
+    {
+      "id": "filing-templates.index.a_note_is_added_by_a_member_who_may_revise",
+      "en": "a note is added by a member who may revise the template",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1098
+    },
+    {
+      "id": "filing-templates.index.a_profiles_template_is_already_offered_to_the_whole_team",
+      "en": "a profile's template is already offered to the whole team",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 968
+    },
+    {
+      "id": "filing-templates.index.a_profiles_template_is_read_only_here",
+      "en": "a profile's template is read-only here",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 706
+    },
+    {
+      "id": "filing-templates.index.a_profiles_template_is_read_only_here_draft_from_it",
+      "en": "a profile's template is read-only here: draft the team's own from it (from=)",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 621
+    },
+    {
+      "id": "filing-templates.index.a_request_for_comment_carries_the_quoting_sentence",
+      "en": "a request for comment carries the sentence that the reply may be quoted unless it says otherwise",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 147
+    },
+    {
+      "id": "filing-templates.index.a_review_grant_is_opened_by_a_joined_participant",
+      "en": "a review grant is opened by a joined participant of the template's project",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 837
+    },
+    {
+      "id": "filing-templates.index.a_review_grant_is_revoked_by_a_joined_participant",
+      "en": "a review grant is revoked by a joined participant of the template's project",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 874
+    },
+    {
+      "id": "filing-templates.index.a_review_requesting_changes_stands",
+      "en": "a review requesting changes stands",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 996
+    },
+    {
+      "id": "filing-templates.index.a_template_is_drafted_by_a_joined_participant",
+      "en": "a template is drafted by a joined participant of its project",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 622
+    },
+    {
+      "id": "filing-templates.index.a_template_is_named_as_at_and_its_names_handle",
+      "en": "a template is named as @ and its name's handle: lower-case letters and digits, runs joined by single hyphens",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1224
+    },
+    {
+      "id": "filing-templates.index.a_template_is_named_by_its_id_or_by_its_name_not_both",
+      "en": "a template is named by its id or by its name, not both",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1250
     },
     {
       "id": "filing-templates.index.a_template_is_named_in",
       "en": "a template is named in one line of 1 to {TEMPLATE_NAME_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 555
+      "line": 557
+    },
+    {
+      "id": "filing-templates.index.a_template_names_the_profiles_it_is_written_for",
+      "en": "a template names the profiles it is written for, or general",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 548
+    },
+    {
+      "id": "filing-templates.index.a_templates_use_is_file_or_brief",
+      "en": "a template's use is file or brief",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 546
     },
     {
       "id": "filing-templates.index.a_templates_words_are_non",
       "en": "a template's words are non-empty UTF-8 text of at most {FILING_TEXT_MAX} bytes",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 566
+      "line": 568
+    },
+    {
+      "id": "filing-templates.index.a_tier_1_kind_needs_one_members_review",
+      "en": "a Tier 1 kind needs one member's review with no concerns",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 997
+    },
+    {
+      "id": "filing-templates.index.a_version_is_withdrawn_by_its_author",
+      "en": "a version is withdrawn by its author",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1053
     },
     {
       "id": "filing-templates.index.a_versions_notes_are_text",
       "en": "a version's notes are text of at most {TEMPLATE_NOTES_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 571
+      "line": 573
+    },
+    {
+      "id": "filing-templates.index.an_administrator_makes_a_template_team_wide",
+      "en": "an administrator makes a template team-wide",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 973
+    },
+    {
+      "id": "filing-templates.index.an_administrator_retires_a_team_wide_template",
+      "en": "an administrator retires a team-wide template",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1037
+    },
+    {
+      "id": "filing-templates.index.an_owner_of_the_templates_project_approves_it",
+      "en": "an owner of the template's project approves it",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 982
+    },
+    {
+      "id": "filing-templates.index.an_owner_of_the_templates_project_retires_it",
+      "en": "an owner of the template's project retires it",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1037
+    },
+    {
+      "id": "filing-templates.index.an_undetermined_tier",
+      "en": "an undetermined tier",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 998
+    },
+    {
+      "id": "filing-templates.index.blank_is_not_a_blank_filings_fill",
+      "en": "{{{blank}}} is not a blank filings fill",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 128
+    },
+    {
+      "id": "filing-templates.index.blank_is_not_a_blank_filings_fill_not_offered",
+      "en": "{{{blank}}} is not a blank filings fill, so this template is not offered",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 127
+    },
+    {
+      "id": "filing-templates.index.from_names_a_version_a_proposal_or_an_approved_filing_draft",
+      "en": "from names a version, a proposal, or (through filings) an approved filing draft",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 654
     },
     {
       "id": "filing-templates.index.give_the_reason_in_1",
       "en": "give the reason in 1 to {ENDING_REASON_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 1037
+      "line": 1039
     },
     {
       "id": "filing-templates.index.give_the_reason_in_1_2",
       "en": "give the reason in 1 to {ENDING_REASON_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 1055
+      "line": 1057
+    },
+    {
+      "id": "filing-templates.index.name_a_member_to_review_it_or_open_a_review_grant",
+      "en": "name a member to review it, or open a review grant on the version first",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 808
+    },
+    {
+      "id": "filing-templates.index.no_fresh_secret_digest_was_stamped_for_this_grant",
+      "en": "no fresh secret digest was stamped for this grant: your team's Civicsmith makes the secret",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 846
+    },
+    {
+      "id": "filing-templates.index.no_member_is_named_as_the_one_acting",
+      "en": "no member is named as the one acting: this call carries nobody",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 215
     },
     {
       "id": "filing-templates.index.no_profile_missing_is_held",
       "en": "no profile '{missing}' is held",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 548
+      "line": 550
+    },
+    {
+      "id": "filing-templates.index.no_proposal_from_is_readable_here",
+      "en": "no proposal '{from}' is readable here",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 652
+    },
+    {
+      "id": "filing-templates.index.no_review_grant_by_that_id_is_readable_here",
+      "en": "no review grant by that id is readable here",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 870
+    },
+    {
+      "id": "filing-templates.index.no_stamped_proposer_a_proposal_names_who_made_it",
+      "en": "no stamped proposer: a proposal names who made it",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 744
+    },
+    {
+      "id": "filing-templates.index.no_such_version_of_this_template",
+      "en": "no such version of this template",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1272
+    },
+    {
+      "id": "filing-templates.index.no_template_by_that_id_is_readable_here",
+      "en": "no template by that id is readable here; one you may not see answers the same",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 224
+    },
+    {
+      "id": "filing-templates.index.no_template_is_named_give_its_id_or_its_name",
+      "en": "no template is named: give its id, or @ and its name",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1251
+    },
+    {
+      "id": "filing-templates.index.no_version_from_is_readable_here",
+      "en": "no version '{from}' is readable here",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 648
     },
     {
       "id": "filing-templates.index.nothing_answers_to_this_review",
@@ -22765,74 +24179,116 @@
       "line": 113
     },
     {
+      "id": "filing-templates.index.of_a_retired_template",
+      "en": "of a retired template",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 970
+    },
+    {
       "id": "filing-templates.index.outcome_is_one_of_review",
       "en": "outcome is one of {REVIEW_OUTCOMES}; scope 1 to {REVIEW_SCOPE_MAX} characters; comment at most {REVIEW_COMMENT_MAX}; credential at most {REVIEW_CREDENTIAL_MAX}",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 931
+      "line": 933
     },
     {
       "id": "filing-templates.index.say_why_in_1_to",
       "en": "say why in 1 to {PROPOSAL_WHY_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 754
+      "line": 756
     },
     {
       "id": "filing-templates.index.state_is_offered_or_one",
       "en": "state is offered or one of {TEMPLATES_STATES_LISTED}",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 1149
+      "line": 1151
     },
     {
       "id": "filing-templates.index.string_is_a_machine_identity",
       "en": "'{String}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 212
+      "line": 214
+    },
+    {
+      "id": "filing-templates.index.the_kinds_tier_is_3_no_file_template_is_kept",
+      "en": "the kind's tier is 3: no file template is kept for it; a brief template may serve it",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 553
     },
     {
       "id": "filing-templates.index.the_kinds_venue_in_the",
       "en": "the kind's venue in the profile '{String}' is a court: no template the team files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 316
+      "line": 318
     },
     {
       "id": "filing-templates.index.the_profile_p_holds_no",
       "en": "the profile '{p}' holds no action kind '{kind}'",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 541
+      "line": 543
     },
     {
       "id": "filing-templates.index.the_profiles_template_is_not",
       "en": "the profile's template is not offered: its attribution lacks {lacks}",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 342
+      "line": 344
     },
     {
       "id": "filing-templates.index.the_reviewer_and_their_organisation",
       "en": "the reviewer and their organisation, each one line of 1 to {GRANT_FIELD_MAX} characters",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 840
+      "line": 842
+    },
+    {
+      "id": "filing-templates.index.the_scopes_library_already_holds_a_template_by_this_name",
+      "en": "the scope's library already holds a template by this name",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 560
+    },
+    {
+      "id": "filing-templates.index.the_template_has_no_approved_version",
+      "en": "the template has no approved version",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1272
+    },
+    {
+      "id": "filing-templates.index.the_template_was_already_retired",
+      "en": "the template was already retired",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1040
     },
     {
       "id": "filing-templates.index.the_template_was_retired_reason",
       "en": "the template was retired: {reason}",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 233
+      "line": 235
+    },
+    {
+      "id": "filing-templates.index.the_text_reviewed_is_not_the_versions_present_text",
+      "en": "the text reviewed is not the version's present text",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 935
     },
     {
       "id": "filing-templates.index.the_version_is_state_not",
       "en": "the version is {state}, not in review",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 244
+      "line": 246
     },
     {
       "id": "filing-templates.index.the_version_is_state_only",
@@ -22846,49 +24302,882 @@
       "en": "the version is {state}, past draft: its text is fixed",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 239
+      "line": 241
     },
     {
       "id": "filing-templates.index.the_version_is_v1_only",
       "en": "the version is {v1}: only an approved project template is widened",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 968
+      "line": 970
+    },
+    {
+      "id": "filing-templates.index.the_version_was_already_withdrawn",
+      "en": "the version was already withdrawn",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1060
+    },
+    {
+      "id": "filing-templates.index.tier_number",
+      "en": "Tier {tier}",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 998
+    },
+    {
+      "id": "filing-templates.index.two_templates_you_can_see_go_by_that_name_in_the_same_scope",
+      "en": "two templates you can see go by that name in the same scope, so neither was chosen: name the template by its id",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 1236
     },
     {
       "id": "filing-templates.index.v1_needs_a_professionals_review",
       "en": "{v1} needs a professional's review with no concerns, or the approver's reason for going without one (1 to {APPROVAL_REASON_MAX} characters)",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 996
+      "line": 998
     },
     {
       "id": "filing-templates.index.version_open_is_stateof_finish",
       "en": "version {open} is {stateOf}: finish or withdraw it first",
       "module": "filing-templates",
       "file": "bio-plane/src/filing-templates/index.mjs",
-      "line": 626
+      "line": 628
+    },
+    {
+      "id": "filing-templates.index.you_are_the_versions_author_and_its_only_member_contributor",
+      "en": "you are the version's author and its only member contributor: another member approves it",
+      "module": "filing-templates",
+      "file": "bio-plane/src/filing-templates/index.mjs",
+      "line": 986
+    },
+    {
+      "id": "filings.dates.n_calendar_days",
+      "en": "{days} calendar days, {counted_from}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/dates.mjs",
+      "line": 54
+    },
+    {
+      "id": "filings.index.a_candidate_theory_names_the_standards",
+      "en": "a candidate theory names the standards it rests on",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2804
+    },
+    {
+      "id": "filings.index.a_contradicted_sentence_is_held_back",
+      "en": "a contradicted sentence is held back unless the approval names it with a reason (release: the sentence's number and the reason)",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1276
+    },
+    {
+      "id": "filings.index.a_deadline",
+      "en": "a deadline",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 597
+    },
+    {
+      "id": "filings.index.a_defence_packet_names_at_most_n",
+      "en": "a defence packet names at most {max} challenged statements, each with its words and, if you have them, the findings it rests on",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2453
+    },
+    {
+      "id": "filings.index.a_documenting_version_names_its_audience",
+      "en": "a documenting version names its audience: one of {audiences}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 902
+    },
+    {
+      "id": "filings.index.a_draft_is_approved_at_most",
+      "en": "a draft is approved at most once; prepare a new draft to approve another text",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1413
+    },
+    {
+      "id": "filings.index.a_joint_text_is_approved_here_before",
+      "en": "a joint text is approved here before a partner's signature is recorded",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1694
+    },
+    {
+      "id": "filings.index.a_member_approves_the_draft_before",
+      "en": "a member approves the draft before it is recorded as sent",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1562
+    },
+    {
+      "id": "filings.index.a_member_approves_the_draft_before_a_second",
+      "en": "a member approves the draft before a second member does",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1661
+    },
+    {
+      "id": "filings.index.a_period",
+      "en": "a period",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1015
+    },
+    {
+      "id": "filings.index.a_point",
+      "en": "a point",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 986
+    },
+    {
+      "id": "filings.index.a_resolution_names_no_pointed_sentence",
+      "en": "a resolution names no pointed sentence, names one twice, or is malformed",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1254
+    },
+    {
+      "id": "filings.index.a_second_member_has_already_approved_this",
+      "en": "a second member has already approved this draft, and that approval stands",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1668
+    },
+    {
+      "id": "filings.index.a_template_is_drafted_from_a_draft",
+      "en": "a template is drafted from a draft a member has approved",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2843
+    },
+    {
+      "id": "filings.index.a_time",
+      "en": "a time",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1015
+    },
+    {
+      "id": "filings.index.another_member_is_writing_to_this",
+      "en": "another member is writing to this action right now; nothing was approved",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1297
+    },
+    {
+      "id": "filings.index.at_a_governing_tier_of_tier_counsel",
+      "en": "at a governing tier of {tier} counsel is named",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2427
+    },
+    {
+      "id": "filings.index.audience_is_one_of",
+      "en": "audience is one of {audiences}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1037
+    },
+    {
+      "id": "filings.index.briefing",
+      "en": "Briefing",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2494
+    },
+    {
+      "id": "filings.index.by_office",
+      "en": ", by {office}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 979
+    },
+    {
+      "id": "filings.index.by_who",
+      "en": " by {who}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1389
+    },
+    {
+      "id": "filings.index.chronology",
+      "en": "Chronology",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2130
     },
     {
       "id": "filings.index.counsel_packet_id_version_version",
       "en": "counsel packet {id} version {version}",
       "module": "filings",
       "file": "bio-plane/src/filings/index.mjs",
-      "line": 2592
+      "line": 2667
+    },
+    {
+      "id": "filings.index.counsel_when_named",
+      "en": "counsel, when named,",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2428
+    },
+    {
+      "id": "filings.index.days",
+      "en": "days",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1015
+    },
+    {
+      "id": "filings.index.deadlines",
+      "en": "Deadlines",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2272
+    },
+    {
+      "id": "filings.index.each_sentence_pointed_out_as_asserting",
+      "en": "each sentence pointed out as asserting a breach is resolved: rewritten, said to only ask, or the act treated as a breach claim",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1261
+    },
+    {
+      "id": "filings.index.evidence",
+      "en": "evidence",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 989
+    },
+    {
+      "id": "filings.index.exhibits",
+      "en": "Exhibits",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2265
+    },
+    {
+      "id": "filings.index.facts",
+      "en": "Facts",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2262
+    },
+    {
+      "id": "filings.index.fills_is_a_map_of_blank_names",
+      "en": "fills is a map of the text's blank names to your own words for each",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 674
+    },
+    {
+      "id": "filings.index.from_lists_at_most_n_finding",
+      "en": "from lists at most {max} finding or inquiry ids",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 906
+    },
+    {
+      "id": "filings.index.from_to_to",
+      "en": "{from} to {to}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 568
     },
     {
       "id": "filings.index.id_case_v1_edition_v2",
       "en": "{id} (case {v1}, edition {v2})",
       "module": "filings",
       "file": "bio-plane/src/filings/index.mjs",
-      "line": 578
+      "line": 585
+    },
+    {
+      "id": "filings.index.language_is_a_language_tag_such",
+      "en": "language is a language tag, such as en or en-GB",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1039
+    },
+    {
+      "id": "filings.index.n_not_judged",
+      "en": ", {n} not judged",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1114
+    },
+    {
+      "id": "filings.index.name_a_template_or_write_the",
+      "en": "name a template or write the words, not both",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 760
+    },
+    {
+      "id": "filings.index.names_pending_is_true_or_false",
+      "en": "names_pending is true or false",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1042
+    },
+    {
+      "id": "filings.index.no_counsel_packet_by_that_id",
+      "en": "no counsel packet by that id and version is readable here; one you may not see answers the same",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 418
+    },
+    {
+      "id": "filings.index.no_draft_by_that_id",
+      "en": "no draft by that id is readable here; one you may not see answers the same",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 410
+    },
+    {
+      "id": "filings.index.no_finding_or_inquiry_by_that_id",
+      "en": "no finding or inquiry by that id is readable here; one you may not see answers the same",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 912
+    },
+    {
+      "id": "filings.index.no_member_is_named",
+      "en": "no member is named",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1690
+    },
+    {
+      "id": "filings.index.no_member_is_named_as_the_one",
+      "en": "no member is named as the one approving",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1443
+    },
+    {
+      "id": "filings.index.no_member_is_named_as_the_one_exporting",
+      "en": "no member is named as the one exporting",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2656
+    },
+    {
+      "id": "filings.index.no_member_is_named_as_the_one_naming",
+      "en": "no member is named as the one naming counsel",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2404
+    },
+    {
+      "id": "filings.index.no_member_is_named_as_the_one_who_sent",
+      "en": "no member is named as the one who sent it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1556
+    },
+    {
+      "id": "filings.index.no_module_answers_a_determinations_read",
+      "en": "no module answers a determination's read here, so none is readable",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2918
+    },
+    {
+      "id": "filings.index.no_module_answers_a_standards_read",
+      "en": "no module answers a standard's read here, so the standards named cannot be read",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2809
+    },
+    {
+      "id": "filings.index.no_module_answers_the_actions_minutes",
+      "en": "no module answers the actions here, so the minutes cannot be compared",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1831
+    },
+    {
+      "id": "filings.index.no_module_answers_the_templates_drafted",
+      "en": "no module answers the team's templates here, so no template can be drafted",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2848
+    },
+    {
+      "id": "filings.index.no_module_answers_the_templates_readable",
+      "en": "no module answers the team's templates here, so none is readable",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 697
+    },
+    {
+      "id": "filings.index.no_module_offers_a_clock_entry",
+      "en": "no module offers a clock entry",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1621
+    },
+    {
+      "id": "filings.index.no_stamped_preparer_a_draft_names",
+      "en": "no stamped preparer: a draft names who prepared it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 743
+    },
+    {
+      "id": "filings.index.no_stamped_preparer_a_notice_names",
+      "en": "no stamped preparer: a notice names who prepared it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1726
+    },
+    {
+      "id": "filings.index.no_stamped_proposer_a_proposal_names",
+      "en": "no stamped proposer: a proposal names who made it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2788
+    },
+    {
+      "id": "filings.index.none",
+      "en": "none",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 182
+    },
+    {
+      "id": "filings.index.none_declared",
+      "en": "none declared",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 190
+    },
+    {
+      "id": "filings.index.own_doing_lists_the_indexes_of",
+      "en": "own_doing lists the indexes of sentences about the team's own doing",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1041
+    },
+    {
+      "id": "filings.index.prepared_as_yourself_your_own_notes",
+      "en": "prepared as yourself: your own notes are never approved, stamped or recorded as the team's act",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1335
+    },
+    {
+      "id": "filings.index.purpose_is_one_of",
+      "en": "purpose is one of {purposes}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2447
+    },
+    {
+      "id": "filings.index.reason_name_a_template_or_write",
+      "en": "{reason}: name a template{listed} or write the words",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 784
+    },
+    {
+      "id": "filings.index.resolutions_is_a_list",
+      "en": "resolutions is a list",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1248
+    },
+    {
+      "id": "filings.index.rewrite_each_sentence_that_asks_for",
+      "en": "rewrite each sentence that asks for the benefit of the team or its members; there is no override",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1283
+    },
+    {
+      "id": "filings.index.say_how_the_partners_act_is_known",
+      "en": "say how the partner's act is known, on one line of at most {max} characters",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1708
+    },
+    {
+      "id": "filings.index.say_in_your_own_words_why_this",
+      "en": "say in your own words why this packet is assembled (reason)",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2413
+    },
+    {
+      "id": "filings.index.say_what_the_communication_is_for",
+      "en": "say what the communication is for, in at most {max} characters",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 896
+    },
+    {
+      "id": "filings.index.say_why_in_at_most_n_characters",
+      "en": "say why in at most {max} characters",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2815
+    },
+    {
+      "id": "filings.index.since_the_draft_was_prepared_changed",
+      "en": "since the draft was prepared: {changed} changed. Prepare it again.",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1453
+    },
+    {
+      "id": "filings.index.standards",
+      "en": "Standards",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2268
+    },
+    {
+      "id": "filings.index.state_the_candidate_theory_and_any",
+      "en": "state the candidate theory, and any remedy, each in at most {max} characters",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2801
+    },
+    {
+      "id": "filings.index.still_uncertain",
+      "en": "still uncertain",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 993
+    },
+    {
+      "id": "filings.index.textcheck_is_the_assistants_answer",
+      "en": "textcheck is the assistant's answer: sentences, each with its quote, what it reads as and why",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1047
+    },
+    {
+      "id": "filings.index.the_act",
+      "en": "the act",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 979
+    },
+    {
+      "id": "filings.index.the_action_a",
+      "en": "the action {action}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1740
+    },
+    {
+      "id": "filings.index.the_action_has_no_readable_document",
+      "en": "the action has no readable bundle.md",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1300
+    },
+    {
+      "id": "filings.index.the_action_is_state_nothing_is",
+      "en": "the action is {state}; nothing is prepared for a closed action",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 635
+    },
+    {
+      "id": "filings.index.the_actions_document_has_no_front_matter",
+      "en": "the action's bundle.md has no front matter",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1303
+    },
+    {
+      "id": "filings.index.the_actions_risk_tier_is_undetermined",
+      "en": "the action's risk tier is undetermined and is never read as 1: a member states it first (op=actionrisktier)",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 752
+    },
+    {
+      "id": "filings.index.the_active_profiles_give_different_templates",
+      "en": "the active profiles give different templates for this kind, so none is given",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 785
+    },
+    {
+      "id": "filings.index.the_communications_words_must_be_non_empty",
+      "en": "the communication's words must be non-empty UTF-8 text of at most {max} bytes",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 892
+    },
+    {
+      "id": "filings.index.the_counterparty",
+      "en": "the counterparty",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1384
+    },
+    {
+      "id": "filings.index.the_governing_tier_is_3_no",
+      "en": "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 755
+    },
+    {
+      "id": "filings.index.the_member",
+      "en": "the member",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2299
+    },
+    {
+      "id": "filings.index.the_minutes_passage_could_not_be_read",
+      "en": "the passage of the minutes could not be read",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1856
+    },
+    {
+      "id": "filings.index.the_offered_ones_are_listed",
+      "en": " (the offered ones are listed)",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 787
+    },
+    {
+      "id": "filings.index.the_organisation_is_not_among_the_actions",
+      "en": "the organisation is not among the action's partners",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1700
+    },
+    {
+      "id": "filings.index.the_partners_text_has_another_fingerprint",
+      "en": "the partner's text has another fingerprint: the same text was not approved",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1704
+    },
+    {
+      "id": "filings.index.the_place",
+      "en": "the place",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1747
+    },
+    {
+      "id": "filings.index.the_profile_holds_no_file_template",
+      "en": "the profile holds no file template for this kind",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 786
+    },
+    {
+      "id": "filings.index.the_project_p",
+      "en": "the project {project}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1740
+    },
+    {
+      "id": "filings.index.the_public_comments_could_not_be_read",
+      "en": "the public comments could not be read",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1838
+    },
+    {
+      "id": "filings.index.the_reason_is_blank_say_in",
+      "en": "the reason is blank: say in your own words why this packet is assembled",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2415
+    },
+    {
+      "id": "filings.index.the_reason_is_n_characters_over",
+      "en": "the reason is {chars} characters, over the {max} a packet's reason is kept to; refused rather than cut",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2416
+    },
+    {
+      "id": "filings.index.the_reason_must_be_your_words_as",
+      "en": "the reason must be your words, as text; a {sent} was sent",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2414
+    },
+    {
+      "id": "filings.index.the_second_approval_is_made_by",
+      "en": "the second approval is made by a member other than the one who approved the text",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1664
+    },
+    {
+      "id": "filings.index.the_standard",
+      "en": "the standard",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 980
+    },
+    {
+      "id": "filings.index.the_template_is_written_for_kind",
+      "en": "the template is written for {template_kind}, and this action is {kind}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 706
+    },
+    {
+      "id": "filings.index.the_text_must_be_non_empty_utf8",
+      "en": "the text must be non-empty UTF-8 text of at most {max} bytes",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 716
+    },
+    {
+      "id": "filings.index.the_text_names_no_blank",
+      "en": "the text names no blank '{blank}': a member fills only the blanks the text names",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 673
+    },
+    {
+      "id": "filings.index.the_text_still_holds_a_blank",
+      "en": "the text still holds a blank the record could not fill; a member writes it in first",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1457
+    },
+    {
+      "id": "filings.index.the_venues_reference_is_one_line",
+      "en": "the venue's reference is one line of 1 to {max} characters, as the venue gave it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1579
+    },
+    {
+      "id": "filings.index.this_draft_is_already_recorded_as_sent",
+      "en": "this draft is already recorded as sent",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1565
+    },
+    {
+      "id": "filings.index.this_partners_signature_is_already_recorded",
+      "en": "this partner's signature is already recorded",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1710
+    },
+    {
+      "id": "filings.index.this_template_is_a_briefing_to",
+      "en": "this template is a briefing to counsel: it serves a counsel packet (op=counselpacket), never a filing",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 795
+    },
+    {
+      "id": "filings.index.this_template_is_wording_the_team_files",
+      "en": "this template is wording the team files in its own name: a briefing takes a brief template",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2438
+    },
+    {
+      "id": "filings.index.undetermined",
+      "en": "undetermined",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 181
+    },
+    {
+      "id": "filings.index.voice_is_one_of",
+      "en": "voice is one of {voices}",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1036
+    },
+    {
+      "id": "filings.index.who_by_a_name_and_an_organisation",
+      "en": "{who} by a name and an organisation (contact optional), each one line of at most {max} characters",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2426
     },
     {
       "id": "filings.index.who_is_a_machine_identity",
       "en": "'{who}' is a machine identity: the team names its counsel",
       "module": "filings",
       "file": "bio-plane/src/filings/index.mjs",
-      "line": 2329
+      "line": 2403
+    },
+    {
+      "id": "filings.index.who_is_a_machine_identity_a_machine",
+      "en": "'{who}' is a machine identity: a machine prepares, and a member approves",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1442
+    },
+    {
+      "id": "filings.index.who_is_a_machine_identity_a_member",
+      "en": "'{who}' is a machine identity: a member approves",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1657
+    },
+    {
+      "id": "filings.index.who_is_a_machine_identity_a_member_records",
+      "en": "'{who}' is a machine identity: a member records a partner's signature",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1690
+    },
+    {
+      "id": "filings.index.who_is_a_machine_identity_only_a",
+      "en": "'{who}' is a machine identity: only a member files and records it",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1555
+    },
+    {
+      "id": "filings.index.who_is_a_machine_identity_only_a_member_hands",
+      "en": "'{who}' is a machine identity: only a member hands a packet to counsel",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 2655
+    },
+    {
+      "id": "filings.index.your_project_asks_a_second_member",
+      "en": "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent",
+      "module": "filings",
+      "file": "bio-plane/src/filings/index.mjs",
+      "line": 1570
+    },
+    {
+      "id": "filings.outward.none_declared",
+      "en": "none declared",
+      "module": "filings",
+      "file": "bio-plane/src/filings/outward.mjs",
+      "line": 117
+    },
+    {
+      "id": "filings.outward.undetermined",
+      "en": "undetermined",
+      "module": "filings",
+      "file": "bio-plane/src/filings/outward.mjs",
+      "line": 119
     },
     {
       "id": "following.index.a_follow_is_read_daily",
@@ -32705,32 +34994,53 @@
       "line": 478
     },
     {
+      "id": "plan-work.index.a_comment_is_on_one",
+      "en": "a comment is on an option, an action or a draft of this plan, one you can see. Nothing was written.",
+      "module": "plan-work",
+      "file": "bio-plane/src/plan-work/index.mjs",
+      "line": 565
+    },
+    {
       "id": "plan-work.index.a_member_takes_an_item",
       "en": "a member takes an item up herself; nobody assigns anybody, so for may name only you. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 1135
+      "line": 1136
+    },
+    {
+      "id": "plan-work.index.a_rhythm_is_recurrence",
+      "en": "a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly){why}. Nothing was written.",
+      "module": "plan-work",
+      "file": "bio-plane/src/plan-work/index.mjs",
+      "line": 357
     },
     {
       "id": "plan-work.index.field_is_1_to_max",
       "en": "{field} is 1 to {max} characters{v1}. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 1122
+      "line": 1123
+    },
+    {
+      "id": "plan-work.index.from_is_one_line_of_your",
+      "en": "from is one line of your own, or {assistant: true, as_of?} when the text began as the assistant's draft",
+      "module": "plan-work",
+      "file": "bio-plane/src/plan-work/index.mjs",
+      "line": 1067
     },
     {
       "id": "plan-work.index.item_was_marked_done_by",
       "en": "{item} was marked done by {by}. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 496
+      "line": 497
     },
     {
       "id": "plan-work.index.no_deadline_checkpoint_proposed_stage",
       "en": "no deadline, checkpoint, proposed stage or hold you may see answers to that item. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 959
+      "line": 960
     },
     {
       "id": "plan-work.index.no_time_zone_was_given",
@@ -32744,21 +35054,21 @@
       "en": "plan-work: {provider} was not given",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 1147
+      "line": 1148
     },
     {
       "id": "plan-work.index.says_nothing_was_written",
       "en": "{says}. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 1121
+      "line": 1122
     },
     {
       "id": "plan-work.index.the_plan_holds_no_preparation",
       "en": "the plan holds no preparation item of that id. Nothing was written.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 514
+      "line": 515
     },
     {
       "id": "plan-work.index.the_plan_is_not_about",
@@ -32772,7 +35082,7 @@
       "en": "this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.",
       "module": "plan-work",
       "file": "bio-plane/src/plan-work/index.mjs",
-      "line": 1142
+      "line": 1143
     },
     {
       "id": "plane.screens.the_cases_your_teams_civicsmith",
