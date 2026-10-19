@@ -99,8 +99,8 @@ export function homeReadings(cs, view, d) {
         else if (!draft.comments) key = "screen.home.area.edition";
         else { key = draft.comments === 1 ? "screen.home.area.edition.comments.one" : "screen.home.area.edition.comments"; fills.count = String(draft.comments); }
       } else if (draft) {
-        // A draft on a case with no published edition: with one comment the design holds no sentence, so it says the draft alone.
-        key = draft.comments > 1 ? "screen.home.area.edition.draftonly.comments" : "screen.home.area.edition.draftonly";
+        // A draft on a case with no published edition: the draft alone, with one comment, or with several.
+        key = draft.comments > 1 ? "screen.home.area.edition.draftonly.comments" : draft.comments === 1 ? "screen.home.area.edition.draftonly.comments.one" : "screen.home.area.edition.draftonly";
         if (draft.comments > 1) fills.count = String(draft.comments);
       } else return;
       out.investigation.lines.push(cs.w(key, fills));

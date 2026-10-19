@@ -575,6 +575,11 @@ test("R64: edition lines: a case with a draft shared until a date says so, with 
     reviewcopy: ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   await settle();
   assert.ok(text(only, main(only).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly", { case: "CASE-9", until: dmy("2026-10-20") })), "a draft on a case with no edition yet");
+  const one = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
+    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    reviewcopy: ok({ ok: true, comments: [{ author_kind: "recipient", text: "x" }], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
+  await settle();
+  assert.ok(text(one, main(one).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly.comments.one", { case: "CASE-9", until: dmy("2026-10-20") })), "one comment on a draft with no edition yet");
 });
 
 test("R64: controls: a member who is not an administrator sends no securitymap and draws no security level; a read that fails draws its reading failed", async () => {

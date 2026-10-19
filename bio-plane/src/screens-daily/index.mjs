@@ -73,7 +73,7 @@ const WORDS_OF = {
     ...["document", "documents", "case", "cases", "followed.one", "followed.other", "clock", "clocks", "security", "level.ordinary", "level.raised", "level.high"].map((r) => `screen.home.rd.${r}`),
     "screen.home.area.ourmove", "screen.home.area.theirmove", "screen.home.area.edition", "screen.home.area.expertise",
     ...["person", "confirmed", "declared"].map((k) => `screen.home.area.expertise.${k}`),
-    ...["published", "comments", "comments.one", "draftonly", "draftonly.comments"].map((k) => `screen.home.area.edition.${k}`),
+    ...["published", "comments", "comments.one", "draftonly", "draftonly.comments", "draftonly.comments.one"].map((k) => `screen.home.area.edition.${k}`),
     "screen.home.line.lastchange", "screen.home.line.places", "screen.home.line.languages", "screen.home.line.aiused", "screen.home.line.ailimit",
     "screen.home.projects", "screen.home.since", "screen.home.since.holds", "screen.home.since.changed", ...PROJECT_ROWS("screen.home")],
   elsewhere: [...SHARED, "screen.elsewhere.name", "screen.elsewhere.purpose", "elsewhere.title", "elsewhere.says", "elsewhere.records_nothing",

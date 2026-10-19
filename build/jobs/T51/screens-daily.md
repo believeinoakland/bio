@@ -43,7 +43,7 @@
 
 ## B6 handled (SCREENS-DAILY #9)
 - B370 applied with tests (`home-readings.mjs`): Action draws our move and their move as the reworded `screen.home.area.ourmove|theirmove` ({n} the count, {date} the earliest due; not drawn without a date) beside the clocks reading; the expertise line is `screen.home.area.expertise.person` joined with "; "; edition lines: the latest published edition as `.edition.published`, a case with a draft shared until a date as `.edition` (no comment), `.edition.comments.one` / `.edition.comments` (recipients' comments counted across its drafts), and a draft on a case with no published edition as `.edition.draftonly` (`.draftonly.comments` for 2 or more).
-- Gap: the design holds no `draftonly` sentence for exactly one comment; that case draws `.edition.draftonly` without the comment. REPORT to BOB.
+- Gap closed (B7): exactly one comment on a draft with no published edition draws `.edition.draftonly.comments.one`.
 - DEC-361: `screen.home.todo.vouch.noplace*` are not used by this module (the to-do arrives with the queue's words); `queue.feed.action` and `.wizards` are read as the list holds them.
 
 ## J1 · BLOCKED
