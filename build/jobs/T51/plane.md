@@ -43,3 +43,9 @@ T51-125 applied; plane suite 264/264, migrate-released 1/1; format, architecture
 ## J2 · COMPLETE
 
 CHANGE B2 applied: publicOp hands bootstrapOp the resolved admin caller; door.test counts 45 routes. Suite 265/265 with instance-setup's branch merged uncommitted; tranche/T51 alone needs instance-setup merged first for those two assertions. Checks 0 failures.
+
+## Record: CHANGE B3 (K4098, control-plane R110)
+- `store.mjs`: `controlPlaneOwnerOps` is handed `filings` and `actionPlans` getters. `t51.test.mjs`: `approvedunsent` and `checkpointsdue` answer through the plane (checked red without the getters). `door.test.mjs`: affordances' ops read from its map (its `affordancevocab` is new from the merged tranche), no pin.
+- Merged `tranche/T51`. control-plane's change (the owner arms) is not on the tranche yet: with `origin/job/T51/control-plane` merged uncommitted (then aborted) the suite is 266/266 after the door.test fix; on the tranche alone two tests fail until it merges (the new one, and `op=sweeps` link-sweep R5, which control-plane's change also fixes). You merge plane after control-plane.
+- Checks: format, architecture, coverage 66/66, words: 0 failures.
+- Size (session_01LkcRK7mT8LTN4K87RmmRdp): test runs 10, module lines 2308

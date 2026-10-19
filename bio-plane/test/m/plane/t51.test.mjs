@@ -67,3 +67,15 @@ test("R5 (T51; K4051; filings R64): the composition hands `filings` the environm
   filingsOf(ctx, {});
   assert.equal(caseInputsOf(ctx).minutesComparisonsSource().registered, false);
 });
+
+test("R5 (T51; K4098; control-plane R110): the owner map is handed filings' and action-plans' instances, so `approvedunsent` (filings R53) and `checkpointsdue` (action-plans R17) answer through the plane; control: an op neither serves is the door's refusal", async () => {
+  const x = await store();
+  for (const op of ["approvedunsent", "checkpointsdue"]) {
+    const res = await x.fetch(`/${op}?viewer=member:nobody&by=member:nobody&project=PROJ-2026-none`);
+    const body = await res.json();
+    assert.equal(res.status, 200, `${op}: ${JSON.stringify(body)}`);
+    assert.equal(body.ok, true, op);
+    assert.equal(/not a function|undefined/.test(JSON.stringify(body)), false, `${op}: an owner was reached`);
+  }
+  assert.equal(unknownOp(await refusal(x, "zzprobe51b")), true);
+});

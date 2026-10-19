@@ -257,7 +257,8 @@ test("R2, R5 (N13): queue's, tasks' and affordances' maps are part of the route 
     assert.ok(mine.includes(op), `controlPlaneRoutes lacks ${op}`);
     assert.ok(map.includes(op), `the map lacks ${op}`);
   }
-  assert.deepEqual(aOps, ["affordancefacts", "affordancescreens"]);   /* affordances R37 (N528): the screens read */
+  /* K3268: affordances' ops are read from its own map (R37, N528: the screens read among them), never listed here */
+  assert.ok(aOps.includes("affordancefacts") && aOps.includes("affordancescreens"));
   /* through the door, each answers what its own map answers on a second object */
   const twin = object();
   new Store(twin.ctx, twin.env);

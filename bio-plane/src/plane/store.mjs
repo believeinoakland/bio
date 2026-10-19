@@ -882,7 +882,9 @@ export class Store extends DurableObject {
                                 steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
                                 questionExplorer: () => questionExplorerOf(ctx),
                                 /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
-                                actionClocks: () => actionClocksOf(ctx) }, url, body),
+                                actionClocks: () => actionClocksOf(ctx),
+                                /* (T51; K4098; control-plane R110) `approvedunsent` (filings R53) and `checkpointsdue` (action-plans R17) */
+                                filings: () => filingsOf(ctx), actionPlans: () => actionPlansOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };
