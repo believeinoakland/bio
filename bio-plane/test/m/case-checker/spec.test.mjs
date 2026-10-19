@@ -5,6 +5,7 @@ import * as CC from "../../../src/case-checker/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { PublicRead } from "../../../src/public-read/index.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/arithmetic.mjs";
+import { W } from "./fixture.mjs";
 
 const V1 = "bio-case-file/1", V2 = "bio-case-file/2", V3 = "bio-case-file/3";
 /* Every word a specification spells as code: each backticked span's identifiers. */
@@ -197,7 +198,9 @@ test("R15 (DEC-149): at start the module registers casechecker and casefilespec 
   }
   /* DEC-149 (T34-87; K1821): the reader has no credential, so the detail speaks of this group's Civicsmith, never "this copy" */
   const unknown = pr.publicRead("casefilespec", { version: "bio-case-file/9" }).result.detail;
-  assert.equal(unknown, "this team's Civicsmith holds no specification of that version; it holds the specifications of bio-case-file/1, bio-case-file/2 and bio-case-file/3, each named as version");
+  const held = CC.CASE_FILE_SPEC_VERSIONS;
+  assert.equal(unknown, W("case-checker.index.holds_several", { reason: W("case-checker.index.no_specification"), head: held.slice(0, -1).join(", "), last: held.at(-1) }));
+  assert.equal(CC.caseFileSpec(null).detail, W("case-checker.index.holds_several", { reason: W("case-checker.index.no_version_named"), head: held.slice(0, -1).join(", "), last: held.at(-1) }));
   assert.equal(/this (copy|plane|instance)/.test(unknown + CC.caseFileSpec(null).detail), false);
   /* another module cannot take the names */
   const again = new PublicRead({ storage: { sql: null } });

@@ -10,7 +10,8 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { contentIdFor } from "../../../src/content/extent.mjs";
-import { caseFile, gradingFacts, byId, sha, A, B, C, MINUTES_SHA } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { W, caseFile, gradingFacts, byId, sha, A, B, C, MINUTES_SHA } from "./fixture.mjs";
 
 /* R26: a departure as the checker answers it: its fields, and `says` beside them (key `refusal.<code>`, vars its fields). */
 const S = (r) => { const { code, ...vars } = r; return { ...r, says: { key: `refusal.${code}`, vars } }; };
@@ -27,9 +28,9 @@ const results = (answer) => Object.fromEntries(answer.findings.map((f) => [f.fin
 const criteria = () => [
   { standard: BENCH, portion: null, designation: "Peer response times", edition: "2024", issuer: "an association", citation: "PRT 2024",
     access: "paywalled", body: BODY, binds: false, passages: [{ content: RELIED, text: "The lease was approved without a vote." }],
-    label: "Benchmark · not binding on the board", access_words: "Behind a paywall" },
+    label: "Benchmark · not binding on the board", access_words: word("label.standardaccess.paywalled") },
   { standard: CODE, portion: "s. 4", designation: "Lease code", edition: "2023", issuer: "the council", citation: "LC s. 4",
-    access: "free", body: BODY, binds: true, passages: [], label: "Standard · binds the board", access_words: "Free to read" }];
+    access: "free", body: BODY, binds: true, passages: [], label: "Standard · binds the board", access_words: word("label.standardaccess.free") }];
 const since = (rows, captures = {}) => rows.map((r) => (r.stated === "not held" ? { ...r, captures: null } : { ...r, captures: captures[r.standard] ?? [] }));
 /** Each member's standard leg in the signed grading facts: A on the benchmark, C on the binding code. */
 const facts = () => {
@@ -115,11 +116,11 @@ test("R22 R9 R2: a criteria file listed but not carried answers standards_use no
   const gone = caseFile(opts({ edit: (b) => b.delete(path) }));
   const before = await CC.checkCaseFile({ parts: gone.parts });
   assert.deepEqual(before.standards_use, { ok: null, file: path, sha256: fileSha,
-    detail: `the criteria the case measures against are not carried; fetch the file whose SHA-256 is ${fileSha}` });
+    detail: W("case-checker.check.criteria_not_carried_fetch", { sha: fileSha }) });
   assert.deepEqual(results(before), ALL_RECREATED);
   assert.equal(before.complete_edition.equal, true, before.complete_edition.detail);
   /* K2143: it is named among the files to supply */
-  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: `${path} is not carried; fetch the file whose SHA-256 is ${fileSha}` }]);
+  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: W("case-checker.check.not_carried_fetch", { what: path, sha: fileSha }) }]);
   const after = await CC.checkCaseFile({ parts: gone.parts, documents: [Buffer.from(canonicalJson(criteria()))] });
   assert.deepEqual(after.standards_use, { ok: true, unjudged: [blind()] });
   assert.deepEqual(after.integrity.documents.used, [fileSha]);
@@ -127,9 +128,10 @@ test("R22 R9 R2: a criteria file listed but not carried answers standards_use no
   /* carried with other bytes */
   const changed = await CC.checkCaseFile({ parts: caseFile(opts({ edit: (b) => b.set(path, Buffer.from("[]")) })).parts });
   assert.equal(changed.standards_use.ok, null);
-  assert.match(changed.standards_use.detail, /^the criteria the case measures against are not judged, because .* does not match the manifest/);
+  assert.equal(changed.standards_use.detail, W("case-checker.check.criteria_not_judged", { why: W("case-checker.check.file_differs_manifest",
+    { path, sha: sha("[]"), bytes: 2, listed_sha: fileSha, listed_bytes: Buffer.byteLength(canonicalJson(criteria())) }) }));
   assert.equal(changed.integrity.intact, false);
-  assert.deepEqual(changed.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: `${path} is carried with other bytes; fetch the file whose SHA-256 is ${fileSha}` }]);
+  assert.deepEqual(changed.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: W("case-checker.check.carried_other_bytes_fetch", { path, sha: fileSha }) }]);
   assert.deepEqual(results(changed), ALL_RECREATED);
   assert.equal(changed.complete_edition.equal, true, changed.complete_edition.detail);
 });

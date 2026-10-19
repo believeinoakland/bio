@@ -13,7 +13,8 @@ import { buildProgram, programModule } from "../../../src/case-checker/build-pro
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { unresolvableSpecifiers } from "../../../scripts/fleet-bundle.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
-import { caseFile, keyFor, A, MINUTES, MINUTES_BYTES } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { like, caseFile, keyFor, A, MINUTES, MINUTES_BYTES } from "./fixture.mjs";
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const P = CC.caseCheckerProgramText();
@@ -72,17 +73,17 @@ test("R13 R16 R20 R22: run offline from an empty directory, the program prints e
     }
     /* R22 in the program: a /2 case file carrying a criteria file, judged offline by the bundled R21 */
     const v2 = caseFile({ criteria: [{ standard: "STD-2026-0001-x", portion: null, designation: "x", edition: "1", issuer: "x", citation: "x",
-      access: "paywalled", body: null, binds: false, passages: [], label: "Benchmark · not binding", access_words: "Behind a paywall" }] });
+      access: "paywalled", body: null, binds: false, passages: [], label: "Benchmark · not binding", access_words: word("label.standardaccess.paywalled") }] });
     writeFileSync(join(dir, "v2.zip"), v2.parts[0]);
     const v2out = JSON.parse(run("v2.zip").replace(/^[^{]*/s, ""));
     assert.equal(v2out.format, "bio-case-file/2");
     assert.equal(canonicalJson(v2out), canonicalJson(await CC.checkCaseFile({ parts: v2.parts })));
     assert.deepEqual(v2out.standards_use.unjudged.map((u) => [u.standard, u.check]), [["STD-2026-0001-x", "COPYRIGHTED_TEXT_CARRIED"]]);
     assert.match(P.text.split("\n")[0], /^\/\/ Civicsmith case checker \(bio-case-file\/1, bio-case-file\/2, bio-case-file\/3\)\./);
-    assert.match(run("part1.zip", "part2.zip").split("\n")[0], new RegExp(`^${A}: Recreated in part$`));
+    assert.equal(run("part1.zip", "part2.zip").split("\n")[0], `${A}: ${word("screen.imported.result.part")}`);
     assert.equal(JSON.parse(run("part1.zip", "part2.zip").replace(/^[^{]*/s, "")).calculations[0].result, "agrees");
     /* a file it cannot read: exit status 2, saying so */
-    assert.throws(() => run("nope.zip"), (e) => e.status === 2 && /could not read nope\.zip/.test(e.stdout));
+    assert.throws(() => run("nope.zip"), (e) => e.status === 2 && like("case-checker.text.read", { path: "nope.zip" }).test(e.stdout.trimEnd()));
     assert.throws(() => run(), (e) => e.status === 2 && /usage:/.test(e.stdout));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
@@ -92,7 +93,7 @@ test("R13: runProgram, the program's own entry, answers what it prints and its s
   const files = new Map([["a.zip", cf.parts[0]]]);
   const out = await CC.runProgram(["a.zip"], async (p) => { if (!files.has(p)) throw new Error("no such file"); return files.get(p); });
   assert.equal(out.status, 0);
-  assert.equal(out.text.split("\n")[0], `${A}: Recreated`);
+  assert.equal(out.text.split("\n")[0], `${A}: ${word("screen.imported.result.yes")}`);
   assert.equal((await CC.runProgram([], async () => null)).status, 2);
   assert.equal((await CC.runProgram(["--help"], async () => null)).status, 0);
 });

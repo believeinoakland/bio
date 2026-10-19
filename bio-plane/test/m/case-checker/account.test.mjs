@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import * as CC from "../../../src/case-checker/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
-import { caseFile, caseFiles, byId, rows, A, B, C, MINUTES } from "./fixture.mjs";
+import { W, like, caseFile, caseFiles, byId, rows, A, B, C, MINUTES } from "./fixture.mjs";
 
 const PASSAGE = "The lease was approved without a vote on March 3, 2024, for $4,200, by Jane Doe of the Parks Board.";
 /* what a sentence cites, as case-grammar R23 spells it (K2528): {kind, ref, ord}, ord null but for a leg */
@@ -68,8 +68,8 @@ test("R24 arm 1: a sentence not bias-marked that cites nothing, or only what it 
   assert.deepEqual(codes(judge(one("Nobody voted on it.", []))), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
   const unread = judge(one("The lease was approved without a vote.", [P9]));
   assert.deepEqual(codes(unread), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
-  assert.match(detail(unread), /sentence 0 cites P9, which is not among what it may cite/);
-  assert.match(detail(judge(one("The minutes show it.", [leg("F9", 2)]))), /cites leg 2 of F9, which is not among/);
+  assert.equal(detail(unread), W("case-checker.say.sentence_cites_among", { ord: 0, w: "P9" }));
+  assert.equal(detail(judge(one("The minutes show it.", [leg("F9", 2)]))), W("case-checker.say.sentence_cites_among", { ord: 0, w: W("case-checker.account.leg_of", { ord: 2, finding: "F9" }) }));
   /* cites in a front-matter row's spelling: canonical JSON in one value */
   assert.deepEqual(codes(judge(one("The lease was approved without a vote.", JSON.stringify([P1])))), []);
   /* answers' own voice (its verdict and cause words) is not an arm: it neither refuses nor hides arm 1 */
@@ -89,12 +89,12 @@ test("R24 (T46; N916): a sentence not bias-marked that states nothing checkable 
     /* control: the same sentence citing only what was not read */
     const unread = judge(one(text, [F2]));
     assert.deepEqual(codes(unread), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]], text);
-    assert.match(detail(unread), /sentence 0 cites F2, which is not among what it may cite/);
+    assert.equal(detail(unread), W("case-checker.say.sentence_cites_among", { ord: 0, w: "F2" }));
     /* and what was not read beside what was: the unread cite is named, the read one excuses nothing */
     for (const cites of [[F1, F2], [F2, F1]]) {
       const mixed = judge(one(text, cites));
       assert.deepEqual(codes(mixed), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]], `${text} ${JSON.stringify(cites)}`);
-      assert.match(detail(mixed), /cites F2, which is not among/);
+      assert.equal(detail(mixed), W("case-checker.say.sentence_cites_among", { ord: 0, w: "F2" }));
       assert.doesNotMatch(detail(mixed), /F1/);
     }
   }
@@ -121,15 +121,15 @@ test("R24 (K2965; case-disclosures R30, K2533): arm 1's cites-nothing judges onl
 
 test("R24 arm 2: a figure, date, name or quotation not in what it cites is ACCOUNT_FACT_NOT_IN_CITED, each named; the same facts taken from what it cites pass", () => {
   const cases = [
-    ["The lease cost $9,999.", /the figure \$9,999/],
-    ["The lease was approved on 2023-05-01.", /the date 2023-05-01/],
-    ["The lease was approved by John Roe.", /the name John Roe/],
-    ["The minutes say “approved after a long debate”.", /the quotation "approved after a long debate"/],
+    ["The lease cost $9,999.", "figure", "$9,999"],
+    ["The lease was approved on 2023-05-01.", "date", "2023-05-01"],
+    ["The lease was approved by John Roe.", "name", "John Roe"],
+    ["The minutes say “approved after a long debate”.", "quotation", "approved after a long debate"],
   ];
-  for (const [text, named] of cases) {
+  for (const [text, kind, said] of cases) {
     const r = judge(one(text));
     assert.deepEqual(codes(r), [[0, "ACCOUNT_FACT_NOT_IN_CITED"]], text);
-    assert.match(detail(r), named, text);
+    assert.equal(detail(r), W("case-checker.say.sentence_states_cites", { ord: 0, said: W(`case-checker.account.the_${kind}`, { said }), are: W("case-checker.account.is") }), text);
   }
   /* negative controls: each fact as what it cites states it (a date in another spelling, a figure word for word) */
   for (const text of ["The lease cost $4,200.", "It was approved on 2024-03-03.", "It was approved in March 2024.", "Jane Doe approved it.",
@@ -138,7 +138,8 @@ test("R24 arm 2: a figure, date, name or quotation not in what it cites is ACCOU
   /* every fact missing is named, not only the first, in one departure for the sentence */
   const all = judge(one("John Roe paid $9,999 on 2023-05-01, saying “never”."));
   assert.deepEqual(codes(all), [[0, "ACCOUNT_FACT_NOT_IN_CITED"]]);
-  for (const re of [/the figure \$9,999/, /the date 2023-05-01/, /the name John Roe/, /the quotation "never"/]) assert.match(detail(all), re);
+  assert.equal(detail(all), W("case-checker.say.sentence_states_cites", { ord: 0, are: W("case-checker.account.are"), said:
+    [["figure", "$9,999"], ["date", "2023-05-01"], ["name", "John Roe"], ["quotation", "never"]].map(([kind, said]) => W(`case-checker.account.the_${kind}`, { said })).join(", ") }));
   /* arm 1 answered: nothing is cited, so arm 2 is not asked */
   assert.deepEqual(codes(judge(one("John Roe paid $9,999.", []))), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
 });
@@ -146,13 +147,13 @@ test("R24 arm 2: a figure, date, name or quotation not in what it cites is ACCOU
 test("R24 arm 3: a finding's conclusion stated otherwise than the record holds, a determination the record does not hold, or a leg that cuts against it read as supporting it, is ACCOUNT_CONTRADICTED_BY_RECORD", () => {
   const negated = judge(one("The lease was not approved without a vote.", [F1]));
   assert.deepEqual(codes(negated), [[0, "ACCOUNT_CONTRADICTED_BY_RECORD"]]);
-  assert.match(detail(negated), /states finding F1's conclusion other than the record holds it/);
+  assert.equal(detail(negated), W("case-checker.say.sentence_states_finding_conclusion", { ord: 0, cite: "F1", claim: "The lease was approved without a vote" }));
   const undetermined = judge(one("This established that the lease was approved.", [F2]), { cited: [...CITED, { ...F2, text: "This established that the lease was approved." }] });
   assert.deepEqual(codes(undetermined), [[0, "ACCOUNT_CONTRADICTED_BY_RECORD"]]);
-  assert.match(detail(undetermined), /states finding F2 as determined, where the record holds no adopted conclusion/);
+  assert.equal(detail(undetermined), W("case-checker.say.sentence_states_finding", { ord: 0, cite: "F2" }));
   const cutting = judge(one("The memo shows the board acted alone.", [leg("F1", 1)]), { cited: [...CITED.slice(0, 3), { ...leg("F1", 1), text: "The memo shows the board acted alone." }] });
   assert.deepEqual(codes(cutting), [[0, "ACCOUNT_CONTRADICTED_BY_RECORD"]]);
-  assert.match(detail(cutting), /reads leg 1 of F1 as supporting finding F1, where it cuts against it/);
+  assert.equal(detail(cutting), W("case-checker.say.sentence_reads_supporting", { ord: 0, cite: W("case-checker.account.leg_of", { ord: 1, finding: "F1" }), finding: "F1" }));
   /* negative controls: the conclusion as held; the cutting leg read as cutting; a supporting leg read as supporting */
   assert.deepEqual(codes(judge(one("The lease was approved without a vote.", [F1]))), []);
   assert.deepEqual(codes(judge(one("The memo cuts against it.", [leg("F1", 1)]))), []);
@@ -171,7 +172,7 @@ test("R24 arms 4 and 5: a bias-marked sentence whose statement is not printed is
                       "The board “never voted”.", "This shows that the board favoured the vendor.", "The lease was approved without a vote, as we expected."]) {
     const r = judge(bias(text));
     assert.deepEqual(codes(r), [[0, "ACCOUNT_CLAIM_NOT_BIAS"]], text);
-    assert.match(detail(r), /a fact is never bias/);
+    assert.match(detail(r), like("case-checker.say.sentence_marked_bias", { ord: 0 }));
   }
   /* both arms, in R30's order */
   assert.deepEqual(codes(judge(bias("Jane Doe favoured the vendor.", "S7"))), [[0, "ACCOUNT_BIAS_NOT_PRINTED"], [0, "ACCOUNT_CLAIM_NOT_BIAS"]]);
@@ -245,13 +246,13 @@ test("R24 R1 R9: offline, a sentence citing material whose text the case file do
   assert.equal(r.account.judged, 0);
   assert.equal(r.account.ok, null);
   assert.deepEqual(r.account.not_judged.map((n) => [n.ord, n.cites]), [[0, [MINUTES]]]);
-  assert.ok(byId(r)[C].missing.some((e) => e.check === "account" && /whose text this case file does not carry, so it is not judged/.test(e.detail)));
+  assert.ok(byId(r)[C].missing.some((e) => e.check === "account" && like("case-checker.check.account_cites_not_carried", { ord: 0 }).test(e.detail)));
   assert.equal(byId(r)[C].result, "recreated_in_part");
   assert.equal((await CC.checkCaseFile({ parts: caseFile().parts })).account, null);
   const unreadable = await CC.checkCaseFile({ parts: caseFile({ docLines: CG.accountLines([{ ord: 0, text: null, cites: [], kind: "account", began_as: "member" }]) }).parts });
   assert.equal(unreadable.account.ok, false);
   assert.deepEqual(unreadable.account.malformed, { reason: "MALFORMED", field: "account[0]" });
-  assert.ok(unreadable.findings.every((f) => f.differs.some((e) => e.check === "account" && /account cannot be read/.test(e.detail))));
+  assert.ok(unreadable.findings.every((f) => f.differs.some((e) => e.check === "account" && e.detail === W("case-checker.check.account_unreadable", { field: "account[0]" }))));
 });
 
 test("R24 R1 (K2965): offline, a statement row citing nothing adds no arm-1 entry, and every finding recreates; an account row citing nothing does differ", async () => {

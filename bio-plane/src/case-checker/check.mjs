@@ -36,35 +36,32 @@ import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
 import { checkStandardsUse } from "./standards.mjs";
 import { checkAccount, listOfField, citeOf } from "./account.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { LENS_LIMIT_STATEMENT, lensOfArg, applicationOf, pairsUnderLens } from "./lens.mjs";
 
 /* ============================================================ the words (R1, R11, R18; the UX stream's, until it gives them) */
 
-/** R1: the sentence every answer carries. The words are the UX stream's; until it gives them, this plain sentence. */
-export const RECREATION_STATEMENT = "Recreating a case shows that what it carries is intact and consistent with what "
-  + "it states. It does not show that the case is true, and it is not an endorsement of it.";
-/** R18: the sentence beside the findings another group published that a finding rests on. The UX stream's words, later. */
-export const REST_ON_ANOTHER_GROUP_STATEMENT = "Part of this case rests on another team's published finding. That part "
-  + "is checked against that team's own case file, named here, and not on that team's behalf here.";
+/** R1: the sentence every answer carries (R27: the design's words, read by key). */
+export const RECREATION_STATEMENT = word("case-checker.recreation_statement");
+/** R18: the sentence beside the findings another group published that a finding rests on. */
+export const REST_ON_ANOTHER_GROUP_STATEMENT = word("case-checker.rest_on_another_group_statement");
 /** R3: the sentence an answer carries when no published keys were given. */
-export const KEYS_NOT_CHECKED_STATEMENT = "The signing keys were not checked against the team's published list of "
-  + "keys, because no list was given to this check.";
+export const KEYS_NOT_CHECKED_STATEMENT = word("case-checker.keys_not_checked_statement");
 /** R7: the sentence when the stated catalogue version is not this checker's. */
-export const CHECKS_VERSION_STATEMENT = (stated, own) => `The publication checks ran at this checker's version, ${own}, `
-  + `not at the version the case states, ${stated === null ? "none" : stated}.`;
+export const CHECKS_VERSION_STATEMENT = (stated, own) => word("case-checker.text.publication_checks_ran",
+  { own, stated: stated === null || stated === undefined ? localize("case-checker.check.none", "none") : String(stated) });
 
 /** R20 (K1448): the sentence beside a calculation this checker does not recompute (a workbook, or a value from a third
- *  party's engine). The UX stream's words, later. */
-export const NOT_RECOMPUTED_STATEMENT = "This value was recomputed by the publishing copy's engine, not by this checker, "
-  + "so it is not shown here to agree.";
+ *  party's engine). */
+export const NOT_RECOMPUTED_STATEMENT = word("case-checker.not_recomputed_statement");
 /** R20: the three answers for a calculation. */
 export const CALCULATION_RESULTS = Object.freeze(["agrees", "differs", "not_recomputed"]);
 
 /** R1: the three results. */
 export const RESULTS = Object.freeze(["recreated", "recreated_in_part", "did_not_recreate"]);
-/** R13: each result in words, as the standalone program prints it. The UX stream's words, when it gives them. */
-export const RESULT_WORDS = Object.freeze({ recreated: "Recreated", recreated_in_part: "Recreated in part",
-                                            did_not_recreate: "Did not recreate" });
+/** R13: each result in words, as the standalone program prints it (the design's words, read by key). */
+export const RESULT_WORDS = Object.freeze({ recreated: word("screen.imported.result.yes"),
+  recreated_in_part: word("screen.imported.result.part"), did_not_recreate: word("screen.imported.result.no") });
 /** R1: the checker's versions, stated in every answer. */
 export const CHECKER_VERSIONS = Object.freeze({ grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION,
                                                 calc_versions: [CALC_METHOD] });
@@ -99,6 +96,14 @@ const b64 = (bytes) => {
 /** An entry of `missing[]` or `differs[]` (R11): which check, what it is about, and a sentence a reader can act on. */
 const entry = (check, about, detail, more = {}) => ({ check, about, ...more, detail });
 
+const NOTHING = () => localize("case-checker.check.nothing", "nothing");
+/** R9, R11: what a reader does to supply a material: "fetch the document whose SHA-256 is …, from … (archived at …)". */
+const fetchMaterial = (mat, kind) => localize("case-checker.check.fetch_material", "fetch the {kind} whose SHA-256 is {sha}",
+  { kind: kind === "observation" ? localize("case-checker.check.kind_observation", "observation") : localize("case-checker.check.kind_document", "document"),
+    sha: String(mat.sha) })
+  + (mat.origin ? `, ${localize("case-checker.check.from_origin", "from {origin}", { origin: mat.origin })}` : "")
+  + (mat.archived_copy ? ` (${localize("case-checker.check.archived_at", "archived at {copy}", { copy: mat.archived_copy })})` : "");
+
 /* ============================================================ the case file read (R1, R2, R9) */
 
 /** The SSH fingerprint of a wire key (`SHA256:` and the unpadded base64 of its digest), as `ssh-keygen -l` prints it. */
@@ -119,33 +124,34 @@ const departureWords = (d) => (typeof d === "string" ? d : isObj(d) && (d.detail
  *  R13, each a sentence. Pure; never throws. */
 export function readCaseFile(parts) {
   try { return readParts(parts); }
-  catch (e) { return { manifest: null, files: [], departures: [`the case file could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`], parts: [] }; }
+  catch (e) { return { manifest: null, files: [], departures: [word("case-checker.departures", { e: String(e && e.message ? e.message : e).slice(0, 200) })], parts: [] }; }
 }
 
 function readParts(parts) {
   const departures = [];
   const list = Array.isArray(parts) ? parts : [];
-  if (!list.length) departures.push("no part of a case file was given");
+  if (!list.length) departures.push(word("case-checker.push.part_case_file"));
   const zips = [];
   list.forEach((p, i) => {
     const z = readStoredZip(p);
-    if (!z.ok) { departures.push(`part ${i + 1} given: ${z.problem}`); return; }
-    for (const pr of z.problems) departures.push(`part ${i + 1} given: ${pr}`);
+    const given = (problem) => localize("case-checker.check.part_given_problem", "part {given} given: {problem}", { given: i + 1, problem });
+    if (!z.ok) { departures.push(given(z.problem)); return; }
+    for (const pr of z.problems) departures.push(given(pr));
     zips.push({ given: i + 1, entries: z.entries });
   });
   const mpath = CASE_FILE_MANIFEST_PATH;
   let manifestText = null;
   for (const z of zips) {
     const mb = z.entries.get(mpath);
-    if (!mb) { departures.push(`part ${z.given} given carries no ${mpath} at its root`); continue; }
+    if (!mb) { departures.push(word("case-checker.push.part_given_carries", { given: z.given, mpath })); continue; }
     const t = textOf(mb);
     if (manifestText === null) manifestText = t;
-    else if (t !== manifestText) departures.push(`part ${z.given} given carries a manifest that differs from the first part's`);
+    else if (t !== manifestText) departures.push(word("case-checker.push.part_given_carries_manifest", { given: z.given }));
   }
   let manifest = null;
   if (manifestText !== null) {
-    try { manifest = JSON.parse(manifestText); } catch { departures.push("the manifest is not JSON"); }
-    if (manifest !== null && !isObj(manifest)) { departures.push("the manifest is not a JSON object"); manifest = null; }
+    try { manifest = JSON.parse(manifestText); } catch { departures.push(word("case-checker.push.manifest_json")); }
+    if (manifest !== null && !isObj(manifest)) { departures.push(word("case-checker.push.manifest_json_object")); manifest = null; }
   }
   const manifestAt = departures.length;     /* the manifest's own departures are named here, once the files are read */
   const m = manifest || {};
@@ -182,16 +188,17 @@ function readParts(parts) {
     const sha = shaOf(b);
     if (sha !== f.sha256 || b.length !== f.bytes) {
       f.state = "differs";
-      f.detail = `${f.path} does not match the manifest: it has SHA-256 ${sha} and ${b.length} bytes, where the manifest lists ${f.sha256} and ${f.bytes} bytes`;
+      f.detail = localize("case-checker.check.file_differs_manifest", "{path} does not match the manifest: it has SHA-256 {sha} and {bytes} bytes, where the manifest lists {listed_sha} and {listed_bytes} bytes",
+        { path: f.path, sha, bytes: b.length, listed_sha: f.sha256, listed_bytes: String(f.bytes) });
     } else { f.state = "intact"; f.content = b; }
   }
   /* A part whose files differ is answered by those files' own entries, for the findings that need them; only a part
      whose every file matches its row and still does not recompute its listed fingerprint departs as a whole. */
   for (const ps of partStates) if (ps.state === "differs" && files.filter((f) => f.part === ps.index).every((f) => f.state === "intact"))
-    departures.push(`part ${ps.index}'s files do not recompute the fingerprint the manifest lists for it (${ps.sha256})`);
+    departures.push(word("case-checker.push.part_files_recompute", { index: String(ps.index), sha256: String(ps.sha256) }));
   const listedNames = new Set(files.map((f) => f.path));
   for (const z of zips) for (const name of z.entries.keys())
-    if (name !== mpath && !listedNames.has(name)) departures.push(`part ${z.given} given carries ${name}, which the manifest does not list`);
+    if (name !== mpath && !listedNames.has(name)) departures.push(word("case-checker.push.part_given_carries_manifest_list", { given: z.given, name }));
   /* `case-grammar` R13: the manifest's departures, those relative to the case document's `materials:` rows (an
      `obscured` copy and its row) among them when the case document is carried as the manifest lists it. */
   if (manifest) {
@@ -257,7 +264,7 @@ const squash = (s) => String(s).replace(/\s+/g, " ").trim();
 export async function checkCaseFile(args) {
   try { return await check(isObj(args) ? args : {}); }
   catch (e) {
-    return malformed([`the check could not read this input: ${String(e && e.message ? e.message : e).slice(0, 200)}`], null);
+    return malformed([localize("case-checker.check.input_unreadable", "the check could not read this input: {error}", { error: String(e && e.message ? e.message : e).slice(0, 200) })], null);
   }
 }
 
@@ -275,7 +282,7 @@ function malformed(departures, manifest) {
     lens: { name: "as_published", statements: null, departure: null, not_applied: [] }, lens_statement: LENS_LIMIT_STATEMENT,
     findings: members.map((f) => ({ finding: f, role: null, result: "did_not_recreate", missing: [],
       differs: departures.map((d) => entry("integrity", "case file", d)), pair: null, bar_met: null })),
-    complete_edition: { equal: null, detail: "the case file could not be read, so its complete edition was not compared" },
+    complete_edition: { equal: null, detail: localize("case-checker.check.edition_not_compared", "the case file could not be read, so its complete edition was not compared") },
     rests_on_another_group: [], rests_on_another_group_statement: REST_ON_ANOTHER_GROUP_STATEMENT,
     statement: RECREATION_STATEMENT,
   };
@@ -314,18 +321,18 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const p = parseFrontmatter(docText);
     fm = isObj(p.data) ? p.data : null;
     body = typeof p.body === "string" ? p.body : null;
-    if (!fm) caseLevel.differs.push(entry("integrity", docFile.path, "the case document carries no front matter this checker can read"));
+    if (!fm) caseLevel.differs.push(entry("integrity", docFile.path, localize("case-checker.check.no_front_matter", "the case document carries no front matter this checker can read")));
   }
   const docSha = docFile && docFile.content ? docFile.sha256 : null;
-  if (!docFile) caseLevel.differs.push(entry("integrity", "case document", "the manifest lists no case document"));
-  else if (docFile.state === "missing") caseLevel.missing.push(entry("integrity", docFile.path, `the case document is not carried; fetch the file whose SHA-256 is ${docFile.sha256}`, { sha256: docFile.sha256 }));
+  if (!docFile) caseLevel.differs.push(entry("integrity", "case document", localize("case-checker.check.manifest_lists_no_case_document", "the manifest lists no case document")));
+  else if (docFile.state === "missing") caseLevel.missing.push(entry("integrity", docFile.path, localize("case-checker.check.case_document_not_carried_fetch", "the case document is not carried; fetch the file whose SHA-256 is {sha}", { sha: docFile.sha256 }), { sha256: docFile.sha256 }));
   else if (docFile.entry) caseLevel.differs.push(docFile.entry);
   if (docSha && str(m.case_document_sha) && docSha !== m.case_document_sha)
-    caseLevel.differs.push(entry("integrity", "case document", `the case document's SHA-256 is ${docSha}, where the manifest names ${m.case_document_sha}`));
+    caseLevel.differs.push(entry("integrity", "case document", localize("case-checker.check.case_document_sha_differs", "the case document's SHA-256 is {sha}, where the manifest names {named}", { sha: docSha, named: m.case_document_sha })));
   if (fm && str(m.case) && fm.case_id !== m.case)
-    caseLevel.differs.push(entry("integrity", "case document", `the case document names case ${fm.case_id}, where the manifest names ${m.case}`));
+    caseLevel.differs.push(entry("integrity", "case document", localize("case-checker.check.case_document_names_case", "the case document names case {case}, where the manifest names {named}", { case: String(fm.case_id), named: m.case })));
   if (fm && Number.isInteger(m.edition) && fm.case_edition !== m.edition)
-    caseLevel.differs.push(entry("integrity", "case document", `the case document names edition ${fm.case_edition}, where the manifest names ${m.edition}`));
+    caseLevel.differs.push(entry("integrity", "case document", localize("case-checker.check.case_document_names_edition", "the case document names edition {edition}, where the manifest names {named}", { edition: String(fm.case_edition), named: m.edition })));
 
   const method = fm ? methodOf(fm) : null;
   const materialsRead = fm ? materialsOf(fm) : null;
@@ -342,35 +349,35 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   /* ---------------------------------------------------------- R3: signatures */
   const manifestKeys = (Array.isArray(m.keys) ? m.keys : []).filter(isObj).map((k) => ({ key: normalizeKey(k.key), fingerprint: str(k.fingerprint) }));
   for (const k of manifestKeys) if (k.key && k.fingerprint && keyFingerprint(k.key) !== k.fingerprint)
-    caseLevel.differs.push(entry("signature", "signing keys", `the case file lists a key whose fingerprint is ${keyFingerprint(k.key)}, beside the fingerprint ${k.fingerprint}`));
+    caseLevel.differs.push(entry("signature", "signing keys", localize("case-checker.check.key_fingerprint_differs", "the case file lists a key whose fingerprint is {fingerprint}, beside the fingerprint {listed}", { fingerprint: String(keyFingerprint(k.key)), listed: k.fingerprint })));
   const allowed = manifestKeys.map((k) => k.key).filter(Boolean);
   const published = Array.isArray(keys) ? keys.map((k) => normalizeKey(isObj(k) ? k.key : k)).filter(Boolean) : null;
   const keyFacts = (keyB64) => ({ key_fingerprint: keyB64 ? keyFingerprint(keyB64) : null,
     listed_in_case_file: keyB64 ? allowed.includes(keyB64) : null,
     ...(published ? { among_published_keys: keyB64 ? published.includes(keyB64) : null } : {}) });
   const embedded = (armored) => { try { return parseSshsig(armored).pubB64; } catch { return null; } };
-  const sigWords = (v) => (v.ok ? "verifies" : v.reason === "UNKNOWN_KEY" ? "was made with a key the case file does not list"
-    : v.reason === "BAD_SIGNATURE" ? "does not verify over what it signs" : v.reason === "NAMESPACE" ? "was made for another purpose"
-    : "cannot be read as a signature");
+  const sigWords = (v) => (v.ok ? localize("case-checker.check.verifies", "verifies") : v.reason === "UNKNOWN_KEY" ? word("case-checker.text.made_key_case")
+    : v.reason === "BAD_SIGNATURE" ? word("case-checker.text.verify_over_signs") : v.reason === "NAMESPACE" ? word("case-checker.text.made_purpose")
+    : word("case-checker.text.read_signature"));
   async function verifyOver(armored, message) {
     const v = await verifySshsig(armored, message, NS_RATIFY, allowed);
     const key = v.keyB64 || embedded(armored);
     const pubOk = published && key ? published.includes(key) : true;
-    return { verified: v.ok === true && pubOk, reason: v.ok ? (pubOk ? null : "NOT_PUBLISHED_KEY") : v.reason, ...keyFacts(key), words: sigWords(v) };
+    return { verified: v.ok === true && pubOk, reason: v.ok ? (pubOk ? null : "NOT_PUBLISHED_KEY") : v.reason, ...keyFacts(key),
+             words: v.ok && !pubOk ? localize("case-checker.check.not_published_key", "was made with a key that is not among the team's published keys") : sigWords(v) };
   }
 
   const sigCase = { file: null, verified: false, reason: null };
   const caseSig = fileOf("case_signature", null);
-  if (!caseSig) caseLevel.differs.push(entry("signature", "case document", "the case file carries no signature of the case document, so nobody can be shown to have signed it"));
+  if (!caseSig) caseLevel.differs.push(entry("signature", "case document", localize("case-checker.check.no_case_signature", "the case file carries no signature of the case document, so nobody can be shown to have signed it")));
   else if (!caseSig.content) {
-    if (caseSig.state === "missing") caseLevel.missing.push(entry("signature", caseSig.path, `the case document's signature is not carried; fetch the file whose SHA-256 is ${caseSig.sha256}`, { sha256: caseSig.sha256 }));
+    if (caseSig.state === "missing") caseLevel.missing.push(entry("signature", caseSig.path, localize("case-checker.check.case_signature_not_carried_fetch", "the case document's signature is not carried; fetch the file whose SHA-256 is {sha}", { sha: caseSig.sha256 }), { sha256: caseSig.sha256 }));
     else caseLevel.differs.push(caseSig.entry);
   } else if (fm && docSha) {
     const v = await verifyOver(textOf(caseSig.content), caseRatifyStatement(fm.case_id, fm.case_edition, docSha));
     Object.assign(sigCase, { file: caseSig.path, ...v });
     if (!v.verified) caseLevel.differs.push(entry("signature", "case document",
-      v.reason === "NOT_PUBLISHED_KEY" ? "the case document's signature was made with a key that is not among the team's published keys"
-        : `the case document's signature ${v.words}`));
+      localize("case-checker.check.case_signature_says", "the case document's signature {words}", { words: v.words })));
   }
 
   /* ---------------------------------------------------------- the findings and their chains */
@@ -442,30 +449,33 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const a = { ref, by_kind: str(row.by_kind), by: row.level === "group" || row.level === "project" ? null : str(row.by), state: "checked", detail: null };
     const fail = (detail) => { a.state = "fails"; a.detail = detail; attestationFails.set(ref, [...(attestationFails.get(ref) || []), entry("signature", ref, detail)]); };
     const gap = (detail) => { a.state = "not_carried"; a.detail = detail; attestationGaps.set(ref, [...(attestationGaps.get(ref) || []), entry("signature", ref, detail)]); };
-    if (!mat) fail(`an attestation names material ${ref}, which the case document's materials do not list`);
+    if (!mat) fail(localize("case-checker.check.attestation_names_material", "an attestation names material {ref}, which the case document's materials do not list", { ref }));
     else if (row.by_kind === "member") {
-      if (row.signature == null || row.signature === "") { a.state = "unsigned"; a.detail = "this member's attestation carries no signature at the attribution level in force, so none is checked"; }
+      if (row.signature == null || row.signature === "") { a.state = "unsigned"; a.detail = word("case-checker.detail.member_attestation_carries"); }
       else {
         const acct = accountRows.find((x) => String(x.capture ?? "") === mat.sha && String(x.by ?? "") === String(row.by ?? ""));
         let text = null, armored = String(row.signature);
         try { if (acct && typeof acct.text_b64 === "string") text = td.decode(b64ToBytes(acct.text_b64)); } catch { text = null; }
         try { if (!/BEGIN SSH SIGNATURE/.test(armored)) armored = td.decode(b64ToBytes(armored)); } catch { /* left as given */ }
-        if (text === null) gap(`the signed account attesting ${ref} is not carried, so its signature cannot be checked`);
+        if (text === null) gap(word("case-checker.gap.signed_account_attesting", { ref }));
         else {
           const v = await verifyOver(armored, captureAccountStatement(mat.sha, text));
           Object.assign(a, { key_fingerprint: v.key_fingerprint, listed_in_case_file: v.listed_in_case_file,
             ...(published ? { among_published_keys: v.among_published_keys } : {}) });
-          if (!v.verified) fail(`the member's signed account attesting ${ref} ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the team's published keys" : v.words}`);
+          if (!v.verified) fail(localize("case-checker.check.member_account_says", "the member's signed account attesting {ref} {words}", { ref, words: v.words }));
         }
       }
     } else if (row.by_kind === "group") {
-      if (row.signature !== "case") fail(`a team attestation of ${ref} names a signature other than the case document's own`);
-      else if (caseSig && !caseSig.content && caseSig.state === "missing") gap(`the team's attestation of ${ref} is the case document's signature, which is not carried`);
-      else if (!sigCase.verified) fail(`the team's attestation of ${ref} is the case document's signature, which ${caseSig ? "does not verify" : "the case file does not carry"}`);
+      if (row.signature !== "case") fail(localize("case-checker.check.group_attestation_other_signature", "a team attestation of {ref} names a signature other than the case document's own", { ref }));
+      else if (caseSig && !caseSig.content && caseSig.state === "missing") gap(word("case-checker.gap.group_attestation_case", { ref }));
+      else if (!sigCase.verified) fail(localize("case-checker.check.group_attestation_fails", "the team's attestation of {ref} is the case document's signature, which {why}",
+        { ref, why: caseSig ? localize("case-checker.check.does_not_verify", "does not verify") : localize("case-checker.check.case_file_does_not_carry", "the case file does not carry") }));
     } else if (row.by_kind === "project" || row.by_kind === "co_attestation") {
       const carried = mat.included !== true || files.some((f) => f.ref === ref);
-      if (!carried) fail(`a ${row.by_kind === "project" ? "project" : "co-"}attestation names ${ref}, which the case file's manifest does not list`);
-    } else fail(`an attestation of ${ref} names a kind this checker does not know (${String(row.by_kind)})`);
+      if (!carried) fail(row.by_kind === "project"
+        ? localize("case-checker.check.project_attestation_unlisted", "a project attestation names {ref}, which the case file's manifest does not list", { ref })
+        : localize("case-checker.check.co_attestation_unlisted", "a co-attestation names {ref}, which the case file's manifest does not list", { ref }));
+    } else fail(localize("case-checker.check.attestation_unknown_kind", "an attestation of {ref} names a kind this checker does not know ({kind})", { ref, kind: String(row.by_kind) }));
     attestationAnswers.push(a);
   }
 
@@ -480,26 +490,25 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   }
   const statedChecks = method && typeof method.checks === "string" ? method.checks : null;
   const pubFindings = fm ? checkCaseDocument(fm, { caseId: fm.case_id, edition: fm.case_edition, body, memberBasis }) : [];
-  const unasked = ["C-21.1: the comparison with the case's previous edition, which this case file does not carry"];
-  if (!basisAll) unasked.push("C-2.8's testimony-row and per-ground arms for each member whose basis the case file does not carry");
+  const unasked = [localize("case-checker.check.unasked_previous_edition", "C-21.1: the comparison with the case's previous edition, which this case file does not carry")];
+  if (!basisAll) unasked.push(localize("case-checker.check.unasked_basis", "C-2.8's testimony-row and per-ground arms for each member whose basis the case file does not carry"));
   const publication_checks = { ran: !!fm, findings: pubFindings, unasked, stated_version: statedChecks, checker_version: CATALOG_VERSION,
     statement: statedChecks === CATALOG_VERSION ? null : CHECKS_VERSION_STATEMENT(statedChecks, CATALOG_VERSION) };
   for (const x of pubFindings) if (x && x.severity === "error")
-    caseLevel.differs.push(entry("publication", "case document", `the case does not pass publication check ${x.check}: ${x.message}`));
+    caseLevel.differs.push(entry("publication", "case document", localize("case-checker.check.publication_check_fails", "the case does not pass publication check {check}: {message}", { check: String(x.check), message: String(x.message) })));
 
   /* ---------------------------------------------------------- R10: the complete edition */
   const ceFile = fileOf("complete_edition", null);
   const complete_edition = { equal: null, sha256: ceFile ? ceFile.sha256 : null, rendered_sha256: null, detail: null };
-  if (!ceFile) { complete_edition.equal = false; complete_edition.detail = "the case file carries no complete edition"; caseLevel.differs.push(entry("complete_edition", "complete edition", complete_edition.detail)); }
+  if (!ceFile) { complete_edition.equal = false; complete_edition.detail = word("case-checker.detail.case_file_carries"); caseLevel.differs.push(entry("complete_edition", "complete edition", complete_edition.detail)); }
   else if (!ceFile.content) {
-    complete_edition.detail = ceFile.state === "missing" ? `the complete edition is not carried; fetch the file whose SHA-256 is ${ceFile.sha256}` : ceFile.detail;
+    complete_edition.detail = ceFile.state === "missing" ? localize("case-checker.check.complete_edition_not_carried_fetch", "the complete edition is not carried; fetch the file whose SHA-256 is {sha}", { sha: ceFile.sha256 }) : ceFile.detail;
     (ceFile.state === "missing" ? caseLevel.missing : caseLevel.differs).push(entry("complete_edition", ceFile.path, complete_edition.detail, { sha256: ceFile.sha256 }));
   } else if (files.some((f) => f.kind !== "complete_edition" && f.kind !== "criteria" && f.state !== "intact" && f.state !== "supplied")) {
     /* Rendered from files that are missing or differ, it could not be the carried edition; what they lack is already
        entered for each finding that needs them, so the edition is not compared rather than counted against every one.
        The criteria file is not rendered from (`case-grammar` R14), so it does not hold the comparison back (R22). */
-    complete_edition.detail = "the complete edition was not compared, because files it is rendered from are missing or "
-      + "differ from the manifest";
+    complete_edition.detail = word("case-checker.detail.complete_edition_compared");
   } else {
     const caseFile = { format: m.format, group: m.group, case: m.case, edition: m.edition, case_document_sha: m.case_document_sha,
       keys: m.keys,
@@ -507,12 +516,13 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
         .map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, bytes: f.bytes, content: f.content })) };
     const rendered = completeEditionOf(caseFile);
     const rb = typeof rendered === "string" ? te.encode(rendered) : asBytes(rendered && rendered.bytes !== undefined ? rendered.bytes : rendered);
-    if (!rb) { complete_edition.detail = "this checker could not render the complete edition from the case file"; caseLevel.differs.push(entry("complete_edition", ceFile.path, complete_edition.detail)); }
+    if (!rb) { complete_edition.detail = word("case-checker.detail.checker_render_complete"); caseLevel.differs.push(entry("complete_edition", ceFile.path, complete_edition.detail)); }
     else {
       complete_edition.rendered_sha256 = shaOf(rb);
       complete_edition.equal = complete_edition.rendered_sha256 === shaOf(ceFile.content);
-      complete_edition.detail = complete_edition.equal ? "the carried complete edition is the edition the rest of the case file renders"
-        : `the carried complete edition (SHA-256 ${complete_edition.sha256}) is not the edition the rest of the case file renders (SHA-256 ${complete_edition.rendered_sha256})`;
+      complete_edition.detail = complete_edition.equal ? word("case-checker.text.carried_complete_edition")
+        : localize("case-checker.check.complete_edition_differs", "the carried complete edition (SHA-256 {sha}) is not the edition the rest of the case file renders (SHA-256 {rendered})",
+                   { sha: complete_edition.sha256, rendered: complete_edition.rendered_sha256 });
       if (!complete_edition.equal) caseLevel.differs.push(entry("complete_edition", ceFile.path, complete_edition.detail));
     }
   }
@@ -521,8 +531,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   const calculations = fm ? recomputeCalculations(fm, files, supplied) : [];
   const used = [], unmatched = [];
   for (const doc of supplied) {
-    if (doc.sha === null) unmatched.push({ sha256: null, bytes: null, detail: "a supplied document is not bytes, so it was not used" });
-    else if (!doc.used) unmatched.push({ sha256: doc.sha, bytes: doc.bytes.length, detail: `a supplied document (SHA-256 ${doc.sha}) matches no fingerprint this case file records as missing, and no calculation input it lacks, so it was not used` });
+    if (doc.sha === null) unmatched.push({ sha256: null, bytes: null, detail: localize("case-checker.check.supplied_not_bytes", "a supplied document is not bytes, so it was not used") });
+    else if (!doc.used) unmatched.push({ sha256: doc.sha, bytes: doc.bytes.length, detail: localize("case-checker.check.supplied_matches_nothing", "a supplied document (SHA-256 {sha}) matches no fingerprint this case file records as missing, and no calculation input it lacks, so it was not used", { sha: doc.sha }) });
     else if (!used.includes(doc.sha)) used.push(doc.sha);
   }
   /* R9 (K2143): every file the manifest lists that the case file lacks (absent, or carried with other bytes) and no
@@ -530,11 +540,13 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
      among them, though no finding's result rests on it. */
   const wanted = files.filter((f) => (f.state === "missing" || f.state === "differs") && !used.includes(f.sha256))
     .map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256,
-                   detail: `${f.state === "differs" ? `${f.path} is carried with other bytes` : `${f.path} is not carried`}; fetch the file whose SHA-256 is ${f.sha256}` }));
+                   detail: f.state === "differs"
+                     ? localize("case-checker.check.carried_other_bytes_fetch", "{path} is carried with other bytes; fetch the file whose SHA-256 is {sha}", { path: f.path, sha: f.sha256 })
+                     : localize("case-checker.check.not_carried_fetch", "{what} is not carried; fetch the file whose SHA-256 is {sha}", { what: f.path, sha: f.sha256 }) }));
   /* R2, R20: the calculations' PROV-O rendering, when carried, is what `case-grammar` R19 renders from the signed rows. */
   const provFile = files.find((f) => f.path === CASE_FILE_PROV_PATH) || null;
   if (fm && provFile && provFile.content && textOf(provFile.content) !== provOf(calculationsOf(fm)))
-    caseLevel.differs.push(entry("calculation", provFile.path, "the calculations' provenance file the case file carries is not the rendering of the calculations the signed case document states"));
+    caseLevel.differs.push(entry("calculation", provFile.path, localize("case-checker.check.provenance_file_differs", "the calculations' provenance file the case file carries is not the rendering of the calculations the signed case document states")));
 
   /* ---------------------------------------------------------- R22: how the case uses its standards, offline */
   const standards_use = standardsUseOf({ files, docText, materials, signedPassages, fileOf });
@@ -550,7 +562,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   const findingsOut = [];
   const recomputeLegs = grading.recompute;
   const fileGap = (f, about, what) => (f.state === "missing"
-    ? { missing: entry("integrity", about, `${what} is not carried; fetch the file whose SHA-256 is ${f.sha256}`, { sha256: f.sha256 }) }
+    ? { missing: entry("integrity", about, localize("case-checker.check.not_carried_fetch", "{what} is not carried; fetch the file whose SHA-256 is {sha}", { what, sha: f.sha256 }), { sha256: f.sha256 }) }
     : f.entry ? { differs: f.entry } : {});
 
   for (const id of findingIds) {
@@ -559,8 +571,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const isMember = roster.includes(id);
     const role = isMember ? (str(roleOf.get(id)?.role) || null) : "reached";
     const ff = fileOf("finding", "finding", id);
-    if (!ff) (isMember ? differs : missing).push(entry("integrity", id, `the case file carries no published bytes for finding ${id}`));
-    else put(fileGap(ff, id, `finding ${id}'s published bytes`));
+    if (!ff) (isMember ? differs : missing).push(entry("integrity", id, localize("case-checker.check.no_published_bytes", "the case file carries no published bytes for finding {id}", { id })));
+    else put(fileGap(ff, id, word("case-checker.file_gap.finding_published_bytes", { id })));
 
     /* R3: a member's signature, over its pinned version. */
     if (isMember) {
@@ -568,40 +580,40 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       const fs = fileOf("finding_signature", "finding", id);
       const sig = { finding: id, verified: false, reason: null };
       if (ff && ff.content && pin && shaOf(ff.content) !== pin)
-        differs.push(entry("integrity", id, `finding ${id}'s carried bytes are not the version the case pins (${pin})`));
-      if (!fs) differs.push(entry("signature", id, `the case file carries no signature for finding ${id}`));
-      else if (!fs.content) put(fileGap(fs, id, `finding ${id}'s signature`));
+        differs.push(entry("integrity", id, localize("case-checker.check.carried_bytes_not_pinned", "finding {id}'s carried bytes are not the version the case pins ({pin})", { id, pin })));
+      if (!fs) differs.push(entry("signature", id, localize("case-checker.check.no_finding_signature", "the case file carries no signature for finding {id}", { id })));
+      else if (!fs.content) put(fileGap(fs, id, word("case-checker.file_gap.finding_signature", { id })));
       else if (pin) {
         const v = await verifyOver(textOf(fs.content), ratifyStatement(id, pin));
         Object.assign(sig, v); delete sig.words;
-        if (!v.verified) differs.push(entry("signature", id, `finding ${id}'s signature ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the team's published keys" : v.words}`));
+        if (!v.verified) differs.push(entry("signature", id, localize("case-checker.check.finding_signature_says", "finding {id}'s signature {words}", { id, words: v.words })));
       }
       findingSigs.push(sig);
     }
 
     /* R4: the passages it relies on. */
     const pf = fileOf("passages", "finding", id);
-    if (pf && !pf.content) put(fileGap(pf, id, `finding ${id}'s passages`));
+    if (pf && !pf.content) put(fileGap(pf, id, word("case-checker.file_gap.finding_passages", { id })));
     const fileRows = pf && pf.content ? listOf(jsonOf(pf.content), "passages") : pf ? [] : [];
     const rows = signedPassages ? (signedPassages[id] || []) : fileRows;
     if (signedPassages && pf && pf.content && (fileRows === null || !sameRows(fileRows, rows, PASSAGE_FIELDS)))
-      differs.push(entry("passage", id, `finding ${id}'s carried passages are not the passages the signed case document states`));
-    else if (rows === null) differs.push(entry("passage", id, `finding ${id}'s passages cannot be read`));
+      differs.push(entry("passage", id, localize("case-checker.check.carried_passages_differ", "finding {id}'s carried passages are not the passages the signed case document states", { id })));
+    else if (rows === null) differs.push(entry("passage", id, localize("case-checker.check.passages_unreadable", "finding {id}'s passages cannot be read", { id })));
     for (const row of (rows || []).filter(isObj)) {
       const cap = str(row.capture_sha) || "";
       const mat = materials.find((x) => x.sha === cap) || null;
-      const where = `a passage of ${cap || "an unnamed document"} relied on by ${id}`;
+      const where = word("case-checker.where", { document: cap || word("case-checker.text.unnamed_document"), id });
       if (!HEX64.test(String(row.content_id ?? "")) || contentIdFor(cap, row.extent, row.chain ?? null) !== row.content_id) {
-        differs.push(entry("passage", id, `${where} does not recompute to the content id it states (${String(row.content_id)})`)); continue; }
+        differs.push(entry("passage", id, localize("case-checker.check.passage_content_id_differs", "{where} does not recompute to the content id it states ({content_id})", { where, content_id: String(row.content_id) }))); continue; }
       const tf = mat && mat.kind === "observation" ? fileOf("observation", "ref", mat.ref) : mat ? fileOf("extracted_text", "ref", mat.ref) : null;
       if (!tf || !tf.content) {
-        missing.push(entry("passage", id, `${where} cannot be found, because the document's extracted text is not carried${mat ? `; fetch the document whose SHA-256 is ${mat.sha}${mat.origin ? `, from ${mat.origin}` : ""}${mat.archived_copy ? ` (archived at ${mat.archived_copy})` : ""}` : ""}`,
+        missing.push(entry("passage", id, localize("case-checker.check.passage_text_not_carried", "{where} cannot be found, because the document's extracted text is not carried", { where }) + (mat ? `; ${fetchMaterial(mat, "document")}` : ""),
           { sha256: tf ? tf.sha256 : cap, ...(mat && mat.origin ? { origin: mat.origin } : {}) }));
         continue;
       }
       const at = mat.kind === "observation" ? textOf(tf.content) : textAtExtent(textOf(tf.content), row.extent);
       if (at === null || typeof row.quoted !== "string" || !squash(at).includes(squash(row.quoted)))
-        differs.push(entry("passage", id, `${where} is not found where it is said to be: its quoted text is not in the document's text at that place`));
+        differs.push(entry("passage", id, localize("case-checker.check.passage_not_found", "{where} is not found where it is said to be: its quoted text is not in the document's text at that place", { where })));
     }
 
     /* R5: the pair, recomputed at the stated version. */
@@ -609,30 +621,31 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     const gf = fileOf("grading_facts", "finding", id);
     let pair = null;
     if (gf && gf.content && factsDiffer.has(id))
-      differs.push(entry("grade", id, `finding ${id}'s carried grading facts are not the facts the signed case document states`));
-    if (gf && !gf.content) put(fileGap(gf, id, `finding ${id}'s grading facts`));
-    if (!fx && !gf) missing.push(entry("grade", id, `the case file carries no grading facts for finding ${id}, so its grade cannot be recomputed`));
-    else if (!fx && gf && gf.content) differs.push(entry("grade", id, `finding ${id}'s grading facts cannot be read`));
+      differs.push(entry("grade", id, localize("case-checker.check.carried_facts_differ", "finding {id}'s carried grading facts are not the facts the signed case document states", { id })));
+    if (gf && !gf.content) put(fileGap(gf, id, word("case-checker.file_gap.finding_grading_facts", { id })));
+    if (!fx && !gf) missing.push(entry("grade", id, localize("case-checker.check.no_grading_facts", "the case file carries no grading facts for finding {id}, so its grade cannot be recomputed", { id })));
+    else if (!fx && gf && gf.content) differs.push(entry("grade", id, localize("case-checker.check.grading_facts_unreadable", "finding {id}'s grading facts cannot be read", { id })));
     else if (!fx) { /* not carried: entered above */ }
     else {
       const r = recomputeLegs(id, fx.legs);
       if (!r.ok && r.reason === "UNKNOWN_METHOD_VERSION")
-        missing.push(entry("grade", id, `the grade was set by grading method ${version === null ? "(none stated)" : version}, which this checker does not hold (it holds ${GRADING_METHOD_VERSIONS.join(", ")})`, { version }));
-      else if (!r.ok) differs.push(entry("grade", id, `finding ${id}'s grade could not be recomputed: ${r.detail}`));
+        missing.push(entry("grade", id, localize("case-checker.check.grading_method_not_held", "the grade was set by grading method {version}, which this checker does not hold (it holds {held})",
+          { version: version === null ? localize("case-checker.check.none_stated", "(none stated)") : version, held: GRADING_METHOD_VERSIONS.join(", ") }), { version }));
+      else if (!r.ok) differs.push(entry("grade", id, localize("case-checker.check.grade_not_recomputed", "finding {id}'s grade could not be recomputed: {detail}", { id, detail: String(r.detail) })));
       else {
         pair = r.pair;
         const recorded = isMember
-          ? [{ from: "the case document", rows: strengthRows.filter((x) => String(x.target ?? "") === id) }]
-          : (legAnswers.get(id) || []).map((x) => ({ from: `the grading facts of ${x.from}`, rows: GRADE_AXES.filter((a) => isObj(x.answer[a])).map((a) => ({ axis: a, ...x.answer[a] })) }));
-        if (isMember && !recorded[0].rows.length) differs.push(entry("grade", id, `the case document records no pair for finding ${id}`));
+          ? [{ from: word("case-checker.from.case_document"), rows: strengthRows.filter((x) => String(x.target ?? "") === id) }]
+          : (legAnswers.get(id) || []).map((x) => ({ from: word("case-checker.from.grading_facts", { from: x.from }), rows: GRADE_AXES.filter((a) => isObj(x.answer[a])).map((a) => ({ axis: a, ...x.answer[a] })) }));
+        if (isMember && !recorded[0].rows.length) differs.push(entry("grade", id, localize("case-checker.check.no_recorded_pair", "the case document records no pair for finding {id}", { id })));
         for (const rec of recorded) for (const row of rec.rows) {
           const a = String(row.axis ?? "");
           if (!pair[a]) continue;
           const rg = row.grade ?? null, rs = String(row.state ?? "");
           if (rg !== pair[a].grade || (rs && rs !== pair[a].state)) {
-            const d = entry("grade", id, `on ${a}, ${rec.from} records ${rg ?? rs} for finding ${id}, and it recomputes to ${pair[a].grade ?? pair[a].state}`, { axis: a, recorded: rg ?? rs, recomputed: pair[a].grade ?? pair[a].state });
+            const d = entry("grade", id, localize("case-checker.check.grade_differs", "on {axis}, {from} records {recorded} for finding {id}, and it recomputes to {recomputed}", { axis: a, from: rec.from, recorded: String(rg ?? rs), id, recomputed: String(pair[a].grade ?? pair[a].state) }), { axis: a, recorded: rg ?? rs, recomputed: pair[a].grade ?? pair[a].state });
             differs.push(d);
-            if (!isMember) for (const parent of reachedBy.get(id) || []) (parentDiffers[parent] ||= []).push(entry("grade", parent, `${parent} rests on ${id}, whose stated grade on ${a} does not recompute`, { axis: a }));
+            if (!isMember) for (const parent of reachedBy.get(id) || []) (parentDiffers[parent] ||= []).push(entry("grade", parent, localize("case-checker.check.rests_on_unrecomputed", "{parent} rests on {id}, whose stated grade on {axis} does not recompute", { parent, id, axis: a }), { axis: a }));
           }
         }
       }
@@ -649,15 +662,16 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       const st = standingOf({ role, bar, pair: p });
       bar_met = isObj(st) ? st.meets : null;
       for (const a of isObj(st) && st.meets === false && Array.isArray(st.short) ? st.short : [])
-        differs.push(entry("bar", id, `on ${a}, finding ${id} reaches ${p[a]?.grade ?? p[a]?.state ?? "nothing"}, short of the bar the case records (${st.bar[a]})`, { axis: a, bar: st.bar[a] }));
+        differs.push(entry("bar", id, localize("case-checker.check.short_of_bar", "on {axis}, finding {id} reaches {reached}, short of the bar the case records ({bar})", { axis: a, id, reached: String(p[a]?.grade ?? p[a]?.state ?? NOTHING()), bar: String(st.bar[a]) }), { axis: a, bar: st.bar[a] }));
     }
 
     /* R8, R2, R3: the material its chain reaches. */
     const chain = chainOf(id);
     if (isMember && role === "load_bearing")
-      for (const u of chain.unlisted) differs.push(entry("presentability", id, `${id}'s chain reaches ${u.kind} ${u.target}, which the case document's materials do not list`));
+      for (const u of chain.unlisted) differs.push(entry("presentability", id, localize("case-checker.check.chain_reaches_unlisted", "{id}'s chain reaches {kind} {target}, which the case document's materials do not list", { id, kind: u.kind, target: u.target })));
     for (const mat of chain.mats) {
-      const what = `${mat.kind === "observation" ? "the observation" : "the document"} ${mat.ref}`;
+      const what = mat.kind === "observation" ? localize("case-checker.check.the_observation", "the observation {ref}", { ref: String(mat.ref) })
+        : localize("case-checker.check.the_document", "the document {ref}", { ref: String(mat.ref) });
       const lb = isMember && role === "load_bearing";
       /* R8 (DEC-180 (4)): a row carried as its copy is presentable when a file of kind `obscured` is carried at the copy's
          SHA-256 (R2 checks its bytes); its extracted text and the original's bytes are not asked: the original never
@@ -667,22 +681,27 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
         const f = files.find((x) => x.kind === "obscured" && x.ref === mat.ref && x.sha256 === ob.copy) || null;
         if (f && f.entry) differs.push(f.entry);
         else if (!f || !f.content)
-          missing.push(entry(lb ? "presentability" : "integrity", id, `the copy of ${what} carried in its place (a photo with its marked areas obscured, or a member document cleaned) is not carried; fetch the file whose SHA-256 is ${ob.copy}`, { sha256: ob.copy, copy: ob.copy }));
+          missing.push(entry(lb ? "presentability" : "integrity", id, localize("case-checker.check.copy_not_carried_fetch", "the copy of {what} carried in its place (a photo with its marked areas obscured, or a member document cleaned) is not carried; fetch the file whose SHA-256 is {sha}", { what, sha: ob.copy }), { sha256: ob.copy, copy: ob.copy }));
         for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
         for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
         continue;
       }
-      const fetch = `fetch the ${mat.kind === "observation" ? "observation" : "document"} whose SHA-256 is ${mat.sha}${mat.origin ? `, from ${mat.origin}` : ""}${mat.archived_copy ? ` (archived at ${mat.archived_copy})` : ""}`;
+      const fetch = fetchMaterial(mat, mat.kind);
       const needs = mat.kind === "observation" ? [["observation", mat.sha]] : [["document", mat.sha], ["extracted_text", mat.text_sha]];
       if (lb && mat.included !== true)
-        differs.push(entry("presentability", id, `${id} is load-bearing and rests on ${what}, which the case lists as not travelling whole`, { sha256: mat.sha }));
+        differs.push(entry("presentability", id, localize("case-checker.check.load_bearing_not_whole", "{id} is load-bearing and rests on {what}, which the case lists as not travelling whole", { id, what }), { sha256: mat.sha }));
       for (const [kind, signedSha] of needs) {
         const f = fileOf(kind, "ref", mat.ref);
         if (f && f.content && signedSha && f.sha256 !== signedSha)
-          differs.push(entry("integrity", id, `${kind === "extracted_text" ? `the carried extracted text of ${what}` : `the carried ${what.replace(/^the /, "")}`} is not the bytes the signed case fingerprints (${signedSha})`, { sha256: signedSha }));
+          differs.push(entry("integrity", id, localize("case-checker.check.carried_not_signed_bytes", "{carried} is not the bytes the signed case fingerprints ({sha})", {
+            carried: kind === "extracted_text" ? localize("case-checker.check.carried_extracted_text", "the carried extracted text of {what}", { what })
+              : kind === "observation" ? localize("case-checker.check.carried_observation", "the carried observation {ref}", { ref: String(mat.ref) })
+              : localize("case-checker.check.carried_document", "the carried document {ref}", { ref: String(mat.ref) }), sha: signedSha }), { sha256: signedSha }));
         if (f && f.entry) differs.push(f.entry);
         else if ((!f || !f.content) && (mat.included === true || (f && f.state === "missing")))
-          missing.push(entry(lb ? "presentability" : "integrity", id, `${what}${kind === "extracted_text" ? "'s extracted text" : ""} is not carried; ${fetch}`, { sha256: f ? f.sha256 : mat.sha, ...(mat.origin ? { origin: mat.origin } : {}) }));
+          missing.push(entry(lb ? "presentability" : "integrity", id, localize("case-checker.check.subject_not_carried", "{subject} is not carried; {fetch}", {
+            subject: kind === "extracted_text" ? localize("case-checker.check.extracted_text_of", "{what}'s extracted text", { what }) : what, fetch }),
+            { sha256: f ? f.sha256 : mat.sha, ...(mat.origin ? { origin: mat.origin } : {}) }));
       }
       for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
       for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
@@ -690,7 +709,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     /* R20, R11: a calculation its chain rests on gives it that calculation's entries. */
     for (const calc of chain.calcs) {
       const c = calculations.find((x) => x.calc === calc);
-      if (!c) { differs.push(entry("calculation", id, `${id}'s chain rests on calculation ${calc}, which the case document's calculations do not list`)); continue; }
+      if (!c) { differs.push(entry("calculation", id, localize("case-checker.check.chain_rests_on_unlisted_calculation", "{id}'s chain rests on calculation {calc}, which the case document's calculations do not list", { id, calc }))); continue; }
       for (const e of c.differs) differs.push({ ...e, about: id });
       for (const e of c.missing) missing.push({ ...e, about: id });
     }
@@ -804,7 +823,7 @@ export function reweigh(args) {
     const docFile = files.find((f) => f.kind === "case_document" && f.content) || null;
     const p = docFile ? parseFrontmatter(textOf(docFile.content)) : null;
     const fm = p && isObj(p.data) ? p.data : null;
-    if (!fm) { out.lens.departure = "the case document is not carried, so nothing was re-weighed under the lens"; for (const f of out.findings) { f.pair = null; f.bar_met = null; } return out; }
+    if (!fm) { out.lens.departure = word("case-checker.departure.case_document_carried"); for (const f of out.findings) { f.pair = null; f.bar_met = null; } return out; }
     const grading = gradingContextOf(fm);
     /* the grading facts the signed document states (`case-grammar` R17), or, for a document that predates them, the files */
     const signed = gradingFactsOf(fm);
@@ -834,7 +853,7 @@ export function reweigh(args) {
     }
     return out;
   } catch (e) {
-    out.lens.departure = `the case could not be re-weighed under the lens: ${String(e && e.message ? e.message : e).slice(0, 200)}`;
+    out.lens.departure = word("case-checker.departure.case_re_weighed", { e: String(e && e.message ? e.message : e).slice(0, 200) });
     return out;
   }
 }
@@ -843,8 +862,7 @@ export function reweigh(args) {
 
 /** R22: the sentence beside a row frozen before T37, which carries no `captures` (`publication` R72), so whether its
  *  standard's whole text travels is not judged here; stated, never filled. The UX stream's words, later. */
-export const CAPTURES_NOT_CARRIED_STATEMENT = "Whether this standard's whole text travels with the case is not judged "
-  + "here, because its row was recorded before the case file said which captures hold its text.";
+export const CAPTURES_NOT_CARRIED_STATEMENT = word("case-checker.captures_not_carried_statement");
 
 /** R22: R21 (`checkStandardsUse`) over the case document, the carried `criteria` file's rows, the document's
  *  `materials:` rows and its passages (each with the finding relying on it); null when the case file lists no
@@ -860,10 +878,11 @@ function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
   const f = fileOf("criteria", null);
   if (!f) return null;
   if (!f.content) return { ok: null, file: f.path, sha256: f.sha256,
-    detail: f.state === "missing" ? `the criteria the case measures against are not carried; fetch the file whose SHA-256 is ${f.sha256}`
-      : `the criteria the case measures against are not judged, because ${f.detail}` };
+    detail: f.state === "missing" ? localize("case-checker.check.criteria_not_carried_fetch", "the criteria the case measures against are not carried; fetch the file whose SHA-256 is {sha}", { sha: f.sha256 })
+      : localize("case-checker.check.criteria_not_judged", "the criteria the case measures against are not judged, because {why}", { why: String(f.detail) }) };
   if (docText === null) return { ok: null, file: f.path, sha256: f.sha256,
-    detail: "the criteria the case measures against are not judged, because the case document is not carried" };
+    detail: localize("case-checker.check.criteria_not_judged", "the criteria the case measures against are not judged, because {why}",
+      { why: localize("case-checker.check.case_document_not_carried", "the case document is not carried") }) };
   const criteria = jsonOf(f.content);
   const passages = [];
   /* the passages the signed document states; a document that predates the block, the carried files (as R4 reads them) */
@@ -922,11 +941,11 @@ function accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, cas
     const gone = (isObj(r) ? listOfField(r.cites) : []).map(citeOf).filter((c) => c && lacking.has(c.key));
     const ord = isObj(r) && Number.isInteger(r.ord) ? r.ord : i;
     if (gone.length) not_judged.push({ ord, cites: gone.map((c) => c.key),
-      detail: `account sentence ${ord} cites ${gone.map((c) => c.words).join(", ")}, whose text this case file does not carry, so it is not judged; fetch it to judge it` });
+      detail: localize("case-checker.check.account_cites_not_carried", "account sentence {ord} cites {cites}, whose text this case file does not carry, so it is not judged; fetch it to judge it", { ord, cites: gone.map((c) => c.words).join(", ") }) });
     else judged.push(isObj(r) && !Number.isInteger(r.ord) ? { ...r, ord: i } : r);
   });
   const r = checkAccount({ account: judged, cited, printed, conclusions });
-  if (r.ok !== true) caseLevel.differs.push(entry("account", "account", `the case document's account cannot be read (${r.field})`, { code: r.reason }));
+  if (r.ok !== true) caseLevel.differs.push(entry("account", "account", localize("case-checker.check.account_unreadable", "the case document's account cannot be read ({field})", { field: String(r.field) }), { code: r.reason }));
   for (const x of r.departures || []) caseLevel.differs.push(entry("account", `account sentence ${x.ord}`, x.detail, { code: x.code }));
   for (const n of not_judged) caseLevel.missing.push(entry("account", `account sentence ${n.ord}`, n.detail));
   return { sentences: rows.length, judged: judged.length,
@@ -977,7 +996,7 @@ function recomputeCalculations(fm, files, supplied = []) {
     if (filled.length) a.supplied = filled;
     const held = [version ?? recipeMethod, recipeMethod].find((v) => v !== CALC_METHOD) ?? null;
     if (held !== null) {
-      missing.push(entry("calculation", calc, `calculation ${calc} was computed by calculation method ${held}, which this checker does not hold (it holds ${CALC_METHOD})`, { calc, version: held }));
+      missing.push(entry("calculation", calc, localize("case-checker.check.calculation_method_not_held", "calculation {calc} was computed by calculation method {held}, which this checker does not hold (it holds {holds})", { calc, held, holds: CALC_METHOD }), { calc, version: held }));
       out.push(settle(a, disclosed));
       continue;
     }
@@ -985,31 +1004,33 @@ function recomputeCalculations(fm, files, supplied = []) {
        signed. */
     const rf = files.find((f) => f.kind === "calculation" && f.calc === calc && !f.input) || null;
     if (rf && rf.content && textOf(rf.content) !== calculationFileText(row))
-      differs.push(entry("calculation", calc, `calculation ${calc}'s carried file is not the row the signed case document states`, { calc }));
-    if (!hashes) { differs.push(entry("calculation", calc, `calculation ${calc}'s inputs cannot be read`, { calc })); out.push(settle(a, disclosed)); continue; }
+      differs.push(entry("calculation", calc, localize("case-checker.check.calculation_file_differs", "calculation {calc}'s carried file is not the row the signed case document states", { calc }), { calc }));
+    if (!hashes) { differs.push(entry("calculation", calc, localize("case-checker.check.calculation_inputs_unreadable", "calculation {calc}'s inputs cannot be read", { calc }), { calc })); out.push(settle(a, disclosed)); continue; }
     const bound = {};
     for (const [name, sha] of Object.entries(hashes)) {
       const { bytes: b, file: f } = inputBytes[name];
       if (!b) {
-        missing.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not carried${f && f.state === "differs" ? " as the bytes its hash names" : ""}; fetch the file whose SHA-256 is ${sha}`, { calc, input: name, sha256: sha }));
+        missing.push(entry("calculation", calc, f && f.state === "differs"
+          ? localize("case-checker.check.input_not_carried_as_hashed", "input {name} of calculation {calc} is not carried as the bytes its hash names; fetch the file whose SHA-256 is {sha}", { name, calc, sha: String(sha) })
+          : localize("case-checker.check.input_not_carried", "input {name} of calculation {calc} is not carried; fetch the file whose SHA-256 is {sha}", { name, calc, sha: String(sha) }), { calc, input: name, sha256: sha }));
         continue;
       }
       const v = jsonOf(b);
-      if (v === undefined || v === null) { differs.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not a table or figure this checker can read`, { calc, input: name })); continue; }
+      if (v === undefined || v === null) { differs.push(entry("calculation", calc, localize("case-checker.check.input_unreadable_table", "input {name} of calculation {calc} is not a table or figure this checker can read", { name, calc }), { calc, input: name })); continue; }
       bound[name] = v;
     }
     if (missing.length || differs.length) { out.push(settle(a, disclosed)); continue; }
     let key = null;
     try { key = resultKey(recipe, hashes, { methodVersion: CALC_METHOD }); } catch { key = null; }
     if (key !== row.result_key)
-      differs.push(entry("calculation", calc, `calculation ${calc}'s result key is stated as ${String(row.result_key)}, and it recomputes to ${key}`, { calc, result: "result_key", stated: row.result_key ?? null, recomputed: key }));
+      differs.push(entry("calculation", calc, localize("case-checker.check.result_key_differs", "calculation {calc}'s result key is stated as {stated}, and it recomputes to {recomputed}", { calc, stated: String(row.result_key), recomputed: String(key) }), { calc, result: "result_key", stated: row.result_key ?? null, recomputed: key }));
     let r;
     try { r = evaluate(recipe, bound); } catch (e) { r = { refused: "EVALUATE_FAILED", why: String(e && e.message ? e.message : e).slice(0, 200) }; }
     const stated = isObj(row.results) && typeof row.result_key === "string" ? row.results[row.result_key] : undefined;
     if (r && typeof r.refused === "string")
-      differs.push(entry("calculation", calc, `calculation ${calc} does not recompute: the evaluator refuses it (${r.refused}: ${r.why})`, { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: null }));
+      differs.push(entry("calculation", calc, localize("case-checker.check.evaluator_refuses", "calculation {calc} does not recompute: the evaluator refuses it ({refused}: {why})", { calc, refused: r.refused, why: String(r.why) }), { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: null }));
     else if (stated === undefined || canonicalJson(stated) !== canonicalJson(r.result))
-      differs.push(entry("calculation", calc, `calculation ${calc}'s result is stated as ${stated === undefined ? "nothing" : canonicalJson(stated)}, and it recomputes to ${canonicalJson(r.result)}`, { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: r.result }));
+      differs.push(entry("calculation", calc, localize("case-checker.check.result_differs", "calculation {calc}'s result is stated as {stated}, and it recomputes to {recomputed}", { calc, stated: stated === undefined ? NOTHING() : canonicalJson(stated), recomputed: canonicalJson(r.result) }), { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: r.result }));
     out.push(settle(a, disclosed));
   }
   return out;
