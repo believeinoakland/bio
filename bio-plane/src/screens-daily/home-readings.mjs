@@ -32,7 +32,7 @@ export function homeReadings(cs, view, d) {
   const list = function (v, key) { return v && Array.isArray(v[key]) ? v[key] : []; };
   const count = function (n) { return typeof n === "number" && isFinite(n) ? n : null; };
 
-  const out = { investigation: { rds: [], lines: [], fails: [] }, action: { rds: [], fails: [] }, members: { lines: [] }, administration: { rds: [], fails: [] } };
+  const out = { investigation: { rds: [], lines: [], fails: [] }, action: { rds: [], lines: [], fails: [] }, members: { lines: [] }, administration: { rds: [], fails: [] } };
 
   // Documents: `browse`'s `total` over the whole set (retrieval-browse R12).
   const docs = ok(data.docs);
@@ -52,11 +52,11 @@ export function homeReadings(cs, view, d) {
   if (published) out.investigation.rds.push(rd(caseIds.length, "screen.home.rd.case", "screen.home.rd.cases"));
   else if (failed(data.published)) out.investigation.fails.push(data.published);
 
-  // Edition drafts: for each of the member's projects, its drafts (`casedrafts`); for each, the live grant's end from
-  // `reviewcopy`; the case's latest published edition and name from `publishedlist` and `publishedcase`. The line says
-  // there is no comment to answer, so a draft a recipient has commented on is not drawn with it.
+  // The editions (`publishedlist`, `publishedcase`) and the drafts shared for review (`casedrafts` per project, `reviewcopy` per
+  // draft): the latest edition's line, and a line for each case with a draft shared until a date, with the recipients' comments to
+  // answer (review R14: a grant is live while unrevoked and unlapsed, its `until` its end).
   if (published) {
-    const grantEnds = [];
+    const byCase = {};
     (d.projects || []).forEach(function (p) {
       if (!p || !p.id) return;
       const dr = later("drafts:" + p.id, "casedrafts", { project: String(p.id) });
@@ -67,34 +67,63 @@ export function homeReadings(cs, view, d) {
         const cp = later("copy:" + x.draft_id, "reviewcopy", { draft: String(x.draft_id) });
         if (cp.state === "failed") { out.investigation.fails.push(cp); return; }
         if (cp.state !== "ok") return;
-        if (list(cp.value, "comments").some(function (c) { return c && c.author_kind === "recipient"; })) return;
         const live = list(cp.value, "grants").filter(function (g) { return g && g.live === true && typeof g.until === "string" && g.until; });
         if (!live.length) return;
+        const id = String(x.case.case_id);
+        const e = byCase[id] || (byCase[id] = { until: "", comments: 0 });
         const until = live.map(function (g) { return String(g.until); }).sort().pop();
-        grantEnds.push({ caseId: String(x.case.case_id), until: until });
+        if (until > e.until) e.until = until;
+        e.comments += list(cp.value, "comments").filter(function (c) { return c && c.author_kind === "recipient"; }).length;
       });
     });
-    grantEnds.forEach(function (g) {
-      const mine = editions.filter(function (c) { return String(c.case_id) === g.caseId; });
-      if (!mine.length) return;
-      const latest = mine.reduce(function (a, c) { return Number(c.edition) > Number(a.edition) ? c : a; });
-      const one = later("pubcase:" + g.caseId, "publishedcase", { caseId: g.caseId, edition: String(latest.edition) });
-      if (one.state === "failed") { out.investigation.fails.push(one); return; }
-      if (one.state !== "ok" || !one.value) return;
-      const v = one.value;
-      const name = String(v.scope || v.project_reference || v.caseId || g.caseId);
-      const when = latest.published_at || latest.signed_at || latest.ratified_at;
-      if (!when) return;
-      out.investigation.lines.push(cs.w("screen.home.area.edition", { n: String(latest.edition), case: name, date: { html: cs.date(String(when)) }, until: { html: cs.date(g.until) } }));
+    const latestOf = function (id) {
+      const mine = editions.filter(function (c) { return String(c.case_id) === id; });
+      return mine.length ? mine.reduce(function (a, c) { return Number(c.edition) > Number(a.edition) ? c : a; }) : null;
+    };
+    const newest = editions.length ? editions.reduce(function (a, c) {
+      return String(c.published_at || c.signed_at || "") > String(a.published_at || a.signed_at || "") ? c : a; }) : null;
+    const lineFor = function (id, latest, draft) {
+      let name = id;
+      if (latest) {
+        const one = later("pubcase:" + id, "publishedcase", { caseId: id, edition: String(latest.edition) });
+        if (one.state === "failed") { out.investigation.fails.push(one); return; }
+        if (one.state !== "ok" || !one.value) return;
+        name = String(one.value.scope || one.value.project_reference || one.value.caseId || id);
+      }
+      const when = latest && (latest.published_at || latest.signed_at || latest.ratified_at);
+      const fills = { n: latest ? String(latest.edition) : "", case: name, date: { html: when ? cs.date(String(when)) : "" } };
+      if (draft) fills.until = { html: cs.date(draft.until) };
+      let key;
+      if (latest && when) {
+        if (!draft) key = "screen.home.area.edition.published";
+        else if (!draft.comments) key = "screen.home.area.edition";
+        else { key = draft.comments === 1 ? "screen.home.area.edition.comments.one" : "screen.home.area.edition.comments"; fills.count = String(draft.comments); }
+      } else if (draft) {
+        // A draft on a case with no published edition: with one comment the design holds no sentence, so it says the draft alone.
+        key = draft.comments > 1 ? "screen.home.area.edition.draftonly.comments" : "screen.home.area.edition.draftonly";
+        if (draft.comments > 1) fills.count = String(draft.comments);
+      } else return;
+      out.investigation.lines.push(cs.w(key, fills));
+    };
+    if (newest) lineFor(String(newest.case_id), latestOf(String(newest.case_id)), byCase[String(newest.case_id)] || null);
+    Object.keys(byCase).forEach(function (id) {
+      if (newest && id === String(newest.case_id)) return;
+      lineFor(id, latestOf(id), byCase[id]);
     });
   }
 
-  // Clocks running (`clocksrunning`, action-clocks R24): all of them, then our move (owed by the group) and theirs (owed by a body).
+  // Clocks running (`clocksrunning`, action-clocks R24): all of them; our move (owed by the group) and theirs (owed by a body) each
+  // as a line with its count and the earliest date due.
   const clocks = ok(data.clocks);
   if (clocks) {
     const by = clocks.by_owed && typeof clocks.by_owed === "object" ? clocks.by_owed : {};
-    const n = function (k) { return by[k] && typeof by[k] === "object" ? count(by[k].count) : null; };
-    out.action.rds.push(rd(count(clocks.total), "screen.home.rd.clock", "screen.home.rd.clocks"), rd(n("group"), "home.move.ours", "home.move.ours"), rd(n("body"), "home.move.theirs", "home.move.theirs"));
+    out.action.rds.push(rd(count(clocks.total), "screen.home.rd.clock", "screen.home.rd.clocks"));
+    [["group", "screen.home.area.ourmove"], ["body", "screen.home.area.theirmove"]].forEach(function (k) {
+      const o = by[k[0]];
+      if (o && typeof o === "object" && count(o.count) && typeof o.next === "string" && o.next) {
+        out.action.lines.push(cs.w(k[1], { n: String(o.count), date: { html: cs.date(o.next) } }));
+      }
+    });
   } else if (failed(data.clocks)) out.action.fails.push(data.clocks);
 
   // Expertise on hand: each member's labels as `memberlist` answers them (member-roster R14, R20), the member by handle.
@@ -102,11 +131,9 @@ export function homeReadings(cs, view, d) {
   const have = [];
   list(roster, "members").forEach(function (m) {
     if (!m || m.status !== "active") return;
-    const labels = (Array.isArray(m.expertise) ? m.expertise : []).filter(function (e) { return e && e.label; });
-    if (!labels.length) return;
     const who = m.handle ? cs.esc(String(m.handle)) : cs.w("member.founder.unnamed");
-    labels.forEach(function (e) {
-      have.push(who + " " + cs.w(e.confirmed ? "screen.members.expertise.confirmed" : "screen.members.expertise.declared", { label: String(e.label) }));
+    (Array.isArray(m.expertise) ? m.expertise : []).filter(function (e) { return e && e.label; }).forEach(function (e) {
+      have.push(cs.w("screen.home.area.expertise.person", { member: { html: who }, label: String(e.label), standing: cs.w(e.confirmed ? "screen.home.area.expertise.confirmed" : "screen.home.area.expertise.declared") }));
     });
   });
   if (have.length) out.members.lines.push(cs.w("screen.home.area.expertise", { people: { html: have.join("; ") } }));

@@ -545,10 +545,12 @@ test("R64: a home whose fixtures answer each read draws each reading with the re
   assert.deepEqual(p.byOp("browse").map((r) => [r.query.kinds, r.query.limit]), [["document", "1"]], "documents: browse over documents, one row");
   assert.deepEqual([p.byOp("peopledirectory")[0].query.show, p.byOp("peopledirectory")[0].query.limit], ["people", "1"]);
   const act = area("action");
-  assert.ok(act.includes(`3 ${word("screen.home.rd.clocks")}`) && act.includes(`1 ${word("home.move.ours")}`) && act.includes(`2 ${word("home.move.theirs")}`), "clocks: total, ours by the group, theirs by a body");
+  assert.ok(act.includes(`3 ${word("screen.home.rd.clocks")}`), "clocks: the total");
+  assert.ok(act.includes(word("screen.home.area.ourmove", { n: "1", date: dmy("2026-10-23") })) && act.includes(word("screen.home.area.theirmove", { n: "2", date: dmy("2026-10-14") })), "our move by the group, theirs by a body, each with its count and earliest date");
   const members = area("members");
   assert.ok(members.includes(word("screen.home.area.expertise", { people: "" }).trim().replace(/\s+$/, "")), "expertise line");
-  assert.ok(members.includes(word("screen.members.expertise.confirmed", { label: "CPA" })) && members.includes(word("screen.members.expertise.declared", { label: "reporter" })));
+  const person = (member, label, standing) => word("screen.home.area.expertise.person", { member, label, standing: word(`screen.home.area.expertise.${standing}`) });
+  assert.ok(members.includes(person("rosa", "CPA", "confirmed")) && members.includes(person("mai", "reporter", "declared")));
   assert.ok(!members.includes("nurse"), "control: an invited member's expertise is not on hand");
   const adm = area("administration");
   assert.ok(adm.includes(`${word("screen.home.rd.level.raised")} ${word("screen.home.rd.security")}`), "security level, over the last 24 hours");
@@ -556,16 +558,23 @@ test("R64: a home whose fixtures answer each read draws each reading with the re
   assert.equal(Date.parse(q.to) - Date.parse(q.from), 86400000);
 });
 
-test("R64: edition drafts: each draft's live grant end, the case's latest published edition and name; a draft a recipient commented on, one of no case and a lapsed grant are not drawn", async () => {
+test("R64: edition lines: a case with a draft shared until a date says so, with the recipients' comments to answer; a draft of no case and a lapsed grant say nothing; the latest edition alone is its plain line", async () => {
   const p = await open("/app", R64_ADMIN);
   await settle();
   const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
-  const line = word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") });
-  assert.ok(inv.includes(line.replace(/<[^>]+>/g, "")), "edition 2 of the case published, the draft shared until the grant's end");
-  assert.equal(inv.split(word("screen.home.area.edition", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })).length, 1, "control: DRAFT-2's recipient commented, so it says nothing");
+  assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") })), "no comment: the sentence that says none is to answer");
+  assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })), "one recipient commented");
   assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1", "PROJ-2", "PROJ-3"], "each of the member's projects");
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
   assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
+  const bare = await open("/app", { ...R64_ADMIN, casedrafts: ok({ ok: true, drafts: [] }) });
+  await settle();
+  assert.ok(text(bare, main(bare).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.published", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02") })), "the latest edition, no draft");
+  const only = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
+    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    reviewcopy: ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
+  await settle();
+  assert.ok(text(only, main(only).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly", { case: "CASE-9", until: dmy("2026-10-20") })), "a draft on a case with no edition yet");
 });
 
 test("R64: controls: a member who is not an administrator sends no securitymap and draws no security level; a read that fails draws its reading failed", async () => {

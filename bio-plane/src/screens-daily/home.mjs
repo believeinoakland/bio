@@ -315,7 +315,7 @@ export const home = Object.freeze({
       (latest ? [cs.w("screen.home.line.lastchange", { project: { html: cs.ref("project", String(latest.id), String(latest.name || latest.id), []) }, date: { html: cs.date(String(latest.lastChange)) } })] : []).concat(more.investigation.lines),
       (failed(data.projects) ? [data.projects] : []).concat(more.investigation.fails));
     const action = area("action", "/app/dash-action", actionMine,
-      [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")].concat(more.action.rds), [], more.action.fails);
+      [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")].concat(more.action.rds), more.action.lines, more.action.fails);
     const people = admin ? area("members", "/app/members", 0,
       [rd(active, "screen.home.rd.member", "screen.home.rd.members"),
         rd(rosterAll.filter(function (x) { return x && x.status === "active" && x.role === "admin"; }).length, "screen.home.rd.admin", "screen.home.rd.admins"),

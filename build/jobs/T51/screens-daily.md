@@ -41,6 +41,11 @@
 - (2a) the "Search projects" button is gone (and its word); the field redraws on `change` until the kit narrows as typed.
 - (2b) drawn once interface-assets carried `.tw` (B5): Find's table sits in `<div class="tw">`.
 
+## B6 handled (SCREENS-DAILY #9)
+- B370 applied with tests (`home-readings.mjs`): Action draws our move and their move as the reworded `screen.home.area.ourmove|theirmove` ({n} the count, {date} the earliest due; not drawn without a date) beside the clocks reading; the expertise line is `screen.home.area.expertise.person` joined with "; "; edition lines: the latest published edition as `.edition.published`, a case with a draft shared until a date as `.edition` (no comment), `.edition.comments.one` / `.edition.comments` (recipients' comments counted across its drafts), and a draft on a case with no published edition as `.edition.draftonly` (`.draftonly.comments` for 2 or more).
+- Gap: the design holds no `draftonly` sentence for exactly one comment; that case draws `.edition.draftonly` without the comment. REPORT to BOB.
+- DEC-361: `screen.home.todo.vouch.noplace*` are not used by this module (the to-do arrives with the queue's words); `queue.feed.action` and `.wizards` are read as the list holds them.
+
 ## J1 · BLOCKED
 
 BLOCKED (cause: context). screens-daily #8 is at half its window and has stopped at a clean step; my record (`build/jobs/T51/screens-daily.md`, "Progress") lists what is done, what is next, and the REPORTs/QUESTIONs for you. Pushed: `job/T51/screens-daily` @ d980f1010c.
