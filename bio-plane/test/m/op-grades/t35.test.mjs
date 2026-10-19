@@ -3,9 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, OP_ALIASES,
-         phoneOf } from "../../../src/op-grades/index.mjs";
+         LARGER_SCREEN_ACTS, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-import { declaredOps } from "./declared.mjs";
+import { declaredOps, reqText, ticked } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
@@ -104,8 +104,14 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   for (const t of [T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS]) assert.ok(!Object.hasOwn(t, "subscriptionsignin"));
   /* R18 over them: the sign-outs are phone acts, the recovery acts are not */
-  assert.deepEqual(["signout", "signouteverywhere", "recoverycodesissue", "recover", "unpack", "coarchiveset"].map(phoneOf),
-    [true, true, false, false, true, true]);
+  /* every op R22 names that carries a grade: R18's rule decides its phone (the credential ones are not phone acts) */
+  const R22_GRADED = ticked(reqText(22)).filter((op) => gradeOf(op) !== null);
+  const offPhone = (op) => ["terminal", "attested", "irreversible"].includes(RUNGS[op]) || RUNG_ABSENT[op]?.ground === "credential"
+    || IRREVERSIBLE_WEIGHT.includes(op) || LARGER_SCREEN_ACTS.includes(op);
+  for (const op of R22_GRADED) assert.equal(phoneOf(op), !offPhone(op), op);
+  assert.deepEqual([phoneOf("signout"), phoneOf("signouteverywhere"), phoneOf("unpack"), phoneOf("coarchiveset")],
+    [true, true, true, true]);
+  assert.deepEqual([phoneOf("recoverycodesissue"), phoneOf("recover")], [false, false]);
   /* negative control */
   assert.notDeepEqual({ ...got, unpack: "substrate" }, R22_WRITES);
 });

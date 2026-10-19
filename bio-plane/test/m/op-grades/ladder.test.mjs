@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as G from "../../../src/op-grades/index.mjs";
+import { reqText, between, ticked, tickedCodes, worded, declaredNames, asksNotTheAccount } from "./declared.mjs";
 
 const { RUNG_LADDER, RUNGS, RUNG_ABSENT, RUNG_ABSENCE_GROUNDS, JUSTIFICATION_REFUSALS, IRREVERSIBLE_CORRECTION_KEY,
         CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS, MACHINE_REFUSALS, NON_ACTS, OP_ALIASES, phoneOf } = G;
@@ -14,32 +15,23 @@ const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUN
 /* ---- R1: the ladder and every rung it names, as R1 lists them ---------------------------------------------------- */
 /* (T47) R37 re-grades `publish` from irreversible to terminal (it prepares; caseratify signs; K3100 doubt 9), and R35
    moves `inboxpull` from R2's `undetermined` to `reversible` */
+const R1_TEXT = reqText(1);
+const KNOWN = declaredNames();
+/* R1 states the other bands as plain words: the ops of op-declarations among them */
+const BAND = (from, to) => worded(between(R1_TEXT, from, to), KNOWN);
 const R1 = {
   irreversible: [],
-  attested: words("attest ratify caseratify reattest captureaccount"),
-  terminal: words("retire publish"),
-  reversible: words(`actionlaws cite sourceconsentwithdraw escalationresume projectvisibilityset versionaccept versioncurrent
-    versionhide versionrevert scenarioset inboxpull`),
-  reasoned: words(`actionhold actionmove actionrisktier addressedrecord adminremove aliaswithdraw aspirationdepart
-    aspirationretire biasdebtresolve conclude connectionassert consequencerevise determine discharge dispose
-    escalationadvance escalationdecline escalationevaluate escalationsuspend declinetoescalate filemembershipjudge goalclose
-    inquirydivide inquiryground narrow projectownerremove projectownerrescue proposedispose reevaluationrecord reinstate
-    relationdeclare relationwithdraw release reopen sever themewithdraw triage versionconsider versionreject
-    withdrawconclusion contradictiondismiss contradictionclarify contradictiontakeup contradictionresolve resolutiondefect
-    sourcedisclose sourcelink sourceconsent plansubjectadd plansubjectremove optionrevise optiondispose planclose
-    heldsetaside addressfrequencyset heldrestore`),
+  attested: BAND("attested ", "; terminal"),
+  terminal: [...BAND("; terminal ", "; reversible "), "publish"],
+  reversible: [...BAND("; reversible ", "; reasoned "), "inboxpull"],
+  reasoned: BAND("; reasoned ", "DEC-88's three bands"),
 };
-/* DEC-88's three bands (K1038, J1): its 57, moved from RUNG_ABSENT into RUNGS */
+/* DEC-88's three bands (K1038, J1): its 57, moved from RUNG_ABSENT into RUNGS, as the backticked ops of R1's sentence */
+const DEC88_TEXT = R1_TEXT.slice(R1_TEXT.indexOf("DEC-88's three bands"));
 const DEC88 = {
-  reversible: words(`suggest extractpropose contradictionpropose themepropose standardpropose comparisonpropose
-    theorypropose actionriskpropose actionlawspropose filingprepare contentmint casedraft reviewcomment taskforward
-    taskresolve thread connectionchoose themedeclare themeplace entityalias goallink versionkeep airunopen airunclose
-    projectfork`),
-  reasoned: words(`testify lead leadlook leadshare transcribe transcriptionattest attesttext resolve resolvetestify
-    entitycreate versionadopt progressiondefine goaldeclare aspirationdeclare aspirationdeadend objectivecondition biasadopt
-    strengthbar standarddeclare standardadopt consequencerecord actioncorrespond filingsent escalationopen escalationattach
-    counselpacket attribute statementack workobjective inboxresolve`),
-  terminal: words("escalationend filingapprove"),
+  reversible: ticked(between(DEC88_TEXT, "reversible ", "; reasoned ")),
+  reasoned: ticked(between(DEC88_TEXT, "reasoned ", " (DEC-88 banded")),
+  terminal: ticked(between(DEC88_TEXT, "terminal ")),
 };
 
 test("R1: RUNG_LADDER is reversible, reasoned, terminal, attested, irreversible, low to high, and RUNGS assigns every op "
@@ -64,12 +56,13 @@ test("R1 R44: the correction path DEC-19 requires beside the top rung is a key, 
   assert.equal(IRREVERSIBLE_CORRECTION_KEY, "screen.ceremony.permanent");
   assert.ok(!Object.hasOwn(G, "IRREVERSIBLE_CORRECTION_PATH"), "the sentence's old name is gone, so no reader takes a key for it");
   assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length, "no code twice");
-  for (const c of ["NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION", "NO_FALSIFIER", "NO_JUSTIFICATION",
-    "NO_EVIDENCE", "PLAN_NO_REASON", "HOLD_REFUSED", "SET_ASIDE_NO_REASON", "FREQUENCY_NO_REASON", "ESCALATION_NO_REASON"])
-    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
-  /* the codes that demand an object, an identifier or evidence of a document stay out */
-  for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "NO_CITATION", "NO_BODY", "NO_TITLE"])
-    assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  /* the codes R1 names (the reasoned acts it backs), and NO_REASON, the code the family begins with */
+  const R1_CODES = tickedCodes(R1_TEXT).filter((c) => !Object.hasOwn(G, c) && !c.endsWith("_PATH"));
+  assert.ok(R1_CODES.length >= 4);
+  for (const c of ["NO_REASON", ...R1_CODES]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+  /* the codes that demand an object, an identifier or evidence of a document stay out: R1's rule, over any code */
+  assert.deepEqual(JUSTIFICATION_REFUSALS.filter(asksNotTheAccount), []);
+  assert.ok(asksNotTheAccount("NO_TARGET") && asksNotTheAccount("NO_ID") && asksNotTheAccount("NO_KIND"));
 });
 
 /* ---- R2, R3 -------------------------------------------------------------------------------------------------------- */
@@ -175,8 +168,9 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
   assert.ok(NON_ACTS.resolutiondefect.startsWith("registry correction, keyed by a resolution"));
   for (const op of ["contradictionoptin", "contradictionrespond"]) assert.ok(NON_ACTS[op].startsWith(
     "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice"), op);
-  for (const op of ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
-    "contradictionresponses", "publishtensions"]) assert.ok(NON_ACTS[op].startsWith("read: "), op);
+  const R5_READS = ticked(reqText(5)).filter((op) => Object.hasOwn(NON_ACTS, op) && NON_ACTS[op].startsWith("read: "));
+  assert.equal(R5_READS.length, 6);
+  for (const op of R5_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);
   assert.match(NON_ACTS.ratify, /op=publishpreflight \(case-authoring R34\)/);
   for (const [op, why] of Object.entries(NON_ACTS)) assert.ok(typeof why === "string" && why.length > 0, op);
 });
@@ -193,8 +187,13 @@ test("R18: phoneOf is false at terminal, attested and irreversible, for a creden
       || RUNG_ABSENT[op]?.ground === "credential" || G.IRREVERSIBLE_WEIGHT.includes(op) || LARGER_SCREEN_ACTS.includes(op)); };
   for (const op of new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT), ...Object.keys(NON_ACTS)]))
     assert.equal(phoneOf(op), expect(op), op);
-  assert.deepEqual(["publish", "retire", "attest", "memberadd", "filingsent", "dispose", "notes", "attesttext",
-    "an-op-no-table-names"].map(phoneOf), [false, false, false, false, false, true, true, true, true]);
+  /* one op of each rung, the larger-screen act, a credential absence, a read and an op no table names */
+  const ofRung = (rung) => Object.keys(RUNGS).find((op) => RUNGS[op] === rung && !G.IRREVERSIBLE_WEIGHT.includes(op));
+  const credential = Object.keys(RUNG_ABSENT).find((op) => RUNG_ABSENT[op].ground === "credential");
+  const read = Object.keys(NON_ACTS).find((op) => NON_ACTS[op].startsWith("read: ") && !Object.hasOwn(RUNG_ABSENT, op));
+  assert.deepEqual([ofRung("terminal"), ofRung("attested"), credential, ...LARGER_SCREEN_ACTS].map(phoneOf), [false, false, false, false]);
+  assert.deepEqual([ofRung("reasoned"), ofRung("reversible"), read, "an-op-no-table-names"].map(phoneOf), [true, true, true, true]);
+  assert.deepEqual(G.IRREVERSIBLE_WEIGHT.map(phoneOf).filter(Boolean), []);
   assert.equal(RUNGS.filingsent, "reasoned", "its rung alone would leave it on the phone");
   assert.deepEqual([phoneOf("filingrecordsent"), phoneOf("filingsent")], [false, false], "the alias as its op");
 });

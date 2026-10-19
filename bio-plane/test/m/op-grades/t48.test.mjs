@@ -11,7 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
-import { declaredOps } from "./declared.mjs";
+import { declaredOps, asksNotTheAccount } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -168,9 +168,10 @@ test("R41: stepsource `reasoned` as connectionassert, STEP_SOURCE_NO_BASIS joini
   assert.equal(NON_ACTS.stepsource, STEP);
   assert.equal(NON_ACTS.stepsourcewithdraw, STEP);
   for (const op of ["stepsource", "stepsourcewithdraw"]) assert.equal(phoneOf(op), true, op);
-  /* controls: the shape-refusals connections R68 lists are not a reason */
-  for (const c of ["STEP_SOURCE_NOT_A_MEMBER", "NO_SUCH_RELATION", "CAPTURE_NOT_HELD", "EXTENT_MALFORMED",
-    "STEP_SOURCE_BASIS_TOO_LONG"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  /* controls: the shape-refusals connections R68 lists are not a reason (R1's rule over a code: none asks an object, an
+     identifier, a choice, a form or a member) */
+  assert.deepEqual(JUSTIFICATION_REFUSALS.filter(asksNotTheAccount), []);
+  assert.ok(asksNotTheAccount("NO_SUCH_RELATION") && asksNotTheAccount("STEP_SOURCE_BASIS_TOO_LONG"));
   assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length, "no code twice");
 });
 

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T45 from "../../../src/op-grades/t45.mjs";
+import { declaredOps, declaredReadOps, reqText, between, ticked, asksNotTheAccount } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]);
@@ -65,18 +66,15 @@ const TAKEN_BACK_BY = {
   plancomment: "plancomment", declaredstakeset: "declaredstakeset",
 };
 /* every other op T45's owners serve: a read, or (statusreportdraft) a labeled draft that writes nothing */
-const R32_READS = ["dutiesarising", "openitemswith", "watchquestions", "templatesforaction", "casecheck", "procedureguides",
-  "successread", "successrecords", "matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments",
-  "whereitstands", "statusreports", "matterpromiseduties", "cures", "ruleoffer",
-  /* (T46; K2881) local-facts R12, case-account R13 */
-  "grouprules", "advocacychecks"];
+const DECLARED_READS = new Set(declaredReadOps());
+const R32_READS = Object.keys(T45.T45_NON_ACTS).filter((op) => DECLARED_READS.has(op) && T45.T45_NON_ACTS[op].startsWith("read: "));
 /* (T46; K2881) agent-worker R76's two record drafts beside plan-work's */
 const R32_DRAFTS = ["statusreportdraft", "infractiondraft", "bearingdraft"];
 const ALL = [...Object.keys(R32_WRITES), ...R32_READS, ...R32_DRAFTS];
 /* (K2885, K2887) T45's acts that affordances R51 makes ACTS rows on an action target: no NON_ACTS row, and those refused a
    machine by name in MACHINE_REFUSALS with their owners' codes (R32's T45 bullet) */
-const R32_ACTS = ["holdnoticesent", "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "arosefrom",
-  "clockstate", "itemtakeup", "holdnoticeprepare", "actionbearingpropose"];
+const R32_ACTS = [...ticked(between(reqText(32), "leave `NON_ACTS`:", "`MACHINE_REFUSALS` (R5) gains")), "holdnoticeprepare",
+  "actionbearingpropose"].filter((op) => Object.hasOwn(R32_WRITES, op));
 const R32_MACHINE = { holdnoticesent: "MACHINE_CANNOT_SEND", actionreceipt: "MACHINE_CANNOT_CORRESPOND",
   actionscope: "MACHINE_CANNOT_SET_SCOPE", actionpromise: "MACHINE_CANNOT_RECORD_PROMISE",
   actionreplybearing: "MACHINE_CANNOT_RECORD_BEARING", arosefrom: "MACHINE_CANNOT_LINK",
@@ -140,13 +138,8 @@ test("R32 R1 (K2857): JUSTIFICATION_REFUSALS gains the codes T45's owners refuse
     assert.equal(JUSTIFICATION_REFUSALS.filter((x) => x === c).length, 1, c);
   assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length, "no code twice");
   /* the codes that ask an object, a choice or a form, never an account, stay out */
-  for (const c of ["SCOPE_UNCHANGED", "NO_SUCH_SCENARIO", "SCENARIO_ALREADY_SET_ASIDE", "PLAN_NOT_OPEN", "PLAN_NOT_PAUSED",
-    "RECEIPT_NOT_ON_SENT", "NEITHER_CAPTURE_NOR_TESTIMONY", "PROMISE_REFUSED", "HOLD_NOT_IN_PLACE", "NOT_A_PARTNER",
-    "JOINT_FINGERPRINT_MISMATCH", "SAME_APPROVER", "SECOND_APPROVAL_NEEDED", "PROJECT_SCOPE_UNKNOWN",
-    "APPROVAL_RULE_INVALID", "BEARING_REFUSED", "AROSE_FROM_LINKED", "SUCCESS_NO_STATEMENT", "SUCCESS_NO_EVIDENCE",
-    "CURE_LINKED", "RULE_ENTRY_INVALID", "RULE_NEEDS_QUALIFICATION", "WATCH_END_REFUSED", "NO_SUCH_WATCH",
-    "OVERRIDE_GROUND_REFUSED", "ASSERTION_UNRESOLVED", "MACHINE_CANNOT_SET_SCOPE"])
-    assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  assert.deepEqual(JUSTIFICATION_REFUSALS.filter(asksNotTheAccount), []);
+  for (const c of ["SCOPE_UNCHANGED", "NO_SUCH_SCENARIO", "MACHINE_CANNOT_SET_SCOPE"]) assert.ok(asksNotTheAccount(c), c);
   /* the rungs of the existing acts those reasons sit inside are unchanged (R3's 21 hold optionstart) */
   assert.deepEqual([RUNGS.filingapprove, RUNG_ABSENT.optionstart.ground, RUNGS.addressedrecord],
     ["terminal", "undetermined", "reasoned"]);
@@ -222,9 +215,12 @@ test("R32 (K2881, K2996): grouprules and advocacychecks reads, advocacycheck `un
     assert.ok(NON_ACTS[op].startsWith("draft: ") && /writes nothing of the record/.test(NON_ACTS[op]), op);
     assert.equal(gradeOf(op), null, op);
   }
-  const FIVE = ["grouprules", "advocacycheck", "advocacychecks", "infractiondraft", "bearingdraft"];
+  /* the ops of local-facts, case-account and agent-worker in T45's tables that are no rule act (R32's own) */
+  const T45_OPS = new Set([...Object.keys(T45.T45_NON_ACTS), ...Object.keys(T45.T45_RUNGS), ...Object.keys(T45.T45_RUNG_ABSENT)]);
+  const FIVE = declaredOps("local-facts", "case-account", "agent-worker").filter((op) => T45_OPS.has(op) && !op.startsWith("rule"));
+  assert.equal(FIVE.length, 5);
   assert.deepEqual(FIVE.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
-  assert.deepEqual(FIVE.map(phoneOf), [true, true, true, true, true]);
+  assert.deepEqual(FIVE.map(phoneOf), FIVE.map(() => true));
   /* negative controls: the check is no read and no draft; a draft graded as a write would be seen */
   assert.ok(!isRead("advocacycheck") && !NON_ACTS.advocacycheck.startsWith("draft: "));
   assert.notEqual(gradeOf("advocacycheck"), "caller-owned");
