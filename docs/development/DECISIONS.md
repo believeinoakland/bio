@@ -5346,3 +5346,18 @@ decided: 2026-10-18 · the design session (P17)
 the design: (1) A hand-kept list, `screens/words-reads-handoffs.json`, holds the strings BOB's module jobs judge no member reads, by `build/modules.json` id with each job's reason; `words-reads.src.mjs` merges it into each module's unkeyed list (DEC-344 block). R1's 117: connection-grammar 6 (ownerConformance's findings), doctypes 2, court-doctypes 1, docprofile 1 (wiring answers), jurisdictions 102 (a profile validator's detail, read by the profile's author), roster-reader 2 (recognition vocabulary), file-scanner 1 (a route never sent), pdf-pixels 2 (a codec key); taken whole from the words check on tranche/T51 @ 087c98265b, and that check passes on all eight with the new list. subresources' Content-Security-Policy string already passes (counted as a builder string). (2) image-cover's four refusals already had rows (DEC-260, `words-mod-1.src.py`) in builder wording; they and their four siblings are reworded for a member (what to do: save it as a JPEG or an ordinary PNG, save a smaller copy, copy it again from its source, mark the area again). (3) `odf-reader.odf.content_xml_with_text_list` "relabeled" and `roster-reader.org-chart.labelled_line_s_name_a` "labeled", "organization" written into the table (the table wins, K3930), placeholders kept as code names them.
 reasoning recorded in: this entry; `screens/words-reads-handoffs.json`, `screens/words-reads.src.mjs`, `screens/words-mod-1.src.py`, `screens/words-drawn.src.py`.
 owed: (BOB, T51) image-cover's `COVER_REFUSALS` reads `refusal.<CODE>` for its four English codes.
+
+### DEC-345 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_0132xHbVxJ5XZzHuwzNvwbRa; the development process also runs on his primary account since K1428) (BOB's HANDOFF B345, R2's close, K3972: member-roster split from membership)
+for: design
+question: member-roster's entry in `words-reads.json`, and membership's trimmed to its own keys.
+why it is Bob's: it is not (P17): the design's lists.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: list data.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) `screens/words-reads-mod-3.json`: `member-roster` reads its `WORD_KEYS` (46 keys, evaluated from tranche/T51's code), with the 11 unkeyed strings that moved with its code (listener registration, the roster acts' names); `membership` reads its own 15 (its `WORD_KEYS` less member-roster's), with its 4 project refusals' details; `handle.changeable`, `handle.fixed` and `handle.formerly` are read by neither and leave the list. (2) The lists are now generated from tranche/T51's source (`git archive origin/tranche/T51 bio-plane/src newgroup bio-plane/public/newgroup`), the newest tranche, not main; `words-reads-mod-5.json` is regenerated with it (instance-setup reads 99 keys). (3) `words-reads.src.mjs` counts a T49 decision whose string and key have both left its module as moot rather than a problem (decision 94: plane's `screen.front.purpose`, the front page's sentence moved with its screen). The words check gives 0 failures on member-roster and membership.
+reasoning recorded in: this entry; `screens/words-reads-mod-3.json`, `screens/words-reads-mod-5.json`, `screens/words-reads.src.mjs`, `screens/words-reads.json`.
+owed: nothing.
