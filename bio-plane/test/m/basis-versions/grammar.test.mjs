@@ -11,7 +11,7 @@ const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q"
 
 /* A frontmatter object with one well-formed version, overridable per field. */
 function fm({ v = {}, legs = null, grounds = null, more = [] } = {}) {
-  const base = { name: "first", description: "a reading of the evidence", relationship: "and", state: "suggested",
+  const base = { name: "first", description: "an account of the support", relationship: "and", state: "suggested",
                  hidden: false, derived_from: null, ...v };
   return {
     id: Q,

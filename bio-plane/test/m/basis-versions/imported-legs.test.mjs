@@ -18,7 +18,7 @@ function acceptance(accepted = new Set()) {
   const acceptedLegRefusals = ({ legs, viewer }) => {
     calls.push({ legs: legs.map((l) => `${l.target}@${l.target_edition}`), viewer });
     return legs.filter((l) => !accepted.has(`${l.target}@${l.target_edition}`)).map((l) => ({
-      check: "C-21.4", code: "IMPORTED_NOT_ACCEPTED", translation: "not accepted at that edition", ord: l.ord, ref: l.target,
+      check: "C-21.4", code: "IMPORTED_NOT_ACCEPTED", translation: "NOT_ACCEPTED", ord: l.ord, ref: l.target,
       detail: `${l.target} is not accepted at edition ${l.target_edition}` }));
   };
   return { calls, accepted, acceptedLegRefusals };

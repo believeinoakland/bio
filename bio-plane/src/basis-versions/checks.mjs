@@ -353,22 +353,22 @@ export const BASIS_VERSION_CHECKS = {
      default subject and there must not be one — VERSION_CHAIN_NO_ADDRESS'
      reasoning one construct over: an answer for an unnamed subject is a list of
      unrelated compositions wearing the word "versions". */
-  /* R55 (T51; N1215; DEC-330 A40): the three refusals of `compareVersions`, a read. Their words are plain until the design
-     stream's word table holds keys for them (owed). */
+  /* R55 (T51; N1215; DEC-330 A40; DEC-337): the three refusals of `compareVersions`, a read. Their words are the list's,
+     read by key. */
   VERSION_COMPARE_NO_INQUIRY: {
     check: 'C-25.37',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: localize('basis-versions.checks.that_request_did_not_name', 'That request did not name a question you can read, so there are no two readings of it to compare.'),
+    translation: word('refusal.VERSION_COMPARE_NO_INQUIRY'),
   },
   VERSION_COMPARE_NO_VERSION: {
     check: 'C-25.38',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: localize('basis-versions.checks.comparing_needs_two_readings_of', 'Comparing needs two readings of the question, and one of them was not named.'),
+    translation: word('refusal.VERSION_COMPARE_NO_VERSION'),
   },
   VERSION_COMPARE_NO_SUCH_VERSION: {
     check: 'C-25.39',
     where: 'src/basis-versions/index.mjs compareVersions, reached from op=versioncompare',
-    translation: localize('basis-versions.checks.this_question_holds_no_reading', 'This question holds no reading by one of the names given, so the two cannot be compared.'),
+    translation: word('refusal.VERSION_COMPARE_NO_SUCH_VERSION'),
   },
   BASIS_VERSIONS_NO_INQUIRY: {
     check: 'C-25.17',
@@ -579,14 +579,12 @@ export const VERSION_ACT_CHECKS = {
   VERSION_NOT_ACCEPTED: {
     check: 'C-25.28',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: 'A project can only stand on a reading its members have accepted, and this one has '
-      + 'not been accepted. Exploring an unsettled reading is done by calculating over it, which '
-      + 'moves nobody\'s stance.',
+    translation: word('refusal.VERSION_NOT_ACCEPTED'),
   },
   VERSION_CURRENT_NO_PROJECT: {
     check: 'C-25.29',
     where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
-    translation: localize('basis-versions.checks.standing_on_a_reading_is', 'Standing on a reading is something a PROJECT does, so this request has to name which project. A question can be shared by several teams, and one team\'s decision must never quietly move another team\'s.'),
+    translation: word('refusal.VERSION_CURRENT_NO_PROJECT'),
   },
   VERSION_CURRENT_UNRELATED: {
     check: 'C-25.30',

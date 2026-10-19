@@ -5,7 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, merge, V, MACHINE } from "./fixture.mjs";
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
-import { basisVersionsOps } from "../../../src/basis-versions/index.mjs";
+import { basisVersionsOps, BASIS_VERSION_CHECKS } from "../../../src/basis-versions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const LEDGER = "INFO-2026-2000-ledger", MINUTES = "INFO-2026-2000-minutes", AUDIT = "INFO-2026-2000-audit";
 const Q = "INQ-2026-2000-q", CALC = "CALC-2026-0003";
@@ -138,6 +139,22 @@ test("R55: compareVersions answers reading 1 against reading 2 derived from it (
   /* through the op entry */
   const url = new URL(`https://x/?target=${Q}&a=reading%201&b=reading%202&viewer=${encodeURIComponent(V("alice"))}`);
   assert.equal(basisVersionsOps(w.bv, url, null).versioncompare().of, 5);
+});
+
+test("R55 (DEC-337): each compare refusal reads its translation by key — the row and the answer hold the list's word for the code, and the answer holds no other sentence", () => {
+  const w = setup();
+  assert.equal(w.inquiry(Q, block(ver("reading 1", { legs: [{ target: LEDGER }] }))).ok, true);
+  const cases = [
+    [w.bv.compareVersions({ target: "INQ-2026-2000-none", a: "x", b: "y", viewer: V("alice") }), "VERSION_COMPARE_NO_INQUIRY"],
+    [w.bv.compareVersions({ target: Q, a: "reading 1", b: "", viewer: V("alice") }), "VERSION_COMPARE_NO_VERSION"],
+    [w.bv.compareVersions({ target: Q, a: "reading 1", b: "nope", viewer: V("alice") }), "VERSION_COMPARE_NO_SUCH_VERSION"],
+  ];
+  for (const [r, code] of cases) {
+    assert.equal(r.reason, code);
+    assert.equal(r.translation, word(`refusal.${code}`), code);
+    assert.equal(BASIS_VERSION_CHECKS[code].translation, word(`refusal.${code}`), code);
+    assert.equal(r.detail, undefined, "no second sentence beside the list's");
+  }
 });
 
 test.todo("R3 (N1251, T52): a leg on a standard is judged by inquiry-grammar's standard arm (its R13) once that arm is exported, and a version rests on it: a standard leg is still refused for its kind until then");

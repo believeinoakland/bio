@@ -163,6 +163,9 @@ test("R12–R15 through the ops: the six dispatch entries read the stamps from t
   const ops = basisVersionsOps(w.bv, url, { author: "member:mallory", reason: "moved by body" });
   const r = ops.versionreject();
   assert.deepEqual([r.ok, r.author, r.reason], [true, ALICE, "moved by body"]);
-  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "projectquestions", "versionaccept", "versioncompare", "versionconsider",
-    "versioncurrent", "versionhide", "versionreject", "versionrevert", "withdrawconclusion"]);
+  /* the six acts are VERSION_ACT_TO's own; the module's other ops are named one by one (K3268) */
+  for (const act of Object.keys(VERSION_ACT_TO)) assert.equal(typeof ops[`version${act}`], "function", act);
+  for (const op of ["basisversions", "versioncompare", "projectquestions"]) assert.equal(typeof ops[op], "function", op);
+  for (const op of ["narrow", "narrowcandidates", "conclude", "withdrawconclusion"]) assert.equal(typeof ops[op], "function", op);
+  assert.equal(Object.keys(ops).length, 13, "no op beyond these");
 });
