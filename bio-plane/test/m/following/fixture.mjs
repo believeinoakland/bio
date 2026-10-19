@@ -12,7 +12,7 @@
    R20 and R21 use (its R5, R8, R34, R37; `law-relations` R11 through its R48), over the policies a test holds in
    `w.policies`, with `content`'s table (its R45 read contract, a policy's text passages) created for the test. */
 import { DatabaseSync } from "node:sqlite";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -140,7 +140,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
         origin: { kind: "named_request" }, attestation_attempts: [],
         ...(w.readings.has(q.locator) ? { reading: { content_type: w.readings.get(q.locator).content_type, reader_version: 1, found: true, at: retrieved,
                                                      entities: [], facts: w.readings.get(q.locator).facts } } : {}),
-        provenance_chain: [{ who: "instance test (Civicsmith/0.0.0)", asserts: `these bytes were served for ${q.locator} at ${retrieved}`, bound: false, via: "direct" }],
+        provenance_chain: [{ who: "instance test (Civicsmith/0.0.0)", asserts: localize("following.fixture.these_bytes_served_for", "these bytes were served for {locator} at {retrieved}", { locator: String(q.locator), retrieved: String(retrieved) }), bound: false, via: "direct" }],
         capture: { method: q.render ? "rendered" : "direct", grade: "B", actor_class: opts.member ? "member" : "daemon", actor: opts.sessMember || null,
                    sha256: s, encoding: "binary", bytes: bytes.length, content_type: "application/json",
                    ...(q.credential ? { credentialed: { kind: q.credential.kind }, reproducible_by_public: false } : {}) } } } };
@@ -276,7 +276,7 @@ export function world({ view = testView(), now = T0, realRetrieval = false, door
       if (!p.ok) return p;
       const key = typeof matter === "string" ? matter : matter && matter.key;
       if (!p.subjects.some((x) => x.key === key))
-        return { ok: false, reason: "MATTER_NOT_OF_PLAN", code: "MATTER_NOT_OF_PLAN", check: "C-151.1", detail: "the plan is not about that matter. Nothing was written.", plan };
+        return { ok: false, reason: "MATTER_NOT_OF_PLAN", code: "MATTER_NOT_OF_PLAN", check: "C-151.1", detail: localize("following.fixture.plan_not_about_matter", "the plan is not about that matter. Nothing was written."), plan };
       const ids = w.promises.get(`${plan} ${key}`) || [];
       const ds = ids.map((id) => ({ duty_id: id, occurrences: w.dutiesHeld.get(id).occurrences }));
       const all_met = ds.length > 0 && ds.every((d) => d.occurrences.length && d.occurrences.every((o) => o.state === "met"));

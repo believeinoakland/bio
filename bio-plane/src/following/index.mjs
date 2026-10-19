@@ -251,9 +251,9 @@ export class Following {
   /* R1: the refusals every follow shares: a machine (or absent) author, and a home the author may not see. */
   #actorRefusal(author, viewer, home) {
     if (!said(author) || isMachineIdentity(author))
-      return refuse("MACHINE_CANNOT_FOLLOW", "a follow is a member's own act; the machine follows nothing of its own accord");
+      return refuse("MACHINE_CANNOT_FOLLOW", localize("following.index.follow_is_member_act", "a follow is a member's own act; the machine follows nothing of its own accord"));
     if (home != null && (!said(home) || !this.membership.inSight(home, viewer ?? author)))
-      return refuse("NO_SUCH_HOME", "the follow's home is a bundle you may see, whose project it lives in");
+      return refuse("NO_SUCH_HOME", localize("following.index.follow_home_visible_bundle", "the follow's home is a bundle you may see, whose project it lives in"));
     return null;
   }
   #cadence(c) { return c == null || c === "" ? "daily" : FOLLOW_CADENCES.includes(c) ? c : null; }
@@ -313,11 +313,11 @@ export class Following {
     if (r) return r;
     const ents = this.entities;
     const seen = said(body) && ents.has(body.trim()) && viewerPredicate(viewer ?? author).scope !== "DENY";
-    if (!seen) return refuse("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!seen) return refuse("NO_SUCH_BODY", localize("following.index.no_body_seen", "no body by that id is registered that you may see"));
     const id = this.#legistarId(body.trim());
-    if (!id) return refuse("NO_LEGISTAR_ID", "the body holds no identifier in a scheme the active profiles name for Legistar");
+    if (!id) return refuse("NO_LEGISTAR_ID", localize("following.index.body_no_legistar_id", "the body holds no identifier in a scheme the active profiles name for Legistar"));
     if (!said(from) || !isCalendarDate(from.trim()) || (until != null && (!said(until) || !isCalendarDate(until.trim()) || until.trim() < from.trim())))
-      return refuse("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
+      return refuse("BAD_PERIOD", localize("following.index.period_days_named", "a follow names the days it covers: from (a day), and until (a day not before it) or none"));
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     const e = this.#endsGiven(ends);
@@ -334,8 +334,8 @@ export class Following {
   /** R1: a follow ends only by its author's act. */
   unfollow({ follow, author } = {}) {
     const row = this.#follow(follow);
-    if (!row) return refuse("NO_SUCH_FOLLOW", "no follow by that id is held");
-    if (!said(author) || author !== row.author) return refuse("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
+    if (!row) return refuse("NO_SUCH_FOLLOW", localize("following.index.no_follow_held", "no follow by that id is held"));
+    if (!said(author) || author !== row.author) return refuse("NOT_THE_AUTHOR", localize("following.index.follow_ended_by_author_only", "a follow is ended only by the member who made it"));
     if (row.ended_at) return { ok: true, already: true, follow: row.follow_id, ended_at: row.ended_at };
     const at = instant(this.now());
     this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=?, ended_reason='author' WHERE follow_id=?`, at, author, row.follow_id);
@@ -347,14 +347,14 @@ export class Following {
    *  A policy watch takes none (R20). */
   followEnd({ follow, ends, by, viewer = null } = {}) {
     if (!said(by) || isMachineIdentity(by))
-      return refuse("MACHINE_CANNOT_FOLLOW", "a follow's end date is set by a member's own act");
+      return refuse("MACHINE_CANNOT_FOLLOW", localize("following.index.end_date_member_act", "a follow's end date is set by a member's own act"));
     this.#endExpired(this.now());
     const row = this.#follow(follow);
-    if (!row || !this.#sees(row, viewer ?? by)) return refuse("NO_SUCH_FOLLOW", "no follow by that id you may see is held");
+    if (!row || !this.#sees(row, viewer ?? by)) return refuse("NO_SUCH_FOLLOW", localize("following.index.no_follow_seen_held", "no follow by that id you may see is held"));
     if (row.kind === "policy")
-      return refuse("WATCH_END_REFUSED", "a policy's watch is the team's standing watch: it takes no end date and ends only with the policy");
-    if (by !== row.author) return refuse("NOT_THE_AUTHOR", "a follow's end date is set by the member who made it");
-    if (row.ended_at) return refuse("WATCH_ENDED", "the follow has already ended");
+      return refuse("WATCH_END_REFUSED", localize("following.index.policy_standing_watch_no_end", "a policy's watch is the team's standing watch: it takes no end date and ends only with the policy"));
+    if (by !== row.author) return refuse("NOT_THE_AUTHOR", localize("following.index.end_date_set_by_author", "a follow's end date is set by the member who made it"));
+    if (row.ended_at) return refuse("WATCH_ENDED", localize("following.index.follow_already_ended", "the follow has already ended"));
     const e = this.#endsGiven(ends);
     if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     return this.#setEnds(row, e.ends, by);
@@ -379,8 +379,8 @@ export class Following {
   followRegister({ address, render = false, gated = null, cadence = null, home = null, ends = null, proceeding = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
-    if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", "a register is followed at a public https locator");
-    if (render !== true && render !== false && render != null) return refuse("BAD_RENDER", "render is true or false");
+    if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", localize("following.index.register_public_https_locator", "a register is followed at a public https locator"));
+    if (render !== true && render !== false && render != null) return refuse("BAD_RENDER", localize("following.index.render_true_or_false", "render is true or false"));
     const g = this.#gated(gated);
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
@@ -461,10 +461,10 @@ export class Following {
   followPortal({ address, query = null, key, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
-    if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", "a portal is followed at a public https locator");
+    if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", localize("following.index.portal_public_https_locator", "a portal is followed at a public https locator"));
     const q = portalKey(address.trim(), query);
-    if (!q) return refuse("NO_LOCATOR", "a portal is followed at a public https locator");
-    if (!said(key)) return refuse("NO_KEY", "a portal follow declares the field that keys its rows");
+    if (!q) return refuse("NO_LOCATOR", localize("following.index.portal_public_https_locator_2", "a portal is followed at a public https locator"));
+    if (!said(key)) return refuse("NO_KEY", localize("following.index.portal_declares_key_field", "a portal follow declares the field that keys its rows"));
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", localize("following.index.a_follow_is_read_daily_4", "a follow is read daily or at a longer cadence: {FOLLOW_CADENCES}", { FOLLOW_CADENCES: String(FOLLOW_CADENCES.join(", ")) }));
     const e = this.#endsGiven(ends);
@@ -478,11 +478,11 @@ export class Following {
   /** R4 (K1505 (15)): the body and notice period of a `per_meeting` watch. */
   perMeetingBody({ address, body, notice = null, author, viewer = null } = {}) {
     if (!said(author) || isMachineIdentity(author))
-      return refuse("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
+      return refuse("MACHINE_CANNOT_FOLLOW", localize("following.index.watch_body_member_act", "naming a watch's body is a member's own act"));
     const sub = this.#perMeetingSubjects(this.now()).find((s) => s.address === (said(address) ? address.trim() : null)
       && this.membership.inSight(s.bundle, viewer ?? author));
-    if (!sub) return refuse("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
-    if (!said(body) || !this.entities.has(body.trim())) return refuse("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!sub) return refuse("NO_SUCH_MEETING_ADDRESS", localize("following.index.no_address_per_meeting", "no address you may see is watched per meeting"));
+    if (!said(body) || !this.entities.has(body.trim())) return refuse("NO_SUCH_BODY", localize("following.index.no_body_registered_seen", "no body by that id is registered that you may see"));
     const at = instant(this.now());
     this.#sql.exec(`INSERT INTO per_meeting_links (address, bundle_id, body, notice, author, at) VALUES (?,?,?,?,?,?)`,
                    sub.address, sub.bundle, body.trim(), said(notice) ? notice.trim() : null, author, at);
@@ -793,15 +793,15 @@ export class Following {
   /** R8: a register behind an account or a fee, refreshed only by the act of the member whose credential it uses. */
   async refreshRegister({ follow, author, credential = null, price = null } = {}) {
     const f = this.#follow(follow);
-    if (!f || f.ended_at || !["register", "person-query"].includes(f.kind)) return refuse("NO_SUCH_FOLLOW", "no live register follow by that id is held");
+    if (!f || f.ended_at || !["register", "person-query"].includes(f.kind)) return refuse("NO_SUCH_FOLLOW", localize("following.index.no_live_register_follow", "no live register follow by that id is held"));
     const gated = json(f.gated);
-    if (!gated) return refuse("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
+    if (!gated) return refuse("NOT_GATED", localize("following.index.public_register_read_tick", "a public register is read on the tick; a member's refresh is for one behind an account or a fee"));
     if (!said(author) || isMachineIdentity(author) || author !== f.author)
-      return refuse("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
+      return refuse("NOT_THE_FOLLOWER", localize("following.index.only_follower_refreshes", "only the member who follows this register refreshes it, with their own credential"));
     if (gated.kind === "fee" && price !== gated.price)
       return refuse("PRICE_FIRST", localize("following.index.this_register_charges_price_the", "this register charges {price}; the refresh runs only once that price is accepted as shown", { price: String(gated.price) }), { price: gated.price });
     if (gated.kind === "account" && (!credential || typeof credential !== "object"))
-      return refuse("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
+      return refuse("NO_CREDENTIAL", localize("following.index.account_gated_member_credential", "an account-gated register is read with the member's own credential"));
     const s = json(f.subject) || {};
     const t = await this.#take(f, s.address, this.now(), { render: s.render === true, member: author, credential, notPublic: true,
       title: word("following.title.refreshed_member", { address: s.address }) });
@@ -1083,16 +1083,16 @@ export class Following {
   /** R23: a member's act recording that a plan set a watch running, for some of its matters or all of them. */
   watchLink({ plan, matters = null, watch = null, author, viewer = null } = {}) {
     if (!said(author) || isMachineIdentity(author))
-      return refuse("MACHINE_CANNOT_LINK_WATCH", "linking a watch to a plan is a member's own act");
+      return refuse("MACHINE_CANNOT_LINK_WATCH", localize("following.index.link_watch_member_act", "linking a watch to a plan is a member's own act"));
     const who = viewer ?? author;
     const p = this.#plan(plan, who);
     if (!p) return noSuchPlan(said(String(plan ?? "")) ? String(plan) : null);
     if (p.state === "closed") return refusePlanClosed(p.id);
     const kind = watch && typeof watch === "object" ? watch.kind : null;
     const wid = watch && typeof watch === "object" && watch.id != null ? String(watch.id).trim() : null;
-    if (!WATCH_KINDS.includes(kind) || !said(wid)) return refuse("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    if (!WATCH_KINDS.includes(kind) || !said(wid)) return refuse("NO_SUCH_WATCH", localize("following.index.no_watch_of_kind_seen", "no watch of that kind that you may see is held under that id"));
     const w = this.#watch(kind, wid, kind === "question" ? author : who);
-    if (!w) return refuse("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    if (!w) return refuse("NO_SUCH_WATCH", localize("following.index.no_watch_of_kind_seen_2", "no watch of that kind that you may see is held under that id"));
     let keys = null;
     if (matters != null) {
       const list = Array.isArray(matters) ? matters : [matters];
@@ -1110,7 +1110,7 @@ export class Following {
       }
       if (!keys.length) keys = null;
     }
-    if (w.ended) return refuse("WATCH_ENDED", "that watch has already ended");
+    if (w.ended) return refuse("WATCH_ENDED", localize("following.index.watch_already_ended", "that watch has already ended"));
     const id = w.id;
     const had = this.#one(`SELECT * FROM watch_links WHERE plan=? AND watch_kind=? AND watch_id=?`, p.id, kind, id);
     if (had) return { ok: true, existed: true, ...this.#linkView(had) };
@@ -1217,23 +1217,23 @@ export class Following {
    *  is set in its owner's terms in the same act. */
   watchAnswer({ link, keep = null, stop = null, author, viewer = null } = {}) {
     if (!said(author) || isMachineIdentity(author))
-      return refuse("MACHINE_CANNOT_LINK_WATCH", "answering whether to keep a watch is a member's own act");
+      return refuse("MACHINE_CANNOT_LINK_WATCH", localize("following.index.answer_keep_member_act", "answering whether to keep a watch is a member's own act"));
     const who = viewer ?? author;
     const l = this.#link(link);
-    if (!l || !this.#seesLink(l, who)) return refuse("NO_SUCH_WATCH", "no link of a watch you may see is held under that id");
+    if (!l || !this.#seesLink(l, who)) return refuse("NO_SUCH_WATCH", localize("following.index.no_link_seen", "no link of a watch you may see is held under that id"));
     const had = this.#one(`SELECT * FROM watch_answers WHERE link_id=?`, l.link_id);
     if (had) return { ok: true, existed: true, link: Number(l.link_id), answer: had.answer, until: had.until_day, by: had.author, at: had.at };
     const nowMs = this.now();
     const e = this.#question24(l, nowMs, null);
     if (!e || !e.recipients.includes(author))
-      return refuse("WATCH_NOT_ASKED", "there is no question about this watch that is yours to answer now");
-    if (e.relied_on) return refuse("WATCH_RELIED_ON", "something else still relies on this watch, so it is not offered for keeping or stopping");
+      return refuse("WATCH_NOT_ASKED", localize("following.index.no_question_yours_now", "there is no question about this watch that is yours to answer now"));
+    if (e.relied_on) return refuse("WATCH_RELIED_ON", localize("following.index.relied_on_not_offered", "something else still relies on this watch, so it is not offered for keeping or stopping"));
     const keeping = keep != null && keep !== false, stopping = stop === true;
-    if (keeping === stopping) return refuse("WATCH_END_REFUSED", "an answer either keeps the watch until a day, or stops it now");
+    if (keeping === stopping) return refuse("WATCH_END_REFUSED", localize("following.index.answer_keep_or_stop", "an answer either keeps the watch until a day, or stops it now"));
     let until = null;
     if (keeping) {
       const g = this.#endsGiven(keep && typeof keep === "object" ? keep.until : null, nowMs);
-      if (g.bad || !g.ends) return refuse("WATCH_END_REFUSED", g.bad || "keeping a watch names the day it is kept until");
+      if (g.bad || !g.ends) return refuse("WATCH_END_REFUSED", g.bad || localize("following.index.keep_names_day", "keeping a watch names the day it is kept until"));
       until = g.ends;
     }
     const today = this.#today(nowMs);
@@ -1255,7 +1255,7 @@ export class Following {
   #endWatch(l, until, by, today) {
     if (l.watch_kind === "follow") {
       const f = this.#follow(l.watch_id);
-      if (!f) return refuse("NO_SUCH_WATCH", "the follow is no longer held");
+      if (!f) return refuse("NO_SUCH_WATCH", localize("following.index.follow_no_longer_held", "the follow is no longer held"));
       if (until) return this.#setEnds(f, until, by);
       return { ok: true, follow: Number(f.follow_id), ended_at: this.#endByAnswer(f, by), ended_reason: "answer" };
     }
@@ -1356,10 +1356,10 @@ export class Following {
   #markRefusal(by, item, viewer) {
     if (!said(by) || isMachineIdentity(by) || !this.#memberKey(by))
       return { ok: false, reason: "MACHINE_CANNOT_MARK", code: "MACHINE_CANNOT_MARK", check: null, translation: word("refusal.MACHINE_CANNOT_MARK"),
-               detail: "watching and flagging are a member's own acts; the machine marks nothing" };
-    if (!said(item)) return { refusal: refuse("MARK_NO_ITEM", "an act on an item names the item") };
+               detail: localize("following.index.watch_flag_member_acts", "watching and flagging are a member's own acts; the machine marks nothing") };
+    if (!said(item)) return { refusal: refuse("MARK_NO_ITEM", localize("following.index.act_names_item", "an act on an item names the item")) };
     const it = this.#itemOf(item, viewer ?? by);
-    if (!it) return { refusal: refuse("MARK_NO_SUCH_ITEM", "no item by that id is one you may see") };
+    if (!it) return { refusal: refuse("MARK_NO_SUCH_ITEM", localize("following.index.no_item_seen", "no item by that id is one you may see")) };
     return { item: it };
   }
 
@@ -1415,7 +1415,7 @@ export class Following {
     if (m.ok === false) return m;
     if (m.refusal) return m.refusal;
     row = row || this.#openFlag(m.item.id);
-    if (!row || row.cleared_at) return refuse("SECOND_LOOK_NOT_OPEN", "the item has no open second look to clear");
+    if (!row || row.cleared_at) return refuse("SECOND_LOOK_NOT_OPEN", localize("following.index.no_open_second_look", "the item has no open second look to clear"));
     this.#sql.exec(`UPDATE second_looks SET cleared_by=?, cleared_at=? WHERE flag_id=? AND cleared_at IS NULL`,
                    this.#memberKey(by), instant(this.now()), row.flag_id);
     return { ok: true, ...this.#flagView(this.#one(`SELECT * FROM second_looks WHERE flag_id=?`, row.flag_id)) };
@@ -1423,8 +1423,8 @@ export class Following {
 
   /** R33: the flags raised on an item, open and cleared, oldest first, to a viewer who may see the item. Writes nothing. */
   secondLooksOf({ item, viewer = null } = {}) {
-    if (!said(item)) return refuse("MARK_NO_ITEM", "a read of an item's second looks names the item");
-    if (!this.#itemOf(item, viewer)) return refuse("MARK_NO_SUCH_ITEM", "no item by that id is one you may see");
+    if (!said(item)) return refuse("MARK_NO_ITEM", localize("following.index.second_looks_names_item", "a read of an item's second looks names the item"));
+    if (!this.#itemOf(item, viewer)) return refuse("MARK_NO_SUCH_ITEM", localize("following.index.no_item_seen_2", "no item by that id is one you may see"));
     return { ok: true, item: item.trim(), flags: this.#rows(`SELECT * FROM second_looks WHERE item=? ORDER BY flag_id`, item.trim()).map((f) => this.#flagView(f)) };
   }
 
@@ -1494,7 +1494,7 @@ export class Following {
    *  her id and `at` the instant that mark was last set, oldest first; `MARK_NO_SUCH_ITEM` for what is no item R32 lists.
    *  Writes nothing; never throws. */
   watchedBy(item) {
-    const no = () => refuse("MARK_NO_SUCH_ITEM", "no item by that id is one the marks list");
+    const no = () => refuse("MARK_NO_SUCH_ITEM", localize("following.index.no_item_marks_list", "no item by that id is one the marks list"));
     try {
       if (!said(item)) return no();
       const id = item.trim();
@@ -1604,10 +1604,10 @@ export class Following {
   /** R11: between two snapshots of one portal follow, what was added, removed and changed by key. Writes nothing. */
   snapshotDiff({ follow, from, to, viewer = null } = {}) {
     const f = this.#follow(follow);
-    if (!f || f.kind !== "portal" || !this.#sees(f, viewer)) return refuse("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f || f.kind !== "portal" || !this.#sees(f, viewer)) return refuse("NO_SUCH_FOLLOW", localize("following.index.no_portal_follow_seen", "no portal follow by that id you may see"));
     const snap = (n) => this.#one(`SELECT * FROM portal_snapshots WHERE follow_id=? AND seq=?`, f.follow_id, Number(n));
     const a = snap(from), b = snap(to);
-    if (!a || !b) return refuse("NO_SUCH_SNAPSHOT", "both snapshots are of this follow, by their sequence numbers");
+    if (!a || !b) return refuse("NO_SUCH_SNAPSHOT", localize("following.index.snapshots_same_follow", "both snapshots are of this follow, by their sequence numbers"));
     const key = (json(f.subject) || {}).key;
     const base = { ok: true, follow: Number(f.follow_id), key, from: { seq: a.seq, at: a.at, valid: vintage(a.at) }, to: { seq: b.seq, at: b.at, valid: vintage(b.at) },
                    note: word("following.note.difference_between_two_answers") };
@@ -1620,7 +1620,7 @@ export class Following {
   /** R10: a portal's snapshots, each a vintage whose validity is its capture instant (`civil-time` `validAt`). */
   snapshots({ follow, at = null, viewer = null } = {}) {
     const f = this.#follow(follow);
-    if (!f || f.kind !== "portal" || !this.#sees(f, viewer)) return refuse("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f || f.kind !== "portal" || !this.#sees(f, viewer)) return refuse("NO_SUCH_FOLLOW", localize("following.index.no_portal_follow_seen_2", "no portal follow by that id you may see"));
     const list = this.#rows(`SELECT seq, capture_sha, at, why FROM portal_snapshots WHERE follow_id=? ORDER BY seq`, f.follow_id)
       .map((x) => ({ seq: Number(x.seq), capture: x.capture_sha, at: x.at, valid: vintage(x.at),
                      ...(at ? { valid_at: validAt({ valid: vintage(x.at) }, at) } : {}), ...(x.why ? { why: x.why } : {}) }));
