@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 Merged (K4013); one item before it merges again (K3986): with inquiry-grammar merged, the words check counts two test copies in bio-plane/test/m/inquiry/case-grammar.test.mjs, :77 "the case states these facts once, in its own signed document" and :264 "name the member asserting that this ground is independently sufficient": inquiry-grammar now writes them by localize. Merge tranche/T51, compare each with the product's own localize call (same id, en and vars as inquiry-grammar's code) by equality, or pass the product's output through, and COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
