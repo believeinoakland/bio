@@ -1,4 +1,5 @@
 /* R17, R18: the release's fleet, verified in full before anything is created and held as hashes, not as bytes. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { RELEASE_LATEST } from "./api.mjs";
 import { releaseSha } from "./readback.mjs";
 import { memberLimits } from "./statements.mjs";
@@ -18,14 +19,9 @@ import { verifySshsig, NS_FLEET, fleetStatement } from "../../../bio-plane/src/s
  * Answers `{skip}` (a sentence saying why no member is installed this time) or `{members, fleet}`. */
 async function loadFleet(release, onWait = null) {
   const man = release.man;
-  if (!man) return { skip: "The public repository was not reachable, so no capability workers were "
-    + "installed this time. Your team's Civicsmith works without them; the next update adds them." };
-  if (!Array.isArray(man.fleet) || man.fleet.length === 0 || !man.fleetSig) return { skip: "This release names no capability workers, so there was nothing further "
-    + "to install. Said explicitly rather than assumed: absence of members in the manifest "
-    + "is a fact about the release, not about your team's Civicsmith." };
-  if (!ARMED_SIGNERS.length) return { skip: "This installer carries no signing key, so the capability workers "
-    + "(which install only under a verified fleet signature) were left out. Your team's "
-    + "Civicsmith itself installed normally." };
+  if (!man) return { skip: word("installer.fleet.skip.unreachable") };
+  if (!Array.isArray(man.fleet) || man.fleet.length === 0 || !man.fleetSig) return { skip: word("installer.fleet.skip.none") };
+  if (!ARMED_SIGNERS.length) return { skip: word("installer.fleet.skip.nokey") };
   /* The statement is REBUILT from the manifest by the same function that
      produced it at the cut — producer/verifier agreement, and the /2 facts
      (compat, part types) are required by construction: a manifest stripped of
@@ -36,19 +32,14 @@ async function loadFleet(release, onWait = null) {
       plane: { sha256: man.sha256, bytes: man.bytes, asset: man.asset || "bio-plane.bundled.mjs" },
       members: man.fleet });
   } catch (e) {
-    return { skip: "The release names capability workers but its manifest does not state "
-      + "how they are uploaded (" + String(e.message).replace(/^REFUSED \[[A-Z_]+\]: /, "")
-      + ") — so none were installed. Your team's Civicsmith itself installed normally; a corrected "
-      + "release fixes this at the next update." };
+    return { skip: word("installer.fleet.skip.manifest.reason", { reason: word("installer.fleet.why.part") }) };
   }
   const v = await verifySshsig(man.fleetSig, new TextEncoder().encode(payload), NS_FLEET, ARMED_SIGNERS);
-  if (!v.ok) return { skip: "The fleet signature did not verify (" + (v.reason || "invalid") + "), so no "
-    + "capability workers were installed. Your team's Civicsmith itself installed normally and is safe." };
+  if (!v.ok) return { skip: word("installer.fleet.skip.signature", { reason: v.reason || "invalid" }) };
   /* The pairing (R61): the signed statement names the plane these members were built against, and it must be the plane
      THIS act just installs, of this release's version. */
   const planeSha = await releaseSha(release);
-  if (planeSha !== man.sha256 || String(man.version) !== String(release.version)) return { skip: "The capability workers are signed against a different release of Civicsmith than the one being "
-    + "installed, so no capability workers were installed. The next update, fetching both halves together, adds them." };
+  if (planeSha !== man.sha256 || String(man.version) !== String(release.version)) return { skip: word("installer.fleet.skip.pairing") };
   /* R38: container members first, because a member bound to a container's class is refused while the class is not there. */
   const fleet = [...man.fleet].sort((a, b) => (containerPartsOf(b).length ? 1 : 0) - (containerPartsOf(a).length ? 1 : 0));
   const base = release.base || RELEASE_LATEST;
@@ -56,11 +47,10 @@ async function loadFleet(release, onWait = null) {
   for (const m of fleet) {
     try {
       const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type] && !DESCRIPTOR_PARTS.has(pp.type));
-      if (badType) throw new Error("part " + badType.path + " has module type '" + badType.type
-        + "' this installer does not know — refusing to guess a loader");
+      if (badType) throw new Error(word("installer.fleet.why.part"));
       const box = containerPartsOf(m);
       const workerParts = (m.parts || []).filter((pp) => pp.type === WORKER_PART);
-      if (workerParts.length > 1) throw new Error("it carries more than one Worker description");
+      if (workerParts.length > 1) throw new Error(word("installer.fleet.why.program"));
       const fetchBundle = () => fetchVerified(base + "/" + m.asset, m.sha256, m.member, onWait);
       const bundle = await fetchBundle();
       /* R39: read from the verified bytes; a statement that cannot be read leaves this member out, named. */
@@ -92,7 +82,7 @@ async function loadFleet(release, onWait = null) {
       members.push({ m, box, limits: stated.limits, own, classes, workerPart: workerParts.length > 0, bytes });
     } catch (e) {
       if (e && (e.source || e.approveAgain)) throw e;
-      members.push({ m, error: String(e && e.message || e) });
+      members.push({ m, error: String(e && e.fleetWhy ? e.fleetWhy : e && e.message || e) });
     }
   }
   return { members, fleet: new Set(man.fleet.map((x) => x.member)) };

@@ -1,7 +1,8 @@
 /* R20, R22, R23, R25: a container member, and the description a Worker member states of its own buckets and schedule. */
 import { cf, special } from "./api.mjs";
 import { establishPlan } from "./probes.mjs";
-import { imageWhy, lacksOf } from "./images.mjs";
+import { imageWhy, imageSaid, lacksOf } from "./images.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 
 /* R38 (M-Q8) — THE CONTAINER MEMBER (agent-runner: Claude Code in a container, a member's own subscription path;
  * file-scanner: ClamAV and the safe view, two containers, T36).
@@ -35,7 +36,7 @@ export const WORKER_PART = "Worker";
 const DESCRIPTOR_PARTS = new Set([CONTAINER_PART, WORKER_PART]);
 const containerPartsOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
 /* R57: what a container member left out then lacks, said after its reason; nothing for a member the assistant does not need. */
-const withLacks = (m, why) => { const l = containerPartsOf(m).length ? lacksOf(m.member) : ""; return l ? `${why}; ${l}` : why; };
+const lacksFor = (m) => (containerPartsOf(m).length ? lacksOf(m.member) : "");
 const CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
 const BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
 const INSTANCE_TYPE = /^[a-z][a-z0-9-]{0,31}$/;
@@ -44,22 +45,22 @@ const CLASS_PATH = /^container\/([A-Za-z_$][A-Za-z0-9_$]{0,63})\.json$/;
 /* The descriptor, read and checked; `{ok: true, d}` or `{ok: false, why}` in words. */
 export function containerDescriptor(bytes) {
   let d;
-  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: "its container description does not parse" }; }
-  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its container description is not an object" };
-  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: "its container description names no class" };
+  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: word("installer.fleet.why.container.parse") }; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: word("installer.fleet.why.container.parse") };
+  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: word("installer.fleet.why.container.class") };
   /* R38 (T46): an image the account cannot pull, or one not pinned by digest, is said in words a group can read. */
   const imageNot = imageWhy(d.image);
-  if (imageNot) return { ok: false, why: imageNot };
-  if (d.scheduling_policy !== "default") return { ok: false, why: "its scheduling policy is not the default one" };
+  if (imageNot) return { ok: false, why: imageSaid(imageNot) };
+  if (d.scheduling_policy !== "default") return { ok: false, why: word("installer.fleet.why.container.policy") };
   if (!Number.isInteger(d.max_instances) || d.max_instances < 1 || d.max_instances > 1000)
-    return { ok: false, why: "its container description states no maximum number of instances" };
+    return { ok: false, why: word("installer.fleet.why.container.size") };
   /* R60 (T50; N1170; `bundler` R33): the size the member's configuration declares, passed on as stated; none stated, none sent. */
   if (d.instance_type !== undefined && (typeof d.instance_type !== "string" || !INSTANCE_TYPE.test(d.instance_type)))
-    return { ok: false, why: "its container description states its size unreadably" };
+    return { ok: false, why: word("installer.fleet.why.container.size") };
   const bind = d.bind === undefined ? [] : d.bind;
   if (!Array.isArray(bind) || !bind.every((b) => b && typeof b.member === "string" && b.member
       && typeof b.binding === "string" && BINDING_NAME.test(b.binding)))
-    return { ok: false, why: "its container description names its bindings unreadably" };
+    return { ok: false, why: word("installer.fleet.why.container.bindings") };
   return { ok: true, d: { class_name: d.class_name, image: d.image, max_instances: d.max_instances, bind,
     ...(d.instance_type === undefined ? {} : { instance_type: d.instance_type }) } };
 }
@@ -73,11 +74,11 @@ export function containerClasses(parts, bytesOf) {
   const classes = [];
   for (const p of parts) {
     const at = CLASS_PATH.exec(p.path);
-    if (!at) return { ok: false, why: `its container part ${p.path} is not named for its class (container/<class_name>.json)` };
+    if (!at) return { ok: false, why: word("installer.fleet.why.container.path") };
     const r = containerDescriptor(bytesOf(p.path));
-    if (!r.ok) return { ok: false, why: `${r.why} (class ${at[1]})` };
-    if (r.d.class_name !== at[1]) return { ok: false, why: `its container part ${p.path} describes the class ${r.d.class_name}` };
-    if (classes.some((c) => c.class_name === r.d.class_name)) return { ok: false, why: `it describes the class ${r.d.class_name} twice` };
+    if (!r.ok) return r;
+    if (r.d.class_name !== at[1]) return { ok: false, why: word("installer.fleet.why.container.path") };
+    if (classes.some((c) => c.class_name === r.d.class_name)) return { ok: false, why: word("installer.fleet.why.container.duplicate") };
     classes.push(r.d);
   }
   return { ok: true, classes };
@@ -88,22 +89,21 @@ const BUCKET_ROLES = Object.freeze({ captures: "bio-captures", published: "bio-p
 const CRON = /^(?:[0-9*,/?LW#A-Za-z-]+\s){4}[0-9*,/?LW#A-Za-z-]+$/;
 export function workerDescriptor(bytes) {
   let d;
-  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: "its Worker description does not parse" }; }
-  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its Worker description is not an object" };
+  try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: word("installer.fleet.why.program") }; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: word("installer.fleet.why.program") };
   const list = (k) => d[k] === undefined ? [] : d[k];
   const r2 = list("r2_buckets"), crons = list("crons");
   if (!Array.isArray(r2) || !r2.every((b) => b && typeof b.binding === "string" && BINDING_NAME.test(b.binding) && Object.hasOwn(BUCKET_ROLES, b.bucket)))
-    return { ok: false, why: "its Worker description names its buckets unreadably" };
+    return { ok: false, why: word("installer.fleet.why.program") };
   if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
-    return { ok: false, why: "its Worker description states its schedule unreadably" };
+    return { ok: false, why: word("installer.fleet.why.program") };
   return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons] } };
 }
 
 /* R44 (T36): what file-scanner then lacks, when its release carries no `Worker` part. */
-const WORKER_PART_LACKS = Object.freeze({
-  "file-scanner": "its release does not yet state its bucket and its daily schedule, so it was installed without them: it cannot read "
-    + "captured files or refresh its virus signatures, and files are not scanned until a release that states them is installed",
-});
+/* R44 (T36): the members that then lack their bucket and schedule, when their release carries no `Worker` part: they get the
+   note `installer.fleet.note.scanner`. */
+const WORKER_PART_LACKS = Object.freeze(["file-scanner"]);
 
 /* R45 (T36; K1946 T4): the member a tool reached through a tunnel is called through, and the binding name it reads the
    operator's Workers VPC service by, as R45 names them. */
@@ -121,18 +121,26 @@ export const vpcServiceOk = (v) => typeof v === "string" && VPC_ID.test(v);
 async function containerConditions(token, acct, { scope, plan }) {
   if (scope !== null && scope !== undefined) {
     if (!scope.split(/[\s,]+/).includes("containers.write"))
-      return { ok: false, why: "the permission you approved does not include Workers Containers" };
+      return { ok: false, code: "nopermission" };
   } else {
     try { await cf(token, `/accounts/${acct}/containers/applications`); }
-    catch (e) { return { ok: false, why: "the permission you approved could not be shown to include Workers Containers (" + e.message + ")" }; }
+    catch (e) { return { ok: false, code: "permissionunknown", said: e.message }; }
   }
   let p = plan;
   if (!p) {
     try { p = await establishPlan(token, acct); } catch (e) { p = { plan: "unknown", detail: e.message }; }
   }
-  if (p.plan === "free") return { ok: false, why: "your account is on Workers Free, and containers need Workers Paid" };
-  if (p.plan !== "paid") return { ok: false, why: "your account's Workers plan could not be verified (" + (p.detail || "no answer") + ")" };
+  if (p.plan === "free") return { ok: false, code: "freeplan" };
+  if (p.plan !== "paid") return { ok: false, code: "planunknown", said: p.detail || "" };
   return { ok: true, leftover: !!p.leftover };
+}
+
+/* Why the conditions failed, as the fragment the left-out list shows. */
+function conditionWhy(c) {
+  if (c.code === "nopermission") return word("installer.fleet.why.nopermission");
+  if (c.code === "permissionunknown") return word("installer.fleet.why.permissionunknown");
+  if (c.code === "freeplan") return word("installer.fleet.why.freeplan");
+  return word("installer.fleet.why.planunknown");
 }
 
 /* The Containers application for one class's namespace, created with the image, or rolled out to it. The application is named
@@ -145,7 +153,7 @@ async function placeContainer(token, acct, m, d, appName, names) {
   const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
   const script = names.member(m.member);
   const ns = (Array.isArray(spaces) ? spaces : []).find((n) => n && n.script === script && n.class === d.class_name);
-  if (!ns || !ns.id) throw new Error("its Durable Object class " + d.class_name + " was not found after the upload");
+  if (!ns || !ns.id) throw new Error(word("installer.fleet.why.class"));
   const apps = await cf(token, `/accounts/${acct}/containers/applications`);
   const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === appName);
   const config = { image: d.image, ...(d.instance_type ? { instance_type: d.instance_type } : {}) };
@@ -164,9 +172,8 @@ async function placeContainer(token, acct, m, d, appName, names) {
   if (!id) return { action, lag: null };
   let got = await deployed(id);
   if (got !== d.image && action === "rolled out") { await rollout(id); got = await deployed(id); }
-  const short = (x) => (x ? x.slice(x.indexOf("@") + 1, x.indexOf("@") + 20) + "…" : "no image");
   return { action, lag: got === d.image ? null
-    : `the container ${appName} of your team's Civicsmith still runs ${got ? "another image (" + short(got) + ")" : "an image that could not be read"}, not the one this release names (${short(d.image)})` };
+    : got ? word("installer.image.lag.older", { name: appName }) : word("installer.image.lag.unread", { name: appName }) };
 }
 
 /* R44: a member's scheduled triggers, set exactly as its `Worker` part states them. */
@@ -174,4 +181,4 @@ async function setSchedules(token, acct, script, crons) {
   return cf(token, `/accounts/${acct}/workers/scripts/${script}/schedules`,
     { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))) });
 }
-export { DESCRIPTOR_PARTS, containerPartsOf, withLacks, WORKER_PART_LACKS, containerConditions, placeContainer, setSchedules };
+export { DESCRIPTOR_PARTS, containerPartsOf, lacksFor, WORKER_PART_LACKS, containerConditions, conditionWhy, placeContainer, setSchedules };

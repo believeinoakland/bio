@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01LGxvuQMoQnNwSkNodRjiu5 · depth 2 · COMPLETE · handled B1
+**Status** · session_01LGxvuQMoQnNwSkNodRjiu5 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -56,3 +56,19 @@ T51-102 queue-producers applied whole. Branch job/T51/queue-producers @ f87911f6
 - `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note only (the `localize` ids I changed are not in `rows.mjs` yet); no refusal naming my module.
 
 Size (session_01LGxvuQMoQnNwSkNodRjiu5): test runs 44, module lines 3144
+
+## J3 · COMPLETE
+
+B2 CHANGE applied. tranche/T51 merged (design @ 2a64c5ae77, DEC-359); branch @ 568de76e87.
+
+- `queue.export-performed`: a full export drops {scope}; a rendering reads `.rendering.summary` and `.rendering.detail` with {format} from `queue.fill.format.<code>`.
+- `newer-capture-affects-reference`: {grade} from `queue.fill.grade.<letter lower-cased>`, `.detail.affects` from `queue.fill.affects.<code>`, `.detail.unseen` when reevaluation blanks the capture for the viewer.
+- `new-version-arrived-from-another-team`: `.detail.state` back, {state} from `queue.fill.state.<code>`.
+- `cited-docket-entry-refused`: {checks} the `queue.fill.check.<code>` words as one list, `queue.fill.check.undetermined` when none.
+- `cited-docket-unreadable`: {reason} from `queue.fill.reason.<code>` (`.http` with {status} for http_<n>).
+- A code the list holds no word for is left empty, or its optional sentence left out; never written into a sentence.
+- Not changed, for BOB: `{statement}` (capture-requests) and `{says}` (intent) are still passed as the owners state them; B2 named no key for them (`queue.fill.statement.*` exists, but capture-requests does not expose who/run/payer beside its text).
+
+Tests: queue-producers 117 pass, 0 fail (new assertions in words.test.mjs; cited and shared tests moved to the real check codes and states). Checks: format 0, architecture 0, coverage 33 of 33, words 0 failures, ownership 0 failures.
+
+Size (session_01LGxvuQMoQnNwSkNodRjiu5): test runs 49, module lines 3180

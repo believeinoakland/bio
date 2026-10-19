@@ -5508,7 +5508,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 21979
+    "generatedRows": 22377
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -6136,6 +6136,12 @@
      "line": 289,
      "text": "a row of `cs.rows`, read by the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
+    },
+    {
+     "file": "bio-plane/src/interface-shell/browser.mjs",
+     "line": 1683,
+     "text": "-----BEGIN SSH SIGNATURE-----\n{}\n-----END SSH SIGNATURE-----\n",
+     "why": "the SSH signature armour: wire grammar (B371 2, INTERFACE-SHELL T51-113)"
     }
    ]
   },
@@ -10757,6 +10763,12 @@
      "line": 233,
      "text": "## What Would Falsify This",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
+    },
+    {
+     "file": "bio-plane/src/screens-investigate/explore.mjs",
+     "line": 81,
+     "text": "declared, not evidenced",
+     "why": "a wire value (a hop's label, marks[].mark) compared by code, never read; screen.explore.declared is the word (B369 2, SCREENS-INVESTIGATE T51-120)"
     }
    ]
   },
@@ -45793,6 +45805,7 @@
     "act.owed_installremove.label.install",
     "act.owed_installremoveconfirm.label.install",
     "act.owed_installupdate.label.install",
+    "act.owed_updatestart.label.updates",
     "conformance.falsify",
     "conformance.rests",
     "installer.account.none",
@@ -45858,6 +45871,7 @@
     "installer.fallback.published.other",
     "installer.fleet.done.one",
     "installer.fleet.done.other",
+    "installer.fleet.left.item",
     "installer.fleet.note.scanner",
     "installer.fleet.note.schedule",
     "installer.fleet.note.vpc.connected",
@@ -45866,6 +45880,7 @@
     "installer.fleet.partial.none",
     "installer.fleet.partial.some",
     "installer.fleet.skip.manifest",
+    "installer.fleet.skip.manifest.reason",
     "installer.fleet.skip.nokey",
     "installer.fleet.skip.none",
     "installer.fleet.skip.pairing",
@@ -45873,9 +45888,25 @@
     "installer.fleet.skip.unreachable",
     "installer.fleet.why.class",
     "installer.fleet.why.container",
+    "installer.fleet.why.container.bindings",
+    "installer.fleet.why.container.class",
+    "installer.fleet.why.container.duplicate",
+    "installer.fleet.why.container.parse",
+    "installer.fleet.why.container.path",
+    "installer.fleet.why.container.policy",
+    "installer.fleet.why.container.size",
+    "installer.fleet.why.freeplan",
+    "installer.fleet.why.http",
+    "installer.fleet.why.integrity",
     "installer.fleet.why.limits",
+    "installer.fleet.why.nopermission",
     "installer.fleet.why.part",
+    "installer.fleet.why.permissionunknown",
+    "installer.fleet.why.planunknown",
     "installer.fleet.why.program",
+    "installer.fleet.why.refetch",
+    "installer.fleet.why.unpinned",
+    "installer.fleet.why.unpullable",
     "installer.holdings.documents.one",
     "installer.holdings.documents.other",
     "installer.holdings.members.one",
@@ -46258,6 +46289,7 @@
     "screen.install.cf.asks",
     "screen.install.cf.containers",
     "screen.install.cf.join",
+    "screen.install.cf.logs",
     "screen.install.cf.plan",
     "screen.install.cf.programs",
     "screen.install.cf.sub",
@@ -46302,6 +46334,7 @@
     "screen.install.ready.answers",
     "screen.install.ready.nolog",
     "screen.install.ready.note",
+    "screen.install.ready.sub",
     "screen.install.remove.keep",
     "screen.install.remove.lost.address",
     "screen.install.remove.lost.heading",
@@ -46331,7 +46364,7 @@
     "weight.irreversible.name"
    ],
    "counts": {
-    "reads": 542,
+    "reads": 563,
     "unkeyed": 0
    },
    "unkeyed": [],
@@ -46358,6 +46391,18 @@
     "instance-setup.offices.detail.no_profile",
     "instance-setup.profiles.detail.none_active",
     "instance-setup.profiles.detail.stages_unchecked",
+    "instance-setup.setup.public_read_could_not_be",
+    "instance-setup.setup.the_governor_did_not_answer",
+    "instance-setup.setup.the_governor_did_not_answer_2",
+    "instance-setup.setup.the_languages_could_not_be",
+    "instance-setup.setup.the_minute_of_the_day",
+    "instance-setup.setup.the_offices_could_not_be",
+    "instance-setup.setup.the_place_could_not_be",
+    "instance-setup.setup.the_running_release_could_not",
+    "instance-setup.setup.the_store_did_not_confirm",
+    "instance-setup.setup.what_could_not_be_read",
+    "instance-setup.setup.what_did_not_answer_string",
+    "instance-setup.setup.whether_your_team_keeps_its",
     "instance-setup.updates.detail.already_held",
     "instance-setup.updates.detail.answered",
     "instance-setup.updates.detail.held",
@@ -46488,7 +46533,7 @@
     "setup.why.registry_refused_identifier_2"
    ],
    "counts": {
-    "reads": 99,
+    "reads": 134,
     "unkeyed": 0
    },
    "unkeyed": [
@@ -46743,6 +46788,114 @@
      "line": 247,
      "text": "Confined to the scratch namespace. Live state is unreachable from this token class.",
      "why": "a diagnostic for builders and operators (a transport, probe, migration or store failure, or an internal state), not drawn on a member's screen"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 68,
+     "text": "creation with base null succeeds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 74,
+     "text": "update with correct base succeeds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 79,
+     "text": "the lost-update floor, on real storage",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 89,
+     "text": "live state is the winning revision",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 92,
+     "text": "history holds the superseded revision",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 93,
+     "text": "the verbatim promotion record is projected",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 96,
+     "text": "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 101,
+     "text": "oversize inline refused at the write",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 104,
+     "text": "canary nonce survived the round trip",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 105,
+     "text": "proves the battery actually wrote and read real storage",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 114,
+     "text": "lease returns live sha as edit base",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 116,
+     "text": "second actor denied while lease holds",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 141,
+     "text": "no configured token is a published repository value",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 142,
+     "text": "no configured token is shorter than 16 characters",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/livefire.mjs",
+     "line": 155,
+     "text": "one bucket bound without the other breaks the fence",
+     "why": "a probe assertion's name or reason in op=livefire's failing list, read by the operator running the probe, never drawn for a member (B369 3, INSTANCE-SETUP T51-106, R19)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 966,
+     "text": "this module had already started on this storage",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 1012,
+     "text": "no producers to register with",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
+    },
+    {
+     "file": "bio-plane/src/setup.mjs",
+     "line": 1022,
+     "text": "no public-read to register with",
+     "why": "start()'s report detail for the operator, never drawn for a member (B369 3, INSTANCE-SETUP T51-106)"
     }
    ],
    "note": "DEC-329 (B303 (8)): read from bio-plane/src/setup.mjs, bio-plane/src/setup-fleet.mjs, bio-plane/src/livefire.mjs; its own instance-setup\\. keys listed whether or not its source names them yet",
@@ -46793,6 +46946,95 @@
    },
    "unkeyed": [],
    "note": "DEC-329 (B303 (8)): read from bio-plane/src/translations; its own translations\\. keys listed whether or not its source names them yet",
+   "batch": "DEC-260"
+  },
+  "installer-steps": {
+   "reads": [
+    "installer.address.prefixtaken",
+    "installer.cfsaid",
+    "installer.connect.address.done",
+    "installer.connect.address.refused",
+    "installer.connect.done",
+    "installer.connect.refused",
+    "installer.fleet.done.one",
+    "installer.fleet.done.other",
+    "installer.fleet.left.item",
+    "installer.fleet.note.scanner",
+    "installer.fleet.note.schedule",
+    "installer.fleet.note.vpc.connected",
+    "installer.fleet.note.vpc.refused",
+    "installer.fleet.note.vpc.unused",
+    "installer.fleet.partial.none",
+    "installer.fleet.partial.some",
+    "installer.fleet.skip.manifest.reason",
+    "installer.fleet.skip.nokey",
+    "installer.fleet.skip.none",
+    "installer.fleet.skip.pairing",
+    "installer.fleet.skip.signature",
+    "installer.fleet.skip.unreachable",
+    "installer.fleet.why.class",
+    "installer.fleet.why.container.bindings",
+    "installer.fleet.why.container.class",
+    "installer.fleet.why.container.duplicate",
+    "installer.fleet.why.container.parse",
+    "installer.fleet.why.container.path",
+    "installer.fleet.why.container.policy",
+    "installer.fleet.why.container.size",
+    "installer.fleet.why.freeplan",
+    "installer.fleet.why.http",
+    "installer.fleet.why.integrity",
+    "installer.fleet.why.limits",
+    "installer.fleet.why.nopermission",
+    "installer.fleet.why.part",
+    "installer.fleet.why.permissionunknown",
+    "installer.fleet.why.planunknown",
+    "installer.fleet.why.program",
+    "installer.fleet.why.refetch",
+    "installer.fleet.why.unpinned",
+    "installer.fleet.why.unpullable",
+    "installer.image.lacks.other",
+    "installer.image.lacks.scanner",
+    "installer.image.lag.older",
+    "installer.image.lag.unread",
+    "installer.lag.address.noversion",
+    "installer.lag.address.silent",
+    "installer.lag.address.version",
+    "installer.lag.bytes.differ",
+    "installer.lag.bytes.unread",
+    "installer.lag.logjob",
+    "installer.lag.logjob.paused",
+    "installer.lag.logjob.unknownid",
+    "installer.lag.logjob.unnamed",
+    "installer.lag.member.failed",
+    "installer.lag.member.misnamed",
+    "installer.lag.member.silent",
+    "installer.lag.member.silent.installed",
+    "installer.lag.member.unbound",
+    "installer.lag.member.unknown",
+    "installer.lag.member.unnamed",
+    "installer.lag.member.version",
+    "installer.lag.members.unreported",
+    "installer.lag.store.unknown",
+    "installer.lag.store.unreported",
+    "installer.lag.store.version",
+    "installer.logs.clear",
+    "installer.logs.named.one",
+    "installer.logs.named.other",
+    "installer.logs.undetermined",
+    "installer.logs.unreadable",
+    "installer.probe.leftover",
+    "installer.step.connect",
+    "installer.step.connect.address",
+    "installer.step.helpers",
+    "installer.step.logs",
+    "screen.install.approveagain"
+   ],
+   "counts": {
+    "reads": 78,
+    "unkeyed": 0
+   },
+   "unkeyed": [],
+   "note": "DEC-329 (B303 (8)): read from newgroup/src/steps; its own $ keys listed whether or not its source names them yet",
    "batch": "DEC-260"
   },
   "skills": {

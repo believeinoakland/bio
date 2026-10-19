@@ -31,7 +31,7 @@ test("R19, R26, R31: a signer-self-registered obligation is refused KIND_NOT_PER
   for (const r of [w.q.queueMute({ member: "alice", viewer: "member:alice", case: "INQ-1", kinds: ["signer-self-registered"] }),
                    w.q.queueMute({ member: "alice", viewer: "member:alice", item: "OBLIGATION::signer-self-registered::K1" })])
     assert.deepEqual([r.reason, r.kind_class, r.check], ["KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27"]);
-  w.run(`INSERT INTO queue_item_mutes VALUES ('alice','OBLIGATION::signer-self-registered::K1','OBLIGATION',?)`, iso(NOW));
+  w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice','OBLIGATION::signer-self-registered::K1','OBLIGATION',?)`, iso(NOW));
   const f = w.feed("alice");
   assert.deepEqual(f.items.map((i) => i.id), ["OBLIGATION::signer-self-registered::K1"]);
   assert.equal(f.mute.suppressed.length, 0);

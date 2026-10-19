@@ -1,5 +1,6 @@
 /* R7, R8, R9: what the install asks the account before it creates anything: whether a script is there, the plan, the buckets
  * and the workers.dev address. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { cf } from "./api.mjs";
 import { rand, uploadForm } from "./bytes.mjs";
 
@@ -67,7 +68,7 @@ async function ensureSubdomain(token, acct, slug) {
         sub = c; registered = c; break;
       } catch (e) { if (!/taken|exists|unavailable/i.test(e.message)) throw e; }
     }
-    if (!sub) throw new Error("no workers.dev prefix is set on this account and the names tried were taken");
+    if (!sub) throw new Error(word("installer.address.prefixtaken"));
   }
   await cf(token, `/accounts/${acct}/workers/scripts/${slug}/subdomain`,
     { method: "POST", body: JSON.stringify({ enabled: true }) });

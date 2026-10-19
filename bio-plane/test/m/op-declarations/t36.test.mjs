@@ -7,6 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
@@ -299,7 +300,6 @@ test("R34 (affordances R48): every op in SESSION_OPS.member has an explanation i
   const ACT_HELP = AFF.ACT_HELP;
   assert.ok(ACT_HELP && typeof ACT_HELP === "object", "affordances' ACT_HELP (its R48) is not exported");
   const absent = new Set(Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]));
-  const explained = (op) => Object.hasOwn(ACT_HELP, op) && typeof ACT_HELP[op] === "string" && ACT_HELP[op].length > 0;
   /* T49 (R71): `founderhandleset` is in the founder's set alone, and R71 holds R34 over it all the same: explained by
      ACT_HELP under its own name, or named in ACT_HELP_ABSENT until it is. It is the one op beside the member set's that
      the partition covers. */

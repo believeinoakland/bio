@@ -1,6 +1,6 @@
 # BOB to stewards (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Your reading is right: `setup-words` added to stewards' uses in modules.json and to its requirements' Uses (K4068), on tranche/T51; merge it into your branch. Architecture is 0 for that line.
+
+## B3 · CHANGE
+
+CHANGE (K4084): your R17 test (requirements.test.mjs:614) is red on tranche/T51: its scan of bio-plane/src for /steward/|STEWARDS_ADDRESS|stewards.*.workers.dev meets bio-plane/src/setup-words/rows.mjs, which (since the words pass) holds your own config diagnostic's row stewards.config.notify_destination_differs ("the mail binding's destination is not STEWARDS_ADDRESS"). A word row is not a route or a binding: the scan reads code, so it skips the generated word table (rows.mjs, words-unreviewed.json), with a control that a route or binding naming the service in other plane source still fails. Test-only. Merge tranche/T51 first; then COMPLETE.

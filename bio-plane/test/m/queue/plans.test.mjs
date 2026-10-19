@@ -106,7 +106,7 @@ test("R12, R19, R26, R31: watch-keep-or-stop, plan-review-due and plan-look-agai
                      w.q.queueMute({ member: "alice", viewer: "member:alice", item: id })])
       assert.deepEqual([r.ok, r.reason, r.kind_class, r.check, r.translation],
         [false, "KIND_NOT_PERSONAL", "OBLIGATION", "C-33.27", QUEUE_ACT_CHECKS.KIND_NOT_PERSONAL.translation], id);
-    w.run(`INSERT INTO queue_item_mutes VALUES ('alice', ?, 'OBLIGATION', ?)`, id, iso(NOW));
+    w.run(`INSERT INTO queue_item_mutes (member_id, item_id, item_class, muted_at) VALUES ('alice', ?, 'OBLIGATION', ?)`, id, iso(NOW));
   }
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c, 0, "a refusal writes nothing");
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-1','plan-look-again,plan-review-due,watch-keep-or-stop')`);

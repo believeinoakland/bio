@@ -107,9 +107,9 @@ test("R35 (case-import R20): the watch's items go to the member who set the watc
       { ...head(IMP, "alice", 3), kind: "withdrawal", edition: "all", date: "2026-08-22", key_listed: true, move: true, reason: "retracted", taken_back: { seq: 4, date: "2026-08-23" } },
       { ...head(IMP2, "ruth", 1), kind: "reaction", edition: 1, date: "2026-08-24", key_listed: true, move: false, taken_back: null }],
     refused: [
-      { ...head(IMP, "alice", 5, iso(NOW - 4 * DAY)), failed: "C-130.15", detail: "the check failed" },
-      { ...head(IMP, "alice", 5, iso(NOW - 6 * DAY)), failed: "C-130.16", detail: "a second copy" },
-      { ...head(IMP, "alice", null), failed: "C-130.14", detail: "no seq" }],
+      { ...head(IMP, "alice", 5, iso(NOW - 4 * DAY)), failed: "digest", detail: "the check failed" },
+      { ...head(IMP, "alice", 5, iso(NOW - 6 * DAY)), failed: "signature", detail: "a second copy" },
+      { ...head(IMP, "alice", null), failed: "form", detail: "no seq" }],
     unreadable: [{ import: IMP, group: "eastbay-watch", case: "CASE-7", set_by: "alice", docket: "https://x.example/?op=docketpublic",
                    sentence: DOCKET_UNREADABLE, reason: "not_json", at: iso(NOW - 3 * DAY) }] };
   const { w, asked } = watchWorld(() => answer);
@@ -151,16 +151,16 @@ test("R35 (case-import R20): the watch's items go to the member who set the watc
   // refused: the check failed named, the copies of one seq one item
   const rf = m[`FINDING::cited-docket-entry-refused::${IMP}#5`];
   assert.equal(rf.class, "FINDING");
-  assert.deepEqual(rf.basis.failed, ["C-130.15", "C-130.16"]);
-  assert.equal(rf.detail, word("queue.cited-docket-entry-refused.detail.other", { seq: 5, checks: "C-130.15, C-130.16" }));
+  assert.deepEqual(rf.basis.failed, ["digest", "signature"]);
+  assert.equal(rf.detail, word("queue.cited-docket-entry-refused.detail.other", { seq: 5, checks: `${word("queue.fill.check.digest")}, ${word("queue.fill.check.signature")}` }));
   assert.equal(rf.summary, word("queue.cited-docket-entry-refused.summary", { whose: watched }));
   assert.equal(m[`FINDING::cited-docket-entry-refused::${IMP}#unnumbered`].detail,
-    word("queue.cited-docket-entry-refused.detail.unnumbered.one", { checks: "C-130.14" }));
+    word("queue.cited-docket-entry-refused.detail.unnumbered.one", { checks: word("queue.fill.check.form") }));
   // unreadable: a CONDITION opening with docket's sentence, its reason and instant, aged from the read
   const un = m[`CONDITION::cited-docket-unreadable::${IMP}`];
   assert.equal(un.class, "CONDITION");
   assert.equal(un.summary, word("queue.cited-docket-unreadable.summary", { whose: watched }));
-  assert.equal(un.detail, [word("queue.cited-docket-unreadable.detail"), word("queue.cited-docket-unreadable.detail.reason", { reason: "not_json" }),
+  assert.equal(un.detail, [word("queue.cited-docket-unreadable.detail"), word("queue.cited-docket-unreadable.detail.reason", { reason: word("queue.fill.reason.not_json") }),
     word("queue.cited-docket-unreadable.detail.at", { date: dayWord("2026-08-29") })].join(" "));
   assert.equal(un.basis.sentence, DOCKET_UNREADABLE, "docket's own sentence stays on the basis");
   assert.equal(DOCKET_UNREADABLE, word("docket.read_publisher_docket"));
@@ -199,12 +199,12 @@ test("R35 (N546; case-import R20's seen_at, K1419): each entry's item ages from 
       { ...head(IMP, "alice", 3, null), kind: "reaction", edition: 3, date: "2026-08-22", key_listed: true, move: false, taken_back: null },
       { ...head(IMP, "alice", 4, "not an instant"), kind: "disclosure", edition: 3, date: "2026-08-23", key_listed: true, move: false, taken_back: null }],
     refused: [
-      { ...head(IMP, "alice", 5, iso(NOW - 3 * DAY)), failed: "C-130.15", detail: "a" },
-      { ...head(IMP, "alice", 5, iso(NOW - 9 * DAY)), failed: "C-130.16", detail: "b" },
-      { ...head(IMP, "alice", 5, null), failed: "C-130.17", detail: "c" },
-      { ...head(IMP, "alice", 6, null), failed: "C-130.15", detail: "d" },
-      { ...head(IMP, "alice", 7, null), failed: "C-130.15", detail: "e" },
-      { ...head(IMP, "alice", 7, iso(NOW - 8 * DAY)), failed: "C-130.16", detail: "f" }],
+      { ...head(IMP, "alice", 5, iso(NOW - 3 * DAY)), failed: "digest", detail: "a" },
+      { ...head(IMP, "alice", 5, iso(NOW - 9 * DAY)), failed: "signature", detail: "b" },
+      { ...head(IMP, "alice", 5, null), failed: "chain", detail: "c" },
+      { ...head(IMP, "alice", 6, null), failed: "digest", detail: "d" },
+      { ...head(IMP, "alice", 7, null), failed: "digest", detail: "e" },
+      { ...head(IMP, "alice", 7, iso(NOW - 8 * DAY)), failed: "signature", detail: "f" }],
     unreadable: [] };
   const { w } = watchWorld(() => answer);
   const m = byId(w.read("alice"));
@@ -218,7 +218,7 @@ test("R35 (N546; case-import R20's seen_at, K1419): each entry's item ages from 
   }
   assert.deepEqual(rf(5).age, { state: "determined", since: iso(NOW - 9 * DAY), ms: 9 * DAY }, "a refused entry's copies: from the first read");
   assert.equal(rf(5).basis.seen_at, iso(NOW - 9 * DAY));
-  assert.deepEqual(rf(5).basis.failed, ["C-130.15", "C-130.16", "C-130.17"]);
+  assert.deepEqual(rf(5).basis.failed, ["digest", "signature", "chain"]);
   assert.deepEqual([rf(6).age.state, rf(6).age.reason], ["undetermined", "no_seen_instant"]);
   assert.deepEqual(rf(7).age, { state: "determined", since: iso(NOW - 8 * DAY), ms: 8 * DAY }, "an undated copy first, a dated one later: the dated one");
   /* the age is the read's instant less seen_at, so a later read is older by exactly the interval, and the item the same */

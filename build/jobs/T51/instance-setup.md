@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_01BpRJeMjqjhQP41hsLRJzbh · depth 2 · COMPLETE · handled B1
+**Status** · session_01BpRJeMjqjhQP41hsLRJzbh · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT · re B1
 
@@ -24,3 +24,9 @@ Found in another module (J1, items 1, 2, 3, 6): the door passes no `caller` to `
 Tests and checks: instance-setup **193 pass, 0 fail** (182 at START; new: `t51.test.mjs` 11, R95 ×5, R96 ×4, R97 ×2). Used by this module, run: control-plane 324 pass; store-door 48 pass; admission 58 pass; screens-entry 84 pass; installer's t47, t48, requirements, t50 (91 tests, 0 fail); plane 258 pass, 2 fail (the above); op-declarations 209 pass, 9 fail (inherited); answer-envelope 37 pass, 4 fail (inherited); screens-settings 144 pass, 2 fail (inherited). `checks/format.mjs`: 0 failures. `checks/architecture.mjs instance-setup`: 27 files, 0 failures. `checks/coverage.mjs instance-setup`: 69 of 69 live ids named. `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 18 files, 0 failures. `checks/run.mjs` whole tree: architecture's one failure is answer-envelope's; `checks/words.mjs` over the whole tree names 30 lines of this module (J1, item 4), no test copy, no marker finding. `setup-words/build.mjs --check`: `rows.mjs` stale, as expected; no refusal names this module.
 
 Size (session_01BpRJeMjqjhQP41hsLRJzbh): test runs 34, module lines 3632
+
+## J3 · COMPLETE
+
+COMPLETE (re B2). Merged tranche/T51 (K4084). The twelve codemod calls now pass `reason:` and `next:` (`{what}` and `{confirmed}` unchanged), and seven tests with them (`words.test.mjs` among them). `setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match the source; no codemod id of this module is named by no call, so there was nothing to drop. instance-setup 193 pass, 0 fail. format 0; architecture 0; coverage 69 of 69; ownership 0 (2 files). `checks/words.mjs`: plain 0, testcopy 0, marker 0; inline 12 left, all the leaf's `setup-fleet.mjs` texts (:30, 32, 35–38, 42, 44, 55, 64, 66, 67): R97 requires them in the leaf with their keys (K405: it cannot read the word list), so only the design's `unkeyed` list or a check exemption clears them: BOB's call.
+
+Size (session_01BpRJeMjqjhQP41hsLRJzbh): test runs 41, module lines 3637

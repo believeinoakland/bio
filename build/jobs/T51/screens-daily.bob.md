@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -36,3 +36,23 @@ CHANGE (K4079): wizard-scripts is merged into tranche/T51 (registry, front doors
 ## B4 · CHANGE
 
 CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: (2a) "Search projects" is a kit field that narrows the drawn list as typed: no op, no registry act. (2b) shell.css carries `.tw{overflow-x:auto}` (from the design's page; interface-assets takes it at its next re-take, so draw the wrapper). (2c) `screen.finder.cite.*` (legend, support, against, cited, newly_against, set_changed, added_since, gone_since, back, back.help); the choose box is `screen.finder.pick` "Pick {title}" and the empty press `screen.finder.pickfirst`; a resolved row is its title alone (queue R59), so `queue.answered.photos`, `.photos.one`, `.granted`, `.granted.meta` are retired; `queue.answered.forwarded.unnamed` "Forwarded {item}"; `queue.feed.<id>` for tasks, bias-debts, sources, proposals, shared-inquiries, leads, exports, references, objectives, machinery, contradictions, signing-keys, action, attribution, docket, cited-cases, wizards, schedule, places, projects; `queue.multi.why.letter` when the door is `filingapprove`, `.why.check` when the item is a check another member asked of you, else the owner's why.
+
+## B5 · CHANGE
+
+CHANGE (K4083), re J3: interface-assets is merged again with .tw carried in shell.css (ASSETS_COMMIT 2a64c5ae77). Merge tranche/T51 and draw B4 (2b) (the table). interface-shell's and op-declarations' merges are still to come (each a CHANGE). The 'narrows as typed' search field: interface-shell has the debounced typed-input hook on its branch (K4076); use it once interface-shell merges.
+
+## B6 · CHANGE
+
+CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim:
+
+B370: `screen.home.area.ourmove` reworded "Our move: {n}, the earliest due {date}", `.theirmove` "Their move: {n}, the earliest due {date}" (clocksrunning's by_owed counts and next), drawing changed with them; `screen.home.area.expertise.person` "{member}, {label} ({standing})" with `.expertise.confirmed|declared`; `screen.home.area.edition.published` (no draft with an end date), `.edition.comments` {count} / `.comments.one`, `.edition.draftonly` and `.draftonly.comments` (no published edition yet).
+
+And DEC-361 (U391): `queue.feed.action`, `queue.feed.wizards` reworded; `screen.home.todo.vouch.noplace` takes "the", with `screen.home.todo.vouch.noplace.one` for one photo. Note the reworded `screen.home.area.ourmove`/`.theirmove` now take {n} and {date} (no {what}, {due}, {reply}).
+
+## B7 · CHANGE
+
+CHANGE (K4088), re J4: the design @ 112748edcf (DEC-363, U393) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your row, from the design's answer verbatim: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
+
+## B8 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.

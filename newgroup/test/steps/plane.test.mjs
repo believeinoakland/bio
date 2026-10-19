@@ -5,6 +5,7 @@ import { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, ensureSubdomain
   selfBinding, BROWSER_BINDING, instanceAiBinding, instanceAiOk, sealBinding, profilesBinding, ownHostsBinding, memberBindings, membersPresent, heldBindings,
   hostOf, BINDING_OF, SEAL_BINDING, INSTANCE_AI_BINDING, PROFILES_BINDING, OWN_HOSTS_BINDING, uploadInstall, uploadUpdate, scriptHash, releaseSha, readBack,
   planeInSync, putSecret, rotateSecrets, namesFor, hex, multipartPart, ascii, find, rand } from "../../src/steps/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 import { TOK, session, immediateTimers, account, heldCopy, sequence, release, chosen, sha, VERSION, LIMITS, CAPABLE_SRC, realFetch, cfok, cferr } from "./world.mjs";
 
@@ -83,7 +84,7 @@ test("R9: a held prefix is used; none is registered from the slug; a taken slug 
   try {
     const taken = [ "grp", suffixed ];
     w.restore(); w = account({ subdomain: "", taken });
-    await assert.rejects(ensureSubdomain(session(), "A1", "grp"), /no workers\.dev prefix is set on this account and the names tried were taken/);
+    await assert.rejects(ensureSubdomain(session(), "A1", "grp"), new RegExp(word("installer.address.prefixtaken").replace(/[.]/g, "\\.")));
   } finally { crypto.getRandomValues = gv2; }
   w.restore();
   w = account({ enableFail: true });

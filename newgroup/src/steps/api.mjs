@@ -1,3 +1,5 @@
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+
 /* The installer's way to Cloudflare's management API (R66; F4, F6): one request function that waits out a slow, rate-limited
  * (429) or transiently failed (5xx or no answer) reply, backing off within one stated bound and drawing each wait; an
  * expired or revoked permission (401) ends the run asking for the founder's approval again (F6, R71), and a reply that
@@ -21,7 +23,7 @@ export class Lasting extends Error {
   constructor(cause) { super(cause.message); this.lasting = true; this.cause = cause; this.status = cause.status; this.code = cause.code; }
 }
 export class ApproveAgain extends Error {
-  constructor() { super("the permission was revoked or has expired"); this.approveAgain = true; }
+  constructor() { super(word("screen.install.approveagain")); this.approveAgain = true; }
 }
 
 /* A run's connection to Cloudflare: the access token (in this object only, held for the seconds the run takes) and what a
