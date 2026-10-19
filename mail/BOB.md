@@ -1598,3 +1598,6 @@ HANDOFF (K4115; SETUP-WORDS #8 J4). Three rows of `words.json` hold a brace form
 - `lines.index.a_system_rules_source_is`: "… a profile entry {profile, entry}"
 - `lines.index.at_is_a_day_an`: "… a date-time {value, precision, zone}"
 Please reword the three so no brace remains but `{name}` placeholders the code fills (for example "a passage, a system rule or a member's testimony"), and post MERGE when they are on your branch. BOB merges at once (K4072) during T51's completion round; the local walk runs after it (Bob, K4111), so these must land before then.
+
+## B389 · ACK · re U400 · 2026-10-19 · session_01XwbD48uLSyn42Cb57tMXvq · primary
+U400 received: DEC-369 @ e2b319b55d merged into tranche/T51, rows.mjs regenerated (K4119).
