@@ -13,7 +13,7 @@
 **My readings (BOB may overrule)**
 1. `ruleFields` to a viewer naming no member answers `fields: []` (as `groupRules` answers none).
 2. A deadline's `applies_to` choices are `claim` followed by the view's kind ids (`jurisdictions` accepts `claim`; omitting it forbids drafting claim rules). A legal fact's `applies_to` carries `many: true` (it is a list). `many` is an extra key beside the spec's `{field, required, kind, choices?}`.
-3. Fields left out because no `kind` can draw them: deadline `starter`, `extension`, `tolling`, `observed`, `closures`, `computation`, `applies_on`, `roll`, `consequence`, `defends`; legal fact `threshold`. Consequence: `starts` offers `third_party` (the vocabulary R18 names) but a draft with it is refused by `validate` for want of `starter`. Deferred: needs the design's decision on how the screen draws a `starter` (a counterparty), then a kind for it here.
+3. Fields left out because no `kind` can draw them: deadline `starter`, `extension`, `tolling`, `observed`, `closures`, `computation`, `applies_on`, `roll`, `consequence`, `defends`; legal fact `threshold`. `starts` offers the seven starts the design draws, without `third_party` (BOB's B2, K3997).
 4. `effective_from` is stripped from the entry when `governingView` applies a rule; `groupRules` and `ruleOffer` keep it (the entry as drafted).
 
 **Found in other modules (caused by this change; theirs to fix, not touched)**
@@ -23,7 +23,9 @@
 - Baseline reds that are not mine and unchanged: duties 4, affordances 2, progressions 3, action-clocks 8, filings 2.
 - Refusal `detail` strings in `index.mjs`/`rules.mjs` (e.g. "the act is one of confirm, correct, dispute.") are English diagnostics beside the keyed `translation`; `checks/words.mjs` finds none. Listed for BOB to settle with the design stream (K3944).
 
-**Deferred**: item 3 above.
+**Deferred**: none.
+
+**B2 (CHANGE, K3997)**: `starts` choices are the seven (no `third_party`); tested in `t51.test.mjs`; readings 1, 2, 4 accepted.
 
 **Tests and checks** (from `/home/user/bio` and the process repository):
 - `node --test bio-plane/test/m/local-facts/`: 71 pass, 0 fail (new: `t51.test.mjs`, 8 tests naming R18, R19).

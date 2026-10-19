@@ -60,7 +60,8 @@ test("R18 every choices list equals the vocabulary it names; applies_to's are th
   assert.deepEqual(d.units.choices, [...UNITS]);
   assert.deepEqual(d.count.choices, [...COUNTS]);
   assert.deepEqual(d.direction.choices, [...DIRECTIONS]);
-  assert.deepEqual(d.starts.choices, [...STARTS]);
+  assert.deepEqual(d.starts.choices, ["received", "filed", "act", "known", "entered", "served", "hearing"], "K3997: the design's seven");
+  assert.deepEqual(d.starts.choices, STARTS.filter((x) => x !== "third_party"), "every start but third_party, which needs a starter no field draws");
   assert.deepEqual(d.owed_by.choices, [...OWED_BY]);
   assert.deepEqual(l.trigger.choices, [...LEGAL_FACT_TRIGGERS]);
   assert.deepEqual(d.applies_to.choices, ["claim", ...kinds]);

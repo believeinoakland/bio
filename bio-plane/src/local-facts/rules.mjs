@@ -44,6 +44,8 @@ const isDay = (v) => {
  *  frozen data of this module (`jurisdictions` stays pure): `kind` is `text`, `number`, `date` or `choice`; a `choices`
  *  of `null` is filled from the active view's kinds (`applies_to`) when asked. A field of `jurisdictions` that no
  *  `kind` here can draw (a deadline's `starter`, `extension`, `tolling`, a legal fact's `threshold`) is left out. */
+/* K3997: a member's draft offers the seven starts the design draws; `third_party` needs a `starter` no field draws. */
+const DRAFT_STARTS = Object.freeze(STARTS.filter((x) => x !== "third_party"));
 export const RULE_FIELDS = Object.freeze({
   deadlines: Object.freeze([
     Object.freeze({ field: "rule", required: true, kind: "text" }),
@@ -52,7 +54,7 @@ export const RULE_FIELDS = Object.freeze({
     Object.freeze({ field: "amount", required: true, kind: "number" }),
     Object.freeze({ field: "count", required: false, kind: "choice", choices: COUNTS }),
     Object.freeze({ field: "direction", required: false, kind: "choice", choices: DIRECTIONS }),
-    Object.freeze({ field: "starts", required: true, kind: "choice", choices: STARTS }),
+    Object.freeze({ field: "starts", required: true, kind: "choice", choices: DRAFT_STARTS }),
     Object.freeze({ field: "owed_by", required: false, kind: "choice", choices: OWED_BY }),
     Object.freeze({ field: "due_at", required: false, kind: "text" }),
     Object.freeze({ field: "citation", required: true, kind: "text" }),
