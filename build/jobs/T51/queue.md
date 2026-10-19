@@ -31,4 +31,7 @@ Best reading, no waiting on it: K4065's fix (the test world runs project-roster'
 - `node --test bio-plane/test/m/queue/`: 180 pass, 0 fail (was 164 pass, 29 red at K4065; plus `t51.test.mjs`, 16 tests for R58–R61). `bio-plane/test/conclude-project.test.mjs`: 1 pass. `store-door`: 48 pass.
 - `node checks/format.mjs`: 0 failures. `node checks/coverage.mjs … queue`: 51 of 51, 0 failures. `node checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures. `node checks/words.mjs … queue`: 0 failures.
 - `node checks/architecture.mjs … queue`: 1 failure, the `project-roster` import above (J1); every other import declared.
+- After K4070 (project-roster in uses) architecture passes: 0 failures; queue suite 180 pass.
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (my new `queue.index.*` and `queue.queuestate.*` ids), as expected.
+
+Size (session_01DggByiBck91qKoo2zJ1P66): test runs 12, module lines 3264
