@@ -215,6 +215,9 @@ async function begin(slug, mode = "install", extra = {}) {
    them. The assertions below read the page as its own script sees those strings, so a negative such as "no
    <b>Updated" still means what it says rather than passing on the escaped bytes. */
 const unescapeScripts = (s) => s.replace(/\\u00(3c|3e|26)/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+/* A key's sentence as a page draws it as text (the plain pages and the panels escape it), and the part of it before its `{said}`. */
+const h = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const headOf = (key, vars = {}) => word(key, { said: "\u0000", ...vars }).split("\u0000")[0];
 const callback = async (qs, cookie) => {
   const r = await req("/callback?" + qs, { headers: cookie ? { cookie } : {} });
   return new Response(unescapeScripts(await r.text()), { status: r.status, headers: r.headers });
@@ -275,7 +278,7 @@ console.log("\n--- front page and begin ---");
   t("PKCE method is S256", a.searchParams.get("code_challenge_method"), "S256");
   t("challenge present", (a.searchParams.get("code_challenge") || "").length >= 40, true);
   t("redirect is the registered string, character-exact", a.searchParams.get("redirect_uri"), CFG.REDIRECT);
-  t("scopes are exactly the registered five (T36: connectivity-directory.bind, R45)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
+  t("scopes are exactly the registered six (T36: connectivity-directory.bind, R45; K3819: account-logs.read, R46)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
   t("state travels", (state || "").length >= 20, true);
   t("cookie is HttpOnly", /HttpOnly/i.test(r.headers.get("set-cookie")), true);
   t("cookie is Secure and Lax", /Secure/.test(r.headers.get("set-cookie")) && /SameSite=Lax/.test(r.headers.get("set-cookie")), true);
@@ -293,11 +296,11 @@ console.log("\n--- callback refuses what it cannot verify ---");
   const calls = script([]);
   const { cookie } = await begin("oak-watch");
   const body = await (await callback("code=abc&state=WRONG", cookie)).text();
-  t("state mismatch stops with a plain sentence", body.includes("could not be verified"), true);
+  t("state mismatch stops with a plain sentence", body.includes(h(word("installer.callback.unverified.title"))), true);
   t("nothing upstream was called", calls.length, 0);
 
   const body2 = await (await callback("code=abc&state=whatever")).text();
-  t("missing cookie stops the same way", body2.includes("could not be verified"), true);
+  t("missing cookie stops the same way", body2.includes(h(word("installer.callback.unverified.title"))), true);
 
   const body3 = await (await callback("error=access_denied&error_description=User+refused", cookie)).text();
   t("user refusal is reported as Cloudflare's decision", body3.includes("Permission was not granted"), true);
@@ -425,7 +428,7 @@ console.log("\n--- install: address asleep, credentials still handed over ---");
   t("the check was actually retried", calls.filter((c) => c.u.includes("slow-town.slowtown.workers.dev")).length >= 10, true);
   t("the page still shows the address", body.includes("https://slow-town.slowtown.workers.dev"), true);
   t("THE CREDENTIALS ARE STILL HANDED OVER", body.includes("out-boot") && body.includes("out-probe"), true);
-  t("the headline says asleep, not failed", body.includes("has not woken up yet"), true);
+  t("the headline says asleep, not failed", body.includes(h(word("installer.success.asleep"))), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -451,9 +454,9 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
      own script rather than being exempted. */
   t("the instance itself was never uploaded",
     calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/small-group")), false);
-  t("the stop explains itself as a setting, not a failure", body.includes("One Cloudflare setting is needed first"), true);
-  t("it names the exact next step", body.includes("add a card or PayPal"), true);
-  t("it says nothing needs cleaning up", body.includes("nothing to clean up"), true);
+  /* R75: the stop is one sentence by key: one Cloudflare setting is needed first, what to do next, and that nothing needs cleaning up. */
+  t("the stop explains itself as a setting, not a failure, names the next step and says nothing needs cleaning up",
+    body.includes(headOf("installer.install.stopped.storage")) && body.includes(word("installer.install.stopped.storage", { said: "" }).split("(Cloudflare said:")[0].slice(-60)), true);
   t("no credentials were minted into the page", body.includes(String.raw`id="out-boot"`), false);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
@@ -547,7 +550,7 @@ console.log("\n--- release: a newer verified repository copy installs ---");
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/fresh-town"));
   t("the repository's source is what installed", await sourceOf(put), repoSrc);
   t("VERSION carries the repository's version", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, repoVer);
-  t("the page says which copy was used and why", body.includes("newer than the built-in"), true);
+  t("the page says which copy was used and why", body.includes(word("installer.release.newer.checked", { version: repoVer, builtin: RELEASE_VERSION })), true);
   globalThis.fetch = realFetch;
 }
 
@@ -577,9 +580,9 @@ console.log("\n--- release: a copy that fails verification is never installed --
     t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
   } else {
     t("R20: the built-in states no limits, so nothing installs, and the page says why",
-      [put === undefined, body.includes("states no limits for your team's Civicsmith")], [true, true]);
+      [put === undefined, body.includes(word("installer.release.refused.none", { builtin: RELEASE_VERSION }))], [true, true]);
   }
-  t("the page says the check failed and was not used", body.includes("did not pass its integrity check"), true);
+  t("the page says the check failed and was not used", body.includes(word("installer.release.fallback.integrity")), true);
   globalThis.fetch = realFetch;
 }
 
@@ -627,9 +630,9 @@ console.log("\n--- install: Workers Free is refused by name, nothing created ---
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("the refusal names the Workers Paid plan", body.includes(word("screen.install.stopped.plan")), true);
-  t("it names the cost", body.includes("$5/month"), true);
+  t("it names the cost and why", body.includes(word("installer.install.stopped.plan.why")), true);
   t("it names what to do", body.includes(word("screen.install.stopped.plan.do")), true);
-  t("it says nothing was created", body.includes("Nothing was created"), true);
+  t("it says nothing was created", body.includes(word("installer.install.stopped.plan.why").slice(-70)), true);
   t("REFUSED BEFORE ANYTHING WAS CREATED — free-town would otherwise be the half-installed instance: no bucket, no script",
     [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
      calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/free-town")).length], [0, 0]);
@@ -653,7 +656,7 @@ console.log("\n--- install: unverifiable plan is an honest refusal, nothing crea
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("the refusal says the plan could not be VERIFIED, not that it is Free",
-    body.includes("Could not verify") && !body.includes("Workers Paid plan is needed"), true);
+    body.includes(headOf("installer.install.stopped.planunknown")) && !body.includes(word("screen.install.stopped.plan")), true);
   t("it carries Cloudflare's own words", body.includes("internal error"), true);
   t("nothing was created here either",
     [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
@@ -1093,19 +1096,23 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
   t("the outcome says nothing changed", body.includes("Nothing changed"), true);
   t("and does not claim an update happened", /<b>Updated (from|to)/.test(body), false);
   t("and says what to check instead", body.includes("newer release has actually been published"), true);
-  t("D-436: a no-op update tells nothing about the producing team", body.includes("op=instancegroupseed"), false);
+  t("D-436: a no-op update tells nothing about how to record the producing team", body.includes("op=instancegroupseed"), false);
   globalThis.fetch = realFetch;
 }
 
-/* ---- D-436 (IC-172), item 3 of the DELEGATION to DIST: an update TELLS the one act it leaves, and never
-   does it. Added by DIST #4, 2026-09-22 (the 0.71.0 cut). A copy that ran a release before FIRST_GROUP_RELEASE
-   records no producing group after the update (decision (b)), and only its root of trust may record one; the
-   installer holds no instance credential, so it neither seeds nor even asks op=instancegroup — it tells from
-   the version it read before the upload. Each arm asserts that no call touched op=instancegroup at all. ---- */
+/* ---- D-436 (IC-172), R18, R78 (K3868): an update TELLS the operator when the copy records no producing team, and
+   never records it. Added by DIST #4, 2026-09-22 (the 0.71.0 cut); since K3868 the installer records the short name itself in a
+   run that holds the ADMIN_TOKEN it generated (the install, the requirements suite's R78), and an update holds none: it
+   reads what the copy records (`op=instancegroup`, which answers the public projection with no credential) and tells from
+   that read, with the version it read before the upload saying which paragraph explains it. Each arm asserts that no call
+   seeded, and that the read carried no credential. ---- */
 console.log("\n--- update: D-436 — the one act an update leaves to the operator is told, never done ---");
 const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".").map(Number);
   for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
-const groupCalls = (calls) => calls.filter((c) => /op=instancegroup/.test(c.u)).map((c) => `${c.method} ${c.u}`);
+const groupCalls = (calls) => calls.filter((c) => /op=instancegroupseed/.test(c.u)).map((c) => `${c.method} ${c.u}`);
+/* What the copy answers when asked what it records: a group, or none (`group: null`, instance-setup R3). */
+const recordsGroup = (host, group) => ({ m: (u) => u.includes(`${host}/api/?op=instancegroup`), f: () => jres(group ? { ok: true, group } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" }) });
+const unauthenticated = (calls) => calls.filter((c) => /op=instancegroup\b/.test(c.u)).every((c) => !c.init?.headers?.authorization);
 t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
   semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
 {
@@ -1120,22 +1127,20 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
     { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", CUR_VER) },
+    recordsGroup("cross-town.cx.workers.dev", null),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`It runs release ${CUR_VER}; it ran 0.70.0.`), true);
-  t("and it TELLS the one act left to the operator, saying why from the version it read",
-    [body.includes("One thing this update does not do for you"), body.includes("Your team&#39;s Civicsmith ran 0.70.0 before this update")],
+  t("and it TELLS the operator the copy records no team, saying why from the version it read",
+    [body.includes(h(word("installer.team.unrecorded.head"))), body.includes(h(word("installer.team.unrecorded.certain", { before: "0.70.0", first: "0.71.0" })))],
     [true, true]);
-  t("naming what is refused until it is done, and by which code", body.includes("GROUP_UNDETERMINED"), true);
-  t("naming the act that settles it — the root of trust's seed, for the record AND for scratch",
-    [body.includes("op=instancegroupseed"), body.includes("store=scratch"), body.includes("ADMIN_TOKEN")], [true, true, true]);
-  /* R22 (N5): the example of this project's own copy (biosmoke7, believe-in-oakland) is gone; the notice says the two
-     names may differ without naming any copy but the operator's. */
-  t("the installed name is offered as a SUGGESTION, saying a copy's name and its team's may differ, naming no other copy",
-    [body.includes("A suggestion, not a default"), body.includes("cross-town"), body.includes("team producing its record need not be"),
-     /biosmoke7|believe-in-oakland/.test(body)],
-    [true, true, true, false]);
-  t("and it NEVER seeds, nor asks op=instancegroup (it holds no credential that could)", groupCalls(calls), []);
+  t("naming what the copy refuses until it is recorded", body.includes(h(word("installer.team.unrecorded.effect"))), true);
+  t("naming the way to record it — run the installer again; no request or credential is told to the operator",
+    [body.includes(h(word("installer.team.unrecorded.how"))), body.includes("op=instancegroupseed"), body.includes("ADMIN_TOKEN")], [true, false, false]);
+  /* R22 (N5): no copy but the operator's is named; the installed name is only offered as the one the installer records unless another is given. */
+  t("the installed name is offered as a SUGGESTION, naming no other copy",
+    [body.includes(h(word("installer.team.unrecorded.suggest", { slug: "cross-town" }))), /biosmoke7|believe-in-oakland/.test(body)], [true, false]);
+  t("and it NEVER seeds (it holds no credential that could), and its read carries none", [groupCalls(calls), unauthenticated(calls)], [[], true]);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -1156,12 +1161,13 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u, mth) => /\/scripts\/probe-member-[a-z0-9-]+$/.test(u) && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pt" }) },
     { m: (u) => u.includes("past-town.pt.workers.dev/api/?op=bootstrap"), f: midUpdate(RELEASE_VERSION, FLEET_VER) },
+    recordsGroup("past-town.pt.workers.dev", "past-town"),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`It runs release ${FLEET_VER}; it ran ${RELEASE_VERSION}.`), true);
-  t("and tells NOTHING about the producing group: the update that crossed the line told it, or the copy recorded it at first boot",
-    [body.includes("One thing this update does not do for you"), body.includes("op=instancegroupseed")], [false, false]);
-  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
+  t("and tells NOTHING about the producing team: the copy records it",
+    [body.includes(h(word("installer.team.unrecorded.head"))), body.includes("op=instancegroupseed")], [false, false]);
+  t("and never seeds", groupCalls(calls), []);
   globalThis.fetch = realFetch;
   disarm();
 }
@@ -1181,12 +1187,13 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.includes("fog-town.fg.workers.dev/api/?op=bootstrap"),
       f: () => n++ === 0 ? new Response("unavailable", { status: 503 })
         : jres({ ok: true, version: CUR_VER, storeVersion: CUR_VER, memberVersions: {} }) },
+    recordsGroup("fog-town.fg.workers.dev", null),
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`It runs release ${CUR_VER}; it ran (not read).`), true);
+  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(h(word("installer.update.done.says", { to: CUR_VER, from: word("installer.update.unread") }))), true);
   t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
-    [body.includes("could not read which version your team&#39;s Civicsmith ran"), body.includes("op=instancegroupseed")], [true, true]);
-  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
+    [body.includes(h(word("installer.team.unrecorded.unknown", { first: "0.71.0" }))), body.includes("op=instancegroupseed")], [true, false]);
+  t("and never seeds", groupCalls(calls), []);
   globalThis.fetch = realFetch;
 }
 
@@ -1251,7 +1258,7 @@ async function d116Update(slug, after) {
   t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
   t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), true);
   t("and says what was confirmed — every part, not only the address",
-    r.body.includes(`Every part of your team's Civicsmith answers ${FLEET_VER}`), true);
+    r.body.includes(h(word("installer.update.done.allanswer", { version: FLEET_VER }))), true);
   t("and names no lag", r.body.includes("not yet confirmed"), false);
 }
 {
@@ -1334,7 +1341,7 @@ async function d116Install(slug, reply) {
 {
   const ok = await d116Install("fresh-all", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
-  t("INSTALL, every part on the release: \"Your team's Civicsmith is running\"", ok.includes("Your team's Civicsmith is running."), true);
+  t("INSTALL, every part on the release: \"Your team's Civicsmith is running\"", ok.includes(h(word("installer.success.running"))), true);
   const lag = await d116Install("fresh-loose", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("INSTALL with an installed member the plane cannot reach: NOT \"running\", and the member NAMED",
@@ -1461,7 +1468,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
     true);
   t("INSTALL: the page reports the copy running, and says it was connected",
-    [r.body.includes("Your team's Civicsmith is running."), r.body.includes("Your team's Civicsmith is connected to")], [true, true]);
+    [r.body.includes(h(word("installer.success.running"))), r.body.includes("Your team's Civicsmith is connected to")], [true, true]);
 }
 {
   const r = await dist6("unbound-town", { mode: "update", pre: { "unbound-town": planeBase("unbound-town") } });
@@ -1534,14 +1541,14 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9 INSTALL, supplied: INSTANCE_AI_TOKEN is bound as a secret carrying EXACTLY the operator's value",
     aiOf(i1.planePuts.at(-1)).map((b) => [b.type, b.text]), [["secret_text", AI]]);
   t("DIST-9 INSTALL, supplied: the value is on NO page the installer renders", i1.body.includes(AI), false);
-  t("DIST-9 INSTALL, supplied: the page says it was stored", i1.body.includes("The organisation AI credential you gave was stored"), true);
+  t("DIST-9 INSTALL, supplied: the page says it was stored", i1.body.includes(word("installer.ai.given")), true);
 
   const i0 = await dist6("ai-none-install");
   t("DIST-9 NO-INVENTION (install): with none supplied, NO plane PUT carries INSTANCE_AI_TOKEN",
     (await sentIn(i0.calls, "ai-none-install")).length, 0);
   t("DIST-9 NO-INVENTION (install): and the copy holds none after the whole act", aiOf(i0.planePuts.at(-1)).length, 0);
   t("DIST-9 (install): the absence is STATED on the page, not left silent",
-    i0.body.includes("No organisation AI credential was given, so your team's Civicsmith has none"), true);
+    i0.body.includes(word("installer.ai.none.install")), true);
 
   const u1 = await dist6("ai-update", { mode: "update", ai: AI, pre: { "ai-update": planeBase("ai-update") } });
   t("DIST-9 UPDATE, supplied: a copy that held none now holds EXACTLY the operator's value",
@@ -1556,7 +1563,7 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9 (update, none supplied): the value the copy already held is KEPT, unchanged (keep_bindings: secret_text)",
     aiOf(u0.planePuts.at(-1)).map((b) => b.text), [OLD]);
   t("DIST-9 (update): the page says none was sent and that the installer never creates one",
-    u0.body.includes("No organisation AI credential was given, so none was sent"), true);
+    u0.body.includes(word("installer.ai.none.update")), true);
 
   const upPage = await (await req("/update?version=" + CUR_VER)).text();
   const homePage = await (await req("/")).text();

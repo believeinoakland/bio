@@ -63,7 +63,7 @@ import { actionProducersOf } from "../action-producers/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
-import { say, joined, dayText, localDayOf, instantText, setText } from "./words.mjs";
+import { say, joined, fillWord, reasonWord, dayText, localDayOf, instantText, setText } from "./words.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
 
@@ -993,9 +993,8 @@ export class QueueProducers {
                      inquiry: inq, version: v.name },
           summary: say("queue.new-version-arrived-from-another-team.summary", { version: v.name, question: qname, project: srcRow && srcRow.title ? srcRow.title : src }),
           summary_key: "queue.new-version-arrived-from-another-team.summary",
-          /* `.detail.state` is left out: basis-versions states a reading's state as a bare code (proposed, considered, accepted,
-             rejected) and the word list holds no key for it (R43; named in the job's REPORT). */
           detail: joined(say("queue.new-version-arrived-from-another-team.detail", { question: qname, n: drawing.length, project: srcRow && srcRow.title ? srcRow.title : src, version: v.name }),
+                         fillWord("state", v.state) ? say("queue.new-version-arrived-from-another-team.detail.state", { state: fillWord("state", v.state) }) : "",
                          v.hidden === 1 ? say("queue.new-version-arrived-from-another-team.detail.hidden") : "",
                          v.author ? say("queue.new-version-arrived-from-another-team.detail.by", { who: v.author }) : "",
                          this.#dayWord(v.at) ? say("queue.new-version-arrived-from-another-team.detail.at", { date: this.#dayWord(v.at) }) : ""),
@@ -1184,15 +1183,20 @@ export class QueueProducers {
         kind: "export-performed",
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
-        /* `{scope}` is left empty: corpus-export states it as a bare code ("working-corpus", "rendering") and the word list holds
-           no key for it (R43; named in the job's REPORT). */
-        summary: say("queue.export-performed.summary", { scope: "", date: this.#dayWord(r.at),
-                                                        records: say(`queue.export-performed.records.${r.bundles === 1 ? "one" : "other"}`, { n: r.bundles }),
-                                                        files: say(`queue.export-performed.files.${r.files === 1 ? "one" : "other"}`, { n: r.files }) }),
-        summary_key: "queue.export-performed.summary",
-        detail: joined(say("queue.export-performed.detail", { scope: "" }),
-                       r.note ? say("queue.export-performed.detail.note", { note: r.note }) : say("queue.export-performed.detail.nonote")),
-        detail_key: "queue.export-performed.detail",
+        /* DEC-359 (B2): a full export (scope working-corpus) and a rendering (scope rendering, named by its format) each have their
+           own words; the format is read through `queue.fill.format.<code>`. */
+        ...(r.scope === "rendering"
+          ? { summary: say("queue.export-performed.rendering.summary", { format: fillWord("format", r.format), date: this.#dayWord(r.at) }),
+              summary_key: "queue.export-performed.rendering.summary",
+              detail: say("queue.export-performed.rendering.detail", { format: fillWord("format", r.format) }),
+              detail_key: "queue.export-performed.rendering.detail" }
+          : { summary: say("queue.export-performed.summary", { date: this.#dayWord(r.at),
+                                                               records: say(`queue.export-performed.records.${r.bundles === 1 ? "one" : "other"}`, { n: r.bundles }),
+                                                               files: say(`queue.export-performed.files.${r.files === 1 ? "one" : "other"}`, { n: r.files }) }),
+              summary_key: "queue.export-performed.summary",
+              detail: joined(say("queue.export-performed.detail"),
+                             r.note ? say("queue.export-performed.detail.note", { note: r.note }) : say("queue.export-performed.detail.nonote")),
+              detail_key: "queue.export-performed.detail" }),
         basis: {
           source: "export_log",
           seq: r.seq, at: r.at, scope: r.scope, bundles: r.bundles, files: r.files, note: r.note ?? null,
@@ -1270,15 +1274,21 @@ export class QueueProducers {
         subject: { kind: "notice", id: n.notice, holder: n.holder, target: n.target ?? null, ord: n.ord ?? null,
                    content_id: n.content_id ?? null, capture_sha: n.capture_sha ?? null,
                    newer_capture: n.newer_capture ?? null, newer_bundle: n.newer_bundle ?? null },
-        /* `{grade}` is left empty and `.detail.affects` left out: reevaluation states the grade and what it affects as bare codes
-           and the word list holds no key for either (R43; named in the job's REPORT). */
+        /* DEC-359 (B2): the grade through `queue.fill.grade.<letter>`, what it affects through `queue.fill.affects.<code>`; a capture
+           the viewer cannot see (reevaluation blanks both) reads `.detail.unseen`. */
         ...(titleOfTarget
           ? { summary: say("queue.newer-capture-affects-reference.summary", { target: titleOfTarget, holder: this.#nameOf(n.holder) }),
               summary_key: "queue.newer-capture-affects-reference.summary" }
           : { summary: say("queue.newer-capture-affects-reference.summary.untitled", { holder: this.#nameOf(n.holder) }),
               summary_key: "queue.newer-capture-affects-reference.summary.untitled" }),
-        detail: say("queue.newer-capture-affects-reference.detail", { grade: "" }),
-        detail_key: "queue.newer-capture-affects-reference.detail",
+        ...(() => {
+          if (!n.grade && !n.affects)
+            return { detail: say("queue.newer-capture-affects-reference.detail.unseen"), detail_key: "queue.newer-capture-affects-reference.detail.unseen" };
+          const affects = fillWord("affects", n.affects);
+          return { detail: joined(say("queue.newer-capture-affects-reference.detail", { grade: fillWord("grade", n.grade) }),
+                                  affects ? say("queue.newer-capture-affects-reference.detail.affects", { affects }) : ""),
+                   detail_key: "queue.newer-capture-affects-reference.detail" };
+        })(),
         basis: { source: "reevaluation.notices", notice: n.notice, holder: n.holder, target: n.target ?? null,
                  grade: n.grade ?? null, affects: n.affects ?? null, raised_at: n.raised_at ?? null,
                  bound: { limit: page.limit ?? QueueProducers.QUEUE_NOTICES_MAX, truncated: page.truncated === true },
@@ -2296,9 +2306,10 @@ export class QueueProducers {
         subject: subjectOf(u),
         summary: say("queue.cited-docket-unreadable.summary", { whose: whose(u) }),
         summary_key: "queue.cited-docket-unreadable.summary",
-        /* `{reason}` is the reason the read recorded, as recorded: case-import states it as a code or a short phrase it was given */
+        /* DEC-359 (B2): the reason through `queue.fill.reason.<code>` (`.http` with `{status}` for http_<n>); one the list does not
+           hold leaves the sentence out */
         detail: joined(say("queue.cited-docket-unreadable.detail"),
-                       u.reason ? say("queue.cited-docket-unreadable.detail.reason", { reason: u.reason }) : "",
+                       reasonWord(u.reason) ? say("queue.cited-docket-unreadable.detail.reason", { reason: reasonWord(u.reason) }) : "",
                        this.#dayWord(u.at) ? say("queue.cited-docket-unreadable.detail.at", { date: this.#dayWord(u.at) }) : ""),
         detail_key: "queue.cited-docket-unreadable.detail",
         basis: { source: "case-import.watchItems", import: u.import, group: u.group ?? null, case: u.case ?? null,
@@ -2332,8 +2343,9 @@ export class QueueProducers {
 
   /** R35: the refused entry's sentence and its key, naming every check its copies failed by the code case-import gives it. */
   static #refusedWords(seq, failed) {
+    const words = failed.map((c) => fillWord("check", c)).filter(Boolean);
     const key = `queue.cited-docket-entry-refused.detail.${seq === null ? "unnumbered." : ""}${failed.length <= 1 ? "one" : "other"}`;
-    return { detail: say(key, { seq, checks: failed.join(", ") }), detail_key: key };
+    return { detail: say(key, { seq, checks: words.length ? words.join(", ") : fillWord("check", "undetermined") }), detail_key: key };
   }
 
   /* ======================================================================
