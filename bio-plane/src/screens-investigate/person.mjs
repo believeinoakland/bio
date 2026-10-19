@@ -9,16 +9,16 @@
 
 import { PARTS } from "./parts.mjs";
 import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
+import { WHY_KEYS } from "./whywords.mjs";
 
+/* R41: the subject read is `entity` (`found: false` the absence); `person` and `samepersoncandidates` are read (by `PARTS.later`,
+   once the entity says its kind) only for a person or an organization, and again after each act (`view.ui.pn`). */
 function reads(view) {
   const id = String(view.subject || "");
-  const at = new Date(Date.now()).toISOString().slice(0, 10);
   return {
-    person: { op: "person", query: { id, at }, subject: true, empty: (v) => !v || v.found === false },
-    candidates: { op: "samepersoncandidates", query: { id } },
     vocab: { op: "affordances", query: {} },
     people: { op: "peopledirectory", query: { limit: "200" } },
-    entity: { op: "entity", query: { id } },
+    entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     naming: { op: "readingname", query: { entity: id } },
     docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
@@ -28,15 +28,17 @@ function render(cs, view) {
   const S = "screen.person.";
   const P = view.parts;
   const id = String(view.subject || "");
-  const d = view.data.person;
+  const ent = view.data.entity && view.data.entity.state === "ok" && view.data.entity.value ? view.data.entity.value.entity : null;
+  /* R41: a subject that is neither a person nor an organization (kinds `person`, `institution`, `body`, `movement`) has its own page */
+  const other = !!(ent && !["person", "institution", "body", "movement"].includes(ent.kind));
+  const at = P.today(cs), nonce = view.ui.pn || 0;
+  const pending = view.data.entity && view.data.entity.state !== "ok" ? view.data.entity : { state: "loading", value: null, refusal: null };
+  const d = ent && !other ? P.later(cs, view, "person", "person", { query: { id, at }, n: nonce }) : pending;
   const p = d && d.state === "ok" ? d.value : null;
-  const name = p && Array.isArray(p.names) && p.names.length ? p.names[0].name : id;
+  const name = p && Array.isArray(p.names) && p.names.length ? p.names[0].name : (ent && ent.label) || id;
   const out = [cs.title(name, { thing: { kind: "person", facts: p ? (p.names || []).slice(1).map((n) => n.name) : [] } })];
-  /* R32 (3): the person's own page has no "Open the person" */
-  out.push(`<div class="mk-acts">${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
   const groups = P.groupMap(vocab);
-  const ent = view.data.entity && view.data.entity.state === "ok" && view.data.entity.value ? view.data.entity.value.entity : null;
   const org = !!(ent && ent.kind && ent.kind !== "person");
   const who = P.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
   const nameOf = (x) => (who.find((o) => o.value === x) || {}).text || P.plain(cs, "connection.node.unnamed");
@@ -46,13 +48,6 @@ function render(cs, view) {
     return (r && r.title) || "";
   };
   const handleOf = (by) => String(by || "").replace(/^member:/, "");
-  /* R18: "Connections": the graph from this person, as of today, two rings out; a node pressed becomes the centre */
-  const centre = String(view.ui.centre || id);
-  const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
-  out.push(cs.sec(S + "connections", cs.state(gq, (g) => (g && Array.isArray(g.nodes) && !(Array.isArray(g.steps) ? g.steps : []).length && g.nodes.length <= 1
-    ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
-    : P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
-      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } })))));
   /* each item cited, dated and graded: its passage a reference to the capture, its grade one mark */
   const cite = (c, label) => (c && (c.captureSha || c.capture_sha)
     ? P.refOf(cs, c.captureSha || c.capture_sha, label || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
@@ -65,8 +60,92 @@ function render(cs, view) {
   };
   const gradeOf = (g) => (typeof g === "string" && /^[A-D]$/.test(g) ? cs.grade("capture", g)
     : g && /^[A-D]$/.test(g.assertion || "") ? cs.grade("connection", g.assertion) : cs.mark("gap", "unrated"));
+  /* R32 (1), R41: the three parts of what the team says, shared by the pages of every kind */
+  const aliasSec = () => {
+    const aliases = ((ent && ent.aliases) || []).filter((a) => !a.withdrawn);
+    const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
+      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: cs.esc(handleOf(a.declared_by)), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
+      + (!a.canonical && /^member:/.test(String(a.declared_by || "")) ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
+    return cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
+      + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })
+      + cs.act("entityalias", { label: "entity.alias.add" }));
+  };
+  const tiesSec = (noneKey) => {
+    const rels = ((ent && ent.relations) || []).filter((r) => !r.withdrawn);
+    const relRow = (r) => {
+      const other = r.direction === "in" ? r.from_entity : r.to_entity;
+      const kind = ["member_of", "proxy_for", "overlaps"].includes(r.relation) ? r.relation : "overlaps";
+      return cs.row("", `<b>${cs.w("entity.relation." + kind)}</b> · ${P.refOf(cs, other, nameOf(other), [])}`,
+        `<span class="mk-small">${cs.w("entity.relation.declared", { who: cs.esc(handleOf(r.declared_by)), date: cs.date(r.at || "", { year: true }), where: cs.esc(String(r.citation || "")) })}</span>`
+        + (r.justification ? ` <span class="rec">${cs.esc(r.justification)}</span>` : ""));
+    };
+    return cs.sec("entity.relation.title", (rels.length ? cs.sheet(rels.map(relRow).join("")) : `<p class="cs-state" data-state="empty">${cs.w(noneKey)}</p>`)
+      + cs.choice("person-rel-kind", "entity.relation.kind", ["member_of", "proxy_for", "overlaps"].map((k) => [k, "entity.relation." + k]), {})
+      + `<p class="mk-small">${cs.w("entity.relation.kind.help")}</p>`
+      + cs.choice("person-rel-with", "entity.relation.with", who.filter((o) => o.value !== id), {})
+      + cs.field("person-rel-why", "entity.relation.why", { area: true, rec: true })
+      + (view.reachable ? cs.act("writinghelp", { label: "act.writinghelp.label.person", data: { field: "justification" } }) : "")
+      + cs.field("person-rel-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
+      + cs.act("relationdeclare", { label: "entity.relation.declare" }));
+  };
+  const namingSec = () => {
+    const nm = view.data.naming && view.data.naming.state === "ok" && view.data.naming.value ? view.data.naming.value : null;
+    const docs = nm ? (nm.documents || []).filter((x) => x && x.capture_sha) : [];
+    if (!docs.length) return "";
+    const docRow = (x) => cs.row("", `<b>${P.refOf(cs, x.bundle_id || x.capture_sha, x.label || x.ref || P.plain(cs, S + "source"), [x.matched_alias || ""], x.bundle_id ? "document" : "capture")}</b>`
+      + ` <span class="mk-small">${x.page !== undefined && x.page !== null ? cs.w("entity.naming.row", { page: String(x.page), alias: cs.esc(x.matched_alias || "") }) : cs.esc(x.matched_alias || "")}</span>`,
+    cs.act("resolve", { label: "entity.naming.match", data: { sha: x.capture_sha, ref: x.ref } })
+      + cs.act("resolvetestify", { label: "entity.naming.testify", data: { sha: x.capture_sha, ref: x.ref } }));
+    return cs.sec("entity.naming.title", `<p class="mk-small">${cs.w("entity.naming.says")}</p>` + cs.sheet(docs.map(docRow).join(""))
+      + cs.field("person-naming-basis", "entity.naming.basis", { area: true, rec: true, help: "entity.naming.basis.help" })
+      + (view.reachable ? cs.act("writinghelp", { label: "act.writinghelp.label.person", data: { field: "basis" } }) : ""));
+  };
+  /* R41: a subject of another kind (an office as a post, an ordinance, a contract, a fund, a source): the subject's own page,
+     read from `entity` (aliases, declared ties), `concerns` (the documents that name it) and, for an office, `linesof`; no fact
+     is recorded about it and no `person` read is made */
+  if (other) {
+    const kindKey = (k) => (cs.w("screen.people.today.kind." + k) !== cs.esc("screen.people.today.kind." + k) ? "screen.people.today.kind." + k : "find.row.kind." + k);
+    const office = ent.kind === "office";
+    const cq = P.later(cs, view, "concerns", "concerns", { query: { id, limit: "200" }, n: nonce });
+    const hq = office ? P.later(cs, view, "holders", "linesof", { query: { entity: id, kinds: "holds", direction: "to", limit: "200" }, n: nonce }) : null;
+    const docs = cq.state === "ok" && cq.value && Array.isArray(cq.value.documents) ? cq.value.documents : [];
+    const named = cq.state === "ok" ? docs.length : 0;
+    const note = typeof ent.note === "string" ? ent.note.trim() : "";
+    const counted = cq.state !== "ok" ? "" : named
+      ? cs.w("screen.people.counts", { list: cs.w("screen.people.count." + (named === 1 ? "document" : "documents"), { n: String(named) }) })
+      : cs.w("screen.people.counts.none");
+    const o = [cs.title(ent.label || id, { thing: { kind: ent.kind, facts: [] } })];
+    o.push(`<p class="mk-sub">${[note ? `<span class="rec">${cs.esc(note)}</span>` : "", cs.w(kindKey(ent.kind)), counted].filter(Boolean).join(" · ")}</p>`);
+    if (named) o.push(`<div class="mk-acts">${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
+    if (!office && (cq.state !== "ok" || docs.length)) o.push(cs.sec(S + "cited", cs.state(cq, (v) => cs.sheet((v.documents || []).map((x) => {
+      const place = x.extent && x.extent.page !== undefined ? ` <span class="mk-small">${cs.w(S + "page", { page: String(Number(x.extent.page) + 1) })}</span>` : "";
+      return cs.row(cs.grade("subject", x.grade || ""), P.refOf(cs, x.bundle_id || x.capture_sha, docTitle(x.capture_sha) || P.plain(cs, S + "source"), [], x.bundle_id ? "document" : "capture") + place, "");
+    }).join("")) + (v.truncated ? `<p class="mk-small">${cs.w("screen.people.more", { n: String((v.documents || []).length) })}</p>` : ""))));
+    if (office) o.push(cs.sec(S + "holders", cs.state(hq, (v) => {
+      const held = (v.lines || []).filter((l) => l && !l.withdrawn && l.kind === "holds");
+      return cs.sheet(held.map((l) => {
+        const when = l.valid && l.valid.undetermined ? `${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, l.valid.why)}</span>` : span(l.valid);
+        return cs.row(gradeOf({ assertion: l.assertion }), `${P.refOf(cs, l.from, nameOf(l.from), [l.title || ""])}${when ? " · " + when : ""}`,
+          cite(l.basis && l.basis.captureSha ? { captureSha: l.basis.captureSha, extent: l.basis.extent } : null));
+      }).join("")) + (v.truncated ? `<p class="mk-small">${cs.w("screen.people.more", { n: String(held.length) })}</p>` : "");
+    })));
+    const says = [aliasSec(), tiesSec(office ? "screen.person.ties.none.office" : "screen.person.ties.none.ordinance")];
+    if (!office) says.push(namingSec());
+    o.push(cs.sec("entity.says.title.org", says.join(""), { help: "entity.says.help.org" }));
+    return o.join("");
+  }
+  /* R18: "Connections": the graph from this person, as of today, two rings out; a node pressed becomes the centre */
+  const centre = String(view.ui.centre || id);
+  const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
+  /* R48, R32 (3): a person with no connections draws the sentence, no graph and no "Explore connections"; the person's own page has no "Open the person" */
+  const none = (g) => g && Array.isArray(g.nodes) && !(Array.isArray(g.steps) ? g.steps : []).length && g.nodes.length <= 1;
+  if (!(gq.state === "ok" && none(gq.value))) out.push(`<div class="mk-acts">${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
+  out.push(cs.sec(S + "connections", cs.state(gq, (g) => (none(g)
+    ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
+    : P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
+      words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } })))));
   /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
-  if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state("person", view, (v) => {
+  if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state(d, (v) => {
     const posts = v.posts || [];
     return cs.sheet(posts.map((x) => cs.row(gradeOf(x.grade),
       `${P.refOf(cs, x.to, x.title || nameOf(x.to), [x.capacity || ""])}${x.capacity ? " · " + cs.esc(x.capacity) : ""} · ${span(x.valid)}`,
@@ -87,10 +166,11 @@ function render(cs, view) {
   const undetLine = (f) => {
     const c = f.citation || {};
     const sha = c.captureSha || c.capture_sha || "";
-    const reason = !f.valid ? P.plain(cs, "people.why.validity_stated") : String((f.undetermined && f.undetermined.why) || "");
+    /* R44: the reason is `{key, vars}`, drawn by its word as the owner answered it */
+    const reason = P.why(cs, f.undetermined && f.undetermined.why);
     const document = docTitle(sha) || (sha ? P.plain(cs, S + "source") : "");
     return cs.row(gradeOf(f.grade), `<b>${kindWord(f)}</b> · ${cs.esc(f.value)}`,
-      `${cs.mark("gap", "undetermined", { reason })} <span class="mk-small">${cs.w(S + "facts.undetermined", { reason: cs.esc(reason), document: cs.esc(document) })}</span> ${cite(c)}`);
+      `${cs.mark("gap", "undetermined")} <span class="mk-small">${cs.w(S + "facts.undetermined", { reason: { html: reason }, document })}</span> ${cite(c)}`);
   };
   const goneLine = (f) => {
     const w = f.withdrawn || {};
@@ -98,7 +178,7 @@ function render(cs, view) {
       `<span class="mk-small">${cs.w(S + "facts.withdrawn.by", { name: cs.esc(String(w.handle || w.by_handle || handleOf(w.by))), date: cs.date(w.at || "", { year: true }), reason: cs.esc(String(w.reason || "")) })}</span>`);
   };
   const removable = standing.filter((f) => f.fact_id);
-  const factsInner = cs.state("person", view, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
+  const factsInner = cs.state(d, () => (standing.length ? cs.sheet(standing.map(factRow).join("")) : "")
     + (undetRows.length ? cs.sheet(undetRows.map(undetLine).join("")) : "")
     + (gone.length ? `<details class="mk-details"><summary>${cs.w(S + "facts.withdrawn", { n: String(gone.length) })}</summary>${cs.sheet(gone.map(goneLine).join(""))}</details>` : ""))
     + cs.choice("person-fact-kind", S + "fact.kind", kinds.map((k) => [k, S + "kind." + k]), {})
@@ -112,41 +192,7 @@ function render(cs, view) {
 
   /* R32 (1): what the team says about them: other names, ties a member declared, and the documents that may name them */
   if (ent) {
-    const says = [];
-    const aliases = (ent.aliases || []).filter((a) => !a.withdrawn);
-    const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
-      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: cs.esc(handleOf(a.declared_by)), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
-      + (!a.canonical && /^member:/.test(String(a.declared_by || "")) ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
-    says.push(cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
-      + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })
-      + cs.act("entityalias", { label: "entity.alias.add" })));
-    const rels = (ent.relations || []).filter((r) => !r.withdrawn);
-    const relRow = (r) => {
-      const other = r.direction === "in" ? r.from_entity : r.to_entity;
-      const kind = ["member_of", "proxy_for", "overlaps"].includes(r.relation) ? r.relation : "overlaps";
-      return cs.row("", `<b>${cs.w("entity.relation." + kind)}</b> · ${P.refOf(cs, other, nameOf(other), [])}`,
-        `<span class="mk-small">${cs.w("entity.relation.declared", { who: cs.esc(handleOf(r.declared_by)), date: cs.date(r.at || "", { year: true }), where: cs.esc(String(r.citation || "")) })}</span>`
-        + (r.justification ? ` <span class="rec">${cs.esc(r.justification)}</span>` : ""));
-    };
-    says.push(cs.sec("entity.relation.title", (rels.length ? cs.sheet(rels.map(relRow).join("")) : `<p class="cs-state" data-state="empty">${cs.w("entity.relation.none")}</p>`)
-      + cs.choice("person-rel-kind", "entity.relation.kind", ["member_of", "proxy_for", "overlaps"].map((k) => [k, "entity.relation." + k]), {})
-      + `<p class="mk-small">${cs.w("entity.relation.kind.help")}</p>`
-      + cs.choice("person-rel-with", "entity.relation.with", who.filter((o) => o.value !== id), {})
-      + cs.field("person-rel-why", "entity.relation.why", { area: true, rec: true })
-      + (view.reachable ? cs.act("writinghelp", { label: "act.writinghelp.label.person", data: { field: "justification" } }) : "")
-      + cs.field("person-rel-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
-      + cs.act("relationdeclare", { label: "entity.relation.declare" })));
-    const nm = view.data.naming && view.data.naming.state === "ok" && view.data.naming.value ? view.data.naming.value : null;
-    const docs = nm ? (nm.documents || []).filter((x) => x && x.capture_sha) : [];
-    if (docs.length) {
-      const docRow = (x) => cs.row("", `<b>${P.refOf(cs, x.bundle_id || x.capture_sha, x.label || x.ref || P.plain(cs, S + "source"), [x.matched_alias || ""], x.bundle_id ? "document" : "capture")}</b>`
-        + ` <span class="mk-small">${x.page !== undefined ? cs.w("entity.naming.row", { page: String(x.page), alias: cs.esc(x.matched_alias || "") }) : cs.esc(x.matched_alias || "")}</span>`,
-      cs.act("resolve", { label: "entity.naming.match", data: { sha: x.capture_sha, ref: x.ref } })
-        + cs.act("resolvetestify", { label: "entity.naming.testify", data: { sha: x.capture_sha, ref: x.ref } }));
-      says.push(cs.sec("entity.naming.title", `<p class="mk-small">${cs.w("entity.naming.says")}</p>` + cs.sheet(docs.map(docRow).join(""))
-        + cs.field("person-naming-basis", "entity.naming.basis", { area: true, rec: true, help: "entity.naming.basis.help" })
-        + (view.reachable ? cs.act("writinghelp", { label: "act.writinghelp.label.person", data: { field: "basis" } }) : "")));
-    }
+    const says = [aliasSec(), tiesSec("entity.relation.none"), namingSec()];
     says.push(`<div class="mk-acts">${cs.act("connect", { label: org ? "entity.connect.org" : "entity.connect" })}</div>`);
     out.push(cs.sec(org ? "entity.says.title.org" : "entity.says.title", says.join(""), { help: org ? "entity.says.help.org" : "entity.says.help" }));
   }
@@ -168,7 +214,7 @@ function render(cs, view) {
         + cs.field("person-wd-reason-" + i, S + "claim.withdraw.reason", { area: true, rec: true })
         + cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person", data: { claim: c.claim_id, field: "person-wd-reason-" + i } }) + "</details>");
   };
-  const cand = view.data.candidates;
+  const cand = ent ? P.later(cs, view, "cand", "samepersoncandidates", { query: { id }, n: nonce }) : pending;
   const fieldsWord = (c, state) => ["names", "identifiers", "posts", "life"].filter((k) => c.fields && c.fields[k] && c.fields[k].state === state).map((k) => P.plain(cs, S + "field." + k)).join(", ");
   const candList = cand && cand.state === "ok" && cand.value && Array.isArray(cand.value.candidates) ? cand.value.candidates : [];
   const candOptions = candList.map((c) => ({ value: c.entity_id, text: P.plain(cs, S + "claim.candidate", { record: nameOf(c.entity_id), agrees: fieldsWord(c, "agrees"), differs: fieldsWord(c, "differs") }) }));
@@ -178,7 +224,7 @@ function render(cs, view) {
     ? `<details class="mk-details" open><summary>${cs.w("act.identityclaim.label.person")}</summary><p class="mk-small">${cs.w("act.identityclaim.does")}</p>`
       + cs.choice("person-claim-other", S + "claim.other", otherOptions, {})
       + cs.choice("person-claim-kind", S + "claim.kind", ["same_as", "not_same_as", "unsure"].map((k) => [k, S + "claim.kind." + k]), {})
-      + cs.choice("person-claim-basis", S + "claim.basis", bases.map((b) => [b, "label.claimbases." + b]), { acts: {} })
+      + cs.choice("person-claim-basis", S + "claim.basis", bases.map((b) => [b, "label.claimbases." + b]), { acts: {}, value: "testimony" })
       + `<p class="mk-small">${cs.w(S + "claim.basis.help")}</p>`
       + (basisNow !== "testimony" ? `<p class="mk-small">${cs.w(S + "claim.evidence")}</p>`
         + P.docChoice(cs, view, "person-claim-doc-a", { label: S + "claim.sha.a", passage: false }) + P.docChoice(cs, view, "person-claim-doc-b", { label: S + "claim.sha.b", passage: false }) : "")
@@ -187,9 +233,9 @@ function render(cs, view) {
       + (view.ui.claimEmpty ? `<details class="mk-details" open><summary>${cs.w(S + "claim.empty.summary")}</summary><p>${cs.w(S + "claim.empty")}</p></details>` : "")
       + "</details>" : "";
   out.push(cs.sec(S + "same", (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, nameOf(m), []), `<span class="mk-small">${cs.w(S + "same.claimed")}</span>`)).join(""))
-      : p && p.cluster && p.cluster.state === "undetermined" ? cs.mark("gap", "undetermined", { reason: p.cluster.why || "" }) : "")
+      : p && p.cluster && p.cluster.state === "undetermined" ? `${cs.mark("gap", "undetermined")} <span class="mk-small">${P.why(cs, p.cluster.why)}</span>` : "")
     + (claims.length ? cs.sheet(claims.map(claimRow).join("")) : "")
-    + cs.state("candidates", view, (v) => ((v.candidates || []).length ? `<p class="mk-small">${cs.w(S + "candidates")}</p>` : ""))
+    + cs.state(cand, (v) => ((v.candidates || []).length ? `<p class="mk-small">${cs.w(S + "candidates")}</p>` : ""))
     + claimForm));
   /* R1: removing a fact for good: the consequence statement (op-grades R21), filled with the day and the member, the
      law or order that requires it, and the Irreversible act (the shell's dialog; read only at the phone width) */
@@ -226,7 +272,8 @@ const acts = [
       const from = String(cs.value("person-fact-from") || "").trim();
       return { body: { person: String(view.subject || ""), kind: String(cs.value("person-fact-kind") || "name"), value,
         valid: { from: from || null, to: null }, citation } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "identityclaim", label: "act.identityclaim.label.person", reasonField: "note",
     send(view, el, cs) {
       const b = String(cs.value("person-claim-other") || "").trim();
@@ -242,7 +289,8 @@ const acts = [
         body.evidence = { a: ea, b: eb };
       }
       return { body };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "withdrawidentityclaim", label: "act.withdrawidentityclaim.label.person", reasonField: "reason",
     send(view, el, cs) {
       const claimId = String((el && el.dataset && el.dataset.claim) || "").trim();
@@ -250,7 +298,8 @@ const acts = [
       const reason = String(cs.value(String((el.dataset && el.dataset.field) || "")) || "").trim();
       if (!reason) return { refuse: "screen.person.claim.withdraw.reason" };
       return { body: { claimId, reason } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "followregister", label: "act.followregister.label.person",
     send(view, el, cs) {
       const address = String(cs.value("person-follow") || "").trim();
@@ -266,38 +315,45 @@ const acts = [
       if (!id || !reason) return { refuse: "screen.person.expunge.empty" };
       if (ground === "court_order" && !order) return { refuse: "screen.person.expunge.noorder" };
       return { body: Object.assign({ id, ground, reason }, ground === "court_order" ? { order } : {}) };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   /* R32 (1): another name, a declared tie, a document matched to them, and a name taken off, each with the owner's arguments */
   { op: "entityalias", label: "entity.alias.add",
     send(view, el, cs) {
       const alias = String(cs.value("person-alias") || "").trim();
       return { body: { entityId: String(view.subject || ""), alias } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "aliaswithdraw", label: "act.owed_aliaswithdraw.label.person",
     send(view, el) {
       const alias = String((el && el.dataset && el.dataset.alias) || "").trim();
       return alias ? { body: { entityId: String(view.subject || ""), alias } } : null;
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "relationdeclare", label: "entity.relation.declare", reasonField: "justification",
     send(view, el, cs) {
       const toEntity = String(cs.value("person-rel-with") || "").trim(), justification = String(cs.value("person-rel-why") || "").trim();
       const citation = String(cs.value("person-rel-cite") || "").trim();
       return { body: { fromEntity: String(view.subject || ""), toEntity, relation: String(cs.value("person-rel-kind") || "member_of"), justification, citation } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "resolve", label: "entity.naming.match",
     send(view, el) {
       const captureSha = String((el && el.dataset && el.dataset.sha) || ""), ref = String((el && el.dataset && el.dataset.ref) || "");
       return captureSha ? { body: { captureSha, ref } } : null;
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "resolvetestify", label: "entity.naming.testify", reasonField: "basis",
     send(view, el, cs) {
       const captureSha = String((el && el.dataset && el.dataset.sha) || ""), ref = String((el && el.dataset && el.dataset.ref) || "");
       const basis = String(cs.value("person-naming-basis") || "").trim();
       if (!captureSha) return null;
       return { body: { captureSha, ref, entityId: String(view.subject || ""), basis } };
-    } },
+    },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   { op: "connect", label: "entity.connect",
-    send(view) { return { body: { entityId: String(view.subject || "") } }; } },
+    send(view) { return { body: { entityId: String(view.subject || "") } }; },
+    done(view, answer, cs) { cs.set("pn", (view.ui.pn || 0) + 1); } },
   /* the assistant's draft of the words of a tie's why or of the basis, labeled and kept only by the member's own act */
   { op: "writinghelp", label: "act.writinghelp.label.person", reasonField: "told", rereads: [],
     send(view, el, cs) {
@@ -328,7 +384,7 @@ const PERSON_KEYS = [
   "screen.person.basis.row.identifier", "screen.person.basis.row.corroborated_name", "screen.person.basis.row.name", "screen.person.basis.row.testimony",
   "label.identityclaimkinds.same_as", "label.identityclaimkinds.not_same_as", "label.identityclaimkinds.unsure",
   "label.claimbases.identifier", "label.claimbases.corroborated_name", "label.claimbases.name", "label.claimbases.testimony",
-  "screen.person.facts.undetermined", "screen.person.facts.withdrawn", "screen.person.facts.withdrawn.by", "people.why.validity_stated", "person.graph.none",
+  "screen.person.facts.undetermined", "screen.person.facts.withdrawn", "screen.person.facts.withdrawn.by", "person.graph.none",
   "entity.says.title", "entity.says.title.org", "entity.says.help", "entity.says.help.org", "entity.alias.title", "entity.alias.label", "entity.alias.label.org",
   "entity.alias.help", "entity.alias.add", "entity.alias.by", "entity.alias.roster", "entity.relation.title", "entity.relation.kind", "entity.relation.kind.help",
   "entity.relation.member_of", "entity.relation.proxy_for", "entity.relation.overlaps", "entity.relation.with", "entity.relation.why", "entity.relation.cite",
@@ -338,6 +394,13 @@ const PERSON_KEYS = [
   "screen.person.expunge.ground", "screen.person.ground.court_order", "screen.person.ground.unlawful", "screen.person.ground.confidential",
   "screen.person.ground.lawful_demand", "screen.person.expunge.order", "screen.person.expunge.order.help", "screen.person.expunge.reason",
   "screen.person.expunge.empty", "screen.person.expunge.noorder",
+  /* R41: the pages of the other kinds */
+  "screen.person.cited", "screen.person.holders", "screen.person.ties.none.ordinance", "screen.person.ties.none.office",
+  "screen.people.counts", "screen.people.counts.none", "screen.people.count.document", "screen.people.count.documents", "screen.people.more",
+  "screen.people.today.kind.office", "screen.people.today.kind.body", "screen.people.today.kind.institution", "screen.people.today.kind.movement",
+  "screen.people.today.kind.fund", "screen.people.today.kind.program",
+  ...["source", "office", "ordinance", "parcel", "contract", "fund", "program", "place", "proceeding"].map((k) => "find.row.kind." + k),
+  "state.undetermined",
 ];
 
 const words = ["screen.person.name", "screen.person.purpose",
@@ -348,7 +411,7 @@ const words = ["screen.person.name", "screen.person.purpose",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.scale.subject.name", "mark.scale.subject.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  ...GRAPH_SHARED, ...FORM_SHARED,
+  ...GRAPH_SHARED, ...FORM_SHARED, ...WHY_KEYS,
   "state.empty", "state.loading", "state.failed", ...PERSON_KEYS];
 
 export const PERSON_SCREEN = Object.freeze({ id: "person", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, render, acts, words, parts: PARTS });

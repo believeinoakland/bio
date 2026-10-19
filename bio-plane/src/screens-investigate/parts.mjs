@@ -33,6 +33,19 @@ export const PARTS = Object.freeze({
   plain(cs, key, fills) {
     return cs.w(key, fills).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
   },
+  /** R44: an undetermined answer's reason, `{key, vars}`, drawn through its word (`vars` that are themselves reasons likewise,
+   *  an owner's as that owner answered it); a reason that is no held key (a bare string, a key the page does not carry) is
+   *  `state.undetermined` over the module's own plain reason, never English of ours and never the key's name. Answers HTML. */
+  why(cs, w) {
+    const held = (k) => typeof k === "string" && cs.w(k) !== cs.esc(k);
+    const draw = (x) => {
+      if (!(x !== null && typeof x === "object" && !Array.isArray(x) && held(x.key))) return cs.w("state.undetermined", { reason: { html: cs.w("people.why.owner_settle_validity") } });
+      const vars = {};
+      for (const [n, v] of Object.entries(x.vars && typeof x.vars === "object" ? x.vars : {})) vars[n] = v !== null && typeof v === "object" && typeof v.key === "string" ? { html: draw(v) } : v;
+      return cs.w(x.key, vars);
+    };
+    return draw(w);
+  },
   /** The page clock's calendar day, `YYYY-MM-DD` (the shell's `cs.now()`, the harness's fake clock in tests). */
   today(cs) {
     return new Date(cs.now()).toISOString().slice(0, 10);

@@ -120,7 +120,7 @@ test("R23 the other people fields are choices too: a claim's other record, a tim
 
 test("R26 person, calculation, proceeding and standard mark their subject read subject: true and list NO_ENTITY and NO_CALC in ABSENT_CODES", () => {
   const by = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
-  const subject = { person: ["person"], calculation: ["calc"], proceeding: ["entity"], standard: ["standard"] };
+  const subject = { person: ["entity"], calculation: ["calc"], proceeding: ["entity"], standard: ["standard"] };
   const subjects = { person: ENT, calculation: CALC, proceeding: PROC, standard: STD };
   for (const [id, reads] of Object.entries(subject)) {
     const r = by[id].reads({ subject: subjects[id], ui: {}, data: {} });
