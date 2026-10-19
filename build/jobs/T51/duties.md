@@ -108,3 +108,16 @@ Tests and checks (on the merged tranche):
 Ruling for BOB to record: K3990 (proposed in J3), unchanged.
 
 Size (session_015fij5CNkGX79gtEuBYtYeY): test runs 6, module lines 2210.
+
+## J6 · COMPLETE
+
+COMPLETE again, after B6 (K4000): tranche/T51 merged at 41359f2b1e, with lines, local-facts and the regenerated setup-words rows.
+
+Tests and checks on the merged tree:
+- `node --test bio-plane/test/m/duties/*.test.mjs`: 74 pass, 0 fail (including the R27 and R19 uses tests that failed before the rows were regenerated).
+- `checks/words.mjs … duties`: 0 failures. `checks/format.mjs`: 0 failures. `checks/architecture.mjs … duties`: 0 failures. `checks/coverage.mjs … duties`: 33 of 33 named. `checks/ownership.mjs … duties tranche/T51 job/T51/duties`: 0 failures.
+- `setup-words/build.mjs --check`: no refusal naming duties.
+
+Nothing changed in code since J5 (01ddb3a60c); this round is the merge only. Nothing deferred. Ruling K3990 remains proposed for BOB to record.
+
+Size (session_015fij5CNkGX79gtEuBYtYeY): test runs 7, module lines 2210.
