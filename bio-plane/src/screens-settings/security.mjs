@@ -98,7 +98,7 @@ export const security = {
     // a tool is named by its provider's display name (vendor and product, from the catalogue), never by its slug; with the catalogue unread, by the column's word
     const cv = data.catalogue && data.catalogue.state === "ok" && data.catalogue.value ? data.catalogue.value : {};
     const known = [].concat(cv.offered || [], cv.held || [], cv.refused || []).filter((x) => x && x.provider_id);
-    const toolName = (id) => { const c = known.find((x) => x.provider_id === id); return c && (c.vendor || c.product) ? E([c.vendor, c.product].filter(Boolean).join(" ")) : W(S + "col.tool"); };
+    const toolName = (id) => { const c = known.find((x) => x.provider_id === id); return c && (c.vendor || c.product) ? E([c.vendor, c.product].filter(Boolean).join(" · ")) : W(S + "col.tool"); };
     // the tools held: each row's acts in its panel
     if (!data.tools || data.tools.state !== "empty" || ui.tested) out.push(cs.sec(S + "tools.heading", (ui.tested ? `<p data-shown="tested">${W(ui.tested.on ? S + "tested.on" : S + "tested.off", { detail: ui.tested.detail || "" })}</p>` : "") + cs.state(data.tools, (v) => cs.rows({
       id: "tools", cols: [S + "col.tool", S + "col.state", S + "col.added"], items: (v.tools || []).filter((t) => t.state !== "removed"), key: (t) => t.tool_id, name: (t) => toolName(t.provider_id),

@@ -55,3 +55,7 @@ COMPLETE: T51-116 screens-settings met; 177 module tests pass against the merged
 ## J5 · COMPLETE
 
 COMPLETE (re B9, K4094). This module draws no legend from a provider slug: `security` has no fieldset legend and draws no `google-web-risk` or `opswat-deep-cdr`; those legends are on the setup page's scanner list, which is not this module's (installer / instance-setup, please check). What I did find and fix here: the "tools in use" table drew each tool by `provider_id`, a slug. It now draws the provider's display name (vendor and product from the catalogue the screen already reads), and, with the catalogue unread, the column's word, never the slug; test added (R15). Catalogue labels and hints are drawn as read. Suite 178 pass, 0 fail; words check clean. Pushed.
+
+## J6 · REPORT
+
+CORRECTION to J5: it said 178 pass; the commit it announced had one failing test (the words test saw "Acme Scan", a joined name not in the record's data), which I had not yet fixed. Fixed and pushed now: the tool is drawn as "vendor · product" like the catalogue's own rows, and the R43 test no longer mistakes that name for the catalogue list. Suite 178 pass, 0 fail; words check 0; coverage 60 of 60. Everything else in J5 stands.
