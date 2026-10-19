@@ -1205,8 +1205,12 @@ export class Standards {
     if (!r || r.ok === false || r.found === false)
       return { day: null, why: word("standards.why.event_held_read", { event_id: String(eventId) }) };
     const w = r.when !== undefined ? r.when : r.event ? r.event.when : undefined;
-    if (!w || w === "undetermined" || w.undetermined)
-      return { day: null, why: word("standards.why.event_record_read", { event_id: String(eventId), words: String(w && w.why ? w.why : "placed nowhere") }) };
+    if (!w || w === "undetermined" || w.undetermined) {
+      /* K3992: events' reason passes on as given, a string or {key, vars}; never String() of a keyed one */
+      const reason = w && w.why ? w.why : null;
+      if (reason && typeof reason === "object") return { day: null, why: reason };
+      return { day: null, why: word("standards.why.event_record_read", { event_id: String(eventId), words: String(reason ?? "placed nowhere") }) };
+    }
     if (w.precision === "edtf") return { day: null, why: word("standards.why.event_band_day", { event_id: String(eventId), value: String(w.value ?? w.start) }) };
     if (w.precision === "upper_bound")
       return { day: null, why: word("standards.why.event_upper_bound", { event_id: String(eventId) }) };
@@ -1236,7 +1240,7 @@ export class Standards {
     }
     for (const r of this.#law.boundsOn(row.standard_id)) {
       const eff = r.effective_date ? { day: r.effective_date } : this.#eventDay(r.effective_event, r.effective_edge, viewer);
-      if (!eff.day) { out.why.to = word("standards.bounds", { relation_id: String(r.relation_id), type: String(r.type), why: String(eff.why) }); out.unread = true; continue; }
+      if (!eff.day) { out.why.to = typeof eff.why === "object" ? eff.why : word("standards.bounds", { relation_id: String(r.relation_id), type: String(r.type), why: String(eff.why) }); out.unread = true; continue; }
       const end = new Date(Date.parse(`${eff.day}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
       if (out.to === null || end < out.to) out.to = end;
       out.bound_by.push({ relation: r.relation_id, type: r.type, effective: eff.day });
@@ -1293,7 +1297,8 @@ export class Standards {
       const overriding = { overridden_by: { standard: by.standard_id, portion: by.portion_path ?? null } };
       if (until === null || own.state === "undetermined")
         return { state: "undetermined", ...overriding,
-                 why: word("standards.why.overrides_portion_whether", { standard_id: String(by.standard_id), why: String(why || own.why), date: String(date) }) };
+                 why: (why || own.why) && typeof (why || own.why) === "object" ? (why || own.why)
+                   : word("standards.why.overrides_portion_whether", { standard_id: String(by.standard_id), why: String(why || own.why), date: String(date) }) };
       if (until === undefined || date < until)
         return { state: "overridden", ...overriding,
                  why: word("standards.why.displaces_portion", { standard_id: String(by.standard_id), portion_path: String(by.portion_path ? ` (${by.portion_path})` : ""), date: String(date), until: String(until ? `, until ${until}` : ", until its own key's next revision") }) };
@@ -1323,7 +1328,10 @@ export class Standards {
       state = "undetermined";
       const missing = [p.from === null ? p.why.from || word("standards.came_force") : null,
                        p.to === null ? p.why.to || word("standards.ceased_force") : null].filter(Boolean);
-      why = missing.length && !p.why.from && !p.why.to
+      /* K3992: a bound's reason from events or civil-time, keyed, is passed on as given */
+      const keyed = missing.find((x) => typeof x === "object");
+      why = keyed ? keyed
+        : missing.length && !p.why.from && !p.why.to
         ? word("standards.why.record_state_whether", { missing: String(missing.join(" or ")), date: String(date) })
         : missing.length ? word("standards.whether_force_undetermined", { missing: String(missing.join("; ")), date: String(date) })
         : (v && v.why) || word("standards.whether_it_was_in_force", { date: String(date) });
