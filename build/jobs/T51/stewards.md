@@ -17,3 +17,7 @@ Entries applied: T51-246 whole. All 56 findings of the words check are gone exce
 ## J4 · COMPLETE
 
 CHANGE B3 (K4084) applied, test-only: R17's scan of bio-plane/src skips the generated word table (setup-words/rows.mjs, words-unreviewed.json), with controls that a route, a workers.dev address or STEWARDS_ADDRESS in any other source still fails the same pattern. Merged tranche/T51 first. Results: node --test stewards/test/: 23 pass, 0 fail; format 0 failures; architecture stewards 0 failures; coverage 23 of 23, 0 failures; ownership 0 failures. The earlier COMPLETE stands (the CSP header remains the one reported words finding). Size (session_01UTbi5VPuYNMbViZaenQLKS): test runs 10, module lines 840
+
+## J5 · REPORT
+
+Found in other modules by checks/run.mjs over /home/user/bio (not touched by this job; stewards' checks unaffected): coverage fails for four modules, each naming live ids no test names: agent-harness R17; agent-runner R36, R37, R38, R40; installer-steps R26, R31; journey-check R19. coverage overall: 6097 of 6105 live ids named. Words over the tree: 0 failures (the stewards CSP header finding no longer appears in this run). For BOB to route to those modules' jobs.
