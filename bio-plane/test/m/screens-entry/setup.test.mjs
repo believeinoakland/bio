@@ -11,7 +11,7 @@ const OTP = "otp-sentinel-5d1e";
 const PW = "founder long password";
 const HANDLE = "rivera";
 const CODES = ["AAAA-1111", "BBBB-2222", "CCCC-3333", "DDDD-4444", "EEEE-5555", "FFFF-6666", "GGGG-7777", "HHHH-8888", "IIII-9999", "JJJJ-0000"];
-const CATALOGUE = { offered: [{ provider_id: "scan-co", name: "Scan Co", config: [{ name: "region", label: "Region", required: true }, { name: "note", label: "Note", required: false }], credentials: ["api_key"], handling_digest: "d1" }] };
+const CATALOGUE = { offered: [{ provider_id: "scan-co", vendor: "Scan", product: "Co", config: [{ name: "region", label: "Region", required: true }, { name: "note", label: "Note", required: false }], credentials: ["api_key"], handling_digest: "d1" }] };
 const plane = (over = {}) => ({
   bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: true, part_scanner: true } },
   claim: { ok: true, result: { ok: true, consumedAt: "2026-10-14T00:00:00Z", handle: HANDLE } },
@@ -273,7 +273,7 @@ test("R6 a fake plane walked from the claim to Finished: each part sends its act
     ["securitytooltest", { toolId: "T-1" }],
     ["securitytools", undefined],
   ]);
-  has(o, "screen.setup.security.passed", { tool: "Scan Co" });
+  has(o, "screen.setup.security.passed", { tool: "Scan · Co" });
   // a place not yet known: "Somewhere else" names it, and chooses no profile
   o.fields["su-pick"] = "other"; await o.tick(300);
   assert.deepEqual(await sent("placewanted", { "su-place": "A place not held" }), [{ name: "A place not held" }]);
@@ -310,13 +310,13 @@ test("R6 every part is resumable: what the reads answer is drawn as done, and th
   const o = await claimed({
     groupidentity: { ok: true, result: { ok: true, group: "river-town", display_name: "River Town", domain: "rivertown.example", domain_verified_at: "2026-10-01" } },
     courtnotice: { ok: true, result: { choice: "tell" } }, hostingaccess: { ok: true, result: { current: { holders: "The treasurer" } } },
-    aikeepawaystate: { ok: true, result: { on: true, reason: "Tips." } }, securitytools: { ok: true, result: { tools: [{ tool_id: "T-1", name: "Scan Co" }] } },
+    aikeepawaystate: { ok: true, result: { on: true, reason: "Tips." } }, securitytools: { ok: true, result: { tools: [{ tool_id: "T-1", provider_id: "scan-co", state: "on" }] } },
     entitieskind: { ok: true, result: { ok: true, kind: "office", entities: [{ id: "E-1", label: "City Clerk" }], count: 1 } },
     memberlist: { ok: true, result: { members: [{ member_id: "admin", founder: true, role: "admin", status: "active" }, { member_id: "dev", role: "admin", status: "active" }] } },
   });
   has(o, "screen.setup.name.now", { name: "River Town" }); has(o, "screen.setup.domain.verified", { domain: "rivertown.example" });
   has(o, "screen.setup.court.now.tell"); has(o, "screen.setup.hosting.now", { holders: "The treasurer" }); has(o, "screen.setup.keepaway.on");
-  has(o, "screen.setup.security.held", { tool: "Scan Co" });
+  has(o, "screen.setup.security.held", { tool: "Scan · Co" });
   assert.ok(o.text.includes("City Clerk"), "the team's offices listed");
   assert.deepEqual(PARTS.map((k) => stateOf(o, k)), ["done", "done", "done", "done", "off", "done", "done", "done"]);
   has(o, "screen.setup.security.scanner");
@@ -575,4 +575,16 @@ test("R25 a skipped part shows screen.setup.state.skipped with its help in the p
   await n.press("courtnoticeset", { values: { "su-court-0": true } });
   assert.deepEqual(n.requests.slice(b).map((x) => x.op), ["courtnoticeset"]);
   assert.ok(isOpen(n, "court"));
+});
+
+// ---- the security tools are named by the catalogue's display name, never by an id (journey-check R27; K4097) ----
+test("R6 a security tool is drawn by its vendor and product from the catalogue read, never by its provider id; control: a tool the catalogue does not name draws no id", async () => {
+  const o = await claimed({ securitytools: { ok: true, result: { tools: [{ tool_id: "T-1", provider_id: "scan-co", state: "on" }, { tool_id: "T-2", provider_id: "other-co-id", state: "on" }] } } });
+  const legends = all(partOf(o, "security"), (e) => e.tag === "legend").map((e) => squash(e.children.map((c) => c.text || "").join("")));
+  assert.deepEqual(legends, ["Scan · Co"]);
+  has(o, "screen.setup.security.held", { tool: "Scan · Co" });
+  for (const id of ["scan-co", "other-co-id"]) assert.ok(!o.drawn().includes(id), id + " drawn");
+  const r = await o.press("securitytooladd", { values: { "su-st-0-cfg-0": "eu", "su-st-0-cred-0": "tool-secret", "su-st-0-keep": true }, data: { tool: "0" } });
+  has(o, "screen.setup.security.passed", { tool: "Scan · Co" });
+  assert.ok(!o.drawn().includes("scan-co"));
 });
