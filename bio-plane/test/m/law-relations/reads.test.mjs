@@ -208,7 +208,7 @@ test("R7 R12 an evidentiary item is graded by its passage's transcription ceilin
   const gone = w.standard({ from: "2010-01-01", to: "2011-01-01" }).id;
   assert.ok(!w.law.neighbours({ node: meeting, at, viewer: V("carol") }).items.some((i) => i.to === gone), "not in force on the day");
   const u = a.items.find((i) => i.to === open);
-  assert.deepEqual([u.in_force.state, typeof u.undetermined.why], ["undetermined", "string"], "an undetermined in-force answer is marked");
+  assert.deepEqual([u.in_force.state, typeof u.undetermined.why.key], ["undetermined", "string"], "an undetermined in-force answer is marked, its reason keyed");
   assert.deepEqual(w.law.neighbours({ node: fenced, at, viewer: V("carol") }).items, [], "an event the viewer may not read");
   assert.ok(w.law.neighbours({ node: fenced, at, viewer: V("alice") }).items.length > 0);
   assert.deepEqual(w.law.neighbours({ node: undated, at, viewer: V("carol") }).items, [], "an event with no when");
