@@ -48,6 +48,7 @@ import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide,
          renderJudgementInput, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../contradiction.mjs";
 import { CONTRADICTION_SCHEMA, CONTRADICTION_COLUMNS } from "./schema.mjs";
@@ -109,12 +110,10 @@ export const CLARIFY_CHOICES = Object.freeze(["differs", "one_wrong", "no_differ
 /** R39: when an acceptance rate is due for review (DEC-77 item 3; §15 point 15). PROVISIONAL, as IDENTIFY's was. */
 export const ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, status: "PROVISIONAL" });
 /** R50: the one sentence a notice carries. */
-export const NOTICE_SENTENCE = "Something this project rests on is in conflict with a record you cannot see. Neither "
-  + "that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, "
-  + "the projects are named to each other's members, and you can respond.";
+export const NOTICE_SENTENCE = word("contradiction.notice_sentence");
 /** R50 (T41, D64): the one sentence a notice carries instead when it names another party, a non-hidden project the
  *  viewer may see by name. */
-export const NOTICE_NAMED_SENTENCE = "Your project's conclusion conflicts with that project's.";
+export const NOTICE_NAMED_SENTENCE = word("contradiction.notice_named_sentence");
 
 /* The viewer the module's own internal reads are made as (a machine credential sees every bundle, membership R43): the
    reach of a duty and a candidate's parties are about the record, never about who asks. What a viewer is then shown
@@ -128,32 +127,31 @@ const MISSING = Symbol("missing");
  *  row, never a widened join inside an existing key, because a key whose meaning drifts makes the per-key figures
  *  incomparable across runs. */
 export const CONTRADICTION_KEYS = Object.freeze({
-  K1: Object.freeze({ key: "K1", name: "one inquiry, opposite roles", feeds: "world",
+  K1: Object.freeze({ key: "K1", name: word("contradiction.name.inquiry_opposite_roles"), feeds: "world",
         join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
-        why: "the inquiry already holds both sides; what is missing is anyone proposing the "
-           + "discrepancy itself as the conclusion shape" }),
-  K2: Object.freeze({ key: "K2", name: "one subject, two held claims", feeds: "record",
+        why: word("contradiction.why.inquiry_already_holds") }),
+  K2: Object.freeze({ key: "K2", name: word("contradiction.name.subject_two_held"), feeds: "record",
         join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
-        why: "two things the team HOLDS about one subject — the case that carries a duty" }),
-  K3: Object.freeze({ key: "K3", name: "one referent, two held claims", feeds: "record",
+        why: word("contradiction.why.two_things_group") }),
+  K3: Object.freeze({ key: "K3", name: word("contradiction.name.referent_two_held"), feeds: "record",
         join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage "
             + "(or, where no passage is named, the same captured document)",
-        why: "we read the same text two ways" }),
-  K4: Object.freeze({ key: "K4", name: "one entity, two sources of different kind or date", feeds: "world",
+        why: word("contradiction.why.read_text_two") }),
+  K4: Object.freeze({ key: "K4", name: word("contradiction.name.entity_two_sources"), feeds: "world",
         join: "two cited passages whose documents RESOLVE (established) to the same entity, of different doctypes "
             + "AS THEIR READERS STATE THEM, or with own dates the record holds in a SETTLED ORDER",
-        why: "a rule against the act it governs, or one body's statement at one date against its statement at another" }),
+        why: word("contradiction.why.rule_against_act") }),
   /* N345, DEC-84 item 3: added, not tuned (R18). Two projects' conclusions are plurality, not a defect, until a member
      finds no named difference between them (R24, R34). */
-  K5: Object.freeze({ key: "K5", name: "one question, two projects' conclusions", feeds: "record",
+  K5: Object.freeze({ key: "K5", name: word("contradiction.name.question_two_projects"), feeds: "record",
         join: "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
-        why: "two projects answered one question differently" }),
+        why: word("contradiction.why.two_projects_answered") }),
   /* T33-48 (ladders §5C.4): added, not tuned (R18). Two readings of the amount of one transfer: the same payer and
      payee, kind and phase or stage, over overlapping periods, whose amounts `money.reconcile` does not find consistent. */
-  K6: Object.freeze({ key: "K6", name: "two amounts for one transfer", feeds: "world",
+  K6: Object.freeze({ key: "K6", name: word("contradiction.name.two_amounts_transfer"), feeds: "world",
         join: "two money facts naming the same payer and payee entities, the same kind and phase or stage, and periods "
             + "that overlap, whose amounts money's reconciliation does not find consistent",
-        why: "two sources state different amounts for what reads as one transfer" }),
+        why: word("contradiction.why.two_sources_state") }),
 });
 
 /* R11: each key's own last level, named when every rung of its ladder is present and the join still formed nothing. */
@@ -163,72 +161,31 @@ const LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: 
 /** R11: the sentence a member reads when a key found nothing. ONE place, so a surface renders what the plane holds
  *  and never composes this itself — the second place a distinction is made is the first place it can drift. */
 export const CONTRADICTION_ABSENCE = Object.freeze({
-  viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and "
-        + "every key below is empty for want of a reader rather than for want of material. This is "
-        + "an outage, not a statement about the record: ask again with a member's session",
-  inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing "
-         + "for any key to pair — the record is EMPTY at the question level and says nothing "
-         + "whatever about whether the world contains contradictions",
-  leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are "
-     + "no two sides to put beside each other",
-  role: "questions rest on material, but not ONE of them holds both a leg that supports it and a "
-      + "leg that cuts against it. That is a fact about how the questions are argued, not about "
-      + "whether the record contains a discrepancy",
-  referent: "both sides exist, but the legs name no PASSAGE — they rest on a whole document, on a "
-          + "sub-question, or on bytes this record does not hold. A pair whose sides cannot be "
-          + "quoted is not a pair a member could judge, so none was formed",
-  subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so "
-         + "this is absence at the SUBJECT level: the claims may well disagree and nothing here "
-         + "can see it",
-  reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering "
-         + "or rejected reading is not something the team HOLDS, so there is no held assertion "
-         + "to pair. Nothing is claimed about what the questions would say if they were read",
-  claim: "accepted readings exist and none of them carries a CLAIM. What the team holds is "
-       + "therefore unstated in the one field this key can read, which is absence in OUR record "
-       + "rather than agreement in it",
-  shared_entity: "cited passages and established resolutions exist, but no two documents resolve "
-               + "to the SAME subject. There is nothing about one entity to compare",
-  content: "no passage of any document has been cited or marked citable. Nothing has been "
-         + "extracted at the content level, which says nothing about what the documents say",
-  cited: "passages exist and none of them is cited by any reading. This key compares what the "
-       + "record RESTS ON, and it rests on none of them",
-  resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any "
-            + "subject. Nobody has confirmed what these documents are about, so there is no "
-            + "entity to pair them under — the next move is to resolve them, not to conclude "
-            + "they are unrelated",
-  shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but "
-             + "no ONE question holds both at once. The two sides of this key are the two sides of a "
-             + "SINGLE question, and none has them",
-  shared_subject: "held claims and registered subjects both exist, and no two accepted claims share "
-                + "a subject. Every subject is spoken to once, so there is nothing about one subject "
-                + "for the record to disagree with itself about",
-  shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on "
-                 + "the same one. Each passage is read by at most one held claim, so no text is read "
-                 + "two ways here",
-  drawing_projects: "questions exist and no project you can see draws on any of them. K5 compares two projects' "
-                  + "answers to one question, so there is nothing to compare until projects rest on the questions",
-  concluded_stances: "projects draw on questions and none of them has concluded one. A project that has not "
-                   + "concluded holds no answer, so there is no answer to set beside another",
-  differing_claim: "projects have concluded, and no two concluded answers differ in their words. That is "
-                 + "agreement in the claims adopted, as far as their text goes, not a finding that they agree",
-  shared_question: "projects have concluded with differing answers, but never on the SAME question. Each question "
-                 + "has at most one concluded answer, so no question is answered two ways here",
-  money_fact: "no money fact you can see is held. K6 compares two amounts stated for one transfer, so there is "
-            + "nothing to compare until amounts are read from the record's sources",
-  same_parties: "money facts are held and no two of them name the same payer and the same payee entity. A fact "
-              + "whose payer or payee is a fund or an unresolved name is not compared here",
-  same_stage_period: "facts name the same payer and payee, and no two of them share a kind and a phase or stage over "
-                   + "periods that overlap. Amounts at different stages or for different periods are different "
-                   + "quantities, not two readings of one",
-  differing_amount: "facts read as one transfer, and none of them states an amount that differs from another's. "
-                  + "That is agreement in the figures as written, not a finding that the transfer is settled",
-  shared_transfer: "facts read as one transfer state different figures, and each pair agrees within the coarser "
-                 + "figure's precision, or its periods' ends are not stated. The counts beside this say which",
-  discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by "
-               + "kind or by date. Either their readers state the same kind and the record holds the same "
-               + "own date for both, or a kind or a date is not held, or the two dates cannot be put in order "
-               + "at the precision held — and where a value or an order is missing the pair was left "
-               + "unformed rather than guessed. The counts beside this say which",
+  viewer: word("contradiction.viewer"),
+  inquiry: word("contradiction.inquiry.question_scope_all"),
+  leg: word("contradiction.leg"),
+  role: word("contradiction.role"),
+  referent: word("contradiction.referent"),
+  subject: word("contradiction.subject.questions_exist_names"),
+  reading: word("contradiction.reading"),
+  claim: word("contradiction.claim"),
+  shared_entity: word("contradiction.shared_entity"),
+  content: word("contradiction.content"),
+  cited: word("contradiction.cited"),
+  resolution: word("contradiction.resolution"),
+  shared_side: word("contradiction.shared_side"),
+  shared_subject: word("contradiction.shared_subject"),
+  shared_referent: word("contradiction.shared_referent"),
+  drawing_projects: word("contradiction.drawing_projects"),
+  concluded_stances: word("contradiction.concluded_stances"),
+  differing_claim: word("contradiction.differing_claim"),
+  shared_question: word("contradiction.shared_question"),
+  money_fact: word("contradiction.money_fact"),
+  same_parties: word("contradiction.same_parties"),
+  same_stage_period: word("contradiction.same_stage_period"),
+  differing_amount: word("contradiction.differing_amount"),
+  shared_transfer: word("contradiction.shared_transfer"),
+  discriminator: word("contradiction.discriminator"),
 });
 
 /* R15, R16: a candidate's stored row as every answer gives it. */
@@ -297,12 +254,11 @@ export function inquiryServices(ctx) {
  *  run's derivation, labelled machine work; it is never evidence, and a chain through it is a lead. */
 export const CONNECTION_OWNER = "contradiction";
 export const CONNECTION_KIND = "in_tension_with";
-export const CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: "in tension with", class: "derived" })]);
+export const CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: word("contradiction.word.tension"), class: "derived" })]);
 /* A candidate states no dates: its `valid` is unstated, so at any date asked it is undetermined, never out. The zone
    names no place (R23); with no bound stated it is never read. */
 const UNDATED = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
-const UNDATED_WHY = "a candidate states no dates: when its two sides came to be in tension is not stated, so whether "
-  + "it holds at the date asked is undetermined, never out";
+const UNDATED_WHY = Object.freeze({ key: "contradiction.undated_why", vars: Object.freeze({}) });
 
 /** R58 (K1563 (1)): the read the owner registers at load. The registry passes `host` through unchanged: with one, that
  *  host's instance answers; without one, the isolate's one instance; otherwise `OWNER_HOST_AMBIGUOUS`. */
@@ -313,8 +269,8 @@ export function ownerNeighbours(args) {
   if (host !== undefined && host !== null) c = instances.get(host.storage ? host.storage : host) ?? null;
   else if (live.size === 1) c = [...live][0];
   if (!c) return { refused: "OWNER_HOST_AMBIGUOUS",
-                   why: host ? "no contradiction instance is made over that host"
-                     : `${live.size} contradiction instances are made in this isolate and the read names no host` };
+                   why: host ? word("contradiction.why.contradiction_instance_made")
+                     : word("contradiction.why.contradiction_instances_made", { size: live.size }) };
   return c.neighbours(rest);
 }
 /* R58: registered once, at load, into the registry the plane wires (connection-grammar R5). A refusal leaves the owner
@@ -538,8 +494,7 @@ export class Contradiction {
                                target: r.a_target, content_id: r.a_content, note: r.a_note }),
       b: this.#extent("leg", { inquiry: r.inquiry, ord: r.b_ord, role: "cuts_against",
                                target: r.b_target, content_id: r.b_content, note: r.b_note }),
-      why: "one question already rests on both of these, one supporting it and one cutting against it. "
-         + "What they SAY about each other is not read here",
+      why: word("contradiction.why.question_already_rests"),
     }));
     return { pairs, truncated, notes: [] };
   }
@@ -578,8 +533,7 @@ export class Contradiction {
       key: "K2", subject_entity: r.entity_id,
       a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null, version: r.a_version, claim: r.a_claim },
       b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null, version: r.b_version, claim: r.b_claim },
-      why: "two questions about the same registered subject, each with a reading the team ACCEPTED "
-         + "and a claim it therefore holds. Whether they can both be so is not read here",
+      why: word("contradiction.why.two_questions_registered"),
     }));
     return { pairs, truncated, notes: [] };
   }
@@ -651,10 +605,8 @@ export class Contradiction {
       a: { kind: "claim", inquiry: r.a_inquiry, version: r.a_version, claim: r.a_claim, ord: r.a_ord },
       b: { kind: "claim", inquiry: r.b_inquiry, version: r.b_version, claim: r.b_claim, ord: r.b_ord },
       why: referent.content_id
-        ? "two questions whose accepted readings rest on the SAME passage, each holding a claim. "
-        + "What that passage supports is the thing they may disagree about"
-        : "two questions whose accepted readings rest on the same DOCUMENT with no passage named on "
-        + "either side, each holding a claim. The passage grain is absent on both, not chosen",
+        ? word("contradiction.why.two_questions_whose")
+        : word("contradiction.why.two_questions_whose_accepted"),
     });
     const pairs = [
       ...same.rows.map((r) => mk(r, { content_id: r.content_id, referent_grain: "passage" })),
@@ -730,10 +682,8 @@ export class Contradiction {
           key: "K4", entity_id: r.entity_id, discriminator, ...(discriminator === "date" ? { order: order === "before" ? "a_first" : "b_first" } : {}),
           a: side(r, "a", da), b: side(r, "b", db),
           why: discriminator === "doctype"
-            ? "two documents the record has established are about the same subject, of different kinds "
-            + "as their readers state them — the shape of a rule against the act it governs"
-            : "two documents the record has established are about the same subject, with own dates the record holds "
-            + "in a settled order — the shape of one body saying X then Y",
+            ? word("contradiction.why.two_documents_record")
+            : word("contradiction.why.two_documents_record_established"),
         });
         continue;
       }
@@ -749,12 +699,8 @@ export class Contradiction {
     }
     return { pairs, truncated, undetermined, indistinct, missing,
              notes: undetermined
-               ? [`${undetermined} candidate pair(s) were NOT formed because a doctype, a document's own date, or the `
-                + `order of two dates was needed to tell them apart and is not held `
-                + `(${missing.never_read} where a document has not been read at all, `
-                + `${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where the record holds no `
-                + `own date of the document, ${missing.order_undetermined} where the two dates cannot be put in order `
-                + `at the precision held). That is not evidence the two agree`]
+               ? [word("contradiction.notes.candidate_pair_formed", { undetermined, never_read: missing.never_read,
+                   no_doctype: missing.no_doctype, no_date: missing.no_date, order_undetermined: missing.order_undetermined })]
                : [] };
   }
 
@@ -771,7 +717,7 @@ export class Contradiction {
     let truncated = false, examinedCut = false;
     const claims = new Set();
     if (!bv || typeof bv.projectsDrawingOn !== "function" || typeof bv.conclusionOf !== "function")
-      return { pairs, truncated, found, notes: ["basis-versions' reads are not reachable here, so K5 compared nothing"] };
+      return { pairs, truncated, found, notes: [word("contradiction.notes.basis_versions_reads")] };
     const vp = viewerPredicate(viewer);
     let after = "", examined = 0;
     outer: for (;;) {
@@ -805,16 +751,14 @@ export class Contradiction {
             key: "K5", inquiry: r.id,
             a: { kind: "stance", inquiry: r.id, project: a.project, version: a.version, claim: a.claim },
             b: { kind: "stance", inquiry: r.id, project: b.project, version: b.version, claim: b.claim },
-            why: "two projects concluded the same question, each adopting a claim, and the claims' words differ. "
-               + "Two projects' answers are plurality, not a defect, until a member finds no named difference",
+            why: word("contradiction.why.two_projects_concluded"),
           });
         }
       }
       if (page.length < 100) break;
     }
     return { pairs, truncated, found,
-             notes: examinedCut ? [`K5 examined the first ${K5_INQUIRIES_EXAMINED} questions this viewer may see and `
-                                 + `stopped: the questions after them were not compared`] : [] };
+             notes: examinedCut ? [word("contradiction.notes.key_examined_first", { k5_inquiries_examined: K5_INQUIRIES_EXAMINED })] : [] };
   }
 
   /** Whether `money`'s read contract is held in this store (its R19): K6 compares nothing, and says so, without it. */
@@ -831,10 +775,10 @@ export class Contradiction {
    *  overlap: the pair is not formed, and is counted. Bounded at the statement, over-fetching one (D-365, R7). */
   #k6(viewer, cap) {
     const empty = { pairs: [], truncated: false, notes: [] };
-    if (!this.#moneyHeld()) return { ...empty, notes: ["money's facts are not held in this store, so K6 compared nothing"] };
+    if (!this.#moneyHeld()) return { ...empty, notes: [word("contradiction.notes.money_facts_held")] };
     const mo = this.#mo();
     if (!mo || typeof mo.reconcile !== "function")
-      return { ...empty, notes: ["money's reconciliation is not reachable here, so K6 compared nothing"] };
+      return { ...empty, notes: [word("contradiction.notes.money_reconciliation_reachable")] };
     const ga = this.#gate("f1.sight_bundle", viewer);
     const gb = this.#gate("f2.sight_bundle", viewer);
     const rows = this.#rows(
@@ -863,18 +807,14 @@ export class Contradiction {
         key: "K6", payer: r.payer, payee: r.payee,
         a: this.#moneySide(r.a_fact), b: this.#moneySide(r.b_fact),
         differs: rec.differs,
-        why: "two sources state amounts for what reads as one transfer — the same payer and payee, kind and phase or "
-           + "stage, over periods that overlap — and the amounts differ beyond the coarser figure's precision. Whether a "
-           + "basis, a period or rounding explains it is shown beside them",
+        why: word("contradiction.why.two_sources_state_amounts"),
       });
     }
     const undetermined = openPeriod;
     return { pairs, truncated, undetermined, consistent: agreeing,
              notes: [
-               ...(openPeriod ? [`${openPeriod} candidate pair(s) were NOT formed because a fact's period states no end, `
-                                 + `so whether the two periods overlap is not settled. That is not evidence the amounts agree`] : []),
-               ...(agreeing ? [`${agreeing} candidate pair(s) were NOT formed because money's reconciliation finds their `
-                               + `amounts consistent within the coarser figure's precision`] : []) ] };
+               ...(openPeriod ? [word("contradiction.notes.candidate_pair_formed_because", { open_period: openPeriod })] : []),
+               ...(agreeing ? [word("contradiction.notes.candidate_pair_formed_because_money", { agreeing })] : []) ] };
   }
 
   /** R8: a K6 side, `{kind: "money", fact, capture_sha, ref, amount, period, stage}`, from money's read contract (its
@@ -891,7 +831,7 @@ export class Contradiction {
     const content = f.source_content_id
       ? this.#one(`SELECT ref FROM content WHERE content_id=?`, f.source_content_id) : null;
     const ref = content ? content.ref
-      : f.source_table ? `row ${f.source_row} of the table ${f.source_table}`
+      : f.source_table ? word("contradiction.text.row_table", { source_row: f.source_row, source_table: f.source_table })
       : f.source_fact ? `money fact ${f.source_fact}` : null;
     const amount = f.precision === "range"
       ? { low: f.amount_low, high: f.amount_high, currency: f.currency, precision: f.precision, as_read: f.as_read }
@@ -1028,8 +968,8 @@ export class Contradiction {
       const row = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
       return { ok: false, reason: "CONTRADICTION_KEY_UNKNOWN", code: "CONTRADICTION_KEY_UNKNOWN",
                check: row.check, translation: row.translation, keys: names,
-               detail: `the record pairs by ${names.join(", ")} and holds no key `
-                     + `'${String(key).slice(0, 40)}'` };
+               detail: localize("contradiction.index.pairs_holds_key", "the record pairs by {keys} and holds no key '{key}'",
+                                { keys: names.join(", "), key: String(key).slice(0, 40) }) };
     }
     /* END DEC-49 REGION is-contradiction-key-unknown */
     /* R6: THE BOUND IS CLAMPED AND PUBLISHED, never refused. `truncated` is then a fact about THIS answer at THIS
@@ -1047,8 +987,7 @@ export class Contradiction {
       if (!run.has(name))
         return { ...spec, ran: false, formed: 0, limit: cap, truncated: false, levels: null, notes: [],
                  absence: { level: "not_run",
-                            says: `this key was not run: the request named ${asked}. Nothing here is a `
-                                + `statement about what ${name} would have found` } };
+                            says: word("contradiction.says.key_run_request", { asked, name }) } };
       const out = denied ? { pairs: [], truncated: false, notes: [] }
         : name === "K1" ? this.#k1(viewer, cap)
         : name === "K2" ? this.#k2(viewer, cap)
@@ -1083,25 +1022,13 @@ export class Contradiction {
       judgement: {
         state: "HELD_APART",
         read: "candidatesFor",
-        by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
-        why: "whether either side of a pair here CONTRADICTS the other is semantic work this read does not "
-           + "do. A run's judgement over a pair enters only as a labelled proposal, and is read through "
-           + "candidatesFor, never here. A pair is not a claim that its two sides disagree: it is a claim "
-           + "that they are WORTH COMPARING, by the named key, and nothing more",
+        by: localize("contradiction.index.judgement_by", "the machine, inside an investigative run, as labelled machine work (DEC-24)"),
+        why: word("contradiction.why.either_side_pair"),
       },
       says: denied
-        ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That "
-        + "is an outage and not a statement about the record: every key below reads empty for want of "
-        + "a reader, and none of them looked"
-        : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought `
-        + `its two sides together`
-        + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a value the record does not `
-                        + `hold, or an order it does not settle, was needed to tell the two apart, and `
-                        + `that is COUNTED rather than rounded to agreement` : "")
-        + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is `
-        + `never evidence of absence at the next, and a key with nothing to join says the record is `
-        + `SPARSE there, not that it is consistent. The pairing answers pairs; a run's judgements over them `
-        + `are read through candidatesFor`,
+        ? word("contradiction.says.read_compared_because")
+        : word("contradiction.says.candidate_pair_over", { formed, keys: [...run].join(", "),
+            undetermined_clause: undetermined ? word("contradiction.says.further_pair_formed", { undetermined }) : "" }),
     };
   }
 
@@ -1181,7 +1108,8 @@ export class Contradiction {
     /* DEC-49 REGION is-candidate-no-proposals */
     if (list.length === 0)
       return refusal("CANDIDATE_NO_PROPOSALS",
-        "an empty batch is not a judgement that found nothing; that is an observation for the run's log", { run: runId });
+        localize("contradiction.index.no_proposals_detail", "an empty batch is not a judgement that found nothing; that is an observation for the run's log"),
+        { run: runId });
     /* END DEC-49 REGION is-candidate-no-proposals */
     const item = (i) => (list[i] && typeof list[i] === "object" ? list[i] : {});
     /* R13: each refusal asked of the WHOLE batch in turn — every label, then every reason, then every pair. */
@@ -1190,7 +1118,8 @@ export class Contradiction {
       /* DEC-49 REGION is-candidate-label-unknown */
       if (!CONTRADICTION_LABELS.includes(p.label))
         return refusal("CANDIDATE_LABEL_UNKNOWN",
-          `proposal ${i} carries '${String(p.label).slice(0, 30)}', which is not one of ${CONTRADICTION_LABELS.join(", ")}`,
+          localize("contradiction.index.label_unknown_detail", "proposal {index} carries '{label}', which is not one of {labels}",
+                   { index: i, label: String(p.label).slice(0, 30), labels: CONTRADICTION_LABELS.join(", ") }),
           { run: runId, index: i, labels: [...CONTRADICTION_LABELS] });
       /* END DEC-49 REGION is-candidate-label-unknown */
     }
@@ -1198,7 +1127,8 @@ export class Contradiction {
       const p = item(i);
       /* DEC-49 REGION is-candidate-no-reason */
       if (typeof p.reason !== "string" || !p.reason.trim())
-        return refusal("CANDIDATE_NO_REASON", `proposal ${i} carries no reason`, { run: runId, index: i });
+        return refusal("CANDIDATE_NO_REASON", localize("contradiction.index.no_reason_detail", "proposal {index} carries no reason", { index: i }),
+                       { run: runId, index: i });
       /* END DEC-49 REGION is-candidate-no-reason */
     }
     /* THE PAIRS AS THIS VIEWER'S PAIRING FORMS THEM NOW — the op's own read, so what may be proposed over is exactly
@@ -1221,8 +1151,11 @@ export class Contradiction {
       /* DEC-49 REGION is-candidate-pair-not-formed */
       if (!f)
         return refusal("CANDIDATE_PAIR_NOT_FORMED",
-          `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now`
-          + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
+          cutKeys.length
+            ? localize("contradiction.index.pair_not_formed_cut_detail", "proposal {index} names a {key} pair the pairing does not form for this viewer now (the read was cut at its bound on {keys}, and a pair past the bound is not formed here)",
+                       { index: i, key: key || "(no key)", keys: cutKeys.join(", ") })
+            : localize("contradiction.index.pair_not_formed_detail", "proposal {index} names a {key} pair the pairing does not form for this viewer now",
+                       { index: i, key: key || "(no key)" }),
           { run: runId, index: i, cut_keys: cutKeys });
       /* END DEC-49 REGION is-candidate-pair-not-formed */
       /* R15: the PLANE's referents, ordered so the row reads the way its digest was taken. */
@@ -1242,9 +1175,7 @@ export class Contradiction {
       new: written[i], ...this.#one(`SELECT ${STORED_ROW} FROM contradiction_candidates WHERE candidate=?`, row.candidate) }));
     const n = written.filter(Boolean).length;
     return { ok: true, run: runId, proposed: rows.length, written: n, unchanged: rows.length - n, candidates,
-             says: `${n} candidate(s) written as PROPOSED machine work; ${rows.length - n} named two referents at `
-                 + `versions already proposed over, and were left exactly as they were (§8). A candidate is a `
-                 + `proposal about two things as they were, never a finding: no member has judged it.` };
+             says: word("contradiction.says.candidate_written_proposed", { n, n2: rows.length - n }) };
   }
   /* ===================================================================== *
    * PRESENT (N345; R24–R29). What a candidate IS at a read is derived from the candidate, its acts and its inquiry's
@@ -1429,21 +1360,21 @@ export class Contradiction {
     return this.#rows(`SELECT recommendation, run, coordinate, proposed_by, reason, origin, at
                          FROM contradiction_recommendations WHERE candidate=? ORDER BY seq`, row.candidate)
       .map((r) => ({ ...r, machine_work: true,
-                     says: "a machine's recommendation of a respect in which the two may differ: not a member's choice" }));
+                     says: word("contradiction.says.machine_recommendation_respect") }));
   }
 
   /** R25's `default_question`: the plane's stated default wording, which a member accepts or rewrites (R35). It is
    *  shown, never sent for them. */
   #defaultQuestion(row) {
     const t = (s) => { const v = this.#shown(s); return String(v?.text ?? v?.ref ?? v?.content_id ?? "").replace(/\s+/g, " ").trim(); };
-    const q = `Can both of these hold, and if not, which is so: "${t(row.a).slice(0, 180)}" and "${t(row.b).slice(0, 180)}"?`;
+    const q = word("contradiction.q", { a: t(row.a).slice(0, 180), b: t(row.b).slice(0, 180) });
     return q.slice(0, TEXT_CAPS.question);
   }
 
   /** The machine's label and reason, labelled as the machine's (DEC-24). */
   #machine(row) {
     return { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, at: row.at,
-             origin: "machine", machine_work: true, says: "proposed machine work, no finding: a member decides" };
+             origin: "machine", machine_work: true, says: word("contradiction.says.proposed_machine_work") };
   }
 
   /** R26's resolution as a member reads it: the kind, who made it and how. */
@@ -1508,7 +1439,7 @@ export class Contradiction {
   #relay(r) {
     return { response: r.response, text: r.text,
              ...(r.cover !== null && r.cover !== undefined ? { cover: r.cover } : {}),
-             ...(r.email ? { email: r.email, email_says: "stated, not verified" } : {}),
+             ...(r.email ? { email: r.email, email_says: word("contradiction.email_says.stated_verified") } : {}),
              project: { id: r.project_id, name: this.#projectName(r.project_id) }, at: r.at };
   }
 
@@ -1645,7 +1576,7 @@ export class Contradiction {
         const row = CONTRADICTION_PAIR_CHECKS.CANDIDATES_NO_SUBJECT;
         return { ok: false, reason: "CANDIDATES_NO_SUBJECT", code: "CANDIDATES_NO_SUBJECT", check: row.check,
                  translation: row.translation,
-                 detail: "name exactly one of inquiry, content, entity, a record (bundle), project or candidate" };
+                 detail: localize("contradiction.index.candidates_no_subject_detail", "name exactly one of inquiry, content, entity, a record (bundle), project or candidate") };
       }
       /* END DEC-49 REGION is-candidates-no-subject */
       const n = Number(limit);
@@ -1702,19 +1633,18 @@ export class Contradiction {
       const candidates = page.map((x) => this.#present(x.row, x.view, viewer));
       const empty = candidates.length ? null
         : visible === 0
-          ? { level: "none_judged", says: "no candidate this viewer may see names it: no run's judgement is held here. "
-                                        + "Whether the pairing forms pairs here is the pairing read's answer" }
+          ? { level: "none_judged", says: word("contradiction.says.candidate_viewer_see") }
           : shown === 0
-            ? { level: "none_shown", says: "candidates are held here, and each is one the record does not show as a tension",
+            ? { level: "none_shown", says: word("contradiction.says.candidates_held_record"),
                 not_shown: notShown, ...held }
-            : { level: "none_matching", says: "candidates are shown here, and none matches the filters or follows the cursor asked" };
+            : { level: "none_matching", says: word("contradiction.says.candidates_shown_matches") };
       return { ok: true, wrote: false, on: { [subject.kind]: subject.id }, limit: cap, truncated,
                cursor: candidates.length ? candidates[candidates.length - 1].candidate : null,
                candidates, not_shown: notShown, ...held,
                ...(subject.kind === "entity" ? { undated, order_undetermined: unordered } : {}), empty };
     } catch (e) {
       return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
-               empty: { level: "undetermined", says: `the read failed and nothing is claimed about it (${String(e && e.message || e).slice(0, 120)})` } };
+               empty: { level: "undetermined", says: word("contradiction.says.read_failed_claimed", { e: String(e && e.message || e).slice(0, 120) }) } };
     }
   }
 
@@ -1767,7 +1697,7 @@ export class Contradiction {
     if (family === "CORRECTED") {
       const wrong = view.inquiry ? res.wrong_side : act.wrong_side;
       if (wrong !== which) return [];
-      const says = "this side was named wrong by a member's resolution; it still resolves, and says it was corrected";
+      const says = word("contradiction.says.side_named_wrong");
       if (!view.inquiry)
         return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: act.wrong_reason,
                   member: act.author, at: act.at, act: act.act_id, says }];
@@ -1778,7 +1708,7 @@ export class Contradiction {
       return [{ mark: "stale", candidate: c, corrected: true, kind: view.kind, reason: res.reason ?? null,
                 member: concluding ? concluding.author : null, at: concluding ? concluding.at : null,
                 inquiry: view.inquiry, ...(concluding ? { act: concluding.act_id }
-                  : { why: "concluded through basis-versions' own door; no concluding act of this module" }), says }];
+                  : { why: word("contradiction.why.concluded_through_basis") }), says }];
     }
     if (view.kind === "dissolved")
       return [{ mark: "qualified", candidate: c,
@@ -1799,12 +1729,13 @@ export class Contradiction {
         const row = CONTRADICTION_PAIR_CHECKS.TENSIONS_TOO_MANY;
         return { ok: false, reason: "TENSIONS_TOO_MANY", code: "TENSIONS_TOO_MANY", check: row.check,
                  translation: row.translation, max: TENSIONS_REFERENTS_MAX,
-                 detail: `${list.length} referents were asked about; at most ${TENSIONS_REFERENTS_MAX} are read at once` };
+                 detail: localize("contradiction.index.tensions_too_many_detail", "{count} referents were asked about; at most {max} are read at once",
+                                  { count: list.length, max: TENSIONS_REFERENTS_MAX }) };
       }
       /* END DEC-49 REGION is-tensions-too-many */
       const out = list.map((x) => {
         const ref = this.#referentOf(x);
-        if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: "not a referent at a version" };
+        if (!ref) return { referent: x ?? null, marks: [], undetermined: true, why: word("contradiction.why.referent_version") };
         /* N368 (entities R39's class): bounded at the statement, over-fetching one so the cut is observed. */
         const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
                                  WHERE (a_ref=? AND a_version=?) OR (b_ref=? AND b_version=?) ORDER BY seq LIMIT ?`,
@@ -1855,18 +1786,18 @@ export class Contradiction {
       return { coordinate, fact: name, a: a ?? null, b: b ?? null, source: "record", machine_work: false,
                ...(miss.length ? { undetermined: true, why: miss.join("; ") } : {}) };
     };
-    const noDate = (s) => (isPart(s) ? (s.capture_sha ? "its reader states no date" : "the passage is not held")
-                                     : "a held claim states no document date");
-    const noType = (s) => (isPart(s) ? (s.capture_sha ? "its reader states no kind" : "the passage is not held")
-                                     : "a held claim is not a document");
+    const noDate = (s) => (isPart(s) ? (s.capture_sha ? word("contradiction.text.reader_states_date") : word("contradiction.text.passage_held"))
+                                     : word("contradiction.text.held_claim_states"));
+    const noType = (s) => (isPart(s) ? (s.capture_sha ? word("contradiction.text.reader_states_kind") : word("contradiction.text.passage_held"))
+                                     : word("contradiction.text.held_claim_document"));
     const subject = (s) => {
       if (isPart(s)) return this.#entitiesOf(s.capture_sha);
       const r = s && s.inquiry ? this.#one(`SELECT inquiry_subject_entity AS e FROM inquiry_bundle_facts WHERE bundle_id=?`, s.inquiry) : null;
       return { ids: r && r.e ? [r.e] : null, truncated: false };
     };
     const sa = subject(A), sb = subject(B);
-    const entities = fact("subject", "resolved_entities", sa.ids, sb.ids, "no established resolution or subject is held",
-                          "no established resolution or subject is held");
+    const entities = fact("subject", "resolved_entities", sa.ids, sb.ids, word("contradiction.fact.established_resolution_subject"),
+                          word("contradiction.fact.established_resolution_subject"));
     /* R28 (N368): a side's list cut at its bound says so, and is never answered as whole. */
     if (sa.truncated || sb.truncated) Object.assign(entities, { truncated: true, limit: FACTS_ENTITIES_MAX,
       ...(sa.truncated ? { a_truncated: true } : {}), ...(sb.truncated ? { b_truncated: true } : {}) });
@@ -1874,8 +1805,8 @@ export class Contradiction {
       fact("time_or_occasion", "stated_date", A.date, B.date, noDate(A), noDate(B)),
       fact("observer_or_method", "doctype", A.doctype, B.doctype, noType(A), noType(B)),
       fact("observer_or_method", "capture", A.capture_sha, B.capture_sha,
-           isPart(A) ? "the passage is not held" : "a held claim rests on no one capture",
-           isPart(B) ? "the passage is not held" : "a held claim rests on no one capture"),
+           isPart(A) ? word("contradiction.text.passage_held") : word("contradiction.facts.held_claim_rests"),
+           isPart(B) ? word("contradiction.text.passage_held") : word("contradiction.facts.held_claim_rests")),
       entities,
     ];
     if (row.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
@@ -1890,8 +1821,8 @@ export class Contradiction {
     const fa = read(row.a), fb = read(row.b);
     const fact = (coordinate, name, a, b) => {
       const miss = [];
-      if (a === null || a === undefined) miss.push(`side A: ${fa ? "money states no value" : "the money fact is not held"}`);
-      if (b === null || b === undefined) miss.push(`side B: ${fb ? "money states no value" : "the money fact is not held"}`);
+      if (a === null || a === undefined) miss.push(`side A: ${fa ? word("contradiction.push.money_states_value") : word("contradiction.push.money_fact_held")}`);
+      if (b === null || b === undefined) miss.push(`side B: ${fb ? word("contradiction.push.money_states_value") : word("contradiction.push.money_fact_held")}`);
       return { coordinate, fact: name, a: a ?? null, b: b ?? null, source: "record", machine_work: false,
                ...(miss.length ? { undetermined: true, why: miss.join("; ") } : {}) };
     };
@@ -1911,7 +1842,8 @@ export class Contradiction {
       ? { coordinate: "scope", fact: "reconciliation", a: null, b: null, source: "record", machine_work: false,
           consistent: !!rec.consistent, amounts: rec.amounts, differs: rec.differs ?? [] }
       : { coordinate: "scope", fact: "reconciliation", a: null, b: null, source: "record", machine_work: false,
-          undetermined: true, why: rec && rec.reason ? `money's reconciliation refused: ${rec.reason}` : "money's reconciliation is not reachable" });
+          undetermined: true, why: rec && rec.reason ? word("contradiction.why.money_reconciliation_refused", { rec: rec.reason })
+                                                    : word("contradiction.why.money_reconciliation_reachable") });
     return facts;
   }
 
@@ -1920,14 +1852,14 @@ export class Contradiction {
     try {
       const row = this.#candidate(candidate);
       if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer))
-        return Contradiction.#noSuch("no contradiction you can see answers to that id");
+        return Contradiction.#noSuch(localize("contradiction.index.no_such_detail", "no contradiction you can see answers to that id"));
       const facts = this.#facts(row);
       return { ok: true, wrote: false, candidate: row.candidate, key: row.key, facts,
                limit: FACTS_ENTITIES_MAX, truncated: facts.some((f) => f.truncated === true),
-               says: "each fact is the record's, as its sides carry it, and none is machine work. A fact not stated is "
-                   + "undetermined, with why, never guessed" };
+               says: word("contradiction.says.fact_record_sides") };
     } catch (e) {
-      return Contradiction.#noSuch(`the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+      return Contradiction.#noSuch(localize("contradiction.index.candidate_unreadable", "the candidate could not be read ({e})",
+                                            { e: String(e && e.message || e).slice(0, 80) }));
     }
   }
 
@@ -1969,7 +1901,7 @@ export class Contradiction {
       const h = typeof sha === "string" ? sha.trim() : "";
       const held = f && h ? this.#heldAt(f, h) : null;
       if (!held) return { ok: true, wrote: false, finding: f || null, sha: h || null, candidates: [], truncated: false,
-                          undetermined: true, why: "no text of that finding answers to those bytes" };
+                          undetermined: true, why: word("contradiction.why.text_finding_answers") };
       /* Only the candidates with a side on a held referent, selected in SQL (never a scan of every candidate). */
       const refs = JSON.stringify([...held.refs]);
       const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
@@ -2001,8 +1933,7 @@ export class Contradiction {
       }
       return { ok: true, wrote: false, finding: f, sha: h, candidates: out, truncated, bound: UNRESOLVED_MAX,
                ...(held.undetermined_legs ? { undetermined_legs: held.undetermined_legs } : {}),
-               says: "each is a tension on something this finding rests on, one level deep; deeper findings disclose "
-                   + "their own when published" };
+               says: word("contradiction.says.tension_something_finding") };
     } catch (e) {
       return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
                why: String(e && e.message || e).slice(0, 160) };
@@ -2032,7 +1963,7 @@ export class Contradiction {
    *  not see is neither returned nor counted (connection-grammar R7). Writes nothing and records no reader. */
   neighbours({ node = null, kinds = null, at: _at = null, page = null, viewer = null, scope: _scope = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("contradiction.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     if (Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND)) return { items: [] };
     if (typeof node !== "string" || !node.trim()) return { items: [] };
     const n = node.trim();
@@ -2054,7 +1985,7 @@ export class Contradiction {
     }
     if (items.length > BOUNDS.hub)
       return { items: [], hub: { set_size: items.length,
-               why: `more than ${BOUNDS.hub} candidates you can see are in tension with this node; it is named, never expanded` } };
+               why: word("contradiction.why.candidates_see_tension", { hub: BOUNDS.hub }) } };
     items.sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
     const after = page && typeof page === "object" && typeof page.after === "string" ? page.after : null;
     const rest = after ? items.filter((i) => i.id > after) : items;
@@ -2078,9 +2009,8 @@ export class Contradiction {
       candidate: row.candidate, key: row.key, weight: view.weight, state: view.state,
       machine_work: true,
       judgement: { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, origin: "machine" },
-      says: "two things paired by the record and labelled by a machine as worth comparing: a proposal, never evidence. "
-          + "A chain through it is a lead",
-      undetermined: { why: UNDATED_WHY },
+      says: word("contradiction.says.two_things_paired"),
+      undetermined: { why: { key: UNDATED_WHY.key, vars: { ...UNDATED_WHY.vars } } },
     };
   }
 
@@ -2113,7 +2043,7 @@ export class Contradiction {
     const row = this.#candidate(candidate);
     const view = row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer) ? this.#view(row) : null;
     if (!view || view.weight === "not_shown")
-      return { refusal: Contradiction.#noSuch("no contradiction you can see answers to that id") };
+      return { refusal: Contradiction.#noSuch(localize("contradiction.index.no_such_detail", "no contradiction you can see answers to that id")) };
     const over = this.#overCap(texts);
     if (over) return { refusal: over };
     return { row, view };
@@ -2124,7 +2054,7 @@ export class Contradiction {
     /* DEC-49 REGION is-machine-cannot-act-on-candidate */
     if (typeof author !== "string" || !author.trim() || isMachineIdentity(author))
       return Contradiction.#refuse("MACHINE_CANNOT_ACT_ON_CANDIDATE",
-        "saying what a contradiction turned out to be is a member's act; this one names no member");
+        localize("contradiction.index.machine_refusal_detail", "saying what a contradiction turned out to be is a member's act; this one names no member"));
     /* END DEC-49 REGION is-machine-cannot-act-on-candidate */
     return null;
   }
@@ -2133,7 +2063,7 @@ export class Contradiction {
   static #noCandidate(candidate) {
     /* DEC-49 REGION is-no-candidate */
     if (typeof candidate !== "string" || !candidate.trim())
-      return Contradiction.#refuse("NO_CANDIDATE", "name the candidate this act is about by its id");
+      return Contradiction.#refuse("NO_CANDIDATE", localize("contradiction.index.no_candidate_detail", "name the candidate this act is about by its id"));
     /* END DEC-49 REGION is-no-candidate */
     return null;
   }
@@ -2144,8 +2074,8 @@ export class Contradiction {
       const cap = TEXT_CAPS[field.startsWith("qualifier") ? "qualifier" : field];
       /* DEC-49 REGION is-words-malformed */
       if (typeof value === "string" && cap && value.length > cap)
-        return Contradiction.#refuse("WORDS_MALFORMED", `${field} is ${value.length} characters; at most ${cap}`,
-                                     { field, limit: cap });
+        return Contradiction.#refuse("WORDS_MALFORMED", localize("contradiction.index.words_malformed_detail", "{field} is {length} characters; at most {cap}",
+                                     { field, length: value.length, cap }), { field, limit: cap });
       /* END DEC-49 REGION is-words-malformed */
     }
     return null;
@@ -2156,13 +2086,17 @@ export class Contradiction {
     /* DEC-49 REGION is-candidate-closed */
     if (isClosed(view.state))
       return Contradiction.#refuse("CANDIDATE_CLOSED",
-        `this contradiction was ${view.state}${view.act ? ` by ${view.act.author}` : ""}, and it stays as they left it`,
+        view.act
+          ? localize("contradiction.index.closed_by_detail", "this contradiction was {state} by {author}, and it stays as they left it",
+                     { state: view.state, author: view.act.author })
+          : localize("contradiction.index.closed_detail", "this contradiction was {state}, and it stays as they left it", { state: view.state }),
         { state: view.state, by: view.act ? view.act.author : null, ...(view.inquiry ? { inquiry: view.inquiry } : {}) });
     /* END DEC-49 REGION is-candidate-closed */
     /* DEC-49 REGION is-candidate-taken-up */
     if (takenUp && view.state === "taken_up")
-      return Contradiction.#refuse("CANDIDATE_TAKEN_UP", `this contradiction was taken up as ${view.inquiry}`,
-                                   { inquiry: view.inquiry });
+      return Contradiction.#refuse("CANDIDATE_TAKEN_UP",
+        localize("contradiction.index.taken_up_detail", "this contradiction was taken up as {inquiry}", { inquiry: view.inquiry }),
+        { inquiry: view.inquiry });
     /* END DEC-49 REGION is-candidate-taken-up */
     return null;
   }
@@ -2197,11 +2131,13 @@ export class Contradiction {
       const rec = standing.find((r) => r.recommendation === id);
       /* DEC-49 REGION is-acceptance-not-standing */
       if (!rec) return Contradiction.#refuse("ACCEPTANCE_NOT_STANDING",
-        `recommendation '${id.slice(0, 64)}' is not standing for this contradiction`, { recommendation: id || null });
+        localize("contradiction.index.acceptance_not_standing_detail", "recommendation '{id}' is not standing for this contradiction",
+                 { id: id.slice(0, 64) }), { recommendation: id || null });
       /* END DEC-49 REGION is-acceptance-not-standing */
       /* DEC-49 REGION is-acceptance-value-differs */
       if (!recorded.includes(rec.coordinate)) return Contradiction.#refuse("ACCEPTANCE_VALUE_DIFFERS",
-        `the recommendation accepted names ${rec.coordinate}, which this act does not record`,
+        localize("contradiction.index.acceptance_value_differs_detail", "the recommendation accepted names {coordinate}, which this act does not record",
+                 { coordinate: rec.coordinate }),
         { recommendation: id, coordinate: rec.coordinate });
       /* END DEC-49 REGION is-acceptance-value-differs */
     }
@@ -2235,17 +2171,19 @@ export class Contradiction {
     /* DEC-49 REGION is-record-cannot-be-dismissed */
     if (view.weight === "duty" || view.weight === "plurality")
       return Contradiction.#refuse("RECORD_CANNOT_BE_DISMISSED",
-        "this is a conflict the record holds; it closes only by a resolution", { weight: view.weight });
+        localize("contradiction.index.record_cannot_be_dismissed_detail", "this is a conflict the record holds; it closes only by a resolution"),
+        { weight: view.weight });
     /* END DEC-49 REGION is-record-cannot-be-dismissed */
     /* DEC-49 REGION is-dismissal-reason-unknown */
     if (!DISMISSAL_REASONS.includes(reason))
       return Contradiction.#refuse("DISMISSAL_REASON_UNKNOWN",
-        `a lead is dismissed for one of ${DISMISSAL_REASONS.join(", ")}`, { reasons: [...DISMISSAL_REASONS] });
+        localize("contradiction.index.dismissal_reason_detail", "a lead is dismissed for one of {reasons}", { reasons: DISMISSAL_REASONS.join(", ") }),
+        { reasons: [...DISMISSAL_REASONS] });
     /* END DEC-49 REGION is-dismissal-reason-unknown */
     const act = this.#record.transact(() => this.#appendAct(row, view, {
       act: "dismiss", author: author.trim(), reason, words: typeof words === "string" && words.trim() ? words.trim() : null, at }));
     return { ok: true, candidate: row.candidate, state: "dismissed", act,
-             says: "the lead was dismissed by the member named, with the reason given; nothing either side says was changed" };
+             says: word("contradiction.says.lead_dismissed_member") };
   }
 
   /** R32's evidence items, each one the viewer may see: `{content}`, `{inquiry, ord}` or `{fact: coordinate}` (a fact R28
@@ -2268,7 +2206,8 @@ export class Contradiction {
       }
       /* DEC-49 REGION is-evidence-not-seen */
       if (!ok) return Contradiction.#refuse("EVIDENCE_NOT_SEEN",
-        `evidence item ${i} is not one you can see, or is a fact the record does not state`, { index: i });
+        localize("contradiction.index.evidence_not_seen_detail", "evidence item {index} is not one you can see, or is a fact the record does not state",
+                 { index: i }), { index: i });
       /* END DEC-49 REGION is-evidence-not-seen */
     }
     return null;
@@ -2287,12 +2226,13 @@ export class Contradiction {
     if (closed) return closed;
     /* DEC-49 REGION is-clarify-not-a-tension */
     if (view.weight === "lead")
-      return Contradiction.#refuse("CLARIFY_NOT_A_TENSION", "a lead is dismissed or taken up, never clarified");
+      return Contradiction.#refuse("CLARIFY_NOT_A_TENSION", localize("contradiction.index.clarify_not_a_tension_detail", "a lead is dismissed or taken up, never clarified"));
     /* END DEC-49 REGION is-clarify-not-a-tension */
     /* DEC-49 REGION is-clarify-choice-unknown */
     if (!CLARIFY_CHOICES.includes(choice) || (choice === "no_difference" && row.key !== "K5"))
       return Contradiction.#refuse("CLARIFY_CHOICE_UNKNOWN",
-        `the answers here are ${(row.key === "K5" ? CLARIFY_CHOICES : CLARIFY_CHOICES.filter((c) => c !== "no_difference")).join(", ")}`,
+        localize("contradiction.index.clarify_choice_detail", "the answers here are {choices}",
+                 { choices: (row.key === "K5" ? CLARIFY_CHOICES : CLARIFY_CHOICES.filter((c) => c !== "no_difference")).join(", ") }),
         { choices: row.key === "K5" ? [...CLARIFY_CHOICES] : CLARIFY_CHOICES.filter((c) => c !== "no_difference") });
     /* END DEC-49 REGION is-clarify-choice-unknown */
     const who = author.trim();
@@ -2302,7 +2242,9 @@ export class Contradiction {
       /* DEC-49 REGION is-clarify-coordinate-unknown */
       if (!coords.length || coords.some((c) => !vocab.includes(c)))
         return Contradiction.#refuse("CLARIFY_COORDINATE_UNKNOWN",
-          `name at least one of ${vocab.join(", ") || "(the vocabulary is not held here)"}`, { coordinates: [...vocab] });
+          localize("contradiction.index.clarify_coordinate_detail", "name at least one of {vocab}",
+                   { vocab: vocab.join(", ") || localize("contradiction.index.vocabulary_not_held", "(the vocabulary is not held here)") }),
+          { coordinates: [...vocab] });
       /* END DEC-49 REGION is-clarify-coordinate-unknown */
       const acc = this.#acceptance(row, view, accepted, coords);
       if (acc.refusal) return acc.refusal;
@@ -2310,7 +2252,7 @@ export class Contradiction {
       const words = typeof explanation === "string" && explanation.trim() ? explanation.trim() : null;
       /* DEC-49 REGION is-clarify-no-explanation */
       if (!words && !allAccepted)
-        return Contradiction.#refuse("CLARIFY_NO_EXPLANATION", "explain in your own words how the two differ");
+        return Contradiction.#refuse("CLARIFY_NO_EXPLANATION", localize("contradiction.index.clarify_no_explanation_detail", "explain in your own words how the two differ"));
       /* END DEC-49 REGION is-clarify-no-explanation */
       const items = Array.isArray(evidence) ? evidence : [];
       const bad = this.#evidenceRefusal(row, items, viewer);
@@ -2329,30 +2271,30 @@ export class Contradiction {
         return { ok: true, candidate: row.candidate, choice,
                  state: evidenced ? "resolved" : "explained_not_shown", ...(evidenced ? { kind: "dissolved" } : {}),
                  qualifier_standing: evidenced ? "evidenced" : "hypothesis", act,
-                 ...(words ? {} : { own_words: false, says_words: "no words of the member's own were given: each respect recorded was the accepted recommendation" }),
+                 ...(words ? {} : { own_words: false, says_words: word("contradiction.says_words") }),
                  ...(defects ? { defects: defects.reports } : {}),
                  says: evidenced
-                   ? "the member found the two differ in the respects named, on the evidence named: the contradiction is resolved as dissolved, and neither side was changed"
-                   : "the member explained how the two differ without evidence: the mark softens and does not clear, and any duty stays" };
+                   ? word("contradiction.says.member_found_two")
+                   : word("contradiction.says.member_explained_how") };
       });
     }
     if (choice === "one_wrong") {
       /* DEC-49 REGION is-wrong-side-unnamed */
       if (wrongSide !== "a" && wrongSide !== "b")
-        return Contradiction.#refuse("WRONG_SIDE_UNNAMED", "name the side that is wrong: a or b");
+        return Contradiction.#refuse("WRONG_SIDE_UNNAMED", localize("contradiction.index.wrong_side_unnamed_detail", "name the side that is wrong: a or b"));
       /* END DEC-49 REGION is-wrong-side-unnamed */
       /* DEC-49 REGION is-wrong-side-no-reason */
       if (typeof reason !== "string" || !reason.trim())
-        return Contradiction.#refuse("WRONG_SIDE_NO_REASON", "say why that side is wrong");
+        return Contradiction.#refuse("WRONG_SIDE_NO_REASON", localize("contradiction.index.wrong_side_no_reason_detail", "say why that side is wrong"));
       /* END DEC-49 REGION is-wrong-side-no-reason */
-      if (row.key === "K5") return Contradiction.#noWrongSide("two projects' conclusions have no wrong side");
+      if (row.key === "K5") return Contradiction.#noWrongSide(localize("contradiction.index.no_wrong_side_detail", "two projects' conclusions have no wrong side"));
       const acc = this.#acceptance(row, view, accepted, []);
       if (acc.refusal) return acc.refusal;
       const act = this.#record.transact(() => this.#appendAct(row, view, {
         act: "clarify", choice, author: who, wrong_side: wrongSide, wrong_reason: reason.trim(),
         acceptance: acc.basis, standing: acc.standing, at }));
       return { ok: true, candidate: row.candidate, choice, state: "resolved", kind: "corrected", wrong_side: wrongSide, act,
-               says: "the member named one side wrong, with the reason: it is marked stale and still resolves; nothing is deleted, and nothing resting on it moves" };
+               says: word("contradiction.says.member_named_side") };
     }
     /* R34: no_difference (K5 only). */
     const acc = this.#acceptance(row, view, accepted, []);
@@ -2361,7 +2303,7 @@ export class Contradiction {
       act: "clarify", choice, author: who, explanation: typeof explanation === "string" && explanation.trim() ? explanation.trim() : null,
       acceptance: acc.basis, standing: acc.standing, at }));
     return { ok: true, candidate: row.candidate, choice, state: "open", weight: "duty", act,
-             says: "the member found no named difference between the two projects' conclusions: it is now a duty for both" };
+             says: word("contradiction.says.member_found_named") };
   }
 
   /** K4 `subject` (R32): report a defect on each established resolution that paired the two sides. */
@@ -2369,7 +2311,7 @@ export class Contradiction {
     const e = this.#e();
     const entity = row.a?.context?.entity_id ?? null;
     if (!e || typeof e.reportResolutionDefect !== "function" || !entity) return { reports: [] };
-    const reason = words || `a member found these two sides differ in subject (contradiction ${row.candidate}); no words of their own were given`;
+    const reason = words || word("contradiction.text.member_found_two", { candidate: row.candidate });
     const reports = [];
     for (const side of [row.a, row.b]) {
       const cap = side.capture_sha ?? this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, side.content_id)?.capture_sha;
@@ -2397,7 +2339,7 @@ export class Contradiction {
         : side.kind === "money" ? (fact ? fact.sight_bundle : null) : this.#contentHome(side.content_id);
       return { target, content_id: side.kind === "leg" || side.kind === "extent" ? side.content_id
                  : side.kind === "money" && fact ? fact.source_content_id ?? null : null,
-               note: `side ${name} of contradiction ${row.candidate}` };
+               note: word("contradiction.note.side_contradiction", { name, candidate: row.candidate }) };
     };
     const framed = frame === "a" ? leg(row.a, "a") : leg(row.b, "b");
     const other = frame === "a" ? leg(row.b, "b") : leg(row.a, "a");
@@ -2412,7 +2354,7 @@ export class Contradiction {
       "references:", ...targets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
       "basis:", ...legLines(framed, "supports"), ...legLines(other, "cuts_against"),
       "state_history: []", "---", "", "## Question", "", fmSafe(question), "", "## Session Log", "",
-      `- ${at} · ${who} · taken up from contradiction ${row.candidate}, framed around side ${frame}`, ""].join("\n");
+      word("contradiction.text.taken_up_contradiction", { at, who, candidate: row.candidate, frame }), ""].join("\n");
     return { text, title: title ?? question };
   }
 
@@ -2426,15 +2368,16 @@ export class Contradiction {
     if (closed) return closed;
     if (view.state === "taken_up")
       return { ok: true, existed: true, candidate: row.candidate, inquiry: view.inquiry, wrote: false,
-               says: "this contradiction is already taken up as the question named; nothing was written" };
+               says: word("contradiction.says.contradiction_already_taken") };
     /* DEC-49 REGION is-take-up-no-question */
     if (typeof question !== "string" || !question.trim())
-      return Contradiction.#refuse("TAKE_UP_NO_QUESTION", "word the question, or accept the default shown with the candidate",
-                                   { default_question: this.#defaultQuestion(row) });
+      return Contradiction.#refuse("TAKE_UP_NO_QUESTION",
+        localize("contradiction.index.take_up_no_question_detail", "word the question, or accept the default shown with the candidate"),
+        { default_question: this.#defaultQuestion(row) });
     /* END DEC-49 REGION is-take-up-no-question */
     /* DEC-49 REGION is-take-up-no-frame */
     if (frame !== "a" && frame !== "b")
-      return Contradiction.#refuse("TAKE_UP_NO_FRAME", "choose the side the question is asked around: a or b");
+      return Contradiction.#refuse("TAKE_UP_NO_FRAME", localize("contradiction.index.take_up_no_frame_detail", "choose the side the question is asked around: a or b"));
     /* END DEC-49 REGION is-take-up-no-frame */
     const who = author.trim();
     const when = at || this.#now();
@@ -2442,7 +2385,7 @@ export class Contradiction {
     return this.#record.transact(() => {
       const id = `${this.#record.allocId("INQ", String(when).slice(0, 4)).id}-contradiction`;
       const doc = this.#takeUpDocument(id, row, question.trim(), frame, who, when);
-      if (!doc) return Contradiction.#noSuch("a side of this contradiction is no longer held");
+      if (!doc) return Contradiction.#noSuch(localize("contradiction.index.side_no_longer_held", "a side of this contradiction is no longer held"));
       const promoted = p.promote({ bundleId: id, base: null, snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand(4)}`,
         author: who, actorIdentity: who, actorViewer: viewer,
         files: [{ path: "bundle.md", text: doc.text }],
@@ -2454,7 +2397,7 @@ export class Contradiction {
                                                 words: question.trim() });
       return { ok: true, candidate: row.candidate, inquiry: id, state: "taken_up", frame, act,
                promoted: { bundleId: promoted.bundleId, bundleSha: promoted.bundleSha },
-               says: "the contradiction was taken up as a new question, framed around the side named; it is resolved by that question's conclusion" };
+               says: word("contradiction.says.contradiction_taken_up") };
     });
   }
 
@@ -2497,11 +2440,11 @@ export class Contradiction {
     const i = this.#i();
     const row = this.#linkedCandidate(id, viewer);
     if (!row)
-      return Contradiction.#notContradictionInquiry("no question you can see answers to that id as one taken up from a contradiction");
+      return Contradiction.#notContradictionInquiry(localize("contradiction.index.not_a_contradiction_inquiry_detail", "no question you can see answers to that id as one taken up from a contradiction"));
     const res = resolution && typeof resolution === "object" && !Array.isArray(resolution) ? resolution : {};
     const family = this.#family(res.kind);
     if (row.key === "K5" && (family === "CORRECTED" || res.kind === "double_speak_or_reversal"))
-      return Contradiction.#noWrongSide("two projects' conclusions have no wrong side and no double-speak");
+      return Contradiction.#noWrongSide(localize("contradiction.index.no_wrong_side_or_double_speak_detail", "two projects' conclusions have no wrong side and no double-speak"));
     const view = this.#view(row);
     const coords = Array.isArray(res.coordinates) ? res.coordinates.filter((c) => typeof c === "string") : [];
     const acc = this.#acceptance(row, view, accepted, coords);
@@ -2513,13 +2456,14 @@ export class Contradiction {
       const files = this.#liveFiles(id);
       const md = files.find((f) => f.path === "bundle.md");
       if (!head || !md || typeof md.text !== "string")
-        return Contradiction.#notContradictionInquiry("the question's document is not held as text");
+        return Contradiction.#notContradictionInquiry(localize("contradiction.index.document_not_text_detail", "the question's document is not held as text"));
       let lines = i.resolutionLines(res);
       lines = Array.isArray(lines) ? lines : String(lines ?? "").split("\n").filter(Boolean);
       if (!lines.length || !/^resolution:/.test(lines[0])) lines = ["resolution:", ...lines.map((l) => `  ${l.replace(/^\s*/, "")}`)];
       let text = setFrontmatterLines(md.text, "resolution", lines);
       text = setOrAddScalar(text, "last_updated", `"${when}"`);
-      text = appendSessionLog(text, `- ${when} · ${who} · resolution recorded as ${fmSafe(res.kind)} (contradiction ${row.candidate})`);
+      text = appendSessionLog(text, localize("contradiction.index.resolution_recorded", "- {when} · {who} · resolution recorded as {kind} (contradiction {candidate})",
+                                             { when, who, kind: fmSafe(res.kind), candidate: row.candidate }));
       const written = this.#p().promote({ bundleId: id, base: head.bundleSha, snapKey: `resolve_${String(when).replace(/[-:.]/g, "")}_${rand(4)}`,
         author: who, actorIdentity: who, actorViewer: viewer,
         files: files.map((f) => (f.path === "bundle.md" ? { path: "bundle.md", text } : f)),
@@ -2533,7 +2477,7 @@ export class Contradiction {
         qualifiers: res.qualifiers ?? null, acceptance: acc.basis, standing: acc.standing, at: when });
       return { ok: true, inquiry: id, candidate: row.candidate, state: "resolved", kind: res.kind, family, act,
                conclusion: concluded,
-               says: "the question was concluded with its resolution: the question's own conclusion, never a project's stance" };
+               says: word("contradiction.says.question_concluded_resolution") };
     });
   }
 
@@ -2545,7 +2489,8 @@ export class Contradiction {
     const list = Array.isArray(coordinates) ? coordinates : [];
     /* DEC-49 REGION is-recommend-no-coordinates */
     if (!list.length)
-      return Contradiction.#refuse("RECOMMEND_NO_COORDINATES", "name at least one respect in which the sides may differ", { run: runId });
+      return Contradiction.#refuse("RECOMMEND_NO_COORDINATES",
+        localize("contradiction.index.recommend_no_coordinates_detail", "name at least one respect in which the sides may differ"), { run: runId });
     /* END DEC-49 REGION is-recommend-no-coordinates */
     const row = typeof candidate === "string" ? this.#candidate(candidate) : null;
     const vocab = row ? (this.#vocab(row.key) || [])
@@ -2554,22 +2499,24 @@ export class Contradiction {
       const c = list[n] && typeof list[n] === "object" ? list[n].coordinate : null;
       /* DEC-49 REGION is-recommend-coordinate-unknown */
       if (!vocab.includes(c))
-        return Contradiction.#refuse("RECOMMEND_COORDINATE_UNKNOWN", `recommendation ${n} names '${String(c).slice(0, 40)}'`,
-                                     { run: runId, index: n, coordinates: [...vocab] });
+        return Contradiction.#refuse("RECOMMEND_COORDINATE_UNKNOWN",
+          localize("contradiction.index.recommend_coordinate_detail", "recommendation {index} names '{coordinate}'", { index: n, coordinate: String(c).slice(0, 40) }),
+          { run: runId, index: n, coordinates: [...vocab] });
       /* END DEC-49 REGION is-recommend-coordinate-unknown */
     }
     for (let n = 0; n < list.length; n++) {
       /* DEC-49 REGION is-recommend-no-reason */
       if (typeof list[n].reason !== "string" || !list[n].reason.trim())
-        return Contradiction.#refuse("RECOMMEND_NO_REASON", `recommendation ${n} carries no reason`, { run: runId, index: n });
+        return Contradiction.#refuse("RECOMMEND_NO_REASON",
+          localize("contradiction.index.recommend_no_reason_detail", "recommendation {index} carries no reason", { index: n }), { run: runId, index: n });
       /* END DEC-49 REGION is-recommend-no-reason */
     }
     const seen = row && this.#sideSeen(row.a, viewer) && this.#sideSeen(row.b, viewer);
     const view = seen ? this.#view(row) : null;
     /* DEC-49 REGION is-recommend-candidate-not-standing */
     if (!view || view.weight === "not_shown" || !isStanding(view.state))
-      return Contradiction.#refuse("RECOMMEND_CANDIDATE_NOT_STANDING", "that contradiction is not open to recommendation",
-                                   { run: runId });
+      return Contradiction.#refuse("RECOMMEND_CANDIDATE_NOT_STANDING",
+        localize("contradiction.index.recommend_not_standing_detail", "that contradiction is not open to recommendation"), { run: runId });
     /* END DEC-49 REGION is-recommend-candidate-not-standing */
     const when = at || this.#now();
     const written = this.#record.transact(() => list.map((x) => {
@@ -2586,7 +2533,7 @@ export class Contradiction {
       reason, origin, at FROM contradiction_recommendations WHERE recommendation=?`, w.id), machine_work: true }));
     const n = written.filter((w) => w.new).length;
     return { ok: true, run: runId, candidate: row.candidate, written: n, unchanged: written.length - n, recommendations: recs,
-             says: "each is a machine's recommendation of a respect in which the two may differ: machine work, not a member's choice" };
+             says: word("contradiction.says.machine_recommendation_respect_two") };
   }
 
   /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. Answers
@@ -2595,26 +2542,26 @@ export class Contradiction {
     /* DEC-49 REGION is-candidate-no-proposer */
     if (typeof proposedBy !== "string" || !proposedBy.trim())
       return Contradiction.#refuse("CANDIDATE_NO_PROPOSER",
-        "machine work records who proposed it; the plane stamps that from the credential that asked, "
-        + "so an empty one means the act arrived by a route that does not attribute it");
+        localize("contradiction.index.no_proposer_detail", "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it"));
     /* END DEC-49 REGION is-candidate-no-proposer */
     const runId = Contradiction.#runId(run);
     const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
     /* DEC-49 REGION is-candidate-no-run */
     if (!r || r.found !== true)
       return Contradiction.#refuse("CANDIDATE_NO_RUN",
-        runId ? `no run named '${runId.slice(0, 60)}' is open in this store`
-              : "pass run=<the run whose work this is>: machine work names the run it came from",
+        runId ? localize("contradiction.index.no_run_detail", "no run named '{run}' is open in this store", { run: runId.slice(0, 60) })
+              : localize("contradiction.index.no_run_named_detail", "pass run=<the run whose work this is>: machine work names the run it came from"),
         { run: runId || null });
     /* END DEC-49 REGION is-candidate-no-run */
     const np = r.refusal;
     if (np)
       return { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
-               detail: np.detail, run: runId, note: "machine work names a run its caller holds. Nothing was written" };
+               detail: np.detail, run: runId, note: word("contradiction.note.machine_work_names") };
     /* DEC-49 REGION is-candidate-run-not-running */
     if (r.running !== true)
       return Contradiction.#refuse("CANDIDATE_RUN_NOT_RUNNING",
-        `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`, { run: runId });
+        localize("contradiction.index.run_not_running_detail", "the run '{run}' has ended; its work is read against the conditions it was formed under",
+                 { run: runId.slice(0, 60) }), { run: runId });
     /* END DEC-49 REGION is-candidate-run-not-running */
     return null;
   }
@@ -2635,10 +2582,11 @@ export class Contradiction {
       const row = typeof link.candidate === "string" ? this.#candidate(link.candidate) : null;
       if (!row || !this.#sideSeen(row.a, who) || !this.#sideSeen(row.b, who))
         return Contradiction.#notHeld(typeof link.candidate === "string" ? link.candidate : null,
-          "this question names a contradiction the record does not hold, or one whose side its author may not see");
+          localize("contradiction.index.candidate_not_held_detail", "this question names a contradiction the record does not hold, or one whose side its author may not see"));
       return null;
     } catch (e) {
-      return Contradiction.#notHeld(null, `the candidate could not be read (${String(e && e.message || e).slice(0, 80)})`);
+      return Contradiction.#notHeld(null, localize("contradiction.index.candidate_unreadable", "the candidate could not be read ({e})",
+                                                   { e: String(e && e.message || e).slice(0, 80) }));
     }
   }
 
@@ -2707,8 +2655,7 @@ export class Contradiction {
       .map((r) => ({ ...r, review_due: r.offered >= ACCEPTANCE_REVIEW.min_offered
                                           && r.accepted / r.offered >= ACCEPTANCE_REVIEW.rate }));
     return { ok: true, wrote: false, coordinates: rows, threshold: { ...ACCEPTANCE_REVIEW },
-             says: "counts, never a bare percentage: a recommendation accepted nearly every time has become a decision, "
-                 + "and is reviewed. The threshold is PROVISIONAL" };
+             says: word("contradiction.says.counts_bare_percentage") };
   }
 
   /** R40: dismissed leads, counted by reason, by key and by label; `false_conflicts` counts only the first two reasons.
@@ -2730,7 +2677,7 @@ export class Contradiction {
     } catch { /* never throws */ }
     return { ok: true, wrote: false, dismissed: total, by_reason: byReason, by_key: byKey, by_label: byLabel,
              false_conflicts: FALSE_CONFLICT_REASONS.reduce((n, r) => n + (byReason[r] || 0), 0),
-             says: "a real conflict not pursued now is never counted as a false conflict" };
+             says: word("contradiction.says.real_conflict_pursued") };
   }
 
   /* ===================================================================== *
@@ -2807,7 +2754,7 @@ export class Contradiction {
                        side: this.#shown(row[which]), named, says: named.length ? NOTICE_NAMED_SENTENCE : NOTICE_SENTENCE,
                        ...this.#partyView(row, g.project),
                        ...(parties.truncated ? { reveal_undetermined: true,
-                         reveal_why: "the projects holding a side could not all be read, so whether every one has asked is undetermined and no reveal is recorded" } : {}) });
+                         reveal_why: word("contradiction.reveal_why") } : {}) });
       }
       return { ok: true, wrote: false, project: g.project, limit: cap, truncated,
                cursor: notices.length ? notices[notices.length - 1].candidate : null, notices };
@@ -2827,7 +2774,7 @@ export class Contradiction {
     if (g.refusal) return { refusal: g.refusal };
     const row = this.#candidate(candidate);
     if (!row || (!this.#sideSeen(row.a, viewer) && !this.#sideSeen(row.b, viewer)))
-      return { refusal: Contradiction.#noSuch("no contradiction you can see answers to that id") };
+      return { refusal: Contradiction.#noSuch(localize("contradiction.index.no_such_detail", "no contradiction you can see answers to that id")) };
     const view = this.#view(row);
     const party = Contradiction.#partyRefusal(!!this.#seenPartySide(row, g.project, viewer), view.weight, g.project);
     if (party) return { refusal: party };
@@ -2841,11 +2788,12 @@ export class Contradiction {
     /* DEC-49 REGION is-not-a-party */
     if (!isParty)
       return Contradiction.#refuse("NOT_A_PARTY",
-        "the project named does not rest on the side of this conflict you can see", { project });
+        localize("contradiction.index.not_a_party_detail", "the project named does not rest on the side of this conflict you can see"), { project });
     /* END DEC-49 REGION is-not-a-party */
     /* DEC-49 REGION is-not-a-project-conflict */
     if (weight !== "duty" && weight !== "plurality")
-      return Contradiction.#refuse("NOT_A_PROJECT_CONFLICT", "a lead is not a conflict the record holds between projects");
+      return Contradiction.#refuse("NOT_A_PROJECT_CONFLICT",
+        localize("contradiction.index.not_a_project_conflict_detail", "a lead is not a conflict the record holds between projects"));
     /* END DEC-49 REGION is-not-a-project-conflict */
     return null;
   }
@@ -2866,7 +2814,7 @@ export class Contradiction {
       if (first)
         return { ok: true, already: true, wrote: false, candidate: row.candidate, project: g.project,
                  opted_in: { member: first.author, at: first.at, words: first.words ?? null },
-                 says: "this project had already asked to resolve it; nothing was written" };
+                 says: word("contradiction.says.project_already_asked") };
       const seq = () => (this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM contradiction_optins`)?.n ?? 0) + 1;
       const put = (kind, fields) => {
         const s = seq();
@@ -2889,8 +2837,8 @@ export class Contradiction {
                revealed: revealed && this.#optins(row.candidate).opted.includes(g.project),
                ...(parties.truncated ? { reveal_undetermined: true } : {}),
                says: revealed
-                 ? "this project asked to resolve it, and every project holding a side has asked: the projects are named to each other's members"
-                 : "this project asked to resolve it; the other projects are told only that another project has asked" };
+                 ? word("contradiction.says.project_asked_resolve")
+                 : word("contradiction.says.project_asked_resolve_projects") };
     });
   }
 
@@ -2900,7 +2848,7 @@ export class Contradiction {
     /* DEC-49 REGION is-disclosure-malformed */
     const part = Contradiction.#malformedPart(disclose);
     if (part) return Contradiction.#refuse("DISCLOSURE_MALFORMED",
-      `the part of the disclosure that is not one of cover or email: ${part}`, { part });
+      localize("contradiction.index.disclosure_malformed_detail", "the part of the disclosure that is not one of cover or email: {part}", { part }), { part });
     /* END DEC-49 REGION is-disclosure-malformed */
     const own = this.#ownCover(member);
     const e = typeof disclose.email === "string" ? disclose.email.trim() : null;
@@ -2909,14 +2857,15 @@ export class Contradiction {
     /* DEC-49 REGION is-disclosure-not-yours */
     if ((typeof disclose.cover === "string" && disclose.cover !== own) || taken)
       return Contradiction.#refuse("DISCLOSURE_NOT_YOURS",
-        "a response may share only your own cover or your own email address", { part: taken ? "email" : "cover" });
+        localize("contradiction.index.disclosure_not_yours_detail", "a response may share only your own cover or your own email address"),
+        { part: taken ? "email" : "cover" });
     /* END DEC-49 REGION is-disclosure-not-yours */
     return null;
   }
 
   /** The part of a disclosure that is not a cover or one email address, or null when it is well formed. */
   static #malformedPart(disclose) {
-    if (typeof disclose !== "object" || Array.isArray(disclose)) return "the disclosure itself";
+    if (typeof disclose !== "object" || Array.isArray(disclose)) return word("contradiction.text.disclosure_itself");
     const extra = Object.keys(disclose).find((k) => k !== "cover" && k !== "email");
     if (extra) return extra;
     const cover = disclose.cover, email = disclose.email;
@@ -2948,11 +2897,13 @@ export class Contradiction {
     const { row } = g;
     /* DEC-49 REGION is-response-before-opt-in */
     if (!this.#optins(row.candidate).opted.includes(g.project))
-      return Contradiction.#refuse("RESPONSE_BEFORE_OPT_IN", "this project has not asked to resolve it yet", { project: g.project });
+      return Contradiction.#refuse("RESPONSE_BEFORE_OPT_IN",
+        localize("contradiction.index.response_before_opt_in_detail", "this project has not asked to resolve it yet"), { project: g.project });
     /* END DEC-49 REGION is-response-before-opt-in */
     /* DEC-49 REGION is-response-no-text */
     if (typeof text !== "string" || !text.trim())
-      return Contradiction.#refuse("RESPONSE_NO_TEXT", "a response says something in the responder's own words");
+      return Contradiction.#refuse("RESPONSE_NO_TEXT",
+        localize("contradiction.index.response_no_text_detail", "a response says something in the responder's own words"));
     /* END DEC-49 REGION is-response-no-text */
     const over = this.#overCap({ text });
     if (over) return over;
@@ -2969,8 +2920,8 @@ export class Contradiction {
         id, row.candidate, g.project, who, when, seq, text.trim(), d.cover, d.email, row.a_bundle_id, row.b_bundle_id);
       return { ok: true, candidate: row.candidate, project: g.project, response: id, at: when,
                shared: { cover: d.cover !== null, email: d.email !== null },
-               ...(d.email ? { email_says: "stated, not verified" } : {}),
-               says: "the response is held; it reaches the other projects' members, with only what you chose to share, once every project holding a side has asked" };
+               ...(d.email ? { email_says: word("contradiction.email_says.stated_verified") } : {}),
+               says: word("contradiction.says.response_held_reaches") };
     });
   }
 
@@ -2984,7 +2935,7 @@ export class Contradiction {
       if (none) return none;
       const row = this.#candidate(candidate);
       if (!row || (!this.#sideSeen(row.a, viewer) && !this.#sideSeen(row.b, viewer)) || !this.#seenPartySide(row, g.project, viewer))
-        return Contradiction.#noSuch("no contradiction you can see answers to that id for this project");
+        return Contradiction.#noSuch(localize("contradiction.index.no_such_project_detail", "no contradiction you can see answers to that id for this project"));
       const n = Number(limit);
       const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) || n < 1
         ? PAGE_MAX : Math.min(Math.floor(n), PAGE_MAX);
@@ -2998,7 +2949,7 @@ export class Contradiction {
                                 ORDER BY seq LIMIT ?`, row.candidate, afterSeq, g.project, JSON.stringify(others), cap + 1);
       const items = rows.slice(0, cap).map((r) => (r.project_id === g.project
         ? { response: r.response, own: true, author: r.author, text: r.text, cover: r.cover, email: r.email,
-            ...(r.email ? { email_says: "stated, not verified" } : {}), project: g.project, at: r.at }
+            ...(r.email ? { email_says: word("contradiction.email_says.stated_verified") } : {}), project: g.project, at: r.at }
         : { own: false, ...this.#relay(r) }));
       return { ok: true, wrote: false, candidate: row.candidate, project: g.project, revealed: isRevealed, limit: cap,
                truncated: rows.length > cap, cursor: items.length ? (items[items.length - 1].response) : null,

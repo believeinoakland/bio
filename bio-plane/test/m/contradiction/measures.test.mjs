@@ -2,6 +2,7 @@
    thirteen N345 routes, driven at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { MACHINE, sha } from "./fixture.mjs";
 import { seeded, cand, recommend, RUN, PRINCIPAL, IQ, INFO, CID, M1 } from "./seed.mjs";
 import { contradictionOps, CONTRADICTION_TABLES, ACCEPTANCE_REVIEW, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256,
@@ -166,8 +167,8 @@ test("the N345 routes: each op reads its own fields from the body or query and t
   assert.equal(ops({ viewer: M1, author: M1 }, { candidate: lead, reason: "not_same_matter" }).contradictiondismiss().ok, true);
   for (const op of ["contradictionnotices", "contradictionoptin", "contradictionrespond", "contradictionresponses"])
     assert.equal(ops({ viewer: M1, author: M1, project: "PROJ-2026-0404-x" }, { candidate: duty, text: "t" })[op]().code, "NO_SUCH_PROJECT", op);
-  assert.deepEqual(Object.keys(ops({}, null)).sort(), ["contradictioncandidates", "contradictionclarify", "contradictiondismiss",
-    "contradictionfacts", "contradictionnotices", "contradictionoptin", "contradictionpairs", "contradictionpropose",
-    "contradictionrecommend", "contradictionresolve", "contradictionrespond", "contradictionresponses", "contradictiontakeup",
-    "contradictiontensions"]);
+  /* the module's own route map: fourteen ops, each a contradiction op and a function (their names are op-declarations', not listed here) */
+  const routes = ops({}, null);
+  assert.equal(Object.keys(routes).length, 14);
+  for (const [name, handler] of Object.entries(routes)) assert.ok(name.startsWith("contradiction") && typeof handler === "function", name);
 });
