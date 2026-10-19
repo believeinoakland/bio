@@ -1,0 +1,122 @@
+/* screens-action R32, R33, R34 (T51-122; DEC-340, U366): the litigation hold, its notice, and the counsel packet. Every sentence is asserted by its
+   key (R19). */
+import test from "node:test";
+import assert from "node:assert/strict";
+import { open, main, text, ops, press, last, ok, refusedIn, button, beside, choose, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, PROJECT, HOLDS_DUE, COUNSEL_PROJECT, NOTICE, PACKET, READER } from "./page.mjs";
+
+const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
+const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
+const section = (p, titleKey) => main(p).querySelectorAll("section.cs-section").find((s) => (s.querySelector("h2") || { textContent: "" }).textContent.trim() === W(titleKey));
+const slot = (p, b) => text(p, p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`));
+
+test("R32: `hold` reads `holdsdue` for where the pressure arrived (a reply, a docket entry, pressure outside any action) and the counsel matters from `projectlist`, each marked with no hold placed", async () => {
+  const p = await open(ROUTES.hold, DATA_PLANE);
+  assert.equal(p.byOp("holdsdue").length, 1);
+  assert.equal(p.byOp("projectlist").length, 1);
+  const s = section(p, "screen.hold.where.heading");
+  const t = s.textContent.replace(/\s+/g, " ");
+  said(p, "screen.hold.sub1");
+  assert.ok(t.includes(W("screen.hold.reply")) && t.includes(W("screen.hold.outside")) && t.includes(W("screen.hold.marked", { member: "dev" })), "the three places");
+  assert.equal(t.split(W("screen.hold.nohold")).length, 4, "each says no hold is placed");
+  assert.ok(t.includes("The rent dispute") && t.includes(W("screen.hold.counsel.row")), "a counsel matter");
+  assert.ok(!t.includes("Pothole repairs"), "control: a project that is no counsel matter is not listed");
+  const tip = s.querySelector("h2").getAttribute("data-tip");
+  assert.ok(tip.length > 0);
+});
+
+test("R32: placing the hold sends the place chosen and the reason, any projects it may also reach, and asks no approval; the hold notice is prepared on its own screen", async () => {
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, actionhold: ok({ ok: true }) });
+  assert.deepEqual(ops(p).filter((o) => o === "actionhold"), ["actionhold"]);
+  said(p, "screen.hold.who");
+  await press(p, "actionhold", { values: { "hold-reason": "a claim is coming" }, reason: "x" });
+  const b = last(p, "actionhold").body;
+  assert.deepEqual([b.target, b.ord, b.hold, b.reason], [ACTION_ID, 2, "in_place", "a claim is coming"], "the reply the screen was opened on");
+  assert.equal(p.doc.querySelectorAll('[data-shell="confirm"]').length, 0, "control: no approval is asked");
+  const docket = JSON.stringify({ project: PROJECT, from: { docket_entry: "DKT-2026-1" } });
+  const sel = p.doc.getElementById("hold-for").querySelectorAll("option").map((o) => o.value);
+  assert.ok(sel.includes(docket) && sel.includes(JSON.stringify({ project: COUNSEL_PROJECT })), "docket marks and counsel matters are places too");
+  await press(p, "actionhold", { values: { "hold-for": JSON.stringify({ project: COUNSEL_PROJECT }), "hold-reason": "the owner's lawyer wrote" }, reason: "x" });
+  assert.deepEqual([last(p, "actionhold").body.project, last(p, "actionhold").body.reason], [COUNSEL_PROJECT, "the owner's lawyer wrote"]);
+  assert.ok(main(p).querySelector('a[href^="/app/holdnotice/"]').textContent.includes(W("screen.hold.notice.link")));
+  said(p, "screen.hold.release");
+});
+
+test("R32: releasing a hold is drawn on `hold`: the place, the member's reason in `screen.hold.release.reason`, confirmed because it cannot be undone", async () => {
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, actionholdrelease: ok({ ok: true }) });
+  said(p, "screen.hold.release.form");
+  assert.ok(text(p).includes(W("screen.hold.release.reason")));
+  await press(p, "actionholdrelease", { values: { "hold-release-why": "the claim was dropped" }, reason: "x", confirm: true });
+  const b = last(p, "actionholdrelease").body;
+  assert.deepEqual([b.target, b.ord], [ACTION_ID, 2]);
+  assert.ok(b.reason.includes("the claim was dropped"), "her reason goes with it");
+});
+
+test("R32: pressure that arrived outside any action is recorded in a project, creating no action; `actionhold` is no longer drawn on `action`", async () => {
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, pressurerecord: ok({ ok: true }) });
+  await press(p, "pressurerecord", { values: { "hold-press": "A letter from the owner's lawyer, received October 3" }, reason: "x" });
+  const b = last(p, "pressurerecord").body;
+  assert.equal(b.project, PROJECT);
+  assert.equal(b.pressure.kind, "legal");
+  assert.equal(b.account, "A letter from the owner's lawyer, received October 3");
+  const q = await open(ROUTES.action, DATA_PLANE);
+  assert.ok(!ops(q).includes("actionhold"));
+  const r = await open(ROUTES.hold, { ...DATA_PLANE, whoami: ok(READER) });
+  assert.deepEqual(ops(r).filter((o) => ["actionhold", "pressurerecord"].includes(o)), [], "a member who may not act is offered neither");
+});
+
+test("R33: 'Prepare the notice' fills the field with the notice as prepared, editable, and sends no other act; a released hold prepares none", async () => {
+  const p = await open(ROUTES.holdnotice, { ...DATA_PLANE, holdnoticeprepare: ok(NOTICE) });
+  await press(p, "holdnoticeprepare", { reason: "x" });
+  assert.deepEqual({ ...last(p, "holdnoticeprepare").body, reason: undefined }, { place: { target: ACTION_ID, ord: 2 }, reason: undefined });
+  assert.equal(p.doc.getElementById("hold-notice").value, NOTICE.text);
+  assert.deepEqual(p.requests.filter((r) => ["holdnoticesent", "actionhold", "filingsent"].includes(r.op)), [], "no other act");
+  said(p, "screen.holdnotice.released");
+  const r = await open(ROUTES.holdnotice, { ...DATA_PLANE, holdnoticeprepare: refusedIn("HOLD_NOT_IN_PLACE", "the owner's own sentence") });
+  const b = await press(r, "holdnoticeprepare", { reason: "x" });
+  assert.ok(slot(r, b).includes(W("refusal.HOLD_NOT_IN_PLACE")), "a released hold prepares none");
+  assert.equal(r.doc.getElementById("hold-notice").value, "");
+});
+
+test("R33: 'Record that I sent it' sends the day, how it was sent and the copy or account inside the outward dialog, and no recipient, read or compliance; the screen says so", async () => {
+  const p = await open(ROUTES.holdnotice, { ...DATA_PLANE, holdnoticesent: ok({ ok: true }) });
+  assert.ok(main(p).querySelector(".cs-dialog button[data-act='holdnoticesent']"), "inside the outward dialog");
+  for (const k of ["screen.holdnotice.outward.1", "screen.holdnotice.outward.2", "screen.holdnotice.not.records", "screen.holdnotice.not.nomember", "screen.holdnotice.sent.none"]) said(p, k);
+  const none = await press(p, "holdnoticesent", { reason: "x" });
+  assert.equal(p.byOp("holdnoticesent").length, 0, "the day and the account are needed");
+  await press(p, "holdnoticesent", { values: { "hold-sent-at": "2026-10-10", "hold-sent-how": "message", "hold-account": "I emailed the notice to the team's members." }, reason: "x" });
+  assert.deepEqual({ ...last(p, "holdnoticesent").body, reason: undefined }, { place: { target: ACTION_ID, ord: 2 }, at: "2026-10-10", medium: "message", account: "I emailed the notice to the team's members.", reason: undefined });
+  assert.deepEqual(Object.keys(last(p, "holdnoticesent").body).filter((k) => /recipient|to|read|comply|member/.test(k)), [], "control: neither a recipient nor a read is sent");
+  assert.ok(none);
+});
+
+test("R34: the counsel packet: its two names, the purpose, the reason; counsel required at tier 3 or undetermined, optional at 1 or 2; the packet is never offered for publication", async () => {
+  const p = await open(ROUTES.counsel, { ...DATA_PLANE, counselpacket: ok(PACKET) });
+  for (const k of ["screen.counsel.sub", "screen.counsel.who.optional", "screen.counsel.purpose.help1", "screen.counsel.purpose.help2", "screen.counsel.reason.help2"]) said(p, k);
+  unsaid(p, "screen.counsel.who.required");
+  const hi = await open(ROUTES.counsel, { ...DATA_PLANE, action: ok({ ...ACTION, risk_tier: "undetermined" }) });
+  said(hi, "screen.counsel.who.required");
+  const opts = p.doc.getElementById("cp-purpose").querySelectorAll("option");
+  assert.deepEqual(opts.map((o) => o.value), ["claim", "defence"]);
+  assert.equal(p.doc.getElementById("cp-reason").getAttribute("maxlength"), "2000");
+  await press(p, "counselpacket", { values: { "cp-name": "Priya Shah", "cp-org": "Tenant Law Center", "cp-reason": "The owner's lawyer has written to us." }, reason: "x" });
+  assert.deepEqual(last(p, "counselpacket").body, { action: ACTION_ID, reason: "The owner's lawyer has written to us.", purpose: "claim", counsel: { name: "Priya Shah", organisation: "Tenant Law Center" } });
+  assert.ok(!["publish", "publishat", "release"].some((o) => ops(p).includes(o)), "control: never offered for publication");
+});
+
+test("R34: each matter as the packet states it, 'not determined' never stopping the packet; a claim draws no defense sections, a defense adds the challenged statements, pressure and deadlines; every section is marked", async () => {
+  const p = await open(ROUTES.counsel, { ...DATA_PLANE, counselpacket: ok(PACKET) });
+  await press(p, "counselpacket", { values: { "cp-reason": "A claim the team may bring" }, reason: "x" });
+  const t = text(p);
+  assert.ok(t.includes(W("screen.counsel.matters.heading")) && t.includes("Closed means repaired"), "a matter with a determination");
+  assert.ok(t.includes(W("screen.counsel.matters.undetermined")), "a matter without one is stated as undetermined");
+  assert.ok(t.includes(PACKET.marking) && t.includes(W("screen.counsel.marked.every")), "marked");
+  unsaid(p, "screen.counsel.defense.heading");
+  const d = await open(ROUTES.counsel, { ...DATA_PLANE, counselpacket: ok({ ...PACKET, purpose: "defence", sections: { ...PACKET.sections,
+    challenged: { items: [{ statement: "Closed means repaired.", findings: ["FND-1", "FND-2"], sources: [{}] }] }, pressure: { items: [{ at: "2026-10-09T09:00:00Z" }] },
+    defence_deadlines: { items: [{ rule: "A special motion to strike", date: null }] } } }) });
+  await choose(d, "cp-purpose", "defence");
+  await press(d, "counselpacket", { values: { "cp-reason": "pressure came", "cp-chal-1": "Closed means repaired." }, reason: "x" });
+  assert.deepEqual([last(d, "counselpacket").body.purpose, last(d, "counselpacket").body.challenged], ["defence", [{ statement: "Closed means repaired." }]]);
+  for (const k of ["screen.counsel.defense.heading", "screen.counsel.defense.undetermined"]) said(d, k);
+  said(d, "screen.counsel.defense.restson", { findings: "2", sources: "1" });
+});

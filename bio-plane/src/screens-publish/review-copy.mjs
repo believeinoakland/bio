@@ -3,10 +3,11 @@
  * kept nowhere; stopping a share; the readers' comments and the member's replies. Its subject is the project, or
  * `<project>/<draft>` for one draft (the newest otherwise). Every function is self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
+import { REVIEW_COPY_FILE } from "./review-copy-file.mjs";
 
 export const REVIEW_COPY = Object.freeze({
   id: "review-copy",
-  parts: PARTS,
+  parts: Object.freeze({ ...PARTS, ...REVIEW_COPY_FILE }),
 
   reads: function (view) {
     if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
@@ -34,7 +35,7 @@ export const REVIEW_COPY = Object.freeze({
     const chosen = drafts.find(function (x) { return x.draft_id === want; }) || drafts[drafts.length - 1] || null;
     view.ui.draft = chosen;
     const c = chosen && chosen.case ? chosen.case : {};
-    const out = [cs.title(c.identity ? cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") }) : null, { thing: "case" })];
+    const out = [cs.title(c.identity ? P.plain(cs.w("screen.review-copy.heading", { case: c.identity, edition: String(c.edition || "") })) : null, { thing: "case" })];
     if (!chosen) { out.push(cs.state("drafts", function () { return ""; }, { empty: "screen.review-copy.nodraft" })); return out.join(""); }
 
     // The named readers: each a row with what they may read and until when, and "Stop sharing" (R2, R18).
@@ -62,10 +63,26 @@ export const REVIEW_COPY = Object.freeze({
     out.push(cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
       + cs.field("rc-role", "screen.review-copy.role.label", { rec: true, help: "screen.review-copy.role.help" })
       + cs.field("rc-until", "screen.review-copy.until.label", { type: "date", help: "screen.review-copy.until.help" })
-      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + "</div>" + P.said(view, "reviewgrant")
+      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + (view.ui.export ? "" : cs.act("reviewexport", { data: { step: "open" } })) + "</div>" + P.said(view, "reviewgrant")
       + (view.ui.link ? '<div class="cs-sheet" data-reader-link><span class="id">' + cs.esc(view.ui.link.href) + "</span><p>"
         + cs.w("screen.review-copy.link.for", { who: view.ui.link.who }) + " <b>" + cs.w("screen.review-copy.noemail") + "</b></p><p class=\"muted\">"
         + cs.w("screen.review-copy.link.once") + "</p></div>" : "")));
+
+    // R40 (A81): "Save as a file": the warning, what the file carries, the one box, and the file handed over to save
+    if (view.ui.export) {
+      const done = view.ui.exported || null;
+      const row = function (text) { return cs.row("", text, ""); };
+      out.push(cs.sec("screen.review_copy.save.this.copy.as.a", '<div class="cs-gap" data-gap="refused" data-recall><span><b>' + cs.w("screen.review_copy.a.file.can.t.be") + "</b> "
+        + cs.w("screen.review_copy.once.it.leaves.your.device") + " " + cs.w("screen.review_copy.stopping.the.sharing.of.a") + " " + cs.w("screen.review_copy.if.what.you.need.is") + "</span></div>"));
+      out.push(cs.sec("screen.review_copy.what.the.file.carries", cs.sheet(row("<b>" + cs.w("screen.review_copy.carries.fingerprint") + "</b> " + cs.w("screen.review_copy.a.code.that.names.exactly")) + row(cs.w("screen.review_copy.the.date.this.copy.last"))
+        + row("<b>" + cs.w("screen.review_copy.carries.author") + "</b>") + row(cs.w("screen.review_copy.the.minimum.strengths.it.was"))) + '<p class="mk-note">' + cs.w("screen.review_copy.the.file.does.not.say") + " " + cs.w("screen.review_copy.its.fingerprint.covers.them.so") + "</p>"));
+      out.push(cs.choice("rc-export-ack", "screen.review_copy.before.you.save.it", [{ value: "", text: "–" }, { value: "yes", key: "screen.review_copy.i.understand.that.this.file" }],
+        { acts: { yes: "reviewexport" }, act: { tone: "primary", label: "screen.review_copy.save.file", data: { step: "save" } } }));
+      out.push(P.said(view, "reviewexport"));
+      if (done && done.name) out.push('<div class="mk-acts" data-export-ready>' + cs.save(done.name, done.text) + "</div>");
+      if (done && done.unstamped) out.push(P.fold(cs, "screen.review_copy.when.the.copy.can.t", "<p>" + cs.w("screen.review_copy.this.copy.could.not.be") + " " + cs.w("screen.review_copy.no.file.was.made") + "</p>"));
+      if (done && done.declined) out.push(P.fold(cs, "screen.review_copy.when.this.browser.doesn.t", "<p>" + cs.w("screen.review_copy.this.browser.did.not.accept") + " " + cs.w("screen.review_copy.nothing.left.this.page") + "</p>"));
+    }
 
     // The readers' comments, each answered by "Reply" (R2).
     if (c.case_id) {
@@ -84,7 +101,7 @@ export const REVIEW_COPY = Object.freeze({
   },
 
   // R2, R11: the reader's link is page memory only, gone when the member leaves the screen.
-  closed: function (cs, view) { view.ui.link = null; },
+  closed: function (cs, view) { view.ui.link = null; view.ui.export = false; view.ui.exported = null; },
 
   acts: [
     {
@@ -100,11 +117,10 @@ export const REVIEW_COPY = Object.freeze({
         const held = view.ui.later && view.ui.later.copy;
         const copy = held && held.state === "ok" ? held.value : null;
         if (!view.ui.draft || !copy) return null;
-        // R18, R27: the end of the chosen day in the team's zone, as an instant in the record's stamp form; the zone is the
-        // copy answer's (`review` R35). A first share has no roster row to carry it, so the team's zone is read as the
-        // ceremony reads it; with none held the share is refused in its fold and nothing is sent.
-        const zoned = P.copyZone(copy);
-        const zone = zoned.zone || (zoned.known ? "" : P.zoneOf(P.value(await cs.call("publishpreflight", { body: P.caseArgs(copy, view.ui.draft.draft_id) }))));
+        // R18, R27, R41: the end of the chosen day in the team's zone, as an instant in the record's stamp form; the zone is the
+        // member door's copy answer's own, at its top level whether or not the draft has a grant (`review` R35); with none held
+        // the share is refused in its fold and nothing is sent.
+        const zone = P.copyZone(copy).zone;
         if (!zone) {
           const key = view.me && view.me.administer === true ? "screen.review-copy.until.nozone" : "screen.review-copy.until.nozone.member";
           P.say(cs, view, "reviewgrant", P.fold(cs, "screen.review-copy.until.nozone.summary", "<p>" + cs.w(key) + "</p>"), false);
@@ -121,6 +137,26 @@ export const REVIEW_COPY = Object.freeze({
         view.ui.link = r.secret ? { href: view.origin + "/app/review#grant=" + r.secret, who: view.ui.pendingWho || r.recipient || "" } : null;
         view.ui.pendingWho = null;
         view.parts.forget(view);
+      },
+    },
+    {
+      // R40 (A81): the browser act "Save as a file": it opens the saving (the warning, what the file carries, the one box); once the
+      // box is ticked, the same act reads the copy once, makes one stamped file in the page and hands it over to save. Nothing is
+      // written to the plane, stored or put in an address; the file carries no grant secret, reader's name or comment.
+      op: "reviewexport", label: "act.owed_reviewexport.label.review-copy",
+      send: async function (view, el, cs) {
+        const P = view.parts;
+        if (el.dataset.step !== "save") { cs.set("export", true); return null; }
+        if (cs.value("rc-export-ack") !== "yes" || !view.ui.draft) return null;
+        const answer = await cs.call("reviewcopy", { query: { draft: view.ui.draft.draft_id } });
+        if (!answer || P.carried(answer)) { P.refused(cs, view, "reviewexport", answer || { ok: false }); return null; }
+        const copy = P.value(answer), stamp = P.stampOf(copy);
+        if (view.ui.said) delete view.ui.said.reviewexport;
+        if (!stamp) view.ui.exported = { unstamped: true };
+        else if (typeof Blob !== "function" || typeof URL === "undefined" || typeof URL.createObjectURL !== "function") view.ui.exported = { declined: true };
+        else view.ui.exported = { name: P.fileName(copy, stamp), text: P.stampedFile(cs, copy, stamp) };
+        cs.set("export", true);
+        return null;
       },
     },
     {

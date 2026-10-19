@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -37,3 +37,7 @@ CHANGE (K4079): wizard-scripts is merged into tranche/T51 (registry, front doors
 ## B5 · CHANGE
 
 CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
+
+## B6 · CHANGE
+
+CHANGE (K4094): journey-check's pseudo-locale walk (R27) finds a slug drawn as text on held: span.meta 'roof-repairs-at'. Draw the item's name (or its key's sentence), never its id; a test with a control.

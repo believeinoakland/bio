@@ -7,7 +7,12 @@
    never drawn as none, a later page's included. Every function is self-contained (interface-shell R21).
    T50 (R46; N1190; DEC-300 (1), DEC-319 (4)): "Courts", an administrator's section listing the forums of kind `court` the team
    holds (`entitieskind` of kind `body` with `forum_kind: "court"`), each by its name and where it came from, and "Add a court"
-   (`entitycreate` with `forum_kind: "court"`) beside "Add an office yourself". */
+   (`entitycreate` with `forum_kind: "court"`) beside "Add an office yourself".
+   T51 (R60, R61's reference; N858 D8; DEC-340, U366): for a place named (`placewantedstate` answers a `name`) while `profiles` lists no
+   active non-test profile, the screen draws that no profile is held for it, what it therefore offers nothing of, and the field to name
+   the place again (`placewanted`), and none of the sections a profile fills (offices, courts, where else to go, the places' choice
+   unless some are offered to choose); nothing is filled in from another profile. With a profile active it draws as before. Either
+   way the reference to `grouprules` follows, with the sentence that a member may draft a rule and another confirm it. */
 
 export const places = {
   id: "places",
@@ -34,6 +39,21 @@ export const places = {
     const data = view.data || {};
     const out = [cs.title()];
     if (!admin) out.push(`<p class="mk-note">${W(S + "admins")}</p>`);
+
+    // R60: a place named and no active non-test profile: said, and nothing a profile would fill is drawn, none from another profile
+    const prof = data.profiles && data.profiles.state === "ok" && data.profiles.value ? data.profiles.value : null;
+    const named = admin && data.place && data.place.state === "ok" && data.place.value && data.place.value.name ? String(data.place.value.name) : null;
+    const noProfile = !!(named && prof && Array.isArray(prof.profiles) && !prof.profiles.some((p) => p && p.test !== true));
+    // the reference to the team's own rules (R61), under both states, to every member: any member drafts, another confirms
+    const rulesRef = cs.sec("screen.grouprules.name", `<p class="mk-note">${W(S + "rules.note")}</p><p><a class="cs-ref" href="/app/grouprules" data-nav data-screen="grouprules">${W("screen.grouprules.name")}</a></p>`);
+    if (noProfile) {
+      const pw = cs.act("placewanted");
+      out.push(cs.sec(S + "noprofile.heading", `<p data-state="noprofile">${W(S + "noprofile.says", { state: named })}</p><p>${W(S + "noprofile.offers")}</p><p class="mk-note">${W(S + "noprofile.still")} ${W(S + "noprofile.asks")}</p>${pw ? `${cs.field("pl-want", S + "noprofile.want", { help: S + "noprofile.want.help", max: 200, value: named, autocomplete: "off" })}${pw}` : ""}`, { fills: { state: named } }));
+      // a profile a team could choose is still offered to choose (the act is `profilesset`'s)
+      if ((prof.choices || []).length && admin) out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${v.choices.map((p) => `<input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"><label for="pl-p-${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${cs.act("profilesset")}</div>`)));
+      out.push(rulesRef);
+      return out.join("");
+    }
 
     // the places whose rules apply, in the order they are read
     out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => {
@@ -114,6 +134,7 @@ export const places = {
       if (add) h += `${cs.field("pl-label", S + "add.label", { rec: true, autocomplete: "off" })}${cs.field("pl-note", S + "add.note", { help: S + "add.help", area: true, rec: true })}${add}`;
       if (h) out.push(cs.sec(S + "add.heading", h));
     }
+    out.push(rulesRef);
     return out.join("");
   },
 

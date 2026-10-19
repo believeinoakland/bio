@@ -4,7 +4,7 @@
  * states that stop it (no key here, a phone, a member who is not an owner). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, drewIn, day, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
 const R = "because";
@@ -32,7 +32,10 @@ test("R3 the steps in order, the current one marked; the reads: checks, disclosu
 test("R3 every refusal that holds before signing is drawn by its words; \"Check again\" reads the checks again", async () => {
   const p = await open(PATH);
   const b = main(p).querySelector("[data-blockers]");
-  assert.match(b.textContent, /Photo 1 is not yet checked\..*A contradiction is not yet disclosed\./);
+  const lines = b.querySelectorAll("li").map((l) => l.textContent);
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0].includes(PREFLIGHT().first.translation), "a code the list holds no word for is drawn by the plane's translation");
+  assert.ok(lines[1].includes(word("refusal.TENSION_NOT_DISCLOSED").replace(/[.\s]+$/, "")), "a code the list holds is drawn by its word, not the translation");
   const n = p.byOp("publishpreflight").length;
   await press(p, "publishpreflight");
   assert.ok(p.byOp("publishpreflight").length > n);
@@ -181,7 +184,7 @@ test("R14 signed and waiting draws signedat with \"Move the time\" and \"Cancel 
   await until(p, () => main(p).querySelector('[data-signed="at"]'));
   assert.deepEqual(last(p, "publishat").body.at, { date: "2026-11-19", time: "06:00" });
   assert.equal(last(p, "publishat").body.members.length, 2);
-  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: "06:00", zone: "America/Los_Angeles" }));
+  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: clock("06:00"), zone: "America/Los_Angeles" }));
   await press(p, "publishatmove", { values: { "ce-move-date": "2026-11-20", "ce-move-time": "07:30" }, reason: R });
   carries(last(p, "publishatmove").body, { case: C, edition: 2, at: { date: "2026-11-20", time: "07:30" } });
   const w = await open(PATH, { plane: { publishschedule: ok({ editions: [{ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "Z" } }] }) } });
@@ -226,13 +229,16 @@ test("R15 at the phone width the Sign step draws signing.ceremony.phone and send
   assert.ok(drew(p, "screen.ceremony.asked"));
 });
 
-test("R4 a photo's facts: taken by and relied on, with the day when the step carries `taken_at` and without it when it does not", async () => {
+test("R4 R30 a photo's facts: taken by and relied on, with the local day when `photosOf` answers `dated` and without it when it does not (R33 of case-disclosures)", async () => {
   const p = await open(PATH);
   const ph = main(p).querySelector(`[data-photo="${PHOTO}"]`);
   assert.ok(drewIn(ph, "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "no day: the sentence without one");
   const pre = PREFLIGHT();
-  pre.steps[3].photos[0].taken_at = "2026-03-02T10:00:00Z";
+  pre.steps[3].photos[0].dated = "2026-03-02";
   const q = await open(PATH, { plane: { publishpreflight: ok(pre) } });
   assert.ok(drewIn(main(q).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts.dated", { by: "dev", date: day("2026-03-02"), findings: "FND-2026-0031" }));
   assert.deepEqual(q.root().innerHTML.match(/\{[a-z]\w*\}/g) || [], []);
+  pre.steps[3].photos[0].dated = null;
+  const none = await open(PATH, { plane: { publishpreflight: ok(pre) } });
+  assert.ok(drewIn(main(none).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "control: a null day is the undated sentence");
 });

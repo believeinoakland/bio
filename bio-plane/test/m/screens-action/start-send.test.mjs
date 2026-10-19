@@ -146,7 +146,7 @@ test("R11: prepare, reload, and the same text, blanks with their sources, unfill
   assert.equal(after.text, before.text);
   assert.equal(after.text, "We request the logs for 2025.");
   for (const s of [W("screen.start-send.blank.own", { name: "period", value: "2025" }), W("screen.start-send.blank", { name: "office", value: "City Clerk", source: ACTION_ID }),
-    W("screen.start-send.unfilled", { names: "cost_limit" }), W("screen.start-send.unfilled.why", { name: "cost_limit", why: "the record holds no value for this blank: the member fills it in" }),
+    W("screen.start-send.unfilled", { names: "cost_limit" }), W("screen.start-send.unfilled.why", { name: "cost_limit", why: W("filings.why.record_holds_value") }),
     W("screen.start-send.advisory", { advisory: "A demand is a Tier 2 act: a lawyer's view helps." }), W("screen.start-send.offer.counsel_packet"),
     W("screen.start-send.draft.own")]) assert.ok(after.page.includes(s), s);
   assert.deepEqual(ops(again), ["filingapprove"]);

@@ -44,12 +44,17 @@ function render(cs, view) {
   const failedRead = ["courts", "institutions"].find((n) => view.data[n] && view.data[n].state === "failed");
   const chosenForum = forums.find((f) => f.value === view.ui["choice:pr-forum"]) || forums[0] || null;
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
+  /* R47: the kinds `affordances` answers (`proceeding_kinds`, its R67: `[{kind, label, forum_kind}]`, read at each call) for the forum
+     chosen, each worded `proceeding.kind.<kind>` where the key is held and by the profile's own `label` (record data) otherwise;
+     an answer without the key is a read that failed, `[]` (or none for this forum) is empty, and neither is read as the other */
   const profileKinds = vocab && vocab.vocabularies && Array.isArray(vocab.vocabularies.proceeding_kinds) ? vocab.vocabularies.proceeding_kinds.filter((k) => k && typeof k.kind === "string") : null;
-  const fallback = { court: ["civil", "writ", "appeal"], commission: ["complaint"] };
-  const keyed = ["civil", "writ", "appeal", "complaint"];
-  const kindList = (profileKinds
-    ? profileKinds.filter((k) => !chosenForum || !chosenForum.forumKind || !k.forum_kind || k.forum_kind === chosenForum.forumKind).map((k) => ({ value: k.kind, text: keyed.includes(k.kind) ? P.plain(cs, "proceeding.kind." + k.kind) : String(k.label || k.kind) }))
-    : (fallback[chosenForum && chosenForum.forumKind] || keyed).map((k) => ({ value: k, text: P.plain(cs, "proceeding.kind." + k) })));
+  const heldKind = (k) => cs.w("proceeding.kind." + k) !== cs.esc("proceeding.kind." + k);
+  const kindList = (profileKinds || []).filter((k) => !chosenForum || !chosenForum.forumKind || !k.forum_kind || k.forum_kind === chosenForum.forumKind)
+    .map((k) => ({ value: k.kind, text: heldKind(k.kind) ? P.plain(cs, "proceeding.kind." + k.kind) : String(k.label || k.kind) }));
+  const kindField = view.data.vocab && view.data.vocab.state === "ok" && !profileKinds ? cs.state({ state: "failed", value: null, refusal: null }, () => "")
+    : view.data.vocab && view.data.vocab.state !== "ok" ? cs.state(view.data.vocab, () => "")
+    : kindList.length ? cs.choice("pr-kind", "screen.proceeding.kind", kindList, {}) + `<p class="mk-small">${cs.w("proceeding.kind.help")}</p>`
+    : cs.state({ state: "empty", value: null, refusal: null }, () => "");
   const addCourt = (summary) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>`
     + (summary === "screen.proceeding.court.none.summary" ? `<p>${cs.w("court.none")}</p>` : "")
     + cs.field("pr-court-name", "court.add.name", { help: "court.add.help" })
@@ -58,7 +63,7 @@ function render(cs, view) {
   const create = (failedRead ? cs.state(failedRead, view, () => "") : "") + (forums.length ? cs.choice("pr-forum", "screen.proceeding.forum", forums, { acts: {} }) + `<p class="mk-small">${cs.w("screen.proceeding.court.help")}</p>` : "")
     + (!forums.length && settled ? addCourt("screen.proceeding.court.none.summary") : forums.length ? addCourt("court.add") : "")
     + courtAdded
-    + cs.choice("pr-kind", "screen.proceeding.kind", kindList, {}) + `<p class="mk-small">${cs.w("proceeding.kind.help")}</p>`
+    + kindField
     + cs.field("pr-number", S + "number", {}) + cs.field("pr-label", S + "label", { help: S + "label.help" })
     + cs.field("pr-note", S + "note", { area: true, rec: true })
     + cs.act("entitycreate", { label: "act.entitycreate.label.proceeding", tone: "primary" });

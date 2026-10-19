@@ -2,9 +2,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf, WORDS, registryOps } from "./kit.mjs";
-import { ADMIN, MEMBER, READER, accountTable, refuse, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, READER, FOUNDER_ROW, accountTable, refuse, env } from "./fixtures.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
-import { hasWord } from "../../../src/setup-words/index.mjs";
+import { hasWord, WORD_ROWS } from "../../../src/setup-words/index.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 
@@ -22,8 +22,10 @@ test("R3 the handle drawn fixed in DEC-197's words; no handlechange act, and no 
   assert.ok(hasWord("handle.fixed"), "the handle's sentence is a word of the list (R39)");
   has(a, "handle.fixed");
   assert.ok(!ops(a).includes("handlechange") && !ops(a).includes("handlecheck"));
-  for (const k of ["handle.changeable", "handle.formerly", "handle.refused.paused", "handle.free", "handle.taken"].filter((k) => WORDS.has(k)))
-    assert.ok(!a.html.includes(a.cs.w(k, { handle: "dev", group: "", suggestion: "", minutes: "", case: "" }).slice(0, 24)), k);
+  // the handle's other sentences (changeable, formerly, free, taken, refused…) are the word list's own `handle.*` rows, none of them drawn
+  const others = WORD_ROWS.filter(([k]) => /^handle\./.test(k) && k !== "handle.fixed").map(([, en]) => String(en).split("{")[0].trim()).filter((en) => en.length >= 12);
+  assert.ok(others.length > 0, "the list holds the handle's other sentences");
+  for (const en of others) assert.ok(!a.text.includes(en.slice(0, 24)), en);
   assert.ok(!/formerly/i.test(a.html));
 });
 
@@ -36,6 +38,10 @@ test("R3, R21 every registry act is drawn (memberlanguageset, setpassword, exper
   assert.ok(rev[0].attrs["data-key"].endsWith("01"));
   assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/connect").length === 1);
   assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/notes").length === 1);
+  // R57 (4): the glossary and the ties are reached from here too, beside connect and notes
+  assert.equal(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/ties").length, 1);
+  assert.equal(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/glossary" && textOf(e) === said("screen.glossary.name")).length, 1);
+  has(a, "screen.glossary.purpose");
   // (R12) the appearance choice is the device's (interface-shell R18), never an op: the kit's own control, cs.appearance()
   const ap = all(a.tree, (e) => e.attrs["data-shell"] === "theme");
   assert.equal(ap.length, 3, "the kit's control is drawn");
@@ -132,7 +138,7 @@ test("R21 Sign out on this device (signout) and Sign out everywhere (signoutever
   assert.ok(no.refused, "drawn beside the act");
 });
 
-test("R22 Register your signing key: made by the kit's signer in this browser (cs.signer.publicLine), its public line sent with signerregisterown; no pasted line is asked; declined sends nothing", async () => {
+test("R22 Register your signing key: made by the kit's signer in this browser (cs.signer.register), its public line sent with signerregisterown; no pasted line is asked; declined sends nothing", async () => {
   const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
   assert.ok(!all(a.tree, (e) => e.tag === "input" && e.attrs.id === "ma-pub").length, "no field for a pasted line");
   has(a, "signing.ceremony.keepkey");
@@ -143,7 +149,78 @@ test("R22 Register your signing key: made by the kit's signer in this browser (c
   assert.ok(!JSON.stringify(r.sent).includes("PRIVATE"), "nothing but the public line");
   // declined: nothing is sent
   const spec = a.s.acts.find((x) => x.op === "signerregisterown");
-  assert.deepEqual(await spec.send({}, {}, { value: () => false, signer: { publicLine: async () => null } }), { refuse: "screen.account.key.declined" });
+  assert.deepEqual(await spec.send({ ui: {} }, {}, { value: () => false, signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
+});
+
+/* R57 (T51; K3807; DEC-330 C1, A74, A11; DEC-336 (7), (8)): the key made on the page's terms, a key registered for the member, the glossary */
+const LINE = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFreshKey0000000000000000000000000000001 mai-k";
+const regSpec = () => SCREENS.find((x) => x.id === "account").acts.find((x) => x.op === "signerregisterown");
+const keyHeading = (o, k) => all(o.tree, (e) => e.tag === "h2" && textOf(e) === said(k))[0];
+
+test("R57 (1) Make your signing key: the tick, the optional passphrase field (a password field), and the act labelled for the account; the passphrase and the tick are the kit's arguments, the file deferred", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  assert.ok(keyHeading(a, "screen.account.key.make.heading"), "the heading");
+  has(a, "screen.account.key.help"); has(a, "signing.ceremony.keepkey"); has(a, "screen.account.key.passphrase"); has(a, "screen.account.key.passphrase.help");
+  const field = a.b.doc.getElementById("ma-pass");
+  assert.equal(field.getAttribute("type"), "password", "a password field");
+  const reg = acts(a.tree).find((b) => b.attrs["data-act"] === "signerregisterown");
+  assert.equal(textOf(reg).startsWith(said("act.signerregisterown.label.account")), true, "Register your signing key");
+  // the kit is asked with what the member typed, deferring the file
+  let asked = null, pending = null;
+  const kit = { value: (id) => ({ "ma-keep": false, "ma-pass": "a typed passphrase" }[id]), now: () => Date.parse("2026-10-18T10:00:00Z"), signer: { register: async (o) => { asked = o; return { ok: true, kept: false, keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIFreshKey0000000000000000000000000000001", line: LINE, file: "BIOKEY1.FILE" }; } } };
+  const view = { ui: {} };
+  const sent = await regSpec().send(view, {}, kit);
+  assert.deepEqual(asked, { keep: false, passphrase: "a typed passphrase", defer: true });
+  assert.deepEqual(sent, { body: { keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIFreshKey0000000000000000000000000000001", comment: "mai-k" } });
+  pending = view.ui.madePending;
+  assert.equal(pending.file, "BIOKEY1.FILE", "the file is held for the sitting");
+  // control: a member who stops sends nothing
+  assert.deepEqual(await regSpec().send({ ui: {} }, {}, { value: () => "", signer: { register: async () => ({ ok: false, declined: true }) } }), { refuse: "screen.account.key.declined" });
+});
+
+test("R57 (2) after it is made: its tail and day, the public line as data, Copy the public line, and Save the key file only for a key that made a file (never for one kept on the device); nothing of it in any request or storage", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  const r = await a.press("signerregisterown", { values: { "ma-keep": true, "ma-pass": "never sent" }, wait: true });
+  const sent = r.sent.find((x) => x.op === "signerregisterown");
+  assert.ok(/^AAAAC3NzaC1lZDI1NTE5AAAAI[A-Za-z0-9+/=]+$/.test(sent.body.keyB64));
+  assert.ok(keyHeading(a, "screen.account.key.made.heading"), "Your key is made");
+  assert.ok(all(a.tree, (e) => e.attrs["data-shown"] === "key").some((e) => textOf(e).startsWith(said("screen.account.key.held", { key: "…" + sent.body.keyB64.slice(-8), date: "" }).replace(/\s*$/, ""))), "the tail, then the day");
+  has(a, "screen.account.key.save"); has(a, "screen.account.key.lost");
+  assert.ok(a.text.includes(sent.body.keyB64), "the public line, as data");
+  const copy = all(a.tree, (e) => e.tag === "button" && e.attrs["data-shell"] === "bind" && textOf(e) === said("screen.account.key.copyline"));
+  assert.equal(copy.length, 1, "Copy the public line");
+  assert.equal(all(a.tree, (e) => e.tag === "button" && textOf(e) === said("screen.account.key.savefile")).length, 0, "no file for a key kept on the device");
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("never sent")), "the passphrase is kept nowhere");
+  assert.ok(!JSON.stringify(r.sent).includes("never sent"), "nor sent");
+  // control: a made key that has a file draws Save the key file (the kit's `cs.save`), drawn from page memory
+  const spec = a.s;
+  const html = spec.render({ w: (k) => k, esc: (x) => String(x), date: () => "D", title: () => "", state: () => "", sec: (k, inner) => k + "|" + inner, act: () => "", choice: () => "", field: () => "", level: () => "prompt", appearance: () => "", sounds: () => "",
+    save: (n, c, o) => `<SAVE ${n} ${c} ${o.label}>`, copy: (c, o) => `<COPY ${c} ${o.label}>` }, { me: MEMBER, data: {}, ui: { made: { line: LINE, file: "BIOKEY1.FILE", tail: "…x", at: "2026-10-18T00:00:00Z" } } });
+  assert.ok(html.includes("<SAVE bio-signing-key.txt BIOKEY1.FILE screen.account.key.savefile>") && html.includes("<COPY " + LINE + " screen.account.key.copyline>"));
+});
+
+test("R57 (3) a key an administrator registered for the member reads \"registered for you by <who>, an administrator, on <date>\" with the note that only she can sign with it, beside Revoke; one she made herself is drawn as before", async () => {
+  const mine = (o) => ({ key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001", member_id: "dev", comment: "", status: "active", added: "2026-10-03T00:00:00Z", ...o });
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ origin: "admin", registered_by: "rosa" })] }) }) });
+  has(a, "screen.account.registered.for.you.by.rosa", { member: "rosa", date: day("2026-10-03T00:00:00Z") });
+  has(a, "screen.account.only.you.can.sign.with");
+  assert.equal(acts(a.tree).filter((b) => b.attrs["data-act"] === "signerrevokeown").length, 1, "beside Revoke your signing key");
+  // the founder, `admin`, by hers, else the unnamed words
+  const f = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ origin: "admin", registered_by: "admin" })] }) }) });
+  has(f, "screen.account.registered.for.you.by.rosa", { member: said("member.founder.unnamed"), date: day("2026-10-03T00:00:00Z") });
+  const named = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ origin: "admin", registered_by: "admin" })] }), memberlist: env({ members: [{ ...FOUNDER_ROW, handle: "cleo" }] }) }) });
+  has(named, "screen.account.registered.for.you.by.rosa", { member: "cleo", date: day("2026-10-03T00:00:00Z") });
+  // a key she registered herself, and one with no one recorded, say no administrator did
+  const self = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ origin: "self", registered_by: "dev" })] }) }) });
+  lacks(self, "screen.account.only.you.can.sign.with");
+  has(self, "screen.account.key.held", { key: "…00000001", date: day("2026-10-03T00:00:00Z") });
+  const unrec = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ origin: "admin", registered_by: "not recorded" })] }) }) });
+  lacks(unrec, "screen.account.only.you.can.sign.with");
+  // the day missing: the member's own key says so, not a day
+  const nodate = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: env({ signers: [mine({ added: null })] }) }) });
+  has(nodate, "screen.members.signer.held.nodate", { key: "…00000001" });
+  // account reads the roster to name them (a member's read)
+  assert.ok(a.p.requests.some((r) => r.op === "memberlist"));
 });
 
 /* R42 (T50; U3b; interface-shell R74): the Sounds setting beside Language and Appearance, kept on the device */
@@ -166,4 +243,16 @@ test("R42 account draws the Sounds choice (off by default) beside Language and A
   const sec = all(a.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.account.language.heading")))[0];
   assert.ok(sec && all(sec, (e) => e.attrs.role === "group" && e.attrs["aria-label"] === said("screen.account.sounds")).length === 1, "in the language section");
   assert.equal(a.text.split(said("screen.account.language.help")).length, 2, "said once");
+});
+
+test("R57 (1), (2) a key made with a typed passphrase opens no dialog, sends keyB64, and offers Save the key file from page memory; the passphrase and the file are in no request or storage", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  const r = await a.press("signerregisterown", { values: { "ma-keep": false, "ma-pass": "a typed passphrase 123" }, wait: true });
+  const sent = r.sent.find((x) => x.op === "signerregisterown");
+  assert.ok(sent && /^AAAAC3NzaC1lZDI1NTE5AAAAI[A-Za-z0-9+/=]+$/.test(sent.body.keyB64), "the public key is sent");
+  assert.equal(all(a.tree, (e) => e.attrs["data-shell"] === "dialog" || /\bcs-dialog\b/.test(e.attrs.class || "")).length, 0, "no dialog of the kit's own");
+  const save = all(a.tree, (e) => e.tag === "button" && e.attrs["data-shell"] === "bind" && textOf(e) === said("screen.account.key.savefile"));
+  assert.equal(save.length, 1, "Save the key file, for a key that made a file");
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("a typed passphrase 123") || String(v).includes("BIOKEY1.")), "kept nowhere");
+  assert.ok(!JSON.stringify(r.sent).includes("a typed passphrase 123") && !JSON.stringify(r.sent).includes("BIOKEY1."), "sent nowhere");
 });

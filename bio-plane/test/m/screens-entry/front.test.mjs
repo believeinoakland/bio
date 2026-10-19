@@ -52,7 +52,10 @@ test("R1 what it has published: each case edition's title, edition, signing date
 
 test("R1 the doorbell, the tour and the sign-in panel are drawn, the tour by 'See how it works, step by step'", async () => {
   const o = await open("front", { table: TABLE });
-  for (const k of ["screen.front.doorbell", "screen.front.doorbell.what", "screen.front.how", "screen.front.how.what", "screen.front.how.go", "screen.front.members"]) has(o, k);
+  // the keys are the module's own declaration (K3268): its doorbell, tour and members' sentences, the doorbell's link text aside
+  const own = o.spec.words.filter((k) => /^screen\.front\.(doorbell|how|members)(\.what|\.go)?$/.test(k) && k !== "screen.front.doorbell.go");
+  assert.equal(own.length, 6);
+  for (const k of own) has(o, k);
   const l = links(o.tree);
   for (const href of ["/app/doorbell", "/app/tour", "/app/forgot"]) assert.ok(l.includes(href), href);
 });

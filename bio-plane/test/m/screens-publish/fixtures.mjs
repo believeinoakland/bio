@@ -23,7 +23,8 @@ export const GRANT_UNTIL = "2099-10-21T06:59:59Z";
 
 const projectMd = ["---", `id: ${P}`, "object_type: project", "title: \"The Coliseum lease\"", "---", ""].join("\n");
 
-export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft: DR, project: P,
+/** `review` R35: the member door's copy carries the team's zone at its top level, with or without a grant. */
+export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft: DR, project: P, zone: "America/Los_Angeles",
   case: { case_id: C, edition: 2, identity: "The Coliseum lease", newCase: false },
   authored: { scope: "Rent adjustments under the Coliseum lease, 2024 to 2026.", statement: "The rents rose without the vote the lease requires.",
     excluded: [{ target: "INFO-9", description: "Whether the rents are fair", reason: "outside the lease's terms" }] },
@@ -137,8 +138,11 @@ export const drew = (p, key, vars = {}, el = main(p)) => text(p, el).includes(no
 export const drewIn = (el, key, vars = {}) => norm(el.textContent).includes(norm(word(key, vars)));
 /** The explanation an element carries (`data-tip`): its text, tags removed and entities read. */
 export const tipOf = (el) => norm(String(el.getAttribute("data-tip") || "").replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])));
-/** The day as the page draws a date (`cs.date`, interface-shell R6): day, month name, year. */
-export const day = (iso) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(iso));
+/** The day as the page draws a date (`cs.date`, interface-shell R6): `date.daymonthyear` with the month's own word (DEC-333). */
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+export const day = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + MONTHS[m - 1]), year: String(y) }); };
+/** A time of day `HH:MM` as the page draws it (`time.clock`, the 12-hour clock; DEC-299). */
+export const clock = (hhmm) => { const [h, m] = String(hhmm).split(":").map(Number); return word("time.clock", { hour: String(h % 12 || 12), minute: String(m).padStart(2, "0"), ampm: word(h < 12 ? "time.am" : "time.pm") }); };
 export const ops = (p, el = main(p)) => el.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 export const button = (p, op, nth = 0) => main(p).querySelectorAll(`button[data-act="${op}"]`)[nth] || null;
 export function fill(p, values) {
@@ -175,3 +179,25 @@ export function choose(p, id, bytes) {
   const el = p.doc.getElementById(id);
   el.files = [{ name: "f.pdf", size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
 }
+
+/* ---------- T51-121: one finding's page, a reader's minimum, printing, the review copy as a file ---------- */
+
+export const F1 = "FND-2026-0031";
+export const F2 = "FND-2026-0032";
+/** The signer's key as the answer states it (an SSH wire key, base64): its fingerprint is the SHA-256 of these bytes. */
+export const SIGNER_KEY = Buffer.from("civicsmith-test-signer-key-bytes").toString("base64");
+export const leg = (target, role, grade, axis, o = {}) => ({ target, role, grade, grade_axis: axis, grade_source: "case", target_edition: 1, served: false, cited_edition: null, detail: null, ...o });
+/** A published finding entry of `publishedcase` (public-read R39), with the bytes it was published from. */
+export const FINDING = (id, o = {}) => ({ bundle_id: id, title: "A finding", edition: 1, bundle_sha: B1, version_sha: B1, role: "load_bearing", ratified_at: "2026-11-18T10:00:00Z",
+  attestor: { member: "rosa", key_b64: SIGNER_KEY }, delivered_by: "dev",
+  body: { state: "published", from_sha: B1, question: "Were the 2024 rent adjustments lawful?", conclusion: "The 2024 adjustments were made without the council vote the lease requires.",
+    authored: { conclusion: "x", falsifier: "A council vote on the 2024 adjustments, in the minutes of any meeting between January and March 2024.", falsifier_override: null } },
+  strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "B" }],
+  standing: { role: "load_bearing", bar: { capture: "B", connection: "B" }, meets: true, short: [], line: "" },
+  basis: [], serves: [], names: [], unresolved: [], division: { parent: null, siblings: [], detail: null }, ...o });
+/** A case answer holding `findings`, as `publishedcase` gives it for a case, or for one finding (`asked`). */
+export const CASE_WITH = (findings, o = {}) => ({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
+  editions: [{ edition: 1 }, { edition: 2 }], manifest_sha: SHA, files: [], findings, method: { timeline: [] }, people: [], captures: [], corrections: { count: 0, last: null }, ...o });
+export const publishedPlane = (findings, o = {}) => ({ publishedcase: ok(CASE_WITH(findings, o)) });
+/** The address of a finding's own page. */
+export const findingPath = (id, edition = 2) => `/app/published/${encodeURIComponent(`${C}/${edition}/${id}`)}`;

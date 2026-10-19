@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged
 ## B4 · CHANGE
 
 CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
+
+## B5 · CHANGE
+
+CHANGE (K4096): you are merged into tranche/T51 (155 pass). The words check over the merged modules finds three test copies of a sentence people read: fixtures.mjs:56, :57 and graph.test.mjs:71 copy "declared, not evidenced" (testcopy; the design keeps it unkeyed in code, but a test never copies it, K3810). Give the fixture text of its own (it is the provider's answer, so any marker text works) and have graph.test.mjs:71 assert what the screen draws from the fixture, not the sentence. Merge tranche/T51 first; words 0 for your module, then COMPLETE.

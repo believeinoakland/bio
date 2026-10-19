@@ -8,11 +8,11 @@ import { open, lacks, has, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, env, libraryTable, LIST } from "./fixtures.mjs";
 
 const ok = (result) => ({ ok: true, result });
-const GR = { id: "WIZ-00000000000000g1", version: "WIZ-00000000000000g1@1", name: "Get a record", steps: [
+const GR = { id: "WIZ-00000000000000g1", version: "WIZ-00000000000000g1@1", name: said("wizard.WIZ-cb0ad18a17a04233.name"), steps: [
   { screen: "finder", act: "search", what: "Search", why: "Maybe it exists" }, { screen: "document", act: null, what: "Read", why: "See" }] };
 const DOORS = ok({ ok: true, scripts: [], doors: [{ door: "money", scripts: [GR.id] }, { door: "elsewhere", scripts: [] }] });
 const read = (q) => {
-  const s = q.script === GR.id ? GR : { id: WELCOME, name: "Welcome a new member", steps: [{ screen: "home", act: null, what: "a", why: "b" }, { screen: "home", act: null, what: "c", why: "d" }] };
+  const s = q.script === GR.id ? GR : { id: WELCOME, name: said("wizard.WIZ-7db08189cc0e58c3.name"), steps: [{ screen: "home", act: null, what: "a", why: "b" }, { screen: "home", act: null, what: "c", why: "d" }] };
   return ok({ ok: true, script: { id: s.id, name: s.name, origin: "group" }, version: { id: s.id + "@1", state: "approved", steps: s.steps } });
 };
 const plane = (over = {}) => ({ wizardread: read, startfrom: DOORS, wizardprogress: ok({ ok: true }), wizardsat: ok({ ok: true, scripts: [] }), ...over });

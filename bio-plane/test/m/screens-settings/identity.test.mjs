@@ -44,3 +44,26 @@ test("R14 groupdescriptiondraft: the draft filled into the focus and purpose fie
   const empty = await a.press("groupdescriptiondraft", { values: { "gi-q-what": "", "gi-q-who": "", "gi-q-why": "" } });
   assert.deepEqual(empty.sent, []);
 });
+
+/* R58 (T51; DEC-331 (2), DEC-336 (1), DEC-338): the team's short name is not asked for; the screen says once whether it was recorded */
+test("R58 with a recorded group group-identity says once, above its title, that the short name was recorded at installation, and draws no field or act for a short name, to an administrator and to a member", async () => {
+  for (const me of [ADMIN, MEMBER]) {
+    const a = await open("group-identity", { me, table: identityTable() });
+    assert.equal(a.text.split(said("screen.group-identity.seed.recorded")).length, 2, "said once");
+    lacks(a, "screen.group-identity.seed.unrecorded");
+    assert.ok(a.html.indexOf(said("screen.group-identity.seed.recorded").slice(0, 20)) < a.html.indexOf("<h1"), "above its title");
+    assert.ok(!ops(a).includes("instancegroupseed"), "no act for it");
+    assert.ok(!all(a.tree, (e) => e.tag === "input" && /short|seed/i.test(e.attrs.id || "")).length, "no field for it");
+    assert.ok(!a.p.all.some((r) => r.op === "instancegroupseed"), "nothing of the sort is sent");
+  }
+});
+
+test("R58 for an older installation answering group null it says the short name is not recorded yet, in its own state, and draws no field", async () => {
+  const a = await open("group-identity", { me: ADMIN, table: identityTable({ groupidentity: env({ group: null, display_name: "East Oakland Watch", domain: null, domain_verified_at: null }) }) });
+  has(a, "screen.group-identity.seed.unrecorded");
+  lacks(a, "screen.group-identity.seed.recorded");
+  assert.ok(!ops(a).includes("instancegroupseed"));
+  // control: a read that did not answer says neither
+  const none = await open("group-identity", { me: ADMIN, table: identityTable({ groupidentity: "none" }) });
+  lacks(none, "screen.group-identity.seed.recorded"); lacks(none, "screen.group-identity.seed.unrecorded");
+});
