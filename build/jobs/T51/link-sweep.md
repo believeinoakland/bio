@@ -30,3 +30,7 @@ Choices, for BOB's record: a sentence whose text is a code fragment (`out_of_sco
 - `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note for `link-sweep.checks.is_missing` (expected: `rows.mjs` is regenerated at the layer close; not edited here). No refusal.
 
 **Size (session_01HmAPWZPEejc5eMANEyUgYq):** test runs 1, module lines 1106.
+
+## J1 · COMPLETE
+
+T51-242 (words) done on job/T51/link-sweep at 1af3138760 (code, tests) and the record's completion section. Words check for link-sweep: 0 failures (was 15). Module tests 29/29 pass. Format, architecture, coverage, ownership: 0 failures. setup-words --check: the expected stale-rows note for link-sweep.checks.is_missing only. Other modules' repo-wide findings (run.mjs words 1161, coverage 24; cross-module words 60) name no link-sweep line. Deferred: none. Waiting on BOB (J1).
