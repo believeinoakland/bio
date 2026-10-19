@@ -70,7 +70,7 @@
 
 - **R70** *(not yet met: T51)* (T51; N858; DEC-340, U366; K3935; amends R54) **`ACT_HELP` is re-generated at the design commit `8c5e692e19`.** R54's reading is repeated over `mock-acts.js` as it stands there: `actionhold` and `holdnoticesent` are held with their new texts, and `holdnoticeprepare` and `counselpacket` are new entries; `ACT_HELP_ABSENT` keeps none of them. The four `act.<op>.does` keys are read by key. Test: the table equals the file's four entries; control: a fifth entry in the file with no op fails the totality test.
 
-## L11 · before L11's START
+## L11 · before L11's START · **folded (K4040)**
 
 **op-declarations** (1; T51-107 runs this)
 
