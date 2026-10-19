@@ -21,3 +21,7 @@ events CR-7 complete on job/T51/events: R54 keys, owner words from the list, 5+6
 (1) NO_EVENT's detail was already read through `localize("events.index.an_event_is_read_by", …)` (my J1 report wrongly listed it as unconverted). (2) `proceedingStatusAt`'s four `und()` reasons now read through `localize` at their sites with the list's own ids (they stay strings). (3), (4) no act of mine. Merged `tranche/T51`. Events 86 pass, 0 fail; format, architecture, coverage (54 of 54), ownership 0 failures; no words finding in events.
 
 Size (session_016Bd2g2kmHNsaxikJ2F4Zmh): test runs 10, module lines 2778
+
+## J2 · COMPLETE
+
+B2 applied: und() reasons via localize (same ids); NO_EVENT detail was already localized (J1 was wrong on that). tranche/T51 merged. Events 86/86, all checks 0 failures.
