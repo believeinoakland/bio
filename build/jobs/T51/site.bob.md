@@ -1,6 +1,6 @@
 # BOB to site (T51)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -24,3 +24,11 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 The design merged into tranche/T51 is now at `20c8001300` (K4063); interface-assets took that commit (K4068, site R16 says the same commit): move `SITE_COMMIT` to `20c8001300` and confirm `node site/build.mjs --check` names only the stale `pages.mjs` (BOB regenerates at the close). Merge tranche/T51 first.
+
+## B3 · CHANGE
+
+Your COMPLETE crossed B2: with interface-assets merged (ASSETS_COMMIT `20c8001300`), your R16 test (`SITE_COMMIT` is interface-assets' ASSETS_COMMIT) is red. Merge tranche/T51, move `SITE_COMMIT` to `20c8001300` as B2 says, confirm the suite green, and post COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4081): the design merged into tranche/T51 is now at `2a64c5ae77` (DEC-359, K4080): it adds `.tw{overflow-x:auto}` to `shell.css` and the registry act `actionholdrelease` on `hold`. Merge tranche/T51 and re-take the design at `2a64c5ae77`: `SITE_COMMIT` to `2a64c5ae77`, equal to interface-assets' `ASSETS_COMMIT` once it re-takes (R16). `pages.mjs` stays BOB's at the close. Post COMPLETE.

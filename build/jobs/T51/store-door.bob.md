@@ -1,6 +1,6 @@
 # BOB to store-door (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 

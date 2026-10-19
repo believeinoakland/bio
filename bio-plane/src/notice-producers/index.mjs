@@ -58,7 +58,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
-import { overdueOn, dayRange, localDay } from "../civil-time/index.mjs";
+import { overdueOn, dayRange, localDay, localClock } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
@@ -717,9 +717,7 @@ export class NoticeProducers {
         summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "inquiry.datedWaits", inquiry: w.inquiry, date: w.date, set_by: w.set_by, zone: r.zone ?? null,
                  waits: ws.map((x) => x.index),
-                 detail: "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the "
-                       + "member who set it and to nobody else, and leaves when they look, re-date or remove it, or the "
-                       + "question concludes." },
+                 detail: localize("notice-producers.index.a_dated_wait_is_inquirys", "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the member who set it and to nobody else, and leaves when they look, re-date or remove it, or the question concludes.") },
         age: ageFrom(w.date, now, "no_wait_day", r.zone),        /* the local day in inquiry's zone (K1688) */
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -745,20 +743,21 @@ export class NoticeProducers {
     const { start, through, truncated } = this.#episode(me, now);
     const from = instantOf(start), to = instantOf(now);
     const got = through === 0 ? localize("notice-producers.nothing_got_through", "nothing got through")
-      : localize("notice-producers.got_through_paused", "{through} {through_2} got through under a paused role", { through: String(through), through_2: String(through === 1 ? "sign-in or recovery" : "sign-ins or recoveries") });
+      : localize("notice-producers.got_through_paused", "{through} {through_2} got through under a paused role", { through: String(through), through_2: wordsOf(through === 1 ? "notice-producers.sign_recovery" : "notice-producers.sign_ins_recoveries") });
+    const fromText = NoticeProducers.#timeAt(from, this.#zone());
     return { items: [{
       id: `FINDING::security-level-high::${from}`, class: "FINDING", kind: "security-level-high",
       label: NOTICED_LABEL, by: "the machine's",
       case: this.#homesOf([]),
       subject: { kind: "civicsmith", id: null, episode: from },
       summary: localize("notice-producers.summary.security_level_group", "The security level of your team's Civicsmith is High"),
-      detail: localize("notice-producers.index.the_security_level_of_your", "The security level of your team's Civicsmith has been High since {from}, and in that time {got}.", { from: String(from), got: String(got) }),
+      detail: fromText === null
+        ? localize("notice-producers.index.the_security_level_of_your_no_time", "The security level of your team's Civicsmith has been High, and in that time {got}.", { got: String(got) })
+        : localize("notice-producers.index.the_security_level_of_your", "The security level of your team's Civicsmith has been High since {from}, and in that time {got}.", { from: fromText, got: String(got) }),
       screen: { op: "securitymap", from, to },
       basis: { source: "credentials.securityLevel", level: lv.level, level_at: lv.levelAt ?? null, episode: { from, to },
                through, threshold: { ...SECURITY_THRESHOLD },
-               detail: "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run "
-                     + "of hours at whose end the level was High, told once to each administrator, and a later one "
-                     + "is told again." },
+               detail: localize("notice-producers.index.the_level_is_credentials", "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run of hours at whose end the level was High, told once to each administrator, and a later one is told again.") },
       age: ageFrom(from, now, "no_episode_start"),
       assignee: null, assignee_role: null,
       recipients: [me],
@@ -1021,8 +1020,7 @@ export class NoticeProducers {
         summary: text, detail: text, word: "ai.queue.exploreask", fills,
         basis: { source: "ai-use.exploreAsksPending", key: a.key, owner: o.ref, day: a.day ?? null, asked_at: a.asked_at ?? null,
                  estimate: a.estimate ?? null,
-                 detail: "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; "
-                       + "silence means no." },
+                 detail: localize("notice-producers.index.an_accounts_ask_is_ai_uses", "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; silence means no.") },
         age: ageFrom(a.asked_at, now, "no_ask_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
@@ -1411,10 +1409,28 @@ export class NoticeProducers {
     return null;
   }
 
-  /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; its own first ten characters when it
-   *  is no instant civil-time reads, else "an earlier date". */
+  /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; null when it is no instant civil-time
+   *  reads (R26: such a day is not written, never as ISO text). */
   static #localDate(at, zone) {
-    return NoticeProducers.#localDay(at, zone) ?? dayOf(at) ?? localize("notice-producers.earlier_date", "an earlier date");
+    return NoticeProducers.#localDay(at, zone);
+  }
+
+  /** R25 (DEC-299, DEC-333, DEC-335): an instant as a team reads a moment, `time.at` with `{date}` the local day with its
+   *  year (`date.daymonthyear`) and `{time}` the local clock (`time.clock`, `time.am`, `time.pm`; civil-time's `localClock`,
+   *  R30), in `zone`; with no zone held, the UTC reading and "UTC" after it. Null when the instant cannot be read (never
+   *  raw text). */
+  static #timeAt(at, zone) {
+    const ms = typeof at === "string" && INSTANT.test(at) ? Date.parse(at) : NaN;
+    if (!Number.isFinite(ms)) return null;
+    const z = filled(zone) ? zone : "UTC";
+    const date = dayInSentence(NoticeProducers.#localDay(ms, z), null);
+    let wall = null;
+    try { wall = localClock(instantOf(ms), z); } catch { wall = null; }
+    if (!date || !wall || !Number.isInteger(wall.hour) || !Number.isInteger(wall.minute)) return null;
+    const minute = String(wall.minute).padStart(2, "0");
+    const clock = wordsOf("time.clock", { hour: String(wall.hour % 12 || 12), minute, ampm: wordsOf(wall.hour < 12 ? "time.am" : "time.pm") });
+    const moment = wordsOf("time.at", { date, time: clock });
+    return filled(zone) ? moment : `${moment} UTC`;
   }
 }
 
