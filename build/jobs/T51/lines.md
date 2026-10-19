@@ -11,3 +11,18 @@ Findings for BOB, none in my module's files.
 3. **Item reasons in `neighbours`.** R24 says the sentence is read from the key "beside `why_key`", but connection-grammar R6 and its battery (already on the tranche) require the item's `undetermined.why` itself to be `{key, vars}`. I followed connection-grammar: `undetermined: {why: {key, vars}}`, no string and no `why_key`. A hub keeps its string `why` (the battery wants a filled string) with `why_key` beside it. R24's wording could be brought in line.
 4. **New word ids** (generated rows are yours to regenerate; `build.mjs --check` reports them as stale): `lines.why.cache_stale`, `no_line_covers`, `lines_disagree`, `read_truncated`, `date_unreadable`, `date_unjudged` (new); `stated_current_through` and `entity_lines_kinds` (existing rows, now reasons); about 50 `lines.index.*` refusal details. Orphaned by this job once regenerated: `lines.text.date_read`, `lines.text.lines_hold_post`, `lines.text.lines_read_holds`, `lines.text.line_naming_office`, `lines.undetermined.line_covers_date`.
 5. **Words judged no member reads (left as they are):** the `Error` thrown at boot when a registration is refused (`migrate`, a wiring defect), and the table and code identifiers (kinds, capacities, roles, ends: values the code compares). Everything else the words check counted, and every other refusal `detail` and `why`, is now a `localize` call.
+
+## J2 · COMPLETE
+
+CR-7 (lines part) applied.
+
+**Entries applied.**
+- R24 (and R7, R10, R11, R21): every reason is `{key, vars}`: stale cache `lines.why.cache_stale`; holderAt `lines.why.no_line_covers`, `lines.why.lines_disagree` (`{lines}`), `lines.why.read_truncated`; R21 `lines.why.stated_current_through` (`{why, day}`, civil-time's reason carried inside); `date_unreadable`, `date_unjudged` for the rest. New file `reasons.mjs` (`reason`, `reasonText`, `REASON_KEYS`); `reasonText` is exported from the index. structureAt/partiesOf/readLine/neighbours answer the keyed reasons; a neighbours item's `undetermined.why` is the `{key, vars}` (connection-grammar R6).
+- Words: the 3 conversion findings and the 25 plain findings, and every other refusal `detail` and `why` (about 50, all `localize('lines.index.<slug>', en, vars)`); citations; the kind words read by `label.linekinds.<kind>` and the capacity words by `label.linecapacities.*` (vocab.mjs, English unchanged). `{statement}` in the basis sentence became "(a statement)" so it is not read as a fill.
+- K3958 reds: R10, R11, R21 tests read the keys (R10 `reads.test.mjs`, R11 `holderAt`, R21 `current.test.mjs`); all green.
+
+**Deferred.** None. See the REPORT (J1) for the shape change in holderAt that `actions` and `duties` must follow, the nested-reason rendering, and the word ids.
+
+**Tests and checks.** `node --test test/m/lines/*.test.mjs`: 35 pass, 0 fail (new `reasons.test.mjs` names R24, with a control). Users' tests against the tranche: one new red, `actions` R9 R25 (t33.test.mjs:105, the old sentence), reported. `checks/run.mjs`: format 175 modules 0 failures; architecture 0 failures; coverage for lines 24 of 24 ids named, 0 failures; words: no finding in lines. `setup-words/build.mjs --check`: stale rows only (expected). `ownership.mjs lines tranche/T51 job/T51/lines`: 1 file changed by lines... 0 failures.
+
+Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 14, module lines 1009
