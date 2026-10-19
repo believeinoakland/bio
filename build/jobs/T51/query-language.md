@@ -53,3 +53,25 @@ Tests and checks:
 - format: 174 modules, 0 failures. architecture (query-language): 0 failures. coverage (query-language): 33 of 33 live ids named, 0 failures. ownership (query-language, tranche/T51): 0 failures.
 
 Size (session_01FS8FKWSy2DYXTK38z1ksz2): test runs 6, module lines 3034
+
+## J4 · BLOCKED
+
+T51-202 · query-language · words pass (B4), commit b5b2429fa2 on job/T51/query-language (pushed). BLOCKED: cause NEEDS BOB, one act.
+
+Applied (the seven findings of build/plan/words-pass/query-language.md):
+- Plain (K3957), query.mjs CACHED_FIELDS whys, each now a localize call read by cachedNotes and the field detail: capture → new id `query-language.query.capture_letter_bounded` (no row yet; rows.mjs is stale for it, as setup-words build --check notes); connection → existing `query.why.leg_raised_anywhere`; due → existing `query.why.clock_next_date`; overdue → existing `query.why.flag_computed_local`. Connection's why was not in the three counted findings (it is a two-literal concatenation), converted for the same reason.
+- Test copies (K3962, K3810): t33.test.mjs (3 lines), statements.test.mjs (1 line), grammar.test.mjs (NEAR warning checks now compare the reason with word(key, vars) and assert hasWord for the wrapper; message text reworded), converts.test.mjs and grammar.test.mjs (content:chain/cap query strings built from CHAIN_DOES_NOT_APPLY, CAP_DOES_NOT_APPLY and a local UNDETERMINED constant).
+
+Tests and checks:
+- node --test test/m/query-language/ (bio-plane): 57 pass, 0 fail.
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; channels 0 failures; coverage reports 30 failures, none naming query-language; words reports no finding naming query-language.js except the one below.
+- setup-words build.mjs --check: stale-rows note for capture_letter_bounded only (expected); no refusal.
+- checks/ownership.mjs query-language tranche/T51 job/T51/query-language: 0 failures.
+
+NEEDS BOB (the one open item): three findings the checker raises in my test file t33.test.mjs, not fixable inside this job:
+- missingkey: `query-language.query.stringify_is_not_available_here`, `query-language.query.sort_stringify_can_hold_many`, `query-language.query.facets_stringify_can_hold_many` (t33.test.mjs:215, :227, :231). These keys exist in rows.mjs as code-tagged rows (words-unreviewed.json), but the checker reads docs/development/ux-substrate/screens/words.json, which lacks them, so tests cannot reference them by word().
+- The tests now call word() on them, keeping the exact assertions. Without the keys in words.json, the only alternative is to weaken the assertions, which I will not do.
+- Ask: add those three keys (with these English sentences, unchanged) to the design's words.json, through the design stream, and BOB regenerates rows at the layer close. Recommended: yes, since members read these warnings. After that the job re-runs the words check and posts COMPLETE.
+
+Deferred: none. Found in other modules: none from this job.
+Size (session_01ViKHjERep3ZC62ov1p3v8e): test runs 1, module lines 3000
