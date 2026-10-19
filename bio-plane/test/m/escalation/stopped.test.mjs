@@ -8,12 +8,12 @@ import { seeded, opened, toStage, V, MACHINE, ms, OFFICE } from "./fixture.mjs";
 import { readFileSync } from "node:fs";
 import { ESCALATION_CHECKS, ESCALATION_WORDS } from "../../../src/escalation/index.mjs";
 import { STATES } from "../../../src/record-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const LIST = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const WORD = (key) => { const w = LIST.words.find((x) => x.key === key); if (!w) throw new Error(`words.json holds no ${key}`); return w.en; };
 /* C-116.27's translation as it stands (R35: kept in T46) */
-const NOT_OPEN_KEPT = "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never "
-  + "moves again. Nothing was written.";
+const NOT_OPEN_KEPT = localize("escalation.checks.the_escalations_stage_moves_only", "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written.");
 
 const by = (who) => ({ author: V(who), viewer: V(who) });
 const stop = (w, extra = {}) => w.esc.escalationStopPursuing({ id: w.E, reason: "The group has stopped pursuing it.", ...by("bob"), ...extra });

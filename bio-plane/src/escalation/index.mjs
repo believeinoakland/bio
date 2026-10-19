@@ -135,6 +135,8 @@ const OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+/* a reason the lines module answers is `{key, vars}` (civil-time's, K3958): a sentence a member reads renders it by key */
+const reasonText = (r) => (isObj(r) ? word(r.key, r.vars) : String(r));
 /* A snap key's tail: eight hex digits, the form the catalogue maps a history file to its manifest entry by (C-12.2). */
 const hex8 = () => { const b = new Uint8Array(4); crypto.getRandomValues(b); return [...b].map((x) => x.toString(16).padStart(2, "0")).join(""); };
 const isMachine = (who) => str(who) === "" || isMachineIdentity(who);
@@ -200,7 +202,7 @@ function consequenceSentence(p) {
   const per = isObj(p.period) && str(p.period.from) && str(p.period.to) ? `from ${str(p.period.from)} to ${str(p.period.to)}`
     : word("escalation.period_record_state");
   const cause = isObj(p.causation) && str(p.causation.state) ? str(p.causation.state) : "undetermined";
-  return word("escalation.consequence_affects_causation", { id: String(p.id), standard: String(str(p.standard) ? ` (standard ${str(p.standard)})` : ""), who: String(who), measure: String(measure), per: String(per), state: String(str(p.state) || "of a state the record does not state (undetermined)"), cause: String(cause) });
+  return word("escalation.consequence_affects_causation", { id: String(p.id), standard: String(str(p.standard) ? ` (standard ${str(p.standard)})` : ""), who: String(who), measure: String(measure), per: String(per), state: String(str(p.state) || localize("escalation.index.consequence_state_undetermined", "of a state the record does not state (undetermined)")), cause: String(cause) });
 }
 
 /* ---- the providers' answers, read in one place each (their Provides) ---- */
@@ -394,8 +396,7 @@ export class Escalation {
     const byEvaluation = (ev) => (ev && COMPLETED_READINGS.has(ev.reading)
       ? [{ ms: instantMs(ev.at), ids: [evaluationId(e.id, evaluations.indexOf(ev) + 1)] }] : []);
     const evalMissing = (ev, scope) => (!ev ? `no evaluation ${scope}`
-      : ev.reading === "complied" ? `the evaluation in force reads complied: it proposes no stage. Compliance is restored `
-        + `only by a live compliant determination of the same act for every standard pursued (escalationEnd)`
+      : ev.reading === "complied" ? word("escalation.evaluation_force_reads")
       : word("escalation.evaluation_reads_denied", { scope: String(scope) }));
 
     /* actions R12 (T33-73): a clock entry is past on the office's local day, so its rule reads the place (the view) */
@@ -437,20 +438,16 @@ export class Escalation {
                                  ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`] });
         }
         if (!owed) {
-          notes.push({ action: a.action, reply_owed: false, says: "no reply owed: this notification action states that "
-                       + "no reply is owed, so stage 3 never triggers on it by time or by the lack of a reply" });
+          notes.push({ action: a.action, reply_owed: false, says: word("escalation.says.reply_owed_notification") });
           continue;
         }
         const facts = actionFacts(this.#text(a.action), nowMs, place) || {};
         if (!facts.clock_next)
-          notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never "
-                       + "triggers by time on it; a member states a clock entry, with its basis, on the action" });
+          notes.push({ action: a.action, says: word("escalation.says.notification_action_pending") });
         else if (facts.clock_overdue)
           alts.push({ ms: overdueSince(this.#text(a.action), facts.clock_next, nowMs, place), ids: [a.action], clock: facts.clock_next });
         else if (facts.clock_overdue === null)
-          notes.push({ action: a.action, says: "whether this action's clock entry is past is undetermined (actions R12: no "
-                       + "time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is "
-                       + "not triggered by time on it" });
+          notes.push({ action: a.action, says: localize("escalation.index.clock_entry_past_undetermined", "whether this action's clock entry is past is undetermined (actions R12: no time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is not triggered by time on it") });
       }
       edge(4, alts, acts.length ? word("escalation.reply_response_entry")
                                 : word("escalation.notification_action_attached_stage"));
@@ -533,14 +530,12 @@ export class Escalation {
       }
       const ids = [...found, ...cured.map((c) => c.cure).filter((c) => !found.includes(c))];
       per.push({ standard, met: ids.length > 0, ids, ...(cured.length ? { cured_by: cured } : {}),
-                 ...(ids.length ? {} : { missing: "no live compliant determination, recorded after the escalation opened, of the "
-                   + "same act or of a later act of the same office linked as its cure" }) });
+                 ...(ids.length ? {} : { missing: word("escalation.live_compliant_determination") }) });
     }
     const lacking = per.filter((p) => !p.met).map((p) => p.standard);
     return { state: lacking.length ? "not_met" : "met", ids: per.flatMap((p) => p.ids), standards: per,
              why: lacking.length ? word("escalation.why.live_compliant_determination", { lacking: String(lacking.join(", ")) })
-                                 : "every standard pursued has a live compliant determination, of the same act or of its "
-                                   + "linked cure, recorded after the escalation opened" };
+                                 : word("escalation.why.standard_pursued_live") };
   }
 
   /* R14: a determination that restores compliance for `standard`: live, compliant for it, recorded after the escalation
@@ -606,15 +601,12 @@ export class Escalation {
           const l = this.#oversightLines(target, actor, dayOf(a.at), viewer);
           const doubt = l.state === "none" && l.undetermined.length ? { undetermined: l.undetermined } : {};
           if (l.state === "held")
-            item.oversight = { state: "held", lines: l.lines, says: "this office holds a line by which it oversees the "
-              + "actor's office on the attachment's day; the line governs over the profile" };
+            item.oversight = { state: "held", lines: l.lines, says: word("escalation.says.office_holds_line") };
           else if (office.oversight === undefined)
-            item.oversight = { state: "undetermined", says: "no line held on the attachment's day shows this office "
-              + "overseeing the actor's office, and the active profiles do not say whether it is an oversight or audit body",
+            item.oversight = { state: "undetermined", says: word("escalation.says.line_held_attachment"),
               ...doubt, ...(l.state === "unread" ? { lines_unread: l.why } : {}) };
           else if (doubt.undetermined)
-            item.oversight = { state: "profile", profile: office.oversight, says: "no line is held on the attachment's "
-              + "day; the active profiles speak", ...doubt };
+            item.oversight = { state: "profile", profile: office.oversight, says: word("escalation.says.line_held_attachment_day"), ...doubt };
         }
       }
       if (a.stage === 5) {
@@ -678,7 +670,7 @@ export class Escalation {
       for (const u of s.undetermined || [])
         if (isObj(u.line) && OVERSIGHT_KINDS.includes(u.line.kind) && u.line.to === entity && u.line.from !== office)
           undetermined.push({ entity: u.line.from, line: Escalation.#line(u.line), ...(via ? { via } : {}),
-                              why: doubt ? `${doubt}; and ${u.why}` : u.why });
+                              why: doubt ? localize("escalation.index.doubt_and_reason", "{doubt}; and {why}", { doubt, why: reasonText(u.why) }) : u.why });
     };
     intoOver(office, null, null);
     const parts = at(office, ["part_of"]);
@@ -686,7 +678,7 @@ export class Escalation {
       if (l.kind === "part_of" && l.from === office) intoOver(l.to, Escalation.#line(l), null);
     for (const u of parts.undetermined || [])
       if (isObj(u.line) && u.line.kind === "part_of" && u.line.from === office)
-        intoOver(u.line.to, Escalation.#line(u.line), word("escalation.office_part_line", { day: String(day), why: String(u.why) }));
+        intoOver(u.line.to, Escalation.#line(u.line), word("escalation.office_part_line", { day: String(day), why: reasonText(u.why) }));
     return { held, undetermined };
   }
 
@@ -785,12 +777,9 @@ export class Escalation {
     };
     answer = this.#withhold(answer, attached, seen);
     if (e.state === "suspended")
-      answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep "
-                           + "running in the actions, and it is not ended" };
+      answer.suspended = { since: e.stateSince, says: word("escalation.says.suspended_proposals_reported") };
     if (e.state === STOPPED)
-      answer.stopped = { since: e.stateSince, stage: e.stage, says: "stopped pursuing: the team decided to stop pursuing "
-                         + "this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen "
-                         + "it at this stage" };
+      answer.stopped = { since: e.stateSince, stage: e.stage, says: word("escalation.says.stopped_pursuing_group") };
     if (e.state === "ended") answer.ended = { at: e.stateSince, says: word("escalation.says.ended_compliance_restored") };
     if (e.stage === 7) answer.targets = this.#targets(actor, dayOf(at), viewer);
     if (e.stage === 5) {
@@ -1100,8 +1089,7 @@ export class Escalation {
       const doubt = l.state === "none" && l.undetermined.length ? { undetermined: l.undetermined } : {};
       if (office.oversight === false) return { state: "refused", code: "COUNTERPARTY_NOT_OVERSIGHT", ...doubt };
       if (office.oversight === true) return { state: "admitted", profile: { oversight: true }, ...doubt };
-      return { state: "undetermined", says: "no line held on this day shows this office overseeing the actor's office, "
-               + "and the active profiles do not say whether it is an oversight or audit body; the attachment lands", ...doubt,
+      return { state: "undetermined", says: word("escalation.says.line_held_day"), ...doubt,
                ...(l.state === "unread" ? { lines_unread: l.why } : {}) };
     }
     return { state: "none_asked", says: word("escalation.says.purpose_asks_condition") };
@@ -1128,8 +1116,7 @@ export class Escalation {
                                            ...(c.undetermined ? { undetermined: c.undetermined } : {}) } : c];
     }));
     return { ok: true, id: e.id, action, stage: 7, on: day, counterparty: isObj(a.counterparty) ? a.counterparty : null,
-             purposes, says: "what the attachment would judge of this action's addressee on this day, per purpose; it "
-               + "writes nothing and chooses nothing" };
+             purposes, says: word("escalation.says.attachment_judge_action") };
   }
 
   /** R10: a member's reading of a response, at stage 4. */
@@ -1461,8 +1448,7 @@ export class Escalation {
       return n;
     });
     return { ok: true, id: declineId(determination, seq), determination, reason: g.reason, author, at,
-             says: "recorded as the team's decline to escalate now; a later decline or an escalation opened later "
-                 + "supersedes it, and it stays readable" };
+             says: word("escalation.says.recorded_group_decline") };
   }
 
   /** R28 (DEC-89): whether the determination was escalated, declined or neither, by the latest of its openings and
@@ -1531,10 +1517,10 @@ export class Escalation {
       const st = held.find((x) => x.standard === standard);
       const rows = st && Array.isArray(st.rows) ? st.rows.filter(isObj) : [];
       if (!rows.length) { say(standard, word("escalation.standard_breached_basis", { standard: String(standard) })); continue; }
-      const basis = rows.map((r) => word("escalation.requires_act_reading", { requires: String(str(r.requires) ? quoted(r.requires) : "what the record does not state (undetermined)"), did: String(str(r.did) ? quoted(r.did) : "what the record does not state (undetermined)"), reading: String(str(r.reading) || "undetermined"), content: String(Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : "") })).join("; and ");
+      const basis = rows.map((r) => word("escalation.requires_act_reading", { requires: String(str(r.requires) ? quoted(r.requires) : word("escalation.record_state_undetermined")), did: String(str(r.did) ? quoted(r.did) : word("escalation.record_state_undetermined")), reading: String(str(r.reading) || "undetermined"), content: String(Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : "") })).join("; and ");
       const force = st.in_force === "in_force" ? word("escalation.force_act_date")
         : word("escalation.whether_force_act", { in_force_why: String(str(st.in_force_why) ? ` (${str(st.in_force_why)})` : "") });
-      say(standard, word("escalation.standard_breached", { standard: String(standard), basis: String(basis), force: String(force), disagreement: String(str(st.disagreement) ? ` The determination states: ${str(st.disagreement)}.` : "") }));
+      say(standard, word("escalation.standard_breached", { standard: String(standard), basis: String(basis), force: String(force), disagreement: String(str(st.disagreement) ? localize("escalation.index.determination_states", " The determination states: {disagreement}.", { disagreement: str(st.disagreement) }) : "") }));
     }
 
     /* The actions resting on it that the viewer may see, each with its clock and every date passed without a response. */
@@ -1551,20 +1537,20 @@ export class Escalation {
         shown++;
         const cp = isObj(a.counterparty) && str(a.counterparty.role) && str(a.counterparty.body)
           ? `${str(a.counterparty.role)}, ${str(a.counterparty.body)}` : word("escalation.office_record_name");
-        say(id, word("escalation.action_rests_determination", { id: String(id), kind: String(str(a.kind) ? ` (${str(a.kind)})` : ""), cp: String(cp), current_state: String(str(a.current_state) ? `; its state is ${str(a.current_state)}` : "") }));
+        say(id, word("escalation.action_rests_determination", { id: String(id), kind: String(str(a.kind) ? ` (${str(a.kind)})` : ""), cp: String(cp), current_state: String(str(a.current_state) ? localize("escalation.index.its_state_is", "; its state is {state}", { state: str(a.current_state) }) : "") }));
         const clock = Array.isArray(a.clock) ? a.clock.filter(isObj) : [];
         if (!clock.length) say(id, word("escalation.action_states_clock", { id: String(id) }));
         for (const c of clock) {
           const what = str(c.text) || str(c.description);
           const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
-          say(id, word("escalation.action_clock_entry", { id: String(id), what: String(what ? quoted(what) : "(its text undetermined)"), date: String(date ?? "on a date the record does not state (undetermined)"), basis: String(str(c.basis) ? quoted(c.basis) : "the record does not state (undetermined)"), status: String(str(c.status) || "its status undetermined") }));
+          say(id, word("escalation.action_clock_entry", { id: String(id), what: String(what ? quoted(what) : word("escalation.text_undetermined")), date: String(date ?? localize("escalation.index.date_undetermined", "on a date the record does not state (undetermined)")), basis: String(str(c.basis) ? quoted(c.basis) : localize("escalation.index.basis_undetermined", "the record does not state (undetermined)")), status: String(str(c.status) || "its status undetermined") }));
           /* actions R12's rule, entry by entry: past once the office's local day after it has begun (or its close of
              business, where the basis says so); undetermined, and said, where no zone is held. */
           if (c.status === "pending" && date) {
             let past = null;
             try { past = actionOverdue({ counterparty: a.counterparty, clock: [c] }, at, place); } catch { past = null; }
             if (past === true)
-              say(id, word("escalation.date_action_passed", { date: String(date), id: String(id), today: String(today ?? "the day of reading") }));
+              say(id, word("escalation.date_action_passed", { date: String(date), id: String(id), today: String(today ?? word("escalation.day_reading")) }));
             else if (past === null)
               say(id, word("escalation.whether_date_action", { date: String(date), id: String(id) }));
           }
@@ -1658,8 +1644,7 @@ export class Escalation {
       items.push({ action: id, kind: a.kind ?? null, sent_at: sent ? sent.at : null,
                    resolution: typeof a.resolution === "string" ? a.resolution : null, state: a.current_state ?? null });
     }
-    return { items, says: "evidence-seeking acts on the determination or its findings (records requests, requests for "
-             + "comment and the like): context, never attached and never a trigger" };
+    return { items, says: word("escalation.says.evidence_seeking_acts") };
   }
 
   /* R29: the ids of the actions resting on the determination that `viewer` may see (`actions.actionsFor`, its R30),
