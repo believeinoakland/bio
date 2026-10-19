@@ -50,7 +50,7 @@ function member(w, id, { subject = null, legs = [] } = {}) {
 /* A passage's content row, as content mints it (its R45's columns). */
 const mint = (w, contentId, captureSha) => w.st.sql.exec(
   `INSERT INTO content (content_id,capture_sha,bundle_id,extent_kind,extent,ref,minted_by,at) VALUES (?,?,?,?,?,?,?,?)`,
-  contentId, captureSha, "INFO-2026-0001-minutes", "document", "{}", "the whole document", "olive", NOW);
+  contentId, captureSha, "INFO-2026-0001-minutes", "document", "{}", "whole", "olive", NOW);
 /* A `materials:` row (case-grammar R12) for a capture, carried whole or by its fingerprint only. */
 const material = (sha, included) => ({ ref: `INFO-2026-0001-minutes`, kind: "document", sha, text_sha: null, origin: null,
                                        archived_copy: null, included, rests_under: "load_bearing" });

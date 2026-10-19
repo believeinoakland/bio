@@ -57,7 +57,7 @@ test("R57 (T41) R33 every row case-carriage answers lapsed (a mark withdrawn sin
     assert.equal(r.ok, false);
     assert.deepEqual({ reason: r.reason, code: r.code, check: r.check, translation: r.translation },
                      { reason: "PHOTO_MARKS_CHANGED_SINCE", code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6", translation: en });
-    assert.deepEqual(r.photos, answer ?? [{ ref: null, sha: null, why: "the photos' marks could not be read" }]);
+    assert.deepEqual(r.photos, answer ?? [{ ref: null, sha: null, why: word("publication.why.photos_marks_read").en }]);
     assert.equal(r.photo, answer ? "INFO-2026-0020-photo" : "a photo", "`photo`, the photos named, for {photo}");
     assert.deepEqual(w.snapshot(), before, "nothing is committed");
   }
