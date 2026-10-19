@@ -1,6 +1,6 @@
 # actions (T51)
 
-**Status** · session_01TXuP7EMXudAZjVe2WhZZQT · depth 2 · COMPLETE · handled B3
+**Status** · session_01TXuP7EMXudAZjVe2WhZZQT · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## Completion (T51-89)
 
