@@ -324,7 +324,7 @@ ${pageMark()}
 <p class="small" id="says" hidden></p>
 <div id="log" class="cs-sheet ng-log"></div>
 <p class="small" id="waiting" role="status" hidden></p>
-<div id="fail" class="ng-stop" role="alert" hidden><p id="fail-p"></p><p id="fail-d"></p><p class="small" id="fail-s"></p>${retry
+<div id="fail" class="ng-stop" role="alert" hidden><p id="fail-p"></p><p id="fail-d"></p><p class="small" id="fail-s"></p><div class="ng-acts" id="fail-again" hidden></div><p class="err" id="fail-err" role="alert"></p>${retry
   ? `<div class="ng-acts" id="fail-acts"><a class="cs-btn" data-tone="primary" id="try-again" href="${esc(retry)}">${esc(UPDATE_WORDS.tryAgain)}</a></div>` : ""}</div>
 <div id="done" class="ng-stage" hidden></div>
 ${publisherFooter()}
@@ -355,6 +355,8 @@ function wire(){
  const n=E("alongside-no");if(n)n.addEventListener("click",()=>E("alongside-dialog").close());
  const t=E("typed"),c=E("confirm-remove");
  if(t&&c){c.disabled=true;t.addEventListener("input",()=>{c.disabled=t.value.trim()!==c.dataset.slug;});}}
+function again(label,body){const a=$("#fail-again"),b=document.createElement("button");b.className="cs-btn";b.dataset.tone="primary";b.textContent=label;
+ b.addEventListener("click",()=>go(body,$("#fail-err")));a.appendChild(b);a.hidden=false;}
 function done(html){ended=true;$("#fail").hidden=true;$("#done").innerHTML=html;$("#done").hidden=false;wire();
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
   await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent);
@@ -395,6 +397,8 @@ function streamPage(headers, shell, run, again = null) {
     /* R66: the line drawn while a wait on Cloudflare or the address goes on. */
     wait: (text)      => write(`<script>waiting(${jsStr(text)})</script>\n`),
     done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
+    /* R70: after a stop that waits for the founder to turn something on, the one act that begins the run again (as R71's). */
+    retry: (label)    => again ? write(`<script>again(${jsStr(label)},${jsLit(again)})</script>\n`) : undefined,
   };
   (async () => {
     await write(shell);
@@ -485,12 +489,21 @@ async function limitReached(api) {
   for (const [k, l] of Object.entries(ACCOUNT_LIMITS)) if (have[k] + l.need > l.ceiling) return word(`installer.limit.${k}.${l.ceiling === 1 ? "one" : "other"}`, { n: l.ceiling });
   return null;
 }
-/* F2: whether Containers are turned on for the account. The platform answers a list of applications when they are, and a
-   refusal naming the setting when they are not; any other refusal is not read as "off". */
+/* F2 (R70): whether Containers are turned on for the account, decided positively. An answer that lists applications shows it on;
+   a refusal naming the setting shows it off; a refusal for want of permission leaves it to the container member's own check (R38
+   leaves that member out and the install continues); any other answer is "could not tell", and the install stops saying so,
+   never reading it as on. */
 const CONTAINERS_OFF = /(containers?\b.*\b(not|isn'?t|aren'?t)\b.*\benabled|\benable\b.*\bcontainers?|containers?\b.*\bdisabled)/i;
-async function containersOn(api) {
-  try { await api("/containers/applications"); return true; }
-  catch (e) { if (special(e)) throw e; return !CONTAINERS_OFF.test(e.message || ""); }
+const NO_PERMISSION = /(authentication|permission|not authori[sz]ed|forbidden|unauthori[sz]ed|scope)/i;
+async function containersState(api) {
+  try { await api("/containers/applications"); return { state: "on" }; }
+  catch (e) {
+    if (special(e)) throw e;
+    const said = e && e.message || String(e);
+    if (CONTAINERS_OFF.test(said)) return { state: "off" };
+    if (NO_PERMISSION.test(said)) return { state: "permission" };
+    return { state: "unknown", said };
+  }
 }
 
 /* The release version an update from the "already holds a copy" page installs: the repository's newest when it is newer than
@@ -647,9 +660,16 @@ async function installRun(emit0, code, saved, guard) {
   /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
   await emit.step("room", word("installer.step.room"));
   try {
-    if (!(await containersOn(api))) {
+    const containers = await containersState(api);
+    if (containers.state === "off") {
       emit.no("room");
-      return emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
+      await emit.fail(word("screen.install.stopped.containers"), word("screen.install.stopped.containers.do"));
+      /* R70: the stop waits to be told it is on, and then begins again, the choices kept. */
+      return emit.retry(word("screen.install.stopped.containers.done"));
+    }
+    if (containers.state === "unknown") {
+      emit.no("room");
+      return emit.fail(word("installer.install.stopped.lookup", { said: containers.said }), word("screen.install.stopped.containers.do"));
     }
     const limit = await limitReached(api);
     if (limit) {

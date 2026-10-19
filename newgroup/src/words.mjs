@@ -389,6 +389,7 @@ export const KEYS = Object.freeze([
   "screen.install.short.heading",
   "screen.install.stopped.containers",
   "screen.install.stopped.containers.do",
+  "screen.install.stopped.containers.done",
   "screen.install.stopped.exists",
   "screen.install.stopped.lasting",
   "screen.install.stopped.lasting.do",

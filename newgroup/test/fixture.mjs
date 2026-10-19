@@ -74,7 +74,7 @@ export function script(rules, pre = null) {
    are run here against recorders, so a label is read exactly as the page's script receives it. */
 export function parsePage(raw) {
   const events = [];
-  let failed = null, done = null, says = null;
+  let failed = null, done = null, says = null, retry = null;
   const waits = [];
   const scripts = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   const rec = {
@@ -89,6 +89,8 @@ export function parsePage(raw) {
     says: (t) => { says = t; },
     /* R66: the line drawn while a wait goes on. */
     waiting: (t) => { waits.push(t); },
+    /* R70: the one act offered after a stop that waits for something to be turned on: its label and the body it begins again with. */
+    again: (label, body) => { retry = { label, body }; },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
   const status = (id) => { let st = null; for (const e of events) if (e.id === id) st = e.k; return st; };
@@ -97,7 +99,7 @@ export function parsePage(raw) {
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
     failed ? `${failed.said} ${failed.d} ${failed.s}` : "", says || "", done || ""].join("\n");
-  return { raw, events, steps, status, label, failed, done, words, says, waits };
+  return { raw, events, steps, status, label, failed, done, words, says, waits, retry };
 }
 
 export async function callback(qs, cookie) {
@@ -250,7 +252,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `silentAddress` an address that never answers; `wakeAfter` an address that answers only after that many tries (R66);
      `cfFlaky` Cloudflare answering that status that many times first (R66); `typed` the short name typed to confirm a removal;
      `choice` the mode a /begin carries (R62). */
-  alongside = false, containersOff = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
+  alongside = false, containersOff = false, containersOdd = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
   rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
   builtInFleet = false,
   /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
@@ -383,6 +385,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
     { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
       const mth = (init.method || "GET").toUpperCase();
+      if (containersOdd) return cferr("Something unexpected happened with the request", 400, 10001);
       if (containersOff) return cferr("Containers are not enabled on this account. Enable Containers in the dashboard.", 403, 10000);
       if (containers === "read") return cferr("Authentication error", 403, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);

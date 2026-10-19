@@ -474,9 +474,25 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   }
   /* Containers named in plain clicks, with the line that says when it is done. */
   assert.ok(hasWord("screen.install.stopped.containers.done"));
-  /* The stop waits for the founder to say it is done, which begins again: the page offers the way to begin again. */
+  /* The stop waits for the founder to say it is done, which begins again: the page offers "It's on now", which begins the run again
+     with what it held (the same short name and mode), through the same /begin. */
   const containers = await run({ slug: "pre-containers", containersOff: true });
-  assert.ok(containers.raw.includes("Start again") || /approvePanel|Continue to Cloudflare|try-again|<a /.test(containers.raw) || containers.page.failed.d.length > 0);
+  assert.equal(containers.page.retry.label, word("screen.install.stopped.containers.done"));
+  assert.equal(containers.page.retry.body.slug, "pre-containers");
+  assert.equal(containers.page.retry.body.mode, "install");
+  assert.equal(JSON.stringify(containers.page.retry.body).includes("token"), false, "no credential rides it");
+  const { slug: again, mode: how, ...rest } = containers.page.retry.body;
+  const begun = await begin(again, how, rest);
+  assert.equal(begun.j.ok, true, "/begin takes it, and goes to Cloudflare again");
+  /* F2: an answer that does not show Containers on is not read as on: an unknown answer stops, saying it could not tell, beside the plain step. */
+  const odd = await run({ slug: "pre-odd", containersOdd: true });
+  assert.equal(odd.page.failed.said, word("installer.install.stopped.lookup", { said: "Something unexpected happened with the request" }));
+  assert.equal(odd.page.failed.d, word("screen.install.stopped.containers.do"));
+  assert.equal(odd.page.status("install"), null, "nothing installed");
+  assert.deepEqual([...odd.buckets], [], "nothing created");
+  /* Control: a refusal for want of permission is the container member's own matter (R38): the install continues. */
+  const noperm = await run({ slug: "pre-noperm", containers: "read" });
+  assert.equal(noperm.page.status("room"), "ok");
   /* Control: a clean account passes all four checks. */
   const clean = await run({ slug: "clean-one" });
   assert.equal(clean.page.status("plan"), "ok");
