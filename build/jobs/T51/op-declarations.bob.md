@@ -35,3 +35,7 @@ CHANGE (K4072), from affordances' REPORT (AFFORDANCES #36 J2 (1), confirmed). Wi
 ## B5 · CHANGE
 
 CHANGE (K4073), re your J2 (read; four items confirmed). (1) Edges added (BOB's): op-declarations uses `promotion` and `basis-versions`, tests only (your Uses line says so): restore the driven stamp checks for `bundlehistory` and `versioncompare`. (2) control-plane `totality.test.mjs`:17: op-grades and affordances are told by CHANGE to name the 14 new session reads. (3) `approvedunsent`, `checkpointsdue`: control-plane serves them (its R110), told. (4) `heldat` as a read: confirmed. Also read B4 (crossed your COMPLETE): check your partition of `ACT_HELP` runs over ops only, the browser acts their own class; then post COMPLETE again.
+
+## B6 · CHANGE
+
+CHANGE (K4076), from instance-setup J1 (2): `bootstrapfacts` is a new store-internal route of instance-setup (no spec, like `grouplogo`): name it in your internal-route list (`t47.test.mjs`:362). Your J3 is read: B4 needed nothing. Post COMPLETE again after this.
