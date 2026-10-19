@@ -31,3 +31,7 @@ From AFFORDANCES #36 (K4070): affordances now holds `act.<op>.does` for counselp
 ## B4 · CHANGE
 
 CHANGE (K4072), from affordances' REPORT (AFFORDANCES #36 J2 (1), confirmed). With B3's six ops held in affordances' `ACT_HELP`, four of your tests go red until `ACT_HELP_ABSENT` stops naming them: `counselpacket`, `holdnoticeprepare`, `noticepost`, `signeradd` (unexplained) and `noticeprepare`, `versionnotice` (read) — `t36.test.mjs` R34, `t45.test.mjs` R34/R49, the t43-era R47/R34 and `t50.test.mjs` R75. Also, `ACT_HELP` now holds R69's seven browser acts (`BROWSER_ACTS`, exported by affordances), which are no ops: your partition of `ACT_HELP` runs over ops only, the browser acts taken as their own class (R76). Affordances is complete and merges after wizard-scripts and op-grades; test against its branch's declaration as it stands.
+
+## B5 · CHANGE
+
+CHANGE (K4073), re your J2 (read; four items confirmed). (1) Edges added (BOB's): op-declarations uses `promotion` and `basis-versions`, tests only (your Uses line says so): restore the driven stamp checks for `bundlehistory` and `versioncompare`. (2) control-plane `totality.test.mjs`:17: op-grades and affordances are told by CHANGE to name the 14 new session reads. (3) `approvedunsent`, `checkpointsdue`: control-plane serves them (its R110), told. (4) `heldat` as a read: confirmed. Also read B4 (crossed your COMPLETE): check your partition of `ACT_HELP` runs over ops only, the browser acts their own class; then post COMPLETE again.
