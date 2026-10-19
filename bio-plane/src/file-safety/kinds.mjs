@@ -21,9 +21,7 @@ export const FINDING_KINDS = Object.freeze([
     word('file-safety.kind.downloader')),
   kind('dropper', ['dropper', 'trojandropper'],
     word('file-safety.kind.dropper')),
-  kind('trojan', ['trojan', 'trj'],
-    'A trojan pretends to be something harmless while doing something harmful, such as giving someone else control of '
-      + 'the computer.'),
+  kind('trojan', ['trojan', 'trj'], word('file-safety.kind.trojan')),
   kind('macro', ['macro', 'macros', 'w97m', 'x97m', 'o97m', 'vba'],
     word('file-safety.kind.macro')),
   kind('exploit', ['exploit', 'exp', 'cve'],
@@ -31,8 +29,7 @@ export const FINDING_KINDS = Object.freeze([
   kind('phishing', ['phishing', 'phish'],
     word('file-safety.kind.phishing')),
   kind('potentially_unwanted', ['pua', 'pup', 'adware', 'riskware', 'potentiallyunwanted'],
-    'A potentially unwanted program is not always harmful, but does things a reader may not want, such as showing '
-      + 'adverts or collecting information.'),
+    word('file-safety.kind.potentially_unwanted')),
   kind('heuristic', ['heuristics', 'heuristic', 'suspicious', 'generic', 'heur'],
     word('file-safety.kind.heuristic')),
   kind('worm', ['worm'], word('file-safety.kind.worm')),
@@ -42,8 +39,7 @@ export const FINDING_KINDS = Object.freeze([
   kind('virus', ['virus', 'infector'], word('file-safety.kind.virus')),
   kind('spyware', ['spyware', 'keylogger', 'stealer', 'infostealer', 'pws', 'passwordstealer'],
     word('file-safety.kind.spyware')),
-  kind('test', ['test', 'eicar'],
-    'This is a harmless test file that scanners are built to recognise, used to check that scanning works.'),
+  kind('test', ['test', 'eicar'], word('file-safety.kind.test')),
 ]);
 
 /** R38: the words when no row matches the name's kind of threat, exactly. */
