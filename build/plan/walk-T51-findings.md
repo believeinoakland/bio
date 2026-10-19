@@ -1,6 +1,6 @@
 # T51 local walk: findings traced to fixes (K4111)
 
-**Status** · Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
+**Status** · Every row closed at K4144 (BOB #228); the walk runs once now. Written by BOB #227 before the walk's next run (journey-check R1 (a), after the completion round's last merge). The last run (K4105, on the L11 close tree): 201 steps, 125 failures; its whole output was not kept (BOB #226's container), so the groups below are K4105's. A group is closed only by a merged change and a test that covers it; the walk runs again only when every row is closed (Bob, K4111).
 
 | # | group (last run) | owner | fix | covering test | state |
 | --- | --- | --- | --- | --- | --- |
@@ -22,6 +22,10 @@
 | `lastActivity()` read on the bootstrap facts | credentials CR-16, instance-setup CR-12 | their tests |
 | instance-setup's twelve leaf texts read by key | instance-setup CR-12 | words check 0 |
 | a reason inside a reason (`word`) | setup-words CR-14 | its R19 test |
+| the original-file card's kind from `format` (R83, extraction R78) | screens-inquiry, extraction | screens-inquiry's R83 test (`document.kind.<format>`), extraction's R78 tests |
+| `security` reads `handling.on_own` (R62, file-scanner R33) | screens-settings, file-scanner | R62's Spanish-recipient test and control; R33's tests |
+| the four `screen.members.*` removal keys listed (DEC-371) | screens-settings | R39 (`contract.test.mjs`) green |
+| the ask reads `readingLanguage` from `translations` (plane R67, instance-setup R99) | plane, instance-setup | `door.test.mjs`, `t48.test.mjs`; R99's test |
 
 ## Seen by journey-check, already fixed before the last run
 
