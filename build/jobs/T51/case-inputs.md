@@ -51,3 +51,13 @@ Checks after the change:
 Deferred and other-module findings: unchanged from J2.
 
 Size (session_01NHLtFixbMhA4qCMEieYzDT): test runs 4, module lines 1337
+
+## J4 · QUESTION
+
+R19 reading: the shape of `minutesLine(row)`.
+
+R19 says `minutesLine(row)` "answers `{key, says}`: `signing.minutes.line` with `{meeting}` and `{date}`, beside `signing.minutes.left`, `.right` and, by `same`, `.same` or `.differs`". It does not say how the other four sentences are carried beside the line.
+
+Best reading, built: `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}`. The top-level `{key, says}` is `signing.minutes.line` filled with the row's meeting and date; `comparison` is `signing.minutes.same` or `.differs` by `same`. This is `openRequestLine`'s form (a line with a sibling object, as `quoting`), and `case-authoring` R77 can spread it into each row unchanged, as it does R34's.
+
+If you want another shape (a flat list of four, or the labels left out), tell me with a CHANGE; it is a few lines and one test. `case-authoring` T51-161 reads the shape, so the answer should reach that job before it merges.
