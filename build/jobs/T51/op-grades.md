@@ -41,3 +41,7 @@ Until you rule, I am converting the other lists (t41 `R30_READS`, which passes w
 ## J5 · REPORT
 
 **REPORT (correction to J4).** J4 said I am converting the other lists now. That is not yet true: none of the 30 remaining is converted in this entry, and the t41 `R30_READS` derivation was reverted with the rest of t41. I am waiting on your ruling for pins before I continue; the other lists resume after it.
+
+## J6 · REPORT
+
+**REPORT (B4, K4073; B5 acknowledged).** Pushed `3a68cc4b25`. `t51.mjs` now states the fifteen reads op-declarations declares for T51 (R77–R79, including `publishedfrozen`, public) as `read: …` reasons, with R48's three; each read's sentence names its owner's requirement. The test is `test/m/op-grades/t51.test.mjs`. It does not yet check the names against `OPS`: op-declarations' declaration is not on `tranche/T51` yet (`holdsdue` is absent from `OPS` here), so that check belongs after its merge. All 126 op-grades tests pass. The words check: 30 hand-list findings; the plain finding is gone after the merge. Still open, in the order of B5: the `pins.test.mjs` requirement-parsing conversion (its ops from `build/requirements/op-grades.md`), the 30 hand-lists (`t41`, `t45`, `OPS`-filtered lists), and the four code controls per B3. I will post COMPLETE only after those and the checks.
