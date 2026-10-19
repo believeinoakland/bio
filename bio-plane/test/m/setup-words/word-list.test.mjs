@@ -156,6 +156,9 @@ test("R4 the module does nothing when loaded beyond defining its exports and imp
   assert.equal(again.word("weight.reversible.name"), word("weight.reversible.name"));
 });
 
+/* a placeholder's name is not spelling: the "labelled" checks read the English with each {name} removed (test-only) */
+const unplaced = (en) => en.replace(/\{[A-Za-z0-9_]+\}/g, "");
+
 /* two placeholders, one placeholder, and none, read from the file itself, not from a hand list */
 const placeholders = (en) => [...new Set([...en.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((m) => m[1]))];
 const two = WORD_ROWS.find((r) => placeholders(r[1]).length >= 2);
@@ -201,6 +204,27 @@ test("R11 control: an unknown key throws UNKNOWN_WORD naming the key; a missing 
   assert.throws(() => word(one[0], { toString: "x" }), (e) => e.code === "WORD_VAR_MISSING");
 });
 
+test("R19 a value of vars that is a reason {key, vars} fills its placeholder with that reason's words, made the same way to any depth, never as String of the object: lines.why.stated_current_through with civil-time.why.business_count_roll whose why is civil-time.why.reader_failed draws the three sentences, two levels deep; localize fills the same way", () => {
+  const en = (k) => WORD_ROWS.find((r) => r[0] === k)[1];
+  const inner = { key: "civil-time.why.business_count_roll", vars: { why: { key: "civil-time.why.reader_failed" } } };
+  const got = word("lines.why.stated_current_through", { why: inner, day: "Monday" });
+  const want = en("civil-time.why.business_count_roll")
+    .replace("{why}", en("civil-time.why.reader_failed"));
+  assert.equal(got, en("lines.why.stated_current_through").replace("{why}", want).replace("{day}", "Monday"));
+  assert.doesNotMatch(got, /object|\{[A-Za-z0-9_]+\}/);
+  assert.equal(localize("lines.why.stated_current_through", "unused", { why: inner, day: "Monday" }), got);
+  /* a reason with its own placeholder takes its own vars */
+  const dated = word("lines.why.stated_current_through", { why: { key: "lines.why.stated_current_through", vars: { why: "a", day: "b" } }, day: "c" });
+  assert.equal(dated, en("lines.why.stated_current_through").replace("{why}", en("lines.why.stated_current_through").replace("{why}", "a").replace("{day}", "b")).replace("{day}", "c"));
+});
+
+test("R19 control: an inner reason whose key the list lacks throws UNKNOWN_WORD naming it; a reason missing its own placeholder throws WORD_VAR_MISSING", () => {
+  const bad = { key: "no.such.inner", vars: {} };
+  assert.throws(() => word("lines.why.stated_current_through", { why: { key: "civil-time.why.business_count_roll", vars: { why: bad } }, day: "x" }), (e) => e.code === "UNKNOWN_WORD" && /no\.such\.inner/.test(e.message));
+  assert.throws(() => localize("lines.why.stated_current_through", "unused", { why: bad, day: "x" }), (e) => e.code === "UNKNOWN_WORD");
+  assert.throws(() => word("lines.why.stated_current_through", { why: { key: "civil-time.why.business_count_roll" }, day: "x" }), (e) => e.code === "WORD_VAR_MISSING" && /civil-time\.why\.business_count_roll/.test(e.message));
+});
+
 test("R12 hasWord(key) is true exactly when the list holds key: every key of the list, and none that is not", () => {
   for (const r of WORD_ROWS) assert.equal(hasWord(r[0]), true, r[0]);
   for (const k of ["no.such.word", "", "weight.reversible", "WEIGHT.REVERSIBLE.NAME", "constructor", "__proto__", "toString", undefined, null, 7])
@@ -222,7 +246,7 @@ test("R13 the keys-only rule at this module's interface: a sentence is read thro
   /* placeholders are {name} with name of letters, digits and _, and no other brace form occurs in the file (measured at T49); a sentence written first in code is the design's to review, and is not held to the file's spelling */
   for (const r of WORD_ROWS.filter((x) => x[5] === "design")) assert.doesNotMatch(r[1].replace(/\{[A-Za-z0-9_]+\}/g, ""), /[{}]/, r[0]);
   /* DEC-221 (N1068): the file's English spells "labeled" */
-  assert.deepEqual(WORD_ROWS.filter((r) => r[5] === "design" && /labelled/i.test(r[1])).map((r) => r[0]), []);
+  assert.deepEqual(WORD_ROWS.filter((r) => r[5] === "design" && /labelled/i.test(unplaced(r[1]))).map((r) => r[0]), []);
   assert.equal(hasWord("signin.founderhint"), WORD_ROWS.some((r) => r[0] === "signin.founderhint"));
 });
 
@@ -231,7 +255,7 @@ test("R2 R5 R6 R7 R8 (their pinned commits and counts retired by R10): WORDS_COM
     assert.notEqual(WORDS_COMMIT, pinned);
   assert.equal(WORDS_COMMIT, createHash("sha256").update(bytes).digest("hex").slice(0, 10));
   assert.equal(WORD_ROWS.filter((r) => r[5] === "design").length, file.words.length);
-  assert.deepEqual(WORD_ROWS.filter((r) => r[5] === "design" && /labelled/i.test(r[1])).map((r) => r[0]), []);
+  assert.deepEqual(WORD_ROWS.filter((r) => r[5] === "design" && /labelled/i.test(unplaced(r[1]))).map((r) => r[0]), []);
   const i = WORD_ROWS.findIndex((r) => /labeled/.test(r[1]));
   if (i >= 0) {
     const old = WORD_ROWS.map((r, j) => (j === i ? [r[0], r[1].replace("labeled", "labelled"), ...r.slice(2)] : r));
