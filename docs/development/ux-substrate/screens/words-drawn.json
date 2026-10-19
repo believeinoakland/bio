@@ -182,7 +182,7 @@
   },
   {
    "key": "screen.ceremony.photos.rules",
-   "en": "A photo in a format whose areas can't be covered (some phones save HEIC or progressive JPEG) stops the signing, naming the photo: capture it again as an ordinary photo, or stop relying on it. If a mark changes after the case is prepared, prepare it again before signing; if it changes after signing, the case isn't published until it is prepared and signed again. Any member who can see a photo may mark it or withdraw a mark; only a member can, never the machine.",
+   "en": "A photo in a format whose areas can't be obscured (some phones save HEIC or progressive JPEG) stops the signing, naming the photo: capture it again as an ordinary photo, or stop relying on it. If a mark changes after the case is prepared, prepare it again before signing; if it changes after signing, the case isn't published until it is prepared and signed again. Any member who can see a photo may mark it or withdraw a mark; only a member can, never the machine.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -21734,7 +21734,7 @@
   },
   {
    "key": "odf-reader.odf.content_xml_with_text_list",
-   "en": "content.xml with text:list xml:id relabeled is byte-identical across two Google exports taken apart in time on every pair M-167 read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after M-123 found the class on 2 census documents",
+   "en": "content.xml with text:list xml:id relabeled is byte-identical across two Google exports taken apart in time on every pair read (8 public government Docs; the only list-bearing difference is text:list@xml:id), after the class was found on 2 census documents",
    "protected": false,
    "note": "DEC-344: reviewed from code (K3930, B343, SETUP-WORDS #7 J3): American spelling (DEC-221); translator: a builder's provenance note, kept verbatim but for the spelling"
   },
@@ -21896,7 +21896,7 @@
   },
   {
    "key": "observation-log.vocabulary.condition_governor_holding_host",
-   "en": "Civicsmith's own pacing is holding back captures from this site: they are paced, not broken",
+   "en": "Your team's Civicsmith is spacing out its captures from this site on purpose: they are paced, not broken",
    "protected": false,
    "note": "DEC-347: B349, reviewed from code (K3930): the same meaning as machinery-producers.summary.pacing_holding_captures, in its words"
   },

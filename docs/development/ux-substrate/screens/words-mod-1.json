@@ -5768,39 +5768,39 @@
   },
   {
    "key": "refusal.NOT_A_COVERABLE_FORMAT",
-   "en": "Areas can be covered only on a JPEG or an ordinary 8-bit PNG photo, and this file is neither. Save it as one of those and try again.",
+   "en": "Areas can be obscured only on a JPEG or an ordinary 8-bit PNG photo, and this file is neither. Save it as one of those and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.UNSUPPORTED_JPEG_PROCESS",
-   "en": "This JPEG is saved in a form Civicsmith cannot cover, such as progressive or 12-bit. Save it again as an ordinary JPEG, or as a PNG, and try again.",
+   "en": "This JPEG is saved in a form your team's Civicsmith cannot obscure areas on, such as progressive or 12-bit. Save it again as an ordinary JPEG, or as a PNG, and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.PNG_INTERLACED",
-   "en": "This PNG is interlaced, a form Civicsmith cannot cover. Save it again without interlacing and try again.",
+   "en": "This PNG is interlaced, a form your team's Civicsmith cannot obscure areas on. Save it again without interlacing and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.AREA_MALFORMED",
-   "en": "An area to cover could not be read as a rectangle: its left edge must lie left of its right, and its top above its bottom. Mark the area again.",
+   "en": "An area to obscure could not be read as a rectangle: its left edge must lie left of its right, and its top above its bottom. Mark the area again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.AREA_OUTSIDE",
-   "en": "An area to cover lies wholly outside the photo. Mark the area again on the photo itself.",
+   "en": "An area to obscure lies wholly outside the photo. Mark the area again on the photo itself.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.PHOTO_TOO_LARGE",
-   "en": "This photo is larger, in file size or in pixels, than Civicsmith can cover. Save a smaller copy and try again.",
+   "en": "This photo is larger, in file size or in pixels, than your team's Civicsmith can work with. Save a smaller copy and try again.",
    "protected": false,
-   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343)"
+   "note": "DEC-260: image-cover, refusal by its code; DEC-344: reworded for a member (B343); DEC-349: obscure, as the drawn screens say"
   },
   {
    "key": "refusal.TRUNCATED_IMAGE_DATA",
