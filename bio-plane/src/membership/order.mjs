@@ -1,4 +1,4 @@
-/* GENERATED: do not edit by hand. membership R146 (N1115, N1171; K657, K3268): the ids of build/modules.json (174
+/* GENERATED: do not edit by hand. membership R146 (N1115, N1171; K657, K3268): the ids of build/modules.json (175
    modules) in the order the file holds them. Written by `node bio-plane/src/membership/order-build.mjs` from the
    repository root (`--check` finds it stale); bio-plane/test/m/membership/module-order.test.mjs holds it equal to the file. */
 export const MODULE_IDS = Object.freeze([
@@ -36,6 +36,7 @@ export const MODULE_IDS = Object.freeze([
   "ocr-worker",
   "sheet-worker",
   "file-scanner",
+  "member-roster",
   "record-core",
   "membership",
   "project-roster",
