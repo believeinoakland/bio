@@ -374,7 +374,10 @@ const RENAMED = {
    screen.setup.claim.button, so neither module reads the registry's setup claim label. */
 const NOT_READ = {
   "screens-entry": ["act.claim.label.setup"],
-  "screens-settings": ["act.claim.label.setup"],
+  /* DEC-371 (B391, K4136): four more, each pattern filled by words the module holds for other ends (`explore` and
+     `document`, `heldcaptures` and `held`, `reconcile` and `money`, `transcribe`), acts the other modules' screens draw. */
+  "screens-settings": ["act.claim.label.setup", "act.explore.label.document", "act.heldcaptures.label.held", "act.reconcile.label.money",
+    "act.transcribe.label.document"],
 };
 /* DEC-253's ten vocabularies, which affordances publishes with its words. */
 const VOCAB_SETS = ["linekinds", "linecapacities", "lineroles", "moneykinds", "moneyphases", "moneystages", "moneybases",
