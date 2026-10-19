@@ -65,3 +65,7 @@ Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700
 ## J3 · COMPLETE
 
 T51-208 (agent-steps, words pass) is complete on job/T51/agent-steps (e43c73904b and the record commit). Per your B3 ruling: plan.test.mjs reads its ops from src/ops.mjs (PLAN_OPS, this module's declaration). Checks: format 0, architecture 0, words 0, coverage 49/49 ids, ownership 0; setup-words --check shows only the stale-rows note. Tests all pass with unchanged counts. Record: build/jobs/T51/agent-steps.md. Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700.
+
+## J4 · COMPLETE
+
+CHANGE B4 applied. Merged tranche/T51 into job/T51/agent-steps (5713f46431). Words check on agent-steps under d424c32: 0 failures, no findings, so nothing new to key or list for the unkeyed list. Tests unchanged: plan 53, interface 70, readers 43, subsessions 35, fanout 62, r096 22, r101 12, r103 14, r107 22, t49r90 14, all 0 failed. Checks: format 0, architecture 0, coverage 49 of 49 ids, ownership 0. setup-words --check shows only the stale-rows note (expected; regenerated at layer close). Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 36, module lines 1700.
