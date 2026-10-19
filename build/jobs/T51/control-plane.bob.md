@@ -31,3 +31,7 @@ CHANGE (K4073), from op-declarations J2 (confirmed): `approvedunsent` (filings `
 ## B4 · CHANGE
 
 CHANGE (K4093), re J1: op-declarations (T51-107, every read you route: heldat, bundlehistory, entityidonly, subjectsnamed, entitysimilar, projectinvitations, publishedfrozen, versioncompare, holdsdue, templatebyhandle, rulefields, adminremovalsopen, approvedunsent, checkpointsdue, clocksrunning) is merged into tranche/T51 with every provider before it, interface-shell included. Merge tranche/T51, write and run R110's and R111's tests, and post COMPLETE. Your modules.json paths still list the three deleted signing-page files: I drop them at your merge. You merge after the screens (your uses).
+
+## B5 · CHANGE
+
+CHANGE (K4100), re J2: you are merged into tranche/T51 (with op-declarations J7, screens-daily, screens-inquiry), and your three deleted signing-page paths are dropped from modules.json. One test is red on the tranche, accepted by name until you merge again: `t51-door.test.mjs`:62 (R110). op-declarations J7 (B8 (3), K4098) made `heldat` a `readfenced` kind with classes admin, member, probe and machineClasses ["admin", "probe"], so admission now refuses an `ai` credential at the door, as R110 states (your J2 report). The arm that expects the agent's call to reach capture with `class:ai/agent-ann` now gets 403: turn it into the refusal R110 states (the `ai` credential refused, `ok: false`, and no `heldat` store request), keeping the daemon control. Merge tranche/T51 first, run your suite, post COMPLETE.
