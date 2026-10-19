@@ -32,3 +32,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 CHANGE (K3987), a note only, no code change: Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987). Carry on.
+
+## B4 · CHANGE
+
+CHANGE (K3988), before I merge: the three `detail`s you left (`NO_ID` "content requires ?id=<content_id>", `TRANSCRIBE_NO_DOCUMENT`, `TRANSCRIPTION_NOT_FOUND`) are keyed by `localize` like every refusal detail (K3982: a detail is a sentence a member can read wherever it travels; the design may later word them for members). Keep the English. Merge `tranche/T51`, run tests and the words check, COMPLETE again.
