@@ -59,8 +59,12 @@ export { PROJECT_GRAMMAR, CLOSED_REASONS, checkProjectExtension, registerProject
 
 /** R9 (N327, DEC-83): the group aspiration's fixed act, and its next step, for `membership.notAnAdmin` (its R84), which
  *  answers `NOT_AN_ADMIN` in place of the retired `GROUP_ASPIRATION_NOT_ADMIN` (C-111.16, its number not reused). */
-export const GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole team holds";
+export const GROUP_ASPIRATION_ACT = localize("intent.index.declaring_revising_retiring_group_aspiration",
+  "declaring, revising or retiring an aspiration the whole team holds");
 export const GROUP_ASPIRATION_REMEDY = word("intent.ask_active_administrator");
+/** R9: an aspiration names one scope, and an owner unless it is the team's; `refuseBadScope` answers the others. */
+const ASPIRATION_SCOPE_NAMED = localize("intent.index.aspiration_scope_named",
+  "an aspiration is the team's (naming no owner), a project's or a member's (naming which). Nothing was written.");
 /** R16: the four acts on a proposal. */
 export const TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 /** R17 (Suggestions): the ageing interval's setting in record-core, and its default in days (C-10.1's staleness age). */
@@ -294,8 +298,7 @@ export class Intent {
   #aspirationAuthority(scope, owner, author, viewer) {
     const who = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !str(owner)) || (scope === "group" && owner != null))
-      return refuseBadScope("an aspiration is the team's (naming no owner), a project's or a member's (naming "
-                     + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+      return refuseBadScope(ASPIRATION_SCOPE_NAMED, { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (scope === "member" && str(owner) !== who)
       /* DEC-49 REGION is-aspiration-yours */
       return refusal("NOT_YOURS", localize("intent.index.a_members_aspiration_is_declared", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written."), { owner });
@@ -323,9 +326,10 @@ export class Intent {
       && isObj(c.satisfied);
     /* DEC-49 REGION is-condition-shaped */
     if (!shaped)
-      return refusal("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, "
-                     + "stages?}, satisfied: {share}}, each name a bare key or id; a filter's `amount` is {min?, max?, currency, "
-                     + "kinds?, phases?, period?}, with at least one bound, each an exact decimal. Nothing was written.",
+      return refusal("CONDITION_UNREADABLE", localize("intent.index.condition_shape_unreadable",
+                       "a condition is {shape}, each name a bare key or id; a filter's `amount` is {amount_shape}, with at least one bound, each an exact decimal. Nothing was written.",
+                       { shape: "{progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}",
+                         amount_shape: "{min?, max?, currency, kinds?, phases?, period?}" }),
                      amountFault(c));
     /* END DEC-49 REGION is-condition-shaped */
     const def = this.progressions.readProgression({ progressionKey: str(c.progression) });
@@ -430,8 +434,8 @@ export class Intent {
   setCondition({ project, condition, reason, author, viewer = null, personWarningSeen = false } = {}) {
     /* DEC-49 REGION is-condition-member */
     if (machine(author))
-      return refusal("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act "
-                     + "(DEC-24 rule 2). Nothing was written.");
+      return refusal("MACHINE_CANNOT_SET_OBJECTIVE", localize("intent.index.objective_measure_member_act",
+                     "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written."));
     /* END DEC-49 REGION is-condition-member */
     const p = this.#project(project, viewer);
     if (p.refused) return p.refused;
@@ -525,8 +529,7 @@ export class Intent {
       }
       if (need.grade == null) { meeting.push(row); continue; }
       if (!row.grade_determined || gradeRank[row.grade] === undefined) {
-        undetermined.push({ ...row, why: "the instance's grade is undetermined (fewer than two stages placed, or a "
-                                         + "stage's grade unknown), so whether it reaches the required grade is not known" });
+        undetermined.push({ ...row, why: word("intent.why.instance_grade_undetermined") });
         continue;
       }
       if (gradeRank[row.grade] >= gradeRank[need.grade]) { meeting.push(row); continue; }
@@ -601,8 +604,7 @@ export class Intent {
     if ((read.undetermined || []).length)
       return open(word("intent.money_fact_state", { undetermined: String(read.undetermined.length) }), { facts: shown });
     if (!ids.length)
-      return open("the record holds no money fact for this entity in the kinds, phases and period named, so its total is "
-                  + "not known; it is never taken as zero");
+      return open(word("intent.record_holds_money"));
     let sum;
     try { sum = this.money.summable({ factIds: ids, viewer: PLANE_VIEWER }); }
     catch (e) { return open(word("intent.money_answer", { entry: String(String(e && e.message || e).slice(0, 120)) }), { facts: shown }); }
@@ -925,8 +927,7 @@ export class Intent {
     if (byMachine) return byMachine;
     const own = scope === "group" ? null : str(owner) || null;
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !own) || (scope === "group" && str(owner)))
-      return refuseBadScope("an aspiration is the team's (naming no owner), a project's or a member's (naming "
-                     + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+      return refuseBadScope(ASPIRATION_SCOPE_NAMED, { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (!str(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own, author, viewer ?? author);
     if (denied) return denied;
@@ -957,8 +958,7 @@ export class Intent {
     if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
     if (a.fm.scope !== "group")
-      return refuseBadScope("a project departs only from an aspiration the whole team holds; a project's or a "
-                     + "member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
+      return refuseBadScope(localize("intent.index.project_departs_group_only", "a project departs only from an aspiration the whole team holds; a project's or a member's own is not held by other projects. Nothing was written."), { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
       return refusePursuitEnded(localize("intent.index.a_retired_aspiration_is_held", "a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written."), { aspiration });
     if (!str(reason)) return refuseNoReason(localize("intent.index.a_departure_from_the_teams", "a departure from the team's aspiration records why. Nothing was written."));

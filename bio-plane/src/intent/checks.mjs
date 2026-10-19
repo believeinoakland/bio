@@ -82,8 +82,7 @@ export const INTENT_CHECKS = Object.freeze({
   },
   NOT_YOURS: {
     check: 'C-111.15', where: at("#aspirationAuthority", "is-aspiration-yours"),
-    translation: 'A member\'s own aspiration is declared, revised and retired by that member alone. Nothing was '
-      + 'written.',
+    translation: word('refusal.NOT_YOURS'),
   },
   NO_LESSON: {
     check: 'C-111.17', where: at("refuseNoLesson", "is-retirement-taught"),

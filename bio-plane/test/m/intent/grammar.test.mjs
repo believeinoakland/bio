@@ -216,11 +216,9 @@ test("R29 R22 the audit runs the grammar over every project held, beside R1's ob
 test("R30 R2 R8 R10 R22 intent's own codes: a progression the record has not declared is INTENT_NO_SUCH_PROGRESSION (C-111.4), a stage it does not declare INTENT_BAD_STAGE (C-111.6), a missing reason INTENT_NO_REASON (C-111.13), numbers and translations unchanged; never progressions' NO_SUCH_PROGRESSION, BAD_STAGE or NO_REASON", async () => {
   /* the rows: one per code, numbers and translations as before the rename; progressions' codes held by progressions alone */
   const rows = {
-    INTENT_NO_SUCH_PROGRESSION: ["C-111.4", "The measure names a declared flow the record does not hold. Declare the flow first, "
-      + "or name one that exists. Nothing was written."],
+    INTENT_NO_SUCH_PROGRESSION: ["C-111.4", word("refusal.INTENT_NO_SUCH_PROGRESSION")],
     INTENT_BAD_STAGE: ["C-111.6", word("refusal.INTENT_BAD_STAGE")],
-    INTENT_NO_REASON: ["C-111.13", "This act is recorded with a reason in your own words, and none was given. The record keeps "
-      + "why, so the next reader is not left guessing. Nothing was written."],
+    INTENT_NO_REASON: ["C-111.13", word("refusal.INTENT_NO_REASON")],
   };
   for (const [code, [check, translation]] of Object.entries(rows))
     assert.deepEqual([INTENT_CHECKS[code].check, INTENT_CHECKS[code].translation], [check, translation], code);
