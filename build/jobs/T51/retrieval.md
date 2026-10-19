@@ -91,3 +91,11 @@ The design's unkeyed list for retrieval holds only prefixes of these (e.g. "a re
 Also for your ruling, one judgement call: the route-name handlist in projection.test.mjs is now pinned against RETRIEVAL_ROUTE_OPS, the module's own list (index.mjs). A retrieval test cannot import op-declarations (architecture: later in order), so the pin does not check op-declarations' declaration.
 
 Completion record: build/jobs/T51/retrieval.md, Completion (T51-203). Commit on job/T51/retrieval.
+
+## J5 · COMPLETE
+
+T51-203 retrieval (words) complete. Applied: the 1 handlist and 19 plain findings of build/plan/words-pass/retrieval.md, and the test copies. Converted through localize with en byte-identical to the text replaced (frontier internet note and not-read reasons; OR-widen detail; content and meaning syntax sentences). The 15 refusal-detail and developer strings still counted are in REPORT (J-REPORT, for your settlement).
+
+Tests: node --test over bio-plane/test/m/retrieval: 167 of 167 pass. citation recorded.test: 12 of 12. Checks: architecture 0 failures; format 0; coverage 79 of 79 ids; ownership 0 failures; words for retrieval: 0 testcopy, 0 handlist, 0 missingkey, 0 marker, 15 plain (REPORTed); setup-words --check: rows.mjs stale, the expected note, no refusal naming retrieval.
+
+Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 6, module lines 2924
