@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { world, NOW, iso } from "./world.mjs";
 import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, TASKS_TABLES, SIGN_TASK_KIND, tasksOps } from "../../../src/tasks/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const PRJ = "PROJ-2026-0001-team", PRJ2 = "PROJ-2026-0002-other", INFO = "INFO-2026-0001-loose";
 const CASE = "CASE-2026-0001-a", CASE2 = "CASE-2026-0002-b", FRESH = "CASE-2026-0003-new";
@@ -96,7 +97,7 @@ test("R19: a member who may see the case asks; each active owner gets a To do of
     "the active owners, not the revoked one, not the asker who owns nothing");
   for (const t of mine) {
     assert.match(t.id, /^TASK-2026-\d{4}-sign$/);
-    assert.equal(t.subject_text, `Edition 2 of ${CASE} is prepared and ready to sign`);
+    assert.equal(t.subject_text, word("tasks.edition_prepared_ready", { ed: "2", case_id: CASE }));
     assert.deepEqual(JSON.parse(t.history), [{ at: iso(NOW), event: "created", actor: "mia" }]);
   }
   assert.deepEqual({ ...w.all(`SELECT * FROM sign_requests`)[0] },
