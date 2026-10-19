@@ -16,7 +16,7 @@ import { MODES, PLAN_FLOW, CONTROL_FLOW, OPTION_KEYS, PLAN_BUDGET_BOUNDS, nextPl
 const DECLARED = Object.keys(OPS);
 const WRITE_OPS = DECLARED.filter((op) => OPS[op].mutating);
 const READ_OPS = DECLARED.filter((op) => !OPS[op].mutating);
-import { OPS } from "../../bio-plane/src/op-declarations/index.mjs";
+import { PLAN_OPS as OPS } from "../src/ops.mjs";
 import worker from "./shell.mjs";
 
 let pass = 0, fail = 0;
