@@ -391,7 +391,7 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #migrationRun = null; #readHooks = null; #transcriber = null;
+  #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
                          env = {}, readHooks = null } = {}) {
@@ -403,6 +403,7 @@ export class Extraction {
     this.membership = membership;
     this.calibration = calibration;
     this.env = env || {};
+    this.#provenance = provenance;
     if (promotion) this.joinPromotion(promotion);
     if (calibration) this.listenToCalibration(calibration);
     if (provenance) this.joinTestimony(provenance);
@@ -962,6 +963,11 @@ export class Extraction {
     const withheld = !!row.bundle_id && this.#redactor(viewer)(row.bundle_id) === null;
     const text_units = withheld ? undefined
       : this.unitsOf(row.capture_sha).units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated }));
+    /* R77 (T51; K4103; amends R27): `bytes` is the stored size of the capture's original as the register holds it, absent
+       when the register holds no row for it, and withheld with the bundle as `text_units` is (a bundle a viewer may not
+       see names no size of its own). */
+    const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(row.capture_sha) : null;
+    const bytes = home && this.#redactor(viewer)(home.bundleId) !== null ? home.bytes : undefined;
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
@@ -981,7 +987,8 @@ export class Extraction {
                    why: localize("extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced") },
              reading_history: this.#readingHistoryOf(row.capture_sha),
              ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
-             ...(text_units ? { text_units } : {}) };
+             ...(text_units ? { text_units } : {}),
+             ...(bytes === undefined ? {} : { bytes }) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

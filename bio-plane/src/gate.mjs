@@ -340,7 +340,7 @@ import { localize } from "./setup-words/index.mjs";
    `CASE_DERIVATION_CHECKS` and `ATTRIBUTION_CHECKS` exports (N212, N214, N251).
    MINOR, rule 17 moving the stamp for arrivals, departures and a changed composition. ROW_CENSUS (R50) is re-pinned to
    this tree as R50 now words it (N350: lines sort by check, then code, then by the line itself; every fleet member's
-   `scripts/` and `civicos-ui/deploy-ui.mjs` left out): 827 rows. The d470 census, of the catalogue file only, moved
+   `scripts/` left out): 827 rows. The d470 census, of the catalogue file only, moved
    with legacy-checks' removal (359 -> 358); its 1.44.0 row was legacy-tests' re-pin. */
 /* 1.45.0 (PROMOTION #16, T15 layer 2, 2026-09-30; N318, K425, K482): EVERY ROW CHANGE SINCE 1.44.0, counted wherever
    the rows live (R34, R47), read by diffing R50's census lines of `tranche/T15` after its layer 1 merged against
@@ -1159,10 +1159,21 @@ import { localize } from "./setup-words/index.mjs";
    CHANGED (327), code and number unmoved, each its `where` or translation (the words read by key, N1116, as the
    modules that hold them moved them); the list is the diff of the two fixtures. THE FAMILIES THAT ARRIVED: none.
    CHANGED IN WHAT THE GATES RUN, no row line moving: none a T50 L3-L11 or T51 L2 job record names. This module adds
-   no row (R58 is a read). The `civicos-ui/` script patterns of the census stay until legacy-ui is deleted (K3838).
+   no row (R58 is a read).
    ROW_CENSUS (R50) re-pinned to this tree: 1918 rows. Rows a T51 job in layers 3-11 adds or changes are T52's stamp
    (plan T51, rule 5 item 2). */
-export const CATALOG_VERSION = "1.78.0";
+/* 1.79.0 (PROMOTION #51, CR-5, 2026-10-19; T51's rule 5 (2); K4015, K4104, K4114): MINOR. The stamp of every row the jobs
+   after T51's layer 2 added or changed (L3 to L11 and R1 to R8, and the completion round's jobs merged before this
+   one), read by diffing R50's census lines of `tranche/T51` against 1.78.0's own (`test/fixtures/row-census-1.78.0.jsonl`:
+   1918 rows, 31b4a129...): five new rows, 75 changed, none retired.
+   ARRIVED (5): C-117.59 MINUTES_NOT_PUBLIC_COMMENT, C-117.60 BAD_MINUTES; C-25.37 VERSION_COMPARE_NO_INQUIRY, C-25.38
+   VERSION_COMPARE_NO_VERSION, C-25.39 VERSION_COMPARE_NO_SUCH_VERSION.
+   CHANGED (75), code and number unmoved, each its `where` or translation (the words read by key, as the modules that hold
+   them moved them); the list is the diff of the two fixtures. THE FAMILIES THAT ARRIVED: none. CHANGED IN WHAT THE
+   GATES RUN, no row line moving: none a job record names. This module adds no row (R59 is a field of a read). The
+   census no longer leaves out `civicos-ui/` scripts, the directory being deleted (T51-126, K3838, N1246).
+   ROW_CENSUS (R50) re-pinned to this tree: 1923 rows. Rows a T52 job adds or changes are T53's stamp. */
+export const CATALOG_VERSION = "1.79.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1254,8 +1265,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1918,
-  digest: "31b4a129bc1b2c99b586c27c455d014fe1570c4287e4cc77c501e071f0d5864f" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1923,
+  digest: "c5885eafaf5dbb471372fe8077398100993b6b49cae2be0c44d77d5f4e0a5d46" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
