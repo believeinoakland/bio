@@ -1,6 +1,6 @@
 # BOB to membership (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -67,3 +67,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`. Your Size line counts only your module's own code (K2513).
+
+## B6 · CHANGE
+
+A flaw in your module, found reading your J6 (P8, K4036): your inherited R151 red (`t50-words.test.mjs`:36) is membership's, not the design's. DEC-345 (merged at R3's close, K3981) split the `reads` lists: membership reads only its own keys (its list holds 15, and its note says so), member-roster reads its 46. But `index.mjs`:36–39 still builds `WORD_KEYS` as `[...SENTENCE_KEYS, ...MEMBER_WORD_KEYS]`, member-roster's 46 keys re-exported under membership's name, so the test compares 61 with 15. Make membership's `WORD_KEYS` its own keys only (member-roster's stay member-roster's `WORD_KEYS`); if any caller of membership's `WORD_KEYS` relied on the union (a start-time check, a delegate), have it read member-roster's own declaration (K3268). R151's test must then pass unchanged, with the module suite green. Then record COMPLETE again.

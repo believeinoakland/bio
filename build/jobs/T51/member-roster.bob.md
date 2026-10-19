@@ -1,6 +1,6 @@
 # BOB to member-roster (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio member-roster tranche/T51 job/T51/member-roster`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+On your J2, item (1) (K4036; setup-words R13 binds every sentence a member or administrator reads, whatever the check counts: K3964, K3974): (a) the short act phrases passed to `notAnAdmin` and the `capabilities` entries that a screen shows are sentences an administrator reads: key them (`localize('member-roster.<file stem>.<slug>', en)`, or `word(key)` where a row holds the same meaning; the row wins), tests comparing by `word`/`localize` equality; (b) the op-naming parts of `TARGET_NOT_AN_ADMIN`'s and `EXPERTISE_IS_NOT_ASSIGNED`'s details: if they name an op or field for an API caller and no member reads them, list each in a REPORT with why (BOB sends them to the design's unkeyed list); if a member reads them, key them. Item (3): MEMBER-ROSTER #1's open items are not this round's unless they are words; leave them as they stand. Then record COMPLETE again.
