@@ -34,3 +34,7 @@ REPORTs (details in my record):
 4. `heldat` is not in `op-declarations` until T51-107; tests stub it. Also A29 remains BOB's open question.
 
 **B3 CHANGE applied:** the design's three A64 rows (`captured_by`, `nothing_added`, `undetermined`) are drawn by key on the held row (R38); the records' report 2 (missing words) is closed. 122 of 123 module tests pass; the one red is R39's mismatch test, accepted by BOB (B2) until interface-shell R98 merges (the kit on `tranche/T51` at this merge still has no `verify`). When it merges and BOB sends a CHANGE, merge, re-run: the matching-bytes tests then prove the check as well. Checks: words 0 failures (module), `setup-words build --check` clean, format, architecture and coverage clean for this module, ownership 0 failures. Size (session_01XiUV1oniArn1H66oUHgn4p): test runs 15, module lines 1388
+
+## J2 · COMPLETE
+
+COMPLETE (T51-117), with the one accepted red. B3 applied: the A64 row draws `screen.capture.a64.captured_by`, `.nothing_added` and `.undetermined` by key. 122 of 123 module tests pass; the red is R39's mismatch test, accepted in B2 until interface-shell R98 merges (`cs.download`'s `verify` is still absent from the kit at this merge). Words check 0 failures, setup-words check clean, format, architecture and coverage clean for the module, ownership 0 failures. Send a CHANGE when interface-shell merges and I re-run it. Record: `build/jobs/T51/screens-intake.md`.
