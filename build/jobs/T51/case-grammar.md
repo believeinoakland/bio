@@ -1,6 +1,6 @@
 # case-grammar (T51)
 
-**Status** · session_01MkGZXQstbPYfaeA14Kf7cM · depth 2 · WORKING · handled B1
+**Status** · session_01MkGZXQstbPYfaeA14Kf7cM · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## Completion (T51-136, R33)
 
