@@ -80,3 +80,7 @@ Remaining strings not profile data or catalogue: none on setup but the legends "
 **Not run (K4111/B6-style rule of the round)**: `journey.test.mjs` (the walk), by BOB once.
 
 **Other screens that draw fetched or filled text the walk could still report**: record text the walk did not type (project names, queue summaries on Home) is data only through the walk's `entered` list (the test passes its own); any other screen whose text arrives in a fill of a keyed sentence is inside that sentence's brackets and not reported. A fill of a word that is only its placeholder (`{field}`) is pseudo only when the value was keyed at its source (catalogue labels are, through the route). `held`'s slug and `elsewhere`'s link slugs are inside `.cs-row`/data. None found beyond these.
+
+**Checks (CR-25)**: module suite without `journey.test.mjs` 83 pass, 0 fail (`pseudo.test.mjs` 7); format 0, words 0, ownership 0; coverage misses only R19. **Architecture: 8 failures, all `pseudo.test.mjs` imports** that `modules.json` `uses` for journey-check does not declare (interface-shell incl. its harness, interface-assets, screens-entry, screens-settings, screens-daily, file-safety's fixture, jurisdictions' Oakland profile). R29 requires the proof on the real screens through the interface harness, so the imports are the requirement's own; `uses` is BOB's file. Asked in QUESTION J4.
+
+Size (session_01KEmRQzhT6pHFHNAtagKobP): test runs 8, module lines 3358
