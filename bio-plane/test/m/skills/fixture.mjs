@@ -27,10 +27,10 @@ export const norm = (s) => wordFold(String(s).replace(/^[ \t]*>[ \t]?/gm, "").re
 /* The word conversion the rows carry (DEC-355: the team is written "team" where the canon says "group"; DEC-221:
    American spelling): both sides of a comparison are read through it, so a sentence the rows say with "team" is
    still the canon's sentence, and any other changed word is still not found. The canon's example label
-   "asked by <handle>" is read as the row carries it, without the placeholder (reported to BOB: the row dropped it). */
+   "asked by <handle>" is read as the row words it (DEC-372): "asked by" and the asking member's handle. */
 export const wordFold = (s) => String(s).replace(/\bteam(s?)\b/g, "group$1").replace(/\blabeled\b/g, "labelled")
   .replace(/\bdefense\b/g, "defence").replace(/\bcatalog(s?)\b/g, "catalogue$1")
-  .replace(/ <handle>/g, " ");
+  .replace(/asked by <handle>"/g, ["asked by\"", "and", "the", "asking", "member's", "handle"].join(" "));
 
 /* Whether `sentence` is in `text`, verbatim but for the normaliser; a quoted sentence may start with a
    letter the document capitalises at a sentence start, and only that first letter is compared either way. */

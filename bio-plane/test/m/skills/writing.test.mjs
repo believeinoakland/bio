@@ -64,7 +64,7 @@ test("R36 R5 the writing_help layer, in disclosed after suggestions and before i
     /for an observation it only helps word what the member saw/,                            // (c)
     /never in a field that states a member's reason for an act/,                            // (d), K1841 (1)
     /the machine never writes the member's reason/,                                         // (d), rule 1
-    /labelled "Draft · the assistant's, asked by ", saved only when the member keeps them/, // (e), the folded form of the canon's label
+    /labelled "Draft · the assistant's, asked by" and the asking member's handle, saved only when the member keeps them/, // (e), the canon's label as the row words it
     /a draft becomes the member's words only by the member's own act of keeping or editing it/,      // (e), K1364
   ]) assert.match(wordFold(all), re);
   /* The lookup can miss: a changed word is not found, and §P's paragraph is not the Roles canon's. */
