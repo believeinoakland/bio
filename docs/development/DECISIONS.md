@@ -5736,3 +5736,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: the reads generator matched the key through each module's `act.${op}.label.${screen}` pattern only because the module holds `claim` (as an op) and `setup` (as a screen) apart; the setup screen's claim button reads `screen.setup.claim.button`, so neither module reads the registry's setup claim label. `words-reads.src.mjs` gains `NOT_READ` (screens-entry and screens-settings: `act.claim.label.setup`), removed after the derivation; the lists are regenerated from a fresh extract of `tranche/T51`, which also brings in what the tranche's merged code reads since the last run (installer's 13 rows, screens-inquiry's 21 including DEC-368's `document.kind.*`, journey-check's harness text triaged unkeyed as DEC-365).
 reasoning recorded in: this entry; `screens/words-reads.src.mjs`, `screens/words-reads.json`, `screens/words-reads-mod-5.json`.
 owed: nothing.
+
+### DEC-371 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01EkYGWQGqSXhiemwre3NyZq; the development process also runs on his primary account since K1428) (BOB's HANDOFF B391; K4136, K4072)
+for: design
+question: Eight keys `screens/words-reads.json` lists under screens-settings that its R39 test finds outside the module's own key list.
+why it is Bob's: it is not (P17): the design's reads lists and rows.
+provisional: as below.
+alternative: retiring or re-keying the four `screen.members.*` rows, set aside: they already carry placeholders, keys are fixed ids (K3930), and the module draws them.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) The four act labels (`act.explore.label.document`, `act.heldcaptures.label.held`, `act.reconcile.label.money`, `act.transcribe.label.document`) are the generator's false matches, as DEC-370's: each `act.${op}.label.${screen}` pattern filled by words the module holds for other ends. They join `NOT_READ` for screens-settings; the lists are regenerated (that module loses exactly these four). (2) The four `screen.members.*` rows stay as they are: only their keys carry the drawing's sample names, and their English is already placeholders ("Removing {member} as an administrator", "{n} administrators: {members}.", "Agree: remove {member} as an administrator", "counted in the {n}, doesn't vote"). screens-settings draws all four on the members screen's administrator-removal panel (`members.mjs` on `tranche/T51`, the removal's heading, its count line, the Agree button's label and the one facing removal's note, lines 228 to 233, `S + "removing.teo.as.an.administrator"` and the rest); the drawing is SCR.members' removal state. The module's own `keys.mjs` lacks them, which is what R39 trips on: adding them there is screens-settings' CHANGE.
+reasoning recorded in: this entry; `screens/words-reads.src.mjs`, `screens/words-reads.json`.
+owed: by screens-settings (BOB's CHANGE): the four `screen.members.*` keys added to `keys.mjs`.
