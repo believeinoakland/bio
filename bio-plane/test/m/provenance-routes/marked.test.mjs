@@ -24,8 +24,7 @@ test("R5: routeFinding states never-looked as the question never asked, not appl
   const never = routeFinding("information", null);
   assert.deepEqual([never.applies, never.assessed, never.marked, never.finding, never.means],
                    [true, false, false, "NEVER_LOOKED", OBSERVATION_MEANS.NEVER_LOOKED]);
-  assert.equal(never.note, "no assessment of this document's route has ever been recorded. This is NOT a finding "
-    + "that the route cannot be shown; it is the absence of the question having been asked.");
+  assert.equal(never.note, word("provenance-routes.note.assessment_document_route"));
   const mark = { finding: "LOOKED_INDETERMINATE", at: "t", by: V("r"), state_at: "verified", seq: 3, register_state: "readable",
                  undetermined: 1, documents_n: 2 };
   assert.deepEqual(routeFinding("information", mark), {
