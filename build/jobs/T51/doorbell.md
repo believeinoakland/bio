@@ -33,3 +33,7 @@ Also `rows.test.mjs` uses a plain token ("changed translation") in place of the 
 **Not mine (seen in the repository-wide run, reported to BOB under P9):** `provenance/register-checks.test.mjs:186,196` copies the doorbell's sentences; `control-plane/doorbell.test.mjs:296,514` and `screens-entry/front.test.mjs:55` hand-list ops and keys.
 
 **Size (session_01C6MLP8YoCGd3BrWthJxfJ5): test runs 4, module lines 1144**
+
+## J2 · COMPLETE
+
+CHANGE K3982 done (commit d09363a33a on job/T51/doorbell, tranche/T51 merged). (1) knocker.test.mjs:205 now compares asserts by equality with the product's localize call, vars from the inbox row. (2) expect.mjs's minted doorbell.checks.group_can_see is deleted; tests read EXPECT[code] by equality. words check doorbell: 0 failures; doorbell tests 73/73; format, architecture, coverage, ownership 0 failures; setup-words check: stale-rows note only. Reported under P9, not mine: provenance/register-checks.test.mjs:186,196 copy doorbell sentences; control-plane/doorbell.test.mjs:296,514 and screens-entry/front.test.mjs:55 hand-list keys/ops. Record: build/jobs/T51/doorbell.md, CHANGE section.
