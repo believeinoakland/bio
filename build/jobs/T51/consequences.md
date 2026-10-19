@@ -12,3 +12,21 @@ Words conversion for consequences (T51-86), decisions for BOB to rule on:
 4. Not converted, as not member-read or composed of other modules' words: calc-grammar's `why` passed through unchanged (index.mjs `basisUnreadable(result.why)`, and `foreignRefusal` text); the undetermined reason `${UNDETERMINED_WHY}: ${lacking.why}` (keyed parts joined by punctuation); record titles `${kind}: ${description}` and `success: ${statement}` (data, not sentences).
 5. setup-words rows.mjs is stale for `consequences.checks.a_reason_is_at_most_500` (new id): expected, regenerated at the layer close.
 6. Other modules (observed, not reviewed): the full checks/run.mjs run shows 1384 words failures and 26 coverage failures in other modules. None names consequences.
+
+## J2 · COMPLETE
+
+COMPLETE. Commit cac821a65c on job/T51/consequences; pushed.
+
+Applied: T51-86 (words). `checks/words.mjs /home/user/bio consequences`: 22 findings at START, 0 now (inline, plain, test copies all clear). The conformance pass over the listed modules: no line naming consequences. Module tests: 65 of 65 pass (`node --test test/m/consequences/*.test.mjs`).
+
+Deferred: none. Found in another module: none (see REPORT item 6).
+
+Checks run:
+- format: 176 modules, 175 requirements files; 0 failures
+- architecture (consequences): 15 product files; 0 failures
+- coverage (consequences): 25 of 25 live requirement ids named by a test; 0 failures
+- ownership (consequences, tranche/T51 to job/T51/consequences): 7 files changed; 0 failures
+- checks/run.mjs: format 0, architecture 0, channels 0; coverage and words report failures in other modules only (REPORT item 6)
+- setup-words build --check: stale-rows note for consequences.checks.a_reason_is_at_most_500 only (expected, REPORT item 5)
+
+Size (session_013XaWAMAcRE4wEJB1HAAKYv): test runs 1, module lines 2114
