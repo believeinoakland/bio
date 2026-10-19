@@ -48,3 +48,26 @@ R40 needs your amendment; two decisions are yours (P17).
 2. Composed reason. `lines.why.stated_current_through` takes its `{why}` fill as the owner's sentence (civil-time's key read through `word`), as lines R21 does; the test in why.test.mjs:62 says the same. reads.test.mjs:251 expected the nested key object, which `word` cannot draw: its fill is String-written, so a nested key shows as "[object Object]". I changed that expectation to the sentence. Choice for you: keep the sentence (current code), or extend setup-words so a fill can take a key (its owner, not mine).
 
 The rows for `people.index.evidence_names_cited_line`, `people.index.read_names_member` and `people.checks.join_shape` are new ids: rows.mjs regenerates at the layer close (BOB's step).
+
+## J5 · COMPLETE
+
+CR-13 done on job/T51/people (ffb974f5de): words findings and the R40 reason changes.
+
+Applied
+- Words (K3949, K3957, K3962): inline copies at index.mjs:53-54 and :473 now read label.identityclaimkinds rows (not_same_as, unsure, same_as); the cited-line sentence (:505) and the read-needs-member refusal (:1757) are localize ids of this module; the OWNER_HOST_AMBIGUOUS sentence (:1790) reads people.why.people_neighbors_needs; the join-shape sentence (checks.mjs:70) is localize people.checks.join_shape; the test copy (directory.test.mjs:91) is now an assertion message with no sentence.
+- R40 (K3958): connection-grammar R6 judges a hop's undetermined reason as {key, vars}: items pass civil-time's key on as it answers (no sentence, no why_key on hops); the composed lines.why.stated_current_through key takes its {why} fill as the owner's sentence (lines R21); why.test.mjs's R40 hop test and reads.test.mjs's R14 expectation align to this. The hub keeps its string why with why_key.
+
+Deferred: none in the module.
+Found elsewhere: setup-words word() writes a key fill as String, so a nested key renders "[object Object]" (see REPORT to BOB, also sent).
+
+Checks (civicos-process ebcc1a3 + tranche/T51 merged, run from the process repository)
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; words: no finding in people (the repository-wide run lists failures in other modules, none in people).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 15 product files; 0 failures.
+- setup-words build.mjs --check: rows.mjs stale (expected; BOB regenerates at the layer close).
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail (after the merge too).
+
+Rulings for BOB to record in build/rulings.md (P17): (a) hop reasons are {key, vars} per connection-grammar R6; (b) the composed stated-current reason carries the owner's sentence in its {why} fill; (c) the kind words read the label.identityclaimkinds rows.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 5, module lines 2241
