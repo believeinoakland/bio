@@ -549,8 +549,13 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   const fixed = JSON.parse(JSON.stringify(VOCABULARIES));
   assert.deepEqual(Object.fromEntries(Object.keys(fixed).map((k) => [k, r.vocabularies[k]])), fixed);
   const extra = Object.keys(r.vocabularies).filter((k) => !Object.hasOwn(fixed, k));
-  assert.deepEqual(extra.filter((k) => !R39_KEYS.includes(k)), []);
-  for (const k of extra) assert.deepEqual(Object.keys(r.vocabularies[k]).sort(), ["values", "words"], k);
+  /* R67, R68: `proceeding_kinds` (a list) and `action_kind_labels` (a map) are the profiles' own record data, not
+     `{values, words}` vocabularies */
+  const PROFILE_DATA = { proceeding_kinds: Array.isArray, action_kind_labels: (v) => v && typeof v === "object" && !Array.isArray(v) };
+  for (const [k, isShape] of Object.entries(PROFILE_DATA)) if (extra.includes(k)) assert.ok(isShape(r.vocabularies[k]), k);
+  const words = extra.filter((k) => !Object.hasOwn(PROFILE_DATA, k));
+  assert.deepEqual(words.filter((k) => !R39_KEYS.includes(k)), []);
+  for (const k of words) assert.deepEqual(Object.keys(r.vocabularies[k]).sort(), ["values", "words"], k);
   assert.ok(extra.includes("connection_kinds"), "the plane composes connection owners");
   /* R37: the plane registers the bundled screen registry (plane R19); each is a list, and every script offered starts on
      a registered screen */

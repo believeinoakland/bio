@@ -19,9 +19,7 @@ const ROWS = T41_OPS.map((op) => ({ op, mutating: writes.includes(op), gated: tr
 
 test("R12: with the control plane's rows for T41's ops nothing is unaccounted; carried by no row each reads stale; an op "
    + "left ungraded or unnamed, or a retired op carried, is seen (K874)", () => {
-  /* the handle pair (op-declarations R42), the project's account (R41) and an investigation act and read (R43) are among them */
-  for (const op of ["handlechange", "handlecheck", "projectkeyset", "accountusesset", "ailimitset", "exploreapprove",
-    "milestoneremove", "stepaccept", "claims", "captureupload"]) assert.ok(T41_OPS.includes(op), op);
+  /* which ops T41's tables hold is pinned by op-grades' own t41.test.mjs (R29, R30; N891) */
   assert.ok(reads.length > 0 && writes.length > 0);
   const r = A.unaccounted(ROWS);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);

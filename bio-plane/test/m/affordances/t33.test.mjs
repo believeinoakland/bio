@@ -86,10 +86,6 @@ const T33 = {
   actions: { map: actionsOps, part: true, writes: {} },
   "action-clocks": { map: actionClocksOps, part: true, writes: { clockadopt: "undetermined" } },
   "ai-runs": { map: aiRunsOps, part: true, writes: { airunverify: "reasoned" } } };
-/* The reads are not listed here: each owner's reads are the ops of its own op map that op-grades' T33 table names (T33_NON_ACTS)
-   and no rung or absence grades, so an op a map gains is seen at once (a read is derived; a write is stated above with its grade). */
-for (const m of Object.values(T33))
-  m.reads = keysOf(m.map).filter((op) => Object.hasOwn(T33_NON_ACTS, op) && !isMutating(op));
 /* The ops T33's requirements name whose owners serve them in process but whose route arm is the wiring jobs' (op-declarations
    R17, K1601; instance-setup R50, R53): graded now so the table is total when they are routed. */
 const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reversible",
@@ -101,10 +97,6 @@ const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reve
    `accountswitchset` (to `accountusesset`) and ai-runs' `aiceilingset` and `aicopyceilingset` (to ai-use's `ailimitset`),
    each graded in op-grades' t41.mjs under the op that replaces it. */
 const RETIRED = ["assistantset", "accountswitchset", "aiceilingset", "aicopyceilingset"];
-/* The reads T33 grades whose owners are not among the maps above (capture-requests, instance-setup, standards' layer 9, ai-use's
-   usage read, K1689, K2514): the reads of op-grades' T33 table that no listed owner's map serves. */
-const UNROUTED_READS = Object.keys(T33_NON_ACTS).filter((op) => !isMutating(op)
-  && !Object.values(T33).some((m) => m.reads.includes(op)));
 /* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
 const UNGATED_WRITES = ["askusage"];
 /* op-grades R3's `reversible`: the published act of the owner that takes each result back. */
@@ -116,7 +108,6 @@ const TAKEN_BACK_BY = {
   followpersonquery: "unfollow", followportal: "unfollow", unfollow: "followbody", permeetingbody: "permeetingbody",
 };
 const ALL_WRITES = { ...Object.assign({}, ...Object.values(T33).map((m) => m.writes)), ...UNROUTED };
-const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
 const published = () => new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
 
 /* K2049 (B4): the ops each of T33's new modules adds in T35, graded by op-grades in its `t35.mjs` (its R22, K2043) and held
@@ -145,6 +136,20 @@ const T48_ADDS = { following: ["proceedingdates"] };
 /* T50 (`following` R32–R34, N1092, DEC-238 S23; K3630): the member marks `watchitem`, `secondlook` and `secondlookclear`, graded by op-grades
    in T50 (T50-18); pinned here so following's map stays closed (the grades are op-grades' tests'). */
 const T50_ADDS = { following: ["watchitem", "secondlook", "secondlookclear"] };
+
+/* The reads are not listed: an owner's reads are the ops of its own op map that no rung or absence grades and that no later
+   tranche's list above adds as a write; of an earlier module's map (`part`), only those op-grades' T33 table names (T33_NON_ACTS),
+   since the rest of that map is other tranches' (a new op of a whole module's map is seen at once; a write is stated above with its grade). */
+const LATER_ADDS = new Set([...Object.values(T35_ADDS).flat(), ...Object.values(T36_ADDS).flatMap((o) => Object.keys(o)),
+  ...Object.values(T41_ADDS).flatMap((o) => Object.keys(o)), ...Object.values(T45_ADDS).flat(), ...Object.values(T47_ADDS).flat(),
+  ...Object.values(T48_ADDS).flat(), ...Object.values(T50_ADDS).flat()]);
+for (const m of Object.values(T33))
+  m.reads = keysOf(m.map).filter((op) => !isMutating(op) && !LATER_ADDS.has(op) && (!m.part || Object.hasOwn(T33_NON_ACTS, op)));
+/* The reads T33 grades whose owners are not among the maps above (capture-requests, instance-setup, standards' layer 9, ai-use's
+   usage read, K1689, K2514): the reads of op-grades' T33 table that no listed owner's map serves. */
+const UNROUTED_READS = Object.keys(T33_NON_ACTS).filter((op) => !isMutating(op)
+  && !Object.values(T33).some((m) => m.reads.includes(op)));
+const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
 
 test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41, T45, T47, T48 and T50 add — "
    + "each earlier module's map holds the ops T33 adds to it, and no owner serves a retired op", () => {

@@ -40,27 +40,12 @@ import { list as profiles, get as profile } from "../../../../jurisdictions/inde
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES } = A;
 const { NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_KEY, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
 const ids = (xs) => xs.map((a) => a.id).sort();
-/* op-grades R13 (T33-85): T33's grades and reasons, the tables spread into RUNGS, RUNG_ABSENT and NON_ACTS; held to the op
-   maps in t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
-const T33_OPS = new Set([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT), ...Object.keys(T33_NON_ACTS)]);
-/* op-grades R17 (K1864): T34's grades and op-declarations R21's aliases, held to their owners and ops in t34.test.mjs, set aside as T33's are. */
-import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
-/* K1974 (A-1): the grading tables are `op-grades'`, which holds T35's grades (its R21, R22) to their owners in its own
-   `t35.test.mjs`; set aside here as T33's and T34's are. */
-import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-/* T36 (K2121, K2156): op-grades R23–R25 grade K2092's five ops, file-safety's 23 and credentials' keep-away in its
-   `t36.mjs`; the ops the closures below name are named by hand, as their owners' requirements give them, never read
-   back from the table. */
-import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
-/* R51 (T45): the acts an action offers, by owner: action-holds', actions', action-replies', escalation's, filings',
-   action-clocks' and plan-work's. */
-const R51_ACTS = ["actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent",
-  "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "actionbearingpropose", "arosefrom",
-  "actionreplyquoting" /* R58 */, "escalationopen", "escalationattach", "filingprepare", "communicationprepare", "filingapprove", "filingsent",
-  "counselpacket", "clockstate", "reminderset", "itemtakeup"];
-/* R52 (T46): the acts T45 deferred, offered on an action: escalation's stop and reopening, and `clockadopt`. */
-const R52_ACTS = ["escalationstoppursuing", "escalationreopen", "clockadopt"];
+/* R51 (T45), R52 (T46): the acts an action offers are derived, not listed: every ACTS row whose `types` name an action,
+   beside R1's own four (actionmove, actioncorrespond, actionlaws, actionrisktier). That each is an op its owner serves
+   is asserted against the owners' op maps in the tests below. */
+const R1_ACTION_ACTS = ["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"];
+const ACTION_ACTS = ACTS.filter((a) => a.types.includes("action")).map((a) => a.id);
+const R51_R52_ACTS = ACTION_ACTS.filter((id) => !R1_ACTION_ACTS.includes(id));
 test("R1 R51 R52: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
     refuse: ["release", "retire", "dispose", "sever", "reinstate"],
@@ -71,7 +56,7 @@ test("R1 R51 R52: ACTS holds exactly the object-directed acts, each at its weigh
       "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset",
       "contradictionresolve" /* N345 */, "sourceconsent" /* N364 (K530): its prompt rides it, R5 */,
       /* R51 (T45): every act directed at an action T45's owners serve */
-      ...R51_ACTS, ...R52_ACTS],
+      ...R51_R52_ACTS],
   };
   const want = Object.entries(W).flatMap(([w, xs]) => xs.map((id) => [id, w])).sort();
   assert.deepEqual(ACTS.map((a) => [a.id, a.weight]).sort(), want);
@@ -318,16 +303,13 @@ test("R19: `terminal` is given only while STATES.information.edges.retired is em
   assert.deepEqual([...G.IRREVERSIBLE_WEIGHT].sort(), ["personexpunge", "publishat", "publishatmove", "standardrelease"]);
 });
 
-test("R19: the justification family holds the codes the reasoned ops refuse with", () => {
+/* N891: the family's content (each code the reasoned ops refuse with, and the exclusions) is op-grades' own, pinned in
+   `test/m/op-grades/pins.test.mjs` ("R1 (N891): JUSTIFICATION_REFUSALS holds only codes that ask the member's account");
+   what is asserted here is the form of the family and the owners' rows, below. */
+test("R19: the justification family is a set of upper-case codes, none twice, and holds a source act's evidence", () => {
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
+  assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length);
   assert.ok(JUSTIFICATION_REFUSALS.includes("NO_EVIDENCE"), "N364 (op-grades R1): a source act's account is its evidence");
-  for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
-    "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
-    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
-    "ACTION_MOVE_NO_REASON" /* N310: actions R13 */,
-    "INTENT_NO_REASON", "CONFORMANCE_NO_REASON", "ESCALATION_NO_REASON" /* K823, K834, K835 */,
-    "TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED" /* R30 */])
-    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
 test("R24: no decorated act, capture act or set act reaches a caller with a null rung and a null rung_absence", () => {
