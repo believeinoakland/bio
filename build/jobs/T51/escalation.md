@@ -18,3 +18,29 @@ Generated artifacts made stale by this job (BOB regenerates at the layer close; 
 For Bob (a word-policy question, not decided here): the seven new sentences are `localize` sentences with no words.json row yet. Whether they get rows (K3944) is for the design stream.
 
 Defect fixed in this module (P8): the lines module answers an undetermined reason as `{key, vars}` (civil-time, K3958). Two places in `src/escalation/index.mjs` rendered it with `String()`, so a member would read "[object Object]" (the part-of line sentence, and the joined doubt). They now render through `reasonText`, which calls `word(key, vars)`.
+
+## J2 · COMPLETE
+
+T51-94 · escalation (R30, R31, R33; the words pass)
+
+Entries applied:
+- The 27 findings of `node checks/words.mjs /home/user/bio escalation` at START (inline 23, plain 3, testcopy 4), and the 17 `plain` and 2 `code` test-copy findings listed in `build/plan/words-pass/escalation.md`. Each is read by key where its words.json row holds the same sentence (17 rows, compared character by character with the literal they replace: 0 mismatches), else through `localize('escalation.index.<slug>', en, vars)` (seven new ids, listed in the REPORT). Test copies read the key, or compare with `word`/`localize` by equality.
+- Red R30 (`structure.test.mjs`, "what we did" lane): the labels are compared with `word('screen.timeline.lane.ours' / '.world')`, which are `What we did` / `What they did`.
+- Red R12 (`structure.test.mjs`, the line's undetermined reason): asserted by key (`civil-time.end_stated`), per K4036.
+- `reasonText` renders a keyed reason by key where a member reads it (see the REPORT).
+
+Deferred: none.
+
+Found in other modules: see the REPORT (handlist op lists in affordances, op-grades and plane; wizard-scripts' copy of a word row).
+
+Tests and checks (run from /home/user/bio, after the merge of tranche/T51 at 0c5bbb62c6):
+- `node --test test/m/escalation/*.test.mjs` (bio-plane): 89 tests, 89 pass, 0 fail (before and after the merge).
+- `node checks/format.mjs /home/user/bio`: 176 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio escalation`: 20 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio escalation`: 37 of 37 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio escalation tranche/T51 job/T51/escalation`: 6 files changed by escalation; 0 failures.
+- `node checks/words.mjs /home/user/bio escalation`: 0 failures. The cross-module group (`conformance consequences action-grammar actions action-holds escalation filing-templates filings action-clocks action-plans action-records plan-work action-replies`): no line names escalation.
+- `node checks/run.mjs /home/user/bio`: exit 1, from other modules' words and coverage findings only; none names escalation.
+- `node bio-plane/src/setup-words/build.mjs --check`: the stale-rows note (expected; see the REPORT).
+
+Size (session_013AsFroTyykKKbdaHRfrSrH): test runs 4, module lines 2308
