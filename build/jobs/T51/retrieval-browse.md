@@ -59,3 +59,11 @@ Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 1, module lines 1365
 ## J2 · COMPLETE
 
 Words pass (T51-263) complete on job/T51/retrieval-browse at d3e08f3414 (commit 3cfecfabab for the code). 25 plain findings converted to localize, plus two unflagged sentences (new_since refusal, read-shape reason) and four test copies. Module tests 51/51 pass; words, architecture, coverage and ownership 0 failures for this module. Full run.mjs shows no failure naming retrieval-browse. Report points (record, Completion T51-263): the requirements' cut clause is superseded (K3964); the read-shape en names 'events R49' and is for the design lane; rows.mjs is stale for the new ids (BOB regenerates at layer close). Co-author model line omitted from commits per the system rule on model identifiers.
+
+## Completion again (B3, K4003)
+
+Merged `tranche/T51` (fast-forward to `f89484903d`). `test/m/retrieval-browse/fixture.mjs`'s stand-in `selectionRead` refusal no longer copies retrieval's sentence (`retrieval.index.selection_readable_by_credential`, merged as a keyed read, K3986): its `detail` is now the neutral stand-in `"stand-in: not yours"`, which the fixture needs and no more. No product code changed for this.
+
+Checks re-run: `node --test bio-plane/test/m/retrieval-browse/`: 51 tests, 51 pass, 0 fail. `checks/words.mjs /home/user/bio retrieval-browse`: 0 failures (testcopy 0). `checks/coverage.mjs ... retrieval-browse`: 18 of 18 live ids, 0 failures. `checks/architecture.mjs ... retrieval-browse`: 0 failures. `checks/ownership.mjs ... tranche/T51 job/T51/retrieval-browse`: 0 failures.
+
+Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 2, module lines 1365
