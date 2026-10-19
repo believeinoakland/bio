@@ -159,7 +159,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     /* T47 (R55, R59): the owners T47 gives a family */
     "basis-versions", "signin-door",
     /* T50 (R73): the owners T50 gives a family */
-    "action-records", "progressions"].sort());
+    "action-records", "progressions",
+    /* T51 (R77, R78): the owners T51 gives a family */
+    "filing-templates", "promotion"].sort());
   /* T48 (R67, R68): `ai-accounts` holds the 24 ops that moved from credentials, `connections` the step-source acts */
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
@@ -370,7 +372,9 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
     "joindoors",
     /* T50 (R73): the instant a member last looked at Home and her open captures answer `by`, the session's member,
        never a request field (membership R148, acquisition R46) */
-    "lookedat", "opencaptures"];
+    "lookedat", "opencaptures",
+    /* T51 (R77; CR-4): the administrator removals under way answer `by`, an administrator's own (member-roster R75) */
+    "adminremovalsopen"];
   let checked = 0;
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;

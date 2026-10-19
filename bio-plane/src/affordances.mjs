@@ -128,7 +128,7 @@ export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
 /* R48 (N726; DEC-174 (3), DEC-99): the one table of what each act does, generated once from the design stream's text;
    R49 serves it, the very object, in the answer with no target. */
-export { ACT_HELP, ACT_HELP_KEYS } from "./affordances/act-help.mjs";
+export { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS } from "./affordances/act-help.mjs";
 /* K1974 (`plan/draft-T35-splits.md` A-1): THE GRADING TABLES ARE `op-grades'` (its R1–R22): the ladder, its correction
    path, the `reasoned` family, the absence grounds, the consequence statements, the larger-screen acts, the Irreversible
    weight, `RUNGS`, `RUNG_ABSENT`, `MACHINE_REFUSALS`, `NON_ACTS` and `phoneOf`. Read here by reference and never copied
@@ -332,8 +332,8 @@ export const GROUND_PROMPT = word("prompt.inquiryground");
  *
  * IT LIVES HERE for DEC-8's reason, unchanged from the two prompts above: a
  * surface renders what it RECEIVED and never composes a prompt of its own. The
- * surface authored this sentence until this item (`ATTEST_YIELDS_GRADE` in
- * civicos-ui/app.html), which DEC-39 calls the last member-facing claim about
+ * surface authored this sentence until this item (`ATTEST_YIELDS_GRADE` in the
+ * interface it replaced), which DEC-39 calls the last member-facing claim about
  * the record's semantics that the record did not own; UI-28 renders the
  * publication and stops writing one.
  *
@@ -466,8 +466,8 @@ export const VOCABULARIES = {
   /* D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21): an action's risk tier IN WORDS — Bob's
      three from the mission of record and the UNDETERMINED that is written wherever no member stated one. A
      code->text map for `sufficiency_claim_states`' reason below: the sentence IS the tier's meaning, and a
-     surface holding its own copy would be the surface deciding what tier 2 means, which is why app.html's
-     arm could offer no chooser before this. `actions'` map (R26, its R40), against which C-2.10 validates and
+     surface holding its own copy would be the surface deciding what tier 2 means, which is why the interface
+     could offer no chooser before this. `actions'` map (R26, its R40), against which C-2.10 validates and
      whose `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
   risk_tiers: RISK_TIERS,
   /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
@@ -505,9 +505,9 @@ export const VOCABULARIES = {
   /* `op-grades` R21 (DEC-143; K1774): the acts that can never be undone, shown with the Irreversible weight. */
   irreversible_weight: IRREVERSIBLE_WEIGHT,
   /* PL-17 / DEC-65 — THE THIRD `asserted_by` STATE, PUBLISHED WITH ITS WORDS.
-     Published for a reason this file can MEASURE rather than assert: today
-     `civicos-ui/app.html`'s grounding receipt renders `Asserted by
-     ${g.asserted_by}` VERBATIM, so the moment a field can hold anything but a
+     Published for a reason this file can MEASURE rather than assert: the
+     interface it replaced rendered a grounding receipt's `Asserted by` field
+     VERBATIM, so the moment a field can hold anything but a
      person's name, a surface with no vocabulary prints a machine word at a
      member. That is the defect this whole file closes, arriving in a field
      whose entire subject is not overclaiming.
@@ -524,8 +524,8 @@ export const VOCABULARIES = {
      and the reason is measurable rather than stylistic: `content.minted_by`
      holds an IDENTITY, and from this item that identity can be a machine
      credential's `class:ai/<tokenId>` stamp. A surface with no vocabulary
-     renders the stored string, which is how `app.html`'s grounding receipt came
-     to print `Asserted by ${g.asserted_by}` verbatim one field over. So the
+     renders the stored string, which is how a grounding receipt came to print
+     the `Asserted by` field verbatim one field over. So the
      plane answers WHICH STATE the row is in and publishes the SENTENCE for it,
      and no surface invents wording for a distinction 5.7 requires be shown.
      A code->text map, not a list, for the same reason its neighbour is one: the
@@ -589,11 +589,24 @@ export const VOCABULARIES = {
  * moment of the call (actions R10, R40: `actionsOf(host).kinds()`, the product's own and then the active profiles'),
  * and every other key the same object `VOCABULARIES` holds (R4). Pure: the caller asks actions and hands the answer
  * here. An answer that is not a list of strings is not a kind list, and the product's kinds are published instead
- * (actions' answer with no profile active), never a partial list. */
-export function vocabulariesFor(kinds) {
+ * (actions' answer with no profile active), never a partial list.
+ *
+ * R67, R68 (T51): `profile` is the store's answer to `affordancevocab` (./affordances/facts.mjs), what only the instance's
+ * active profiles know: `proceeding_kinds`, a list of `{kind, label, forum_kind}` (an entry without a string `kind` left
+ * out), and `action_kind_labels`, an object from a profile-defined kind to its non-empty `label`. A key the store did not
+ * answer as that shape is left out of the answer, never answered empty, so a surface can tell "none" from "could not ask". */
+export function vocabulariesFor(kinds, profile = null) {
   const ok = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
+  const p = profile && typeof profile === "object" ? profile : {};
+  const profiled = {};
+  if (Array.isArray(p.proceeding_kinds))
+    profiled.proceeding_kinds = p.proceeding_kinds.filter((k) => k && typeof k === "object" && typeof k.kind === "string")
+      .map(({ kind, label, forum_kind }) => ({ kind, label: typeof label === "string" ? label : null, forum_kind: forum_kind ?? null }));
+  if (p.action_kind_labels && typeof p.action_kind_labels === "object" && !Array.isArray(p.action_kind_labels))
+    profiled.action_kind_labels = Object.fromEntries(Object.entries(p.action_kind_labels)
+      .filter(([, label]) => typeof label === "string" && label.trim().length > 0));
   /* R39: T33's vocabularies, each `{values, words}`, present only where its owner is composed (./affordances/words.mjs). */
-  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...composedVocabularies() };
+  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...profiled, ...composedVocabularies() };
 }
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -602,7 +615,7 @@ export function vocabulariesFor(kinds) {
  *
  * THE FORK. `attest` was the last act in this plane whose member-facing label
  * was written by a surface: op=affordances published nothing for it, so
- * civicos-ui spelled "Co-attest this capture" itself (UI-22 raised it rather
+ * the interface it replaced spelled the label itself (UI-22 raised it rather
  * than papering over it). Two ways to fix that. Promote `attest` into ACTS with
  * an applies(), or publish a SEPARATE block for the capture-directed class.
  *

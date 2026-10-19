@@ -202,7 +202,10 @@ test("R2, R7 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`) 
     const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
     assert.ok(missing.includes(`bio-plane/${path} ${fam}`), missing.join(", "));
   }
-  for (const code of ["CAPTURE_HELD_IN_PARTS", "ROUTE_MARK_NO_AUTHOR", "ROUTE_MARK_NO_BUNDLE", "ROUTE_MARK_NO_SUCH_BUNDLE", "ROUTE_MARK_NOT_A_DOCUMENT"])
+  /* the codes are read from their owners' own tables, never copied here (K3268) */
+  const { ROUTE_MARK_CHECKS } = await import("../../../src/provenance-routes/checks.mjs");
+  const { ATTEST_CHECKS } = await import("../../../src/attestation/checks.mjs");
+  for (const code of [...Object.keys(ROUTE_MARK_CHECKS), ...Object.keys(ATTEST_CHECKS)])
     assert.ok(M.dec49Row(code), code);
 });
 
