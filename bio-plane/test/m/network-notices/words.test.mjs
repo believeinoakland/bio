@@ -29,8 +29,7 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   noSlug.P = noSlug.project("budget", "alice");
   const slug = await prepare(noSlug);
   assert.equal(slug.reason, "NOTICE_NO_GROUP_SLUG");
-  assert.equal(slug.translation, "Your team has no name recorded yet, and a notice is never anonymous. Record the team's name "
-    + "first. Nothing was published.");
+  assert.equal(slug.translation, word("refusal.NOTICE_NO_GROUP_SLUG"));
   noOldName(slug, "C-127.4");
 
   const noKey = world({ key: false });
@@ -39,10 +38,8 @@ test("R1 (DEC-149) NOTICE_NO_GROUP_SLUG and NOTICE_NO_INSTANCE_KEY tell the memb
   const key = await prepare(noKey);
   assert.equal(key.reason, "NOTICE_NO_INSTANCE_KEY");
   assert.equal(key.check, "C-127.5");
-  assert.equal(key.translation, "Your team's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
-    + "notice is always published with. The operator binds one. Nothing was published.");
-  assert.equal(key.detail, "your team's Civicsmith holds no signing key of its own, and a notice is never published without "
-    + "its signed level");
+  assert.equal(key.translation, word("refusal.NOTICE_NO_INSTANCE_KEY"));
+  assert.equal(key.detail, nn.NO_INSTANCE_KEY_DETAIL);
   noOldName(key, "C-127.5");
 
   /* the post's own key check (R4, R13) answers the same words: the key goes between prepare and post */
@@ -61,8 +58,7 @@ test("R4 (DEC-149) NOTICE_STALE says your group's Civicsmith holds no prepared n
   const stale = await w.nn.postNotice({ digest: "0".repeat(64), signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.equal(stale.reason, "NOTICE_STALE");
   assert.equal(stale.check, "C-127.12");
-  assert.equal(stale.translation, "Your team's Civicsmith holds no prepared notice from you with this fingerprint, or it was "
-    + "prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.");
+  assert.equal(stale.translation, word("refusal.NOTICE_STALE"));
   noOldName(stale, "C-127.12");
   /* past its hour: the same row */
   w.clock.now = NOW + 3600000 + 1000;
