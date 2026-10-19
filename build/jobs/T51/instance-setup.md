@@ -56,3 +56,28 @@ REPORT (re B3): what I found in other modules while doing CR-12. None of it is c
 2. `test/m/plane/door.test.mjs`:142 (the R1, R5 test "instance-setup's forty-five routes") is now red: instance-setup's map holds 36 routes, not 45, because the nine translation route lines left (CR-12). The test's drive list still counts the nine. Plane's job sets the count to 36 and drops the translation drives from the instance-setup comparison, since `translationsOps` answers them through `store.mjs`. This is the one failure I cause outside my module; I did not edit the test.
 3. Reds in the whole-tree `checks/run.mjs`, not mine: coverage: agent-harness R17; agent-runner R36, R37, R38, R40; extraction R77; installer-steps R26, R31; journey-check R19; screens-inquiry R81, R82; setup-words R19. Words: `promotion/index.mjs`:194, 1151, 1184 (inline).
 4. Test note for my own tests (no action for you): the fixture's default `credentials` stub is `{}`, so a `last_used_at` read through `boot()` answers null. The R95 test now hands a real `credentials` reader over the same store; the fixture is unchanged.
+
+## J6 · COMPLETE · re B3
+
+COMPLETE (re B3). CR-12 done in its two parts that are mine; item 2 waits on your answer to J4.
+
+Entries applied:
+- Item 1: `bootstrapfacts`' `last_used_at` reads `credentials.lastActivity()` (CR-16, K4116). The module's own `sessions` read (`#lastActivity`) is gone. The R95 test hands a real `credentials` reader over the same store and checks the instant (2026-10-14T17:45:00.000Z).
+- Item 3: ten of the eleven translation delegates are deleted. `readingLanguage` stays, for `plane/src/ask.mjs`:369 (J5, item 1). The nine translation route lines leave `instanceSetupOps`; plane's `store.mjs` already answers those routes through `translationsOps`, which it did before. Search of the whole tree for callers of the removed delegates and routes found none except that one.
+- R94's test now asks the nine routes of `translations` (the map instance-setup holds none of them); `exports.test.mjs`'s route list drops them.
+- Item 2 (the leaf's twelve texts): not changed; see J4. R97 and its control are as they were.
+
+Deferred: item 2 (J4). Found in other modules, reported in J5: plane's `ask.mjs` caller of `readingLanguage`; plane's `door.test.mjs`:142 red (45 → 36 routes); the whole-tree coverage and words findings.
+
+Tests and checks:
+- instance-setup: `node --test test/m/instance-setup/*.test.mjs`: 193 pass, 0 fail (t51: 11 pass).
+- plane `door.test.mjs`: 5 pass, 1 fail (the R1, R5 route count, J5 item 2; not my file).
+- `checks/format.mjs`: 175 modules, 0 failures.
+- `checks/architecture.mjs instance-setup`: 27 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 69 of 69 live ids named by a test; 0 failures.
+- `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 5 files changed by instance-setup, 0 failures.
+- `checks/run.mjs /home/user/bio`: instance-setup's findings are the twelve leaf copies (item 2) only; the rest are in other modules (J5 item 3).
+
+Commit `b6401a7fff` on `job/T51/instance-setup`, pushed.
+
+Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 5, module lines 3607
