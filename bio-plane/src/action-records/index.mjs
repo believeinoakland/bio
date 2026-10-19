@@ -406,7 +406,7 @@ export class ActionRecords {
                      + "asked, and a proposal nobody can be named for is one the record could say nothing "
                      + "about: the label IS the act." };
     if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+      return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const read = this.lawEntries(laws);
     if (!read.ok) return read;
     const entries = read.entries;
@@ -444,7 +444,7 @@ export class ActionRecords {
   actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
     if (asked !== 1 && asked !== 2 && asked !== 3) return this.badRiskTier(target, tier, "a proposal");
     const why = typeof basis === "string" ? basis.trim() : "";
@@ -472,7 +472,7 @@ export class ActionRecords {
   actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const held = this.#heldFm(target) || {};
     let list = seeks;
@@ -564,7 +564,7 @@ export class ActionRecords {
     const asked = { target: target ?? null, detail: RECEIPT_DETAIL };
     const fenced = correspondFence(who, asked);
     if (fenced) return fenced;
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const when = String(at ?? "").trim();
     const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account, dateTime: true }, asked);
     if (entryRefused) return entryRefused;
@@ -620,7 +620,7 @@ export class ActionRecords {
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential "
         + "may not set or remove it. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
     if (want === null) return { ok: false, reason: "BAD_SCOPE", target, legal: [true, false],
                                 detail: "confidential is true (set the scope) or false (remove it)" };
@@ -669,7 +669,7 @@ export class ActionRecords {
     /* DEC-49 REGION is-promise */
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_RECORD_PROMISE", localize("action-records.index.promise_machine_cannot_record", "a promise the team made to a person is recorded by a member; a machine credential may not record one. Nothing was written."), { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
       return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds.join(", ")}, the text 1 to `
         + `${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
@@ -712,7 +712,7 @@ export class ActionRecords {
     const faulted = () => { const { project, ...rest } = fault; return { ...rest, target: target ?? null }; };
     /* DEC-49 REGION is-action-stake */
     if (fault && fault.reason === "MACHINE_CANNOT_SET_STAKE") return faulted();
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_target_one_action", "one action at a time: pass target=<action id>") };
     if (fault) return faulted();
     if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     /* END DEC-49 REGION is-action-stake */
@@ -765,7 +765,7 @@ export class ActionRecords {
     /* DEC-49 REGION is-action-inquiry */
     if (!who || isMachineIdentity(who))
       return worded("MACHINE_CANNOT_OPEN_FROM_ACTION", localize("action-records.index.a_question_is_opened_from", "a question is opened from an action by a member; a machine credential may not open one. Nothing was written."), { action: action ?? null });
-    if (!action) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass action=<action id>" };
+    if (!action) return { ok: false, reason: "NO_TARGET", detail: localize("action-records.index.no_action_one_action", "one action at a time: pass action=<action id>") };
     if (!asked || asked.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked))
       return worded("ACTION_INQUIRY_NO_QUESTION", localize("action-records.index.the_question_is_1_to", "the question is 1 to {ACTION_QUESTION_MAX} characters on one line. Nothing was written.", { ACTION_QUESTION_MAX: String(ACTION_QUESTION_MAX) }), { action, max: ACTION_QUESTION_MAX });
     const b = this.#seenAction(action, viewer);
