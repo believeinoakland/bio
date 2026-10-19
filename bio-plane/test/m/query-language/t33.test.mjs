@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
 import { kinds, phases, stages, bases } from "../../../src/money/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { compile, savedForm, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, DEFAULT_FACETS }
   from "../../../src/query.mjs";
 
@@ -212,7 +212,7 @@ test("R29 a T33 field with no relation named is dropped with its warning, never 
     for (const second of [undefined, {}, { fields: { [T33.find((x) => x !== f)]: REL[T33.find((x) => x !== f)] } }]) {
       for (const term of [`${f}:"${VALUES[f][0]}"`, `has:${f}`, `-${f}:x`, `${f}:*`]) {
         const p = compile({ q: `water ${term}`, viewer: V, zone: "UTC" }, second);
-        assert.deepEqual(p.warnings, [word("query-language.query.stringify_is_not_available_here", { stringify: JSON.stringify(f) })], `${term}`);
+        assert.deepEqual(p.warnings, [localize("query-language.query.stringify_is_not_available_here", "{stringify} is not available here; read as nothing", { stringify: JSON.stringify(f) })], `${term}`);
         assert.deepEqual(p.drops, p.warnings);
         assert.deepEqual(everyStatement(p), everyStatement(compile({ q: "water", viewer: V, zone: "UTC" }, second)), term);
         for (const [, s] of everyStatement(p)) assert.ok(!s.sql.includes(FIELDS[f].col), `${term} reads ${FIELDS[f].col}`);
@@ -224,11 +224,11 @@ test("R29 a T33 field with no relation named is dropped with its warning, never 
   for (const f of T33) {
     assert.ok(!(f in SORTABLE), f);
     const s = compile({ q: `sort:${f} water`, viewer: V }, { fields: REL });
-    assert.deepEqual(s.drops, [word("query-language.query.sort_stringify_can_hold_many", { stringify: JSON.stringify(f) })]);
+    assert.deepEqual(s.drops, [localize("query-language.query.sort_stringify_can_hold_many", "sort: {stringify} can hold many values per record; not a sort", { stringify: JSON.stringify(f) })]);
     assert.equal(s.sort.field, "relevance");
     assert.equal(compile({ q: "", viewer: V, sort: f }, { fields: REL }).sort.field, "updated", "the parameter too");
     const fc = compile({ q: "", viewer: V, facets: [f, "type"] }, { fields: REL });
-    assert.deepEqual([fc.facetFields, fc.warnings], [["type"], [word("query-language.query.facets_stringify_can_hold_many", { stringify: JSON.stringify(f) })]]);
+    assert.deepEqual([fc.facetFields, fc.warnings], [["type"], [localize("query-language.query.facets_stringify_can_hold_many", "facets: {stringify} can hold many values per record; not a facet", { stringify: JSON.stringify(f) })]]);
   }
   /* R7 and R8 through every relation: member input moves only args, and every gate mark is the one gate's. */
   const shapes = (v) => everyStatement(compile({ q: T33.map((f) => `${f}:"${v}"`).join(" "), viewer: "member:ann",
