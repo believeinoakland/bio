@@ -61,3 +61,7 @@ Decision for you (layers and order are yours): (A, my recommendation) rule which
 **Deferred.** None. **Another module.** None.
 
 Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700
+
+## J3 · COMPLETE
+
+T51-208 (agent-steps, words pass) is complete on job/T51/agent-steps (e43c73904b and the record commit). Per your B3 ruling: plan.test.mjs reads its ops from src/ops.mjs (PLAN_OPS, this module's declaration). Checks: format 0, architecture 0, words 0, coverage 49/49 ids, ownership 0; setup-words --check shows only the stale-rows note. Tests all pass with unchanged counts. Record: build/jobs/T51/agent-steps.md. Size (session_01YAwmmYXXALThsEWDUkRnFx): test runs 24, module lines 1700.
