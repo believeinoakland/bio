@@ -369,6 +369,13 @@ const RENAMED = {
   "screens-action": { "act.optionpropose.label.plan": "act.planask.label.plan" },
   "screens-investigate": { "act.connectionassert.label.explore": "act.stepsource.label.explore" },
 };
+/* DEC-370 (B390, K4134): a key a module's `act.${op}.label.${screen}` pattern matches only because the module holds both words
+   apart (`claim` as an op, `setup` as a screen), though it draws no such act: the setup screen's claim button reads
+   screen.setup.claim.button, so neither module reads the registry's setup claim label. */
+const NOT_READ = {
+  "screens-entry": ["act.claim.label.setup"],
+  "screens-settings": ["act.claim.label.setup"],
+};
 /* DEC-253's ten vocabularies, which affordances publishes with its words. */
 const VOCAB_SETS = ["linekinds", "linecapacities", "lineroles", "moneykinds", "moneyphases", "moneystages", "moneybases",
   "moneyprecisions", "identityclaimkinds", "connectionkinds"];
@@ -481,6 +488,7 @@ for (const m of MODULES) {
       if (RETIRED.has(k)) retired.add(k); else if (KEYS.has(k) && !reads.has(k)) { reads.add(k); n++; } }
     c.computedKeys = n; }
   /* DEC-265 (B226 (5)): keys a module's requirements name that its merged source does not read yet */
+  for (const k of NOT_READ[m] || []) reads.delete(k);
   for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
   if (m === "affordances") {
