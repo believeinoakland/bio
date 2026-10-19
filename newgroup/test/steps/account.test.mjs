@@ -282,3 +282,22 @@ test("R6 control: dropLock on a refused delete throws nothing", async () => {
   assert.equal(w.scripts.has(LOCK_SCRIPT), true);
   w.restore();
 });
+
+test("R1 (F4): a 429 that says Retry-After is waited for that long, within the bound; without it the back-off is as before", async () => {
+  const limited = (after) => new Response(JSON.stringify({ success: false, errors: [{ message: "slow down" }] }), { status: 429, headers: after ? { "retry-after": after } : {} });
+  let waits = [];
+  sequence([limited("45"), limited("45"), cfok(1)]);
+  assert.equal(await cf(session((w, b) => waits.push([w, b])), "/x"), 1);
+  assert.deepEqual(waits, [[0, 300], [45, 300]]);
+  waits = [];
+  sequence([limited(null), limited(null), cfok(1)]);
+  await cf(session((w, b) => waits.push([w, b])), "/x");
+  assert.deepEqual(waits, [[0, 300], [2, 300]], "control: no header, the first back-off");
+  waits = [];
+  sequence([limited("100000"), cfok(1)]);
+  await cf(session((w) => waits.push(w)), "/x");
+  sequence([limited("100000"), limited("100000"), cfok(1)]);
+  const w2 = [];
+  await assert.rejects(cf(session((w) => w2.push(w)), "/x").then(() => { throw new Error("completed"); }), /completed|slow down/).catch(() => {});
+  assert.ok(w2.every((w) => w <= 300), "a wait never passes the bound");
+});

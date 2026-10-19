@@ -47,8 +47,9 @@ export async function patiently(fn, { onWait = null, minutes = WAIT_BOUND_MINUTE
       if (!transient(e)) throw e;
       if (waited >= bound) throw new Lasting(e);
       if (onWait) await onWait(waited, bound);
-      await sleep(delay * 1000);
-      waited += delay; delay = Math.min(delay * 2, BACKOFF_CAP_S);
+      const wait = Math.max(delay, Math.min(Number.isFinite(e.retryAfter) ? e.retryAfter : 0, bound));
+      await sleep(wait * 1000);
+      waited += wait; delay = Math.min(delay * 2, BACKOFF_CAP_S);
     }
   }
 }
@@ -72,6 +73,8 @@ export async function cfCall(session, path, init = {}, base) {
       const e = new Error(j.errors?.[0]?.message || `HTTP ${r.status}`);
       e.code = j.errors?.[0]?.code;
       e.status = r.status;
+      /* F4: a rate limit that says when to come back (Retry-After, in seconds) is waited for that long. */
+      if (r.status === 429) { const after = Number(r.headers.get("retry-after")); if (Number.isFinite(after) && after > 0) e.retryAfter = after; }
       if (r.status === 401) throw Object.assign(new ApproveAgain(), { status: 401, apiMessage: e.message });
       throw e;
     }

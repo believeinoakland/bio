@@ -50,7 +50,18 @@ async function ensureBuckets(token, acct, names) {
   return there;
 }
 
-async function ensureSubdomain(token, acct, slug) {
+/* F7: the address is chosen before the copy is created. The account's workers.dev prefix is read and, when it has none, the two
+   names that would be tried are offered up front (Cloudflare offers no availability check, so the second is fixed here and
+   `ensureSubdomain` tries exactly these, in this order). Nothing is registered. */
+async function offerSubdomain(token, acct, slug) {
+  let sub = null;
+  try { sub = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; }
+  catch (e) { if (e.status !== 404) throw e; }
+  if (sub) return { sub, candidates: [] };
+  return { sub: null, candidates: [slug, `${slug}-${rand(3).toLowerCase().replace(/[^a-z0-9]/g, "x").slice(0, 4)}`] };
+}
+
+async function ensureSubdomain(token, acct, slug, offer = null) {
   let sub = null;
   try { sub = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; }
   catch (e) { if (e.status !== 404) throw e; }
@@ -60,7 +71,7 @@ async function ensureSubdomain(token, acct, slug) {
        and permanent in practice (changing it later breaks every URL already
        issued), so derive it from the name the user chose and SAY SO on the
        page rather than choosing silently. */
-    const candidates = [slug, `${slug}-${rand(3).toLowerCase().replace(/[^a-z0-9]/g, "x").slice(0, 4)}`];
+    const candidates = offer?.candidates?.length ? offer.candidates : [slug, `${slug}-${rand(3).toLowerCase().replace(/[^a-z0-9]/g, "x").slice(0, 4)}`];
     for (const c of candidates) {
       try {
         await cf(token, `/accounts/${acct}/workers/subdomain`,
@@ -74,4 +85,4 @@ async function ensureSubdomain(token, acct, slug) {
     { method: "POST", body: JSON.stringify({ enabled: true }) });
   return { sub, registered };
 }
-export { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, ensureSubdomain };
+export { scriptExists, PLAN_PROBE, establishPlan, ensureBuckets, offerSubdomain, ensureSubdomain };

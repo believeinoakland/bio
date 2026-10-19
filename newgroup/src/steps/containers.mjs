@@ -97,7 +97,15 @@ export function workerDescriptor(bytes) {
     return { ok: false, why: word("installer.fleet.why.program") };
   if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
     return { ok: false, why: word("installer.fleet.why.program") };
-  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons] } };
+  /* F10: a member's own Durable Objects, bindings and migrations in order, as its signed release states them; none stated, the installer's table is used. */
+  const objects = d.durable_objects;
+  if (objects !== undefined && !(objects && Array.isArray(objects.bindings) && Array.isArray(objects.migrations)
+      && objects.bindings.every((b) => b && BINDING_NAME.test(b.name) && CLASS_NAME.test(b.class_name))
+      && objects.migrations.every((x) => x && /^v[0-9]+$/.test(x.tag) && Array.isArray(x.classes) && x.classes.every((c) => CLASS_NAME.test(c)))))
+    return { ok: false, why: word("installer.fleet.why.program") };
+  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons],
+    ...(objects === undefined ? {} : { durable_objects: { bindings: objects.bindings.map(({ name, class_name }) => ({ name, class_name })),
+      migrations: objects.migrations.map(({ tag, classes }) => ({ tag, classes: [...classes] })) } }) } };
 }
 
 /* R44 (T36): what file-scanner then lacks, when its release carries no `Worker` part. */

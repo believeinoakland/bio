@@ -443,3 +443,30 @@ test("R25: an instance_type in container.json is passed to the create call and t
   assert.equal(f.w.apps.length, 0);
   f.w.restore();
 });
+
+test("R20 (F10): a class a later release adds to an installed container member is created by a migration from the tag it holds; none when it holds every class", async () => {
+  const held = (classes) => ({ pre: { grp: [], "file-scanner-grp": [] }, preClasses: { "file-scanner-grp": classes }, preTags: { "file-scanner-grp": "v1" } });
+  let f = await fleet({ rel: { scanner: true }, acct: held(["FileScanner"]) });
+  assert.deepEqual(uploadOf(f.w, "file-scanner-grp").meta.migrations, { old_tag: "v1", new_tag: "v2", new_sqlite_classes: ["SafeViewRenderer"] });
+  assert.ok(f.result.done.includes(SCANNER));
+  f.w.restore();
+  f = await fleet({ rel: { scanner: true }, acct: held(["FileScanner", "SafeViewRenderer"]) });
+  assert.equal(uploadOf(f.w, "file-scanner-grp").meta.migrations, undefined, "control: nothing to create, no migration");
+  f.w.restore();
+});
+
+test("R24 (F10): a member's Durable Objects are read from its signed Worker part when it states them, else the installer's table; a malformed statement leaves the member out", async () => {
+  const objects = { bindings: [{ name: "EXTRA", class_name: "ExtraObj" }], migrations: [{ tag: "v1", classes: ["FileScanner", "SafeViewRenderer"] }, { tag: "v2", classes: ["ExtraObj"] }] };
+  const held = { pre: { grp: [], "file-scanner-grp": [] }, preClasses: { "file-scanner-grp": ["FileScanner", "SafeViewRenderer"] }, preTags: { "file-scanner-grp": "v1" } };
+  let f = await fleet({ rel: { scanner: true, scannerWorker: { ...SCANNER_WORKER, durable_objects: objects } }, acct: held });
+  const meta = uploadOf(f.w, "file-scanner-grp").meta;
+  assert.deepEqual(meta.bindings.find((b) => b.name === "EXTRA"), { type: "durable_object_namespace", name: "EXTRA", class_name: "ExtraObj" });
+  assert.deepEqual(meta.migrations, { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["ExtraObj"] }] });
+  assert.equal(byName(uploadOf(f.w, "agent-worker-grp").meta, "SEGMENTS").class_name, "SegmentDriver", "a member that states none keeps the table");
+  f.w.restore();
+  assert.deepEqual(objectMigrations("x", "v1", objects), { old_tag: "v1", new_tag: "v2", steps: [{ new_sqlite_classes: ["ExtraObj"] }] });
+  f = await fleet({ rel: { scanner: true, scannerWorker: { ...SCANNER_WORKER, durable_objects: { bindings: [{ name: "lower", class_name: "X" }], migrations: [] } } } });
+  assert.deepEqual(f.result.left.map((l) => l.member), [SCANNER]);
+  assert.equal(f.result.left[0].why, word("installer.fleet.why.program"));
+  f.w.restore();
+});

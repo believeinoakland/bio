@@ -377,3 +377,23 @@ test("R21: a member's limits, in the shape R10 reads; none stated is null; an un
   assert.equal(bad.ok, false); assert.ok(typeof bad.why === "string");
   assert.equal(memberLimits(`"bio-plane-limits/1 cpu_ms=1"`).limits, null, "the plane's statement is not a member's");
 });
+
+test("R9 (F7): the address is offered before the copy is created, nothing registered; ensureSubdomain then tries exactly the names offered", async () => {
+  const { offerSubdomain } = await import("../../src/steps/index.mjs");
+  let w = account({ subdomain: "held" });
+  assert.deepEqual(await offerSubdomain(session(), "A1", "grp"), { sub: "held", candidates: [] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  const offer = await offerSubdomain(session(), "A1", "grp");
+  assert.equal(offer.sub, null);
+  assert.equal(offer.candidates[0], "grp");
+  assert.match(offer.candidates[1], /^grp-[a-z0-9]{1,4}$/);
+  assert.equal(w.prefix(), "", "nothing is registered by the offer");
+  assert.ok(w.calls.every((c) => c.method === "GET"));
+  const r = await ensureSubdomain(session(), "A1", "grp", offer);
+  assert.deepEqual(r, { sub: offer.candidates[1], registered: offer.candidates[1] });
+  w.restore();
+  w = account({ subdomain: "", taken: ["grp"] });
+  await assert.rejects(ensureSubdomain(session(), "A1", "grp", { sub: null, candidates: ["grp"] }), /./, "control: only the names offered are tried");
+  w.restore();
+});
