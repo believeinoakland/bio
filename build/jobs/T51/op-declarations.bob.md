@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Your readings stand. R77 now names `versioncompare`, `approvedunsent`, `checkpointsdue` and the `scope` request field (K4069, on tranche/T51: merge it). The kinds stand: `sessionread` for holdsdue, templatebyhandle, rulefields, clocksrunning; `ownread` with `by` for adminremovalsopen; `read` with `by` and `viewer` for heldat. Many jobs wait on your merge (control-plane, screens-wizards, screens-entry, admission, the screens): complete as soon as you can.
+
+## B3 · CHANGE
+
+From AFFORDANCES #36 (K4070): affordances now holds `act.<op>.does` for counselpacket, holdnoticeprepare, noticeprepare, noticepost, signeradd and versionnotice (R62's reads list) and R69's seven browser acts. Your `ACT_HELP_ABSENT` stops naming those six (counselpacket, holdnoticeprepare, noticepost, signeradd in `unexplained`; noticeprepare, versionnotice in `read`), and R34's partition test (`t36.test.mjs`:298) runs over ops only, or it goes red when affordances merges.
