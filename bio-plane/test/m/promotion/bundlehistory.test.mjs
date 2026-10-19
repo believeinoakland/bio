@@ -130,3 +130,32 @@ test("R58 control: a call changes no row of manifest, history or files", () => {
   p.bundleHistory({ bundle: "INFO-2026-9999", viewer: who });
   assert.equal(record.dump(), before);
 });
+
+/* R59: each revision states the capture its own data/provenance.json names for the document. */
+const prov = (capture) => JSON.stringify({ documents: [{ capture: capture ? { sha256: capture } : {} }] });
+const withProv = (title, text) => ({ files: [{ path: "bundle.md", text: infoDoc(ID, { title }) }, { path: "data/provenance.json", text }] });
+
+test("R59: a document captured, then re-captured, answers two revisions whose capture_sha are the two captures' digests, newest first", () => {
+  const { p } = makePromotion();
+  const first = sha("first capture"), second = sha("second capture");
+  const a = p.promote(create(ID, infoDoc(ID, { title: "One" }), withProv("One", prov(first))));
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const b = p.promote(revise(ID, a.bundleSha, infoDoc(ID, { title: "Two" }), withProv("Two", prov(second))));
+  assert.equal(b.ok, true, JSON.stringify(b));
+  const r = p.bundleHistory({ bundle: ID, viewer: who });
+  assert.deepEqual(r.revisions.map((x) => x.capture_sha), [second, first]);
+});
+
+test("R59 control: a revision with no capture in its snapshot answers no capture_sha, and R58's other fields are unchanged", () => {
+  const { p } = makePromotion();
+  const a = p.promote(create(ID, infoDoc(ID, { title: "One" }), withProv("One", prov(null))));
+  const b = p.promote(revise(ID, a.bundleSha, infoDoc(ID, { title: "Two" }), withProv("Two", "not json")));
+  const c = p.promote(revise(ID, b.bundleSha, infoDoc(ID, { title: "Three" }), { files: [{ path: "bundle.md", text: infoDoc(ID, { title: "Three" }) }], drop: ["data/provenance.json"], snapKey: "k3" }));
+  for (const x of [a, b, c]) assert.equal(x.ok, true, JSON.stringify(x));
+  const r = p.bundleHistory({ bundle: ID, viewer: who });
+  assert.equal(r.revisions.length, 3);
+  for (const rev of r.revisions) {
+    assert.equal(Object.hasOwn(rev, "capture_sha"), false);
+    assert.deepEqual(Object.keys(rev).sort(), ["at", "author", "files", "kind", "seq", "sha256", "snapKey"]);
+  }
+});
