@@ -207,8 +207,7 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
     "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
-  has(refused.detail, "Either no active credential is held under that role");
-  has(refused.detail, "which roles hold a credential.");
+  assert.equal(refused.detail, localize("credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role — a role that was never registered and one whose membership is no longer active are the same answer here — or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential."));
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
   /* index :880, :1060, :1243: a sealed key that no longer opens */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
