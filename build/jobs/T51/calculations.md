@@ -30,3 +30,7 @@ Completion of T51-192 (calculations, words). Branch job/T51/calculations @ 635ae
 - module tests, test/m/calculations (57): before 55 pass, 2 fail (R3, R32); after 56 pass, 1 fail (R32, the baseline red above)
 
 Size (session_01Tcs5UBSYhkZ5nthcyxpECc): test runs 3, module lines 3403
+
+## J2 · COMPLETE
+
+T51-192 calculations complete at 635ae7444c (job record J1 is the REPORT). Words check 0 failures; format, architecture, coverage, ownership 0 failures; calculations tests 56 of 57, the one red (R32 freezeUses relationships) was red before this job and is reported in J1. Merge decision and the R32 red are yours.
