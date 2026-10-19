@@ -11,13 +11,15 @@ const { OPS, OP_STAMPS } = O;
 const admitsMachines = (op) => !(Array.isArray(OPS[op].machineClasses) && OPS[op].machineClasses.length === 0);
 const refusesMachines = (op) => !admitsMachines(op);
 
-/* the reads R77 and R78 declare, by the op each requirement names */
-const R110_STAMPED = ["bundlehistory", "entityidonly", "subjectsnamed", "entitysimilar", "projectinvitations", "versioncompare",
-                      "approvedunsent", "checkpointsdue", "clocksrunning", "adminremovalsopen"];
+/* the reads R77 and R78 declare, from op-declarations' own T51 declarations (K3268); R111's three are named apart */
+const { T51_SHARES, T51_FAMILIES } = await import("../../../src/op-declarations/t51.mjs");
+const T51_OPS = [...Object.values(T51_SHARES).flatMap((x) => Object.keys(x.ops)), ...T51_FAMILIES.flatMap((f) => Object.keys(f.ops))];
 const R111 = ["holdsdue", "templatebyhandle", "rulefields"];
+const R110_STAMPED = T51_OPS.filter((op) => !R111.includes(op) && op !== "heldat" && op !== "publishedfrozen");
 const BODY = {};
 
-test("R110 (T51-123; op-declarations R77): each stamped read (bundlehistory, entityidonly, subjectsnamed, entitysimilar, projectinvitations, versioncompare, approvedunsent, checkpointsdue, clocksrunning, adminremovalsopen) is declared, reaches the store's route of its own name with `viewer` (and `by` where declared) from the session, none the caller's, a refusal the owner's answered as given; machine credentials are refused before any store request where the row admits none", async () => {
+test("R110 (T51-123; op-declarations R77): each stamped read (every other op op-declarations R77 declares but `heldat` and `publishedfrozen`) is declared, reaches the store's route of its own name with `viewer` (and `by` where declared) from the session, none the caller's, a refusal the owner's answered as given; machine credentials are refused before any store request where the row admits none", async () => {
+  assert.equal(R110_STAMPED.length, 10, "R77 declares 12 reads beside R111's three, less heldat and publishedfrozen");
   for (const op of R110_STAMPED) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is declared`);
     assert.equal(OPS[op].mutating, false, `${op} is a read`);
