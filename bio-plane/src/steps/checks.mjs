@@ -45,7 +45,7 @@ export const STEPS_CHECKS = {
   NO_SUCH_PRODUCT: { check: "C-142.17", where: at("stepProduct"),
     translation: word("refusal.NO_SUCH_PRODUCT") },
   STEP_MEMBER_ONLY: { check: "C-142.18", where: at("stepLearn", "stepOutcome", "stepCostAdd", "stepProduct", "questionFollow", "stepAccept", "costMessage", "stepReminder", "stepByWhen"),
-    translation: "Only a member does this, in their own words and by their own choice. Nothing was written." },
+    translation: word("refusal.STEP_MEMBER_ONLY") },
   STEP_BAD_TEXT: { check: "C-142.19", where: at("stepLearn", "costMessage", "stepPropose", "stepEnd", "stepAccept"),
     translation: word("refusal.STEP_BAD_TEXT") },
   STEP_BAD_WAIT: { check: "C-142.20", where: at("stepWait"),

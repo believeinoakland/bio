@@ -37,6 +37,7 @@ import { aiAccountsOf, AI_ACCOUNT_CHECKS } from "../ai-accounts/index.mjs";
 import { savedForm } from "../query.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 import { ANSWERS_TABLES, migrateAnswers } from "./schema.mjs";
 import { refusal } from "./checks.mjs";
 import { askAdmits, scrubRead } from "./scope.mjs";
@@ -232,7 +233,7 @@ export class Answers {
    *  as a draft (R30); a log already open keeps the use it opened with. */
   async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null, use = "ask" } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
-      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your team's Civicsmith");
+      return refusal("RULE_SERVICES_OFF", localize("answers.index.the_rule_services_are_switched", "the rule services are switched off in your team's Civicsmith"));
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
     if (typeof fn !== "function" || !Object.hasOwn(BUILT_IN_SERVICES, service) && !this.services.has(service))
       return refusal("RULE_SERVICE_UNKNOWN", `no rule service is named ${service}`, { service: service ?? null });
