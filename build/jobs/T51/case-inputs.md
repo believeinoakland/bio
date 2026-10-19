@@ -1,6 +1,6 @@
 # case-inputs (T51)
 
-**Status** · session_01XQkjrJ84xQvzqWSREkCCoB · depth 2 · COMPLETE · handled B4
+**Status** · session_01XQkjrJ84xQvzqWSREkCCoB · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -88,3 +88,13 @@ T51-160 · case-inputs: complete (restart #5, after B3).
 - `checks/run.mjs`: the words and coverage failures it lists are other modules' (for example wizard-scripts); none names case-inputs.
 
 Size (session_01XQkjrJ84xQvzqWSREkCCoB): test runs 3, module lines 1467
+
+## J6 · COMPLETE
+
+COMPLETE again after B5 (CHANGE).
+
+Merged `tranche/T51` into the job branch. In `fixture.mjs` the two sentences the words check counted as test copies are now opaque tokens no assertion reads: the fixture's `caseIdentitySentence` answers `NEWCASE-IDENTITY` / `DERIVEDCASE-IDENTITY` for the two states that had sentences, and the writer line is `WRITER-LINE <stated>`. No test reads either.
+
+Checks: the full-repo `checks/words.mjs` shows no finding in case-inputs; `node --test test/m/case-inputs/*.test.mjs`: 51 pass, 0 fail; format, architecture, coverage (19 of 19) and ownership: 0 failures.
+
+Size (session_01XQkjrJ84xQvzqWSREkCCoB): test runs 5, module lines 1293
