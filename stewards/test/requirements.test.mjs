@@ -617,15 +617,15 @@ test("R17: no group's Civicsmith holds a route or binding to this service, and i
   assert.ok(!JSON.stringify(pcfg.services || []).includes("stewards"));
   assert.ok(!/stewards\.[a-z0-9-]+\.workers\.dev/.test(plane));
   const scan = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? scan(join(dir, e.name)) : e.name.endsWith(".mjs") ? [join(dir, e.name)] : []);
-  /* The scan reads code: the generated word table holds sentences, not routes or bindings, so it is skipped. */
+  /* The scan reads code: the generated artifacts that embed the word rows hold sentences, not routes or bindings, so they are skipped (rows.mjs, the review list, and case-checker's program.mjs, which embeds the rows, K4149). */
   const NAMES_SERVICE = /stewards\.[a-z0-9-]+\.workers\.dev|\/steward\/|STEWARDS_ADDRESS/;
-  const GENERATED = /\/setup-words\/(rows\.mjs|words-unreviewed\.json)$/;
+  const GENERATED = /\/(setup-words\/(rows\.mjs|words-unreviewed\.json)|case-checker\/program\.mjs)$/;
   for (const f of scan(new URL("../../bio-plane/src", import.meta.url).pathname).filter((x) => !GENERATED.test(x)))
     assert.ok(!NAMES_SERVICE.test(readFileSync(f, "utf8")), f);
   /* Controls: a route or a binding naming the service in any other plane source still fails the scan. */
   for (const bad of ['fetch("https://stewards.acct.workers.dev/report")', 'const u = "/steward/reports"', "env.STEWARDS_ADDRESS"]) assert.ok(NAMES_SERVICE.test(bad), bad);
   assert.ok(!GENERATED.test("/x/bio-plane/src/other/rows.mjs") && GENERATED.test("/x/bio-plane/src/setup-words/rows.mjs"));
-  for (const [f, src] of SOURCES()) {
+  assert.ok(!GENERATED.test("/x/bio-plane/src/case-checker/checks.mjs") && GENERATED.test("/x/bio-plane/src/case-checker/program.mjs"));  for (const [f, src] of SOURCES()) {
     assert.ok(!/bio-plane\/src\/(?!setup-fleet\.mjs|setup-words\/index\.mjs)/.test(src), `${f} imports only the slug grammar and the word list from a group's Civicsmith's code`);
   }
 });
