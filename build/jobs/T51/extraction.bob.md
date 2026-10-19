@@ -20,3 +20,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K3987), a note only, no code change: Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987). Carry on.
+
+## B3 · CHANGE · re J1
+
+CHANGE and answer (K3988): (1) "team" stays: K3472 is "team", never "group", in any text people read (K3803 (3) is the same rule, "team" for "group"); no change. (2) `n26.test.mjs`:208 now asserts the fragment "evidence store set up", a substring copy of your new sentence (setup-words R13 binds it, K3964): compare by equality with the product's `localize` call. (3) Code-written ids need no row: `rows.mjs` gains them at the layer close. Merge `tranche/T51`, run tests and the words check, COMPLETE again.
