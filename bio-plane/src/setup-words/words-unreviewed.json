@@ -1594,469 +1594,469 @@
       "en": "a judgement may not set {overreach}. Loop bounds, the pass counter, the budget, the mode and the step are the TABLE's and never the model's (§14b.4). The evidential case is measured: TREC 2011 found searchers erring by up to +95/-87 points on their own recall and stopping early on a false belief of high coverage.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1008
+      "line": 1007
     },
     {
       "id": "agent-harness.harness.a_judgements_disagreements_are_at",
       "en": "a judgement's disagreements are at most {DISAGREEMENTS_MAX} pairs, each a record id and two different levels of {LEVELS} and nothing else; {bad} breaks that.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1014
+      "line": 1013
     },
     {
       "id": "agent-harness.harness.a_plan_mode_judgement_at",
       "en": "a plan-mode judgement at '{step}' may carry only {v1}, and a proposal only {OPTION_KEYS} (optionPropose's fields). {v2} may not be set: the order of the candidates is the only sign of their strength, so no candidate carries a score, a rank or a strength, and the step, the pass, the budget and the plan are the table's.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1190
+      "line": 1189
     },
     {
       "id": "agent-harness.harness.at_has_no_transition",
       "en": "'{at}' has no transition",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 751
+      "line": 750
     },
     {
       "id": "agent-harness.harness.at_has_no_transition_2",
       "en": "'{at}' has no transition",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1153
+      "line": 1152
     },
     {
       "id": "agent-harness.harness.at_is_not_a_row",
       "en": "'{at}' is not a row in this table",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 651
+      "line": 650
     },
     {
       "id": "agent-harness.harness.at_is_not_a_row_2",
       "en": "'{at}' is not a row in this table",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1114
+      "line": 1113
     },
     {
       "id": "agent-harness.harness.every_candidate_this_pass_composed",
       "en": "every candidate this pass composed has been proposed or dropped",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1144
+      "line": 1143
     },
     {
       "id": "agent-harness.harness.every_candidate_this_pass_formed",
       "en": "every candidate this pass formed has been written or dropped",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 716
+      "line": 715
     },
     {
       "id": "agent-harness.harness.length_candidate_s_composed_nothing",
       "en": "{length} candidate(s) composed; nothing may be written before dedup",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 702
+      "line": 701
     },
     {
       "id": "agent-harness.harness.length_candidate_s_composed_strongest",
       "en": "{length} candidate(s) composed, strongest first; nothing may be proposed before dedup",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1137
+      "line": 1136
     },
     {
       "id": "agent-harness.harness.length_candidate_s_still_to",
       "en": "{length} candidate(s) still to write, one at a time",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 715
+      "line": 714
     },
     {
       "id": "agent-harness.harness.length_candidate_s_still_to_2",
       "en": "{length} candidate(s) still to propose, one at a time, in order",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1143
+      "line": 1142
     },
     {
       "id": "agent-harness.harness.length_candidate_s_survived_dedup",
       "en": "{length} candidate(s) survived dedup; they are written ONE AT A TIME, as formed",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 708
+      "line": 707
     },
     {
       "id": "agent-harness.harness.length_candidate_s_survived_dedup_2",
       "en": "{length} candidate(s) survived dedup; they are proposed ONE AT A TIME, in order",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1140
+      "line": 1139
     },
     {
       "id": "agent-harness.harness.length_read_s_made_length",
       "en": "{length} read(s) made, {length_2} UNDETERMINED",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1135
+      "line": 1134
     },
     {
       "id": "agent-harness.harness.length_report_s_honoured_the",
       "en": "{length} REPORT(s) honoured the return contract{v1}",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 692
+      "line": 691
     },
     {
       "id": "agent-harness.harness.length_sub_sessions_spawned_one",
       "en": "{length} sub-sessions spawned, one per level, in LEVELS order",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 680
+      "line": 679
     },
     {
       "id": "agent-harness.harness.mode_check_does",
       "en": "read an EXISTING conclusion adversarially (DEC-24's CHECK role, §2)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 199
+      "line": 198
     },
     {
       "id": "agent-harness.harness.mode_extract_does",
       "en": "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 214
+      "line": 213
     },
     {
       "id": "agent-harness.harness.mode_investigate_does",
       "en": "investigate fresh — enabled only after CHECK's first live run is verified (VF-5/SK-4)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 201
+      "line": 200
     },
     {
       "id": "agent-harness.harness.mode_key_is_not_deployed",
       "en": "mode '{key}' is not deployed yet — it is a row in this table ({does}), and enabling it is an EDIT to this file under review, never a request parameter",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 608
+      "line": 607
     },
     {
       "id": "agent-harness.harness.mode_plan_does",
       "en": "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md §4)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 221
+      "line": 220
     },
     {
       "id": "agent-harness.harness.mode_v1_is_not_deployed",
       "en": "mode '{v1}' is not deployed — it is no mode this table knows at all (the table holds: {keys})",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 607
+      "line": 606
     },
     {
       "id": "agent-harness.harness.no_candidate_differs_from_what_the_plan",
       "en": "no candidate differs from what the plan already holds",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1139
+      "line": 1138
     },
     {
       "id": "agent-harness.harness.no_candidate_differs_in_substance",
       "en": "no candidate differs in substance from what the record already holds",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 707
+      "line": 706
     },
     {
       "id": "agent-harness.harness.none_refused",
       "en": "; none refused",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 694
+      "line": 693
     },
     {
       "id": "agent-harness.harness.nothing_written_composed_candidate_s",
       "en": "nothing written: {composed} candidate(s) composed, {kept} sent to be written, none written{v1}",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 638
+      "line": 637
     },
     {
       "id": "agent-harness.harness.pass_of_passlimit_passes_are",
       "en": "{pass} of {passLimit} passes are done; the loop's termination is the table's and not the model's",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 661
+      "line": 660
     },
     {
       "id": "agent-harness.harness.pass_pass_added_no_new",
       "en": "pass {pass} added no new candidate (each one composed was already held, or none was composed); a further pass would find nothing the record does not hold, so the run closes",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 741
+      "line": 740
     },
     {
       "id": "agent-harness.harness.pass_pass_done_the_table",
       "en": "pass {pass} done; the table decides there is another",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 742
+      "line": 741
     },
     {
       "id": "agent-harness.harness.pass_v1_fan_out_across",
       "en": "pass {v1}: fan out across all {length} levels",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 677
+      "line": 676
     },
     {
       "id": "agent-harness.harness.return_s_refused_a_sub",
       "en": "; {refused} return(s) REFUSED — a sub-session that returns documents has defeated the architecture, and those levels are UNDETERMINED, not empty",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 693
+      "line": 692
     },
     {
       "id": "agent-harness.harness.sk_4s_gate_refuse_a",
       "en": "SK-4's gate: refuse a mode that is not deployed, before anything is spent",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 274
+      "line": 273
     },
     {
       "id": "agent-harness.harness.starting_the_plans_one_pass",
       "en": "starting the plan's one pass: read what the record holds",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1132
+      "line": 1131
     },
     {
       "id": "agent-harness.harness.the_mode_is_deployed_read_this",
       "en": "the mode is deployed; read this run's own log before doing anything else",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 612
+      "line": 611
     },
     {
       "id": "agent-harness.harness.the_model_judged_present_at",
       "en": "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) — so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 909
+      "line": 908
     },
     {
       "id": "agent-harness.harness.the_one_question_the_runs",
       "en": "the one question the run's project confirmed-cites",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 396
+      "line": 395
     },
     {
       "id": "agent-harness.harness.the_plane_refused_code",
       "en": " (the plane refused '{code}')",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 637
+      "line": 636
     },
     {
       "id": "agent-harness.harness.the_plane_refused_string_f10",
       "en": "the plane refused '{String}'; F10 routes a refusal to an ADJUST step, never to a verbatim retry",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 713
+      "line": 712
     },
     {
       "id": "agent-harness.harness.the_plane_refused_string_f10_2",
       "en": "the plane refused '{String}'; F10 routes a refusal to an ADJUST step, never to a verbatim retry",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1142
+      "line": 1141
     },
     {
       "id": "agent-harness.harness.the_plans_one_pass_is_done",
       "en": "the plan's one pass is done; the loop's termination is the table's and not the model's",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1120
+      "line": 1119
     },
     {
       "id": "agent-harness.harness.the_proposal_was_adjusted",
       "en": "the proposal was ADJUSTED, differs from the refused one and keeps its place",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1146
+      "line": 1145
     },
     {
       "id": "agent-harness.harness.the_refusal_could_not_be",
       "en": "the refusal could not be answered by changing the submission, so the candidate is DROPPED and never resent (that would climb PL-3's `repeats` counter); {length} candidate(s) behind it in this pass are still written, one at a time",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 729
+      "line": 728
     },
     {
       "id": "agent-harness.harness.the_refusal_could_not_be_2",
       "en": "the refusal could not be answered by changing the submission, so the candidate is DROPPED. Resending the same bytes would return the stored refusal without re-evaluation and climb PL-3's `repeats` counter, which is the loop F10 exists to make visible",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 732
+      "line": 731
     },
     {
       "id": "agent-harness.harness.the_refusal_could_not_be_3",
       "en": "the refusal could not be answered by changing the proposal, so it is DROPPED and never resent; {length} candidate(s) behind it are still proposed, in order",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1148
+      "line": 1147
     },
     {
       "id": "agent-harness.harness.the_refusal_could_not_be_none_remain",
       "en": "the refusal could not be answered by changing the proposal, so it is DROPPED; none remain",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1149
+      "line": 1148
     },
     {
       "id": "agent-harness.harness.the_run_publishes_no_state",
       "en": "The run publishes no state it can be read back from, so this segment starts from the resume row",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 855
+      "line": 854
     },
     {
       "id": "agent-harness.harness.the_runs_context_question",
       "en": "the run's context question",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 403
+      "line": 402
     },
     {
       "id": "agent-harness.harness.the_runs_published_state_names",
       "en": "The run's published state names no step yet, so this segment starts from the resume row",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 856
+      "line": 855
     },
     {
       "id": "agent-harness.harness.the_stopped_budget_is_spent",
       "en": "the '{stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 662
+      "line": 661
     },
     {
       "id": "agent-harness.harness.the_stopped_budget_is_spent_2",
       "en": "the '{stopped}' budget is spent. §14b.6: when a bound stops a run, the log says WHICH bound and where",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1121
+      "line": 1120
     },
     {
       "id": "agent-harness.harness.the_submission_was_adjusted",
       "en": "the submission was ADJUSTED and differs from the one that was refused",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 733
+      "line": 732
     },
     {
       "id": "agent-harness.harness.this_run_searched_the_reported",
       "en": "this run searched the {reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at {String}.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 494
+      "line": 493
     },
     {
       "id": "agent-harness.harness.this_runs_last_tick_published",
       "en": "this run's last tick published its state at '{resumeAt}' with {v1} pass(es) done, and its log carries {v2} observation(s); continuing rather than restarting (§14b.7)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 669
+      "line": 668
     },
     {
       "id": "agent-harness.harness.this_runs_last_tick_published_2",
       "en": "this run's last tick published its state at '{resumeAt}'; continuing rather than restarting (§14b.7)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1128
+      "line": 1127
     },
     {
       "id": "agent-harness.harness.this_runs_last_tick_published_3",
       "en": "this run's last tick published its state at '{resumeAt}', which works from reads a state does not carry, so the reads are made again",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1131
+      "line": 1130
     },
     {
       "id": "agent-harness.harness.this_runs_log_carries_observations",
       "en": "this run's log carries {resumedFrom} observation(s); continuing rather than restarting (§14b.7)",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 672
+      "line": 671
     },
     {
       "id": "agent-harness.harness.this_runs_log_is_empty",
       "en": "this run's log is empty; starting the first pass",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 673
+      "line": 672
     },
     {
       "id": "agent-harness.harness.undetermined_a_run_over_a_project",
       "en": "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 393
+      "line": 392
     },
     {
       "id": "agent-harness.harness.undetermined_not_absent_map",
       "en": " UNDETERMINED, not absent: {map}.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 1276
+      "line": 1275
     },
     {
       "id": "agent-harness.harness.undetermined_the_run_read_published",
       "en": "UNDETERMINED: the run read published no context id",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 389
+      "line": 388
     },
     {
       "id": "agent-harness.harness.undetermined_the_runs_context_kind",
       "en": "UNDETERMINED: the run's context kind {stringify} is not one this member reads",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 404
+      "line": 403
     },
     {
       "id": "agent-harness.harness.undetermined_the_runs_project_confirmed",
       "en": "UNDETERMINED: the run's project confirmed-cites {length} questions and this member does not pick one of several; a candidate names its own target, never the project id",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 401
+      "line": 400
     },
     {
       "id": "agent-harness.harness.undetermined_the_runs_project_confirms_no",
       "en": "UNDETERMINED: the run's project confirmed-cites no question this run can see; a candidate names its own target, never the project id",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 399
+      "line": 398
     },
     {
       "id": "agent-harness.harness.undetermined_the_runs_published_state",
       "en": "UNDETERMINED: the run's published state names step {stringify} at pass {stringify_2}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 861
+      "line": 860
     },
     {
       "id": "agent-harness.harness.which_check_is_the_first",
       "en": "{which}. CHECK is the first deployed mode (§2); deployed now: {deployed}; not yet: {waiting}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.",
       "module": "agent-harness",
       "file": "agent-harness/src/harness.mjs",
-      "line": 610
+      "line": 609
     },
     {
       "id": "agent-harness.subsession.a_citation_carries_exactly_keys",
@@ -4457,165 +4457,193 @@
       "en": "a member's own sign-in serves a project only while that member is its only participant, and this project has others (owners included); it can hold an Anthropic API key instead. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1395
+      "line": 1389
     },
     {
       "id": "ai-accounts.index.a_sign_ins_token_is",
       "en": "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 746
+      "line": 742
     },
     {
       "id": "ai-accounts.index.keeping_material_away_from_the",
       "en": "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1169
+      "line": 1164
     },
     {
       "id": "ai-accounts.index.keeping_the_teams_material_away",
       "en": "keeping the team's material away from every assistant",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1178
+      "line": 1173
+    },
+    {
+      "id": "ai-accounts.index.no_claude_account_serves_this",
+      "en": "no Claude account serves this member: they hold no reference of their own, they are not connected through their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 218
     },
     {
       "id": "ai-accounts.index.no_key_or_token_was",
       "en": "no key or token was given. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 230
+      "line": 226
+    },
+    {
+      "id": "ai-accounts.index.only_an_active_member_holds",
+      "en": "only an active member holds a Claude account reference. Nothing was written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 197
     },
     {
       "id": "ai-accounts.index.only_an_active_member_is",
       "en": "only an active member is connected through their subscription. Nothing was recorded.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 715
+      "line": 711
     },
     {
       "id": "ai-accounts.index.only_an_active_member_or",
       "en": "only an active member, or the founder, holds a sign-in. Nothing was recorded.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 743
+      "line": 739
     },
     {
       "id": "ai-accounts.index.only_that_the_member_is",
       "en": "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 710
+      "line": 706
     },
     {
       "id": "ai-accounts.index.reading_the_team_keys_assistant",
       "en": "reading the team key's assistant settings",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 585
+      "line": 581
     },
     {
       "id": "ai-accounts.index.switching_the_team_keys",
       "en": "switching the team key's assistant settings",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 313
+      "line": 309
     },
     {
       "id": "ai-accounts.index.the_account_used_for_this",
       "en": "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 282
+      "line": 278
     },
     {
       "id": "ai-accounts.index.the_claude_sign_in_that",
       "en": "the Claude sign-in that serves this act is not held: it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 812
+      "line": 808
     },
     {
       "id": "ai-accounts.index.the_key_could_not_be",
       "en": "the key could not be sealed by your team's Civicsmith. Nothing was stored or read.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1583
+      "line": 1577
     },
     {
       "id": "ai-accounts.index.the_key_does_not_open",
       "en": "the key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1595
+      "line": 1589
     },
     {
       "id": "ai-accounts.index.the_kind_your_teams_civicsmith",
       "en": "the kind your team's Civicsmith holds is {ACCOUNT_KINDS}; a Claude subscription is connected through Claude Code's own sign-in, never held as a token. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 392
+      "line": 388
     },
     {
       "id": "ai-accounts.index.the_projects_key_does_not",
       "en": "the project's key does not open under the seal secret of your team's Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1056
+      "line": 1052
     },
     {
       "id": "ai-accounts.index.the_reference_does_not_open",
       "en": "the reference does not open under the seal secret of your team's Civicsmith, which has changed; the member connects their account again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 851
+      "line": 847
     },
     {
       "id": "ai-accounts.index.the_sign_in_does_not",
       "en": "the sign-in does not open under the seal secret of your team's Civicsmith, which has changed; its member signs in again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 806
+      "line": 802
     },
     {
       "id": "ai-accounts.index.the_switches_are_names_nothing",
       "en": "the switches are {names}. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 239
+      "line": 235
     },
     {
       "id": "ai-accounts.index.the_team_keeps_its_material",
       "en": "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1222
+      "line": 1217
     },
     {
       "id": "ai-accounts.index.the_teams_key_does_not",
       "en": "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1061
+      "line": 1057
+    },
+    {
+      "id": "ai-accounts.index.the_teams_key_serves_only",
+      "en": "the team's key serves only acts of active members. Nothing was used.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1106
     },
     {
       "id": "ai-accounts.index.this_member_has_not_yet",
       "en": "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1004
+      "line": 1000
     },
     {
       "id": "ai-accounts.index.this_member_has_not_yet_2",
       "en": "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1486
+      "line": 1480
     },
     {
       "id": "ai-accounts.index.this_member_holds_no_claude",
       "en": "this member holds no Claude account reference of their own. Nothing was used or written.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 215
+    },
+    {
+      "id": "ai-accounts.index.this_member_holds_no_claude_key",
+      "en": "this member holds no Claude account of their own: no key and no connected sign-in. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
       "line": 216
@@ -4625,56 +4653,63 @@
       "en": "; this one has {length}",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1169
+      "line": 1164
     },
     {
       "id": "ai-accounts.index.this_project_holds_no_claude",
       "en": "this project holds no Claude account. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 219
+      "line": 217
+    },
+    {
+      "id": "ai-accounts.index.this_project_keeps_its_material",
+      "en": "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing was sent.",
+      "module": "ai-accounts",
+      "file": "bio-plane/src/ai-accounts/index.mjs",
+      "line": 1241
     },
     {
       "id": "ai-accounts.index.what_takes_map_nothing_was",
       "en": "{what} takes {map}. Nothing was changed.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 264
+      "line": 260
     },
     {
       "id": "ai-accounts.index.whether_the_team_keeps_its",
       "en": "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1223
+      "line": 1218
     },
     {
       "id": "ai-accounts.index.whether_this_project_keeps_its",
       "en": "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1248
+      "line": 1242
     },
     {
       "id": "ai-accounts.index.you_are_not_connected_through",
       "en": "you are not connected through your Claude subscription, so there is no sign-in of yours to serve the project. Nothing was written.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 1399
+      "line": 1393
     },
     {
       "id": "ai-accounts.index.you_have_not_yet_been",
       "en": "you have not yet been shown what connecting your own Claude account means, so nothing was connected or sent. Read it, then try again.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 448
+      "line": 444
     },
     {
       "id": "ai-accounts.index.your_teams_civicsmith_has_no",
       "en": "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read.",
       "module": "ai-accounts",
       "file": "bio-plane/src/ai-accounts/index.mjs",
-      "line": 364
+      "line": 360
     },
     {
       "id": "ai-runs.index.a_batch_names_the_steps",
@@ -18989,14 +19024,14 @@
       "en": "this instrument now names something it did not name before",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 402
+      "line": 401
     },
     {
       "id": "doctypes.regulation.changes",
       "en": "{count} change(s) to an instrument at the same address",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 410
+      "line": 409
     },
     {
       "id": "doctypes.regulation.code_headings",
@@ -19017,14 +19052,14 @@
       "en": "what was read at this address is not the same form of law it was",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 392
+      "line": 391
     },
     {
       "id": "doctypes.regulation.instrument_changed",
       "en": "this instrument's {field} is not what it was at this address",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 385
+      "line": 384
     },
     {
       "id": "doctypes.regulation.no_caption",
@@ -19059,7 +19094,7 @@
       "en": "an instrument or code section this one acted on is no longer named in it",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 399
+      "line": 398
     },
     {
       "id": "doctypes.regulation.recital_chain",
@@ -19073,7 +19108,7 @@
       "en": "the recitals establishing this instrument's grounds changed in number",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 388
+      "line": 387
     },
     {
       "id": "doctypes.regulation.section_added",
@@ -19108,7 +19143,14 @@
       "en": "this instrument says what it said, and acts on the same things",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 411
+      "line": 410
+    },
+    {
+      "id": "doctypes.regulation.unread_either",
+      "en": "nothing could be read from this instrument this time, so nothing is claimed about it either way",
+      "module": "doctypes",
+      "file": "doctypes/regulation.mjs",
+      "line": 374
     },
     {
       "id": "doctypes.sections.neither_form",
@@ -19220,28 +19262,28 @@
       "en": "this report now points at an instrument or code section it did not cite before",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 350
+      "line": 349
     },
     {
       "id": "doctypes.staff-report.changes",
       "en": "{count} change(s): {gone} citation(s) gone, {added} added",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 359
+      "line": 358
     },
     {
       "id": "doctypes.staff-report.changes_and_recommendation",
       "en": "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 358
+      "line": 357
     },
     {
       "id": "doctypes.staff-report.field_changed",
       "en": "this report's {field} changed",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 342
+      "line": 341
     },
     {
       "id": "doctypes.staff-report.label",
@@ -19262,14 +19304,14 @@
       "en": "an instrument or code section this report pointed at is no longer cited in it",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 347
+      "line": 346
     },
     {
       "id": "doctypes.staff-report.recommendation_changed",
       "en": "what this report recommends the body do is not what it recommended before",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 337
+      "line": 336
     },
     {
       "id": "doctypes.staff-report.template_sections",
@@ -19290,7 +19332,14 @@
       "en": "this report says what it said, and points at the same instruments",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 360
+      "line": 359
+    },
+    {
+      "id": "doctypes.staff-report.unread_either",
+      "en": "nothing could be read from this report this time, so nothing is claimed about it either way",
+      "module": "doctypes",
+      "file": "doctypes/staff-report.mjs",
+      "line": 327
     },
     {
       "id": "doorbell.checks.changing_a_knocks_status_records",
@@ -29552,7 +29601,14 @@
       "en": "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 886
+      "line": 884
+    },
+    {
+      "id": "member-roster.index.a_handle_is_chosen_when_a",
+      "en": "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1279
     },
     {
       "id": "member-roster.index.a_listener_names_the_module",
@@ -29562,39 +29618,67 @@
       "line": 170
     },
     {
+      "id": "member-roster.index.adding_a_member",
+      "en": "adding a member",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 856
+    },
+    {
+      "id": "member-roster.index.an_administrator_is_removed_by",
+      "en": "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1338
+    },
+    {
+      "id": "member-roster.index.capabilities_is_an_array",
+      "en": "capabilities is an array",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 736
+    },
+    {
       "id": "member-roster.index.changing_the_join_link",
       "en": "changing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1649
+      "line": 1644
     },
     {
       "id": "member-roster.index.changing_the_teams_join_link",
       "en": "changing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1648
+      "line": 1643
     },
     {
       "id": "member-roster.index.changing_the_teams_website_key",
       "en": "changing the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1550
+      "line": 1545
     },
     {
       "id": "member-roster.index.changing_the_website_key",
       "en": "changing the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1551
+      "line": 1546
+    },
+    {
+      "id": "member-roster.index.choose_the_name_the_team_will",
+      "en": "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1685
     },
     {
       "id": "member-roster.index.choosing_whether_members_are_told",
       "en": "choosing whether members are told what a court can reach",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1798
+      "line": 1792
     },
     {
       "id": "member-roster.index.confirming_or_withdrawing_a_members_declared",
@@ -29608,7 +29692,7 @@
       "en": "creating the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1534
+      "line": 1529
     },
     {
       "id": "member-roster.index.declared_and_unconfirmed_which_costs_nothing",
@@ -29618,18 +29702,32 @@
       "line": 567
     },
     {
+      "id": "member-roster.index.describing_the_team",
+      "en": "describing the team",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1865
+    },
+    {
+      "id": "member-roster.index.endorsing_a_proposed_administrator",
+      "en": "endorsing a proposed administrator",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 758
+    },
+    {
       "id": "member-roster.index.every_existing_administrator_must_endorse",
       "en": "every existing administrator must endorse an addition beyond the second",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 780
+      "line": 778
     },
     {
       "id": "member-roster.index.lowercase_letters_digits_and_dashes",
       "en": "lowercase letters, digits and dashes, 2 to 41 characters",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 871
+      "line": 869
     },
     {
       "id": "member-roster.index.module_has_already_registered_its_listener",
@@ -29643,14 +29741,14 @@
       "en": "reading the administrator removals under way",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1749
+      "line": 1743
     },
     {
       "id": "member-roster.index.reading_the_teams_website_key_and",
       "en": "reading the team's website key and join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1714
+      "line": 1708
     },
     {
       "id": "member-roster.index.recording_who_holds_hosting_access",
@@ -29664,56 +29762,77 @@
       "en": "removals are recorded with a reason",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 825
+      "line": 823
     },
     {
       "id": "member-roster.index.replacing_the_join_link",
       "en": "replacing the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1662
+      "line": 1657
     },
     {
       "id": "member-roster.index.replacing_the_teams_join_link",
       "en": "replacing the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1661
+      "line": 1656
+    },
+    {
+      "id": "member-roster.index.resigning_administrator_status",
+      "en": "resigning administrator status",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 352
+    },
+    {
+      "id": "member-roster.index.setting_a_members_capabilities",
+      "en": "setting a member's capabilities",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 732
+    },
+    {
+      "id": "member-roster.index.setting_a_members_status",
+      "en": "setting a member's status",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1325
     },
     {
       "id": "member-roster.index.switching_off_the_join_link",
       "en": "switching off the join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1673
+      "line": 1668
     },
     {
       "id": "member-roster.index.switching_off_the_teams_join_link",
       "en": "switching off the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1672
+      "line": 1667
     },
     {
       "id": "member-roster.index.switching_off_the_teams_website_key",
       "en": "switching off the team's website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1563
+      "line": 1558
     },
     {
       "id": "member-roster.index.switching_off_the_website_key",
       "en": "switching off the website key",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1564
+      "line": 1559
     },
     {
       "id": "member-roster.index.switching_on_the_teams_join_link",
       "en": "switching on the team's join link",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1632
+      "line": 1627
     },
     {
       "id": "member-roster.index.the_registration_could_not_be_read",
@@ -29727,7 +29846,7 @@
       "en": "the target is counted in the denominator but does not vote",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 823
+      "line": 821
     },
     {
       "id": "member-roster.index.this_listener_is_already_registered",
@@ -29744,11 +29863,25 @@
       "line": 179
     },
     {
+      "id": "member-roster.index.this_member_has_not_declared",
+      "en": "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 585
+    },
+    {
       "id": "member-roster.index.voting_to_remove_an_administrator",
       "en": "voting to remove an administrator",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 800
+      "line": 798
+    },
+    {
+      "id": "member-roster.index.withdrawing_an_invitation",
+      "en": "withdrawing an invitation",
+      "module": "member-roster",
+      "file": "bio-plane/src/member-roster/index.mjs",
+      "line": 1446
     },
     {
       "id": "member-roster.order-build.line_have_the_file_gives",
@@ -29776,112 +29909,112 @@
       "en": "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1414
+      "line": 1409
     },
     {
       "id": "membership.index.a_member_joins_a_project",
       "en": "a member joins a project they were invited to. Being uninvited is not a refusal you can see.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1062
+      "line": 1064
     },
     {
       "id": "membership.index.a_member_row_already_holds",
       "en": "a member row already holds the id '{memberId}'; nothing was written",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 888
+      "line": 886
     },
     {
       "id": "membership.index.act_acts_on_the_teams",
       "en": "{act} acts on the team's live website key, and there is none. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1519
+      "line": 1514
     },
     {
       "id": "membership.index.act_acts_on_the_teams_2",
       "en": "{act} acts on the team's join link, and it is off. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1528
+      "line": 1523
     },
     {
       "id": "membership.index.act_on_string_is_work",
       "en": "{act} on {String} is work inside that project, and {who} has not joined it (§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 626
+      "line": 628
     },
     {
       "id": "membership.index.adding_an_administrator_beyond_the",
       "en": "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 942
+      "line": 940
     },
     {
       "id": "membership.index.adding_an_owner_to_a_project_whose_owners",
       "en": "adding an owner to a project whose owners are all inactive (7.13)",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1152
+      "line": 1153
     },
     {
       "id": "membership.index.administrator_status_is_granted_and",
       "en": "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 741
+      "line": 739
     },
     {
       "id": "membership.index.an_administrator_may_add_an",
       "en": "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1165
+      "line": 1166
     },
     {
       "id": "membership.index.an_invitation_lasts_a_whole",
       "en": "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1403
+      "line": 1398
     },
     {
       "id": "membership.index.an_owner_is_not_removed",
       "en": "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1132
+      "line": 1133
     },
     {
       "id": "membership.index.choose_a_handle_it_is",
       "en": "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1046
+      "line": 1044
     },
     {
       "id": "membership.index.detail_nothing_was_written",
       "en": "{detail} Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1872
+      "line": 1866
     },
     {
       "id": "membership.index.gate_mark_outside_or_participant",
       "en": "{GATE_MARK} ({outside} OR {participant} OR {administers})",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 95
+      "line": 97
     },
     {
       "id": "membership.index.name_is_at_most_max",
       "en": "{name} is at most {max} characters.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1883
+      "line": 1877
     },
     {
       "id": "membership.index.name_who_holds_hosting_access",
@@ -29902,63 +30035,63 @@
       "en": "no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1094
+      "line": 1096
     },
     {
       "id": "membership.index.only_a_member_whose_status",
       "en": "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 769
+      "line": 767
     },
     {
       "id": "membership.index.only_an_invitation_that_has",
       "en": "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1457
+      "line": 1452
     },
     {
       "id": "membership.index.only_an_owner_of_this",
       "en": "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1038
+      "line": 1040
     },
     {
       "id": "membership.index.only_an_owner_of_this_2",
       "en": "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1116
+      "line": 1118
     },
     {
       "id": "membership.index.other_was_chosen_and_the",
       "en": "`other` was chosen, and the kind it describes was left empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1879
+      "line": 1873
     },
     {
       "id": "membership.index.reactivated_as_an_ordinary_member",
       "en": "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1374
+      "line": 1369
     },
     {
       "id": "membership.index.recorded_as_a_request_to",
       "en": "recorded as a request to leave. An owner of this project removes participants; this does not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1101
+      "line": 1103
     },
     {
       "id": "membership.index.removal_takes_votesneeded_of_administrators",
       "en": "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 830
+      "line": 828
     },
     {
       "id": "membership.index.resigned_an_ordinary_member_now",
@@ -29972,49 +30105,49 @@
       "en": "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 881
+      "line": 879
     },
     {
       "id": "membership.index.stringify_is_not_a_setting",
       "en": "{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 930
+      "line": 932
     },
     {
       "id": "membership.index.subject_is_v1_production_and",
       "en": "{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 669
+      "line": 671
     },
     {
       "id": "membership.index.the_choice_is_tell_or",
       "en": "the choice is `tell` or `dont`, and nothing else. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1802
+      "line": 1796
     },
     {
       "id": "membership.index.the_description_is_seen_by",
       "en": "the description is seen by `members` or by the `public` too.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1886
+      "line": 1880
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen",
       "en": "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1314
+      "line": 1311
     },
     {
       "id": "membership.index.the_founders_handle_is_chosen_2",
       "en": "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1317
+      "line": 1314
     },
     {
       "id": "membership.index.the_founding_administrator_holds_admin",
@@ -30028,42 +30161,49 @@
       "en": "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 810
+      "line": 808
     },
     {
       "id": "membership.index.the_join_link_has_let",
       "en": "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1695
+      "line": 1689
     },
     {
       "id": "membership.index.the_kinds_are_a_list",
       "en": "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1875
+      "line": 1869
+    },
+    {
+      "id": "membership.index.the_member_named_holds_no",
+      "en": "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1129
     },
     {
       "id": "membership.index.the_password_could_not_be",
       "en": "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1060
+      "line": 1058
     },
     {
       "id": "membership.index.the_team_holds_one_live",
       "en": "the team holds one live website key at a time (DEC-133). Nothing was created.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1538
+      "line": 1533
     },
     {
       "id": "membership.index.the_team_holds_one_live_2",
       "en": "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1636
+      "line": 1631
     },
     {
       "id": "membership.index.the_team_would_be_left",
@@ -30077,63 +30217,63 @@
       "en": "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1623
+      "line": 1618
     },
     {
       "id": "membership.index.the_website_names_the_person",
       "en": "the website names the person by the cover the team will know them by. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1619
+      "line": 1614
     },
     {
       "id": "membership.index.this_invitation_is_not_live",
       "en": "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 976
+      "line": 974
     },
     {
       "id": "membership.index.this_key_opens_no_door",
       "en": "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1615
+      "line": 1610
     },
     {
       "id": "membership.index.this_link_opens_no_door",
       "en": "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1686
+      "line": 1681
     },
     {
       "id": "membership.index.this_project_has_no_owner_rows",
       "en": "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1157
+      "line": 1158
     },
     {
       "id": "membership.index.this_project_is_discoverable_and",
       "en": "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 867
+      "line": 869
     },
     {
       "id": "membership.index.this_project_is_hidden_and",
       "en": "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 866
+      "line": 868
     },
     {
       "id": "membership.index.too_many_handles_were_checked",
       "en": "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed.",
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
-      "line": 1244
+      "line": 1242
     },
     {
       "id": "membership.index.what_is_an_administrators_act",
@@ -30154,14 +30294,14 @@
       "en": "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 892
+      "line": 894
     },
     {
       "id": "membership.index.whether_this_projects_own_rules",
       "en": "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 543
+      "line": 545
     },
     {
       "id": "money-checks.index.money_could_not_answer_message",
@@ -32537,6 +32677,13 @@
       "line": 70
     },
     {
+      "id": "people.index.directory_follows",
+      "en": "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added",
+      "module": "people",
+      "file": "bio-plane/src/people/index.mjs",
+      "line": 1252
+    },
+    {
       "id": "people.index.evidence_names_cited_line",
       "en": "the evidence names the cited line held by each record (lines: {a, b})",
       "module": "people",
@@ -32548,7 +32695,7 @@
       "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
       "module": "people",
       "file": "bio-plane/src/people/index.mjs",
-      "line": 1760
+      "line": 1759
     },
     {
       "id": "people.index.said_grade_grade_because_because",
@@ -39030,7 +39177,7 @@
       "en": "loading the workbook took longer than the time budget, so evaluation was not started",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 85
+      "line": 84
     },
     {
       "id": "sheet-worker.contract.no_capture_with_that_sha_in",
@@ -39038,6 +39185,13 @@
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
       "line": 77
+    },
+    {
+      "id": "sheet-worker.contract.recompute_is_not_enabled_here",
+      "en": "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member",
+      "module": "sheet-worker",
+      "file": "sheet-worker/src/contract.mjs",
+      "line": 78
     },
     {
       "id": "sheet-worker.contract.store_must_be_named_this",
@@ -39051,28 +39205,28 @@
       "en": "the engine did not load as the pinned build, so no workbook is recomputed",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 80
+      "line": 79
     },
     {
       "id": "sheet-worker.contract.the_engine_refused_or_failed",
       "en": "the engine refused or failed on this workbook",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 84
+      "line": 83
     },
     {
       "id": "sheet-worker.contract.the_workbook_is_larger_than",
       "en": "the workbook is larger than this member recomputes; nothing of it was recomputed",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 82
+      "line": 81
     },
     {
       "id": "sheet-worker.contract.the_workbook_refers_to_other",
       "en": "the workbook refers to other workbooks, whose values are not here",
       "module": "sheet-worker",
       "file": "sheet-worker/src/contract.mjs",
-      "line": 83
+      "line": 82
     },
     {
       "id": "sheet-worker.enginecore.the_engine_module_did_not",
@@ -40909,25 +41063,39 @@
       "line": 194
     },
     {
+      "id": "sources.checks.a_disclosure_names_what_was_revealed",
+      "en": "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written.",
+      "module": "sources",
+      "file": "bio-plane/src/sources/checks.mjs",
+      "line": 18
+    },
+    {
+      "id": "sources.checks.a_result_names_the_service",
+      "en": "A result from a paid or account-gated service names the service it came from. Name it. Nothing was written.",
+      "module": "sources",
+      "file": "bio-plane/src/sources/checks.mjs",
+      "line": 51
+    },
+    {
       "id": "sources.checks.only_a_member_acting_for",
       "en": "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written.",
       "module": "sources",
       "file": "bio-plane/src/sources/checks.mjs",
-      "line": 41
+      "line": 39
     },
     {
       "id": "sources.checks.that_secret_was_not_recognised",
       "en": "That secret was not recognised, so nothing was recorded. Check it and try again.",
       "module": "sources",
       "file": "bio-plane/src/sources/checks.mjs",
-      "line": 36
+      "line": 34
     },
     {
       "id": "standards.index.a_citation_is_at_most",
       "en": "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2697
+      "line": 2694
     },
     {
       "id": "standards.index.a_standard_held_held_holds",
@@ -40941,7 +41109,7 @@
       "en": "an adoption names the edition adopted, at most {EDITION_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1854
+      "line": 1852
     },
     {
       "id": "standards.index.citation_is_not_one_of",
@@ -40965,6 +41133,13 @@
       "line": 1543
     },
     {
+      "id": "standards.index.force_read_from_provision_words",
+      "en": "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 1781
+    },
+    {
       "id": "standards.index.no_question_your_teams_record",
       "en": "no question your team's record holds that you may see answers to that id. Nothing was written.",
       "module": "standards",
@@ -40976,7 +41151,7 @@
       "en": "no record of a version known in force through a date answers to that id here. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2173
+      "line": 2171
     },
     {
       "id": "standards.index.no_source_matches_citation",
@@ -40997,7 +41172,7 @@
       "en": "only an owner of the project its source material is filed in may release it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1803
+      "line": 1801
     },
     {
       "id": "standards.index.period_starts_after_captures",
@@ -41011,21 +41186,35 @@
       "en": " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2393
+      "line": 2390
+    },
+    {
+      "id": "standards.index.proposed_force_moves_no_answer",
+      "en": "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 1721
+    },
+    {
+      "id": "standards.index.read_names_the_member_reading",
+      "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
+      "module": "standards",
+      "file": "bio-plane/src/standards/index.mjs",
+      "line": 2209
     },
     {
       "id": "standards.index.sid_is_held_held_without",
       "en": "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2626
+      "line": 2623
     },
     {
       "id": "standards.index.sid_is_v1_seen_by",
       "en": "{sid} is {v1}seen by every member of your team. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 1797
+      "line": 1795
     },
     {
       "id": "standards.index.side_is_held_passage",
@@ -41046,14 +41235,14 @@
       "en": "the act a proposal names is an id of at most {ACT_MAX} characters. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2382
+      "line": 2379
     },
     {
       "id": "standards.index.the_source_was_last_retrieved",
       "en": "the source was last retrieved on {checkedDay}, and {through} is after it. Nothing was written.",
       "module": "standards",
       "file": "bio-plane/src/standards/index.mjs",
-      "line": 2140
+      "line": 2138
     },
     {
       "id": "steps.index.basis_ord_rests_on_target",

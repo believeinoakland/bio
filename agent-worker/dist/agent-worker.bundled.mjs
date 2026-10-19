@@ -9127,9 +9127,6 @@ var WORD_ROWS = Object.freeze([
   ["case-inputs.document.readings_given_draft", "Readings given on draft {draft}, which {by} named as this case's draft at publication on {at}, are readings of this case, and each one listed above says so. That link is {by}'s act, recorded with the publication, and not an inference from the statement's words: another draft or case carrying the same sentence binds nothing here.", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.document.acknowledged_second_reader", "{ack_prose_head} Acknowledged, as a second reader of what this case leaves out, by:", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.acks.rows.map.recipient_review_grant", "- the recipient of review grant {by}, addressed by its issuer as '{recipient}', on {at}", "case-inputs, acks.rows.map()", null, false, "design"],
-  ["case-inputs.acks.rows.map.participant", "- {by}, a participant of {project}, on {at}", "case-inputs, acks.rows.map()", null, false, "design"],
-  ["case-inputs.acks.rows.map.given_draft", "given on draft {draft}", "case-inputs, acks.rows.map()", null, false, "design"],
-  ["case-inputs.document.list_stops_acknowledgments", "- (the list stops here; more acknowledgments are recorded than this document lists)", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.document.nobody_acknowledged_case", "{ack_prose_head} Nobody acknowledged it FOR THIS CASE. An acknowledgment is never required to publish \u2014 a team may be one person \u2014 and its absence is stated rather than left for a reader to infer.", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.document.nobody_author_acknowledged", "{ack_prose_head} Nobody but its author acknowledged it. An acknowledgment is never required to publish \u2014 a team may be one person \u2014 and its absence is stated rather than left for a reader to infer.", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.document.withheld_list_record", "Nothing is withheld from this list: this record holds no acknowledgment of this statement by {writer_by}, who wrote it.", "case-inputs, page/document", null, false, "design"],
@@ -9138,10 +9135,6 @@ var WORD_ROWS = Object.freeze([
   ["case-inputs.document.statement_recorded_listed_reason", "{rows} of this statement {are} recorded and NOT listed above, and the reason is UNDETERMINED rather than the writer's own: this draft predates the recording of the statement's author, so any participant's acknowledgment of it may be the writer's and this list cannot rule that out. They are counted here rather than hidden \u2014 everything recorded is shown or stated.", "case-inputs, page/document", null, false, "design"],
   ["case-inputs.why.source_answered_list", "the source answered no list", "case-inputs, why", null, false, "design"],
   ["case-inputs.why.source_answered_malformed", "the source answered a malformed row", "case-inputs, why", null, false, "design"],
-  ["case-inputs.listed.reading_draft_named", "this is a reading of draft {draft}, which {by} named as the draft of edition {edition} of {case_id} when publishing it ({at}), so it is a reading of that case.", "case-inputs, listed", null, false, "design"],
-  ["case-inputs.listed.edition_already_signed", "That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.", "case-inputs, listed", null, false, "design"],
-  ["case-inputs.listed.case_document_authored", "Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.", "case-inputs, listed", null, false, "design"],
-  ["case-inputs.why.case_document_authored", "this case document was authored before acknowledgments were recorded, so it has no list to add to; it is left exactly as it was signed-for-review", "case-inputs, why", null, false, "design"],
   ["case-inputs.not_from_author", "It is NOT read off {publisher}, who prepared and published this case: preparing a case is not writing its statement.", "case-inputs, =notFromAuthor", null, false, "design"],
   ["case-inputs.stated.undetermined_case_document", "UNDETERMINED: this case document prints no exclusion statement, so there is no sentence for anybody to have written.", "case-inputs, stated", null, false, "design"],
   ["case-inputs.stated.undetermined_named_draft", "UNDETERMINED: {publisher} named draft {draft_id} as this case's draft, and that draft records no author for this sentence \u2014 it was written before drafts recorded their authors \u2014 so who wrote the bytes this case publishes cannot be established. {not_from_author} An editor who saves the statement again records who wrote the bytes that stand.", "case-inputs, stated", null, false, "design"],
@@ -10460,7 +10453,6 @@ var WORD_ROWS = Object.freeze([
   ["case-disclosures.stated_source_consent", "stated with the source's consent", null, null, false, "design"],
   ["case-disclosures.stated_already_public", "stated because it is already public, as cited", null, null, false, "design"],
   ["case-disclosures.document_grade_attestation", "## Each Document's Grade And Co-attestation", null, null, false, "design"],
-  ["case-disclosures.document_case_findings", "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {earned_capture_ceiling} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgment.", null, null, false, "design"],
   ["case-disclosures.capture_letter", "no capture letter ({grade_basis})", null, null, false, "design"],
   ["case-disclosures.obtained_late_proves", "obtained LATE: it proves the bytes existed by then, not at capture", null, null, false, "design"],
   ["case-disclosures.timestamp_archive", "(a timestamp at {timestamp_at}, no co-archive)", null, null, false, "design"],
@@ -11272,91 +11264,46 @@ var WORD_ROWS = Object.freeze([
   ["contradiction.text.disclosure_itself", "the disclosure itself", "contradiction, text", null, false, "design"],
   ["contradiction.says.response_held_reaches", "the response is held; it reaches the other projects' members, with only what you chose to share, once every project holding a side has asked", "contradiction, says", null, false, "design"],
   ["case-grammar.text.framing_follows_declared", "[framing that follows the declared bias statement {named}]", "case-grammar, text", null, false, "design"],
-  ["case-grammar.text.case_states_account", "This case states no account.", "case-grammar, text", null, false, "design"],
-  ["case-grammar.blocks_predate_sentence", "this case document's format predates the statement of each capture's grade, co-attestation and source, so it states none; that is not a statement that there were none", "case-grammar, =BLOCKS_PREDATE_SENTENCE", null, false, "design"],
-  ["case-grammar.block_unreadable_sentence", "this case document declares a format that states each capture's grade, co-attestation and source, but carries no readable block for it, so what it stated is undetermined", "case-grammar, =BLOCK_UNREADABLE_SENTENCE", null, false, "design"],
   ["case-grammar.text.person", "the same person as {source}", "case-grammar, text", null, false, "design"],
-  ["case-grammar.withheld_source_reason", "the source has not consented to being named, and no public record names them", "case-grammar, =WITHHELD_SOURCE_REASON", null, false, "design"],
   ["case-grammar.one_line.received", "{withheld_source_label}: {withheld_source_reason}; received as {digest} at {time}", "case-grammar, oneLine()#0", null, false, "design"],
-  ["case-grammar.text.unreadable_value", "an unreadable value", "case-grammar, text", null, false, "design"],
   ["case-grammar.freeze.claims", "The claims", "case-grammar, Object.freeze()#0", null, false, "design"],
   ["case-grammar.freeze.findings", "The findings", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.documents_observations", "The documents and observations", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.searched", "What was searched", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.declared_bias", "The declared bias", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.disclosed_contradictions", "Disclosed contradictions", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.how_grades_worked", "How grades are worked out", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.how_check_case", "How to check this case yourself", "case-grammar, Object.freeze()#0", null, false, "design"],
   ["case-grammar.timeline_heading", "The timeline", "case-grammar, =TIMELINE_HEADING", null, false, "design"],
   ["case-grammar.calculations_heading", "The calculations", "case-grammar, =CALCULATIONS_HEADING", null, false, "design"],
   ["case-grammar.account_heading", "The account", "case-grammar, =ACCOUNT_HEADING", null, false, "design"],
-  ["case-grammar.review_comments_heading", "What reviewers said", "case-grammar, =REVIEW_COMMENTS_HEADING", null, false, "design"],
   ["case-grammar.agrees", "recomputed at publication, and the result agrees with the one stored", "case-grammar, agrees", null, false, "design"],
-  ["case-grammar.differs", "recomputed at publication, and the result differs from the one stored", "case-grammar, differs", null, false, "design"],
-  ["case-grammar.unbound", "not recomputed at publication: an input it names was not bound", "case-grammar, unbound", null, false, "design"],
-  ["case-grammar.not_recomputed", "not recomputed here: a workbook this team's Civicsmith did not recompute", "case-grammar, not_recomputed", null, false, "design"],
-  ["case-grammar.two_strengths_sentence", "A case has two strengths, never one.", "case-grammar, =TWO_STRENGTHS_SENTENCE", null, false, "design"],
-  ["case-grammar.capture", "Capture: how faithfully the documents this rests on were taken in, so that someone else can check they are what they say. A is the strongest, D the weakest. It never says whether the finding is true.", "case-grammar, capture", null, false, "design"],
-  ["case-grammar.connection", "Connection: how firmly those documents are tied to what the finding is about, so that someone else can follow the link. A is the strongest, D the weakest. It never says whether the finding is true.", "case-grammar, connection", null, false, "design"],
-  ["case-grammar.testimony", "Testimony: a member's own firsthand account, graded beside the two and never combined with them.", "case-grammar, testimony", null, false, "design"],
   ["case-grammar.text.made", "Made with {product}", "case-grammar, text", null, false, "design"],
-  ["case-grammar.text.location_stated", "no location stated", "case-grammar, text", null, false, "design"],
-  ["case-grammar.text.unreadable_location", "an unreadable location", "case-grammar, text", null, false, "design"],
-  ["case-grammar.title.case_file_readable", "A case file with no readable case document", "case-grammar, title", null, false, "design"],
-  ["case-grammar.p.case_file_carries", "This case file carries no readable case document, so nothing of the case can be shown from it.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.text.bar_declared", "no bar declared", "case-grammar, text", null, false, "design"],
   ["case-grammar.p.case", "What this case is about: {case_scope}", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.conclusion_recorded", "{m}: no conclusion is recorded for it.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.claim_undetermined", "{m}: the claim is undetermined: {concluded}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.said.record_establish_claim", "the record cannot establish which claim was concluded", "case-grammar, said()#1", null, false, "design"],
-  ["case-grammar.p.case_document_lists", "This case document lists no materials.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.document_observation_reached", "No document or observation is reached by this case's findings.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.extracted_text_fingerprint", "Extracted text fingerprint: {text_sha}", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.origin", "Origin: {origin}", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.archived_copy", "Archived copy: {recorded}", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.li.included_whole_case", "Included whole in this case file.", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.li.finding_case_relies", "A finding this case relies on rests on it.", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.li.supporting_findings_rest", "Only supporting findings rest on it.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.source", "Source: {withheld_source_label}: {withheld_source_reason}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.source_2", "Source: {withheld_source_label}", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.p.case_document_state", "This case document does not state what was searched.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.computed_over_subject", "Computed at {computed_at} over {subjects} subject(s), {looked} with a recorded observation. It records what was looked for, not how much exists.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.level_subject_looked", "{level} level ({subject_kind}): {g}: {subjects} subject(s), {looked} looked at, {never_looked} never looked at, {undetermined} undetermined. {l}", "case-grammar, li()", null, false, "design"],
   ["case-grammar.p.publisher_acknowledgment", "The publisher's acknowledgment: {stated}", "case-grammar, p()", null, false, "design"],
   ["case-grammar.said.stated", "none is stated", "case-grammar, said()#1", null, false, "design"],
   ["case-grammar.li.justification_evidence_citations", "{kind}, on {subject}: {text} Justification: {justification}. Evidence: {printed}. Citations withheld: {undetermined}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.statement_kind", "a statement of kind {kind}", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.p.case_disclosed_contradiction", "This case disclosed no contradiction.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.seen_side_state", "{finding}: {sentence} Seen side: {text}. State: {state}.", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.p.finding_graded_capture", "Each finding is graded on its own, on capture and on connection separately, as this case read it. Nothing combines them, and this case has no strength of its own.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.frozen_strength_recorded", "no frozen strength is recorded for it", "case-grammar, li()", null, false, "design"],
   ["case-grammar.p.project_bar", "This project's bar: {floors}.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.case_graded_method", "This case was graded by method {grading}, whose words this rendering does not hold.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.case_document_state_grading", "This case document does not state the grading method it was graded by.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.checked_under_catalog", "It was checked under catalog version {checks}.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.check_case_yourself", "You can check this case yourself, without {product} and without a network connection.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.get_checker_file", "1. Get the checker, one file, from the publishing team's public read {program}, and the specification of the case file's format from {specification}.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.run_checker_part", "2. Run the checker on every part of this case file. It checks every fingerprint and signature, finds each passage where it is said to be, works each grade out again by the method stated above, checks each relied-on finding against the bar, and runs the same publication checks.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.finding_recreated_recreated", "3. Each finding is then recreated, recreated in part (naming what is missing, such as a document to fetch: a document whose fingerprint matches completes it), or did not recreate (naming what differs).", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.recreating_case_shows", "Recreating a case shows it is intact and consistent. It does not show that it is true.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.title.case_file_read", "A case file that could not be read", "case-grammar, title", null, false, "design"],
-  ["case-grammar.p.case_file_read", "This case file could not be read whole, so nothing of the case is shown from it.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.already_shown_chain", "{finding} is already shown above in this chain.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.chain_goes_deeper", "This chain goes deeper than six steps; the steps below are not followed.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.case_file_carries_grading", "This case file carries no grading facts for {finding}, so its chain is not shown.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.rests", "{finding} rests on nothing.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.esc.group_finding", "{head}. This is another team's finding.", "case-grammar, esc()", null, false, "design"],
   ["case-grammar.li.accepted_edition_because", "Accepted by {accepted_by} on {accepted_at}, edition {edition}, because: {r}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.recreated_grades_edition", "Recreated as: {result}{gaps}. Its grades as that edition published them: {pair}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.gaps_stated", "; the gaps stated: {gaps}", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.li.case_states_acceptance", "This case states no acceptance for it.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.open_flag_disclosed", "An open flag is disclosed: {issue} (flagged {flagged_at}){owner_words}.", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.li.chain_stops_finding", "The chain stops here: what that finding rests on is in its own case file.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.esc.passages_relies", "The passages {finding} relies on:", "case-grammar, esc()", null, false, "design"],
-  ["case-grammar.p.did_did_two", "What they did and what we did are two lists, never mixed. Each item shows the record it rests on.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.stated_lane", "Nothing is stated in this lane.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.calculation_reached_case", "No calculation is reached by this case's findings.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.calculation_stated_anyone", "Each calculation is stated so that anyone can run its recipe again on the same inputs. A result is a computed fact, never a judgment.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.recipe", "Recipe: {recipe}", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.method_version", "Method version: {method_version}", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.inputs_stated", "Its inputs are not stated.", "case-grammar, li()", null, false, "design"],
@@ -11366,16 +11313,9 @@ var WORD_ROWS = Object.freeze([
   ["case-grammar.li.text", "It was {stated}.", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.recomputed_publication_outcome", "recomputed at publication with an outcome not stated", "case-grammar, li()", null, false, "design"],
   ["case-grammar.li.publisher_disclosure", "The publisher's disclosure: {disclosed}", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.p.account_publisher_sentence", "The account is the publisher's own, sentence by sentence; every sentence rests on what it cites. A sentence framed by the team's declared bias is marked, and its statement named.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.outcome_carried_edition", "No outcome is carried into this edition.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.publisher_included_reviewer", "The publisher included no reviewer's comment.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.how_many_reviewers", "How many reviewers' comments were left out is not stated.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.reviewer_comment_left", "{left_out} reviewer's comment{were} left out by the publisher.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.approval_rule_force", "No approval rule was in force when this case was signed.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.p.group_rule_force", "The team's rule in force at signing required approval by: {set_by}{set_at}.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.p.named", "no one named", "case-grammar, p()", null, false, "design"],
   ["case-grammar.li.approved", "Approved by {by}{at}.", "case-grammar, li()", null, false, "design"],
-  ["case-grammar.p.approval_recorded", "No approval is recorded.", "case-grammar, p()", null, false, "design"],
   ["case-grammar.text.attested_member_group", "Attested by a member of the team, credited to the {level}{at}.", "case-grammar, text", null, false, "design"],
   ["case-grammar.text.attested", "Attested by {member}{at}{by}{recorded_in}.", "case-grammar, text", null, false, "design"],
   ["case-grammar.text.co_attested", "Co-attested by {by}{at}{recorded_in}.", "case-grammar, text", null, false, "design"],
@@ -11383,40 +11323,23 @@ var WORD_ROWS = Object.freeze([
   ["case-grammar.text.vouched_group_under", "Vouched for by the team {by}, under this case's own signature.", "case-grammar, text", null, false, "design"],
   ["case-grammar.text.attestation_kind_rendering", "An attestation of a kind this rendering does not know: {by_kind}.", "case-grammar, text", null, false, "design"],
   ["case-grammar.p.published_signed", "Published and signed by {group}.", "case-grammar, p()", null, false, "design"],
-  ["case-grammar.scrutiny", "a source this team checks more closely before relying on it", "case-grammar, scrutiny", null, false, "design"],
-  ["case-grammar.inference", "an inference this team allows or refuses to draw", "case-grammar, inference", null, false, "design"],
-  ["case-grammar.pattern", "a pattern this team has evidence an institution or source follows", "case-grammar, pattern", null, false, "design"],
-  ["case-grammar.freeze.everyone_investigates_looks", "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.freeze.group_declares_lens", "This team declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material.", "case-grammar, Object.freeze()#0", null, false, "design"],
-  ["case-grammar.lens_none_sentence", "No manifest was in force when this case was published: no bias set stood adopted for it. That is stated, not left blank: it is a different fact from a lens with nothing in it.", "case-grammar, =LENS_NONE_SENTENCE", null, false, "design"],
-  ["case-grammar.lens_undetermined_sentence", "The lens this case was produced under is undetermined, so no statement is printed and nothing is claimed either way", "case-grammar, =LENS_UNDETERMINED_SENTENCE", null, false, "design"],
   ["case-grammar.text.acknowledgment_stated", "No acknowledgment is stated.", "case-grammar, text", null, false, "design"],
   ["case-grammar.text.case_produced_under", "This case was produced under {made} statement{s} of declared bias in force when it was published, each printed here with its reasons.", "case-grammar, text", null, false, "design"],
   ["case-grammar.flat_map.ones_stated", "{withheld} (which ones is not stated)", "case-grammar, made.flatMap()#0", null, false, "design"],
-  ["case-grammar.group", "the team that publishes this case", "case-grammar, team", null, false, "design"],
-  ["case-grammar.project", "the project that produced it", "case-grammar, project", null, false, "design"],
-  ["case-grammar.cover", "the cover the team knows its author by", "case-grammar, cover", null, false, "design"],
-  ["case-grammar.name.name_author_chose", "the name its author chose to appear under", "case-grammar, name", null, false, "design"],
   ["case-grammar.text.case_rests_directly", "This case rests, directly or through another finding, on {count} firsthand observation{plural} recorded by a member of this team. What it shows of who SAID each one is that member's own choice, made for this edition and never filled in for them. An observation names no person in its own bytes; the words below are the whole of the attribution.", "case-grammar, text", null, false, "design"],
   ["case-grammar.map.level_chosen_edition", "- **{observation}** \u2014 NO LEVEL IS CHOSEN: {why}. This edition cannot be signed until its author chooses one, or the finding resting on it leaves the case.", "case-grammar, .map()#0", null, false, "design"],
   ["case-grammar.map.attributed_level_chosen", "- **{observation}** \u2014 attributed to {attributed}{shown} \u2014 level `{level}`, chosen at edition {edition}.", "case-grammar, .map()#0", null, false, "design"],
   ["case-grammar.map.record_names_producing", "(this record names no producing team, so none is printed)", "case-grammar, .map()#0", null, false, "design"],
-  ["case-grammar.citations_undetermined_sentence", "version undetermined (signed before capture pins): this document was signed before a case's citation edges were pinned to the capture they were made against, and it carries neither", "case-grammar, =CITATIONS_UNDETERMINED_SENTENCE", null, false, "design"],
   ["case-grammar.map.cite_kind_stated", "a cite of a kind not stated", "case-grammar, list.map()#0", null, false, "design"],
   ["case-grammar.text.rests", "{stated}, on {stated2}: {g} Rests on: {cites}.", "case-grammar, text", null, false, "design"],
   ["case-grammar.text.outcome_kind_stated", "An outcome of a kind not stated", "case-grammar, text", null, false, "design"],
   ["case-grammar.load_bearing", "Relied on", "case-grammar, load_bearing", null, false, "design"],
-  ["case-grammar.text.role_case_stated", "Its role in this case is not stated", "case-grammar, text", null, false, "design"],
   ["case-grammar.line.project_declared_bar", "{who} \xB7 this project declared no bar", "case-grammar, line", null, false, "design"],
   ["case-grammar.line.asked_meet_project", "{who} \xB7 not asked to meet this project's bar ({declared})", "case-grammar, line", null, false, "design"],
   ["case-grammar.line.project_bar", "{who} \xB7 this project's bar is ({declared})", "case-grammar, line", null, false, "design"],
   ["case-grammar.line.meets_project_bar", "{who} \xB7 meets this project's bar ({declared})", "case-grammar, line", null, false, "design"],
   ["case-grammar.line.short_project_bar", "{who} \xB7 short of this project's bar on {and} ({declared})", "case-grammar, line", null, false, "design"],
-  ["case-grammar.line.standing_against_project", "Its standing against this project's bar could not be read", "case-grammar, line", null, false, "design"],
   ["case-grammar.explained_not_shown", "explained, not yet shown", "case-grammar, explained_not_shown", null, false, "design"],
-  ["case-grammar.tension_depth_sentence", "a disclosure reaches one level: the contradictions on what each finding rests on directly; deeper findings disclose their own when published", "case-grammar, =TENSION_DEPTH_SENTENCE", null, false, "design"],
-  ["case-grammar.tensions_predate_sentence", "this case document's format predates the disclosure of contradictions, so it states none; that is not a statement that none existed", "case-grammar, =TENSIONS_PREDATE_SENTENCE", null, false, "design"],
-  ["case-grammar.tensions_unreadable_sentence", "this case document declares a format that discloses contradictions, but carries no readable tension section, so what it disclosed is undetermined", "case-grammar, =TENSIONS_UNREADABLE_SENTENCE", null, false, "design"],
   ["case-grammar.by.case_owner", "the case's owner", "case-grammar, by", null, false, "design"],
   ["refusal.TRANSCRIBE_NOT_A_MEMBER", "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself.", "content, refusal by its code", null, false, "design"],
   ["refusal.TRANSCRIBE_NO_DOCUMENT", "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first.", "content, refusal by its code", null, false, "design"],
@@ -16084,7 +16007,9 @@ var WORD_ROWS = Object.freeze([
   ["ai-accounts.index.a_sign_ins_token_is", "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", null, null, false, "code"],
   ["ai-accounts.index.keeping_the_teams_material_away", "keeping the team's material away from every assistant", null, null, false, "code"],
+  ["ai-accounts.index.no_claude_account_serves_this", "no Claude account serves this member: they hold no reference of their own, they are not connected through their subscription, and the team's key is not held or not on, so there is no assistant for them. Nothing was used.", null, null, false, "code"],
   ["ai-accounts.index.no_key_or_token_was", "no key or token was given. Nothing was written.", null, null, false, "code"],
+  ["ai-accounts.index.only_an_active_member_holds", "only an active member holds a Claude account reference. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.only_an_active_member_is", "only an active member is connected through their subscription. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.only_an_active_member_or", "only an active member, or the founder, holds a sign-in. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.only_that_the_member_is", "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.", null, null, false, "code"],
@@ -16101,11 +16026,14 @@ var WORD_ROWS = Object.freeze([
   ["ai-accounts.index.the_switches_are_names_nothing", "the switches are {names}. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.the_team_keeps_its_material", "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.the_teams_key_does_not", "the team's key does not open under the seal secret of your team's Civicsmith, which has changed; an administrator sets it again. Nothing was used.", null, null, false, "code"],
+  ["ai-accounts.index.the_teams_key_serves_only", "the team's key serves only acts of active members. Nothing was used.", null, null, false, "code"],
   ["ai-accounts.index.this_member_has_not_yet", "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.this_member_has_not_yet_2", "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.this_member_holds_no_claude", "this member holds no Claude account reference of their own. Nothing was used or written.", null, null, false, "code"],
+  ["ai-accounts.index.this_member_holds_no_claude_key", "this member holds no Claude account of their own: no key and no connected sign-in. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.this_one_has", "; this one has {length}", null, null, false, "code"],
   ["ai-accounts.index.this_project_holds_no_claude", "this project holds no Claude account. Nothing was written.", null, null, false, "code"],
+  ["ai-accounts.index.this_project_keeps_its_material", "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.what_takes_map_nothing_was", "{what} takes {map}. Nothing was changed.", null, null, false, "code"],
   ["ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.whether_this_project_keeps_its", "whether this project keeps its material away from the assistant could not be read, so no account was read or used. Nothing was sent.", null, null, false, "code"],
@@ -18174,6 +18102,7 @@ var WORD_ROWS = Object.freeze([
   ["doctypes.regulation.section_gone", "section {number} was read before and is not read now", null, null, false, "code"],
   ["doctypes.regulation.sections_none_read", "no section was read from either reading, so nothing is said about sections: {why}", null, null, false, "code"],
   ["doctypes.regulation.unchanged", "this instrument says what it said, and acts on the same things", null, null, false, "code"],
+  ["doctypes.regulation.unread_either", "nothing could be read from this instrument this time, so nothing is claimed about it either way", null, null, false, "code"],
   ["doctypes.sections.neither_form", "this text was read as neither an instrument nor a code section, so it is not divided into sections", null, null, false, "code"],
   ["doctypes.sections.neither_form_no_codes", "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code", null, null, false, "code"],
   ["doctypes.sections.no_code_forms", "no active jurisdiction profile gives a section-number form for any code, so no code section is read", null, null, false, "code"],
@@ -18200,6 +18129,7 @@ var WORD_ROWS = Object.freeze([
   ["doctypes.staff-report.template_sections", "{count} report template section heading(s)", null, null, false, "code"],
   ["doctypes.staff-report.titled", "names itself as a report on a line of its own", null, null, false, "code"],
   ["doctypes.staff-report.unchanged", "this report says what it said, and points at the same instruments", null, null, false, "code"],
+  ["doctypes.staff-report.unread_either", "nothing could be read from this report this time, so nothing is claimed about it either way", null, null, false, "code"],
   ["doorbell.checks.changing_a_knocks_status_records", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.", null, null, false, "code"],
   ["doorbell.checks.this_teams_inbox_read_your", "This team's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this team has set its Civicsmith up rather than a judgement about what you sent \u2014 a team that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the team's members how to get the whole of it to them. The team can see how often its doorbell turns people away.", null, null, false, "code"],
   ["doorbell.checks.your_material_was_not_received", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away.", null, null, false, "code"],
@@ -19666,15 +19596,22 @@ var WORD_ROWS = Object.freeze([
   ["machinery-producers.index.words_the_request_is_held", "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.", null, null, false, "code"],
   ["machinery-producers.index.your_teams_civicsmith_signed_the", "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.", null, null, false, "code"],
   ["member-roster.index.a_cover_is_the_label_you", "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name", null, null, false, "code"],
+  ["member-roster.index.a_handle_is_chosen_when_a", "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.", null, null, false, "code"],
   ["member-roster.index.a_listener_names_the_module", "a listener names the module that registers it and its function", null, null, false, "code"],
+  ["member-roster.index.adding_a_member", "adding a member", null, null, false, "code"],
+  ["member-roster.index.an_administrator_is_removed_by", "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.", null, null, false, "code"],
+  ["member-roster.index.capabilities_is_an_array", "capabilities is an array", null, null, false, "code"],
   ["member-roster.index.changing_the_join_link", "changing the join link", null, null, false, "code"],
   ["member-roster.index.changing_the_teams_join_link", "changing the team's join link", null, null, false, "code"],
   ["member-roster.index.changing_the_teams_website_key", "changing the team's website key", null, null, false, "code"],
   ["member-roster.index.changing_the_website_key", "changing the website key", null, null, false, "code"],
+  ["member-roster.index.choose_the_name_the_team_will", "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written.", null, null, false, "code"],
   ["member-roster.index.choosing_whether_members_are_told", "choosing whether members are told what a court can reach", null, null, false, "code"],
   ["member-roster.index.confirming_or_withdrawing_a_members_declared", "confirming or withdrawing a member's declared expertise", null, null, false, "code"],
   ["member-roster.index.creating_the_teams_website_key", "creating the team's website key", null, null, false, "code"],
   ["member-roster.index.declared_and_unconfirmed_which_costs_nothing", "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one", null, null, false, "code"],
+  ["member-roster.index.describing_the_team", "describing the team", null, null, false, "code"],
+  ["member-roster.index.endorsing_a_proposed_administrator", "endorsing a proposed administrator", null, null, false, "code"],
   ["member-roster.index.every_existing_administrator_must_endorse", "every existing administrator must endorse an addition beyond the second", null, null, false, "code"],
   ["member-roster.index.lowercase_letters_digits_and_dashes", "lowercase letters, digits and dashes, 2 to 41 characters", null, null, false, "code"],
   ["member-roster.index.module_has_already_registered_its_listener", "{module} has already registered its listener", null, null, false, "code"],
@@ -19684,6 +19621,9 @@ var WORD_ROWS = Object.freeze([
   ["member-roster.index.removals_are_recorded_with_a_reason", "removals are recorded with a reason", null, null, false, "code"],
   ["member-roster.index.replacing_the_join_link", "replacing the join link", null, null, false, "code"],
   ["member-roster.index.replacing_the_teams_join_link", "replacing the team's join link", null, null, false, "code"],
+  ["member-roster.index.resigning_administrator_status", "resigning administrator status", null, null, false, "code"],
+  ["member-roster.index.setting_a_members_capabilities", "setting a member's capabilities", null, null, false, "code"],
+  ["member-roster.index.setting_a_members_status", "setting a member's status", null, null, false, "code"],
   ["member-roster.index.switching_off_the_join_link", "switching off the join link", null, null, false, "code"],
   ["member-roster.index.switching_off_the_teams_join_link", "switching off the team's join link", null, null, false, "code"],
   ["member-roster.index.switching_off_the_teams_website_key", "switching off the team's website key", null, null, false, "code"],
@@ -19693,7 +19633,9 @@ var WORD_ROWS = Object.freeze([
   ["member-roster.index.the_target_is_counted_in_the", "the target is counted in the denominator but does not vote", null, null, false, "code"],
   ["member-roster.index.this_listener_is_already_registered", "this listener is already registered, and it takes one registration", null, null, false, "code"],
   ["member-roster.index.this_listener_is_already_registered_by", "this listener is already registered by {holder}, and it takes one registration", null, null, false, "code"],
+  ["member-roster.index.this_member_has_not_declared", "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.", null, null, false, "code"],
   ["member-roster.index.voting_to_remove_an_administrator", "voting to remove an administrator", null, null, false, "code"],
+  ["member-roster.index.withdrawing_an_invitation", "withdrawing an invitation", null, null, false, "code"],
   ["member-roster.order-build.line_have_the_file_gives", "line {v1}: have {stringify}, the file gives {stringify_2}", null, null, false, "code"],
   ["member-roster.order-build.out_is_stale", "member-roster: {out} is stale: {d}\n", null, null, false, "code"],
   ["member-roster.order-build.the_generated_list_is_absent", "the generated list is absent", null, null, false, "code"],
@@ -19736,6 +19678,7 @@ var WORD_ROWS = Object.freeze([
   ["membership.index.the_founding_administrator_holds_admin_2", "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).", null, null, false, "code"],
   ["membership.index.the_join_link_has_let", "the join link has let in its daily number of people in the last 24 hours. Nothing was written.", null, null, false, "code"],
   ["membership.index.the_kinds_are_a_list", "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.", null, null, false, "code"],
+  ["membership.index.the_member_named_holds_no", "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.", null, null, false, "code"],
   ["membership.index.the_password_could_not_be", "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.", null, null, false, "code"],
   ["membership.index.the_team_holds_one_live", "the team holds one live website key at a time (DEC-133). Nothing was created.", null, null, false, "code"],
   ["membership.index.the_team_holds_one_live_2", "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.", null, null, false, "code"],
@@ -20092,6 +20035,7 @@ var WORD_ROWS = Object.freeze([
   ["pdf-worker.index.a_capture_is_read_from", "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.", null, null, false, "code"],
   ["pdf-worker.index.a_capture_lives_inside_one", "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one.", null, null, false, "code"],
   ["people.checks.join_shape", `the condition's join is "same" (one counterparty) or {lines: [kinds]} (a line between the two counterparties)`, null, null, false, "code"],
+  ["people.index.directory_follows", "the people and organisations the record follows, never the team's own members; each row counts the documents, questions and projects naming it among those you may see, and when the newest was added", null, null, false, "code"],
   ["people.index.evidence_names_cited_line", "the evidence names the cited line held by each record (lines: {a, b})", null, null, false, "code"],
   ["people.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public", null, null, false, "code"],
   ["people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", null, null, false, "code"],
@@ -21021,6 +20965,7 @@ var WORD_ROWS = Object.freeze([
   ["scheduler.index.the_key_key_is_one", "the key '{key}' is one of the answer's own fields or another consumer's", null, null, false, "code"],
   ["sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started", null, null, false, "code"],
   ["sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store", null, null, false, "code"],
+  ["sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member", null, null, false, "code"],
   ["sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
   ["sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed", null, null, false, "code"],
   ["sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook", null, null, false, "code"],
@@ -21288,6 +21233,8 @@ var WORD_ROWS = Object.freeze([
   ["skills.skillpack.contradictions_recommender_prompt_has_passed", "contradiction's recommender prompt has passed no measurement: its digest is null until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no measurement vouches for is not given to a run as the words it recommends under.", null, null, false, "code"],
   ["skills.skillpack.formulate_claims_and_legs_supported", "Formulate claims and legs SUPPORTED BY EVIDENCE. The goal is not to support or disprove a position.", null, null, false, "code"],
   ["skills.skillpack.the_ai_holds_no_op", "The AI holds no op that ACCEPTS anything. Nothing it can call concludes, accepts, publishes, or makes a version current.", null, null, false, "code"],
+  ["sources.checks.a_disclosure_names_what_was_revealed", "A disclosure names what was revealed (a pseudonym link, an attribute or a name), how it became known, and to whom it is known, each from the listed choices. The field that is not one of them is named. Nothing was written.", null, null, false, "code"],
+  ["sources.checks.a_result_names_the_service", "A result from a paid or account-gated service names the service it came from. Name it. Nothing was written.", null, null, false, "code"],
   ["sources.checks.only_a_member_acting_for", "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written.", null, null, false, "code"],
   ["sources.checks.that_secret_was_not_recognised", "That secret was not recognised, so nothing was recorded. Check it and try again.", null, null, false, "code"],
   ["standards.index.a_citation_is_at_most", "a citation is at most {CITE_MAX} characters, and this one is {length}. Nothing was written.", null, null, false, "code"],
@@ -21296,6 +21243,7 @@ var WORD_ROWS = Object.freeze([
   ["standards.index.citation_is_not_one_of", "{citation} is not one of this standard's text passages. Nothing was written.", null, null, false, "code"],
   ["standards.index.cited_by_names_where_cited", "a standard held cited names where it is cited: cited_by {captureSha, extent}, a passage of a held capture you may see. Nothing was written.", null, null, false, "code"],
   ["standards.index.documents_cite_it_as_stated", "documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted", null, null, false, "code"],
+  ["standards.index.force_read_from_provision_words", "a force is read from the provision's own words and confirmed by a member; a proposal moves nothing", null, null, false, "code"],
   ["standards.index.no_question_your_teams_record", "no question your team's record holds that you may see answers to that id. Nothing was written.", null, null, false, "code"],
   ["standards.index.no_record_of_a_version", "no record of a version known in force through a date answers to that id here. Nothing was written.", null, null, false, "code"],
   ["standards.index.no_source_matches_citation", "the citation matches the citation form of no source the active jurisdiction profiles list; the standard is held all the same, and where it comes from is undetermined", null, null, false, "code"],
@@ -21303,6 +21251,8 @@ var WORD_ROWS = Object.freeze([
   ["standards.index.only_an_owner_of_the", "only an owner of the project its source material is filed in may release it. Nothing was written.", null, null, false, "code"],
   ["standards.index.period_starts_after_captures", "the period starts after the earlier capture and on or before the later one: it rests on the captures, never on an enactment date", null, null, false, "code"],
   ["standards.index.proposal_stored_no_text", " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).", null, null, false, "code"],
+  ["standards.index.proposed_force_moves_no_answer", "this is a proposed force and not a force: it moves no answer until a member confirms it naming this proposal", null, null, false, "code"],
+  ["standards.index.read_names_the_member_reading", "a read names the member reading; an absent viewer is neither an administrator nor the public", null, null, false, "code"],
   ["standards.index.sid_is_held_held_without", "{sid} is held {held}, without its text, so nothing is read from its words. Nothing was written.", null, null, false, "code"],
   ["standards.index.sid_is_v1_seen_by", "{sid} is {v1}seen by every member of your team. Nothing was written.", null, null, false, "code"],
   ["standards.index.side_is_held_passage", "'s {side} is a held passage {passage: content id} or an enactment event {event: EVT-\u2026, edge: start or end}", null, null, false, "code"],
@@ -40678,7 +40628,7 @@ var Members = class _Members {
         detail: localize("membership.index.the_founding_administrator_holds_admin", "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the remedy is at the hosting account (section 4.6). Nothing was written.")
       };
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
-    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");
+    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, localize("member-roster.index.resigning_administrator_status", "resigning administrator status"));
     const admins = this.activeAdmins();
     if (admins.length <= 1)
       return _Members.#rowRefusal(
@@ -40944,7 +40894,7 @@ var Members = class _Members {
         ok: false,
         reason: "NOT_DECLARED",
         label: lab,
-        detail: "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation."
+        detail: localize("member-roster.index.this_member_has_not_declared", "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation.")
       };
     if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
     if (withdraw && cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
@@ -41109,11 +41059,11 @@ var Members = class _Members {
    *  standing cannot use this op to enumerate the roster. */
   memberCaps({ memberId, capabilities, by } = {}) {
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.setting_a_members_capabilities", "setting a member's capabilities"));
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);
     const want = Array.isArray(capabilities) ? capabilities : null;
-    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: localize("member-roster.index.capabilities_is_an_array", "capabilities is an array") };
     if (want.includes("administer") || m.role === "admin")
       return {
         ok: false,
@@ -41136,7 +41086,7 @@ var Members = class _Members {
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.endorsing_a_proposed_administrator", "endorsing a proposed administrator"));
     const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);
     if (m.status !== "proposed") {
@@ -41261,7 +41211,7 @@ var Members = class _Members {
     expiresInDays = void 0,
     by = null
   } = {}) {
-    const barAdd = this.#custodialBar(by, "adding a member");
+    const barAdd = this.#custodialBar(by, localize("member-roster.index.adding_a_member", "adding a member"));
     if (barAdd) return barAdd;
     const label = typeof cover === "string" && cover.trim() ? cover : null;
     const refusal8 = (code, detail, extra) => {
@@ -41663,7 +41613,7 @@ var Members = class _Members {
    *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
    *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
   handleChange() {
-    return _Members.#handleFixed("a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.");
+    return _Members.#handleFixed(localize("member-roster.index.a_handle_is_chosen_when_a", "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written."));
   }
   /* R129, R144: HANDLE_FIXED is minted here alone; `handleChange` and a second `founderHandleSet` answer through it. */
   static #handleFixed(detail) {
@@ -41704,7 +41654,7 @@ var Members = class _Members {
     return { ok: true, handle: h };
   }
   memberSet({ memberId, status, by = null } = {}) {
-    const barSet = this.#custodialBar(by, "setting a member's status");
+    const barSet = this.#custodialBar(by, localize("member-roster.index.setting_a_members_status", "setting a member's status"));
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
@@ -41713,7 +41663,7 @@ var Members = class _Members {
     if (m.role === "admin" && status === "revoked")
       return refusal8(
         "ADMIN_REQUIRES_VOTE",
-        "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
+        localize("member-roster.index.an_administrator_is_removed_by", "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally.")
       );
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
     const now = (/* @__PURE__ */ new Date()).toISOString();
@@ -41785,7 +41735,7 @@ var Members = class _Members {
      (each word once, in the order given), or the refusal. */
   static #doorCapabilities(v, required) {
     if (v === void 0 || v === null) return required ? ["contribute"] : null;
-    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: localize("member-roster.index.capabilities_is_an_array", "capabilities is an array") };
     const bad = v.filter((c) => !_Members.CAPABILITIES.includes(c));
     if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad.map(_Members.#echo), known: _Members.CAPABILITIES };
     return [...new Set(v)];
@@ -41814,7 +41764,7 @@ var Members = class _Members {
   }
   /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
   inviteWithdraw({ memberId, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.withdrawing_an_invitation", "withdrawing an invitation"));
     const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);
     if (m.status !== "invited" || !m.invite_hash)
@@ -42102,7 +42052,7 @@ var Members = class _Members {
     const label = _Members.#doorCover(cover);
     if (!label) return _Members.#custodialRefusal(
       "NO_COVER",
-      "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written."
+      localize("member-roster.index.choose_the_name_the_team_will", "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written.")
     );
     if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
       return _Members.#rowRefusal(
@@ -42299,7 +42249,7 @@ var Members = class _Members {
   }
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.describing_the_team", "describing the team"));
     const refuse2 = (code, detail, extra) => _Members.#rowRefusal(code, localize("membership.index.detail_nothing_was_written", "{detail} Nothing was written.", { detail: String(detail) }), extra);
     if (!Array.isArray(kinds) || kinds.some((k) => !_Members.GROUP_KINDS.includes(k)))
       return refuse2("GROUP_KIND_UNKNOWN", localize("membership.index.the_kinds_are_a_list", "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.", { GROUP_KINDS: String(_Members.GROUP_KINDS.join(", ")) }));
@@ -42452,10 +42402,10 @@ var SENTENCE_KEYS2 = Object.freeze([
 // ../bio-plane/src/membership/index.mjs
 var MEMBERSHIP_EXEMPT_TABLES = MEMBER_EXEMPT_TABLES;
 var MEMBERSHIP_DECLARED_TABLES = MEMBER_DECLARED_TABLES;
+var MEMBER_ROSTER_CODES = new Set(Object.keys(MEMBER_ROSTER_ROWS.MEMBERSHIP_CHECKS));
 var WORD_KEYS2 = Object.freeze([.../* @__PURE__ */ new Set([
-  ...[MEMBERSHIP_CHECKS3, MEMBER_ID_CHECKS3, CUSTODIAL_CHECKS3, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS].flatMap((table2) => Object.keys(table2).map(rowKey)),
-  ...SENTENCE_KEYS2,
-  ...WORD_KEYS
+  ...[MEMBERSHIP_CHECKS3, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS].flatMap((table2) => Object.keys(table2).filter((code) => !MEMBER_ROSTER_CODES.has(code)).map(rowKey)),
+  ...SENTENCE_KEYS2
 ])]);
 var GATE_MARK = "/*viewer-gate*/";
 var MACHINE_VIEWER = new RegExp(`^${MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(admin|member|probe|daemon|ai)$`);
@@ -43548,7 +43498,7 @@ var Membership = class _Membership {
         check: row3.check,
         translation: row3.translation,
         handle,
-        detail: "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written."
+        detail: localize("membership.index.the_member_named_holds_no", "the member named holds no participation in this project, so there is nobody to remove (7.7). Nothing was written.")
       };
     }
     if (p.owner) return {

@@ -39,6 +39,7 @@ var WORD_ROWS = Object.freeze([
   ["workbooks.recomputed", "not recomputed here", null, null, false, "design"],
   ["sheet-worker.contract.loading_the_workbook_took_longer", "loading the workbook took longer than the time budget, so evaluation was not started", null, null, false, "code"],
   ["sheet-worker.contract.no_capture_with_that_sha_in", "no capture with that sha in that store", null, null, false, "code"],
+  ["sheet-worker.contract.recompute_is_not_enabled_here", "workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member", null, null, false, "code"],
   ["sheet-worker.contract.store_must_be_named_this", "store must be named: this member reads a capture from one namespace and guesses none", null, null, false, "code"],
   ["sheet-worker.contract.the_engine_did_not_load", "the engine did not load as the pinned build, so no workbook is recomputed", null, null, false, "code"],
   ["sheet-worker.contract.the_engine_refused_or_failed", "the engine refused or failed on this workbook", null, null, false, "code"],
