@@ -22919,6 +22919,324 @@
    "en": "Copy them exactly, or choose the document that holds them. Nothing was written.",
    "protected": false,
    "note": "DEC-357: B363 Q1 (SCREENS-SETTINGS #7, grouprules R61; local-facts R18 rulefields): the rule-drafting form's fields"
+  },
+  {
+   "key": "wizard-scripts.names.comment_for_team",
+   "en": "Comment for the team",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): data.mjs:55; translator: Name of a Civicsmith script (library). No placeholders."
+  },
+  {
+   "key": "wizard-scripts.names.update_team_civicsmith",
+   "en": "Update your team's Civicsmith",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): data.mjs:59; translator: Name of a Civicsmith update script. No placeholders."
+  },
+  {
+   "key": "wizard-scripts.refusal.proposal_why_length",
+   "en": "Say why in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1030; translator: Refusal detail when a proposal has no reason or it is too long. {max}: the longest allowed reason, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.submit_author_only",
+   "en": "Only the author of a draft can submit it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1058; translator: Refusal detail shown when someone other than the draft author tries to submit it."
+  },
+  {
+   "key": "wizard-scripts.refusal.widen_not_approved",
+   "en": "This version is {state}. Only an approved project script can be offered team-wide. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1090; translator: Refusal detail when offering a script team-wide. {state}: the version's current state (e.g. draft, submitted, or \"of a retired script\" wording: a retired script)."
+  },
+  {
+   "key": "wizard-scripts.refusal.widen_admin_only",
+   "en": "Only an administrator can offer a script team-wide.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1092; translator: Refusal detail when a non-administrator tries to offer a script team-wide."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_not_submitted",
+   "en": "This version is {state}, not submitted. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1100; translator: Refusal detail when approving a version that is not awaiting approval. {state}: the version's current state, e.g. draft or approved."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_team_wide_admin_only",
+   "en": "Only an administrator can approve a team-wide script.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when a non-administrator tries to approve a team-wide script."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_owner_only",
+   "en": "Only an owner of the script's project can approve it.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1102; translator: Refusal detail when someone who does not own the project tries to approve a project script."
+  },
+  {
+   "key": "wizard-scripts.refusal.approve_not_own_work",
+   "en": "You wrote this version and nobody else has contributed to it, so another member needs to approve it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1106; translator: Refusal detail when the approver is the only member who worked on the version."
+  },
+  {
+   "key": "wizard-scripts.refusal.grant_admin_action",
+   "en": "granting the advanced wizard editor",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1131; translator: Fragment naming the action that needs an administrator; slotted into a \"not an administrator\" refusal. Keep as a lowercase phrase."
+  },
+  {
+   "key": "wizard-scripts.refusal.grant_no_such_member",
+   "en": "No member has that id. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1135; translator: Refusal detail when granting the advanced wizard editor to an unknown member id."
+  },
+  {
+   "key": "wizard-scripts.refusal.revoke_admin_action",
+   "en": "revoking the advanced wizard editor",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1154; translator: Fragment naming the action that needs an administrator; slotted into a \"not an administrator\" refusal. Keep as a lowercase phrase."
+  },
+  {
+   "key": "wizard-scripts.refusal.revoke_no_such_grant",
+   "en": "No editor grant has that id. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1157; translator: Refusal detail when revoking an advanced editor grant that does not exist."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_reason_length",
+   "en": "Give the reason in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1182; translator: Refusal detail when retiring or withdrawing without a reason or with one that is too long. {max}: the longest allowed reason, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_team_wide_admin_only",
+   "en": "Only an administrator can retire a team-wide script.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-administrator tries to retire a team-wide script."
+  },
+  {
+   "key": "wizard-scripts.refusal.retire_owner_only",
+   "en": "Only an owner of the script's project can retire it.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1187; translator: Refusal detail when a non-owner tries to retire a project script."
+  },
+  {
+   "key": "wizard-scripts.refusal.withdraw_author_only",
+   "en": "Only the author of a version can withdraw it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1201; translator: Refusal detail when someone other than the author tries to withdraw a version."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_no_help_field",
+   "en": "The assistant can't help word this field.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1528; translator: Refusal detail when the writing assistant is not offered for this field."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_tell_length",
+   "en": "Tell the assistant what to say, in 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1532; translator: Refusal detail when the request to the assistant is empty or too long. {max}: the longest allowed request, in characters."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_draft_unavailable",
+   "en": "The assistant can't draft this yet. Nothing was drafted and the field is unchanged.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1537; translator: Refusal detail when the writing assistant is not available yet."
+  },
+  {
+   "key": "wizard-scripts.refusal.use_owners_authors_only",
+   "en": "Only the owners of a script's project and its authors can see how it is used.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1586; translator: Refusal detail when someone else asks for a script's usage figures."
+  },
+  {
+   "key": "wizard-scripts.refusal.candidates_owners_admins_only",
+   "en": "Only project owners and administrators can see candidate scripts.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:1613; translator: Refusal detail when someone else asks for the list of candidate scripts."
+  },
+  {
+   "key": "wizard-scripts.refusal.steps_at_most",
+   "en": "A script can have at most {max} steps. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:163; translator: Refusal detail when a script has too many steps. {max}: the most steps allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.step_text_length",
+   "en": "The step's {field} text can be at most {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:174; translator: Refusal detail when step text is too long. {field}: the step field, \"what\" or \"why\"; {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_text_length",
+   "en": "A draft's text must be 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:178; translator: Refusal detail when a step's draft text is empty or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.side_trip_not_offered",
+   "en": "There is no script {script} on offer here to go to. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:266; translator: Refusal detail when a step's side trip points at a script that is not offered. {script}: the script id as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.side_trip_loops_back",
+   "en": "The side trip to {script} leads back to this script, so it would never return. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:276; translator: Refusal detail when a side trip would loop back. {script}: the script id the side trip goes to (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.needs_one_step",
+   "en": "A script needs at least one step.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:299; translator: Check finding shown when a script has no steps."
+  },
+  {
+   "key": "wizard-scripts.refusal.screen_unknown",
+   "en": "There is no screen {screen}.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:306; translator: Check finding when a step names a screen that does not exist. {screen}: the screen name as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.act_unknown",
+   "en": "The screen {screen} has no action {act}.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:309; translator: Check finding when a step names an action its screen does not offer. {screen}: the screen name; {act}: the action as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.step_needs_what_why",
+   "en": "This step needs to say what the member does and why.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:311; translator: Check finding when a step lacks its \"what\" or \"why\" text."
+  },
+  {
+   "key": "wizard-scripts.refusal.template_not_offered",
+   "en": "There is no filing template {template} on offer here.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:318; translator: Check finding when a step's draft names a missing filing template. {template}: the template id as given (first 80 characters)."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_text_length_check",
+   "en": "A draft's text must be 1 to {max} characters.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:319; translator: Check finding when a step's draft text is empty or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.assistant_never_helps_act",
+   "en": "The assistant can't help word the action {act}, because it can't be done by a machine or can't be undone.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:330; translator: Check finding when a step asks the assistant to help word an action it may not help with. {act}: the action name (internal action id)."
+  },
+  {
+   "key": "wizard-scripts.refusal.act_refused_to_machine",
+   "en": "The assistant can't take the action {act}. It can only place a labeled draft there.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:332; translator: Check finding when a machine-made step uses a restricted action. {act}: the action name."
+  },
+  {
+   "key": "wizard-scripts.warning.single_step",
+   "en": "This script has only one step.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:335; translator: Check warning shown when a script has a single step."
+  },
+  {
+   "key": "wizard-scripts.warning.duplicate_script",
+   "en": "An offered script already walks the same screens and actions.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:339; translator: Check warning when a script duplicates one already on offer."
+  },
+  {
+   "key": "wizard-scripts.refusal.no_such_script",
+   "en": "No wizard script has that id, or you can't see it.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:463; translator: Refusal detail when a script id is unknown or hidden from the viewer."
+  },
+  {
+   "key": "wizard-scripts.refusal.not_a_draft",
+   "en": "This version is {state}, past draft, so its steps are fixed. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:479; translator: Refusal detail when editing or withdrawing a version that is no longer a draft. {state}: the version's current state, e.g. submitted or approved."
+  },
+  {
+   "key": "wizard-scripts.refusal.civicsmith_read_only",
+   "en": "A Civicsmith script is read-only. Teams can't edit or retire it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:489; translator: Refusal detail when a team tries to change one of Civicsmith's own scripts."
+  },
+  {
+   "key": "wizard-scripts.refusal.script_already_retired",
+   "en": "This script was already retired.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when retiring an already retired script."
+  },
+  {
+   "key": "wizard-scripts.refusal.version_already_withdrawn",
+   "en": "This version was already withdrawn.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:495; translator: Refusal detail when withdrawing an already withdrawn version."
+  },
+  {
+   "key": "wizard-scripts.refusal.steps_at_most_recording",
+   "en": "A script can have at most {max} steps. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:865; translator: Refusal detail when a recording has too many steps. {max}: the most steps allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.draft_joined_only",
+   "en": "Only members who have joined the script's project can draft a script for it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:915; translator: Refusal detail when a non-participant tries to start a script draft."
+  },
+  {
+   "key": "wizard-scripts.refusal.name_length",
+   "en": "Name the script in one line of 1 to {max} characters. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:926; translator: Refusal detail when the script name is empty, multi-line or too long. {max}: the most characters allowed."
+  },
+  {
+   "key": "wizard-scripts.refusal.revise_author_only",
+   "en": "Only the author of a draft can revise it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): index.mjs:968; translator: Refusal detail when someone other than the author tries to revise a draft."
+  },
+  {
+   "key": "wizard-scripts.refusal.rumor_as_lead",
+   "en": "A rumor can't be proposed as a question. Propose it as a lead instead.",
+   "protected": false,
+   "note": "DEC-358: B365, reviewed from code (K3930): start.mjs:86; translator: Detail shown when a rumor part of a start is proposed as a question."
+  },
+  {
+   "key": "notice-producers.index.the_security_level_of_your",
+   "en": "The security level of your team's Civicsmith has been high since {from}, and in that time {got}.",
+   "protected": false,
+   "note": "DEC-358: B365; notice-producers R12 (T51-132); translator: {from} is a date and time, {got} says what was stopped in that time"
+  },
+  {
+   "key": "notice-producers.index.the_security_level_of_your_no_time",
+   "en": "The security level of your team's Civicsmith has been high, and in that time {got}.",
+   "protected": false,
+   "note": "DEC-358: B365; the same, when the moment it rose is not known"
+  },
+  {
+   "key": "screen.capture.a64.captured_by",
+   "en": "captured by {name}, {date}",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64 (T51-117): who captured the copy already held, and when; screen.document.capturedby adds the source"
+  },
+  {
+   "key": "screen.capture.a64.nothing_added",
+   "en": "nothing was added",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64: the held copy is unchanged, so the press added nothing"
+  },
+  {
+   "key": "screen.capture.a64.undetermined",
+   "en": "whether the site still gives the same document isn't known yet",
+   "protected": false,
+   "note": "DEC-358: B365; screens-intake A64: the record alone cannot tell; a member's check asks the site once"
   }
  ],
  "rewrite": {
