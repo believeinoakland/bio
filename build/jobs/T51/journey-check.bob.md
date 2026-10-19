@@ -41,3 +41,9 @@ Merge tranche/T51, run your suite (the local arm with the two screens still red 
 ## B5 · CHANGE
 
 CHANGE (K4107; SCREENS-INQUIRY #12 J7 (1)), adding to B4. The design no longer draws a "Passages" heading on `document` (DEC-229 replaced it by "Read it" with its tabs; since screens-inquiry's B5 the section is `document.read.title`). Your step at `investigation.mjs`:178, `requireWord(p, "screen.document.passages.head", ...)`, is stale: require `document.read.title` within `#cs-main` instead; the notice's passage on page 1 of the reading still holds. The other half of R1 (a)'s two screen failures, `dash-project` from Home's door drawing "Nothing is here", is screens-daily's (its R51, by CHANGE now); your step stays as it is. Post COMPLETE once B4 and this are both done.
+
+## B6 · CHANGE
+
+CHANGE (K4111, Bob's direction: the walk is expensive; it runs again only when every finding of its last run is fixed). Adding to B4 and B5:
+1. Do not run R1 (a) (or the six tests after it) yourself in this job: they stay accepted red by name until the completion round's last merge, when BOB runs the walk once. Prove each change of B4 and B5 with your module's own tests: R27's scan given a page holding a profile value read from the Oakland fixture and a vendor name reports neither, and still reports a hard-coded sentence (the control); the document step requires `document.read.title`.
+2. In your COMPLETE, list every finding group of the last run (K4105: R27 on `elsewhere` and `places` profile values, R27 on `setup` vendor names, R27 on `setup` scanner catalogue labels (file-scanner's CR-17, not yours), `investigation.mjs`:422's fixture text, `document`'s heading, `dash-project` from Home (screens-daily, merged)) and, for each one yours, the test that covers it; say if you know of any other finding of that run you have not covered.
