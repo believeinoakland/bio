@@ -15797,10 +15797,13 @@ var WORD_ROWS = Object.freeze([
   ["ai-accounts.index.a_members_own_sign_in", "a member's own sign-in serves a project only while that member is its only participant, and this project has others (owners included); it can hold an Anthropic API key instead. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.a_sign_ins_token_is", "a sign-in's token is {min} to {max} characters, and this was not one. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.keeping_material_away_from_the", "keeping material away from the assistant is turned on only with a reason of {min} to {max} characters, which every member reads{v1}. Nothing was changed.", null, null, false, "code"],
+  ["ai-accounts.index.keeping_the_teams_material_away", "keeping the team's material away from every assistant", null, null, false, "code"],
   ["ai-accounts.index.no_key_or_token_was", "no key or token was given. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.only_an_active_member_is", "only an active member is connected through their subscription. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.only_an_active_member_or", "only an active member, or the founder, holds a sign-in. Nothing was recorded.", null, null, false, "code"],
   ["ai-accounts.index.only_that_the_member_is", "only that the member is connected is recorded here; this call carried more than the member, and none of it is kept. Nothing was recorded.", null, null, false, "code"],
+  ["ai-accounts.index.reading_the_team_keys_assistant", "reading the team key's assistant settings", null, null, false, "code"],
+  ["ai-accounts.index.switching_the_team_keys", "switching the team key's assistant settings", null, null, false, "code"],
   ["ai-accounts.index.the_account_used_for_this", "the account used for this act is {name} Claude account, and its switch for {use} is off; the act does not move to another account. Nothing was used.", null, null, false, "code"],
   ["ai-accounts.index.the_claude_sign_in_that", "the Claude sign-in that serves this act is not held: it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. Nothing was used.", null, null, false, "code"],
   ["ai-accounts.index.the_key_could_not_be", "the key could not be sealed by your team's Civicsmith. Nothing was stored or read.", null, null, false, "code"],
@@ -15815,6 +15818,7 @@ var WORD_ROWS = Object.freeze([
   ["ai-accounts.index.this_member_has_not_yet", "this member has not yet read the notice that their questions go to Anthropic under the team's API account. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.this_member_has_not_yet_2", "this member has not yet read the notice that their questions go to Anthropic under this project's API account. Nothing was sent.", null, null, false, "code"],
   ["ai-accounts.index.this_member_holds_no_claude", "this member holds no Claude account reference of their own. Nothing was used or written.", null, null, false, "code"],
+  ["ai-accounts.index.this_one_has", "; this one has {length}", null, null, false, "code"],
   ["ai-accounts.index.this_project_holds_no_claude", "this project holds no Claude account. Nothing was written.", null, null, false, "code"],
   ["ai-accounts.index.what_takes_map_nothing_was", "{what} takes {map}. Nothing was changed.", null, null, false, "code"],
   ["ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.", null, null, false, "code"],
@@ -16687,13 +16691,64 @@ var WORD_ROWS = Object.freeze([
   ["credentials.checks.a_credential_that_acts_for", "A credential that acts for one member acts for the member who creates it, and nobody else. You named another member, and nobody can authorise an agent in someone else's name: it would see what they see and its work would be recorded as theirs. Nothing was created. The member it should act for can create it themselves.", null, null, false, "code"],
   ["credentials.checks.an_agent_credential_has_to", "An agent credential has to say who stands behind it: the organisation as a whole, or one named member. The two carry different accountability and they see different things, so the record will not hold one that says neither.", null, null, false, "code"],
   ["credentials.checks.only_a_named_person_signed", "Only a named person signed in to your team's Civicsmith can create an agent credential. Deciding what an automated worker is allowed to reach is a judgement somebody has to be accountable for, so an automated worker cannot make it \u2014 not even about itself.", null, null, false, "code"],
+  ["credentials.index.a_member_changes_their_own", "a member changes their own password from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.a_member_registers_their", "a member registers their own signing key from their own signed-in session. A machine credential, the operator's bearer and an unstamped call have no member behind them to hold one; an administrator registers a key for a member with op=signeradd. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.a_member_scoped_credential", "a member-scoped credential acts for the member who mints it, and '{principalMember}' is not '{minter}'. A member cannot authorise an agent in another member's name. Nothing was written.", null, null, false, "code"],
   ["credentials.index.a_reset_link_is_made", "a reset link is made only for an active member of the team. Nothing was made.", null, null, false, "code"],
+  ["credentials.index.a_run_in_a_project", "a run in a project", null, null, false, "code"],
+  ["credentials.index.a_runs_credential_holds", "a run's credential holds a non-empty list of the runner's writes, each one of {writes}, and this was not one. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.a_runs_credential_is", "a run's credential is minted only for an active member's own run. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.a_runs_credential_names", "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted.", null, null, false, "code"],
   ["credentials.index.a_runs_credential_names_the", "a run's credential names the project the run was opened in as a non-empty string, or names none, and this was neither. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.a_standing_question_runs", "a standing question runs only for an active member. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.an_asks_grant_admits", "an ask's grant admits only the reads on its list, and '{op}'{write} is not one. Nothing was read.", null, null, false, "code"],
+  ["credentials.index.an_asks_grant_is", "an ask's grant is minted only under the member's own live session. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.empty_nothing_was", "{empty}. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.expected_the_base64_field", "expected the base64 field of an ssh-ed25519 public key", null, null, false, "code"],
+  ["credentials.index.expiresindays_is_a", "expiresInDays is a whole number of days from {min} to {max}, {default} when it is left out, and this was not one. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.from_is_before_the", "from is before the counts kept, which go back {days} days", null, null, false, "code"],
+  ["credentials.index.from_is_not_an", "from is not an instant", null, null, false, "code"],
+  ["credentials.index.from_is_not_before", "from is not before to", null, null, false, "code"],
   ["credentials.index.id_already_names_a_credential", "'{id}' already names a credential in your team's Civicsmith. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.", null, null, false, "code"],
   ["credentials.index.memberid_has_not_enrolled_status", "{memberId} has not enrolled: status '{status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one your team's Civicsmith would refuse. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.memberid_is_on_the", "{memberId} is on the roster with status '{status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.minted_by_your_teams_civicsmith", "minted by your team's Civicsmith for one segment of your run", null, null, false, "code"],
   ["credentials.index.no_credential_in_your_teams", "no credential in your team's Civicsmith is called '{v1}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.", null, null, false, "code"],
+  ["credentials.index.no_digest_of_the", "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value generated when the credential was asked for), so there is nothing a lookup could ever find this credential by. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.no_live_grant_answers", "no live grant answers to this token: it expired, its session ended, or it never existed. Nothing was read.", null, null, false, "code"],
+  ["credentials.index.no_live_session_answers", "no live session answers to this token: it ended, it expired, or it never existed. Nothing was ended.", null, null, false, "code"],
+  ["credentials.index.no_member_is_named", "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.", null, null, false, "code"],
+  ["credentials.index.no_member_is_named_2", "no member is named on this act, and a withdrawal nobody authored is not one.", null, null, false, "code"],
+  ["credentials.index.no_password_was_set", "no password was set and nothing was written. Either that role holds no recovery code, or the code given is not one of its unspent codes, or the role is not an active member's now. Which of those happened is not said: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold codes.", null, null, false, "code"],
+  ["credentials.index.no_standing_question_was", "no standing question was named. Nothing was minted.", null, null, false, "code"],
+  ["credentials.index.pass_an_identity", "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.", null, null, false, "code"],
+  ["credentials.index.period_refused_detail", "{what}. {rule} Nothing was read.", null, null, false, "code"],
+  ["credentials.index.principalkind_was", "principalKind was '{kind}'. It is 'organisation' (the key acts for the team, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.", null, null, false, "code"],
+  ["credentials.index.recovery_codes_are_issued", "recovery codes are issued to an active member for their own account, from their own signed-in session. Nothing was issued.", null, null, false, "code"],
+  ["credentials.index.registered_to_you_and", "registered to you, and it attests as any registered key does. Every administrator is told of the registration, and any of them can revoke the key.", null, null, false, "code"],
+  ["credentials.index.setting_the_teams_key", "setting the team's key for an outside service", null, null, false, "code"],
+  ["credentials.index.sign_in_refused", "no session was issued and nothing was written. Either no active credential is held under that role \u2014 a role that was never registered and one whose membership is no longer active are the same answer here \u2014 or a credential is stored and the password supplied does not derive its stored hash. The password itself is never kept, only a salted derivation of it, so that is the only comparison there is to make. Which of those happened, the record does not say: it is one answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.", null, null, false, "code"],
+  ["credentials.index.standing_questions_are_off", "standing questions are off for the {who}, which would serve this one. Nothing was minted.", null, null, false, "code"],
   ["credentials.index.string_is_a_machine_identity", "'{String}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.", null, null, false, "code"],
   ["credentials.index.string_is_a_machine_identity_2", "'{String}' is a machine identity. The row carries revoked_by, and a machine name there would record the team withdrawing an authority nobody in the team decided to withdraw.", null, null, false, "code"],
+  ["credentials.index.switching_the_teams_key", "switching the team's key for an outside service", null, null, false, "code"],
+  ["credentials.index.the_current_password_given", "the current password given does not derive the hash stored for this account, so the password was not changed. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.the_keyed_services_are", "the keyed services are {services}, and {prefix}<tool id> for each security tool. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.the_kinds_counted_are", "the kinds counted are {kinds}. Nothing was counted.", null, null, false, "code"],
+  ["credentials.index.the_period_is_from", "The period is from an earlier instant to a later one, at most {days} days long and inside the last {days} days.", null, null, false, "code"],
+  ["credentials.index.the_period_is_from_2", "The period is from an earlier instant to a later one.", null, null, false, "code"],
+  ["credentials.index.the_period_is_longer", "the period is longer than {days} days", null, null, false, "code"],
+  ["credentials.index.the_security_counts_could", "the security counts could not be read, so no figure is given: they are absent, never zero. Nothing was read.", null, null, false, "code"],
+  ["credentials.index.the_teams_key_for", "the team's key for this service is off or not held; the caller goes on without it.", null, null, false, "code"],
+  ["credentials.index.this_act_asks_for", "this act asks for the password again, and it was not given in the last {minutes} minutes. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.this_key_is_already", "this key is already registered to you and active; nothing was written. Every administrator is told of the registration, and any of them can revoke the key.", null, null, false, "code"],
+  ["credentials.index.this_key_is_registered", "this key is registered to another member of this team, and a registered key is never rebound by its own member's act. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.this_key_of_yours", "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written.", null, null, false, "code"],
+  ["credentials.index.this_reset_link_does", "this reset link does not work: it was used, it expired, a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.this_session_is_locked", "this session is locked after a while without use: only unlocking it with the password, or signing out, is served. Nothing was changed.", null, null, false, "code"],
+  ["credentials.index.to_is_after_the", "to is after the present hour", null, null, false, "code"],
+  ["credentials.index.to_is_not_an", "to is not an instant", null, null, false, "code"],
+  ["credentials.index.too_many_attempts_were", "too many attempts were refused recently, so this one was not judged: no password, code or claim was checked and nothing changed. Try again later.", null, null, false, "code"],
   ["doc-clean.images.a_malformed_referred_to_count", "a malformed referred-to count", null, null, false, "code"],
   ["doc-clean.images.a_segment_longer_than_the_stream", "a segment longer than the stream", null, null, false, "code"],
   ["doc-clean.images.a_segment_of_unstated_length", "a segment of unstated length", null, null, false, "code"],
@@ -18075,6 +18130,38 @@ var WORD_ROWS = Object.freeze([
   ["machinery-producers.index.words_the_request_expired_at", "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.", null, null, false, "code"],
   ["machinery-producers.index.words_the_request_is_held", "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.", null, null, false, "code"],
   ["machinery-producers.index.your_teams_civicsmith_signed_the", "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.", null, null, false, "code"],
+  ["member-roster.index.a_cover_is_the_label_you", "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name", null, null, false, "code"],
+  ["member-roster.index.a_listener_names_the_module", "a listener names the module that registers it and its function", null, null, false, "code"],
+  ["member-roster.index.changing_the_join_link", "changing the join link", null, null, false, "code"],
+  ["member-roster.index.changing_the_teams_join_link", "changing the team's join link", null, null, false, "code"],
+  ["member-roster.index.changing_the_teams_website_key", "changing the team's website key", null, null, false, "code"],
+  ["member-roster.index.changing_the_website_key", "changing the website key", null, null, false, "code"],
+  ["member-roster.index.choosing_whether_members_are_told", "choosing whether members are told what a court can reach", null, null, false, "code"],
+  ["member-roster.index.confirming_or_withdrawing_a_members_declared", "confirming or withdrawing a member's declared expertise", null, null, false, "code"],
+  ["member-roster.index.creating_the_teams_website_key", "creating the team's website key", null, null, false, "code"],
+  ["member-roster.index.declared_and_unconfirmed_which_costs_nothing", "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one", null, null, false, "code"],
+  ["member-roster.index.every_existing_administrator_must_endorse", "every existing administrator must endorse an addition beyond the second", null, null, false, "code"],
+  ["member-roster.index.lowercase_letters_digits_and_dashes", "lowercase letters, digits and dashes, 2 to 41 characters", null, null, false, "code"],
+  ["member-roster.index.module_has_already_registered_its_listener", "{module} has already registered its listener", null, null, false, "code"],
+  ["member-roster.index.reading_the_administrator_removals_under_way", "reading the administrator removals under way", null, null, false, "code"],
+  ["member-roster.index.reading_the_teams_website_key_and", "reading the team's website key and join link", null, null, false, "code"],
+  ["member-roster.index.recording_who_holds_hosting_access", "recording who holds hosting access (4.8)", null, null, false, "code"],
+  ["member-roster.index.removals_are_recorded_with_a_reason", "removals are recorded with a reason", null, null, false, "code"],
+  ["member-roster.index.replacing_the_join_link", "replacing the join link", null, null, false, "code"],
+  ["member-roster.index.replacing_the_teams_join_link", "replacing the team's join link", null, null, false, "code"],
+  ["member-roster.index.switching_off_the_join_link", "switching off the join link", null, null, false, "code"],
+  ["member-roster.index.switching_off_the_teams_join_link", "switching off the team's join link", null, null, false, "code"],
+  ["member-roster.index.switching_off_the_teams_website_key", "switching off the team's website key", null, null, false, "code"],
+  ["member-roster.index.switching_off_the_website_key", "switching off the website key", null, null, false, "code"],
+  ["member-roster.index.switching_on_the_teams_join_link", "switching on the team's join link", null, null, false, "code"],
+  ["member-roster.index.the_registration_could_not_be_read", "the registration could not be read: {reason}", null, null, false, "code"],
+  ["member-roster.index.the_target_is_counted_in_the", "the target is counted in the denominator but does not vote", null, null, false, "code"],
+  ["member-roster.index.this_listener_is_already_registered", "this listener is already registered, and it takes one registration", null, null, false, "code"],
+  ["member-roster.index.this_listener_is_already_registered_by", "this listener is already registered by {holder}, and it takes one registration", null, null, false, "code"],
+  ["member-roster.index.voting_to_remove_an_administrator", "voting to remove an administrator", null, null, false, "code"],
+  ["member-roster.order-build.line_have_the_file_gives", "line {v1}: have {stringify}, the file gives {stringify_2}", null, null, false, "code"],
+  ["member-roster.order-build.out_is_stale", "member-roster: {out} is stale: {d}\n", null, null, false, "code"],
+  ["member-roster.order-build.the_generated_list_is_absent", "the generated list is absent", null, null, false, "code"],
   ["membership.index.a_door_makes_at_most", "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written.", null, null, false, "code"],
   ["membership.index.a_member_joins_a_project", "a member joins a project they were invited to. Being uninvited is not a refusal you can see.", null, null, false, "code"],
   ["membership.index.a_member_row_already_holds", "a member row already holds the id '{memberId}'; nothing was written", null, null, false, "code"],
@@ -18082,6 +18169,7 @@ var WORD_ROWS = Object.freeze([
   ["membership.index.act_acts_on_the_teams_2", "{act} acts on the team's join link, and it is off. Nothing was written.", null, null, false, "code"],
   ["membership.index.act_on_string_is_work", "{act} on {String} is work inside that project, and {who} has not joined it (\xA77.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (\xA74.9, \xA77). Nothing was written.", null, null, false, "code"],
   ["membership.index.adding_an_administrator_beyond_the", "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it.", null, null, false, "code"],
+  ["membership.index.adding_an_owner_to_a_project_whose_owners", "adding an owner to a project whose owners are all inactive (7.13)", null, null, false, "code"],
   ["membership.index.administrator_status_is_granted_and", "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.", null, null, false, "code"],
   ["membership.index.an_administrator_may_add_an", "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.", null, null, false, "code"],
   ["membership.index.an_invitation_lasts_a_whole", "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.", null, null, false, "code"],
@@ -18122,6 +18210,7 @@ var WORD_ROWS = Object.freeze([
   ["membership.index.this_invitation_is_not_live", "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.", null, null, false, "code"],
   ["membership.index.this_key_opens_no_door", "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.", null, null, false, "code"],
   ["membership.index.this_link_opens_no_door", "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.", null, null, false, "code"],
+  ["membership.index.this_project_has_no_owner_rows", "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one", null, null, false, "code"],
   ["membership.index.this_project_is_discoverable_and", "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 \xA77.14).", null, null, false, "code"],
   ["membership.index.this_project_is_hidden_and", "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 \xA77.9).", null, null, false, "code"],
   ["membership.index.too_many_handles_were_checked", "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed.", null, null, false, "code"],
@@ -18129,8 +18218,6 @@ var WORD_ROWS = Object.freeze([
   ["membership.index.whether_a_pairing_is_published", "whether a pairing is published is the member's own decision or an administrator's (section 3). Nothing was written.", null, null, false, "code"],
   ["membership.index.whether_string_can_be_found", "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 \xA77.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.", null, null, false, "code"],
   ["membership.index.whether_this_projects_own_rules", "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written.", null, null, false, "code"],
-  ["membership.order-build.line_v1_have_stringify_the", "line {v1}: have {stringify}, the file gives {stringify_2}", null, null, false, "code"],
-  ["membership.order-build.membership_out_is_stale_d", "membership: {out} is stale: {d}\n", null, null, false, "code"],
   ["money-checks.index.money_could_not_answer_message", "money could not answer: {message}", null, null, false, "code"],
   ["money.index.a_chain_of_authority_is", "a chain of authority is read for one money fact (MNY-...)", null, null, false, "code"],
   ["money.index.a_code_names_one_of", "a code names one of the active profiles' classification schemes{v1} and its code", null, null, false, "code"],
@@ -18370,13 +18457,27 @@ var WORD_ROWS = Object.freeze([
   ["project-roster.index.a_projects_requests_to_join", "a project's requests to join are seen by the requester, the project's owners and administrators (Membership Architecture v2 \xA77.14), and not by other participants: a pending requester is not a participant (\xA77.8). Your own requests are read without naming a project.", null, null, false, "code"],
   ["project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 \xA77.14; only owners invite, \xA77.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.a_stake_is_a_members", "a stake is a member's own words, set by a signed-in member. Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.an_unnamed_caller", "an unnamed caller", null, null, false, "code"],
+  ["project-roster.index.approval_rule_is_not_valid", "rule {n} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.approval_rules_are_a_list", "the rules are a list, empty to restore one member's approval. Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.approval_set_needs_a_reason", "a project's approval setting is set with a reason of at most {max} characters. Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.approval_set_needs_an_owner", "only an owner of this project sets which of its acts need a second member's approval", null, null, false, "code"],
   ["project-roster.index.asking_to_join_a_project", "asking to join a project is a signed-in member's own act (Membership Architecture v2 \xA77.14). A credential with no active member behind it asks nothing. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.detail_a_request_is_open", "{detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going hidden (Membership Architecture v2 \xA77.14), and each of those closes it for good; the member may ask again.", null, null, false, "code"],
   ["project-roster.index.detail_a_request_to_join", "{detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who asked, signed in as themselves (Membership Architecture v2 \xA77.14), and a machine credential, the operator's bearer and the member bearer have nobody behind them to ask.", null, null, false, "code"],
   ["project-roster.index.granted_as_an_invitation_the", "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4).", null, null, false, "code"],
   ["project-roster.index.one_member_approves_every_act", "one member approves every act, the default.", null, null, false, "code"],
   ["project-roster.index.one_owner_is_the_floor", "one owner is the floor, so the last owner of a project is not removable. Add another owner first, or deactivate the project (7.11).", null, null, false, "code"],
+  ["project-roster.index.owner_add_needs_an_owner", "only an owner of this project may propose another owner of it", null, null, false, "code"],
+  ["project-roster.index.owner_add_needs_every_owner", "every existing owner must agree to an addition beyond the second", null, null, false, "code"],
+  ["project-roster.index.owner_must_be_joined_first", "an owner is a joined participant with the owner flag, so the member joins the project first", null, null, false, "code"],
+  ["project-roster.index.owner_remove_needs_a_reason", "ownership changes are recorded with a reason", null, null, false, "code"],
+  ["project-roster.index.owner_remove_needs_an_owner", "only an owner of this project votes on its ownership", null, null, false, "code"],
+  ["project-roster.index.owner_remove_target_cannot_vote", "the target is counted in the denominator but does not vote", null, null, false, "code"],
   ["project-roster.index.removing_this_owner_would_leave", "removing this owner would leave only owners who have asked to leave ({map}), so nobody would be committed to the project. Add another owner first (7.10), or deactivate the project (7.11). Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.rescue_needs_a_reason", "authority changes are recorded with a reason", null, null, false, "code"],
+  ["project-roster.index.scope_needs_a_hidden_project", "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written.", null, null, false, "code"],
+  ["project-roster.index.scope_set_needs_a_reason", "a project's scope is set with a reason of at most {max} characters. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.stringify_has_no_open_request", "{stringify} has no open request to join this project, so there is nothing to answer. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.stringify_is_already_a_participant", "{stringify} is already a participant of this project, so a grant would invite nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.stringify_is_not_a_kind", "{stringify} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.", null, null, false, "code"],
@@ -18397,6 +18498,8 @@ var WORD_ROWS = Object.freeze([
   ["project-roster.index.you_can_already_see_this", "you can already see this project, so there is nothing to ask: a participant is already in it (an invited one joins by the checkbox, \xA77.4), and an administrator's sight of a project is not a position in it (\xA77.3). Nothing was written.", null, null, false, "code"],
   ["project-roster.index.you_have_no_open_request", "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written.", null, null, false, "code"],
   ["project-roster.index.your_request_is_open_the", "your request is open. The project's owners answer it; until they do it stays open.", null, null, false, "code"],
+  ["promotion.gate.capture_absent_from_bucket", "registered capture is absent from the working bucket", null, null, false, "code"],
+  ["promotion.gate.capture_bytes_differ", "capture bytes differ from the register", null, null, false, "code"],
   ["promotion.gate.registered_capture_is_held_in", "registered capture is held in parts, and {why}, so no part could be verified", null, null, false, "code"],
   ["promotion.gate.registered_capture_is_held_in_2", "registered capture is held in parts, and {length} of the {length_2} parts the record names are not in the working bucket: {label}", null, null, false, "code"],
   ["promotion.gate.registered_capture_is_held_in_3", "registered capture is held in parts, and the stored size or digest of {length} disagrees with the record: {label}", null, null, false, "code"],
@@ -18406,9 +18509,11 @@ var WORD_ROWS = Object.freeze([
   ["promotion.gate.the_case_document_catalogue_could", "the case-document catalogue could not judge this document, so it is not passed: {String}", null, null, false, "code"],
   ["promotion.index.cut_was_produced_by_cut", "{cut} was produced by '{cut_2}' and this revision says '{cut_3}'. A revision changes what a document says, never whose it is. Send it again with the team the record holds, or with none. Nothing was written.", null, null, false, "code"],
   ["promotion.index.empty_neither_text_a_string", "{empty}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.", null, null, false, "code"],
+  ["promotion.index.project_needs_name", "a project needs a name, and it must be unique across your team's Civicsmith", null, null, false, "code"],
   ["promotion.index.the_base_this_revision_names", "the base this revision names is not the record's current version: someone else changed it since it was read. Nothing was written.", null, null, false, "code"],
   ["promotion.index.the_sha256_sent_for_map", "the sha256 sent for {map} is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.", null, null, false, "code"],
   ["promotion.index.this_store_records_no_producing", "this store records no producing team, and this creation names none \u2014 neither a group: line in its bundle.md nor a team in its meta. The record does not supply one. Nothing was created.", null, null, false, "code"],
+  ["promotion.names.give_project_title_unique", "give the project a title unique across your team's Civicsmith", null, null, false, "code"],
   ["promotion.text.rel_rel_target_target_status", '  - rel: {rel}\n    target: {target}\n    status: {status}\n    note: "{v1}"', null, null, false, "code"],
   ["promotion.text.text_session_log_entry", "{text}\n## Session Log\n\n{entry}", null, null, false, "code"],
   ["provenance-routes.checks.only_a_captured_document_travelled", "Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt.", null, null, false, "code"],
@@ -18710,16 +18815,23 @@ var WORD_ROWS = Object.freeze([
   ["record-core.checks.a_part_of_your_teams_9", "A part of your team's Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. {BUILD_FAULT}", null, null, false, "code"],
   ["record-core.checks.the_setting_was_not_changed", "The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.", null, null, false, "code"],
   ["record-core.index.a_counts_registration_names_its", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.a_draft_of_a_new", "a draft of a new edition's statement of what changed", null, null, false, "code"],
   ["record-core.index.a_grammar_names_its_module", "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.a_lease_is_taken_under", "a lease is taken under a named actor \u2014 a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.", null, null, false, "code"],
   ["record-core.index.a_mint_seed_names_its", "a mint seed names its module and a list of [prefix, table, column] sources, each three non-empty strings; nothing was registered.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_under", "a setting is recorded under a name, and none was given; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_with", "a setting is recorded with who set it, and no one was named; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded.", null, null, false, "code"],
+  ["record-core.index.a_settings_value_is_stored", "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.a_statistics_source_names_its", "a statistics source names its module and is a function; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.a_store_gate_names_its", "a store gate names its module, a table that module declared and a check to run; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.a_store_gate_names_its_2", "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).", null, null, false, "code"],
+  ["record-core.index.an_expunge_is_a_members", "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.", null, null, false, "code"],
   ["record-core.index.an_expunge_names_one_of", "an expunge names one of the grounds unlawful, confidential, court_order (with the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.", null, null, false, "code"],
   ["record-core.index.an_opaque_id_to_record", "an opaque id to record is a non-empty string; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.an_what_names_its_module", "an {what} names its module{v1} and is a function; nothing was registered.", null, null, false, "code"],
   ["record-core.index.applied_of_count_item_s", "{applied} of {count} item(s) applied and {retained} RETAINED; each retained item in items[] carries its own act's reason. The applied items stand \u2014 this is not a rollback.", null, null, false, "code"],
+  ["record-core.index.every_one_of_the_count", "every one of the {count} item(s) was applied, each by op={act}'s own rules.", null, null, false, "code"],
   ["record-core.index.gated_ids_are_minted_by", "{gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid allocates only a prefix whose objects every caller may see. Nothing was allocated.", null, null, false, "code"],
   ["record-core.index.id_is_already_in_the", "{id} is already in the opaque-id ledger, or the ledger could not confirm it free; an id is recorded once and never handed out again. Nothing was recorded.", null, null, false, "code"],
   ["record-core.index.id_was_not_recorded_an", "{id} was not recorded: an opaque id is recorded inside the transaction of the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.", null, null, false, "code"],
@@ -20842,11 +20954,11 @@ var ENQUIRE_MODE = Object.freeze({
   bounds: "ASK_BOUNDS (R17), declared when the interview starts"
 });
 function draftMayRead(asked3) {
-  const at7 = (k) => own(asked3, k) ? asked3[k] : null;
-  const firsthand = at7("firsthand");
+  const at8 = (k) => own(asked3, k) ? asked3[k] : null;
+  const firsthand = at8("firsthand");
   if (!(firsthand == null || firsthand === false)) return false;
-  const kind = at7("kind");
-  return kind === "own_words" && at7("suggestions") === true || kind === "infractiondraft" || kind === "bearingdraft";
+  const kind = at8("kind");
+  return kind === "own_words" && at8("suggestions") === true || kind === "infractiondraft" || kind === "bearingdraft";
 }
 var RUN_MODES = Object.freeze([...DEPLOYMENT_SEQUENCE.order]);
 var CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
@@ -21233,18 +21345,18 @@ function nothingWrittenGuard(s, decision) {
 }
 function tableStep(state) {
   const s = state || {};
-  const at7 = String(s.step || FIRST_STEP);
-  const row3 = CONTROL_FLOW[at7];
-  if (!row3) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row", "'{at}' is not a row in this table", { at: String(at7) }), bound: "completed" };
-  if (at7 === "gate-mode") return gateStep(s);
+  const at8 = String(s.step || FIRST_STEP);
+  const row3 = CONTROL_FLOW[at8];
+  if (!row3) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row", "'{at}' is not a row in this table", { at: String(at8) }), bound: "completed" };
+  if (at8 === "gate-mode") return gateStep(s);
   const stopped = stopBecause(s);
-  if (stopped && at7 !== "close")
+  if (stopped && at8 !== "close")
     return {
       step: "close",
       bound: stopped,
       why: stopped === "completed" ? localize("agent-harness.harness.pass_of_passlimit_passes_are", "{pass} of {passLimit} passes are done; the loop's termination is the table's and not the model's", { pass: String(s.pass), passLimit: String(passLimit(s.maxPasses)) }) : localize("agent-harness.harness.the_stopped_budget_is_spent", "the '{stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where", { stopped: String(stopped) })
     };
-  switch (at7) {
+  switch (at8) {
     case "resume":
       if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
         return {
@@ -21305,7 +21417,7 @@ function tableStep(state) {
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition", "'{at}' has no transition", { at: String(at7) }), bound: "completed" };
+  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition", "'{at}' has no transition", { at: String(at8) }), bound: "completed" };
 }
 function advance(state, decision) {
   const s = state || {};
@@ -21361,9 +21473,9 @@ function publishableState(state, limit, flow = CONTROL_FLOW) {
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at7 = flow === PLAN_FLOW ? full.step === "close" ? "close" : "read" : STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const at8 = flow === PLAN_FLOW ? full.step === "close" ? "close" : "read" : STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
   const restart = resumableState({
-    step: at7,
+    step: at8,
     pass: full.pass,
     adjusted: false,
     passAdded: full.passAdded,
@@ -21373,7 +21485,7 @@ function publishableState(state, limit, flow = CONTROL_FLOW) {
     scope: full.scope,
     disagreed: full.disagreed
   });
-  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at7 } };
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at8 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
@@ -21386,15 +21498,15 @@ function resumeFrom(published, flow = CONTROL_FLOW) {
       state: null,
       basis: published == null ? localize("agent-harness.harness.the_run_publishes_no_state", "The run publishes no state it can be read back from, so this segment starts from the resume row") : localize("agent-harness.harness.the_runs_published_state_names", "The run's published state names no step yet, so this segment starts from the resume row")
     };
-  const at7 = String(p.step);
+  const at8 = String(p.step);
   const pass = Number(p.pass);
-  if (!resumeTargets(flow).includes(at7) || !Number.isInteger(pass) || pass < 0)
+  if (!resumeTargets(flow).includes(at8) || !Number.isInteger(pass) || pass < 0)
     return {
       at: null,
       state: null,
-      basis: localize("agent-harness.harness.undetermined_the_runs_published_state", "UNDETERMINED: the run's published state names step {stringify} at pass {stringify_2}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped", { stringify: String(JSON.stringify(at7).slice(0, 60)), stringify_2: String(JSON.stringify(p.pass ?? null).slice(0, 20)) })
+      basis: localize("agent-harness.harness.undetermined_the_runs_published_state", "UNDETERMINED: the run's published state names step {stringify} at pass {stringify_2}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped", { stringify: String(JSON.stringify(at8).slice(0, 60)), stringify_2: String(JSON.stringify(p.pass ?? null).slice(0, 20)) })
     };
-  return { at: at7, basis: null, state: {
+  return { at: at8, basis: null, state: {
     pass,
     targets: list(p.targets),
     reports: list(p.reports),
@@ -21577,11 +21689,11 @@ function planStopBecause(state) {
 }
 function nextPlanStep(state) {
   const s = state || {};
-  const at7 = String(s.step || FIRST_STEP);
-  if (!PLAN_FLOW[at7]) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row_2", "'{at}' is not a row in this table", { at: String(at7) }), bound: "completed" };
-  if (at7 === "gate-mode") return gateStep(s);
+  const at8 = String(s.step || FIRST_STEP);
+  if (!PLAN_FLOW[at8]) return { step: "close", why: localize("agent-harness.harness.at_is_not_a_row_2", "'{at}' is not a row in this table", { at: String(at8) }), bound: "completed" };
+  if (at8 === "gate-mode") return gateStep(s);
   const stopped = planStopBecause(s);
-  if (stopped && at7 !== "close")
+  if (stopped && at8 !== "close")
     return {
       step: "close",
       bound: stopped,
@@ -21589,7 +21701,7 @@ function nextPlanStep(state) {
     };
   const done = (why) => ({ step: "close", bound: "completed", why, pass_done: true });
   const queue = s.queue || [];
-  switch (at7) {
+  switch (at8) {
     case "resume":
       if (typeof s.resumeAt === "string" && ["dedup", "submit", "adjust"].includes(s.resumeAt))
         return {
@@ -21619,7 +21731,7 @@ function nextPlanStep(state) {
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition_2", "'{at}' has no transition", { at: String(at7) }), bound: "completed" };
+  return { step: "close", why: localize("agent-harness.harness.at_has_no_transition_2", "'{at}' has no transition", { at: String(at8) }), bound: "completed" };
 }
 function planAdvance(state, decision) {
   const next = advance(state, decision);
@@ -23040,19 +23152,19 @@ function conditionFault(input) {
 }
 
 // ../agent-steps/src/plane.mjs
-function planeAnswer(asked3, at7) {
-  if (!asked3.reached) return { at: at7, silent: asked3 };
+function planeAnswer(asked3, at8) {
+  if (!asked3.reached) return { at: at8, silent: asked3 };
   const envelope = asked3.body && typeof asked3.body === "object" ? asked3.body : {};
   const inner = envelope.result && typeof envelope.result === "object" && !Array.isArray(envelope.result) ? envelope.result : null;
   const said2 = inner && "ok" in inner ? inner : envelope;
   if (asked3.status !== 200 || envelope.ok !== true || said2.ok === false)
-    return { at: at7, refused: {
-      at: at7,
+    return { at: at8, refused: {
+      at: at8,
       code: said2.reason ?? said2.code ?? envelope.reason ?? envelope.code ?? null,
       check: said2.check ?? envelope.check ?? null,
       plane: asked3.body ?? null
     } };
-  return { at: at7, result: inner ?? envelope };
+  return { at: at8, result: inner ?? envelope };
 }
 function publishedPack(answer) {
   const a = answer && typeof answer === "object" ? answer : {};
@@ -24726,22 +24838,22 @@ function grammarsOf(list3) {
   if (!Array.isArray(list3)) throw new TypeError("checkBundle: opts.grammars is a list of {module, ids, arm}");
   const byArm = /* @__PURE__ */ new Map(), rest = [], claimed = /* @__PURE__ */ new Map();
   list3.forEach((g, i) => {
-    const at7 = `checkBundle: opts.grammars[${i}]`;
-    if (!g || typeof g !== "object") throw new TypeError(`${at7} is not a {module, ids, arm} entry`);
-    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at7} names no module`);
+    const at8 = `checkBundle: opts.grammars[${i}]`;
+    if (!g || typeof g !== "object") throw new TypeError(`${at8} is not a {module, ids, arm} entry`);
+    if (typeof g.module !== "string" || g.module.trim() === "") throw new TypeError(`${at8} names no module`);
     if (!Array.isArray(g.ids) || g.ids.length === 0 || !g.ids.every((id) => typeof id === "string" && GRAMMAR_ID_RE.test(id)))
-      throw new TypeError(`${at7} (${g.module}): ids is a non-empty list of C-ids`);
-    if (typeof g.arm !== "function") throw new TypeError(`${at7} (${g.module}): arm is not a function`);
+      throw new TypeError(`${at8} (${g.module}): ids is a non-empty list of C-ids`);
+    if (typeof g.arm !== "function") throw new TypeError(`${at8} (${g.module}): arm is not a function`);
     for (const id of g.ids) {
-      if (claimed.has(id)) throw new RangeError(`${at7} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
+      if (claimed.has(id)) throw new RangeError(`${at8} (${g.module}): ${id} is already claimed by ${claimed.get(id)}`);
       claimed.set(id, g.module);
     }
     const touched = EXTENSION_ARMS.filter((a) => a.ids.some((id) => g.ids.includes(id)));
     if (touched.length > 1)
-      throw new RangeError(`${at7} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
+      throw new RangeError(`${at8} (${g.module}): claims ids of ${touched.map((a) => a.name).join(" and ")}; one grammar replaces one arm`);
     const [arm] = touched;
     if (arm && !arm.ids.every((id) => g.ids.includes(id)))
-      throw new RangeError(`${at7} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
+      throw new RangeError(`${at8} (${g.module}): claims part of ${arm.name}, whose ids are ${arm.ids.join(", ")}; an arm is claimed whole`);
     if (arm) byArm.set(arm.name, g);
     else rest.push(g);
   });
@@ -28424,10 +28536,10 @@ async function inflateRaw(u8, limit) {
       chunks.push(value);
     }
     const bytes = new Uint8Array(total);
-    let at7 = 0;
+    let at8 = 0;
     for (const c of chunks) {
-      bytes.set(c, at7);
-      at7 += c.length;
+      bytes.set(c, at8);
+      at8 += c.length;
     }
     return { bytes };
   } catch {
@@ -29034,7 +29146,7 @@ async function crossCheck(src, r, row3, cdOffset) {
     const length = (signed ? 4 : 0) + 4 + 2 * width;
     if (length > avail) return { agrees, outOfRange: true, range: [lo, end2 + length] };
     const q = signed ? 4 : 0;
-    const read2 = (at7) => width === 8 ? u64(d, at7) : u32(d, at7);
+    const read2 = (at8) => width === 8 ? u64(d, at8) : u32(d, at8);
     agrees = agrees && u32(d, q) === row3.crc32 && read2(q + 4) === row3.compressed && read2(q + 4 + width) === row3.uncompressed;
     end2 += length;
   } else {
@@ -29131,8 +29243,8 @@ function sha256Js() {
   const block = new Uint8Array(64);
   let filled = 0, length = 0;
   const rotr = (x, n) => x >>> n | x << 32 - n;
-  const compress = (m, at7) => {
-    for (let t = 0; t < 16; t++) W2[t] = m[at7 + 4 * t] << 24 | m[at7 + 4 * t + 1] << 16 | m[at7 + 4 * t + 2] << 8 | m[at7 + 4 * t + 3];
+  const compress = (m, at8) => {
+    for (let t = 0; t < 16; t++) W2[t] = m[at8 + 4 * t] << 24 | m[at8 + 4 * t + 1] << 16 | m[at8 + 4 * t + 2] << 8 | m[at8 + 4 * t + 3];
     for (let t = 16; t < 64; t++) {
       const a2 = W2[t - 15], b2 = W2[t - 2];
       W2[t] = W2[t - 16] + (rotr(a2, 7) ^ rotr(a2, 18) ^ a2 >>> 3) + W2[t - 7] + (rotr(b2, 17) ^ rotr(b2, 19) ^ b2 >>> 10) | 0;
@@ -29184,7 +29296,7 @@ function sha256Js() {
       const v = new DataView(tail.buffer);
       v.setUint32(tail.length - 8, Math.floor(bits / 4294967296));
       v.setUint32(tail.length - 4, bits >>> 0);
-      for (let at7 = 0; at7 < tail.length; at7 += 64) compress(tail, at7);
+      for (let at8 = 0; at8 < tail.length; at8 += 64) compress(tail, at8);
       return Array.from(H, (x) => x.toString(16).padStart(8, "0")).join("");
     }
   };
@@ -29270,9 +29382,9 @@ async function* cut(source, row3) {
   };
   async function* windows() {
     for (let off = 0; off < row3.compressed; off += CUT_WINDOW) {
-      const at7 = row3.data_offset + off, length = Math.min(CUT_WINDOW, row3.compressed - off);
-      if (at7 + length > src.size) throw new Unreadable();
-      yield await src.read(at7, length);
+      const at8 = row3.data_offset + off, length = Math.min(CUT_WINDOW, row3.compressed - off);
+      if (at8 + length > src.size) throw new Unreadable();
+      yield await src.read(at8, length);
     }
   }
   const finish = async () => {
@@ -29613,8 +29725,8 @@ function readCfb(b) {
   const dirBytes = gather(dirChain, sector, ss, dirChain.length * ss);
   const entries = [];
   const utf16 = new TextDecoder("utf-16le");
-  for (let at7 = 0; at7 + 128 <= dirBytes.length; at7 += 128) {
-    const e = dirBytes.subarray(at7, at7 + 128);
+  for (let at8 = 0; at8 + 128 <= dirBytes.length; at8 += 128) {
+    const e = dirBytes.subarray(at8, at8 + 128);
     const nameLen = u16(e, 64);
     const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0 ? utf16.decode(e.subarray(0, nameLen - 2)) : "";
     const high = u32(e, 124);
@@ -31054,8 +31166,8 @@ async function docxStructure(parts) {
     const name = normalizePartName(entry.name);
     if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
     const rid = embeddingRids.get(name) ?? null;
-    const at7 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at7 ? docParaRef(at7.para, at7.run) : null;
+    const at8 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at8 ? docParaRef(at8.para, at8.run) : null;
     const read2 = await readPart(parts.bytes, parts.container, name);
     if (!read2.ok) {
       links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read2.why }));
@@ -31093,7 +31205,7 @@ async function docxStructure(parts) {
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
     else {
       for (const c of parsed.comments) {
-        const at7 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        const at8 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
         items.push({
           kind: "comment",
           id: c.id,
@@ -31101,7 +31213,7 @@ async function docxStructure(parts) {
           date: c.date,
           initials: c.initials,
           text: c.text,
-          source: at7 ? docParaRef(at7.para, at7.run) : null
+          source: at8 ? docParaRef(at8.para, at8.run) : null
         });
       }
     }
@@ -31404,11 +31516,11 @@ function walkSlide(xml) {
   const open = [];
   let cur = null;
   let inText = false;
-  const noteRid = (attrs, at7 = shape >= 0 ? shape : null) => {
+  const noteRid = (attrs, at8 = shape >= 0 ? shape : null) => {
     for (const key of ["id", "embed", "link"]) {
       const v = attrs[key];
       if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, at7);
+        ridUsage.set(v, at8);
     }
   };
   const skipped = mceSkipper();
@@ -32677,17 +32789,17 @@ function odtStructure(parts) {
     const markFor = /* @__PURE__ */ new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at7 = c.id != null ? markFor.get(c.id) : void 0;
+      const at8 = c.id != null ? markFor.get(c.id) : void 0;
       const item = {
         kind: "tracked-change",
         change: c.change,
         author: c.author,
         date: c.date,
-        source: at7 == null ? null : docParaRef(at7)
+        source: at8 == null ? null : docParaRef(at8)
       };
       if (c.change === "deletion") item.superseded = c.superseded;
       else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
-      if (at7 === void 0) item.why = "change_region_unmarked_in_body";
+      if (at8 === void 0) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
     for (const a of walk.annotations) {
@@ -35548,7 +35660,7 @@ var MINTED_OBJECT = Object.freeze({
   /* T48 (R62; N1018, K3112): `case-inputs`' two opaque prefixes (its R6, R9; record-grammar R46) */
   OUTC: "carried outcome"
 });
-var MINTED_ID_FOR = Object.freeze({ WCD: "a draft of a new edition's statement of what changed" });
+var MINTED_ID_FOR = Object.freeze({ WCD: localize("record-core.index.a_draft_of_a_new", "a draft of a new edition's statement of what changed") });
 var OPAQUE_PREFIXES = new Set(ID_TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix));
 var TAIL_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 var TAIL_LENGTH = 16;
@@ -35899,13 +36011,13 @@ var RecordCore = class _RecordCore {
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table2, column] of [...sources, ...this.#mintSeeds.flatMap((r) => r.sources)]) {
       if (!IDENT.test(String(table2)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                       SELECT DISTINCT ${column}, ?, 'live' FROM ${table2}
-                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at7, head, head);
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at8, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -35916,7 +36028,7 @@ var RecordCore = class _RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
       ...scopes,
-      at7,
+      at8,
       ...scopes
     );
   }
@@ -35946,7 +36058,7 @@ var RecordCore = class _RecordCore {
    *  (C-102.28, DEC-49); its detail is the sentence it has always carried. */
   static #anonymousLease(actor) {
     if (typeof actor === "string" && actor.trim()) return null;
-    return rowRefusal("ANONYMOUS_LEASE", "a lease is taken under a named actor \u2014 a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.");
+    return rowRefusal("ANONYMOUS_LEASE", localize("record-core.index.a_lease_is_taken_under", "a lease is taken under a named actor \u2014 a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock."));
   }
   /** D-61: a lease is NEVER anonymous. It is a courtesy lock; promotion's CAS on `base` is the
    *  integrity mechanism, so the lease hands back the bundle's CURRENT digest as the edit base. */
@@ -36347,10 +36459,10 @@ var RecordCore = class _RecordCore {
     created,
     lastUpdated,
     criticality,
-    at: at7
+    at: at8
   }) {
     return this.transact(() => {
-      const now = at7 ?? (/* @__PURE__ */ new Date()).toISOString();
+      const now = at8 ?? (/* @__PURE__ */ new Date()).toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -37213,7 +37325,7 @@ var RecordCore = class _RecordCore {
     if (!named || !d || d.module !== module || !checks)
       return rowRefusal(
         "STORE_GATE_MALFORMED",
-        `a store gate names its module, a table that module declared and a check to run; nothing was registered${d && named && d.module !== module ? ` (${d.name} is ${d.module}'s)` : ""}.`,
+        d && named && d.module !== module ? localize("record-core.index.a_store_gate_names_its_2", "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).", { table: String(d.name), owner: String(d.module) }) : localize("record-core.index.a_store_gate_names_its", "a store gate names its module, a table that module declared and a check to run; nothing was registered."),
         { module: named ? module : null, table: typeof table2 === "string" ? table2 : null, ...d ? { declaredBy: d.module } : {} }
       );
     if (this.#gates.has(table2))
@@ -37291,11 +37403,11 @@ var RecordCore = class _RecordCore {
     if (!d || d.module !== module || d.classes.expunge !== "tombstone")
       return rowRefusal("EXPUNGE_NOT_DECLARED", localize("record-core.index.string_is_not_a_table", "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.", { String: String(String(table2)), String_2: String(String(module)) }), { table: named });
     if (!said2(by) || by.trim().startsWith("token:"))
-      return rowRefusal("EXPUNGE_NOT_A_MEMBER", "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.", { table: named });
+      return rowRefusal("EXPUNGE_NOT_A_MEMBER", localize("record-core.index.an_expunge_is_a_members", "an expunge is a member's act, named by that member; a machine or absent actor removes nothing."), { table: named });
     const n = keyed2 ? Number(this.#one(`SELECT COUNT(*) AS n FROM ${d.name} WHERE ${w.sql}`, ...w.args).n) : 0;
     if (!n)
       return rowRefusal("EXPUNGE_NOTHING", localize("record-core.index.no_row_of_name_matches", "no row of {name} matches the key; nothing was removed.", { name: String(d.name) }), { table: named });
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     const keep2 = { ...key };
     return this.transact(() => {
       this.#sql.exec(`DELETE FROM ${d.name} WHERE ${w.sql}`, ...w.args);
@@ -37309,7 +37421,7 @@ var RecordCore = class _RecordCore {
         ground === "court_order" ? order : null,
         ground === "lawful_demand" ? demandKind : null,
         by,
-        at7
+        at8
       );
       return {
         ok: true,
@@ -37322,7 +37434,7 @@ var RecordCore = class _RecordCore {
           ...ground === "court_order" ? { order } : {},
           ...ground === "lawful_demand" ? { demandKind } : {},
           by,
-          at: at7
+          at: at8
         }
       };
     });
@@ -37403,7 +37515,7 @@ var RecordCore = class _RecordCore {
       return rowRefusal("SETTING_VALUE_REQUIRED", localize("record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded."));
     const text2 = roundTripsJson(value) ? jsonText(value) : null;
     if (text2 === null)
-      return rowRefusal("SETTING_NOT_JSON", "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded.", { name: n });
+      return rowRefusal("SETTING_NOT_JSON", localize("record-core.index.a_settings_value_is_stored", "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded."), { name: n });
     if (n === "jurisdiction_profiles" && !(Array.isArray(value) && value.every((v) => typeof v === "string" && v.trim() !== "") && new Set(value).size === value.length))
       return rowRefusal(
         "SETTING_INVALID",
@@ -37472,49 +37584,7 @@ var PURGE_REMOVED = Object.freeze([
 ]);
 
 // ../bio-plane/src/membership/schema.mjs
-var MEMBERSHIP_SCHEMA = `
--- Members. Each member signs in with their own password, which is the credentials module's
--- (under role 'member:<member_id>'; T19, K637). invite_hash is the SHA-256 of a
--- one-time enrollment code; it is cleared the moment the member enrolls, so
--- a leaked invite cannot re-enroll an active member.
-CREATE TABLE IF NOT EXISTS members (
-  member_id   TEXT PRIMARY KEY,
-  -- A COVER, not a name. It is the label an administrator uses to tell
-  -- participants apart, and it is explicitly NOT a claim about who someone is
-  -- in the world. The word matters: a field called "name" invites an
-  -- administrator to type a legal name, and the cover-and-handle split exists
-  -- precisely so that a roster seized or subpoenaed does not deanonymise the
-  -- group. See docs/architecture/BIO_Membership_Architecture_v2.md section 3.
-  cover       TEXT NOT NULL,
-  -- The HANDLE the member chooses at enrolment, what the RECORD shows; unique (members_handle).
-  handle      TEXT,
-  role        TEXT NOT NULL DEFAULT 'member',
-  status      TEXT NOT NULL DEFAULT 'invited',
-  invite_hash TEXT,
-  -- Capabilities, section 5: a JSON array of CAPABILITIES words; administer is never one of them.
-  capabilities TEXT,
-  created     TEXT NOT NULL,
-  updated     TEXT NOT NULL,
-  -- R58: the actor whose act caused the latest status transition; NULL reads 'not recorded', never back-filled.
-  status_by   TEXT,
-  status_at   TEXT,
-  -- D-134: who invited the member (server-stamped); NULL reads 'not recorded'.
-  invited_by  TEXT,
-  -- R19 (section 3, "Pairing"): whether this member's cover-and-handle pairing is published, the member's or an
-  -- administrator's per-member decision. 0 until one of them publishes it.
-  pairing_published INTEGER NOT NULL DEFAULT 0,
-  -- R97, R105 (DEC-133): when the invitation stops working (NULL: made before invitations expired, or none yet),
-  -- the days chosen for one not yet made (a proposed administrator's, R6), when an administrator withdrew it (R98),
-  -- the door it came through ('administrator', 'website', 'join link'; NULL reads 'administrator') and the name the
-  -- website reported as approving (R101). Never a usable invitation: only its hash is held (invite_hash).
-  invite_expires   TEXT,
-  invite_days      INTEGER,
-  invite_withdrawn TEXT,
-  door             TEXT,
-  approved_by      TEXT
-);
-CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL;
-
+var MEMBERSHIP_PROJECT_SCHEMA = `
 -- REC-149 (Membership Architecture v2 section 7, item 7.14, BOB #16 from Bob's
 -- ruling of 2026-09-18, "each project chooses"): DISCOVERABLE or HIDDEN, as an
 -- OWNER'S RECORDED ACT and never a field of the project document, because a
@@ -37591,6 +37661,68 @@ CREATE TABLE IF NOT EXISTS project_participants (
 );
 CREATE INDEX IF NOT EXISTS pp_member ON project_participants(member_id);
 
+-- R63 (Bob, 2026-09-26): EVERY REMOVAL AN OWNER MAKES, KEPT, with who removed whom, when, and the owner's reason;
+-- every participant of the project reads it. Append-only.
+CREATE TABLE IF NOT EXISTS project_removals (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  member_id  TEXT NOT NULL,
+  removed_by TEXT NOT NULL,
+  comment    TEXT,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_removals_project ON project_removals(project_id, seq);
+`;
+var MEMBERSHIP_ADDITIVE_COLUMNS = [
+  ["project_participants", "owner_order", "INTEGER"],
+  ["project_participants", "joined_at", "TEXT"]
+];
+var MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_removals", "project_visibility", "project_sight"];
+
+// ../bio-plane/src/member-roster/schema.mjs
+var MEMBER_SCHEMA = `
+-- Members. Each member signs in with their own password, which is the credentials module's
+-- (under role 'member:<member_id>'; T19, K637). invite_hash is the SHA-256 of a
+-- one-time enrollment code; it is cleared the moment the member enrolls, so
+-- a leaked invite cannot re-enroll an active member.
+CREATE TABLE IF NOT EXISTS members (
+  member_id   TEXT PRIMARY KEY,
+  -- A COVER, not a name. It is the label an administrator uses to tell
+  -- participants apart, and it is explicitly NOT a claim about who someone is
+  -- in the world. The word matters: a field called "name" invites an
+  -- administrator to type a legal name, and the cover-and-handle split exists
+  -- precisely so that a roster seized or subpoenaed does not deanonymise the
+  -- group. See docs/architecture/BIO_Membership_Architecture_v2.md section 3.
+  cover       TEXT NOT NULL,
+  -- The HANDLE the member chooses at enrolment, what the RECORD shows; unique (members_handle).
+  handle      TEXT,
+  role        TEXT NOT NULL DEFAULT 'member',
+  status      TEXT NOT NULL DEFAULT 'invited',
+  invite_hash TEXT,
+  -- Capabilities, section 5: a JSON array of CAPABILITIES words; administer is never one of them.
+  capabilities TEXT,
+  created     TEXT NOT NULL,
+  updated     TEXT NOT NULL,
+  -- R58: the actor whose act caused the latest status transition; NULL reads 'not recorded', never back-filled.
+  status_by   TEXT,
+  status_at   TEXT,
+  -- D-134: who invited the member (server-stamped); NULL reads 'not recorded'.
+  invited_by  TEXT,
+  -- R19 (section 3, "Pairing"): whether this member's cover-and-handle pairing is published, the member's or an
+  -- administrator's per-member decision. 0 until one of them publishes it.
+  pairing_published INTEGER NOT NULL DEFAULT 0,
+  -- R97, R105 (DEC-133): when the invitation stops working (NULL: made before invitations expired, or none yet),
+  -- the days chosen for one not yet made (a proposed administrator's, R6), when an administrator withdrew it (R98),
+  -- the door it came through ('administrator', 'website', 'join link'; NULL reads 'administrator') and the name the
+  -- website reported as approving (R101). Never a usable invitation: only its hash is held (invite_hash).
+  invite_expires   TEXT,
+  invite_days      INTEGER,
+  invite_withdrawn TEXT,
+  door             TEXT,
+  approved_by      TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL;
+
 -- Section 1.3, declared expertise and confirmed licenses. An EVENT LOG, not a status column, because withdrawal
 -- supersedes rather than overwrites (R23). It gates nothing (R24). The v1.4 members.expertise column it
 -- replaced is dropped (K57).
@@ -37603,18 +37735,6 @@ CREATE TABLE IF NOT EXISTS member_expertise (
   created   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label);
-
--- R63 (Bob, 2026-09-26): EVERY REMOVAL AN OWNER MAKES, KEPT, with who removed whom, when, and the owner's reason;
--- every participant of the project reads it. Append-only.
-CREATE TABLE IF NOT EXISTS project_removals (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id TEXT NOT NULL,
-  member_id  TEXT NOT NULL,
-  removed_by TEXT NOT NULL,
-  comment    TEXT,
-  at         TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS project_removals_project ON project_removals(project_id, seq);
 
 -- Administrator governance, section 4.7. Every vote is a row, so the record of WHO decided and WHY survives the
 -- decision; a spent proposal keeps its votes.
@@ -37719,7 +37839,7 @@ CREATE TABLE IF NOT EXISTS court_notice (
   at      TEXT NOT NULL
 );
 `;
-var MEMBERSHIP_ADDITIVE_COLUMNS = [
+var MEMBER_ADDITIVE_COLUMNS = [
   ["members", "handle", "TEXT"],
   ["members", "capabilities", "TEXT"],
   ["members", "status_by", "TEXT"],
@@ -37730,28 +37850,26 @@ var MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "invite_days", "INTEGER"],
   ["members", "invite_withdrawn", "TEXT"],
   ["members", "door", "TEXT"],
-  ["members", "approved_by", "TEXT"],
-  ["project_participants", "owner_order", "INTEGER"],
-  ["project_participants", "joined_at", "TEXT"]
+  ["members", "approved_by", "TEXT"]
 ];
-var MEMBERSHIP_EXEMPT_TABLES = [
+var MEMBER_EXEMPT_TABLES = [
   "members",
   "member_expertise",
   "admin_votes",
   "hosting_access",
-  /* R111 (T34): the doors, the group's description and the court-notice setting. */
+  /* R46 (T34): the doors, the group's description and the court-notice setting. */
   "join_doors",
   "group_description",
   "court_notice",
-  /* R57, R16 (was R124's, T40) and R123: the handle history and the handle check's window. */
+  /* R21, R13 (was R124's, T40) and R50: the handle history and the handle check's window. */
   "handle_history",
   "handle_check_window",
-  /* R143 (T48): the members' Home marks. */
+  /* R58 (T48): the members' Home marks. */
   "home_looks",
-  /* R144 (T49): the founder's own handle. */
+  /* R59 (T49): the founder's own handle. */
   "founder_handle"
 ];
-var MEMBERSHIP_DECLARED_TABLES = Object.freeze([
+var MEMBER_DECLARED_TABLES = Object.freeze([
   Object.freeze({
     name: "join_doors",
     purge: "exempt",
@@ -37773,9 +37891,8 @@ var MEMBERSHIP_DECLARED_TABLES = Object.freeze([
     version_chain: false
   })
 ]);
-var MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_removals", "project_visibility", "project_sight"];
 
-// ../bio-plane/src/membership/words.mjs
+// ../bio-plane/src/member-roster/words.mjs
 var keyed = (key, names = []) => word(key, Object.fromEntries(names.map((n) => [n, `{${n}}`])));
 var ROW_KEYS = Object.freeze({ HANDLE_CHECK_PAUSED: "handle.refused.paused" });
 var ROW_PLACEHOLDERS = Object.freeze({ CONSENSUS_REQUIRED: ["awaiting"], HANDLE_CHECK_PAUSED: ["minutes"] });
@@ -37790,17 +37907,13 @@ var SENTENCE_KEYS = Object.freeze([
   "membership.door_warning",
   "membership.also_do",
   "court.statement",
-  "membership.remedy.active_administrator_group",
   "membership.remedy.active_administrator_group_confirm",
-  "membership.why.both_owners_agree",
-  "membership.why.majority_all_owners",
-  "membership.why.owner_floor_last",
   "membership.says.member_enrolled_under",
   "membership.says.member_holds_reserved"
 ]);
 
-// ../bio-plane/src/membership/checks.mjs
-var at2 = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
+// ../bio-plane/src/member-roster/checks.mjs
+var at2 = (fn, region) => `src/member-roster/index.mjs ${fn} > ${region}`;
 var frozenRows = (table2) => Object.freeze(Object.fromEntries(
   Object.entries(table2).map(([code, row3]) => [code, Object.freeze({ ...row3 })])
 ));
@@ -37810,25 +37923,10 @@ var MEMBERSHIP_CHECKS = frozenRows({
     where: at2("notAnAdmin", "is-custodial-admin"),
     translation: rowWord("NOT_AN_ADMIN")
   }),
-  NO_SUCH_PROJECT: Object.freeze({
-    check: "C-70.5",
-    where: at2("noSuchProject", "is-project-seen"),
-    translation: rowWord("NO_SUCH_PROJECT")
-  }),
   NOT_PROPOSED: Object.freeze({
     check: "C-96.14",
     where: at2("adminEndorse", "is-endorse-proposed"),
     translation: rowWord("NOT_PROPOSED")
-  }),
-  NOT_A_PARTICIPANT: Object.freeze({
-    check: "C-56.3",
-    where: at2("notAParticipant", "is-not-a-participant"),
-    translation: rowWord("NOT_A_PARTICIPANT")
-  }),
-  TARGET_NOT_A_PARTICIPANT: Object.freeze({
-    check: "C-56.4",
-    where: at2("projectRemove", "is-remove-target-participant"),
-    translation: rowWord("TARGET_NOT_A_PARTICIPANT")
   }),
   LISTENER_MALFORMED: Object.freeze({
     check: "C-102.11",
@@ -37849,16 +37947,9 @@ var MEMBERSHIP_CHECKS = frozenRows({
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: "C-96.13",
-    where: at2("expertiseDeclare", "is-expertise-labelled"),
+    where: at2("#noLabel", "is-expertise-labelled"),
     translation: rowWord("EXPERTISE_NO_LABEL")
   }),
-  /* T19 layer 2 (the families' move): C-33.48 COPIED from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
-     unchanged (entities' C-33.25 precedent); C-33.28 LAST_OWNER went with `projectOwnerRemove` to `project-roster` (T38). */
-  LAST_COMMITTED_OWNER: {
-    check: "C-33.48",
-    where: "src/membership/index.mjs projectLeave > is-leave-owner-floor",
-    translation: rowWord("LAST_COMMITTED_OWNER")
-  },
   /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745): the next free numbers of C-96, this module's family for the
      acts on a member's row and the group's custodial acts (K107 (3), K174). C-96.19–.21 are credentials'. Each code is
      minted at one site, the region its `where` names. ===== */
@@ -37995,58 +38086,49 @@ var MEMBERSHIP_CHECKS = frozenRows({
     check: "C-96.54",
     where: at2("founderHandleSet", "is-founder-handle-founder"),
     translation: rowWord("FOUNDER_HANDLE_NOT_FOUNDER")
-  }),
-  /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
-     it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a
-     person's acts in a project (C-56.5 is project-roster's; K107 (3), K174). T47 (R142 (2), K3078): its translation is
-     `words.json`'s `refusal.PROJECT_GUARD_UNCHECKED`, read by key (a row change for T48's stamp). ===== */
-  PROJECT_GUARD_UNCHECKED: Object.freeze({
-    check: "C-56.6",
-    where: at2("#projectActGuarded", "is-project-guard-checked"),
-    translation: rowWord("PROJECT_GUARD_UNCHECKED")
   })
 });
 var MEMBER_ID_CHECKS = frozenRows({
   MEMBER_ID_RESERVED: {
     check: "C-55.1",
-    where: "src/membership/index.mjs memberAdd > is-member-id-reserved",
+    where: "src/member-roster/index.mjs memberAdd > is-member-id-reserved",
     translation: rowWord("MEMBER_ID_RESERVED")
   }
 });
 var CUSTODIAL_CHECKS = frozenRows({
   BAD_MEMBER_ID: {
     check: "C-96.2",
-    where: "src/membership/index.mjs memberAdd > is-member-add-id",
+    where: "src/member-roster/index.mjs memberAdd > is-member-add-id",
     translation: rowWord("BAD_MEMBER_ID")
   },
   NO_COVER: {
     check: "C-96.3",
-    where: "src/membership/index.mjs memberAdd > is-member-add-shape",
+    where: "src/member-roster/index.mjs memberAdd > is-member-add-shape",
     translation: rowWord("NO_COVER")
   },
   EXISTS: {
     check: "C-96.4",
-    where: "src/membership/index.mjs memberAdd > is-member-add-shape",
+    where: "src/member-roster/index.mjs memberAdd > is-member-add-shape",
     translation: rowWord("EXISTS")
   },
   /* C-96.5 ADMINS_FIRST is retired (DEC-134 (1), R12) and never reused. */
   CONSENSUS_REQUIRED: {
     check: "C-96.6",
-    where: "src/membership/index.mjs memberAdd > is-admin-consensus",
+    where: "src/member-roster/index.mjs memberAdd > is-admin-consensus",
     translation: rowWord("CONSENSUS_REQUIRED")
   },
   ADMIN_REQUIRES_VOTE: {
     check: "C-96.7",
-    where: "src/membership/index.mjs memberSet > is-admin-requires-vote",
+    where: "src/member-roster/index.mjs memberSet > is-admin-requires-vote",
     translation: rowWord("ADMIN_REQUIRES_VOTE")
   },
   TARGET_NOT_AN_ADMIN: {
     check: "C-96.9",
-    where: "src/membership/index.mjs adminRemove > is-remove-target-admin",
+    where: "src/member-roster/index.mjs adminRemove > is-remove-target-admin",
     translation: rowWord("TARGET_NOT_AN_ADMIN")
   },
   /* ---- T4 (legacy-checks, N44), 2026-09-27: MEMBERSHIP'S NEW ACTS (N18), SAID IN WORDS. ----
-     Each code is minted at ONE site in `src/membership/index.mjs`. A whole-function `where` could not serve: each
+     Each code is minted at ONE site in `src/member-roster/index.mjs`. A whole-function `where` could not serve: each
      function also refuses with codes held elsewhere (NOT_AN_ADMIN, NO_SUCH_MEMBER), which a whole-function site
      would judge as not this family's. So each `where` names the DEC-49 region membership marks around its one
      refusal, and the control plane's `dec49Decorate` attaches the row at the wire. */
@@ -38054,64 +38136,20 @@ var CUSTODIAL_CHECKS = frozenRows({
   /* Membership R11 (§4.8): the record of who holds hosting access names somebody. */
   NO_HOLDERS: {
     check: "C-96.11",
-    where: "src/membership/index.mjs hostingAccessSet > is-hosting-access-holders",
+    where: "src/member-roster/index.mjs hostingAccessSet > is-hosting-access-holders",
     translation: rowWord("NO_HOLDERS")
   },
   /* Membership R19 (§3, "Pairing"): whether a member's cover and handle are shown together is that member's
      decision, or an administrator's. */
   PAIRING_NOT_YOURS: {
     check: "C-96.12",
-    where: "src/membership/index.mjs memberPairingSet > is-pairing-yours",
+    where: "src/member-roster/index.mjs memberPairingSet > is-pairing-yours",
     translation: rowWord("PAIRING_NOT_YOURS")
   }
 });
-var PROJECT_AUTHORITY_CHECKS = frozenRows({
-  PROJECT_ACT_NOT_A_PARTICIPANT: {
-    check: "C-56.1",
-    where: "src/membership/index.mjs projectAuthority > is-project-authority",
-    translation: rowWord("PROJECT_ACT_NOT_A_PARTICIPANT")
-  },
-  /* T40 (R122; N812, K231): minted at one site, `notTheOwner`, which `projectAuthority` (R55) and `credentials`
-     (its R54–R57) answer through; the row's `where` moved there, its words unchanged. */
-  PROJECT_ACT_NOT_THE_OWNER: {
-    check: "C-56.2",
-    where: "src/membership/index.mjs notTheOwner > is-not-the-owner",
-    translation: rowWord("PROJECT_ACT_NOT_THE_OWNER")
-  }
-});
-var PROJECT_VISIBILITY_CHECKS = frozenRows({
-  PROJECT_SEEN_NOT_A_PARTICIPANT: {
-    check: "C-70.1",
-    where: "src/membership/index.mjs #existenceOnly > is-project-existence-only",
-    translation: rowWord("PROJECT_SEEN_NOT_A_PARTICIPANT")
-  },
-  PROJECT_VISIBILITY_NOT_THE_OWNER: {
-    check: "C-70.2",
-    where: "src/membership/index.mjs projectVisibilitySet > is-project-visibility-owner",
-    translation: rowWord("PROJECT_VISIBILITY_NOT_THE_OWNER")
-  },
-  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
-    check: "C-70.3",
-    /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
-       `visibility`), so this row names that helper's region and the code keeps ONE site. */
-    where: "src/membership/index.mjs visibilitySettingRefusal > is-project-visibility-setting",
-    translation: rowWord("PROJECT_VISIBILITY_UNKNOWN_SETTING")
-  }
-});
-var CASE_AUTHORITY_CHECKS = frozenRows({
-  CASE_SIGNER_NOT_AN_OWNER: {
-    check: "C-57.1",
-    /* REC-140 (2026-09-18): the region moved into `caseAuthority`, the ONE helper both ratify
-       paths call — `op=caseratify` for the case document and `op=ratify` for a finding a
-       ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
-       was corrected from "this case" to "a case, and each finding in it" at the same time,
-       because the same code now answers at both acts and the old sentence was false at one. */
-    where: "src/membership/index.mjs caseAuthority > is-case-signer-owner",
-    translation: rowWord("CASE_SIGNER_NOT_AN_OWNER")
-  }
-});
+var MEMBER_ROSTER_ROWS = Object.freeze({ MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS });
 
-// ../bio-plane/src/membership/order.mjs
+// ../bio-plane/src/member-roster/order.mjs
 var MODULE_IDS = Object.freeze([
   "setup-words",
   "record-grammar",
@@ -38147,6 +38185,7 @@ var MODULE_IDS = Object.freeze([
   "ocr-worker",
   "sheet-worker",
   "file-scanner",
+  "member-roster",
   "record-core",
   "membership",
   "project-roster",
@@ -38289,99 +38328,31 @@ var MODULE_IDS = Object.freeze([
   "journey-check"
 ]);
 
-// ../bio-plane/src/membership/index.mjs
+// ../bio-plane/src/member-roster/index.mjs
+var { MEMBERSHIP_CHECKS: MEMBERSHIP_CHECKS2, MEMBER_ID_CHECKS: MEMBER_ID_CHECKS2, CUSTODIAL_CHECKS: CUSTODIAL_CHECKS2 } = MEMBER_ROSTER_ROWS;
 var WORD_KEYS = Object.freeze([.../* @__PURE__ */ new Set([
-  ...[
-    MEMBERSHIP_CHECKS,
-    MEMBER_ID_CHECKS,
-    CUSTODIAL_CHECKS,
-    PROJECT_AUTHORITY_CHECKS,
-    PROJECT_VISIBILITY_CHECKS,
-    CASE_AUTHORITY_CHECKS
-  ].flatMap((table2) => Object.keys(table2).map(rowKey)),
+  ...[MEMBERSHIP_CHECKS2, MEMBER_ID_CHECKS2, CUSTODIAL_CHECKS2].flatMap((table2) => Object.keys(table2).map(rowKey)),
   ...SENTENCE_KEYS
 ])]);
-var GATE_MARK = "/*viewer-gate*/";
-var OWN_PROJECT = `(CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)`;
-function viewerPredicate(viewer, reach = null) {
-  const v = typeof viewer === "string" ? viewer : "";
-  const carried = carriedProject(v);
-  if (carried !== null) return projectGate(v, carried, reach);
-  const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
-  if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
-  const memberId = m[3] || null;
-  const founder = v === Membership.ROOT_ADMIN || memberId === Membership.ROOT_ADMIN;
-  if (!memberId && !founder)
-    return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
-  const outside = `(b.object_type <> 'project' AND COALESCE(b.project, '') = '')`;
-  const participant = `EXISTS (SELECT 1 FROM project_participants pp WHERE pp.project_id = ${OWN_PROJECT} AND pp.member_id = ?)`;
-  const discoverable = `EXISTS (SELECT 1 FROM project_sight ps WHERE ps.project_id = ${OWN_PROJECT}
-                                  AND ps.setting = 'discoverable')`;
-  const administers = founder ? discoverable : `(EXISTS (SELECT 1 FROM members am WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active')
-            AND ${discoverable})`;
-  const who2 = founder ? Membership.ROOT_ADMIN : memberId;
-  return {
-    member: memberId,
-    sql: localize("membership.index.gate_mark_outside_or_participant", "{GATE_MARK} ({outside} OR {participant} OR {administers})", { GATE_MARK: String(GATE_MARK), outside: String(outside), participant: String(participant), administers: String(administers) }),
-    args: founder ? [who2] : [who2, who2],
-    viewer: v,
-    scope: "participant"
-  };
-}
+var ROOT_ADMIN = "admin";
+var CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var VIEWER = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`);
 var CARRIED = /^(member:[A-Za-z0-9._:-]{1,128}|admin)@([\s\S]+)$/;
-function carriedProject(viewer) {
-  const m = typeof viewer === "string" ? CARRIED.exec(viewer) : null;
-  return m ? m[2] : null;
-}
 function baseViewer(viewer) {
   const m = typeof viewer === "string" ? CARRIED.exec(viewer) : null;
   return m ? m[1] : viewer;
 }
-function projectGate(v, project, reach) {
-  const base = viewerPredicate(baseViewer(v));
-  if (base.scope === "DENY" || base.scope === "member") return base;
-  const ids = Array.isArray(reach) ? reach.filter((id) => typeof id === "string" && id) : [];
-  return {
-    member: base.member,
-    sql: `${GATE_MARK} (${base.sql.replace(GATE_MARK, "")}) AND (b.bundle_id = ? OR b.project = ?
-            OR b.bundle_id IN (SELECT value FROM json_each(?)))`,
-    args: [...base.args, project, project, JSON.stringify(ids)],
-    viewer: v,
-    scope: "participant",
-    project
-  };
+function carriedProject(viewer) {
+  const m = typeof viewer === "string" ? CARRIED.exec(viewer) : null;
+  return m ? m[2] : null;
 }
-function hiddenBundles(viewer, reach = null) {
-  const gate = viewerPredicate(viewer, reach);
-  if (gate.scope === "member") return null;
-  return {
-    sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`,
-    args: [...gate.args]
-  };
+function viewerMember(viewer, identity = null) {
+  const asked3 = typeof identity === "string" && identity !== "" ? identity : viewer;
+  if (typeof asked3 !== "string") return null;
+  const m = VIEWER.exec(baseViewer(asked3));
+  return m ? m[3] || null : null;
 }
-var NO_SUCH_PROJECT_DETAIL = "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way.";
-var NO_SUCH_PROJECT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
-function noSuchProject(projectId, extra = null) {
-  let own5 = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own5 = Object.entries(extra).filter(([k]) => !NO_SUCH_PROJECT_FIXED.has(k));
-  } catch {
-    own5 = [];
-  }
-  const row3 = MEMBERSHIP_CHECKS.NO_SUCH_PROJECT;
-  return {
-    ok: false,
-    reason: "NO_SUCH_PROJECT",
-    code: "NO_SUCH_PROJECT",
-    check: row3.check,
-    translation: row3.translation,
-    project: projectId ?? null,
-    ...Object.fromEntries(own5),
-    detail: NO_SUCH_PROJECT_DETAIL
-  };
-}
+var viewerKnown = (v) => typeof v === "string" && VIEWER.test(baseViewer(v));
 var NOT_AN_ADMIN_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "detail", "message"]);
 function notAnAdmin(by, act, extra = null) {
   let own5 = [];
@@ -38395,7 +38366,7 @@ function notAnAdmin(by, act, extra = null) {
   const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
   own5 = own5.filter(([k]) => k !== "remedy");
   const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
-  const row3 = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  const row3 = MEMBERSHIP_CHECKS2.NOT_AN_ADMIN;
   return {
     ok: false,
     reason: "NOT_AN_ADMIN",
@@ -38406,28 +38377,6 @@ function notAnAdmin(by, act, extra = null) {
     ...Object.fromEntries(own5),
     ...remedy ? { remedy, message: `${row3.translation} ${remedy}` } : {},
     detail: localize("membership.index.what_is_an_administrators_act", "{what} is an administrator's act (Membership Architecture v2 \xA74.9), and your team's Civicsmith takes who is asking from the signed-in session rather than from the caller. This caller is not one of the active administrators. Nothing was changed.", { what: String(what) })
-  };
-}
-var NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 \xA77). Nothing was changed.";
-var NOT_A_PARTICIPANT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
-function notAParticipant(projectId, by, extra = null) {
-  let own5 = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own5 = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
-  } catch {
-    own5 = [];
-  }
-  const row3 = MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT;
-  return {
-    ok: false,
-    reason: "NOT_A_PARTICIPANT",
-    code: "NOT_A_PARTICIPANT",
-    check: row3.check,
-    translation: row3.translation,
-    project: projectId ?? null,
-    ...Object.fromEntries(own5),
-    detail: NOT_A_PARTICIPANT_DETAIL
   };
 }
 var NO_SUCH_MEMBER_DETAIL = localize("membership.index.no_member_of_your_team", "no member of your team answers to that id here. Nothing was changed.");
@@ -38446,7 +38395,7 @@ function noSuchMember(memberId, extra = null) {
   } catch {
     member = null;
   }
-  const row3 = MEMBERSHIP_CHECKS.NO_SUCH_MEMBER;
+  const row3 = MEMBERSHIP_CHECKS2.NO_SUCH_MEMBER;
   return {
     ok: false,
     reason: "NO_SUCH_MEMBER",
@@ -38456,40 +38405,6 @@ function noSuchMember(memberId, extra = null) {
     member,
     ...Object.fromEntries(own5),
     detail: NO_SUCH_MEMBER_DETAIL
-  };
-}
-var NOT_THE_OWNER_DETAIL = "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 \xA74.9, \xA77). Nothing was changed.";
-var NOT_THE_OWNER_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "project", "detail", "message"]);
-function notTheOwner(by, projectId, extra = null) {
-  let own5 = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own5 = Object.entries(extra).filter(([k]) => !NOT_THE_OWNER_FIXED.has(k));
-  } catch {
-    own5 = [];
-  }
-  const given = own5.find(([k]) => k === "remedy");
-  const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
-  own5 = own5.filter(([k]) => k !== "remedy");
-  const echo = (v) => {
-    try {
-      return v === null || v === void 0 ? null : String(v).slice(0, 200);
-    } catch {
-      return null;
-    }
-  };
-  const row3 = PROJECT_AUTHORITY_CHECKS.PROJECT_ACT_NOT_THE_OWNER;
-  return {
-    ok: false,
-    reason: "PROJECT_ACT_NOT_THE_OWNER",
-    code: "PROJECT_ACT_NOT_THE_OWNER",
-    check: row3.check,
-    translation: row3.translation,
-    by: echo(by),
-    project: echo(projectId),
-    ...Object.fromEntries(own5),
-    ...remedy ? { remedy, message: `${row3.translation} ${remedy}` } : {},
-    detail: NOT_THE_OWNER_DETAIL
   };
 }
 var isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -38503,7 +38418,7 @@ var MODULE_ORDER = moduleOrderFrom(MODULE_IDS.map((id) => ({ id })));
 var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 function listenerRefusal(held2, module, fn, extra) {
   const refuse2 = (code, detail, fields) => {
-    const row3 = MEMBERSHIP_CHECKS[code];
+    const row3 = MEMBERSHIP_CHECKS2[code];
     let own5 = {};
     try {
       if (isObj(extra)) own5 = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
@@ -38516,25 +38431,24 @@ function listenerRefusal(held2, module, fn, extra) {
   const declared = (detail, holder) => refuse2("LISTENER_DECLARED", detail, { module: holder });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
-      return malformed("a listener names the module that registers it and its function");
+      return malformed(localize("member-roster.index.a_listener_names_the_module", "a listener names the module that registers it and its function"));
     if (Array.isArray(held2)) {
       if (held2.some((h) => isObj(h) && h.module === module))
-        return declared(`${module} has already registered its listener`, module);
+        return declared(localize("member-roster.index.module_has_already_registered_its_listener", "{module} has already registered its listener", { module: String(module) }), module);
       return null;
     }
     if (isObj(held2)) {
       const holder = typeof held2.module === "string" ? held2.module : null;
-      return declared(`this listener is already registered${holder ? ` by ${holder}` : ""}, and it takes one registration`, holder);
+      return declared(holder ? localize("member-roster.index.this_listener_is_already_registered_by", "this listener is already registered by {holder}, and it takes one registration", { holder: String(holder) }) : localize("member-roster.index.this_listener_is_already_registered", "this listener is already registered, and it takes one registration"), holder);
     }
     return null;
   } catch (e) {
-    return malformed(`the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`);
+    return malformed(localize("member-roster.index.the_registration_could_not_be_read", "the registration could not be read: {reason}", { reason: String(String(e && e.message ? e.message : e).slice(0, 200)) }));
   }
 }
-var Membership = class _Membership {
-  constructor({ sql, core = null } = {}) {
+var Members = class _Members {
+  constructor({ sql } = {}) {
     this.sql = sql;
-    this.core = core;
   }
   #rows(q, ...a) {
     return [...this.sql.exec(q, ...a)];
@@ -38543,97 +38457,43 @@ var Membership = class _Membership {
     const r = this.#rows(q, ...a);
     return r.length ? r[0] : null;
   }
-  /* A project's title, asked of record-core (R34): membership's SQL reads no bundle column but the R37 contract. */
-  #titleOf(bundleId) {
-    const info = this.core && typeof this.core.bundleInfo === "function" ? this.core.bundleInfo(bundleId) : null;
-    return info && typeof info.title === "string" ? info.title : null;
-  }
-  /* This module's tables, at every boot (R57, R58, R115), idempotent: `members.name` renamed to `cover` (2026-07-24);
+  /* This module's tables, at every boot (R21, R66, R74), idempotent: `members.name` renamed to `cover` (2026-07-24);
      every table and index created if absent; the additive columns an older store lacks added; the vestigial
-     `members.expertise` column dropped (K57: `member_expertise` is the record, R21–R24); the tables declared to
-     record-core's purge (R115) when its `declarePurge` is present; and the sight index recomputed whole from the owners'
-     acts (D-497: a derivation, so an index that disagreed with `project_visibility` cannot survive a restart; moved
-     here from the legacy store's boot, T19). Run by the host inside its boot, after record-core's schema. */
+     `members.expertise` column dropped (K57: `member_expertise` is the record, R17–R20). It declares nothing to
+     record-core and reads no bundle: the composition declares `schema.mjs`'s tables, and reindexes project sight. */
   migrate() {
     const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
     const memberCols = cols("members");
     if (memberCols.includes("name") && !memberCols.includes("cover"))
       this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
-    const addColumns = () => {
-      for (const [table2, column, decl] of MEMBERSHIP_ADDITIVE_COLUMNS) {
-        const have = cols(table2);
-        if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
-      }
-    };
-    addColumns();
-    const bare = MEMBERSHIP_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const [table2, column, decl] of MEMBER_ADDITIVE_COLUMNS) {
+      const have = cols(table2);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
+    }
+    const bare = MEMBER_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) {
       const t = st.trim();
       if (t) this.sql.exec(t);
     }
     if (cols("members").includes("expertise")) this.sql.exec(`ALTER TABLE members DROP COLUMN expertise`);
-    this.declareTables();
-    this.#registerReservedIdFinding();
-    if (cols("bundles").length) this.reindexProjectSight();
-  }
-  /* R115 (was R59), through record-core's `declarePurge` (its R21's default form); R131 (T46) through its `declareTable`. */
-  declareTables() {
-    if (this.#declared) return false;
-    const explicit = typeof this.core.declareTable === "function";
-    const own5 = new Set(explicit ? MEMBERSHIP_DECLARED_TABLES.map((t) => t.name) : []);
-    const answers = [
-      this.core.declarePurge(
-        "membership",
-        MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
-        { exempt: MEMBERSHIP_EXEMPT_TABLES.filter((t) => !own5.has(t)) }
-      ),
-      ...explicit ? [this.core.declareTable("membership", MEMBERSHIP_DECLARED_TABLES.map((t) => ({ ...t })))] : []
-    ];
-    for (const answer of answers)
-      if (answer && answer.ok === false)
-        throw new Error(`membership: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
-    this.#declared = true;
-    return true;
-  }
-  #declared = false;
-  /* ===== R114 (was R96's participation half; K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
-   *
-   * The figures `op=stats` and purge's proof report of this module's project-keyed tables (REC-27, D-137: the
-   * participation graph and the pending owner votes, so a purge can PROVE it took them), shaped as record-core R63's
-   * `counts(hid)` with its key list, which `plane` registers under this module's name (`registerCounts("membership",
-   * [...Membership.COUNT_KEYS], (hid) => m.counts(hid))`, plane R10), so this module registers nothing itself and no
-   * figure is registered twice. `hid` is R63's: R88's `hiddenBundles(viewer)`, the bundles the caller may not see, or
-   * null for a caller that sees every bundle and for the direct internal call (purge's proof among them), which count
-   * whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
-   * rows the caller could not all read is a disclosure of existence). `COALESCE(project_id, '')`: a NULL key names no
-   * bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be dropped. Synchronous; writes nothing. */
-  static COUNT_KEYS = Object.freeze(["projectParticipants"]);
-  counts(hid = null) {
-    const n = (table2) => (hid ? this.#one(`SELECT count(*) c FROM ${table2} WHERE COALESCE(project_id, '') NOT IN ${hid.sql}`, ...hid.args) : this.#one(`SELECT count(*) c FROM ${table2}`)).c;
-    return { projectParticipants: n("project_participants") };
   }
   /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED BY THE AUDIT, NEVER RENAMED (moved from the
-     legacy store's `auditPass`, T19, through record-core's R68 seam). `memberAdd` refuses the id `admin` (R12), but an
+     legacy store's `auditPass`, T19, through record-core's R68 seam). `memberAdd` refuses the id `admin` (R9), but an
      instance that enrolled one before the reservation still holds it, and every name-keyed check reads it as the
      founder. Renaming it would rewrite who the record says acted, so the audit SAYS it and an administrator decides.
      Always answered under the key `membership`, so "none held" and "this build does not look" never read alike; a
      stated finding, never a conformance error. It names only the reserved id, which is public, and that row's role
-     and status. Registered once; a host whose record-core does not offer the seam registers nothing. */
-  #registerReservedIdFinding() {
-    if (this.#findingRegistered || !this.core || typeof this.core.registerAuditFinding !== "function") return;
-    this.core.registerAuditFinding("membership", "membership", () => this.#reservedIdFinding());
-    this.#findingRegistered = true;
-  }
-  #findingRegistered = false;
-  #reservedIdFinding() {
-    const id = _Membership.ROOT_ADMIN;
+     and status. Registered once with record-core by `membership` (split map §3 seam 1), which asks this
+     module for the finding; a host whose record-core does not offer the seam registers nothing. */
+  reservedIdFinding() {
+    const id = _Members.ROOT_ADMIN;
     const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, id);
     return {
       reservedId: id,
       held: !!m,
       role: m ? m.role : null,
       status: m ? m.status : null,
-      check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+      check: MEMBER_ID_CHECKS2.MEMBER_ID_RESERVED.check,
       says: m ? word("membership.says.member_enrolled_under", { id, role: m.role, status: m.status }) : word("membership.says.member_holds_reserved", { id })
     };
   }
@@ -38660,10 +38520,10 @@ var Membership = class _Membership {
     this.#revokedListeners.sort((a, b) => rank2(a.module) - rank2(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  #announceRevoked(memberId, by, at7) {
+  #announceRevoked(memberId, by, at8) {
     for (const l of this.#revokedListeners) {
       try {
-        const r = l.fn({ memberId, by: by ?? null, at: at7 });
+        const r = l.fn({ memberId, by: by ?? null, at: at8 });
         if (r && typeof r.then === "function") r.then(null, () => {
         });
       } catch {
@@ -38673,7 +38533,7 @@ var Membership = class _Membership {
   /* ===== Services later modules read (K57, R64–R73), and the canon rules N18 built (R10, R11, R18, R19) ===== */
   /* R64: the founder (`admin`, once the instance is claimed) and every active member with role `admin`. */
   isAdministrator(memberId) {
-    if (memberId === _Membership.ROOT_ADMIN) return this.#claimed();
+    if (memberId === _Members.ROOT_ADMIN) return this.#claimed();
     if (typeof memberId !== "string" || memberId === "") return false;
     const m = this.#one(`SELECT role, status FROM members WHERE member_id=?`, memberId);
     return !!m && m.role === "admin" && m.status === "active";
@@ -38745,47 +38605,12 @@ var Membership = class _Membership {
       return null;
     }
   }
-  /* R69: the member ids of the project's participants who have joined (not leaving, not invited) and are active. */
-  activeParticipants(projectId) {
-    return this.#rows(
-      `SELECT p.member_id FROM project_participants p JOIN members m ON m.member_id = p.member_id
-                        WHERE p.project_id=? AND p.state='joined' AND m.status='active' ORDER BY p.member_id`,
-      projectId
-    ).map((r) => r.member_id);
-  }
-  /* R71: what `promotion` calls when a promotion creates a project, inside the caller's transaction: `ownerId`
-     (a member; a machine-created project has no owner, §7.1) becomes the sole initial owner as R31 makes one,
-     the creation visibility is recorded as the first R45 record, and the project's sight is reindexed. */
-  projectCreated({ projectId, ownerId = null, visibility = null, by = null } = {}) {
-    if (visibility !== null && visibility !== void 0) {
-      const bad = this.visibilitySettingRefusal(visibility, projectId);
-      if (bad) return bad;
-    }
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    let owner = null;
-    if (ownerId) {
-      const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
-      if (!claimed.ok) return claimed;
-      owner = ownerId;
-    }
-    if (visibility !== null && visibility !== void 0)
-      this.sql.exec(
-        `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
-        projectId,
-        String(visibility),
-        by ?? ownerId ?? "not recorded",
-        "chosen at creation",
-        at7
-      );
-    this.reindexProjectSight(projectId);
-    return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
-  }
   /* R10 (section 4.5; DEC-134 (4)): an administrator — never the founder, whose standing is the hosting account's
      (4.6) — resigns, becoming an ordinary member, unless they are the last administrator R86 lists (the founder counted
      once the instance is claimed). The refusal at two (`RESIGN_AT_TWO`, C-96.10) is retired: one administrator is
      enough (DEC-134 (1)), and only the group left with none is refused (`LAST_ADMIN`, C-96.22). */
   adminResign({ by = null } = {}) {
-    if (by === _Membership.ROOT_ADMIN)
+    if (by === _Members.ROOT_ADMIN)
       return {
         ok: false,
         reason: "ROOT_OF_TRUST",
@@ -38795,7 +38620,7 @@ var Membership = class _Membership {
     if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");
     const admins = this.activeAdmins();
     if (admins.length <= 1)
-      return _Membership.#rowRefusal(
+      return _Members.#rowRefusal(
         "LAST_ADMIN",
         localize("membership.index.the_team_would_be_left", "the team would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add another administrator first. Nothing was written."),
         { administrators: admins.length }
@@ -38814,25 +38639,25 @@ var Membership = class _Membership {
      (the setup screen's act, `screens-entry` R6, and the group's settings, `screens-settings` R18; the setup page's
      `setup-page` R15 is retired, K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");
-    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.recording_who_holds_hosting_access", "recording who holds hosting access (4.8)"));
+    const refusal8 = (code, detail, extra) => _Members.#custodialRefusal(code, detail, extra);
     const h = String(holders ?? "").trim().slice(0, 500);
     if (!h)
       return refusal8(
         "NO_HOLDERS",
         localize("membership.index.name_who_holds_hosting_access", "name who holds hosting access: the record keeps the team's answer as it was given, and an empty answer records nobody. Nothing was written.")
       );
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
-    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at7);
-    return { ok: true, holders: h, note: n, recorded_by: by, at: at7 };
+    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at8);
+    return { ok: true, holders: h, note: n, recorded_by: by, at: at8 };
   }
   /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
      `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
      past it, and the page is the first `limit` records in the order they were recorded. `current`, the latest
      record, is read on its own, so a cut history never changes what the answer is. */
   hostingAccess({ limit = null } = {}) {
-    const cap = Math.max(1, Math.min(Number(limit) || _Membership.HOSTING_ACCESS_LIMIT, _Membership.HOSTING_ACCESS_LIMIT));
+    const cap = Math.max(1, Math.min(Number(limit) || _Members.HOSTING_ACCESS_LIMIT, _Members.HOSTING_ACCESS_LIMIT));
     const found2 = this.#rows(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq LIMIT ?`, cap + 1);
     const truncated = found2.length > cap;
     const current = this.#one(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq DESC LIMIT 1`);
@@ -38854,7 +38679,7 @@ var Membership = class _Membership {
   memberPairingSet({ memberId, published, by = null } = {}) {
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);
-    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
+    const refusal8 = (code, detail, extra) => _Members.#custodialRefusal(code, detail, extra);
     if (by !== memberId && !this.isAdministrator(by))
       return refusal8(
         "PAIRING_NOT_YOURS",
@@ -38878,9 +38703,9 @@ var Membership = class _Membership {
   /* N70: bounded as `hostingAccess` is: the first `limit` pairings by handle (200 at most, the caller's to lower),
      `truncated` measured by reading one row past the cap. */
   memberPairings({ viewer = null, administer = null, limit = null } = {}) {
-    const self = this.positionalMember(viewer);
-    const admin = administer === true || administer === "1" || baseViewer(viewer) === _Membership.ROOT_ADMIN && this.isAdministrator(_Membership.ROOT_ADMIN) || self !== null && this.isAdministrator(self);
-    const cap = Math.max(1, Math.min(Number(limit) || _Membership.MEMBER_PAIRINGS_LIMIT, _Membership.MEMBER_PAIRINGS_LIMIT));
+    const self = viewerMember(viewer);
+    const admin = administer === true || administer === "1" || baseViewer(viewer) === _Members.ROOT_ADMIN && this.isAdministrator(_Members.ROOT_ADMIN) || self !== null && this.isAdministrator(self);
+    const cap = Math.max(1, Math.min(Number(limit) || _Members.MEMBER_PAIRINGS_LIMIT, _Members.MEMBER_PAIRINGS_LIMIT));
     const found2 = this.#rows(
       `SELECT handle, cover, pairing_published FROM members
         WHERE handle IS NOT NULL AND (pairing_published=1 OR ? OR member_id=?) ORDER BY handle LIMIT ?`,
@@ -38892,41 +38717,9 @@ var Membership = class _Membership {
     return { ok: true, pairings: truncated ? found2.slice(0, cap) : found2, limit: cap, truncated };
   }
   static MEMBER_PAIRINGS_LIMIT = 200;
-  /* R18 (section 7.8; D54, T41-3): the projects a member participates in, for an administrator's roster, as the
-     administrator reading it (`viewer`) sees them: each project that administrator sees at FULL (R44), and, of a
-     hidden project it does not, only the member's ownership, which that administrator's EXISTENCE already shows
-     (`{project, state: null, owner: true, existence: true}`); a hidden project's other participants are never listed
-     to an administrator neither invited nor joined to it. With no viewer stamped, the roster is read as an
-     administrator in no project would read it (fail closed): discoverable projects whole, hidden ones by owner only. */
-  #projectsOf(memberId, viewer) {
-    const full = (p) => viewer === null || viewer === void 0 ? this.visibilityOf(p) === "discoverable" : this.inSight(p, viewer);
-    const out = [];
-    for (const p of this.#rows(`SELECT project_id, state, owner FROM project_participants WHERE member_id=?
-                                 ORDER BY project_id`, memberId)) {
-      if (full(p.project_id)) out.push({ project: p.project_id, state: p.state, owner: !!p.owner });
-      else if (p.owner && this.visibilityOf(p.project_id) === "hidden")
-        out.push({ project: p.project_id, state: null, owner: true, existence: true });
-    }
-    return out;
-  }
   static async #sha256(v) {
-    const b = await crypto.subtle.digest("SHA-256", _Membership.#enc.encode(v));
+    const b = await crypto.subtle.digest("SHA-256", _Members.#enc.encode(v));
     return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  }
-  /** REC-132 / D-422 — WHO IS ASKING, as distinct from WHAT THEY MAY SEE.
-   *  `identity` is the POSITIONAL half of the control plane's one session resolver
-   *  (admission's `resolveSession`, `src/admission/index.mjs`): `member:<id>` for a signed-in session,
-   *  the founder's included (`member:admin`), and the same string as the viewer for
-   *  every credential that is not a session. When it is absent — a caller that never
-   *  stamps it, the store's own internal reads — the viewer is asked, which is exactly
-   *  what every site here asked before, so such a caller is byte-unchanged. A
-   *  `class:*` or unrecognised identity answers null: no roster position, no author.
-   *  EVERY positional question a viewer-carrying read asks in this file goes through
-   *  here, and a visibility question never does. */
-  positionalMember(viewer, identity = null) {
-    const asked3 = typeof identity === "string" && identity !== "" ? identity : viewer;
-    const g = viewerPredicate(asked3);
-    return g.scope === "DENY" ? null : g.member;
   }
   static #enc = new TextEncoder();
   static #rand(n = 32) {
@@ -38971,11 +38764,11 @@ var Membership = class _Membership {
     }
   }
   #rightsOf(role, none) {
-    if (role === _Membership.ROOT_ADMIN)
+    if (role === _Members.ROOT_ADMIN)
       return {
-        capabilities: [..._Membership.CAPABILITIES],
+        capabilities: [..._Members.CAPABILITIES],
         administer: true,
-        member: _Membership.ROOT_ADMIN,
+        member: _Members.ROOT_ADMIN,
         handle: this.founderHandle(),
         rootOfTrust: true
       };
@@ -38988,20 +38781,13 @@ var Membership = class _Membership {
     if (!m || m.status !== "active") return { ...none, member: id };
     const admin = m.role === "admin";
     return {
-      capabilities: admin ? [..._Membership.CAPABILITIES] : this.#capsOf(m),
+      capabilities: admin ? [..._Members.CAPABILITIES] : this.#capsOf(m),
       administer: admin,
       member: id,
       handle: m.handle ?? null,
       rootOfTrust: false
     };
   }
-  /* ---- project participation, Architecture section 7 ----
-   *
-   * The evidence corpus stays shared: Information and Problems remain visible to
-   * the group generally, because compartmenting evidence would fracture the
-   * thing the record exists to be. What participation scopes is the group's
-   * THINKING, which is the material with strategic value before publication.
-   */
   /* R119 (N783): the member whose handle is exactly `handle`, `{member_id, handle, status}`, or null. R32, R36 and
      `project-roster` R3–R5 and R12 resolve a handle through it. Writes nothing and never throws. */
   memberByHandle(handle) {
@@ -39013,6 +38799,1874 @@ var Membership = class _Membership {
       return null;
     }
   }
+  /* ---- section 1.3: declared expertise, confirmed licenses ----
+   *
+   * TWO CLAIMS BY TWO PEOPLE, kept apart for the same reason the intake doctrine
+   * keeps who ISSUED a document separate from how faithfully it was CAPTURED.
+   * The member says what they hold. An administrator says whether the group has
+   * satisfied itself that they hold it. Neither stands in for the other.
+   *
+   * WRITE AUTHORITY IS SPLIT BY COLUMN. A member writes `label` and never the
+   * confirmation events; an administrator writes the confirmation events and can
+   * never introduce a label the member did not declare. That is what keeps
+   * confirmation a confirmation rather than an assignment.
+   *
+   * AND IT GATES NOTHING. An unconfirmed entry costs its holder no capability,
+   * no visibility and no access. It appears in no session, is consulted by no
+   * op, and must never enter the enforcement path. Section 5 in v2: it informs
+   * humans; it gates nothing, confirmed or not. */
+  static #normLabel(label) {
+    return String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+  }
+  #expertiseState(memberId, label) {
+    const r = this.#one(
+      `SELECT event, actor, created FROM member_expertise WHERE member_id=? AND label=?
+       ORDER BY seq DESC LIMIT 1`,
+      memberId,
+      label
+    );
+    return r ? r.event : null;
+  }
+  /* R17, R72: EXPERTISE_NO_LABEL is minted here alone; the declaration and the holders' read answer through it, each with
+     its own detail. */
+  static #noLabel(detail) {
+    const row3 = MEMBERSHIP_CHECKS2.EXPERTISE_NO_LABEL;
+    return {
+      ok: false,
+      reason: "EXPERTISE_NO_LABEL",
+      code: "EXPERTISE_NO_LABEL",
+      check: row3.check,
+      translation: row3.translation,
+      detail
+    };
+  }
+  /** The member's own statement about themselves. */
+  expertiseDeclare({ memberId, label } = {}) {
+    const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
+    const lab = _Members.#normLabel(label);
+    if (!lab) return _Members.#noLabel("a declaration needs a label, such as 'CPA'");
+    const cur = this.#expertiseState(memberId, lab);
+    if (cur === "declared" || cur === "confirmed")
+      return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
+    this.sql.exec(
+      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,'declared',?,?)`,
+      memberId,
+      lab,
+      memberId,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return {
+      ok: true,
+      memberId,
+      label: lab,
+      state: "declared",
+      confirmed: false,
+      detail: localize("member-roster.index.declared_and_unconfirmed_which_costs_nothing", "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one")
+    };
+  }
+  /** An administrator vouching, INCLUDING for another administrator (4.9). */
+  expertiseConfirm({ memberId, label, by, withdraw = false } = {}) {
+    if (!this.isAdministrator(by))
+      return notAnAdmin(
+        by,
+        localize("member-roster.index.confirming_or_withdrawing_a_members_declared", "confirming or withdrawing a member's declared expertise"),
+        { remedy: word("membership.remedy.active_administrator_group_confirm") }
+      );
+    const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    const lab = _Members.#normLabel(label);
+    const cur = this.#expertiseState(memberId, lab);
+    if (cur === null)
+      return {
+        ok: false,
+        reason: "NOT_DECLARED",
+        label: lab,
+        detail: "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation."
+      };
+    if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
+    if (withdraw && cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
+    this.sql.exec(
+      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,?,?,?)`,
+      memberId,
+      lab,
+      withdraw ? "withdrawn" : "confirmed",
+      by,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+    return {
+      ok: true,
+      memberId,
+      label: lab,
+      state: withdraw ? "withdrawn" : "confirmed",
+      confirmed: !withdraw,
+      by
+    };
+  }
+  /** The roster view: current state per label, with the history behind it. */
+  expertiseList({ memberId } = {}) {
+    const rows = this.#rows(
+      `SELECT seq, label, event, actor, created FROM member_expertise WHERE member_id=? ORDER BY seq`,
+      memberId
+    );
+    const cur = /* @__PURE__ */ new Map();
+    for (const r of rows) cur.set(r.label, r);
+    return {
+      ok: true,
+      memberId,
+      expertise: [...cur.values()].map((r) => ({
+        label: r.label,
+        state: r.event,
+        confirmed: r.event === "confirmed",
+        by: r.actor,
+        at: r.created,
+        /* Both are surfaced so an interface can show WHICH of the two claims it
+           is looking at, which is the entire function of the distinction. */
+        history: rows.filter((h) => h.label === r.label).map((h) => ({ event: h.event, actor: h.actor, at: h.created }))
+      })).sort((a, b) => a.label.localeCompare(b.label)),
+      gates: "nothing"
+    };
+  }
+  /* ---- the membership model's member half, Architecture sections 3 to 6 ----
+   *
+   * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
+   * every rule below reads it rather than restating it. The table in the
+   * architecture document is the specification and R5's test (`test/m/membership/`)
+   * asserts it row by row, because this is the part of the design that is cheap
+   * to get subtly wrong and expensive to discover wrong.
+   */
+  static CAPABILITIES = ["contribute", "publish", "create_projects"];
+  /** Removal takes a MAJORITY OF ALL ADMINISTRATORS, counting the target in the
+   *  denominator but not letting them vote, and ties do not eject.
+   *
+   *  That one sentence is what makes removal impossible at two without needing a
+   *  special case, demands unanimity while the group is small enough for
+   *  unanimity to be reasonable, and loosens as the group grows. A lone captured
+   *  administrator can never eject anyone at any size. It fails only to a
+   *  colluding majority, and nothing survives a colluding majority. */
+  static adminMath(n) {
+    const votesNeeded = Math.floor(n / 2) + 1;
+    const eligibleVoters = Math.max(0, n - 1);
+    return { administrators: n, votesNeeded, eligibleVoters, possible: votesNeeded <= eligibleVoters };
+  }
+  /** The table, computed rather than transcribed, so the code and the document
+   *  cannot drift. Exposed as an op because a UI must be able to tell a group
+   *  what it would take BEFORE they start a removal. */
+  adminArithmetic() {
+    const table2 = [];
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) table2.push(_Members.adminMath(n));
+    return { ok: true, table: table2, live: _Members.adminMath(this.activeAdmins().length) };
+  }
+  /* Who counts as an administrator.
+   *
+   * The FOUNDING administrator has no members row. They claimed the instance by
+   * spending ADMIN_TOKEN, which is what 4.1 describes: the solo participant is
+   * the administrator, and the whole membership apparatus stays invisible until
+   * a second person exists. Counting only member rows made a claimed instance
+   * with one invited administrator look like a group of one, so the second
+   * invitation was issued unilaterally when it should have needed consensus.
+   * Found by the existing members suite failing, not by the new one.
+   *
+   * The founder is named `admin`, the credentials role they hold, and they
+   * cannot be removed by vote: per 4.6 the holders of ADMIN_TOKEN are the root
+   * of trust and every rule in the membership model sits beneath them.
+   * Membership does not and cannot constrain them, and an interface that
+   * implied otherwise would be lying. */
+  static ROOT_ADMIN = ROOT_ADMIN;
+  /* R86 (N329): the administrators in a stated order: the founder first once the instance is claimed, then every active
+     member with role `admin` in the order their member rows were created, ties broken by member id (`tasks` R1's
+     "earliest active administrator" is the first after the founder). Writes nothing and never throws. */
+  activeAdmins() {
+    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
+                              ORDER BY created, member_id`).map((r) => r.member_id);
+    return this.#claimed() ? [_Members.ROOT_ADMIN, ...rows] : rows;
+  }
+  /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
+   * so a caller with no standing learns nothing about the member or key it named. `by` is the control
+   * plane's STAMP (op-declarations' `CUSTODIAL_ACTIONS`, applied by control-plane), relayed from the query and
+   * never from a body.
+   * THREE SHAPES AND THREE ANSWERS, each true of the caller:
+   *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
+   *     NOT_AN_ADMIN, by name, answered through `notAnAdmin` (R84), as at `memberCaps`;
+   *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
+   *     `machineClasses` decides which classes reach here, and the record names the credential;
+   *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
+   *     `not recorded`, which is what it is.
+   * ANSWERS NULL when the act may proceed. */
+  #custodialBar(by, act) {
+    if (by === null || by === void 0 || by === "") return null;
+    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    if (this.activeAdmins().includes(by)) return null;
+    return notAnAdmin(by, act);
+  }
+  /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
+   * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
+   * surfaces read `code`. The code is a STRING LITERAL at each call site, never a variable. */
+  static #custodialRefusal(code, detail, extra) {
+    const row3 = CUSTODIAL_CHECKS2[code];
+    return {
+      ok: false,
+      reason: code,
+      code,
+      check: row3.check,
+      translation: row3.translation,
+      ...extra || {},
+      detail
+    };
+  }
+  /* REC-159: the stored actor, or the stated absence of one. */
+  static #statusBy(v) {
+    return typeof v === "string" && v !== "" ? v : "not recorded";
+  }
+  #capsOf(row3) {
+    try {
+      const v = JSON.parse(row3.capabilities || "[]");
+      return Array.isArray(v) ? v : [];
+    } catch {
+      return [];
+    }
+  }
+  /** Set a member's capabilities. NOT a route to administrator status: that is
+   *  granted and removed only by the section 4 process, and 4.4 says no
+   *  administrator may strip another, so this refuses to touch either side of
+   *  that line. */
+  /*  D-136 ADDS `by`, AND IT IS READ RATHER THAN RECORDED. Section 4.9 makes
+   *  setting capabilities a custodial act of an ADMINISTRATOR, and the control
+   *  plane now stamps `by` from the session (op-declarations' `GOVERNANCE_ACTIONS`, applied by control-plane).
+   *  A stamp nothing consults is a mechanism believed on the strength of its
+   *  EXISTENCE rather than its behaviour, so the check sits here beside
+   *  `adminEndorse`'s and `adminRemove`'s, which asked the same question of the
+   *  same roster before this item and were whole except for who supplied the
+   *  answer. A bearer credential stamps `class:<cls>`, which is in no roster,
+   *  so it is refused here even if the control plane's fence in front of it were
+   *  removed (R9's test in `test/m/membership/not-an-admin-visibility.test.mjs`
+   *  asks it with a bearer's stamp and no fence in front).
+   *
+   *  IT IS ASKED BEFORE `NO_SUCH_MEMBER`, deliberately: who may ask is settled
+   *  before the record answers whether a member exists, so a caller with no
+   *  standing cannot use this op to enumerate the roster. */
+  memberCaps({ memberId, capabilities, by } = {}) {
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");
+    const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    const want = Array.isArray(capabilities) ? capabilities : null;
+    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    if (want.includes("administer") || m.role === "admin")
+      return {
+        ok: false,
+        reason: "NOT_A_CAPABILITY_GRANT",
+        detail: localize("membership.index.administrator_status_is_granted_and", "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.")
+      };
+    const bad = want.filter((c) => !_Members.CAPABILITIES.includes(c));
+    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: _Members.CAPABILITIES };
+    this.sql.exec(
+      `UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
+      JSON.stringify(want),
+      (/* @__PURE__ */ new Date()).toISOString(),
+      memberId
+    );
+    return { ok: true, memberId, capabilities: want, by };
+  }
+  /** Endorse a proposed administrator. Addition above the second requires the
+   *  CONSENSUS of every existing administrator, and that is the load-bearing
+   *  half of 4.7: without it a captured administrator recruits confederates and
+   *  manufactures the majority that ejects the honest ones. */
+  async adminEndorse({ memberId, by } = {}) {
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");
+    const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    if (m.status !== "proposed") {
+      const row3 = MEMBERSHIP_CHECKS2.NOT_PROPOSED;
+      return {
+        ok: false,
+        reason: "NOT_PROPOSED",
+        code: "NOT_PROPOSED",
+        check: row3.check,
+        translation: row3.translation,
+        status: m.status,
+        detail: localize("membership.index.only_a_member_whose_status", "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.")
+      };
+    }
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
+      memberId,
+      by,
+      null,
+      now
+    );
+    const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId).map((r) => r.voter).filter((v) => admins.includes(v));
+    const awaiting = admins.filter((a) => !have.includes(a));
+    if (awaiting.length)
+      return {
+        ok: false,
+        reason: "CONSENSUS_REQUIRED",
+        memberId,
+        have: have.sort(),
+        awaiting: awaiting.sort(),
+        detail: localize("member-roster.index.every_existing_administrator_must_endorse", "every existing administrator must endorse an addition beyond the second")
+      };
+    const invite = _Members.#rand(16);
+    const hash = await _Members.#sha256(invite);
+    const days = Number.isInteger(m.invite_days) ? m.invite_days : _Members.INVITE_DAYS_DEFAULT;
+    const expires = _Members.#expiresAt(now, days);
+    this.sql.exec(
+      `UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, status_at=?, updated=? WHERE member_id=?`,
+      hash,
+      expires,
+      by,
+      now,
+      now,
+      memberId
+    );
+    return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
+  }
+  /** Vote to remove an administrator. Section 4.7. */
+  adminRemove({ memberId, by, reason: reason2 } = {}) {
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, localize("member-roster.index.voting_to_remove_an_administrator", "voting to remove an administrator"));
+    if (memberId === _Members.ROOT_ADMIN)
+      return {
+        ok: false,
+        reason: "ROOT_OF_TRUST",
+        detail: localize("membership.index.the_founding_administrator_holds_admin_2", "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).")
+      };
+    const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    const refusal8 = (code, detail, extra) => _Members.#custodialRefusal(code, detail, extra);
+    if (m.role !== "admin")
+      return refusal8(
+        "TARGET_NOT_AN_ADMIN",
+        "this member is not an administrator, so there is no administrator to remove; an ordinary member is deactivated with op=memberset",
+        { memberId }
+      );
+    if (memberId === by) return {
+      ok: false,
+      reason: "TARGET_CANNOT_VOTE",
+      detail: localize("member-roster.index.the_target_is_counted_in_the", "the target is counted in the denominator but does not vote")
+    };
+    const why = String(reason2 ?? "").trim();
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("member-roster.index.removals_are_recorded_with_a_reason", "removals are recorded with a reason") };
+    const math = _Members.adminMath(admins.length);
+    if (!math.possible)
+      return {
+        ok: false,
+        reason: "IMPOSSIBLE_AT_TWO",
+        ...math,
+        detail: localize("membership.index.removal_takes_votesneeded_of_administrators", "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.", { votesNeeded: String(math.votesNeeded), administrators: String(math.administrators), eligibleVoters: String(math.eligibleVoters) })
+      };
+    if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
+      return { ok: false, reason: "ALREADY_VOTED", by };
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
+      memberId,
+      by,
+      why,
+      now
+    );
+    const votes = this.#rows(`SELECT voter, reason FROM admin_votes WHERE kind='remove' AND target=?`, memberId).filter((v) => admins.includes(v.voter) && v.voter !== memberId);
+    if (votes.length < math.votesNeeded)
+      return {
+        ok: false,
+        reason: "VOTES_SHORT",
+        memberId,
+        have: votes.length,
+        need: math.votesNeeded,
+        ...math,
+        deciders: votes.map((v) => v.voter).sort()
+      };
+    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, status_at=?, updated=? WHERE member_id=?`, by, now, now, memberId);
+    if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);
+    return {
+      ok: true,
+      memberId,
+      removed: true,
+      ...math,
+      deciders: votes.map((v) => v.voter).sort(),
+      reasons: votes.map((v) => v.reason).filter(Boolean),
+      alsoDo: word("membership.also_do")
+    };
+  }
+  async memberAdd({
+    memberId,
+    cover,
+    role = "member",
+    capabilities = null,
+    expertise = null,
+    expiresInDays = void 0,
+    by = null
+  } = {}) {
+    const barAdd = this.#custodialBar(by, "adding a member");
+    if (barAdd) return barAdd;
+    const label = typeof cover === "string" && cover.trim() ? cover : null;
+    const refusal8 = (code, detail, extra) => {
+      if (!(code in MEMBER_ID_CHECKS2)) return _Members.#custodialRefusal(code, detail, extra);
+      const row3 = MEMBER_ID_CHECKS2[code];
+      return { ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail, memberId };
+    };
+    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
+      return refusal8("BAD_MEMBER_ID", localize("member-roster.index.lowercase_letters_digits_and_dashes", "lowercase letters, digits and dashes, 2 to 41 characters"));
+    if (memberId === _Members.ROOT_ADMIN)
+      return refusal8(
+        "MEMBER_ID_RESERVED",
+        localize("membership.index.root_admin_names_the_founding", "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it", { ROOT_ADMIN: String(_Members.ROOT_ADMIN) })
+      );
+    if (!label || typeof label !== "string")
+      return refusal8(
+        "NO_COVER",
+        localize("member-roster.index.a_cover_is_the_label_you", "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name")
+      );
+    if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
+      return refusal8("EXISTS", localize("membership.index.a_member_row_already_holds", "a member row already holds the id '{memberId}'; nothing was written", { memberId: String(memberId) }), { memberId });
+    if (expertise !== null && expertise !== void 0)
+      return {
+        ok: false,
+        reason: "EXPERTISE_IS_NOT_ASSIGNED",
+        detail: "expertise is declared by the member and then confirmed by an administrator (section 1.3). It is not set when the invitation is created, because an administrator who could introduce the label would be assigning it rather than confirming it. Use op=expertisedeclare and op=expertiseconfirm."
+      };
+    const days = _Members.#expiryRefusal(expiresInDays);
+    if (typeof days !== "number") return days;
+    const wantAdmin = role === "admin";
+    const admins = this.activeAdmins();
+    const caps = Array.isArray(capabilities) ? capabilities.filter((c) => _Members.CAPABILITIES.includes(c)) : ["contribute"];
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const inviter = by || null;
+    if (wantAdmin && admins.length >= 2) {
+      this.sql.exec(
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                              invite_days,door)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?,?,'administrator')`,
+        memberId,
+        label,
+        JSON.stringify(caps),
+        now,
+        now,
+        by || null,
+        inviter,
+        days
+      );
+      if (by && admins.includes(by))
+        this.sql.exec(
+          `INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)`,
+          memberId,
+          by,
+          now
+        );
+      const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId).map((r) => r.voter).filter((v) => admins.includes(v));
+      return refusal8(
+        "CONSENSUS_REQUIRED",
+        localize("membership.index.adding_an_administrator_beyond_the", "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it."),
+        { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() }
+      );
+    }
+    const invite = _Members.#rand(16);
+    const hash = await _Members.#sha256(invite);
+    const expires = _Members.#expiresAt(now, days);
+    this.sql.exec(
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                            invite_expires,door)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?,?,'administrator')`,
+      memberId,
+      label,
+      wantAdmin ? "admin" : "member",
+      "invited",
+      hash,
+      JSON.stringify(caps),
+      now,
+      now,
+      by || null,
+      inviter,
+      expires
+    );
+    return {
+      ok: true,
+      memberId,
+      invite,
+      expires,
+      role: wantAdmin ? "admin" : "member",
+      capabilities: caps,
+      invited_by: _Members.#statusBy(inviter)
+    };
+  }
+  /* An invitation is a BURNER: the token in the URL is the whole credential, and
+   * after use the URL resolves to nothing and carries no record of what it
+   * formerly addressed (Membership Architecture section 6).
+   *
+   * The previous scheme put `<memberId>:<code>` in the link, so anyone who saw a
+   * leaked or archived one learned who had been invited. The token is now opaque
+   * and the member id is never in it, never returned by this lookup, and never
+   * needed to enrol.
+   *
+   * A SPENT token and a token that never existed return byte-identical answers.
+   * That is the security property and not tidiness: a response distinguishing
+   * them would confirm to whoever found the archived link that it had once
+   * addressed somebody real, which is exactly what the burner is for. */
+  static #INVITE_MISS = {
+    ok: false,
+    reason: "NO_SUCH_INVITATION",
+    detail: localize("membership.index.this_invitation_is_not_live", "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.")
+  };
+  async #invited(invite) {
+    if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
+    const hash = await _Members.#sha256(invite);
+    const m = this.#one(
+      `SELECT member_id, cover, role, status, capabilities, invite_expires
+       FROM members WHERE invite_hash=? AND status='invited'`,
+      hash
+    );
+    return m && !_Members.#expired(m.invite_expires) ? m : null;
+  }
+  /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
+   *  holds no credential yet, which is what the invitation is for. */
+  async inviteLook({ invite } = {}) {
+    const m = await this.#invited(invite);
+    if (!m) return { ..._Members.#INVITE_MISS };
+    return {
+      ok: true,
+      cover: m.cover,
+      role: m.role,
+      capabilities: this.#capsOf(m),
+      expertise: this.expertiseList({ memberId: m.member_id }).expertise
+    };
+  }
+  async enroll({ invite, handle, password } = {}) {
+    const m = await this.#invited(invite);
+    if (!m) return { ..._Members.#INVITE_MISS };
+    const h = String(handle ?? "").trim();
+    const refused2 = this.#handleRefusal(h, m.member_id);
+    if (refused2) return refused2;
+    if (typeof password !== "string" || password.length < 12)
+      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    if (!await this.#setEnrolmentPassword(`member:${m.member_id}`, password)) return _Members.#enrolNotRecorded();
+    this.sql.exec(
+      `UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, status_at=?, updated=? WHERE member_id=?`,
+      h,
+      m.member_id,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      (/* @__PURE__ */ new Date()).toISOString(),
+      m.member_id
+    );
+    return {
+      ok: true,
+      memberId: m.member_id,
+      handle: h,
+      ...this.courtNotice().choice === "tell" ? { courtStatement: _Members.COURT_STATEMENT } : {}
+    };
+  }
+  /* R16, R144: the one judgment of a chosen handle, `h` already trimmed, for an enrolment and for the founder's set:
+     `NO_HANDLE`, `BAD_HANDLE` (R12's pattern), then `HANDLE_TAKEN` (R16 (T40, T46; DEC-184 (1), DEC-186 (2), DEC-196): taken
+     when another member holds it now, whatever their status (a member who has left keeps theirs), or held it before, the
+     founder's included, R144; `admin` always, R141). `self` is the member who may keep it, none for the founder. Null when
+     the handle is free. */
+  #handleRefusal(h, self) {
+    if (!h) return {
+      ok: false,
+      reason: "NO_HANDLE",
+      detail: localize("membership.index.choose_a_handle_it_is", "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.")
+    };
+    if (!_Members.HANDLE_PATTERN.test(h))
+      return { ok: false, reason: "BAD_HANDLE", detail: localize("member-roster.index.lowercase_letters_digits_and_dashes", "lowercase letters, digits and dashes, 2 to 41 characters") };
+    if (this.#heldByAnother(h, self)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
+    return null;
+  }
+  /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
+     answer says so; its row is this module's C-96.18. */
+  static #enrolNotRecorded() {
+    const row3 = MEMBERSHIP_CHECKS2.ENROL_NOT_RECORDED;
+    return {
+      ok: false,
+      reason: "ENROL_NOT_RECORDED",
+      code: "ENROL_NOT_RECORDED",
+      check: row3.check,
+      translation: row3.translation,
+      detail: localize("membership.index.the_password_could_not_be", "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.")
+    };
+  }
+  static #projects(projectsOf, memberId, viewer) {
+    if (typeof projectsOf !== "function") return [];
+    try {
+      const got = projectsOf(memberId, viewer);
+      return Array.isArray(got) ? got : [];
+    } catch {
+      return [];
+    }
+  }
+  /* R71 (T51; K624; split map §3 seam 4): the projects of a member are given by the caller, never read here.
+     `projectsOf(memberId, viewer)` answers the list `membership` R18's rule gives that member for that viewer; it is called
+     only for an administrator's roster (`administer`), for each row and for the founder's, in that order. Without a
+     function, when it answers anything but a list, or when it throws, a row's `projects` is `[]`. */
+  memberList({ administer, viewer = null, projectsOf = null } = {}) {
+    const pairs = administer === true || administer === "1";
+    const rows = this.#rows(
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, pairing_published, created, updated,
+              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending,
+              door, approved_by, invite_expires, invite_withdrawn
+       FROM members ORDER BY member_id`
+    ).map(({ door, approved_by, invite_expires, invite_withdrawn, ...r }) => ({
+      ...r,
+      capabilities: this.#capsOf(r),
+      status_by: _Members.#statusBy(r.status_by),
+      /* REC-159: who set the status, or `not recorded` */
+      invited_by: _Members.#statusBy(r.invited_by),
+      /* D-134 (BOB #35): who invited them, or `not recorded` */
+      /* D-51: served from `member_expertise`, not from the dead column on
+         this row. Two places answering the same question, one of them never
+         updated, is the shape that produces a roster nobody can trust. */
+      expertise: this.expertiseList({ memberId: r.member_id }).expertise,
+      /* R17 (T46; DEC-197): no `formerly` key: a handle is chosen at joining and never changed. */
+      pairing_published: r.pairing_published === 1,
+      /* R19 */
+      ...pairs ? {
+        projects: _Members.#projects(projectsOf, r.member_id, viewer),
+        /* R18, R71: an administrator's roster */
+        /* R105: how each came in and their invitation, for an administrator's roster only. */
+        door: door ?? "administrator",
+        approvedBy: approved_by ?? null,
+        expires: r.status === "proposed" ? null : invite_expires ?? null,
+        invitation: _Members.#invitationState(r, invite_expires, invite_withdrawn)
+      } : {}
+    }));
+    const founder = this.#claimed() ? [{
+      member_id: _Members.ROOT_ADMIN,
+      handle: this.founderHandle(),
+      founder: true,
+      role: "admin",
+      status: "active",
+      status_by: _Members.#statusBy(null),
+      invited_by: _Members.#statusBy(null),
+      capabilities: [..._Members.CAPABILITIES],
+      pairing_published: false,
+      created: null,
+      updated: null,
+      invite_pending: 0,
+      expertise: [],
+      ...pairs ? { projects: _Members.#projects(projectsOf, _Members.ROOT_ADMIN, viewer) } : {}
+    }] : [];
+    return { members: [...founder, ...rows] };
+  }
+  /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186, Bob's "S18: B"; K1881, K2394) — A MEMBER'S HANDLE, CHECKED AS IT
+   * IS TYPED; T46 (T46-4; N934; DEC-196, DEC-197; K2903) — AND NEVER CHANGED =====
+   *
+   * A handle is unique in the group and never reused (R16): every member's handle stays taken whatever the member's
+   * status, a member who has left included, and so does every handle `handle_history` holds, the earlier handles of the
+   * changes made before R124 was retired (append-only and never deleted, R57). The check (R123) says only free, taken or
+   * not allowed, never who holds a handle or that it was someone's earlier one, and counts every call against a window
+   * per invitation or member (K1881's protective limit). A handle is chosen at joining and never changed (DEC-197):
+   * `handleChange` (R129) refuses every call `HANDLE_FIXED`, reading and writing nothing. R125's guard slot stands, so
+   * reopening a change is one requirement, but no act here calls it. */
+  static HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,40}$/;
+  /* R123 (K1881): 60 checks in any 10 minutes, per invitation or per member, by a two-bucket sliding window
+     (`credentials` R38's form; `capture` R31's). */
+  static HANDLE_CHECK_WINDOW = Object.freeze({ perKey: 60, windowMs: 10 * 6e4 });
+  static HANDLE_CHECK_STATED = word(
+    "membership.handle_check_stated",
+    { per_key: _Members.HANDLE_CHECK_WINDOW.perKey, minutes: _Members.HANDLE_CHECK_WINDOW.windowMs / 6e4 }
+  );
+  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
+     (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
+  #heldByAnother(handle, self) {
+    if (handle === _Members.ROOT_ADMIN || handle === this.founderHandle()) return true;
+    return !!this.#one(
+      `SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
+                        UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
+      handle,
+      self ?? "",
+      handle,
+      self ?? ""
+    );
+  }
+  /* R123: what in a typed handle does not fit R12's pattern: `length` (2 to 41), `start` (a letter or digit) and
+     `characters`, naming each character outside lower-case letters, digits and hyphens, once, in the order typed. */
+  static #handleProblems(h) {
+    const problems = [];
+    if (h.length < 2 || h.length > 41) problems.push({ problem: "length", min: 2, max: 41 });
+    if (h.length && !/^[a-z0-9]/.test(h)) problems.push({ problem: "start" });
+    const odd = [...new Set([...h].filter((c) => !/[a-z0-9-]/.test(c)))].slice(0, 20);
+    if (odd.length) problems.push({ problem: "characters", characters: odd });
+    return problems;
+  }
+  /* R123: the smallest `<handle>-2`, `-3`, … that R12's pattern admits and no member but `self` holds or held; null when
+     none fits 41 characters. The handles so far taken under that stem are read once. */
+  #suggestion(h, self) {
+    const stem = `${h}-`;
+    const founder = this.founderHandle();
+    const taken = new Set(this.#rows(
+      `SELECT handle AS h FROM members WHERE substr(handle, 1, ?) = ? AND member_id<>?
+       UNION SELECT from_handle AS h FROM handle_history WHERE substr(from_handle, 1, ?) = ? AND member_id<>?`,
+      stem.length,
+      stem,
+      self ?? "",
+      stem.length,
+      stem,
+      self ?? ""
+    ).map((r) => r.h));
+    if (founder) taken.add(founder);
+    for (let n = 2; ; n++) {
+      const cand = `${stem}${n}`;
+      if (cand.length > 41) return null;
+      if (!taken.has(cand)) return cand;
+    }
+  }
+  /* R123's window for one key at `now`: `prev × (1 − elapsed/W) + cur`. */
+  #handleCheckEstimate(key, now) {
+    const W2 = _Members.HANDLE_CHECK_WINDOW.windowMs;
+    const win = Math.floor(now / W2);
+    const at8 = (w) => Number(this.#one(`SELECT count FROM handle_check_window WHERE key=? AND win=?`, key, w)?.count ?? 0);
+    return { prev: at8(win - 1), cur: at8(win), win, f: (now - win * W2) / W2 };
+  }
+  /* Whole seconds until the estimate falls below the bound, no further check counted. */
+  static #handleCheckRetry({ prev, cur, f: f4 }) {
+    const W2 = _Members.HANDLE_CHECK_WINDOW.windowMs, N2 = _Members.HANDLE_CHECK_WINDOW.perKey;
+    let ms;
+    if (cur < N2 && prev > 0 && 1 - (N2 - cur) / prev < 1) ms = Math.max(0, (1 - (N2 - cur) / prev - f4) * W2);
+    else ms = (1 - f4) * W2 + Math.max(0, 1 - N2 / Math.max(cur, 1)) * W2;
+    return Math.max(1, Math.ceil(ms / 1e3) + 1);
+  }
+  /* R123 (DEC-188 (7)): the paused answer's fields: `stated`, `retryAfter` in whole seconds, and `minutes`, the whole
+     minutes until then, rounded up, which the translation's `{minutes}` names. */
+  static #pausedFor(retryAfter) {
+    return { stated: _Members.HANDLE_CHECK_STATED, retryAfter, minutes: Math.ceil(retryAfter / 60) };
+  }
+  /** R123 (DEC-184 (2), (3), DEC-186 (3); K1881; `op=handlecheck`): whether `handle` could be taken in this group now,
+   *  as a person types it, asked with a live invitation or by an active member (`viewer`, a member checking a handle;
+   *  T46: no handle is changed, R129). Free, taken (with a
+   *  suggestion) or not allowed (naming what does not fit), never who holds it. Writes only its count; never throws. */
+  async handleCheck({ invite = null, handle = null, viewer = null } = {}) {
+    try {
+      let key = null, self = null;
+      const m = invite !== null && invite !== void 0 ? await this.#invited(invite) : null;
+      if (m) {
+        key = `invite:${await _Members.#sha256(invite)}`;
+        self = m.member_id;
+      } else {
+        const who2 = viewerMember(viewer);
+        const row3 = who2 && who2 !== _Members.ROOT_ADMIN ? this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, who2) : null;
+        if (row3 && row3.status === "active") key = `member:${row3.member_id}`;
+      }
+      if (!key) return { ..._Members.#INVITE_MISS };
+      const now = Date.now();
+      const est = this.#handleCheckEstimate(key, now);
+      if (est.prev * (1 - est.f) + est.cur >= _Members.HANDLE_CHECK_WINDOW.perKey)
+        return _Members.#rowRefusal(
+          "HANDLE_CHECK_PAUSED",
+          localize("membership.index.too_many_handles_were_checked", "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed."),
+          _Members.#pausedFor(_Members.#handleCheckRetry(est))
+        );
+      this.sql.exec(`INSERT INTO handle_check_window (key, win, count) VALUES (?,?,1)
+                     ON CONFLICT(key, win) DO UPDATE SET count=count+1`, key, est.win);
+      this.sql.exec(`DELETE FROM handle_check_window WHERE win < ?`, est.win - 1);
+      const h = String(handle ?? "").trim();
+      const shown = h.slice(0, 80);
+      const words = (k, names = []) => ({ key: k, en: keyed(k, names) });
+      if (!_Members.HANDLE_PATTERN.test(h))
+        return {
+          ok: true,
+          handle: shown,
+          state: "not_allowed",
+          problems: _Members.#handleProblems(h),
+          suggestion: null,
+          words: words("handle.characters")
+        };
+      if (this.#heldByAnother(h, self))
+        return {
+          ok: true,
+          handle: shown,
+          state: "taken",
+          problems: [],
+          suggestion: this.#suggestion(h, self),
+          words: words("handle.taken", ["handle", "group", "suggestion"])
+        };
+      return { ok: true, handle: shown, state: "free", problems: [], suggestion: null, words: words("handle.free", ["handle", "group"]) };
+    } catch {
+      return { ..._Members.#INVITE_MISS };
+    }
+  }
+  /* R125 (DEC-186 (1); K2376 (4); R116's form): the one guard a change of handle would ask whether a member's work is in
+     a published case. One later module (`publication`, its R76) registers once at start; the slot takes one
+     registration whoever makes it, so its refusals are R81's, naming the holder. T46 (DEC-197): while no handle is
+     changed (R129), no act of this module calls it; the slot stands so that reopening a change is one requirement. */
+  #handleGuard = null;
+  // {module, fn}
+  registerHandleGuard(module, fn) {
+    const refused2 = listenerRefusal(this.#handleGuard, module, fn);
+    if (refused2) return refused2;
+    this.#handleGuard = { module, fn };
+    return { ok: true, module };
+  }
+  /** R129 (T46; DEC-197, DEC-196; N934, K2903; `op=handlechange`): a handle is chosen when a member joins and is never
+   *  changed, by the member or anyone. The op stays declared and routed, and every call is refused HANDLE_FIXED before
+   *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
+   *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
+  handleChange() {
+    return _Members.#handleFixed("a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.");
+  }
+  /* R129, R144: HANDLE_FIXED is minted here alone; `handleChange` and a second `founderHandleSet` answer through it. */
+  static #handleFixed(detail) {
+    return _Members.#rowRefusal("HANDLE_FIXED", detail);
+  }
+  /* ===== T49 (T49-1; N1072; Bob's K3265) — THE FOUNDER'S OWN HANDLE (R144) =====
+   *
+   * The founder has no members row, so the handle she signs in and is known by is held in a table of its own, one row at
+   * most. It is chosen once and never changed (a second set is HANDLE_FIXED, R129's row). Her member id stays `admin` in
+   * every viewer, stamp and participation row (R43, R44, R64, R86, R94); the id is a reserved name, the handle of no one
+   * (R141). */
+  /** R144: the founder's held handle, or null while none is held. Writes nothing; never throws. */
+  founderHandle() {
+    try {
+      return this.#one(`SELECT handle FROM founder_handle WHERE id=1`)?.handle ?? null;
+    } catch {
+      return null;
+    }
+  }
+  /** R144 (`op=founderhandleset`; called in-plane by `credentials`' claim inside its act): records the handle the founder
+   *  signs in and is known by. Refusals in order, each writing nothing: a `by` that is not the founder (`admin` or
+   *  `member:admin`) is FOUNDER_HANDLE_NOT_FOUNDER (a machine credential included); a handle already held is
+   *  HANDLE_FIXED; then R16's NO_HANDLE, BAD_HANDLE and HANDLE_TAKEN. Answers `{ok: true, handle}`. */
+  founderHandleSet(args = {}) {
+    const { handle = null, by = null } = isObj(args) ? args : {};
+    if (by !== _Members.ROOT_ADMIN && by !== `member:${_Members.ROOT_ADMIN}`)
+      return _Members.#rowRefusal(
+        "FOUNDER_HANDLE_NOT_FOUNDER",
+        localize("membership.index.the_founders_handle_is_chosen", "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written."),
+        { by: _Members.#echo(by ?? null) }
+      );
+    if (this.founderHandle() !== null)
+      return _Members.#handleFixed(localize("membership.index.the_founders_handle_is_chosen_2", "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written."));
+    const h = String(handle ?? "").trim();
+    const refused2 = this.#handleRefusal(h, null);
+    if (refused2) return refused2;
+    this.sql.exec(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, h, (/* @__PURE__ */ new Date()).toISOString());
+    return { ok: true, handle: h };
+  }
+  memberSet({ memberId, status, by = null } = {}) {
+    const barSet = this.#custodialBar(by, "setting a member's status");
+    if (barSet) return barSet;
+    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    const refusal8 = (code, detail, extra) => _Members.#custodialRefusal(code, detail, extra);
+    if (m.role === "admin" && status === "revoked")
+      return refusal8(
+        "ADMIN_REQUIRES_VOTE",
+        "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
+      );
+    const demoted = status === "active" && m.role === "admin" && m.status !== "active";
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const actor = by || null;
+    const at8 = m.status !== status ? now : null;
+    if (demoted)
+      this.sql.exec(
+        `UPDATE members SET status=?, role='member', status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
+        status,
+        actor,
+        at8,
+        now,
+        memberId
+      );
+    else
+      this.sql.exec(
+        `UPDATE members SET status=?, status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
+        status,
+        actor,
+        at8,
+        now,
+        memberId
+      );
+    if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);
+    return { ok: true, memberId, status, by: _Members.#statusBy(actor), ...demoted ? {
+      demoted: true,
+      detail: localize("membership.index.reactivated_as_an_ordinary_member", "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.")
+    } : {} };
+  }
+  /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745) — INVITATIONS THAT EXPIRE, THE GROUP'S TWO DOORS, ADDRESSING
+   * A CHECK, AND THE GROUP'S OWN SETTINGS =====
+   *
+   * Every new refusal is a row of this module's (C-96.22–.38) answered through `#rowRefusal`, its code a literal at
+   * the one region its row's `where` names; the administrator's refusal is R84's. A secret this module hands out (an
+   * invitation, a website key, a join link) is returned once and held only as its hash (R111). No service here sends a
+   * message (R105): an invitation reaches its person only through the answer to its caller. */
+  static INVITE_DAYS_DEFAULT = 7;
+  static INVITE_DAYS_MAX = 30;
+  /* A refusal carrying its row from MEMBERSHIP_CHECKS: `reason` and `code` the same literal, `#custodialRefusal`'s
+     shape. The caller's fields sit beside the row's and never replace them. */
+  static #rowRefusal(code, detail, extra) {
+    const row3 = MEMBERSHIP_CHECKS2[code];
+    return { ...extra || {}, ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail };
+  }
+  /* R97: the days an invitation lasts: 7 when not given, else a whole number from 1 to 30; anything else BAD_EXPIRY.
+     Answers the number, or the refusal. One judgment for R12, R99, R100, R102 and R103. */
+  static #expiryRefusal(v) {
+    if (v === void 0 || v === null) return _Members.INVITE_DAYS_DEFAULT;
+    if (Number.isInteger(v) && v >= 1 && v <= _Members.INVITE_DAYS_MAX) return v;
+    return _Members.#rowRefusal(
+      "BAD_EXPIRY",
+      localize("membership.index.an_invitation_lasts_a_whole", "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.", { INVITE_DAYS_MAX: String(_Members.INVITE_DAYS_MAX) }),
+      { expiresInDays: _Members.#echo(v) }
+    );
+  }
+  /* R99: the daily number of invitations a door may make, a whole number of at least 1, which the administrator sets;
+     `required` when nothing stands for it yet (a creation or an enabling). Answers the number, or the refusal. */
+  static #dailyCapRefusal(v, required) {
+    if (!required && (v === void 0 || v === null)) return null;
+    if (Number.isInteger(v) && v >= 1) return v;
+    return _Members.#rowRefusal(
+      "BAD_DAILY_CAP",
+      localize("membership.index.a_door_makes_at_most", "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written."),
+      { dailyCap: _Members.#echo(v) }
+    );
+  }
+  /* R99 "BAD_CAPABILITY as R9": the door's capabilities, `["contribute"]` when not given; a non-array or a word outside
+     the vocabulary (`administer` among them) is R9's refusal, naming the words and the vocabulary. Answers the list
+     (each word once, in the order given), or the refusal. */
+  static #doorCapabilities(v, required) {
+    if (v === void 0 || v === null) return required ? ["contribute"] : null;
+    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    const bad = v.filter((c) => !_Members.CAPABILITIES.includes(c));
+    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad.map(_Members.#echo), known: _Members.CAPABILITIES };
+    return [...new Set(v)];
+  }
+  /* A caller's value echoed back in a refusal: never more than it can carry safely. */
+  static #echo(v) {
+    try {
+      return typeof v === "string" ? v.slice(0, 40) : typeof v === "number" || typeof v === "boolean" || v === null ? v : String(v).slice(0, 40);
+    } catch {
+      return null;
+    }
+  }
+  static #expiresAt(nowIso, days) {
+    return new Date(Date.parse(nowIso) + days * 864e5).toISOString();
+  }
+  static #expired(expires) {
+    return typeof expires === "string" && Date.parse(expires) <= Date.now();
+  }
+  /* R105: an invitation's state on an administrator's roster. A proposed administrator has none yet. */
+  static #invitationState(r, expires, withdrawn) {
+    if (r.status === "proposed") return null;
+    if (withdrawn) return "withdrawn";
+    if (r.status === "invited") return r.invite_pending ? _Members.#expired(expires) ? "expired" : "live" : "expired";
+    if (r.status === "revoked" && !r.handle) return "withdrawn";
+    return "spent";
+  }
+  /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
+  inviteWithdraw({ memberId, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");
+    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
+    if (!m) return noSuchMember(memberId);
+    if (m.status !== "invited" || !m.invite_hash)
+      return _Members.#rowRefusal(
+        "NO_UNUSED_INVITATION",
+        localize("membership.index.only_an_invitation_that_has", "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written."),
+        { memberId, status: m.status }
+      );
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, status_at=?, updated=?
+                    WHERE member_id=?`, now, by, now, now, memberId);
+    this.#announceRevoked(memberId, by, now);
+    return { ok: true, memberId, status: "revoked", invitation: "withdrawn", by, at: now };
+  }
+  /* ---- R99-R105 (DEC-133): the group's two doors ---- */
+  static DOOR_WARNING = word("membership.door_warning");
+  static #DOOR = {
+    website: { door: "website", start: "create", stop: "revoke", actor: "website" },
+    link: { door: "join link", start: "enable", stop: "off", actor: "join-link" }
+  };
+  /* A door's latest row, and whether it is live (its latest row neither a revocation nor a switching off). */
+  #doorNow(kind) {
+    const d = _Members.#DOOR[kind];
+    const r = this.#one(`SELECT door_id, event, secret_hash, capabilities, daily_cap, expires_days FROM join_doors
+                          WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
+    if (!r || r.event === d.stop) return null;
+    return {
+      id: r.door_id,
+      hash: r.secret_hash,
+      capabilities: this.#capsOf(r),
+      dailyCap: r.daily_cap,
+      expiresInDays: r.expires_days
+    };
+  }
+  #doorAppend(kind, id, event, hash, s, by, at8) {
+    this.sql.exec(
+      `INSERT INTO join_doors (door, door_id, event, secret_hash, capabilities, daily_cap, expires_days, set_by, at)
+                   VALUES (?,?,?,?,?,?,?,?,?)`,
+      _Members.#DOOR[kind].door,
+      id,
+      event,
+      hash,
+      JSON.stringify(s.capabilities),
+      s.dailyCap,
+      s.expiresInDays,
+      by,
+      at8
+    );
+  }
+  /* A door's settings, each judged as R99 judges it: `required` at a creation or an enabling (capabilities default,
+     the cap required, the days default), else each left as `held` has it when not given. Answers the settings, or the
+     first refusal in R99's order. */
+  static #doorSettings({ capabilities, dailyCap, expiresInDays }, held2) {
+    const required = !held2;
+    const caps = _Members.#doorCapabilities(capabilities, required);
+    if (caps && !Array.isArray(caps)) return caps;
+    const cap = _Members.#dailyCapRefusal(dailyCap, required);
+    if (cap && typeof cap !== "number") return cap;
+    let days = held2 ? held2.expiresInDays : _Members.INVITE_DAYS_DEFAULT;
+    if (expiresInDays !== void 0 && expiresInDays !== null || required) {
+      days = _Members.#expiryRefusal(expiresInDays);
+      if (typeof days !== "number") return days;
+    }
+    return { ok: true, capabilities: caps ?? held2.capabilities, dailyCap: cap ?? held2.dailyCap, expiresInDays: days };
+  }
+  static #secret() {
+    return _Members.#rand(32);
+  }
+  static #doorIdOf() {
+    return _Members.#rand(8);
+  }
+  /* R100's refusal when no key is live, and R103's when no link is: each minted in its one region. */
+  #liveWebsiteKey(act) {
+    const now = this.#doorNow("website");
+    if (now) return now;
+    return _Members.#rowRefusal(
+      "NO_WEBSITE_KEY",
+      localize("membership.index.act_acts_on_the_teams", "{act} acts on the team's live website key, and there is none. Nothing was written.", { act: String(act) })
+    );
+  }
+  #liveJoinLink(act) {
+    const now = this.#doorNow("link");
+    if (now) return now;
+    return _Members.#rowRefusal(
+      "JOIN_LINK_OFF",
+      localize("membership.index.act_acts_on_the_teams_2", "{act} acts on the team's join link, and it is off. Nothing was written.", { act: String(act) })
+    );
+  }
+  /** R99: an administrator creates the website key, at most one live. The key is answered once and never again. */
+  websiteKeyCreate({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.creating_the_teams_website_key", "creating the team's website key"));
+    if (this.#doorNow("website"))
+      return _Members.#rowRefusal(
+        "WEBSITE_KEY_EXISTS",
+        localize("membership.index.the_team_holds_one_live", "the team holds one live website key at a time (DEC-133). Nothing was created.")
+      );
+    const s = _Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
+    if (!s.ok) return s;
+    const key = _Members.#secret(), keyId = _Members.#doorIdOf(), at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("website", keyId, "create", sha256HexSync(key), s, by, at8);
+    return {
+      ok: true,
+      keyId,
+      key,
+      capabilities: s.capabilities,
+      dailyCap: s.dailyCap,
+      expiresInDays: s.expiresInDays,
+      warning: _Members.DOOR_WARNING
+    };
+  }
+  /** R100: the live key's scope, cap or invitation days changed, each as R99 judges it, each kept when not given. */
+  websiteKeySet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.changing_the_teams_website_key", "changing the team's website key"));
+    const live = this.#liveWebsiteKey(localize("member-roster.index.changing_the_website_key", "changing the website key"));
+    if (live.ok === false) return live;
+    const s = _Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
+    if (!s.ok) return s;
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("website", live.id, "set", live.hash, s, by, at8);
+    return {
+      ok: true,
+      keyId: live.id,
+      capabilities: s.capabilities,
+      dailyCap: s.dailyCap,
+      expiresInDays: s.expiresInDays,
+      by,
+      at: at8
+    };
+  }
+  /** R100: the live key is dead at once; the invitations it made stay as they are (R98 withdraws them). */
+  websiteKeyRevoke({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.switching_off_the_teams_website_key", "switching off the team's website key"));
+    const live = this.#liveWebsiteKey(localize("member-roster.index.switching_off_the_website_key", "switching off the website key"));
+    if (live.ok === false) return live;
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("website", live.id, "revoke", null, live, by, at8);
+    return { ok: true, keyId: live.id, revoked: true, by, at: at8 };
+  }
+  /* The live door whose secret this is, or null: a secret that is not 64 lowercase hex characters names none, and is
+     never hashed against the log. */
+  #doorFor(kind, secret) {
+    if (typeof secret !== "string" || !/^[0-9a-f]{64}$/.test(secret)) return null;
+    const live = this.#doorNow(kind);
+    return live && live.hash === sha256HexSync(secret) ? live : null;
+  }
+  /* The cover a door's caller gives: a non-empty string, or null. */
+  static #doorCover(cover) {
+    return typeof cover === "string" && cover.trim() ? cover : null;
+  }
+  /* How many invitations this door's actor made in the 24 hours before now. */
+  #doorToday(actor) {
+    const since = new Date(Date.now() - 864e5).toISOString();
+    return this.#one(`SELECT COUNT(*) AS n FROM members WHERE invited_by=? AND created>?`, actor, since).n;
+  }
+  /* R101, R104, R105: an ordinary member made through a door: role `member`, `invited` (never proposed), under a fresh
+     member id R12's pattern admits and nothing in the request derives, `invited_by` and `status_by` the door's actor,
+     the door's capabilities, an invitation that expires after the door's days. Answers `{invite, expires}` once. */
+  async #doorMember(kind, live, cover, approvedBy) {
+    const d = _Members.#DOOR[kind];
+    const actor = `${d.actor}:${live.id}`;
+    let memberId;
+    do
+      memberId = `m-${_Members.#rand(10)}`;
+    while (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId));
+    const invite = _Members.#rand(16);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const expires = _Members.#expiresAt(now, live.expiresInDays);
+    this.sql.exec(
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                            invite_expires,door,approved_by)
+       VALUES (?,?,NULL,'member','invited',?,?,?,?,?,?,?,?,?)`,
+      memberId,
+      cover,
+      await _Members.#sha256(invite),
+      JSON.stringify(live.capabilities),
+      now,
+      now,
+      actor,
+      actor,
+      expires,
+      d.door,
+      approvedBy
+    );
+    return { ok: true, invite, expires };
+  }
+  /** R101: the website's call: one invitation for one cover name, with the approver's name as the website reports it. */
+  async websiteInvite({ key, cover, approvedBy = null } = {}) {
+    const live = this.#doorFor("website", key);
+    if (!live)
+      return _Members.#rowRefusal(
+        "WEBSITE_KEY_UNKNOWN",
+        localize("membership.index.this_key_opens_no_door", "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.")
+      );
+    const label = _Members.#doorCover(cover);
+    if (!label) return _Members.#custodialRefusal(
+      "NO_COVER",
+      localize("membership.index.the_website_names_the_person", "the website names the person by the cover the team will know them by. Nothing was written.")
+    );
+    if (this.#doorToday(`website:${live.id}`) >= live.dailyCap)
+      return _Members.#rowRefusal(
+        "WEBSITE_DAILY_CAP",
+        localize("membership.index.the_website_key_has_made", "the website key has made its daily number of invitations in the last 24 hours. Nothing was written."),
+        { dailyCap: live.dailyCap }
+      );
+    const a = approvedBy === null || approvedBy === void 0 ? "" : String(approvedBy).trim().slice(0, 120);
+    return this.#doorMember("website", live, label, a || null);
+  }
+  /** R102: an administrator switches the join link on, at most one live. The link is answered once and never again. */
+  joinLinkEnable({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.switching_on_the_teams_join_link", "switching on the team's join link"));
+    if (this.#doorNow("link"))
+      return _Members.#rowRefusal(
+        "JOIN_LINK_ON",
+        localize("membership.index.the_team_holds_one_live_2", "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.")
+      );
+    const s = _Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
+    if (!s.ok) return s;
+    const link = _Members.#secret(), linkId = _Members.#doorIdOf(), at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("link", linkId, "enable", sha256HexSync(link), s, by, at8);
+    return {
+      ok: true,
+      linkId,
+      link,
+      capabilities: s.capabilities,
+      dailyCap: s.dailyCap,
+      expiresInDays: s.expiresInDays,
+      warning: _Members.DOOR_WARNING
+    };
+  }
+  /** R103: the live link's settings changed, as R100 changes the key's. */
+  joinLinkSet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.changing_the_teams_join_link", "changing the team's join link"));
+    const live = this.#liveJoinLink(localize("member-roster.index.changing_the_join_link", "changing the join link"));
+    if (live.ok === false) return live;
+    const s = _Members.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
+    if (!s.ok) return s;
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("link", live.id, "set", live.hash, s, by, at8);
+    return {
+      ok: true,
+      linkId: live.id,
+      capabilities: s.capabilities,
+      dailyCap: s.dailyCap,
+      expiresInDays: s.expiresInDays,
+      by,
+      at: at8
+    };
+  }
+  /** R103: a new link, answered once, its settings kept; the old one is dead at once. */
+  joinLinkReplace({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.replacing_the_teams_join_link", "replacing the team's join link"));
+    const live = this.#liveJoinLink(localize("member-roster.index.replacing_the_join_link", "replacing the join link"));
+    if (live.ok === false) return live;
+    const link = _Members.#secret(), linkId = _Members.#doorIdOf(), at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("link", linkId, "replace", sha256HexSync(link), live, by, at8);
+    return {
+      ok: true,
+      linkId,
+      link,
+      replaced: live.id,
+      capabilities: live.capabilities,
+      dailyCap: live.dailyCap,
+      expiresInDays: live.expiresInDays,
+      by,
+      at: at8
+    };
+  }
+  /** R103: the live link is dead at once. */
+  joinLinkOff({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.switching_off_the_teams_join_link", "switching off the team's join link"));
+    const live = this.#liveJoinLink(localize("member-roster.index.switching_off_the_join_link", "switching off the join link"));
+    if (live.ok === false) return live;
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#doorAppend("link", live.id, "off", null, live, by, at8);
+    return { ok: true, linkId: live.id, off: true, by, at: at8 };
+  }
+  /** R104: the join page's call: one invitation for the cover the person chose; enrolment is R16's. */
+  async joinLinkInvite({ link, cover } = {}) {
+    const live = this.#doorFor("link", link);
+    if (!live)
+      return _Members.#rowRefusal(
+        "NO_SUCH_JOIN_LINK",
+        localize("membership.index.this_link_opens_no_door", "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.")
+      );
+    const label = _Members.#doorCover(cover);
+    if (!label) return _Members.#custodialRefusal(
+      "NO_COVER",
+      "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written."
+    );
+    if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
+      return _Members.#rowRefusal(
+        "JOIN_LINK_DAILY_CAP",
+        localize("membership.index.the_join_link_has_let", "the join link has let in its daily number of people in the last 24 hours. Nothing was written."),
+        { dailyCap: live.dailyCap }
+      );
+    return this.#doorMember("link", live, label, null);
+  }
+  /* ---- R130 (T46; N654, K1752): the doors' settings and history, for an administrator ---- */
+  /* R130's bound: R113's rule, at most 200 records, lowered never raised. */
+  static JOIN_DOORS_LIMIT = 200;
+  /** R130 (`op=joindoors`): the settings and history of the group's two doors, to an administrator (R64), never their
+   *  secrets. Each door answers `{live, current, history, limit, truncated}`: `current` the live door's settings, its
+   *  id the one its invitations' actor names (R105), `since` and `by` its latest record's; `history` every record R100
+   *  and R103 appended for it, in the order recorded, the first `limit` of them, `truncated` read one row past. No
+   *  column holding a secret's hash is selected, and no invitation a door made is read. Writes nothing, never throws. */
+  joinDoors(args = {}) {
+    const { by = null, limit = null } = isObj(args) ? args : {};
+    try {
+      if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.reading_the_teams_website_key_and", "reading the team's website key and join link"));
+      const cap = Math.max(1, Math.min(Number(limit) || _Members.JOIN_DOORS_LIMIT, _Members.JOIN_DOORS_LIMIT));
+      const record2 = (r) => ({
+        id: r.door_id,
+        event: r.event,
+        capabilities: this.#capsOf(r),
+        dailyCap: r.daily_cap,
+        expiresInDays: r.expires_days,
+        by: r.set_by,
+        at: r.at
+      });
+      const door = (kind) => {
+        const d = _Members.#DOOR[kind];
+        const found2 = this.#rows(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
+                                   WHERE door=? ORDER BY seq LIMIT ?`, d.door, cap + 1).map(record2);
+        const last = this.#one(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
+                                 WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
+        const live = !!last && last.event !== d.stop;
+        const truncated = found2.length > cap;
+        return {
+          live,
+          current: live ? {
+            id: last.door_id,
+            capabilities: this.#capsOf(last),
+            dailyCap: last.daily_cap,
+            expiresInDays: last.expires_days,
+            since: last.at,
+            by: last.set_by
+          } : null,
+          history: truncated ? found2.slice(0, cap) : found2,
+          limit: cap,
+          truncated
+        };
+      };
+      return { ok: true, websiteKey: door("website"), joinLink: door("link") };
+    } catch {
+      const none = { live: false, current: null, history: [], limit: _Members.JOIN_DOORS_LIMIT, truncated: false };
+      return { ok: true, websiteKey: { ...none }, joinLink: { ...none } };
+    }
+  }
+  /* ---- R75 (T51; K624, K3946; was membership R153; N1248, K3861, DEC-332 A72): the removals under way, read ---- */
+  /** `adminRemovalsOpen({by})` answers an administrator `{ok: true, removals}`: one entry for each administrator who is the
+   *  target of at least one recorded `remove` vote and is not yet revoked, `{target, voters, awaiting, have, need}`.
+   *  `voters` are the administrators who have voted on that target (the target never counted), in the order cast,
+   *  `{voter, at}`; `awaiting` the administrators who may vote on it and have not, in R29's order; `have` the votes as
+   *  R4 counts them; `need` `adminMath(administrators).votesNeeded`. No reason is answered. A caller who is not an
+   *  administrator, a machine credential included, is refused NOT_AN_ADMIN (R28). Writes nothing; never throws. */
+  adminRemovalsOpen(args = {}) {
+    const { by = null } = isObj(args) ? args : {};
+    try {
+      if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.reading_the_administrator_removals_under_way", "reading the administrator removals under way"));
+      const admins = this.activeAdmins();
+      const need = _Members.adminMath(admins.length).votesNeeded;
+      const targets = this.#rows(
+        `SELECT v.target AS target FROM admin_votes v JOIN members m ON m.member_id = v.target
+          WHERE v.kind='remove' AND m.role='admin' AND m.status<>'revoked'
+          GROUP BY v.target ORDER BY MIN(v.created), v.target`
+      ).map((r) => r.target);
+      const removals = targets.map((target) => {
+        const voters = this.#rows(
+          `SELECT voter, created FROM admin_votes WHERE kind='remove' AND target=? ORDER BY created, rowid`,
+          target
+        ).filter((v) => admins.includes(v.voter) && v.voter !== target).map((v) => ({ voter: v.voter, at: v.created }));
+        const voted = voters.map((v) => v.voter);
+        return {
+          target,
+          voters,
+          awaiting: admins.filter((a) => a !== target && !voted.includes(a)),
+          have: voters.length,
+          need
+        };
+      });
+      return { ok: true, removals };
+    } catch {
+      return { ok: true, removals: [] };
+    }
+  }
+  /* ---- R72 (T51; K624; split map §3 seam 5): who currently holds an expertise ---- */
+  /** Every active member whose latest entry for `label` is declared or confirmed (a withdrawn one is neither, R19), each
+   *  `{memberId, handle, state}`, in member-id order; `[]` for a label nobody holds and when a read fails. `label` is
+   *  normalised as R17 does; an empty one is refused `EXPERTISE_NO_LABEL`. It reads this module's tables only, asks no
+   *  sight, grants none (R20), writes nothing and never throws. (`membership`'s `checkAddressees` asks it and applies its
+   *  R80 to each holder.) */
+  expertiseHolders(label) {
+    try {
+      const lab = _Members.#normLabel(label);
+      if (!lab) return _Members.#noLabel("a check request is addressed by a label, such as 'CPA'");
+      return this.#rows(
+        `SELECT x.member_id, m.handle, x.event FROM member_expertise x JOIN members m ON m.member_id = x.member_id
+          WHERE x.label=? AND m.status='active'
+            AND x.seq = (SELECT MAX(y.seq) FROM member_expertise y WHERE y.member_id = x.member_id AND y.label = x.label)
+          ORDER BY x.member_id`,
+        lab
+      ).filter((r) => r.event === "declared" || r.event === "confirmed").map((r) => ({ memberId: r.member_id, handle: r.handle ?? null, state: r.event }));
+    } catch {
+      return [];
+    }
+  }
+  /* ---- R107, R108 (DEC-136 (1)): whether members are told what a court can reach ---- */
+  static COURT_STATEMENT = word("court.statement");
+  /** R107: an administrator's choice, `tell` or `dont`, the same act at setup and in the settings; appended. */
+  courtNoticeSet({ choice, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, localize("member-roster.index.choosing_whether_members_are_told", "choosing whether members are told what a court can reach"));
+    if (choice !== "tell" && choice !== "dont")
+      return _Members.#rowRefusal(
+        "COURT_NOTICE_UNKNOWN_CHOICE",
+        localize("membership.index.the_choice_is_tell_or", "the choice is `tell` or `dont`, and nothing else. Nothing was written."),
+        { choice: _Members.#echo(choice ?? null) }
+      );
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(`INSERT INTO court_notice (choice, set_by, at) VALUES (?,?,?)`, choice, by, at8);
+    return { ok: true, choice, by, at: at8 };
+  }
+  /** R107: the setting and its history; `choice` null until an administrator has chosen, and null reads as not telling. */
+  courtNotice() {
+    try {
+      const history = this.#rows(`SELECT choice, set_by AS by, at FROM court_notice ORDER BY seq`);
+      return { choice: history.length ? history[history.length - 1].choice : null, history };
+    } catch {
+      return { choice: null, history: [] };
+    }
+  }
+  /* ---- R143 (T48; N1036; DEC-218, K3146, K3189): when a member last looked at Home ---- */
+  /* R143, R148: the member whose Home mark `by` names, or null. Only an active member (`ann` or `member:ann`) or the founder
+     (`admin`, once the instance is claimed, R94) has a mark; an absent `by`, a machine credential, an operator token and a
+     member not active have none. */
+  #markHolder(by) {
+    const raw = typeof by === "string" ? by.trim() : "";
+    if (!raw || MACHINE_STAMP_PREFIXES.some((p) => raw.toLowerCase().startsWith(p))) return null;
+    const id = raw.startsWith("member:") ? raw.slice(7) : raw;
+    if (!id) return null;
+    if (id === _Members.ROOT_ADMIN) return this.#claimed() ? id : null;
+    return this.#one(`SELECT status FROM members WHERE member_id=?`, id)?.status === "active" ? id : null;
+  }
+  /** R143: `{since}`, the instant `by`'s previous look was recorded (null when none was), recording this call's instant as
+   *  the new mark in the same act. A `by` without a mark records nothing and answers `{since: null}` (#markHolder).
+   *  Answers only the caller's own mark; never throws. */
+  lookedSince(args = {}) {
+    try {
+      const id = this.#markHolder(isObj(args) ? args.by : null);
+      if (id === null) return { since: null };
+      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      this.sql.exec(
+        `INSERT INTO home_looks (member_id, at) VALUES (?,?) ON CONFLICT(member_id) DO UPDATE SET at=excluded.at`,
+        id,
+        now
+      );
+      return { since: prev ? prev.at : null };
+    } catch {
+      return { since: null };
+    }
+  }
+  /** R148 (`op=lookedat`, a read; N1092, DEC-238): `{since}`, the instant of `by`'s last recorded look at Home, the one
+   *  R143's next `lookedSince` would answer, or null when none was recorded. It records nothing and moves no mark. Who has
+   *  a mark is R143's rule (#markHolder); any other `by` is answered `{since: null}`. Never throws. */
+  lookedAt(args = {}) {
+    try {
+      const id = this.#markHolder(isObj(args) ? args.by : null);
+      if (id === null) return { since: null };
+      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
+      return { since: prev ? prev.at : null };
+    } catch {
+      return { since: null };
+    }
+  }
+  /* ---- R109, R110 (DEC-132): the group's optional self-description ---- */
+  static GROUP_KINDS = Object.freeze(["professional", "issue", "community", "catch-all", "other"]);
+  /* A text field: trimmed, empty reads as null. */
+  static #text(v) {
+    if (v === void 0 || v === null) return null;
+    const t = String(v).trim();
+    return t ? t : null;
+  }
+  /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
+  groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");
+    const refuse2 = (code, detail, extra) => _Members.#rowRefusal(code, localize("membership.index.detail_nothing_was_written", "{detail} Nothing was written.", { detail: String(detail) }), extra);
+    if (!Array.isArray(kinds) || kinds.some((k) => !_Members.GROUP_KINDS.includes(k)))
+      return refuse2("GROUP_KIND_UNKNOWN", localize("membership.index.the_kinds_are_a_list", "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.", { GROUP_KINDS: String(_Members.GROUP_KINDS.join(", ")) }));
+    const ks = [...new Set(kinds)];
+    const other = ks.includes("other") ? _Members.#text(otherKind) : null;
+    if (ks.includes("other") && !other)
+      return refuse2("GROUP_KIND_OTHER_EMPTY", localize("membership.index.other_was_chosen_and_the", "`other` was chosen, and the kind it describes was left empty."));
+    const f4 = _Members.#text(focus), p = _Members.#text(purpose);
+    for (const [name, v, max] of [["otherKind", other, 120], ["focus", f4, 1e3], ["purpose", p, 4e3]])
+      if (v !== null && v.length > max)
+        return refuse2("GROUP_DESCRIPTION_TOO_LONG", localize("membership.index.name_is_at_most_max", "{name} is at most {max} characters.", { name: String(name), max: String(max) }), { field: name, max });
+    const vis = visibility === void 0 || visibility === null ? "members" : visibility;
+    if (vis !== "members" && vis !== "public")
+      return refuse2("GROUP_VISIBILITY_UNKNOWN", localize("membership.index.the_description_is_seen_by", "the description is seen by `members` or by the `public` too."));
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
+                   VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f4, p, vis, by, at8);
+    return { ok: true, kinds: ks, otherKind: other, focus: f4, purpose: p, visibility: vis, by, at: at8 };
+  }
+  /* Who reads the description and its history: an active member, the founder once claimed, a machine credential. */
+  #insider(viewer) {
+    viewer = baseViewer(viewer);
+    if (!viewerKnown(viewer)) return false;
+    const who2 = viewerMember(viewer);
+    if (who2 === null) return viewer !== _Members.ROOT_ADMIN || this.isAdministrator(_Members.ROOT_ADMIN);
+    if (who2 === _Members.ROOT_ADMIN) return this.isAdministrator(_Members.ROOT_ADMIN);
+    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, who2);
+    return !!m && m.status === "active";
+  }
+  /** R110: the description and its history to an insider; to anyone else, the public, only the four texts, and only
+   *  while the latest visibility is `public`. Writes nothing, never throws. */
+  groupDescription({ viewer = null } = {}) {
+    try {
+      const history = this.#rows(`SELECT kinds, other_kind, focus, purpose, visibility, set_by, at
+                                    FROM group_description ORDER BY seq`).map((r) => ({
+        kinds: JSON.parse(r.kinds),
+        otherKind: r.other_kind,
+        focus: r.focus,
+        purpose: r.purpose,
+        visibility: r.visibility,
+        by: r.set_by,
+        at: r.at
+      }));
+      const last = history.length ? history[history.length - 1] : null;
+      const description = last && (last.kinds.length || last.focus || last.purpose) ? last : null;
+      if (this.#insider(viewer)) return { description, history };
+      if (!description || description.visibility !== "public") return { description: null };
+      const { kinds, otherKind, focus, purpose } = description;
+      return { description: { kinds, otherKind, focus, purpose } };
+    } catch {
+      return { description: null };
+    }
+  }
+};
+var CAPABILITIES = Members.CAPABILITIES;
+var adminMath = (n) => Members.adminMath(n);
+
+// ../bio-plane/src/membership/checks.mjs
+var at3 = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
+var frozenRows2 = (table2) => Object.freeze(Object.fromEntries(
+  Object.entries(table2).map(([code, row3]) => [code, Object.freeze({ ...row3 })])
+));
+var OWN_ROWS = frozenRows2({
+  NO_SUCH_PROJECT: Object.freeze({
+    check: "C-70.5",
+    where: at3("noSuchProject", "is-project-seen"),
+    translation: rowWord("NO_SUCH_PROJECT")
+  }),
+  NOT_A_PARTICIPANT: Object.freeze({
+    check: "C-56.3",
+    where: at3("notAParticipant", "is-not-a-participant"),
+    translation: rowWord("NOT_A_PARTICIPANT")
+  }),
+  TARGET_NOT_A_PARTICIPANT: Object.freeze({
+    check: "C-56.4",
+    where: at3("projectRemove", "is-remove-target-participant"),
+    translation: rowWord("TARGET_NOT_A_PARTICIPANT")
+  }),
+  LAST_COMMITTED_OWNER: {
+    check: "C-33.48",
+    where: "src/membership/index.mjs projectLeave > is-leave-owner-floor",
+    translation: rowWord("LAST_COMMITTED_OWNER")
+  },
+  /* T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
+     it does not give), so the invitation or the visibility setting fails closed. T47 (R142 (2), K3078): its translation is
+     `words.json`'s `refusal.PROJECT_GUARD_UNCHECKED`, read by key. */
+  PROJECT_GUARD_UNCHECKED: Object.freeze({
+    check: "C-56.6",
+    where: at3("#projectActGuarded", "is-project-guard-checked"),
+    translation: rowWord("PROJECT_GUARD_UNCHECKED")
+  })
+});
+var MEMBERSHIP_CHECKS3 = frozenRows2({ ...MEMBER_ROSTER_ROWS.MEMBERSHIP_CHECKS, ...OWN_ROWS });
+var MEMBER_ID_CHECKS3 = MEMBER_ROSTER_ROWS.MEMBER_ID_CHECKS;
+var CUSTODIAL_CHECKS3 = MEMBER_ROSTER_ROWS.CUSTODIAL_CHECKS;
+var PROJECT_AUTHORITY_CHECKS = frozenRows2({
+  PROJECT_ACT_NOT_A_PARTICIPANT: {
+    check: "C-56.1",
+    where: "src/membership/index.mjs projectAuthority > is-project-authority",
+    translation: rowWord("PROJECT_ACT_NOT_A_PARTICIPANT")
+  },
+  /* T40 (R122; N812, K231): minted at one site, `notTheOwner`, which `projectAuthority` (R55) and `credentials`
+     (its R54–R57) answer through; the row's `where` moved there, its words unchanged. */
+  PROJECT_ACT_NOT_THE_OWNER: {
+    check: "C-56.2",
+    where: "src/membership/index.mjs notTheOwner > is-not-the-owner",
+    translation: rowWord("PROJECT_ACT_NOT_THE_OWNER")
+  }
+});
+var PROJECT_VISIBILITY_CHECKS = frozenRows2({
+  PROJECT_SEEN_NOT_A_PARTICIPANT: {
+    check: "C-70.1",
+    where: "src/membership/index.mjs #existenceOnly > is-project-existence-only",
+    translation: rowWord("PROJECT_SEEN_NOT_A_PARTICIPANT")
+  },
+  PROJECT_VISIBILITY_NOT_THE_OWNER: {
+    check: "C-70.2",
+    where: "src/membership/index.mjs projectVisibilitySet > is-project-visibility-owner",
+    translation: rowWord("PROJECT_VISIBILITY_NOT_THE_OWNER")
+  },
+  PROJECT_VISIBILITY_UNKNOWN_SETTING: {
+    check: "C-70.3",
+    /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
+       `visibility`), so this row names that helper's region and the code keeps ONE site. */
+    where: "src/membership/index.mjs visibilitySettingRefusal > is-project-visibility-setting",
+    translation: rowWord("PROJECT_VISIBILITY_UNKNOWN_SETTING")
+  }
+});
+var CASE_AUTHORITY_CHECKS = frozenRows2({
+  CASE_SIGNER_NOT_AN_OWNER: {
+    check: "C-57.1",
+    /* REC-140 (2026-09-18): the region moved into `caseAuthority`, the ONE helper both ratify
+       paths call — `op=caseratify` for the case document and `op=ratify` for a finding a
+       ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
+       was corrected from "this case" to "a case, and each finding in it" at the same time,
+       because the same code now answers at both acts and the old sentence was false at one. */
+    where: "src/membership/index.mjs caseAuthority > is-case-signer-owner",
+    translation: rowWord("CASE_SIGNER_NOT_AN_OWNER")
+  }
+});
+
+// ../bio-plane/src/membership/words.mjs
+var SENTENCE_KEYS2 = Object.freeze([
+  "membership.remedy.active_administrator_group",
+  "membership.why.both_owners_agree",
+  "membership.why.majority_all_owners",
+  "membership.why.owner_floor_last"
+]);
+
+// ../bio-plane/src/membership/index.mjs
+var MEMBERSHIP_EXEMPT_TABLES = MEMBER_EXEMPT_TABLES;
+var MEMBERSHIP_DECLARED_TABLES = MEMBER_DECLARED_TABLES;
+var WORD_KEYS2 = Object.freeze([.../* @__PURE__ */ new Set([
+  ...[MEMBERSHIP_CHECKS3, MEMBER_ID_CHECKS3, CUSTODIAL_CHECKS3, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS].flatMap((table2) => Object.keys(table2).map(rowKey)),
+  ...SENTENCE_KEYS2,
+  ...WORD_KEYS
+])]);
+var GATE_MARK = "/*viewer-gate*/";
+var MACHINE_VIEWER = new RegExp(`^${MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(admin|member|probe|daemon|ai)$`);
+var OWN_PROJECT = `(CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)`;
+function viewerPredicate(viewer, reach = null) {
+  const v = typeof viewer === "string" ? viewer : "";
+  const carried = carriedProject(v);
+  if (carried !== null) return projectGate(v, carried, reach);
+  const memberId = viewerMember(v);
+  const founder = v === ROOT_ADMIN || memberId === ROOT_ADMIN;
+  if (!memberId && !founder && !MACHINE_VIEWER.test(v))
+    return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
+  if (!memberId && !founder)
+    return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
+  const outside = `(b.object_type <> 'project' AND COALESCE(b.project, '') = '')`;
+  const participant = `EXISTS (SELECT 1 FROM project_participants pp WHERE pp.project_id = ${OWN_PROJECT} AND pp.member_id = ?)`;
+  const discoverable = `EXISTS (SELECT 1 FROM project_sight ps WHERE ps.project_id = ${OWN_PROJECT}
+                                  AND ps.setting = 'discoverable')`;
+  const administers = founder ? discoverable : `(EXISTS (SELECT 1 FROM members am WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active')
+            AND ${discoverable})`;
+  const who2 = founder ? ROOT_ADMIN : memberId;
+  return {
+    member: memberId,
+    sql: localize("membership.index.gate_mark_outside_or_participant", "{GATE_MARK} ({outside} OR {participant} OR {administers})", { GATE_MARK: String(GATE_MARK), outside: String(outside), participant: String(participant), administers: String(administers) }),
+    args: founder ? [who2] : [who2, who2],
+    viewer: v,
+    scope: "participant"
+  };
+}
+function projectGate(v, project, reach) {
+  const base = viewerPredicate(baseViewer(v));
+  if (base.scope === "DENY" || base.scope === "member") return base;
+  const ids = Array.isArray(reach) ? reach.filter((id) => typeof id === "string" && id) : [];
+  return {
+    member: base.member,
+    sql: `${GATE_MARK} (${base.sql.replace(GATE_MARK, "")}) AND (b.bundle_id = ? OR b.project = ?
+            OR b.bundle_id IN (SELECT value FROM json_each(?)))`,
+    args: [...base.args, project, project, JSON.stringify(ids)],
+    viewer: v,
+    scope: "participant",
+    project
+  };
+}
+function hiddenBundles(viewer, reach = null) {
+  const gate = viewerPredicate(viewer, reach);
+  if (gate.scope === "member") return null;
+  return {
+    sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`,
+    args: [...gate.args]
+  };
+}
+var NO_SUCH_PROJECT_DETAIL = "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way.";
+var NO_SUCH_PROJECT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
+function noSuchProject(projectId, extra = null) {
+  let own5 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own5 = Object.entries(extra).filter(([k]) => !NO_SUCH_PROJECT_FIXED.has(k));
+  } catch {
+    own5 = [];
+  }
+  const row3 = MEMBERSHIP_CHECKS3.NO_SUCH_PROJECT;
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROJECT",
+    code: "NO_SUCH_PROJECT",
+    check: row3.check,
+    translation: row3.translation,
+    project: projectId ?? null,
+    ...Object.fromEntries(own5),
+    detail: NO_SUCH_PROJECT_DETAIL
+  };
+}
+var NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 \xA77). Nothing was changed.";
+var NOT_A_PARTICIPANT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
+function notAParticipant(projectId, by, extra = null) {
+  let own5 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own5 = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
+  } catch {
+    own5 = [];
+  }
+  const row3 = MEMBERSHIP_CHECKS3.NOT_A_PARTICIPANT;
+  return {
+    ok: false,
+    reason: "NOT_A_PARTICIPANT",
+    code: "NOT_A_PARTICIPANT",
+    check: row3.check,
+    translation: row3.translation,
+    project: projectId ?? null,
+    ...Object.fromEntries(own5),
+    detail: NOT_A_PARTICIPANT_DETAIL
+  };
+}
+var NOT_THE_OWNER_DETAIL = "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 \xA74.9, \xA77). Nothing was changed.";
+var NOT_THE_OWNER_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "project", "detail", "message"]);
+function notTheOwner(by, projectId, extra = null) {
+  let own5 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own5 = Object.entries(extra).filter(([k]) => !NOT_THE_OWNER_FIXED.has(k));
+  } catch {
+    own5 = [];
+  }
+  const given = own5.find(([k]) => k === "remedy");
+  const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
+  own5 = own5.filter(([k]) => k !== "remedy");
+  const echo = (v) => {
+    try {
+      return v === null || v === void 0 ? null : String(v).slice(0, 200);
+    } catch {
+      return null;
+    }
+  };
+  const row3 = PROJECT_AUTHORITY_CHECKS.PROJECT_ACT_NOT_THE_OWNER;
+  return {
+    ok: false,
+    reason: "PROJECT_ACT_NOT_THE_OWNER",
+    code: "PROJECT_ACT_NOT_THE_OWNER",
+    check: row3.check,
+    translation: row3.translation,
+    by: echo(by),
+    project: echo(projectId),
+    ...Object.fromEntries(own5),
+    ...remedy ? { remedy, message: `${row3.translation} ${remedy}` } : {},
+    detail: NOT_THE_OWNER_DETAIL
+  };
+}
+var isObj2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var Membership = class _Membership {
+  constructor({ sql, core = null, members = null } = {}) {
+    this.sql = sql;
+    this.core = core;
+    this.members = members ?? new Members({ sql });
+  }
+  #rows(q, ...a) {
+    return [...this.sql.exec(q, ...a)];
+  }
+  #one(q, ...a) {
+    const r = this.#rows(q, ...a);
+    return r.length ? r[0] : null;
+  }
+  /* A project's title, asked of record-core (R34): membership's SQL reads no bundle column but the R37 contract. */
+  #titleOf(bundleId) {
+    const info = this.core && typeof this.core.bundleInfo === "function" ? this.core.bundleInfo(bundleId) : null;
+    return info && typeof info.title === "string" ? info.title : null;
+  }
+  /* This module's tables, at every boot (R114, R115), idempotent: `member-roster`'s tables first (its R74), then the
+     project tables (the additive columns an older store lacks added before the indexes that name them, REC-143's lesson);
+     the tables declared to record-core's purge when its `declarePurge` is present; and the sight index recomputed whole
+     from the owners' acts (D-497: a derivation, so an index that disagreed with `project_visibility` cannot survive a
+     restart). Run by the host inside its boot, after record-core's schema. */
+  migrate() {
+    this.members.migrate();
+    const cols = (t) => [...this.sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
+    for (const [table2, column, decl] of MEMBERSHIP_ADDITIVE_COLUMNS) {
+      const have = cols(table2);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${decl}`);
+    }
+    const bare = MEMBERSHIP_PROJECT_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+    for (const st of bare.split(";")) {
+      const t = st.trim();
+      if (t) this.sql.exec(t);
+    }
+    this.declareTables();
+    this.#registerReservedIdFinding();
+    if (cols("bundles").length) this.reindexProjectSight();
+  }
+  /* R115 (was R59), through record-core's `declarePurge` (its R21's default form); R131 (T46) through its `declareTable`. */
+  declareTables() {
+    if (this.#declared) return false;
+    const explicit = typeof this.core.declareTable === "function";
+    const own5 = new Set(explicit ? MEMBERSHIP_DECLARED_TABLES.map((t) => t.name) : []);
+    const answers = [
+      this.core.declarePurge(
+        "membership",
+        MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
+        { exempt: MEMBERSHIP_EXEMPT_TABLES.filter((t) => !own5.has(t)) }
+      ),
+      ...explicit ? [this.core.declareTable("membership", MEMBERSHIP_DECLARED_TABLES.map((t) => ({ ...t })))] : []
+    ];
+    for (const answer of answers)
+      if (answer && answer.ok === false)
+        throw new Error(`membership: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
+    this.#declared = true;
+    return true;
+  }
+  #declared = false;
+  /* ===== R114 (was R96's participation half; K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
+   *
+   * The figures `op=stats` and purge's proof report of this module's project-keyed tables (REC-27, D-137: the
+   * participation graph and the pending owner votes, so a purge can PROVE it took them), shaped as record-core R63's
+   * `counts(hid)` with its key list, which `plane` registers under this module's name (`registerCounts("membership",
+   * [...Membership.COUNT_KEYS], (hid) => m.counts(hid))`, plane R10), so this module registers nothing itself and no
+   * figure is registered twice. `hid` is R63's: R88's `hiddenBundles(viewer)`, the bundles the caller may not see, or
+   * null for a caller that sees every bundle and for the direct internal call (purge's proof among them), which count
+   * whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
+   * rows the caller could not all read is a disclosure of existence). `COALESCE(project_id, '')`: a NULL key names no
+   * bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be dropped. Synchronous; writes nothing. */
+  static COUNT_KEYS = Object.freeze(["projectParticipants"]);
+  counts(hid = null) {
+    const n = (table2) => (hid ? this.#one(`SELECT count(*) c FROM ${table2} WHERE COALESCE(project_id, '') NOT IN ${hid.sql}`, ...hid.args) : this.#one(`SELECT count(*) c FROM ${table2}`)).c;
+    return { projectParticipants: n("project_participants") };
+  }
+  /* REC-132 / D-422 / C-55: the audit's finding for a member holding the reserved id is `member-roster`'s
+     (`reservedIdFinding`); the registration with record-core's R68 seam is made here, under the key `membership`, so the
+     audit reads as before. Registered once; a host whose record-core does not offer the seam registers nothing. */
+  #registerReservedIdFinding() {
+    if (this.#findingRegistered || !this.core || typeof this.core.registerAuditFinding !== "function") return;
+    this.core.registerAuditFinding("membership", "membership", () => this.members.reservedIdFinding());
+    this.#findingRegistered = true;
+  }
+  #findingRegistered = false;
+  /* R69: the member ids of the project's participants who have joined (not leaving, not invited) and are active. */
+  activeParticipants(projectId) {
+    return this.#rows(
+      `SELECT p.member_id FROM project_participants p JOIN members m ON m.member_id = p.member_id
+                        WHERE p.project_id=? AND p.state='joined' AND m.status='active' ORDER BY p.member_id`,
+      projectId
+    ).map((r) => r.member_id);
+  }
+  /* R71: what `promotion` calls when a promotion creates a project, inside the caller's transaction: `ownerId`
+     (a member; a machine-created project has no owner, §7.1) becomes the sole initial owner as R31 makes one,
+     the creation visibility is recorded as the first R45 record, and the project's sight is reindexed. */
+  projectCreated({ projectId, ownerId = null, visibility = null, by = null } = {}) {
+    if (visibility !== null && visibility !== void 0) {
+      const bad = this.visibilitySettingRefusal(visibility, projectId);
+      if (bad) return bad;
+    }
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    let owner = null;
+    if (ownerId) {
+      const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
+      if (!claimed.ok) return claimed;
+      owner = ownerId;
+    }
+    if (visibility !== null && visibility !== void 0)
+      this.sql.exec(
+        `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
+        projectId,
+        String(visibility),
+        by ?? ownerId ?? "not recorded",
+        "chosen at creation",
+        at8
+      );
+    this.reindexProjectSight(projectId);
+    return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
+  }
+  /* R18 (section 7.8; D54, T41-3): the projects a member participates in, for an administrator's roster, as the
+     administrator reading it (`viewer`) sees them: each project that administrator sees at FULL (R44), and, of a
+     hidden project it does not, only the member's ownership, which that administrator's EXISTENCE already shows
+     (`{project, state: null, owner: true, existence: true}`); a hidden project's other participants are never listed
+     to an administrator neither invited nor joined to it. With no viewer stamped, the roster is read as an
+     administrator in no project would read it (fail closed): discoverable projects whole, hidden ones by owner only. */
+  #projectsOf(memberId, viewer) {
+    const full = (p) => viewer === null || viewer === void 0 ? this.visibilityOf(p) === "discoverable" : this.inSight(p, viewer);
+    const out = [];
+    for (const p of this.#rows(`SELECT project_id, state, owner FROM project_participants WHERE member_id=?
+                                 ORDER BY project_id`, memberId)) {
+      if (full(p.project_id)) out.push({ project: p.project_id, state: p.state, owner: !!p.owner });
+      else if (p.owner && this.visibilityOf(p.project_id) === "hidden")
+        out.push({ project: p.project_id, state: null, owner: true, existence: true });
+    }
+    return out;
+  }
+  /** R76 (REC-132 / D-422) — WHO IS ASKING, as distinct from WHAT THEY MAY SEE: the member id R43 reads for `identity`
+   *  when it is a non-empty string, else for `viewer`, through `member-roster` R73's spelling; null for a machine
+   *  credential and for a viewer or identity R43 admits to nothing. Writes nothing; never throws. */
+  positionalMember(viewer, identity = null) {
+    return viewerMember(viewer, identity);
+  }
   /* ===== R118 (N783) — THE ONE WRITE OF A PARTICIPATION ROW A LATER MODULE MAKES =====
    *
    * `project-roster`'s acts (its R3–R5, R12) have made every check of their own; this writes their row in the caller's
@@ -39023,9 +40677,9 @@ var Membership = class _Membership {
    * an unknown kind, an `invite` whose row exists, and an `ownerOn`/`ownerOff` whose row does not. Never throws. */
   participationWrite(kind, args = {}) {
     try {
-      const { projectId, memberId, by = null, comment = null, at: at7 = null } = args && typeof args === "object" ? args : {};
+      const { projectId, memberId, by = null, comment = null, at: at8 = null } = args && typeof args === "object" ? args : {};
       if (typeof projectId !== "string" || !projectId || typeof memberId !== "string" || !memberId) return false;
-      const when = typeof at7 === "string" && at7 ? at7 : (/* @__PURE__ */ new Date()).toISOString();
+      const when = typeof at8 === "string" && at8 ? at8 : (/* @__PURE__ */ new Date()).toISOString();
       const held2 = !!this.#one(
         `SELECT 1 AS x FROM project_participants WHERE project_id=? AND member_id=?`,
         projectId,
@@ -39192,7 +40846,7 @@ var Membership = class _Membership {
       if (r === null) return null;
       if (r && typeof r.then === "function") r.then(null, () => {
       });
-      else if (isObj(r) && r.ok === false && typeof r.reason === "string" && r.reason) return r;
+      else if (isObj2(r) && r.ok === false && typeof r.reason === "string" && r.reason) return r;
     } catch {
     }
     return _Membership.#rowRefusal(
@@ -39414,7 +41068,7 @@ var Membership = class _Membership {
     viewer = baseViewer(viewer);
     const g = viewerPredicate(viewer);
     if (g.scope === "DENY" || g.scope === "member") return false;
-    if (viewer === _Membership.ROOT_ADMIN || g.member === _Membership.ROOT_ADMIN) return true;
+    if (viewer === ROOT_ADMIN || g.member === ROOT_ADMIN) return true;
     const m = this.#one(`SELECT role, status FROM members WHERE member_id=?`, g.member);
     return !!m && m.role === "admin" && m.status === "active";
   }
@@ -39575,24 +41229,24 @@ var Membership = class _Membership {
       if (guarded) return guarded;
     }
     const why = reason2 === null || reason2 === void 0 || String(reason2).trim() === "" ? null : String(reason2).slice(0, 280);
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
       why,
-      at7
+      at8
     );
     this.reindexProjectSight(projectId);
-    const lapsed = want === "hidden" ? _Membership.#tell(this.#hiddenListener, { projectId, by: by ?? null, at: at7 }) : 0;
+    const lapsed = want === "hidden" ? _Membership.#tell(this.#hiddenListener, { projectId, by: by ?? null, at: at8 }) : 0;
     return {
       ok: true,
       projectId,
       setting: want,
       set_by: by,
       reason: why,
-      at: at7,
+      at: at8,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
   }
@@ -39825,7 +41479,7 @@ var Membership = class _Membership {
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.participation(projectId, target.member_id);
     if (!p) {
-      const row3 = MEMBERSHIP_CHECKS.TARGET_NOT_A_PARTICIPANT;
+      const row3 = MEMBERSHIP_CHECKS3.TARGET_NOT_A_PARTICIPANT;
       return {
         ok: false,
         reason: "TARGET_NOT_A_PARTICIPANT",
@@ -39842,7 +41496,7 @@ var Membership = class _Membership {
       detail: localize("membership.index.an_owner_is_not_removed", "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.")
     };
     const why = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
       `INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
@@ -39850,9 +41504,9 @@ var Membership = class _Membership {
       target.member_id,
       by,
       why,
-      at7
+      at8
     );
-    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at7 };
+    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at8 };
   }
   /** D-311: THE RESCUE'S CALLER-AND-PROJECT CONDITIONS, extracted from `projectOwnerRescue` (now `project-roster`'s, its R5) so
    *  `op=affordances` asks the SAME predicate the act refuses on (the `#citesInto` discipline):
@@ -39863,7 +41517,7 @@ var Membership = class _Membership {
     if (!this.isAdministrator(by))
       return notAnAdmin(
         by,
-        "adding an owner to a project whose owners are all inactive (7.13)",
+        localize("membership.index.adding_an_owner_to_a_project_whose_owners", "adding an owner to a project whose owners are all inactive (7.13)"),
         { remedy: word("membership.remedy.active_administrator_group") }
       );
     const owners = this.projectOwners(projectId);
@@ -39871,7 +41525,7 @@ var Membership = class _Membership {
       return {
         ok: false,
         reason: "NO_OWNERS",
-        detail: "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one"
+        detail: localize("membership.index.this_project_has_no_owner_rows", "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one")
       };
     const active = owners.filter((o) => {
       const m = this.#one(`SELECT status FROM members WHERE member_id=?`, o);
@@ -39885,154 +41539,6 @@ var Membership = class _Membership {
         detail: localize("membership.index.an_administrator_may_add_an", "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.")
       };
     return null;
-  }
-  /* ---- section 1.3: declared expertise, confirmed licenses ----
-   *
-   * TWO CLAIMS BY TWO PEOPLE, kept apart for the same reason the intake doctrine
-   * keeps who ISSUED a document separate from how faithfully it was CAPTURED.
-   * The member says what they hold. An administrator says whether the group has
-   * satisfied itself that they hold it. Neither stands in for the other.
-   *
-   * WRITE AUTHORITY IS SPLIT BY COLUMN. A member writes `label` and never the
-   * confirmation events; an administrator writes the confirmation events and can
-   * never introduce a label the member did not declare. That is what keeps
-   * confirmation a confirmation rather than an assignment.
-   *
-   * AND IT GATES NOTHING. An unconfirmed entry costs its holder no capability,
-   * no visibility and no access. It appears in no session, is consulted by no
-   * op, and must never enter the enforcement path. Section 5 in v2: it informs
-   * humans; it gates nothing, confirmed or not. */
-  static #normLabel(label) {
-    return String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
-  }
-  #expertiseState(memberId, label) {
-    const r = this.#one(
-      `SELECT event, actor, created FROM member_expertise WHERE member_id=? AND label=?
-       ORDER BY seq DESC LIMIT 1`,
-      memberId,
-      label
-    );
-    return r ? r.event : null;
-  }
-  /** The member's own statement about themselves. */
-  expertiseDeclare({ memberId, label } = {}) {
-    const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
-    const lab = _Membership.#normLabel(label);
-    if (!lab) {
-      const row3 = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
-      return {
-        ok: false,
-        reason: "EXPERTISE_NO_LABEL",
-        code: "EXPERTISE_NO_LABEL",
-        check: row3.check,
-        translation: row3.translation,
-        detail: "a declaration needs a label, such as 'CPA'"
-      };
-    }
-    const cur = this.#expertiseState(memberId, lab);
-    if (cur === "declared" || cur === "confirmed")
-      return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
-    this.sql.exec(
-      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,'declared',?,?)`,
-      memberId,
-      lab,
-      memberId,
-      (/* @__PURE__ */ new Date()).toISOString()
-    );
-    return {
-      ok: true,
-      memberId,
-      label: lab,
-      state: "declared",
-      confirmed: false,
-      detail: "declared and unconfirmed, which costs nothing: an unconfirmed entry carries the same capabilities, visibility and access as a confirmed one"
-    };
-  }
-  /** An administrator vouching, INCLUDING for another administrator (4.9). */
-  expertiseConfirm({ memberId, label, by, withdraw = false } = {}) {
-    if (!this.isAdministrator(by))
-      return notAnAdmin(
-        by,
-        "confirming or withdrawing a member's declared expertise",
-        { remedy: word("membership.remedy.active_administrator_group_confirm") }
-      );
-    const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    const lab = _Membership.#normLabel(label);
-    const cur = this.#expertiseState(memberId, lab);
-    if (cur === null)
-      return {
-        ok: false,
-        reason: "NOT_DECLARED",
-        label: lab,
-        detail: "this member has not declared that. An administrator confirms what a member claims and never introduces the claim, or it would be an assignment rather than a confirmation."
-      };
-    if (!withdraw && cur === "confirmed") return { ok: false, reason: "ALREADY_CONFIRMED", label: lab };
-    if (withdraw && cur !== "confirmed") return { ok: false, reason: "NOT_CONFIRMED", label: lab, state: cur };
-    this.sql.exec(
-      `INSERT INTO member_expertise (member_id,label,event,actor,created) VALUES (?,?,?,?,?)`,
-      memberId,
-      lab,
-      withdraw ? "withdrawn" : "confirmed",
-      by,
-      (/* @__PURE__ */ new Date()).toISOString()
-    );
-    return {
-      ok: true,
-      memberId,
-      label: lab,
-      state: withdraw ? "withdrawn" : "confirmed",
-      confirmed: !withdraw,
-      by
-    };
-  }
-  /** The roster view: current state per label, with the history behind it. */
-  expertiseList({ memberId } = {}) {
-    const rows = this.#rows(
-      `SELECT seq, label, event, actor, created FROM member_expertise WHERE member_id=? ORDER BY seq`,
-      memberId
-    );
-    const cur = /* @__PURE__ */ new Map();
-    for (const r of rows) cur.set(r.label, r);
-    return {
-      ok: true,
-      memberId,
-      expertise: [...cur.values()].map((r) => ({
-        label: r.label,
-        state: r.event,
-        confirmed: r.event === "confirmed",
-        by: r.actor,
-        at: r.created,
-        /* Both are surfaced so an interface can show WHICH of the two claims it
-           is looking at, which is the entire function of the distinction. */
-        history: rows.filter((h) => h.label === r.label).map((h) => ({ event: h.event, actor: h.actor, at: h.created }))
-      })).sort((a, b) => a.label.localeCompare(b.label)),
-      gates: "nothing"
-    };
-  }
-  /* ---- the membership model's member half, Architecture sections 3 to 6 ----
-   *
-   * The arithmetic of section 4.7 lives in ONE place, `adminArithmetic`, and
-   * every rule below reads it rather than restating it. The table in the
-   * architecture document is the specification and R5's test (`test/m/membership/`)
-   * asserts it row by row, because this is the part of the design that is cheap
-   * to get subtly wrong and expensive to discover wrong.
-   */
-  static CAPABILITIES = ["contribute", "publish", "create_projects"];
-  /** Removal takes a MAJORITY OF ALL ADMINISTRATORS, counting the target in the
-   *  denominator but not letting them vote, and ties do not eject.
-   *
-   *  That one sentence is what makes removal impossible at two without needing a
-   *  special case, demands unanimity while the group is small enough for
-   *  unanimity to be reasonable, and loosens as the group grows. A lone captured
-   *  administrator can never eject anyone at any size. It fails only to a
-   *  colluding majority, and nothing survives a colluding majority. */
-  static adminMath(n) {
-    const votesNeeded = Math.floor(n / 2) + 1;
-    const eligibleVoters = Math.max(0, n - 1);
-    return { administrators: n, votesNeeded, eligibleVoters, possible: votesNeeded <= eligibleVoters };
   }
   /* Section 7.10. Ownership of a project is a SET, and it follows 4.7 with one
      deliberate divergence and one relaxed floor.
@@ -40108,776 +41614,11 @@ var Membership = class _Membership {
       projectId
     ).map((r) => r.member_id);
   }
-  /** The table, computed rather than transcribed, so the code and the document
-   *  cannot drift. Exposed as an op because a UI must be able to tell a group
-   *  what it would take BEFORE they start a removal. */
-  adminArithmetic() {
-    const table2 = [];
-    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9]) table2.push(_Membership.adminMath(n));
-    return { ok: true, table: table2, live: _Membership.adminMath(this.activeAdmins().length) };
-  }
-  /* Who counts as an administrator.
-   *
-   * The FOUNDING administrator has no members row. They claimed the instance by
-   * spending ADMIN_TOKEN, which is what 4.1 describes: the solo participant is
-   * the administrator, and the whole membership apparatus stays invisible until
-   * a second person exists. Counting only member rows made a claimed instance
-   * with one invited administrator look like a group of one, so the second
-   * invitation was issued unilaterally when it should have needed consensus.
-   * Found by the existing members suite failing, not by the new one.
-   *
-   * The founder is named `admin`, the credentials role they hold, and they
-   * cannot be removed by vote: per 4.6 the holders of ADMIN_TOKEN are the root
-   * of trust and every rule in the membership model sits beneath them.
-   * Membership does not and cannot constrain them, and an interface that
-   * implied otherwise would be lying. */
-  static ROOT_ADMIN = "admin";
-  /* R86 (N329): the administrators in a stated order: the founder first once the instance is claimed, then every active
-     member with role `admin` in the order their member rows were created, ties broken by member id (`tasks` R1's
-     "earliest active administrator" is the first after the founder). Writes nothing and never throws. */
-  activeAdmins() {
-    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
-                              ORDER BY created, member_id`).map((r) => r.member_id);
-    return this.#claimed() ? [_Membership.ROOT_ADMIN, ...rows] : rows;
-  }
-  /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
-   * so a caller with no standing learns nothing about the member or key it named. `by` is the control
-   * plane's STAMP (op-declarations' `CUSTODIAL_ACTIONS`, applied by control-plane), relayed from the query and
-   * never from a body.
-   * THREE SHAPES AND THREE ANSWERS, each true of the caller:
-   *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
-   *     NOT_AN_ADMIN, by name, answered through `notAnAdmin` (R84), as at `memberCaps`;
-   *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
-   *     `machineClasses` decides which classes reach here, and the record names the credential;
-   *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
-   *     `not recorded`, which is what it is.
-   * ANSWERS NULL when the act may proceed. */
-  #custodialBar(by, act) {
-    if (by === null || by === void 0 || by === "") return null;
-    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
-    if (this.activeAdmins().includes(by)) return null;
-    return notAnAdmin(by, act);
-  }
-  /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
-   * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
-   * surfaces read `code`. The code is a STRING LITERAL at each call site, never a variable. */
-  static #custodialRefusal(code, detail, extra) {
-    const row3 = CUSTODIAL_CHECKS[code];
-    return {
-      ok: false,
-      reason: code,
-      code,
-      check: row3.check,
-      translation: row3.translation,
-      ...extra || {},
-      detail
-    };
-  }
-  /* REC-159: the stored actor, or the stated absence of one. */
-  static #statusBy(v) {
-    return typeof v === "string" && v !== "" ? v : "not recorded";
-  }
-  #capsOf(row3) {
-    try {
-      const v = JSON.parse(row3.capabilities || "[]");
-      return Array.isArray(v) ? v : [];
-    } catch {
-      return [];
-    }
-  }
-  /** Set a member's capabilities. NOT a route to administrator status: that is
-   *  granted and removed only by the section 4 process, and 4.4 says no
-   *  administrator may strip another, so this refuses to touch either side of
-   *  that line. */
-  /*  D-136 ADDS `by`, AND IT IS READ RATHER THAN RECORDED. Section 4.9 makes
-   *  setting capabilities a custodial act of an ADMINISTRATOR, and the control
-   *  plane now stamps `by` from the session (op-declarations' `GOVERNANCE_ACTIONS`, applied by control-plane).
-   *  A stamp nothing consults is a mechanism believed on the strength of its
-   *  EXISTENCE rather than its behaviour, so the check sits here beside
-   *  `adminEndorse`'s and `adminRemove`'s, which asked the same question of the
-   *  same roster before this item and were whole except for who supplied the
-   *  answer. A bearer credential stamps `class:<cls>`, which is in no roster,
-   *  so it is refused here even if the control plane's fence in front of it were
-   *  removed (R9's test in `test/m/membership/not-an-admin-visibility.test.mjs`
-   *  asks it with a bearer's stamp and no fence in front).
-   *
-   *  IT IS ASKED BEFORE `NO_SUCH_MEMBER`, deliberately: who may ask is settled
-   *  before the record answers whether a member exists, so a caller with no
-   *  standing cannot use this op to enumerate the roster. */
-  memberCaps({ memberId, capabilities, by } = {}) {
-    const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");
-    const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    const want = Array.isArray(capabilities) ? capabilities : null;
-    if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
-    if (want.includes("administer") || m.role === "admin")
-      return {
-        ok: false,
-        reason: "NOT_A_CAPABILITY_GRANT",
-        detail: localize("membership.index.administrator_status_is_granted_and", "administrator status is granted and removed only by the section 4 process, never by editing a field. 4.4: no administrator may strip another.")
-      };
-    const bad = want.filter((c) => !_Membership.CAPABILITIES.includes(c));
-    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: _Membership.CAPABILITIES };
-    this.sql.exec(
-      `UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
-      JSON.stringify(want),
-      (/* @__PURE__ */ new Date()).toISOString(),
-      memberId
-    );
-    return { ok: true, memberId, capabilities: want, by };
-  }
-  /** Endorse a proposed administrator. Addition above the second requires the
-   *  CONSENSUS of every existing administrator, and that is the load-bearing
-   *  half of 4.7: without it a captured administrator recruits confederates and
-   *  manufactures the majority that ejects the honest ones. */
-  async adminEndorse({ memberId, by } = {}) {
-    const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");
-    const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    if (m.status !== "proposed") {
-      const row3 = MEMBERSHIP_CHECKS.NOT_PROPOSED;
-      return {
-        ok: false,
-        reason: "NOT_PROPOSED",
-        code: "NOT_PROPOSED",
-        check: row3.check,
-        translation: row3.translation,
-        status: m.status,
-        detail: localize("membership.index.only_a_member_whose_status", "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this member's is not. Nothing was written.")
-      };
-    }
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(
-      `INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
-      memberId,
-      by,
-      null,
-      now
-    );
-    const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId).map((r) => r.voter).filter((v) => admins.includes(v));
-    const awaiting = admins.filter((a) => !have.includes(a));
-    if (awaiting.length)
-      return {
-        ok: false,
-        reason: "CONSENSUS_REQUIRED",
-        memberId,
-        have: have.sort(),
-        awaiting: awaiting.sort(),
-        detail: "every existing administrator must endorse an addition beyond the second"
-      };
-    const invite = _Membership.#rand(16);
-    const hash = await _Membership.#sha256(invite);
-    const days = Number.isInteger(m.invite_days) ? m.invite_days : _Membership.INVITE_DAYS_DEFAULT;
-    const expires = _Membership.#expiresAt(now, days);
-    this.sql.exec(
-      `UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, status_at=?, updated=? WHERE member_id=?`,
-      hash,
-      expires,
-      by,
-      now,
-      now,
-      memberId
-    );
-    return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
-  }
-  /** Vote to remove an administrator. Section 4.7. */
-  adminRemove({ memberId, by, reason: reason2 } = {}) {
-    const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");
-    if (memberId === _Membership.ROOT_ADMIN)
-      return {
-        ok: false,
-        reason: "ROOT_OF_TRUST",
-        detail: localize("membership.index.the_founding_administrator_holds_admin_2", "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the application. Whoever can set ADMIN_TOKEN can take the team over, and there is no arrangement in which nobody holds that power, because your team's Civicsmith runs in somebody's hosting account. The remedy is at the hosting account, not here (section 4.6).")
-      };
-    const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
-    if (m.role !== "admin")
-      return refusal8(
-        "TARGET_NOT_AN_ADMIN",
-        "this member is not an administrator, so there is no administrator to remove; an ordinary member is deactivated with op=memberset",
-        { memberId }
-      );
-    if (memberId === by) return {
-      ok: false,
-      reason: "TARGET_CANNOT_VOTE",
-      detail: "the target is counted in the denominator but does not vote"
-    };
-    const why = String(reason2 ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
-    const math = _Membership.adminMath(admins.length);
-    if (!math.possible)
-      return {
-        ok: false,
-        reason: "IMPOSSIBLE_AT_TWO",
-        ...math,
-        detail: localize("membership.index.removal_takes_votesneeded_of_administrators", "removal takes {votesNeeded} of {administrators} administrators and only {eligibleVoters} may vote, so it cannot be carried. That is the rule working, not a defect: a lone administrator must never be able to eject the other.", { votesNeeded: String(math.votesNeeded), administrators: String(math.administrators), eligibleVoters: String(math.eligibleVoters) })
-      };
-    if (this.#one(`SELECT voter FROM admin_votes WHERE kind='remove' AND target=? AND voter=?`, memberId, by))
-      return { ok: false, reason: "ALREADY_VOTED", by };
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(
-      `INSERT INTO admin_votes (kind,target,voter,reason,created) VALUES ('remove',?,?,?,?)`,
-      memberId,
-      by,
-      why,
-      now
-    );
-    const votes = this.#rows(`SELECT voter, reason FROM admin_votes WHERE kind='remove' AND target=?`, memberId).filter((v) => admins.includes(v.voter) && v.voter !== memberId);
-    if (votes.length < math.votesNeeded)
-      return {
-        ok: false,
-        reason: "VOTES_SHORT",
-        memberId,
-        have: votes.length,
-        need: math.votesNeeded,
-        ...math,
-        deciders: votes.map((v) => v.voter).sort()
-      };
-    this.sql.exec(`UPDATE members SET status='revoked', status_by=?, status_at=?, updated=? WHERE member_id=?`, by, now, now, memberId);
-    if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);
-    return {
-      ok: true,
-      memberId,
-      removed: true,
-      ...math,
-      deciders: votes.map((v) => v.voter).sort(),
-      reasons: votes.map((v) => v.reason).filter(Boolean),
-      alsoDo: word("membership.also_do")
-    };
-  }
-  async memberAdd({
-    memberId,
-    cover,
-    role = "member",
-    capabilities = null,
-    expertise = null,
-    expiresInDays = void 0,
-    by = null
-  } = {}) {
-    const barAdd = this.#custodialBar(by, "adding a member");
-    if (barAdd) return barAdd;
-    const label = typeof cover === "string" && cover.trim() ? cover : null;
-    const refusal8 = (code, detail, extra) => {
-      if (!(code in MEMBER_ID_CHECKS)) return _Membership.#custodialRefusal(code, detail, extra);
-      const row3 = MEMBER_ID_CHECKS[code];
-      return { ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail, memberId };
-    };
-    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
-      return refusal8("BAD_MEMBER_ID", "lowercase letters, digits and dashes, 2 to 41 characters");
-    if (memberId === _Membership.ROOT_ADMIN)
-      return refusal8(
-        "MEMBER_ID_RESERVED",
-        localize("membership.index.root_admin_names_the_founding", "'{ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be enrolled under it", { ROOT_ADMIN: String(_Membership.ROOT_ADMIN) })
-      );
-    if (!label || typeof label !== "string")
-      return refusal8(
-        "NO_COVER",
-        "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name"
-      );
-    if (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return refusal8("EXISTS", localize("membership.index.a_member_row_already_holds", "a member row already holds the id '{memberId}'; nothing was written", { memberId: String(memberId) }), { memberId });
-    if (expertise !== null && expertise !== void 0)
-      return {
-        ok: false,
-        reason: "EXPERTISE_IS_NOT_ASSIGNED",
-        detail: "expertise is declared by the member and then confirmed by an administrator (section 1.3). It is not set when the invitation is created, because an administrator who could introduce the label would be assigning it rather than confirming it. Use op=expertisedeclare and op=expertiseconfirm."
-      };
-    const days = _Membership.#expiryRefusal(expiresInDays);
-    if (typeof days !== "number") return days;
-    const wantAdmin = role === "admin";
-    const admins = this.activeAdmins();
-    const caps = Array.isArray(capabilities) ? capabilities.filter((c) => _Membership.CAPABILITIES.includes(c)) : ["contribute"];
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    const inviter = by || null;
-    if (wantAdmin && admins.length >= 2) {
-      this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
-                              invite_days,door)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?,?,'administrator')`,
-        memberId,
-        label,
-        JSON.stringify(caps),
-        now,
-        now,
-        by || null,
-        inviter,
-        days
-      );
-      if (by && admins.includes(by))
-        this.sql.exec(
-          `INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)`,
-          memberId,
-          by,
-          now
-        );
-      const have = this.#rows(`SELECT voter FROM admin_votes WHERE kind='add' AND target=?`, memberId).map((r) => r.voter).filter((v) => admins.includes(v));
-      return refusal8(
-        "CONSENSUS_REQUIRED",
-        localize("membership.index.adding_an_administrator_beyond_the", "adding an administrator beyond the second requires the consensus of every existing administrator. No invitation is issued until they have all endorsed it."),
-        { memberId, proposed: true, have: have.sort(), awaiting: admins.filter((a) => !have.includes(a)).sort() }
-      );
-    }
-    const invite = _Membership.#rand(16);
-    const hash = await _Membership.#sha256(invite);
-    const expires = _Membership.#expiresAt(now, days);
-    this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
-                            invite_expires,door)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?,?,?,'administrator')`,
-      memberId,
-      label,
-      wantAdmin ? "admin" : "member",
-      "invited",
-      hash,
-      JSON.stringify(caps),
-      now,
-      now,
-      by || null,
-      inviter,
-      expires
-    );
-    return {
-      ok: true,
-      memberId,
-      invite,
-      expires,
-      role: wantAdmin ? "admin" : "member",
-      capabilities: caps,
-      invited_by: _Membership.#statusBy(inviter)
-    };
-  }
-  /* An invitation is a BURNER: the token in the URL is the whole credential, and
-   * after use the URL resolves to nothing and carries no record of what it
-   * formerly addressed (Membership Architecture section 6).
-   *
-   * The previous scheme put `<memberId>:<code>` in the link, so anyone who saw a
-   * leaked or archived one learned who had been invited. The token is now opaque
-   * and the member id is never in it, never returned by this lookup, and never
-   * needed to enrol.
-   *
-   * A SPENT token and a token that never existed return byte-identical answers.
-   * That is the security property and not tidiness: a response distinguishing
-   * them would confirm to whoever found the archived link that it had once
-   * addressed somebody real, which is exactly what the burner is for. */
-  static #INVITE_MISS = {
-    ok: false,
-    reason: "NO_SUCH_INVITATION",
-    detail: localize("membership.index.this_invitation_is_not_live", "this invitation is not live. An invitation is spent the moment it is used, and a spent one cannot be told apart from one that never existed, nor from one that expired or was withdrawn.")
-  };
-  async #invited(invite) {
-    if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
-    const hash = await _Membership.#sha256(invite);
-    const m = this.#one(
-      `SELECT member_id, cover, role, status, capabilities, invite_expires
-       FROM members WHERE invite_hash=? AND status='invited'`,
-      hash
-    );
-    return m && !_Membership.#expired(m.invite_expires) ? m : null;
-  }
-  /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
-   *  holds no credential yet, which is what the invitation is for. */
-  async inviteLook({ invite } = {}) {
-    const m = await this.#invited(invite);
-    if (!m) return { ..._Membership.#INVITE_MISS };
-    return {
-      ok: true,
-      cover: m.cover,
-      role: m.role,
-      capabilities: this.#capsOf(m),
-      expertise: this.expertiseList({ memberId: m.member_id }).expertise
-    };
-  }
-  async enroll({ invite, handle, password } = {}) {
-    const m = await this.#invited(invite);
-    if (!m) return { ..._Membership.#INVITE_MISS };
-    const h = String(handle ?? "").trim();
-    const refused2 = this.#handleRefusal(h, m.member_id);
-    if (refused2) return refused2;
-    if (typeof password !== "string" || password.length < 12)
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    if (!await this.#setEnrolmentPassword(`member:${m.member_id}`, password)) return _Membership.#enrolNotRecorded();
-    this.sql.exec(
-      `UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, status_at=?, updated=? WHERE member_id=?`,
-      h,
-      m.member_id,
-      (/* @__PURE__ */ new Date()).toISOString(),
-      (/* @__PURE__ */ new Date()).toISOString(),
-      m.member_id
-    );
-    return {
-      ok: true,
-      memberId: m.member_id,
-      handle: h,
-      ...this.courtNotice().choice === "tell" ? { courtStatement: _Membership.COURT_STATEMENT } : {}
-    };
-  }
-  /* R16, R144: the one judgment of a chosen handle, `h` already trimmed, for an enrolment and for the founder's set:
-     `NO_HANDLE`, `BAD_HANDLE` (R12's pattern), then `HANDLE_TAKEN` (R16 (T40, T46; DEC-184 (1), DEC-186 (2), DEC-196): taken
-     when another member holds it now, whatever their status (a member who has left keeps theirs), or held it before, the
-     founder's included, R144; `admin` always, R141). `self` is the member who may keep it, none for the founder. Null when
-     the handle is free. */
-  #handleRefusal(h, self) {
-    if (!h) return {
-      ok: false,
-      reason: "NO_HANDLE",
-      detail: localize("membership.index.choose_a_handle_it_is", "choose a handle. It is what the record shows: the author of a promotion, the attestor of a ratification, the participant list of a project. It is yours, not the label the administrator used to invite you.")
-    };
-    if (!_Membership.HANDLE_PATTERN.test(h))
-      return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    if (this.#heldByAnother(h, self)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
-    return null;
-  }
-  /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
-     answer says so; its row is this module's C-96.18. */
-  static #enrolNotRecorded() {
-    const row3 = MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED;
-    return {
-      ok: false,
-      reason: "ENROL_NOT_RECORDED",
-      code: "ENROL_NOT_RECORDED",
-      check: row3.check,
-      translation: row3.translation,
-      detail: localize("membership.index.the_password_could_not_be", "the password could not be recorded, so the enrolment did not happen: the member is not active and the invitation is still live. Nothing was written.")
-    };
-  }
-  memberList({ administer, viewer = null } = {}) {
-    const pairs = administer === true || administer === "1";
-    const rows = this.#rows(
-      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, pairing_published, created, updated,
-              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending,
-              door, approved_by, invite_expires, invite_withdrawn
-       FROM members ORDER BY member_id`
-    ).map(({ door, approved_by, invite_expires, invite_withdrawn, ...r }) => ({
-      ...r,
-      capabilities: this.#capsOf(r),
-      status_by: _Membership.#statusBy(r.status_by),
-      /* REC-159: who set the status, or `not recorded` */
-      invited_by: _Membership.#statusBy(r.invited_by),
-      /* D-134 (BOB #35): who invited them, or `not recorded` */
-      /* D-51: served from `member_expertise`, not from the dead column on
-         this row. Two places answering the same question, one of them never
-         updated, is the shape that produces a roster nobody can trust. */
-      expertise: this.expertiseList({ memberId: r.member_id }).expertise,
-      /* R17 (T46; DEC-197): no `formerly` key: a handle is chosen at joining and never changed. */
-      pairing_published: r.pairing_published === 1,
-      /* R19 */
-      ...pairs ? {
-        projects: this.#projectsOf(r.member_id, viewer),
-        /* R18: an administrator's roster */
-        /* R105: how each came in and their invitation, for an administrator's roster only. */
-        door: door ?? "administrator",
-        approvedBy: approved_by ?? null,
-        expires: r.status === "proposed" ? null : invite_expires ?? null,
-        invitation: _Membership.#invitationState(r, invite_expires, invite_withdrawn)
-      } : {}
-    }));
-    const founder = this.#claimed() ? [{
-      member_id: _Membership.ROOT_ADMIN,
-      handle: this.founderHandle(),
-      founder: true,
-      role: "admin",
-      status: "active",
-      status_by: _Membership.#statusBy(null),
-      invited_by: _Membership.#statusBy(null),
-      capabilities: [..._Membership.CAPABILITIES],
-      pairing_published: false,
-      created: null,
-      updated: null,
-      invite_pending: 0,
-      expertise: [],
-      ...pairs ? { projects: this.#projectsOf(_Membership.ROOT_ADMIN, viewer) } : {}
-    }] : [];
-    return { members: [...founder, ...rows] };
-  }
-  /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186, Bob's "S18: B"; K1881, K2394) — A MEMBER'S HANDLE, CHECKED AS IT
-   * IS TYPED; T46 (T46-4; N934; DEC-196, DEC-197; K2903) — AND NEVER CHANGED =====
-   *
-   * A handle is unique in the group and never reused (R16): every member's handle stays taken whatever the member's
-   * status, a member who has left included, and so does every handle `handle_history` holds, the earlier handles of the
-   * changes made before R124 was retired (append-only and never deleted, R57). The check (R123) says only free, taken or
-   * not allowed, never who holds a handle or that it was someone's earlier one, and counts every call against a window
-   * per invitation or member (K1881's protective limit). A handle is chosen at joining and never changed (DEC-197):
-   * `handleChange` (R129) refuses every call `HANDLE_FIXED`, reading and writing nothing. R125's guard slot stands, so
-   * reopening a change is one requirement, but no act here calls it. */
-  static HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,40}$/;
-  /* R123 (K1881): 60 checks in any 10 minutes, per invitation or per member, by a two-bucket sliding window
-     (`credentials` R38's form; `capture` R31's). */
-  static HANDLE_CHECK_WINDOW = Object.freeze({ perKey: 60, windowMs: 10 * 6e4 });
-  static HANDLE_CHECK_STATED = word(
-    "membership.handle_check_stated",
-    { per_key: _Membership.HANDLE_CHECK_WINDOW.perKey, minutes: _Membership.HANDLE_CHECK_WINDOW.windowMs / 6e4 }
-  );
-  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
-     (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
-  #heldByAnother(handle, self) {
-    if (handle === _Membership.ROOT_ADMIN || handle === this.founderHandle()) return true;
-    return !!this.#one(
-      `SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
-                        UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
-      handle,
-      self ?? "",
-      handle,
-      self ?? ""
-    );
-  }
-  /* R123: what in a typed handle does not fit R12's pattern: `length` (2 to 41), `start` (a letter or digit) and
-     `characters`, naming each character outside lower-case letters, digits and hyphens, once, in the order typed. */
-  static #handleProblems(h) {
-    const problems = [];
-    if (h.length < 2 || h.length > 41) problems.push({ problem: "length", min: 2, max: 41 });
-    if (h.length && !/^[a-z0-9]/.test(h)) problems.push({ problem: "start" });
-    const odd = [...new Set([...h].filter((c) => !/[a-z0-9-]/.test(c)))].slice(0, 20);
-    if (odd.length) problems.push({ problem: "characters", characters: odd });
-    return problems;
-  }
-  /* R123: the smallest `<handle>-2`, `-3`, … that R12's pattern admits and no member but `self` holds or held; null when
-     none fits 41 characters. The handles so far taken under that stem are read once. */
-  #suggestion(h, self) {
-    const stem = `${h}-`;
-    const founder = this.founderHandle();
-    const taken = new Set(this.#rows(
-      `SELECT handle AS h FROM members WHERE substr(handle, 1, ?) = ? AND member_id<>?
-       UNION SELECT from_handle AS h FROM handle_history WHERE substr(from_handle, 1, ?) = ? AND member_id<>?`,
-      stem.length,
-      stem,
-      self ?? "",
-      stem.length,
-      stem,
-      self ?? ""
-    ).map((r) => r.h));
-    if (founder) taken.add(founder);
-    for (let n = 2; ; n++) {
-      const cand = `${stem}${n}`;
-      if (cand.length > 41) return null;
-      if (!taken.has(cand)) return cand;
-    }
-  }
-  /* R123's window for one key at `now`: `prev × (1 − elapsed/W) + cur`. */
-  #handleCheckEstimate(key, now) {
-    const W2 = _Membership.HANDLE_CHECK_WINDOW.windowMs;
-    const win = Math.floor(now / W2);
-    const at7 = (w) => Number(this.#one(`SELECT count FROM handle_check_window WHERE key=? AND win=?`, key, w)?.count ?? 0);
-    return { prev: at7(win - 1), cur: at7(win), win, f: (now - win * W2) / W2 };
-  }
-  /* Whole seconds until the estimate falls below the bound, no further check counted. */
-  static #handleCheckRetry({ prev, cur, f: f4 }) {
-    const W2 = _Membership.HANDLE_CHECK_WINDOW.windowMs, N2 = _Membership.HANDLE_CHECK_WINDOW.perKey;
-    let ms;
-    if (cur < N2 && prev > 0 && 1 - (N2 - cur) / prev < 1) ms = Math.max(0, (1 - (N2 - cur) / prev - f4) * W2);
-    else ms = (1 - f4) * W2 + Math.max(0, 1 - N2 / Math.max(cur, 1)) * W2;
-    return Math.max(1, Math.ceil(ms / 1e3) + 1);
-  }
-  /* R123 (DEC-188 (7)): the paused answer's fields: `stated`, `retryAfter` in whole seconds, and `minutes`, the whole
-     minutes until then, rounded up, which the translation's `{minutes}` names. */
-  static #pausedFor(retryAfter) {
-    return { stated: _Membership.HANDLE_CHECK_STATED, retryAfter, minutes: Math.ceil(retryAfter / 60) };
-  }
-  /** R123 (DEC-184 (2), (3), DEC-186 (3); K1881; `op=handlecheck`): whether `handle` could be taken in this group now,
-   *  as a person types it, asked with a live invitation or by an active member (`viewer`, a member checking a handle;
-   *  T46: no handle is changed, R129). Free, taken (with a
-   *  suggestion) or not allowed (naming what does not fit), never who holds it. Writes only its count; never throws. */
-  async handleCheck({ invite = null, handle = null, viewer = null } = {}) {
-    try {
-      let key = null, self = null;
-      const m = invite !== null && invite !== void 0 ? await this.#invited(invite) : null;
-      if (m) {
-        key = `invite:${await _Membership.#sha256(invite)}`;
-        self = m.member_id;
-      } else {
-        const who2 = viewerPredicate(viewer).member;
-        const row3 = who2 && who2 !== _Membership.ROOT_ADMIN ? this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, who2) : null;
-        if (row3 && row3.status === "active") key = `member:${row3.member_id}`;
-      }
-      if (!key) return { ..._Membership.#INVITE_MISS };
-      const now = Date.now();
-      const est = this.#handleCheckEstimate(key, now);
-      if (est.prev * (1 - est.f) + est.cur >= _Membership.HANDLE_CHECK_WINDOW.perKey)
-        return _Membership.#rowRefusal(
-          "HANDLE_CHECK_PAUSED",
-          localize("membership.index.too_many_handles_were_checked", "too many handles were checked for this invitation or member in the last few minutes, so this one was not read. Nothing was changed."),
-          _Membership.#pausedFor(_Membership.#handleCheckRetry(est))
-        );
-      this.sql.exec(`INSERT INTO handle_check_window (key, win, count) VALUES (?,?,1)
-                     ON CONFLICT(key, win) DO UPDATE SET count=count+1`, key, est.win);
-      this.sql.exec(`DELETE FROM handle_check_window WHERE win < ?`, est.win - 1);
-      const h = String(handle ?? "").trim();
-      const shown = h.slice(0, 80);
-      const words = (k, names = []) => ({ key: k, en: keyed(k, names) });
-      if (!_Membership.HANDLE_PATTERN.test(h))
-        return {
-          ok: true,
-          handle: shown,
-          state: "not_allowed",
-          problems: _Membership.#handleProblems(h),
-          suggestion: null,
-          words: words("handle.characters")
-        };
-      if (this.#heldByAnother(h, self))
-        return {
-          ok: true,
-          handle: shown,
-          state: "taken",
-          problems: [],
-          suggestion: this.#suggestion(h, self),
-          words: words("handle.taken", ["handle", "group", "suggestion"])
-        };
-      return { ok: true, handle: shown, state: "free", problems: [], suggestion: null, words: words("handle.free", ["handle", "group"]) };
-    } catch {
-      return { ..._Membership.#INVITE_MISS };
-    }
-  }
-  /* R125 (DEC-186 (1); K2376 (4); R116's form): the one guard a change of handle would ask whether a member's work is in
-     a published case. One later module (`publication`, its R76) registers once at start; the slot takes one
-     registration whoever makes it, so its refusals are R81's, naming the holder. T46 (DEC-197): while no handle is
-     changed (R129), no act of this module calls it; the slot stands so that reopening a change is one requirement. */
-  #handleGuard = null;
-  // {module, fn}
-  registerHandleGuard(module, fn) {
-    const refused2 = listenerRefusal(this.#handleGuard, module, fn);
-    if (refused2) return refused2;
-    this.#handleGuard = { module, fn };
-    return { ok: true, module };
-  }
-  /** R129 (T46; DEC-197, DEC-196; N934, K2903; `op=handlechange`): a handle is chosen when a member joins and is never
-   *  changed, by the member or anyone. The op stays declared and routed, and every call is refused HANDLE_FIXED before
-   *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
-   *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
-  handleChange() {
-    return _Membership.#handleFixed("a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was written.");
-  }
-  /* R129, R144: HANDLE_FIXED is minted here alone; `handleChange` and a second `founderHandleSet` answer through it. */
-  static #handleFixed(detail) {
-    return _Membership.#rowRefusal("HANDLE_FIXED", detail);
-  }
-  /* ===== T49 (T49-1; N1072; Bob's K3265) — THE FOUNDER'S OWN HANDLE (R144) =====
-   *
-   * The founder has no members row, so the handle she signs in and is known by is held in a table of its own, one row at
-   * most. It is chosen once and never changed (a second set is HANDLE_FIXED, R129's row). Her member id stays `admin` in
-   * every viewer, stamp and participation row (R43, R44, R64, R86, R94); the id is a reserved name, the handle of no one
-   * (R141). */
-  /* An owner's current handle as a reader sees it (R77): a member's, or the founder's own once she holds one (R144), and
-     never the founder's id `admin`; null for an owner with none. */
-  #handleOf(memberId) {
-    return memberId === _Membership.ROOT_ADMIN ? this.founderHandle() : this.memberFacts(memberId)?.handle ?? null;
-  }
-  /** R144: the founder's held handle, or null while none is held. Writes nothing; never throws. */
-  founderHandle() {
-    try {
-      return this.#one(`SELECT handle FROM founder_handle WHERE id=1`)?.handle ?? null;
-    } catch {
-      return null;
-    }
-  }
-  /** R144 (`op=founderhandleset`; called in-plane by `credentials`' claim inside its act): records the handle the founder
-   *  signs in and is known by. Refusals in order, each writing nothing: a `by` that is not the founder (`admin` or
-   *  `member:admin`) is FOUNDER_HANDLE_NOT_FOUNDER (a machine credential included); a handle already held is
-   *  HANDLE_FIXED; then R16's NO_HANDLE, BAD_HANDLE and HANDLE_TAKEN. Answers `{ok: true, handle}`. */
-  founderHandleSet(args = {}) {
-    const { handle = null, by = null } = isObj(args) ? args : {};
-    if (by !== _Membership.ROOT_ADMIN && by !== `member:${_Membership.ROOT_ADMIN}`)
-      return _Membership.#rowRefusal(
-        "FOUNDER_HANDLE_NOT_FOUNDER",
-        localize("membership.index.the_founders_handle_is_chosen", "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the founder. Nothing was written."),
-        { by: _Membership.#echo(by ?? null) }
-      );
-    if (this.founderHandle() !== null)
-      return _Membership.#handleFixed(localize("membership.index.the_founders_handle_is_chosen_2", "the founder's handle is chosen once and never changed (DEC-197), and one is held. Nothing was written."));
-    const h = String(handle ?? "").trim();
-    const refused2 = this.#handleRefusal(h, null);
-    if (refused2) return refused2;
-    this.sql.exec(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, h, (/* @__PURE__ */ new Date()).toISOString());
-    return { ok: true, handle: h };
-  }
-  memberSet({ memberId, status, by = null } = {}) {
-    const barSet = this.#custodialBar(by, "setting a member's status");
-    if (barSet) return barSet;
-    if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    const refusal8 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
-    if (m.role === "admin" && status === "revoked")
-      return refusal8(
-        "ADMIN_REQUIRES_VOTE",
-        "an administrator is removed by a majority of all administrators, counting the target in the denominator but not letting them vote (section 4.7). No administrator may strip another unilaterally."
-      );
-    const demoted = status === "active" && m.role === "admin" && m.status !== "active";
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    const actor = by || null;
-    const at7 = m.status !== status ? now : null;
-    if (demoted)
-      this.sql.exec(
-        `UPDATE members SET status=?, role='member', status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
-        status,
-        actor,
-        at7,
-        now,
-        memberId
-      );
-    else
-      this.sql.exec(
-        `UPDATE members SET status=?, status_by=?, status_at=COALESCE(?, status_at), updated=? WHERE member_id=?`,
-        status,
-        actor,
-        at7,
-        now,
-        memberId
-      );
-    if (status === "revoked" && m.status !== "revoked") this.#announceRevoked(memberId, actor, now);
-    return { ok: true, memberId, status, by: _Membership.#statusBy(actor), ...demoted ? {
-      demoted: true,
-      detail: localize("membership.index.reactivated_as_an_ordinary_member", "reactivated as an ordinary member. Administrator status is not restored by reactivation: the team voted them out under 4.7, and putting them back is an appointment, which needs the consensus of all existing administrators like any other.")
-    } : {} };
-  }
-  /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745) — INVITATIONS THAT EXPIRE, THE GROUP'S TWO DOORS, ADDRESSING
-   * A CHECK, AND THE GROUP'S OWN SETTINGS =====
-   *
-   * Every new refusal is a row of this module's (C-96.22–.38) answered through `#rowRefusal`, its code a literal at
-   * the one region its row's `where` names; the administrator's refusal is R84's. A secret this module hands out (an
-   * invitation, a website key, a join link) is returned once and held only as its hash (R111). No service here sends a
-   * message (R105): an invitation reaches its person only through the answer to its caller. */
-  static INVITE_DAYS_DEFAULT = 7;
-  static INVITE_DAYS_MAX = 30;
-  /* A refusal carrying its row from MEMBERSHIP_CHECKS: `reason` and `code` the same literal, `#custodialRefusal`'s
-     shape. The caller's fields sit beside the row's and never replace them. */
+  /* A refusal carrying its row from MEMBERSHIP_CHECKS: `reason` and `code` the same literal. The caller's fields sit
+     beside the row's and never replace them. */
   static #rowRefusal(code, detail, extra) {
-    const row3 = MEMBERSHIP_CHECKS[code];
+    const row3 = MEMBERSHIP_CHECKS3[code];
     return { ...extra || {}, ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail };
-  }
-  /* R97: the days an invitation lasts: 7 when not given, else a whole number from 1 to 30; anything else BAD_EXPIRY.
-     Answers the number, or the refusal. One judgment for R12, R99, R100, R102 and R103. */
-  static #expiryRefusal(v) {
-    if (v === void 0 || v === null) return _Membership.INVITE_DAYS_DEFAULT;
-    if (Number.isInteger(v) && v >= 1 && v <= _Membership.INVITE_DAYS_MAX) return v;
-    return _Membership.#rowRefusal(
-      "BAD_EXPIRY",
-      localize("membership.index.an_invitation_lasts_a_whole", "an invitation lasts a whole number of days from 1 to {INVITE_DAYS_MAX} (seven when none is chosen), and the number given is not one. Nothing was written.", { INVITE_DAYS_MAX: String(_Membership.INVITE_DAYS_MAX) }),
-      { expiresInDays: _Membership.#echo(v) }
-    );
-  }
-  /* R99: the daily number of invitations a door may make, a whole number of at least 1, which the administrator sets;
-     `required` when nothing stands for it yet (a creation or an enabling). Answers the number, or the refusal. */
-  static #dailyCapRefusal(v, required) {
-    if (!required && (v === void 0 || v === null)) return null;
-    if (Number.isInteger(v) && v >= 1) return v;
-    return _Membership.#rowRefusal(
-      "BAD_DAILY_CAP",
-      localize("membership.index.a_door_makes_at_most", "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with no default. Nothing was written."),
-      { dailyCap: _Membership.#echo(v) }
-    );
-  }
-  /* R99 "BAD_CAPABILITY as R9": the door's capabilities, `["contribute"]` when not given; a non-array or a word outside
-     the vocabulary (`administer` among them) is R9's refusal, naming the words and the vocabulary. Answers the list
-     (each word once, in the order given), or the refusal. */
-  static #doorCapabilities(v, required) {
-    if (v === void 0 || v === null) return required ? ["contribute"] : null;
-    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
-    const bad = v.filter((c) => !_Membership.CAPABILITIES.includes(c));
-    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad.map(_Membership.#echo), known: _Membership.CAPABILITIES };
-    return [...new Set(v)];
   }
   /* A caller's value echoed back in a refusal: never more than it can carry safely. */
   static #echo(v) {
@@ -40887,531 +41628,187 @@ var Membership = class _Membership {
       return null;
     }
   }
-  static #expiresAt(nowIso, days) {
-    return new Date(Date.parse(nowIso) + days * 864e5).toISOString();
+  /* An owner's current handle as a reader sees it (R77): a member's, or the founder's own once she holds one, and never the
+     founder's id `admin`; null for an owner with none. */
+  #handleOf(memberId) {
+    return memberId === ROOT_ADMIN ? this.members.founderHandle() : this.members.memberFacts(memberId)?.handle ?? null;
   }
-  static #expired(expires) {
-    return typeof expires === "string" && Date.parse(expires) <= Date.now();
+  /* ===== R154 — EACH MOVED NAME ANSWERS WHAT `member-roster` ANSWERS (K3268: no user re-points) =====
+   * Each name whose requirement moved to `member-roster` is a delegate of the same name and shape; the class statics are
+   * its aliases. */
+  static ROOT_ADMIN = ROOT_ADMIN;
+  static CAPABILITIES = CAPABILITIES;
+  static adminMath = adminMath;
+  static HOSTING_ACCESS_LIMIT = Members.HOSTING_ACCESS_LIMIT;
+  static MEMBER_PAIRINGS_LIMIT = Members.MEMBER_PAIRINGS_LIMIT;
+  static HANDLE_PATTERN = Members.HANDLE_PATTERN;
+  static HANDLE_CHECK_WINDOW = Members.HANDLE_CHECK_WINDOW;
+  static HANDLE_CHECK_STATED = Members.HANDLE_CHECK_STATED;
+  static INVITE_DAYS_DEFAULT = Members.INVITE_DAYS_DEFAULT;
+  static INVITE_DAYS_MAX = Members.INVITE_DAYS_MAX;
+  static DOOR_WARNING = Members.DOOR_WARNING;
+  static JOIN_DOORS_LIMIT = Members.JOIN_DOORS_LIMIT;
+  static COURT_STATEMENT = Members.COURT_STATEMENT;
+  static GROUP_KINDS = Members.GROUP_KINDS;
+  onRevoked(...a) {
+    return this.members.onRevoked(...a);
   }
-  /* R105: an invitation's state on an administrator's roster. A proposed administrator has none yet. */
-  static #invitationState(r, expires, withdrawn) {
-    if (r.status === "proposed") return null;
-    if (withdrawn) return "withdrawn";
-    if (r.status === "invited") return r.invite_pending ? _Membership.#expired(expires) ? "expired" : "live" : "expired";
-    if (r.status === "revoked" && !r.handle) return "withdrawn";
-    return "spent";
+  registerClaimed(...a) {
+    return this.members.registerClaimed(...a);
   }
-  /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
-  inviteWithdraw({ memberId, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");
-    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);
-    if (m.status !== "invited" || !m.invite_hash)
-      return _Membership.#rowRefusal(
-        "NO_UNUSED_INVITATION",
-        localize("membership.index.only_an_invitation_that_has", "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they have joined, theirs was withdrawn, or none was made yet. Nothing was written."),
-        { memberId, status: m.status }
-      );
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, status_at=?, updated=?
-                    WHERE member_id=?`, now, by, now, now, memberId);
-    this.#announceRevoked(memberId, by, now);
-    return { ok: true, memberId, status: "revoked", invitation: "withdrawn", by, at: now };
+  registerPasswordSetter(...a) {
+    return this.members.registerPasswordSetter(...a);
   }
-  /* ---- R99-R105 (DEC-133): the group's two doors ---- */
-  static DOOR_WARNING = word("membership.door_warning");
-  static #DOOR = {
-    website: { door: "website", start: "create", stop: "revoke", actor: "website" },
-    link: { door: "join link", start: "enable", stop: "off", actor: "join-link" }
-  };
-  /* A door's latest row, and whether it is live (its latest row neither a revocation nor a switching off). */
-  #doorNow(kind) {
-    const d = _Membership.#DOOR[kind];
-    const r = this.#one(`SELECT door_id, event, secret_hash, capabilities, daily_cap, expires_days FROM join_doors
-                          WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
-    if (!r || r.event === d.stop) return null;
-    return {
-      id: r.door_id,
-      hash: r.secret_hash,
-      capabilities: this.#capsOf(r),
-      dailyCap: r.daily_cap,
-      expiresInDays: r.expires_days
-    };
+  registerHandleGuard(...a) {
+    return this.members.registerHandleGuard(...a);
   }
-  #doorAppend(kind, id, event, hash, s, by, at7) {
-    this.sql.exec(
-      `INSERT INTO join_doors (door, door_id, event, secret_hash, capabilities, daily_cap, expires_days, set_by, at)
-                   VALUES (?,?,?,?,?,?,?,?,?)`,
-      _Membership.#DOOR[kind].door,
-      id,
-      event,
-      hash,
-      JSON.stringify(s.capabilities),
-      s.dailyCap,
-      s.expiresInDays,
-      by,
-      at7
-    );
+  isAdministrator(...a) {
+    return this.members.isAdministrator(...a);
   }
-  /* A door's settings, each judged as R99 judges it: `required` at a creation or an enabling (capabilities default,
-     the cap required, the days default), else each left as `held` has it when not given. Answers the settings, or the
-     first refusal in R99's order. */
-  static #doorSettings({ capabilities, dailyCap, expiresInDays }, held2) {
-    const required = !held2;
-    const caps = _Membership.#doorCapabilities(capabilities, required);
-    if (caps && !Array.isArray(caps)) return caps;
-    const cap = _Membership.#dailyCapRefusal(dailyCap, required);
-    if (cap && typeof cap !== "number") return cap;
-    let days = held2 ? held2.expiresInDays : _Membership.INVITE_DAYS_DEFAULT;
-    if (expiresInDays !== void 0 && expiresInDays !== null || required) {
-      days = _Membership.#expiryRefusal(expiresInDays);
-      if (typeof days !== "number") return days;
-    }
-    return { ok: true, capabilities: caps ?? held2.capabilities, dailyCap: cap ?? held2.dailyCap, expiresInDays: days };
+  activeAdmins(...a) {
+    return this.members.activeAdmins(...a);
   }
-  static #secret() {
-    return _Membership.#rand(32);
+  memberFacts(...a) {
+    return this.members.memberFacts(...a);
   }
-  static #doorIdOf() {
-    return _Membership.#rand(8);
+  memberStatusSince(...a) {
+    return this.members.memberStatusSince(...a);
   }
-  /* R100's refusal when no key is live, and R103's when no link is: each minted in its one region. */
-  #liveWebsiteKey(act) {
-    const now = this.#doorNow("website");
-    if (now) return now;
-    return _Membership.#rowRefusal(
-      "NO_WEBSITE_KEY",
-      localize("membership.index.act_acts_on_the_teams", "{act} acts on the team's live website key, and there is none. Nothing was written.", { act: String(act) })
-    );
+  memberByHandle(...a) {
+    return this.members.memberByHandle(...a);
   }
-  #liveJoinLink(act) {
-    const now = this.#doorNow("link");
-    if (now) return now;
-    return _Membership.#rowRefusal(
-      "JOIN_LINK_OFF",
-      localize("membership.index.act_acts_on_the_teams_2", "{act} acts on the team's join link, and it is off. Nothing was written.", { act: String(act) })
-    );
+  sessionRights(...a) {
+    return this.members.sessionRights(...a);
   }
-  /** R99: an administrator creates the website key, at most one live. The key is answered once and never again. */
-  websiteKeyCreate({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "creating the team's website key");
-    if (this.#doorNow("website"))
-      return _Membership.#rowRefusal(
-        "WEBSITE_KEY_EXISTS",
-        localize("membership.index.the_team_holds_one_live", "the team holds one live website key at a time (DEC-133). Nothing was created.")
-      );
-    const s = _Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
-    if (!s.ok) return s;
-    const key = _Membership.#secret(), keyId = _Membership.#doorIdOf(), at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("website", keyId, "create", sha256HexSync(key), s, by, at7);
-    return {
-      ok: true,
-      keyId,
-      key,
-      capabilities: s.capabilities,
-      dailyCap: s.dailyCap,
-      expiresInDays: s.expiresInDays,
-      warning: _Membership.DOOR_WARNING
-    };
+  adminResign(...a) {
+    return this.members.adminResign(...a);
   }
-  /** R100: the live key's scope, cap or invitation days changed, each as R99 judges it, each kept when not given. */
-  websiteKeySet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the team's website key");
-    const live = this.#liveWebsiteKey("changing the website key");
-    if (live.ok === false) return live;
-    const s = _Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
-    if (!s.ok) return s;
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("website", live.id, "set", live.hash, s, by, at7);
-    return {
-      ok: true,
-      keyId: live.id,
-      capabilities: s.capabilities,
-      dailyCap: s.dailyCap,
-      expiresInDays: s.expiresInDays,
-      by,
-      at: at7
-    };
+  adminArithmetic(...a) {
+    return this.members.adminArithmetic(...a);
   }
-  /** R100: the live key is dead at once; the invitations it made stay as they are (R98 withdraws them). */
-  websiteKeyRevoke({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the team's website key");
-    const live = this.#liveWebsiteKey("switching off the website key");
-    if (live.ok === false) return live;
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("website", live.id, "revoke", null, live, by, at7);
-    return { ok: true, keyId: live.id, revoked: true, by, at: at7 };
+  adminEndorse(...a) {
+    return this.members.adminEndorse(...a);
   }
-  /* The live door whose secret this is, or null: a secret that is not 64 lowercase hex characters names none, and is
-     never hashed against the log. */
-  #doorFor(kind, secret) {
-    if (typeof secret !== "string" || !/^[0-9a-f]{64}$/.test(secret)) return null;
-    const live = this.#doorNow(kind);
-    return live && live.hash === sha256HexSync(secret) ? live : null;
+  adminRemove(...a) {
+    return this.members.adminRemove(...a);
   }
-  /* The cover a door's caller gives: a non-empty string, or null. */
-  static #doorCover(cover) {
-    return typeof cover === "string" && cover.trim() ? cover : null;
+  adminRemovalsOpen(...a) {
+    return this.members.adminRemovalsOpen(...a);
   }
-  /* How many invitations this door's actor made in the 24 hours before now. */
-  #doorToday(actor) {
-    const since = new Date(Date.now() - 864e5).toISOString();
-    return this.#one(`SELECT COUNT(*) AS n FROM members WHERE invited_by=? AND created>?`, actor, since).n;
+  hostingAccessSet(...a) {
+    return this.members.hostingAccessSet(...a);
   }
-  /* R101, R104, R105: an ordinary member made through a door: role `member`, `invited` (never proposed), under a fresh
-     member id R12's pattern admits and nothing in the request derives, `invited_by` and `status_by` the door's actor,
-     the door's capabilities, an invitation that expires after the door's days. Answers `{invite, expires}` once. */
-  async #doorMember(kind, live, cover, approvedBy) {
-    const d = _Membership.#DOOR[kind];
-    const actor = `${d.actor}:${live.id}`;
-    let memberId;
-    do
-      memberId = `m-${_Membership.#rand(10)}`;
-    while (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId));
-    const invite = _Membership.#rand(16);
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    const expires = _Membership.#expiresAt(now, live.expiresInDays);
-    this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
-                            invite_expires,door,approved_by)
-       VALUES (?,?,NULL,'member','invited',?,?,?,?,?,?,?,?,?)`,
-      memberId,
-      cover,
-      await _Membership.#sha256(invite),
-      JSON.stringify(live.capabilities),
-      now,
-      now,
-      actor,
-      actor,
-      expires,
-      d.door,
-      approvedBy
-    );
-    return { ok: true, invite, expires };
+  hostingAccess(...a) {
+    return this.members.hostingAccess(...a);
   }
-  /** R101: the website's call: one invitation for one cover name, with the approver's name as the website reports it. */
-  async websiteInvite({ key, cover, approvedBy = null } = {}) {
-    const live = this.#doorFor("website", key);
-    if (!live)
-      return _Membership.#rowRefusal(
-        "WEBSITE_KEY_UNKNOWN",
-        localize("membership.index.this_key_opens_no_door", "this key opens no door of this team: it was never made, was switched off, or is not a key, and the answer is the same for each. Nothing was written.")
-      );
-    const label = _Membership.#doorCover(cover);
-    if (!label) return _Membership.#custodialRefusal(
-      "NO_COVER",
-      localize("membership.index.the_website_names_the_person", "the website names the person by the cover the team will know them by. Nothing was written.")
-    );
-    if (this.#doorToday(`website:${live.id}`) >= live.dailyCap)
-      return _Membership.#rowRefusal(
-        "WEBSITE_DAILY_CAP",
-        localize("membership.index.the_website_key_has_made", "the website key has made its daily number of invitations in the last 24 hours. Nothing was written."),
-        { dailyCap: live.dailyCap }
-      );
-    const a = approvedBy === null || approvedBy === void 0 ? "" : String(approvedBy).trim().slice(0, 120);
-    return this.#doorMember("website", live, label, a || null);
+  memberPairingSet(...a) {
+    return this.members.memberPairingSet(...a);
   }
-  /** R102: an administrator switches the join link on, at most one live. The link is answered once and never again. */
-  joinLinkEnable({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching on the team's join link");
-    if (this.#doorNow("link"))
-      return _Membership.#rowRefusal(
-        "JOIN_LINK_ON",
-        localize("membership.index.the_team_holds_one_live_2", "the team holds one live join link at a time (DEC-133 (6)). Nothing was changed.")
-      );
-    const s = _Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
-    if (!s.ok) return s;
-    const link = _Membership.#secret(), linkId = _Membership.#doorIdOf(), at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("link", linkId, "enable", sha256HexSync(link), s, by, at7);
-    return {
-      ok: true,
-      linkId,
-      link,
-      capabilities: s.capabilities,
-      dailyCap: s.dailyCap,
-      expiresInDays: s.expiresInDays,
-      warning: _Membership.DOOR_WARNING
-    };
+  memberPairings(...a) {
+    return this.members.memberPairings(...a);
   }
-  /** R103: the live link's settings changed, as R100 changes the key's. */
-  joinLinkSet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the team's join link");
-    const live = this.#liveJoinLink("changing the join link");
-    if (live.ok === false) return live;
-    const s = _Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
-    if (!s.ok) return s;
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("link", live.id, "set", live.hash, s, by, at7);
-    return {
-      ok: true,
-      linkId: live.id,
-      capabilities: s.capabilities,
-      dailyCap: s.dailyCap,
-      expiresInDays: s.expiresInDays,
-      by,
-      at: at7
-    };
+  memberCaps(...a) {
+    return this.members.memberCaps(...a);
   }
-  /** R103: a new link, answered once, its settings kept; the old one is dead at once. */
-  joinLinkReplace({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "replacing the team's join link");
-    const live = this.#liveJoinLink("replacing the join link");
-    if (live.ok === false) return live;
-    const link = _Membership.#secret(), linkId = _Membership.#doorIdOf(), at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("link", linkId, "replace", sha256HexSync(link), live, by, at7);
-    return {
-      ok: true,
-      linkId,
-      link,
-      replaced: live.id,
-      capabilities: live.capabilities,
-      dailyCap: live.dailyCap,
-      expiresInDays: live.expiresInDays,
-      by,
-      at: at7
-    };
+  memberAdd(...a) {
+    return this.members.memberAdd(...a);
   }
-  /** R103: the live link is dead at once. */
-  joinLinkOff({ by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the team's join link");
-    const live = this.#liveJoinLink("switching off the join link");
-    if (live.ok === false) return live;
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#doorAppend("link", live.id, "off", null, live, by, at7);
-    return { ok: true, linkId: live.id, off: true, by, at: at7 };
+  memberSet(...a) {
+    return this.members.memberSet(...a);
   }
-  /** R104: the join page's call: one invitation for the cover the person chose; enrolment is R16's. */
-  async joinLinkInvite({ link, cover } = {}) {
-    const live = this.#doorFor("link", link);
-    if (!live)
-      return _Membership.#rowRefusal(
-        "NO_SUCH_JOIN_LINK",
-        localize("membership.index.this_link_opens_no_door", "this link opens no door of this team: it was never made, was replaced or switched off, or is not a link, and the answer is the same for each. Nothing was written.")
-      );
-    const label = _Membership.#doorCover(cover);
-    if (!label) return _Membership.#custodialRefusal(
-      "NO_COVER",
-      "choose the name the team will know you by: it need not be, and often should not be, a legal name. Nothing was written."
-    );
-    if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
-      return _Membership.#rowRefusal(
-        "JOIN_LINK_DAILY_CAP",
-        localize("membership.index.the_join_link_has_let", "the join link has let in its daily number of people in the last 24 hours. Nothing was written."),
-        { dailyCap: live.dailyCap }
-      );
-    return this.#doorMember("link", live, label, null);
+  inviteLook(...a) {
+    return this.members.inviteLook(...a);
   }
-  /* ---- R130 (T46; N654, K1752): the doors' settings and history, for an administrator ---- */
-  /* R130's bound: R113's rule, at most 200 records, lowered never raised. */
-  static JOIN_DOORS_LIMIT = 200;
-  /** R130 (`op=joindoors`): the settings and history of the group's two doors, to an administrator (R64), never their
-   *  secrets. Each door answers `{live, current, history, limit, truncated}`: `current` the live door's settings, its
-   *  id the one its invitations' actor names (R105), `since` and `by` its latest record's; `history` every record R100
-   *  and R103 appended for it, in the order recorded, the first `limit` of them, `truncated` read one row past. No
-   *  column holding a secret's hash is selected, and no invitation a door made is read. Writes nothing, never throws. */
-  joinDoors(args = {}) {
-    const { by = null, limit = null } = isObj(args) ? args : {};
-    try {
-      if (!this.isAdministrator(by)) return notAnAdmin(by, "reading the team's website key and join link");
-      const cap = Math.max(1, Math.min(Number(limit) || _Membership.JOIN_DOORS_LIMIT, _Membership.JOIN_DOORS_LIMIT));
-      const record2 = (r) => ({
-        id: r.door_id,
-        event: r.event,
-        capabilities: this.#capsOf(r),
-        dailyCap: r.daily_cap,
-        expiresInDays: r.expires_days,
-        by: r.set_by,
-        at: r.at
-      });
-      const door = (kind) => {
-        const d = _Membership.#DOOR[kind];
-        const found2 = this.#rows(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
-                                   WHERE door=? ORDER BY seq LIMIT ?`, d.door, cap + 1).map(record2);
-        const last = this.#one(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
-                                 WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
-        const live = !!last && last.event !== d.stop;
-        const truncated = found2.length > cap;
-        return {
-          live,
-          current: live ? {
-            id: last.door_id,
-            capabilities: this.#capsOf(last),
-            dailyCap: last.daily_cap,
-            expiresInDays: last.expires_days,
-            since: last.at,
-            by: last.set_by
-          } : null,
-          history: truncated ? found2.slice(0, cap) : found2,
-          limit: cap,
-          truncated
-        };
-      };
-      return { ok: true, websiteKey: door("website"), joinLink: door("link") };
-    } catch {
-      const none = { live: false, current: null, history: [], limit: _Membership.JOIN_DOORS_LIMIT, truncated: false };
-      return { ok: true, websiteKey: { ...none }, joinLink: { ...none } };
-    }
+  inviteWithdraw(...a) {
+    return this.members.inviteWithdraw(...a);
+  }
+  enroll(...a) {
+    return this.members.enroll(...a);
+  }
+  expertiseDeclare(...a) {
+    return this.members.expertiseDeclare(...a);
+  }
+  expertiseConfirm(...a) {
+    return this.members.expertiseConfirm(...a);
+  }
+  expertiseList(...a) {
+    return this.members.expertiseList(...a);
+  }
+  handleCheck(...a) {
+    return this.members.handleCheck(...a);
+  }
+  handleChange(...a) {
+    return this.members.handleChange(...a);
+  }
+  founderHandle(...a) {
+    return this.members.founderHandle(...a);
+  }
+  founderHandleSet(...a) {
+    return this.members.founderHandleSet(...a);
+  }
+  websiteKeyCreate(...a) {
+    return this.members.websiteKeyCreate(...a);
+  }
+  websiteKeySet(...a) {
+    return this.members.websiteKeySet(...a);
+  }
+  websiteKeyRevoke(...a) {
+    return this.members.websiteKeyRevoke(...a);
+  }
+  websiteInvite(...a) {
+    return this.members.websiteInvite(...a);
+  }
+  joinLinkEnable(...a) {
+    return this.members.joinLinkEnable(...a);
+  }
+  joinLinkSet(...a) {
+    return this.members.joinLinkSet(...a);
+  }
+  joinLinkReplace(...a) {
+    return this.members.joinLinkReplace(...a);
+  }
+  joinLinkOff(...a) {
+    return this.members.joinLinkOff(...a);
+  }
+  joinLinkInvite(...a) {
+    return this.members.joinLinkInvite(...a);
+  }
+  joinDoors(...a) {
+    return this.members.joinDoors(...a);
+  }
+  courtNoticeSet(...a) {
+    return this.members.courtNoticeSet(...a);
+  }
+  courtNotice(...a) {
+    return this.members.courtNotice(...a);
+  }
+  lookedSince(...a) {
+    return this.members.lookedSince(...a);
+  }
+  lookedAt(...a) {
+    return this.members.lookedAt(...a);
+  }
+  groupDescriptionSet(...a) {
+    return this.members.groupDescriptionSet(...a);
+  }
+  groupDescription(...a) {
+    return this.members.groupDescription(...a);
+  }
+  /* R14, R71 (`member-roster`): the roster, given this module's own rule for the projects of a member (R18). */
+  memberList({ administer, viewer = null } = {}) {
+    return this.members.memberList({ administer, viewer, projectsOf: (memberId, v) => this.#projectsOf(memberId, v) });
   }
   /* ---- R106 (DEC-135 (2), (5)): who a check request reaches ---- */
-  /** Every active member whose current state for `label` is declared or confirmed and whom R80 admits to `target`, in
-   *  member-id order. It addresses only: writes nothing, grants nothing, and never throws. */
+  /** Every active member whose current state for `label` is declared or confirmed (`member-roster` R72) and whom R80
+   *  admits to `target`, in member-id order. It addresses only: writes nothing, grants nothing, and never throws. */
   checkAddressees({ target, label } = {}) {
     try {
-      const lab = _Membership.#normLabel(label);
-      if (!lab) {
-        const row3 = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
-        return {
-          ok: false,
-          reason: "EXPERTISE_NO_LABEL",
-          code: "EXPERTISE_NO_LABEL",
-          check: row3.check,
-          translation: row3.translation,
-          detail: "a check request is addressed by a label, such as 'CPA'"
-        };
-      }
+      const holders = this.members.expertiseHolders(label);
+      if (!Array.isArray(holders)) return holders;
       if (typeof target !== "string" || !target) return [];
-      const rows = this.#rows(
-        `SELECT x.member_id, m.handle, x.event FROM member_expertise x JOIN members m ON m.member_id = x.member_id
-          WHERE x.label=? AND m.status='active'
-            AND x.seq = (SELECT MAX(y.seq) FROM member_expertise y WHERE y.member_id = x.member_id AND y.label = x.label)
-          ORDER BY x.member_id`,
-        lab
-      );
-      return rows.filter((r) => (r.event === "declared" || r.event === "confirmed") && this.inSight(target, `member:${r.member_id}`)).map((r) => ({ memberId: r.member_id, handle: r.handle ?? null, state: r.event }));
+      return holders.filter((h) => this.inSight(target, `member:${h.memberId}`));
     } catch {
       return [];
-    }
-  }
-  /* ---- R107, R108 (DEC-136 (1)): whether members are told what a court can reach ---- */
-  static COURT_STATEMENT = word("court.statement");
-  /** R107: an administrator's choice, `tell` or `dont`, the same act at setup and in the settings; appended. */
-  courtNoticeSet({ choice, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "choosing whether members are told what a court can reach");
-    if (choice !== "tell" && choice !== "dont")
-      return _Membership.#rowRefusal(
-        "COURT_NOTICE_UNKNOWN_CHOICE",
-        localize("membership.index.the_choice_is_tell_or", "the choice is `tell` or `dont`, and nothing else. Nothing was written."),
-        { choice: _Membership.#echo(choice ?? null) }
-      );
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(`INSERT INTO court_notice (choice, set_by, at) VALUES (?,?,?)`, choice, by, at7);
-    return { ok: true, choice, by, at: at7 };
-  }
-  /** R107: the setting and its history; `choice` null until an administrator has chosen, and null reads as not telling. */
-  courtNotice() {
-    try {
-      const history = this.#rows(`SELECT choice, set_by AS by, at FROM court_notice ORDER BY seq`);
-      return { choice: history.length ? history[history.length - 1].choice : null, history };
-    } catch {
-      return { choice: null, history: [] };
-    }
-  }
-  /* ---- R143 (T48; N1036; DEC-218, K3146, K3189): when a member last looked at Home ---- */
-  /* R143, R148: the member whose Home mark `by` names, or null. Only an active member (`ann` or `member:ann`) or the founder
-     (`admin`, once the instance is claimed, R94) has a mark; an absent `by`, a machine credential, an operator token and a
-     member not active have none. */
-  #markHolder(by) {
-    const raw = typeof by === "string" ? by.trim() : "";
-    if (!raw || MACHINE_STAMP_PREFIXES.some((p) => raw.toLowerCase().startsWith(p))) return null;
-    const id = raw.startsWith("member:") ? raw.slice(7) : raw;
-    if (!id) return null;
-    if (id === _Membership.ROOT_ADMIN) return this.#claimed() ? id : null;
-    return this.#one(`SELECT status FROM members WHERE member_id=?`, id)?.status === "active" ? id : null;
-  }
-  /** R143: `{since}`, the instant `by`'s previous look was recorded (null when none was), recording this call's instant as
-   *  the new mark in the same act. A `by` without a mark records nothing and answers `{since: null}` (#markHolder).
-   *  Answers only the caller's own mark; never throws. */
-  lookedSince(args = {}) {
-    try {
-      const id = this.#markHolder(isObj(args) ? args.by : null);
-      if (id === null) return { since: null };
-      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
-      const now = (/* @__PURE__ */ new Date()).toISOString();
-      this.sql.exec(
-        `INSERT INTO home_looks (member_id, at) VALUES (?,?) ON CONFLICT(member_id) DO UPDATE SET at=excluded.at`,
-        id,
-        now
-      );
-      return { since: prev ? prev.at : null };
-    } catch {
-      return { since: null };
-    }
-  }
-  /** R148 (`op=lookedat`, a read; N1092, DEC-238): `{since}`, the instant of `by`'s last recorded look at Home, the one
-   *  R143's next `lookedSince` would answer, or null when none was recorded. It records nothing and moves no mark. Who has
-   *  a mark is R143's rule (#markHolder); any other `by` is answered `{since: null}`. Never throws. */
-  lookedAt(args = {}) {
-    try {
-      const id = this.#markHolder(isObj(args) ? args.by : null);
-      if (id === null) return { since: null };
-      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
-      return { since: prev ? prev.at : null };
-    } catch {
-      return { since: null };
-    }
-  }
-  /* ---- R109, R110 (DEC-132): the group's optional self-description ---- */
-  static GROUP_KINDS = Object.freeze(["professional", "issue", "community", "catch-all", "other"]);
-  /* A text field: trimmed, empty reads as null. */
-  static #text(v) {
-    if (v === void 0 || v === null) return null;
-    const t = String(v).trim();
-    return t ? t : null;
-  }
-  /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
-  groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
-    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the team");
-    const refuse2 = (code, detail, extra) => _Membership.#rowRefusal(code, localize("membership.index.detail_nothing_was_written", "{detail} Nothing was written.", { detail: String(detail) }), extra);
-    if (!Array.isArray(kinds) || kinds.some((k) => !_Membership.GROUP_KINDS.includes(k)))
-      return refuse2("GROUP_KIND_UNKNOWN", localize("membership.index.the_kinds_are_a_list", "the kinds are a list drawn from {GROUP_KINDS}, and may be empty.", { GROUP_KINDS: String(_Membership.GROUP_KINDS.join(", ")) }));
-    const ks = [...new Set(kinds)];
-    const other = ks.includes("other") ? _Membership.#text(otherKind) : null;
-    if (ks.includes("other") && !other)
-      return refuse2("GROUP_KIND_OTHER_EMPTY", localize("membership.index.other_was_chosen_and_the", "`other` was chosen, and the kind it describes was left empty."));
-    const f4 = _Membership.#text(focus), p = _Membership.#text(purpose);
-    for (const [name, v, max] of [["otherKind", other, 120], ["focus", f4, 1e3], ["purpose", p, 4e3]])
-      if (v !== null && v.length > max)
-        return refuse2("GROUP_DESCRIPTION_TOO_LONG", localize("membership.index.name_is_at_most_max", "{name} is at most {max} characters.", { name: String(name), max: String(max) }), { field: name, max });
-    const vis = visibility === void 0 || visibility === null ? "members" : visibility;
-    if (vis !== "members" && vis !== "public")
-      return refuse2("GROUP_VISIBILITY_UNKNOWN", localize("membership.index.the_description_is_seen_by", "the description is seen by `members` or by the `public` too."));
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
-                   VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f4, p, vis, by, at7);
-    return { ok: true, kinds: ks, otherKind: other, focus: f4, purpose: p, visibility: vis, by, at: at7 };
-  }
-  /* Who reads the description and its history: an active member, the founder once claimed, a machine credential. */
-  #insider(viewer) {
-    viewer = baseViewer(viewer);
-    const g = viewerPredicate(viewer);
-    if (g.scope === "DENY") return false;
-    if (g.member === null) return viewer !== _Membership.ROOT_ADMIN || this.isAdministrator(_Membership.ROOT_ADMIN);
-    if (g.member === _Membership.ROOT_ADMIN) return this.isAdministrator(_Membership.ROOT_ADMIN);
-    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, g.member);
-    return !!m && m.status === "active";
-  }
-  /** R110: the description and its history to an insider; to anyone else, the public, only the four texts, and only
-   *  while the latest visibility is `public`. Writes nothing, never throws. */
-  groupDescription({ viewer = null } = {}) {
-    try {
-      const history = this.#rows(`SELECT kinds, other_kind, focus, purpose, visibility, set_by, at
-                                    FROM group_description ORDER BY seq`).map((r) => ({
-        kinds: JSON.parse(r.kinds),
-        otherKind: r.other_kind,
-        focus: r.focus,
-        purpose: r.purpose,
-        visibility: r.visibility,
-        by: r.set_by,
-        at: r.at
-      }));
-      const last = history.length ? history[history.length - 1] : null;
-      const description = last && (last.kinds.length || last.focus || last.purpose) ? last : null;
-      if (this.#insider(viewer)) return { description, history };
-      if (!description || description.visibility !== "public") return { description: null };
-      const { kinds, otherKind, focus, purpose } = description;
-      return { description: { kinds, otherKind, focus, purpose } };
-    } catch {
-      return { description: null };
     }
   }
 };
@@ -44593,7 +44990,7 @@ var RULING_REF = /^(?:D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
 var K_REF = /^K\d+(?: [^\s,;]+)?$/;
 var DATED_REF = /^(\d{4}-\d{2}-\d{2})(?: [^\s,;]+)?$/;
 var basisParts = (b) => b.split(/[,;]\s*/).map((x) => x.trim());
-var isObj2 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj3 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var isStr = (v) => typeof v === "string" && v.trim().length > 0;
 var isPosInt = (v) => Number.isInteger(v) && v > 0;
 var own4 = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -44656,7 +45053,7 @@ function basisValid(b, test = false) {
   return parts.length > 0 && parts.every((p) => BASIS_REF.test(p.trim()));
 }
 function compile(p) {
-  if (!isObj2(p) || typeof p.re !== "string") return null;
+  if (!isObj3(p) || typeof p.re !== "string") return null;
   for (const k of Object.keys(p)) if (k !== "re" && k !== "flags") return null;
   const flags = own4(p, "flags") ? p.flags : "";
   if (typeof flags !== "string" || !/^[iu]*$/.test(flags) || new Set(flags).size !== flags.length) return null;
@@ -44672,7 +45069,7 @@ function applyForm(form, raw, prefixes = []) {
   const re = compile(form.pattern);
   if (!re) return null;
   let v = String(raw == null ? "" : raw).trim();
-  const c = isObj2(form.clean) ? form.clean : {};
+  const c = isObj3(form.clean) ? form.clean : {};
   for (const p of prefixes) {
     const r = compile(p);
     if (r) v = v.replace(new RegExp(`^(?:${r.source})`, r.flags), "");
@@ -44712,7 +45109,7 @@ function validate(profile) {
 }
 function validateInto(p, errors) {
   const err = (path, code, detail) => errors.push({ path, code, detail });
-  if (!isObj2(p)) {
+  if (!isObj3(p)) {
     err("", "NOT_A_PROFILE", "a profile is a plain object");
     return;
   }
@@ -44747,7 +45144,7 @@ function validateInto(p, errors) {
       err(`${path}.basis`, "BASIS_INVALID", o.status === "researched" ? "a researched fact rests on a measurement (M-<n> or a dated entry)" : "a ruled fact rests on a ruling (D-<n>, DEC-<n> or K<n>)");
   };
   const hours = (path, h) => {
-    if (!isObj2(h)) {
+    if (!isObj3(h)) {
       err(path, "HOURS_INVALID", "hours is {weekly: [{day, open, close}], status, basis}");
       return;
     }
@@ -44756,27 +45153,27 @@ function validateInto(p, errors) {
     else {
       const spans = /* @__PURE__ */ new Map();
       h.weekly.forEach((s, i) => {
-        const at7 = `${path}.weekly[${i}]`;
-        if (!isObj2(s)) {
-          err(at7, "HOURS_INVALID", "a span is {day, open, close}");
+        const at8 = `${path}.weekly[${i}]`;
+        if (!isObj3(s)) {
+          err(at8, "HOURS_INVALID", "a span is {day, open, close}");
           return;
         }
-        fields(at7, s, ["day", "open", "close"]);
+        fields(at8, s, ["day", "open", "close"]);
         const day = WEEKDAYS.includes(s.day) ? s.day : null;
-        if (!day) err(`${at7}.day`, "HOURS_INVALID", localize("jurisdictions.index.day_is_one_of_weekdays", "day is one of {WEEKDAYS}", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
+        if (!day) err(`${at8}.day`, "HOURS_INVALID", localize("jurisdictions.index.day_is_one_of_weekdays", "day is one of {WEEKDAYS}", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
         const [o, c] = [minutes(s.open), minutes(s.close)];
-        if (o === null) err(`${at7}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
-        if (c === null) err(`${at7}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
+        if (o === null) err(`${at8}.open`, "HOURS_INVALID", "open is HH:MM, 24-hour");
+        if (c === null) err(`${at8}.close`, "HOURS_INVALID", "close is HH:MM, 24-hour");
         if (o === null || c === null) return;
         if (o >= c) {
-          err(at7, "HOURS_INVALID", "open is before close");
+          err(at8, "HOURS_INVALID", "open is before close");
           return;
         }
         if (!day) return;
         const prior = spans.get(day) || [];
         const clash = prior.find((p2) => o < p2.c && p2.o < c);
-        if (clash) err(at7, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
-        spans.set(day, [...prior, { o, c, at: at7 }]);
+        if (clash) err(at8, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
+        spans.set(day, [...prior, { o, c, at: at8 }]);
       });
     }
     statusBasis(path, h);
@@ -44784,7 +45181,7 @@ function validateInto(p, errors) {
   const channel = (path, v) => {
     if (own4(v, "cutoff")) {
       const c = v.cutoff, ca = `${path}.cutoff`;
-      if (!isObj2(c)) err(ca, "CHANNEL_INVALID", "cutoff is {time, citation, status, basis}");
+      if (!isObj3(c)) err(ca, "CHANNEL_INVALID", "cutoff is {time, citation, status, basis}");
       else {
         fields(ca, c, ["time", "citation", "status", "basis"]);
         if (minutes(c.time) === null) err(`${ca}.time`, "CHANNEL_INVALID", "time is HH:MM, 24-hour");
@@ -44796,7 +45193,7 @@ function validateInto(p, errors) {
       if (!Array.isArray(v.outages)) err(`${path}.outages`, "CHANNEL_INVALID", "outages is a list of {from, to, status, basis}");
       else v.outages.forEach((o, j) => {
         const oa = `${path}.outages[${j}]`;
-        if (!isObj2(o)) {
+        if (!isObj3(o)) {
           err(oa, "CHANNEL_INVALID", "an outage is {from, to, status, basis}");
           return;
         }
@@ -44810,7 +45207,7 @@ function validateInto(p, errors) {
     }
     if (own4(v, "receipt")) {
       const r = v.receipt, ra = `${path}.receipt`;
-      if (!isObj2(r)) err(ra, "CHANNEL_INVALID", "receipt is {rule, citation, status, basis}");
+      if (!isObj3(r)) err(ra, "CHANNEL_INVALID", "receipt is {rule, citation, status, basis}");
       else {
         fields(ra, r, ["rule", "citation", "status", "basis"]);
         if (!RECEIPT_RULES.includes(r.rule)) err(`${ra}.rule`, "CHANNEL_INVALID", localize("jurisdictions.index.rule_is_one_of_receipt", "rule is one of {RECEIPT_RULES}", { RECEIPT_RULES: String(RECEIPT_RULES.join(", ")) }));
@@ -44827,7 +45224,7 @@ function validateInto(p, errors) {
     let ok = true;
     normal.forEach((part, j) => {
       if (typeof part === "string") return;
-      if (!isObj2(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own4(part, "unpad") && typeof part.unpad !== "boolean" || own4(part, "upper") && typeof part.upper !== "boolean" || own4(part, "default") && typeof part.default !== "string") {
+      if (!isObj3(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own4(part, "unpad") && typeof part.unpad !== "boolean" || own4(part, "upper") && typeof part.upper !== "boolean" || own4(part, "default") && typeof part.default !== "string") {
         ok = false;
         err(`${path}[${j}]`, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
       }
@@ -44851,7 +45248,7 @@ function validateInto(p, errors) {
     return v;
   };
   const entry = (path, e) => {
-    if (!isObj2(e)) {
+    if (!isObj3(e)) {
       err(path, "VALUE_INVALID", "an entry is an object");
       return false;
     }
@@ -44860,57 +45257,57 @@ function validateInto(p, errors) {
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
   if (own4(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
-    const at7 = `systems[${i}]`;
-    if (!entry(at7, s)) return;
-    fields(at7, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
-    str(`${at7}.origin`, s.origin, "origin");
+    const at8 = `systems[${i}]`;
+    if (!entry(at8, s)) return;
+    fields(at8, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    str(`${at8}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
-    str(`${at7}.name`, s.name, "name");
+    str(`${at8}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
-      err(`${at7}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own4(s, "path")) pattern(`${at7}.path`, s.path);
+      err(`${at8}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
+    if (own4(s, "path")) pattern(`${at8}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
-      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at7);
+      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at8);
     }
     if (own4(s, "links")) {
-      if (!isObj2(s.links) || !own4(s.links, "item") || !own4(s.links, "file"))
-        err(`${at7}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+      if (!isObj3(s.links) || !own4(s.links, "item") || !own4(s.links, "file"))
+        err(`${at8}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
-        fields(`${at7}.links`, s.links, ["item", "file"]);
-        pattern(`${at7}.links.item`, s.links.item);
-        pattern(`${at7}.links.file`, s.links.file);
+        fields(`${at8}.links`, s.links, ["item", "file"]);
+        pattern(`${at8}.links.item`, s.links.item);
+        pattern(`${at8}.links.file`, s.links.file);
       }
     }
-    if (own4(s, "republishes") && typeof s.republishes !== "boolean") err(`${at7}.republishes`, "VALUE_INVALID", "true or false");
-    if (own4(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at7}.provenance_stated`, "VALUE_INVALID", "true or false");
-    basis(at7, s);
+    if (own4(s, "republishes") && typeof s.republishes !== "boolean") err(`${at8}.republishes`, "VALUE_INVALID", "true or false");
+    if (own4(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at8}.provenance_stated`, "VALUE_INVALID", "true or false");
+    basis(at8, s);
   });
   if (own4(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
-    const at7 = `mixed_hosts[${i}]`;
-    if (!entry(at7, m)) return;
-    fields(at7, m, ["host", "why", "basis"]);
-    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at7}.host`, "VALUE_INVALID", "a lower-case host name");
-    str(`${at7}.why`, m.why, "why");
+    const at8 = `mixed_hosts[${i}]`;
+    if (!entry(at8, m)) return;
+    fields(at8, m, ["host", "why", "basis"]);
+    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at8}.host`, "VALUE_INVALID", "a lower-case host name");
+    str(`${at8}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at7}.host`, "HOST_CONFLICT", localize("jurisdictions.index.host_is_mixed_and_also", "{host} is mixed and also in {get}, which has no path", { host: String(m.host), get: String(noPathHosts.get(m.host)) }));
-    basis(at7, m);
+      err(`${at8}.host`, "HOST_CONFLICT", localize("jurisdictions.index.host_is_mixed_and_also", "{host} is mixed and also in {get}, which has no path", { host: String(m.host), get: String(noPathHosts.get(m.host)) }));
+    basis(at8, m);
   });
   const spaceForms = {};
   if (own4(p, "spaces")) {
-    if (!isObj2(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
+    if (!isObj3(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
-      const at7 = `spaces.${name}`;
+      const at8 = `spaces.${name}`;
       if (!SPACES.includes(name)) {
-        err(at7, "UNKNOWN_SPACE", localize("jurisdictions.index.name_is_not_one_of", "'{name}' is not one of {SPACES}", { name: String(name), SPACES: String(SPACES.join(", ")) }));
+        err(at8, "UNKNOWN_SPACE", localize("jurisdictions.index.name_is_not_one_of", "'{name}' is not one of {SPACES}", { name: String(name), SPACES: String(SPACES.join(", ")) }));
         continue;
       }
-      if (!entry(at7, s)) continue;
-      fields(at7, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
-      str(`${at7}.label`, s.label, "label");
+      if (!entry(at8, s)) continue;
+      fields(at8, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
+      str(`${at8}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list3(`${at7}.forms`, s.forms).forEach((f4, i) => {
-        const fa = `${at7}.forms[${i}]`;
+      list3(`${at8}.forms`, s.forms).forEach((f4, i) => {
+        const fa = `${at8}.forms[${i}]`;
         if (!entry(fa, f4)) return;
         fields(fa, f4, ["form", "pattern", "normal", "clean", "basis"]);
         str(`${fa}.form`, f4.form, "form");
@@ -44924,7 +45321,7 @@ function validateInto(p, errors) {
         let normalOk = normalParts(`${fa}.normal`, f4.normal, groups);
         if (own4(f4, "clean")) {
           const c = f4.clean;
-          const bad = !isObj2(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own4(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own4(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own4(c, "upper") && c.upper !== true;
+          const bad = !isObj3(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own4(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own4(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own4(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
@@ -44933,15 +45330,15 @@ function validateInto(p, errors) {
         basis(fa, f4);
         if (isStr(f4.form) && re && normalOk) spaceForms[name].set(f4.form, f4);
       });
-      if (name === "enactment" && own4(s, "kinds")) list3(`${at7}.kinds`, s.kinds).forEach((k, i) => {
-        const ka = `${at7}.kinds[${i}]`;
+      if (name === "enactment" && own4(s, "kinds")) list3(`${at8}.kinds`, s.kinds).forEach((k, i) => {
+        const ka = `${at8}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str(`${ka}.kind`, k.kind, "kind");
         pattern(`${ka}.prefix`, k.prefix);
         if (own4(k, "floor")) {
           const fl = k.floor;
-          if (!isObj2(fl)) err(`${ka}.floor`, "VALUE_INVALID", "a floor is {first, system, basis}");
+          if (!isObj3(fl)) err(`${ka}.floor`, "VALUE_INVALID", "a floor is {first, system, basis}");
           else {
             fields(`${ka}.floor`, fl, ["first", "system", "basis"]);
             if (!isPosInt(fl.first)) err(`${ka}.floor.first`, "VALUE_INVALID", "the first number is a positive integer");
@@ -44954,45 +45351,45 @@ function validateInto(p, errors) {
     }
   }
   if (own4(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
-    const at7 = `crosswalks[${i}]`;
-    if (!entry(at7, x)) return;
-    fields(at7, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at7}.space`, "UNKNOWN_SPACE", localize("jurisdictions.index.string_is_not_a_space", "'{String}' is not a space", { String: String(String(x.space)) }));
-    if (!own4(x, "source") || x.source === "" || x.source == null) err(`${at7}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
-    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at7}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
+    const at8 = `crosswalks[${i}]`;
+    if (!entry(at8, x)) return;
+    fields(at8, x, ["space", "forms", "pairs", "source", "basis"]);
+    if (!SPACES.includes(x.space)) err(`${at8}.space`, "UNKNOWN_SPACE", localize("jurisdictions.index.string_is_not_a_space", "'{String}' is not a space", { String: String(String(x.space)) }));
+    if (!own4(x, "source") || x.source === "" || x.source == null) err(`${at8}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at8}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
-    if (!forms) err(`${at7}.forms`, "VALUE_INVALID", "forms is [a, b]");
+    if (!forms) err(`${at8}.forms`, "VALUE_INVALID", "forms is [a, b]");
     else forms.forEach((f4, j) => {
-      if (!known.has(f4)) err(`${at7}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", localize("jurisdictions.index.the_space_has_no_form", "the space has no form '{String}'", { String: String(String(f4)) }));
+      if (!known.has(f4)) err(`${at8}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", localize("jurisdictions.index.the_space_has_no_form", "the space has no form '{String}'", { String: String(String(f4)) }));
     });
-    list3(`${at7}.pairs`, x.pairs).forEach((pair, j) => {
+    list3(`${at8}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
-        err(`${at7}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
+        err(`${at8}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
       }
       if (!forms) return;
       pair.forEach((v, n) => {
         const f4 = known.get(forms[n]);
-        if (f4 && applyForm(f4, v) == null) err(`${at7}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", localize("jurisdictions.index.v_is_not_a_value", "'{v}' is not a value in form '{v1}'", { v: String(v), v1: String(forms[n]) }));
+        if (f4 && applyForm(f4, v) == null) err(`${at8}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", localize("jurisdictions.index.v_is_not_a_value", "'{v}' is not a value in form '{v1}'", { v: String(v), v1: String(forms[n]) }));
       });
     });
-    basis(at7, x);
+    basis(at8, x);
   });
-  const variantOrgs = new Set(own4(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.body_variants) ? p.vocabulary.body_variants.filter(isObj2).map((v) => v.organisation).filter((o) => typeof o === "string" && KIND_RE.test(o)) : []);
+  const variantOrgs = new Set(own4(p, "vocabulary") && isObj3(p.vocabulary) && Array.isArray(p.vocabulary.body_variants) ? p.vocabulary.body_variants.filter(isObj3).map((v) => v.organisation).filter((o) => typeof o === "string" && KIND_RE.test(o)) : []);
   const variantOrg = (o) => typeof o === "string" && variantOrgs.has(o);
-  const profileKinds = new Set(own4(p, "action_kinds") && Array.isArray(p.action_kinds) ? p.action_kinds.filter((k) => isObj2(k) && typeof k.kind === "string" && KIND_RE.test(k.kind)).map((k) => k.kind) : []);
+  const profileKinds = new Set(own4(p, "action_kinds") && Array.isArray(p.action_kinds) ? p.action_kinds.filter((k) => isObj3(k) && typeof k.kind === "string" && KIND_RE.test(k.kind)).map((k) => k.kind) : []);
   if (own4(p, "vocabulary")) {
-    if (!isObj2(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
+    if (!isObj3(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
-      const at7 = `vocabulary.${key}`;
+      const at8 = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) {
-        err(at7, "UNKNOWN_VOCABULARY", localize("jurisdictions.index.key_is_not_one_of", "'{key}' is not one of {VOCABULARY}", { key: String(key), VOCABULARY: String(VOCABULARY.join(", ")) }));
+        err(at8, "UNKNOWN_VOCABULARY", localize("jurisdictions.index.key_is_not_one_of", "'{key}' is not one of {VOCABULARY}", { key: String(key), VOCABULARY: String(VOCABULARY.join(", ")) }));
         continue;
       }
       const once = /* @__PURE__ */ new Set();
-      list3(at7, entries).forEach((e, i) => {
-        const ea = `${at7}[${i}]`;
+      list3(at8, entries).forEach((e, i) => {
+        const ea = `${at8}[${i}]`;
         if (!entry(ea, e)) return;
         if (own4(DATA_VOCABULARY, key)) {
           fields(ea, e, DATA_VOCABULARY[key]);
@@ -45023,7 +45420,7 @@ function validateInto(p, errors) {
           if (own4(e, "copy") && !CODE_COPIES.includes(e.copy)) err(`${ea}.copy`, "COPY_UNKNOWN", localize("jurisdictions.index.copy_is_one_of_code", "copy is one of {CODE_COPIES}", { CODE_COPIES: String(CODE_COPIES.join(", ")) }));
           if (own4(e, "sections")) {
             const sc = e.sections;
-            if (!isObj2(sc)) err(`${ea}.sections`, "VALUE_INVALID", "sections is {number, separators, markers}");
+            if (!isObj3(sc)) err(`${ea}.sections`, "VALUE_INVALID", "sections is {number, separators, markers}");
             else {
               fields(`${ea}.sections`, sc, ["number", "separators", "markers"]);
               pattern(`${ea}.sections.number`, sc.number);
@@ -45065,15 +45462,15 @@ function validateInto(p, errors) {
     }
   }
   if (own4(p, "practice")) {
-    if (!isObj2(p.practice)) err("practice", "VALUE_INVALID", "practice is an object");
+    if (!isObj3(p.practice)) err("practice", "VALUE_INVALID", "practice is an object");
     else {
       fields("practice", p.practice, ["minutes_due_days"]);
       if (own4(p.practice, "minutes_due_days")) {
         const m = p.practice.minutes_due_days;
-        if (!isObj2(m)) err("practice.minutes_due_days", "VALUE_INVALID", "{value, basis}");
+        if (!isObj3(m)) err("practice.minutes_due_days", "VALUE_INVALID", "{value, basis}");
         else {
           fields("practice.minutes_due_days", m, ["value", "count", "closures", "basis"]);
-          if (own4(m, "closures") && !(own4(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj2(h) && h.list === m.closures)))
+          if (own4(m, "closures") && !(own4(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj3(h) && h.list === m.closures)))
             err("practice.minutes_due_days.closures", "VALUE_INVALID", localize("jurisdictions.index.no_holidays_entry_of_this", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(m.closures)) }));
           if (!isPosInt(m.value)) err("practice.minutes_due_days.value", "VALUE_INVALID", "a positive integer");
           if (own4(m, "count") && !COUNTS.includes(m.count)) err("practice.minutes_due_days.count", "COUNT_UNKNOWN", "count is calendar or business");
@@ -45083,26 +45480,26 @@ function validateInto(p, errors) {
     }
   }
   if (own4(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
-    const at7 = `search_terms[${i}]`;
-    if (!entry(at7, t)) return;
-    fields(at7, t, ["term", "basis"]);
-    str(`${at7}.term`, t.term, "term");
-    basis(at7, t);
+    const at8 = `search_terms[${i}]`;
+    if (!entry(at8, t)) return;
+    fields(at8, t, ["term", "basis"]);
+    str(`${at8}.term`, t.term, "term");
+    basis(at8, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
   if (own4(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
-    const at7 = `records_laws[${i}]`;
-    if (!entry(at7, l)) return;
-    fields(at7, l, ["level", "name", "citation", "stages", "requesters", "basis"]);
-    if (!LAW_LEVELS.includes(l.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
-    str(`${at7}.name`, l.name, "name");
-    str(`${at7}.citation`, l.citation, "citation");
+    const at8 = `records_laws[${i}]`;
+    if (!entry(at8, l)) return;
+    fields(at8, l, ["level", "name", "citation", "stages", "requesters", "basis"]);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at8}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
+    str(`${at8}.name`, l.name, "name");
+    str(`${at8}.citation`, l.citation, "citation");
     if (own4(l, "stages")) {
       const seen = /* @__PURE__ */ new Set();
-      if (!Array.isArray(l.stages) || !l.stages.length) err(`${at7}.stages`, "VALUE_INVALID", "stages is a non-empty ordered list of {stage, label, citation}");
+      if (!Array.isArray(l.stages) || !l.stages.length) err(`${at8}.stages`, "VALUE_INVALID", "stages is a non-empty ordered list of {stage, label, citation}");
       else l.stages.forEach((st, j) => {
-        const sa = `${at7}.stages[${j}]`;
-        if (!isObj2(st)) {
+        const sa = `${at8}.stages[${j}]`;
+        if (!isObj3(st)) {
           err(sa, "VALUE_INVALID", "a stage is {stage, label, citation}");
           return;
         }
@@ -45115,8 +45512,8 @@ function validateInto(p, errors) {
       });
     }
     if (own4(l, "requesters")) {
-      const r = l.requesters, ra = `${at7}.requesters`;
-      if (!isObj2(r)) err(ra, "VALUE_INVALID", "requesters is {text, citation, status, basis}");
+      const r = l.requesters, ra = `${at8}.requesters`;
+      if (!isObj3(r)) err(ra, "VALUE_INVALID", "requesters is {text, citation, status, basis}");
       else {
         fields(ra, r, ["text", "citation", "status", "basis"]);
         str(`${ra}.text`, r.text, "text");
@@ -45125,11 +45522,11 @@ function validateInto(p, errors) {
       }
     }
     if (isStr(l.name)) lawNames.add(l.name);
-    basis(at7, l);
+    basis(at8, l);
   });
   if (own4(p, "locale")) {
     const l = p.locale;
-    if (!isObj2(l)) err("locale", "VALUE_INVALID", "locale is {value, basis}");
+    if (!isObj3(l)) err("locale", "VALUE_INVALID", "locale is {value, basis}");
     else {
       fields("locale", l, ["value", "basis"]);
       if (!isLocale(l.value)) err("locale.value", "VALUE_INVALID", "the value is one well-formed BCP 47 language tag");
@@ -45137,7 +45534,7 @@ function validateInto(p, errors) {
     }
   }
   const zone = (path, z) => {
-    if (!isObj2(z)) {
+    if (!isObj3(z)) {
       err(path, "VALUE_INVALID", "time_zone is {value, status, basis}");
       return;
     }
@@ -45147,25 +45544,25 @@ function validateInto(p, errors) {
   };
   if (own4(p, "time_zone")) zone("time_zone", p.time_zone);
   const amountOf = (path, a) => {
-    if (!isObj2(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
+    if (!isObj3(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
       err(path, "VALUE_INVALID", localize("jurisdictions.index.amount_is_amount_and_units", "an amount is {amount, units}, a positive integer of one of {units_list}", { units_list: UNITS.join(", ") }));
   };
   const computationKeys = /* @__PURE__ */ new Set();
   if (own4(p, "computation")) list3("computation", p.computation).forEach((c, i) => {
-    const at7 = `computation[${i}]`;
-    if (!entry(at7, c)) return;
-    fields(at7, c, ["key", "rule", "citation", "status", "basis"]);
-    if (typeof c.key !== "string" || !KIND_RE.test(c.key)) err(`${at7}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
-    else if (computationKeys.has(c.key)) err(`${at7}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice", "'{key}' is given twice", { key: String(c.key) }));
+    const at8 = `computation[${i}]`;
+    if (!entry(at8, c)) return;
+    fields(at8, c, ["key", "rule", "citation", "status", "basis"]);
+    if (typeof c.key !== "string" || !KIND_RE.test(c.key)) err(`${at8}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
+    else if (computationKeys.has(c.key)) err(`${at8}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice", "'{key}' is given twice", { key: String(c.key) }));
     else computationKeys.add(c.key);
-    if (!COMPUTATION_RULES.includes(c.rule)) err(`${at7}.rule`, "VALUE_INVALID", localize("jurisdictions.index.rule_is_one_of_computation", "rule is one of {COMPUTATION_RULES}", { COMPUTATION_RULES: String(COMPUTATION_RULES.join(", ")) }));
-    str(`${at7}.citation`, c.citation, "citation");
-    statusBasis(at7, c);
+    if (!COMPUTATION_RULES.includes(c.rule)) err(`${at8}.rule`, "VALUE_INVALID", localize("jurisdictions.index.rule_is_one_of_computation", "rule is one of {COMPUTATION_RULES}", { COMPUTATION_RULES: String(COMPUTATION_RULES.join(", ")) }));
+    str(`${at8}.citation`, c.citation, "citation");
+    statusBasis(at8, c);
   });
-  const closureLists = new Set(own4(p, "holidays") && Array.isArray(p.holidays) ? p.holidays.filter((h) => isObj2(h) && typeof h.list === "string" && KIND_RE.test(h.list)).map((h) => h.list) : []);
+  const closureLists = new Set(own4(p, "holidays") && Array.isArray(p.holidays) ? p.holidays.filter((h) => isObj3(h) && typeof h.list === "string" && KIND_RE.test(h.list)).map((h) => h.list) : []);
   if (own4(p, "weekend")) {
     const w = p.weekend;
-    if (!isObj2(w)) err("weekend", "WEEKEND_INVALID", "weekend is {days, citation, status, basis}");
+    if (!isObj3(w)) err("weekend", "WEEKEND_INVALID", "weekend is {days, citation, status, basis}");
     else {
       fields("weekend", w, ["days", "citation", "status", "basis"]);
       if (!Array.isArray(w.days) || !w.days.length || !w.days.every((d) => WEEKDAYS.includes(d)) || new Set(w.days).size !== w.days.length)
@@ -45175,31 +45572,31 @@ function validateInto(p, errors) {
       statusBasis("weekend", w);
     }
   }
-  const codeKeys = new Set(own4(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
+  const codeKeys = new Set(own4(p, "vocabulary") && isObj3(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj3).map((c) => c.key) : []);
   const families = /* @__PURE__ */ new Set();
   if (own4(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
-    const at7 = `standard_sources[${i}]`;
-    if (!entry(at7, s)) return;
-    fields(at7, s, ["source", "kind", "issuer", "sector", "level", "cite", "code", "key", "series", "normal", "basis"]);
-    if (own4(s, "key") && (typeof s.key !== "string" || !ID_RE.test(s.key))) err(`${at7}.key`, "VALUE_INVALID", "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$");
-    str(`${at7}.source`, s.source, "source");
-    str(`${at7}.issuer`, s.issuer, "issuer");
+    const at8 = `standard_sources[${i}]`;
+    if (!entry(at8, s)) return;
+    fields(at8, s, ["source", "kind", "issuer", "sector", "level", "cite", "code", "key", "series", "normal", "basis"]);
+    if (own4(s, "key") && (typeof s.key !== "string" || !ID_RE.test(s.key))) err(`${at8}.key`, "VALUE_INVALID", "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$");
+    str(`${at8}.source`, s.source, "source");
+    str(`${at8}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!STANDARD_SOURCE_KINDS.includes(s.kind)) err(`${at7}.kind`, "SOURCE_KIND_UNKNOWN", localize("jurisdictions.index.kind_is_one_of_standard", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
+    if (!STANDARD_SOURCE_KINDS.includes(s.kind)) err(`${at8}.kind`, "SOURCE_KIND_UNKNOWN", localize("jurisdictions.index.kind_is_one_of_standard", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
     const levelled = !["policy", "commitment", "standard"].includes(s.kind);
     if (own4(s, "level") || levelled) {
-      if (!LAW_LEVELS.includes(s.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", levelled && !own4(s, "level") ? localize("jurisdictions.index.a_v1_entry_carries_a", "a {v1} entry carries a level, one of {LAW_LEVELS}", { v1: String(LEVELLED_KINDS.includes(s.kind) ? s.kind : "source"), LAW_LEVELS: String(LAW_LEVELS.join(", ")) }) : localize("jurisdictions.index.level_is_one_of_law_2", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
+      if (!LAW_LEVELS.includes(s.level)) err(`${at8}.level`, "LEVEL_UNKNOWN", levelled && !own4(s, "level") ? localize("jurisdictions.index.a_v1_entry_carries_a", "a {v1} entry carries a level, one of {LAW_LEVELS}", { v1: String(LEVELLED_KINDS.includes(s.kind) ? s.kind : "source"), LAW_LEVELS: String(LAW_LEVELS.join(", ")) }) : localize("jurisdictions.index.level_is_one_of_law_2", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
     }
     if (own4(s, "sector")) {
-      if (!SECTORS.includes(s.sector)) err(`${at7}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.sector_is_one_of_sectors", "sector is one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
-      else if (own4(s, "level") && s.sector !== "government") err(`${at7}.sector`, "VALUE_INVALID", "a law level is a government's: an entry with a level has sector government or none");
-    } else if (!levelled && !own4(s, "level")) err(`${at7}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.an_entry_with_no_level", "an entry with no level names its issuer's sector, one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
+      if (!SECTORS.includes(s.sector)) err(`${at8}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.sector_is_one_of_sectors", "sector is one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
+      else if (own4(s, "level") && s.sector !== "government") err(`${at8}.sector`, "VALUE_INVALID", "a law level is a government's: an entry with a level has sector government or none");
+    } else if (!levelled && !own4(s, "level")) err(`${at8}.sector`, "SECTOR_UNKNOWN", localize("jurisdictions.index.an_entry_with_no_level", "an entry with no level names its issuer's sector, one of {SECTORS}", { SECTORS: String(SECTORS.join(", ")) }));
     const cite = compile(s.cite);
-    pattern(`${at7}.cite`, s.cite);
-    if (own4(s, "code") && !codeKeys.has(s.code)) err(`${at7}.code`, "CODE_UNKNOWN", localize("jurisdictions.index.no_vocabulary_codes_entry_has", "no vocabulary.codes entry has key '{String}'", { String: String(String(s.code)) }));
+    pattern(`${at8}.cite`, s.cite);
+    if (own4(s, "code") && !codeKeys.has(s.code)) err(`${at8}.code`, "CODE_UNKNOWN", localize("jurisdictions.index.no_vocabulary_codes_entry_has", "no vocabulary.codes entry has key '{String}'", { String: String(String(s.code)) }));
     if (own4(s, "series")) {
-      const sr = s.series, sa = `${at7}.series`;
-      if (!isObj2(sr)) err(sa, "SERIES_INVALID", "series is {key, label}");
+      const sr = s.series, sa = `${at8}.series`;
+      if (!isObj3(sr)) err(sa, "SERIES_INVALID", "series is {key, label}");
       else {
         fields(sa, sr, ["key", "label"]);
         if (typeof sr.key !== "string" || !KIND_RE.test(sr.key)) err(`${sa}.key`, "SERIES_INVALID", "series.key matches ^[a-z][a-z0-9_]*$");
@@ -45213,22 +45610,22 @@ function validateInto(p, errors) {
       }
       if (cite) {
         const names = groupNames(cite);
-        if (!names.includes("number")) err(`${at7}.cite`, "SERIES_INVALID", "a series' cite has a named group number, the item's number as written");
-        if (names.includes("edition") && s.kind !== "standard") err(`${at7}.cite`, "SERIES_INVALID", "an edition group is a standard's designation only");
+        if (!names.includes("number")) err(`${at8}.cite`, "SERIES_INVALID", "a series' cite has a named group number, the item's number as written");
+        if (names.includes("edition") && s.kind !== "standard") err(`${at8}.cite`, "SERIES_INVALID", "an edition group is a standard's designation only");
       }
     }
     if (own4(s, "normal")) {
-      if (!own4(s, "series")) err(`${at7}.normal`, "SERIES_INVALID", "normal is a series' number's normal form: given with a series");
-      normalParts(`${at7}.normal`, s.normal, cite ? groupCount(cite) : Infinity);
+      if (!own4(s, "series")) err(`${at8}.normal`, "SERIES_INVALID", "normal is a series' number's normal form: given with a series");
+      normalParts(`${at8}.normal`, s.normal, cite ? groupCount(cite) : Infinity);
     }
-    basis(at7, s);
+    basis(at8, s);
   });
   const roles = /* @__PURE__ */ new Set();
   const bodies = /* @__PURE__ */ new Set();
   const offices = /* @__PURE__ */ new Set();
-  const schemeKinds = new Map(own4(p, "identifier_schemes") && Array.isArray(p.identifier_schemes) ? p.identifier_schemes.filter((x) => isObj2(x) && isStr(x.scheme) && Array.isArray(x.entity_kinds)).map((x) => [x.scheme, x.entity_kinds]) : []);
+  const schemeKinds = new Map(own4(p, "identifier_schemes") && Array.isArray(p.identifier_schemes) ? p.identifier_schemes.filter((x) => isObj3(x) && isStr(x.scheme) && Array.isArray(x.entity_kinds)).map((x) => [x.scheme, x.entity_kinds]) : []);
   const identifier = (path, x, kind) => {
-    if (!isObj2(x)) {
+    if (!isObj3(x)) {
       err(path, "SCHEME_INVALID", "an identifier is {scheme, id}");
       return;
     }
@@ -45238,20 +45635,20 @@ function validateInto(p, errors) {
     if (!isStr(x.id)) err(`${path}.id`, "SCHEME_INVALID", "id is a non-empty string");
   };
   if (own4(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
-    const at7 = `counterparties[${i}]`;
-    if (!entry(at7, c)) return;
-    fields(at7, c, ["role", "body", "level", "elected", "oversight", "hours", "time_zone", "ids", "within", "organisation", "basis"]);
-    if (own4(c, "time_zone")) zone(`${at7}.time_zone`, c.time_zone);
+    const at8 = `counterparties[${i}]`;
+    if (!entry(at8, c)) return;
+    fields(at8, c, ["role", "body", "level", "elected", "oversight", "hours", "time_zone", "ids", "within", "organisation", "basis"]);
+    if (own4(c, "time_zone")) zone(`${at8}.time_zone`, c.time_zone);
     if (own4(c, "ids")) {
-      if (!isObj2(c.ids) || !Object.keys(c.ids).length) err(`${at7}.ids`, "VALUE_INVALID", "ids is {office?, body?}, at least one");
+      if (!isObj3(c.ids) || !Object.keys(c.ids).length) err(`${at8}.ids`, "VALUE_INVALID", "ids is {office?, body?}, at least one");
       else {
-        fields(`${at7}.ids`, c.ids, ["office", "body"]);
-        for (const k of ["office", "body"]) if (own4(c.ids, k)) identifier(`${at7}.ids.${k}`, c.ids[k], k);
+        fields(`${at8}.ids`, c.ids, ["office", "body"]);
+        for (const k of ["office", "body"]) if (own4(c.ids, k)) identifier(`${at8}.ids.${k}`, c.ids[k], k);
       }
     }
     if (own4(c, "within")) {
-      const w = c.within, wa = `${at7}.within`;
-      if (!isObj2(w)) err(wa, "VALUE_INVALID", "within is {label, kind, ids}");
+      const w = c.within, wa = `${at8}.within`;
+      if (!isObj3(w)) err(wa, "VALUE_INVALID", "within is {label, kind, ids}");
       else {
         fields(wa, w, ["label", "kind", "ids"]);
         str(`${wa}.label`, w.label, "label");
@@ -45261,26 +45658,26 @@ function validateInto(p, errors) {
       }
     }
     if (own4(c, "organisation")) {
-      if (typeof c.organisation !== "string" || !KIND_RE.test(c.organisation)) err(`${at7}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
-      else if (!variantOrg(c.organisation)) err(`${at7}.organisation`, "VALUE_INVALID", localize("jurisdictions.index.the_body_variant_map_names", "the body-variant map names no organisation '{organisation}'", { organisation: String(c.organisation) }));
+      if (typeof c.organisation !== "string" || !KIND_RE.test(c.organisation)) err(`${at8}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
+      else if (!variantOrg(c.organisation)) err(`${at8}.organisation`, "VALUE_INVALID", localize("jurisdictions.index.the_body_variant_map_names", "the body-variant map names no organisation '{organisation}'", { organisation: String(c.organisation) }));
     }
-    str(`${at7}.role`, c.role, "role");
-    str(`${at7}.body`, c.body, "body");
+    str(`${at8}.role`, c.role, "role");
+    str(`${at8}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
     if (isStr(c.body)) bodies.add(c.body);
     if (isStr(c.role) && isStr(c.body)) offices.add(`${c.role}\0${c.body}`);
-    if (own4(c, "hours")) hours(`${at7}.hours`, c.hours);
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at7}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty", "level is one of {COUNTERPARTY_LEVELS}", { COUNTERPARTY_LEVELS: String(COUNTERPARTY_LEVELS.join(", ")) }));
-    if (typeof c.elected !== "boolean") err(`${at7}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own4(c, "oversight") && typeof c.oversight !== "boolean") err(`${at7}.oversight`, "VALUE_INVALID", "oversight is true or false");
-    basis(at7, c);
+    if (own4(c, "hours")) hours(`${at8}.hours`, c.hours);
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at8}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_counterparty", "level is one of {COUNTERPARTY_LEVELS}", { COUNTERPARTY_LEVELS: String(COUNTERPARTY_LEVELS.join(", ")) }));
+    if (typeof c.elected !== "boolean") err(`${at8}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own4(c, "oversight") && typeof c.oversight !== "boolean") err(`${at8}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    basis(at8, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier23 = /* @__PURE__ */ new Set();
   const venueKinds = /* @__PURE__ */ new Set();
   const templateIds = /* @__PURE__ */ new Set();
   const templateOf = (ta, t, k, inList) => {
-    if (!isObj2(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
+    if (!isObj3(t)) err(ta, "TEMPLATE_UNATTRIBUTED", localize("jurisdictions.index.a_template_is_fields_never_bare", "a template is {{fields}}, never bare text", { fields: TEMPLATE_FIELDS.join(", ") }));
     else {
       fields(ta, t, [...TEMPLATE_FIELDS, "name", "sources", ...inList ? ["purpose"] : []]);
       for (const f4 of TEMPLATE_FIELDS)
@@ -45304,7 +45701,7 @@ function validateInto(p, errors) {
       if (!Array.isArray(t.reviews)) bad("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
       else t.reviews.forEach((r, j) => {
         const ra = `${ta}.reviews[${j}]`;
-        if (!isObj2(r)) {
+        if (!isObj3(r)) {
           err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}");
           return;
         }
@@ -45328,46 +45725,46 @@ function validateInto(p, errors) {
       }
       if (t.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
     }
-    if (isObj2(t) && (inList || own4(t, "name"))) {
+    if (isObj3(t) && (inList || own4(t, "name"))) {
       if (!isStr(t.name) || t.name.length > TEMPLATE_NAME_MAX || /[\r\n]/.test(t.name))
         err(`${ta}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_a_title_of", "name is a title of at most {TEMPLATE_NAME_MAX} characters on one line", { TEMPLATE_NAME_MAX: String(TEMPLATE_NAME_MAX) }));
     }
-    if (isObj2(t) && (inList || own4(t, "sources"))) {
+    if (isObj3(t) && (inList || own4(t, "sources"))) {
       if (!Array.isArray(t.sources) || !t.sources.length) err(`${ta}.sources`, "VALUE_INVALID", localize("jurisdictions.index.sources_lists_one_public_source", "sources lists at least one public source, each with a citation"));
       else t.sources.forEach((x, j) => {
-        if (!isObj2(x) || Object.keys(x).some((f4) => f4 !== "citation") || !isStr(x.citation))
+        if (!isObj3(x) || Object.keys(x).some((f4) => f4 !== "citation") || !isStr(x.citation))
           err(`${ta}.sources[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.a_source_has_a_citation", "a source has one field, citation, which is non-empty"));
       });
     }
   };
   if (own4(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
-    const at7 = `action_kinds[${i}]`;
-    if (!entry(at7, k)) return;
-    fields(at7, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at7}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at7}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice", "'{kind}' is given twice", { kind: String(k.kind) }));
+    const at8 = `action_kinds[${i}]`;
+    if (!entry(at8, k)) return;
+    fields(at8, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at8}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (kinds.has(k.kind)) err(`${at8}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice", "'{kind}' is given twice", { kind: String(k.kind) }));
     else {
       kinds.add(k.kind);
       if (k.tier === 2 || k.tier === 3) tier23.add(k.kind);
     }
-    str(`${at7}.label`, k.label, "label");
-    if (own4(k, "tier") && !TIERS.includes(k.tier)) err(`${at7}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own4(k, "laws")) list3(`${at7}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at7}.laws[${j}]`, "LAW_UNKNOWN", localize("jurisdictions.index.no_records_laws_or_standard", "no records_laws or standard_sources entry is named '{String}'", { String: String(String(l)) }));
+    str(`${at8}.label`, k.label, "label");
+    if (own4(k, "tier") && !TIERS.includes(k.tier)) err(`${at8}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own4(k, "laws")) list3(`${at8}.laws`, k.laws).forEach((l, j) => {
+      if (!lawNames.has(l)) err(`${at8}.laws[${j}]`, "LAW_UNKNOWN", localize("jurisdictions.index.no_records_laws_or_standard", "no records_laws or standard_sources entry is named '{String}'", { String: String(String(l)) }));
     });
     if (own4(k, "venue")) {
       const v = k.venue;
-      if (!isObj2(v)) err(`${at7}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
+      if (!isObj3(v)) err(`${at8}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at7}.venue`, v, ["name", "how", "hours", "time_zone", "cutoff", "outages", "receipt", "facts", "basis"]);
-        str(`${at7}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at7}.venue.how`, "VALUE_INVALID", localize("jurisdictions.index.how_is_one_of_venue", "how is one of {VENUE_HOW}", { VENUE_HOW: String(VENUE_HOW.join(", ")) }));
-        if (own4(v, "hours")) hours(`${at7}.venue.hours`, v.hours);
-        if (own4(v, "time_zone")) zone(`${at7}.venue.time_zone`, v.time_zone);
+        fields(`${at8}.venue`, v, ["name", "how", "hours", "time_zone", "cutoff", "outages", "receipt", "facts", "basis"]);
+        str(`${at8}.venue.name`, v.name, "name");
+        if (!VENUE_HOW.includes(v.how)) err(`${at8}.venue.how`, "VALUE_INVALID", localize("jurisdictions.index.how_is_one_of_venue", "how is one of {VENUE_HOW}", { VENUE_HOW: String(VENUE_HOW.join(", ")) }));
+        if (own4(v, "hours")) hours(`${at8}.venue.hours`, v.hours);
+        if (own4(v, "time_zone")) zone(`${at8}.venue.time_zone`, v.time_zone);
         if (own4(v, "facts")) {
           const named = /* @__PURE__ */ new Set();
-          list3(`${at7}.venue.facts`, v.facts).forEach((f4, j) => {
-            const fa = `${at7}.venue.facts[${j}]`;
+          list3(`${at8}.venue.facts`, v.facts).forEach((f4, j) => {
+            const fa = `${at8}.venue.facts[${j}]`;
             if (!entry(fa, f4)) return;
             fields(fa, f4, ["fact", "value", "amount", "citation", "status", "basis"]);
             if (!VENUE_FACTS.includes(f4.fact)) err(`${fa}.fact`, "VALUE_INVALID", localize("jurisdictions.index.fact_is_one_of_venue", "fact is one of {VENUE_FACTS}", { VENUE_FACTS: String(VENUE_FACTS.join(", ")) }));
@@ -45379,36 +45776,36 @@ function validateInto(p, errors) {
             statusBasis(fa, f4);
           });
         }
-        channel(`${at7}.venue`, v);
-        basis(`${at7}.venue`, v);
+        channel(`${at8}.venue`, v);
+        basis(`${at8}.venue`, v);
         if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
     }
-    if (own4(k, "template")) templateOf(`${at7}.template`, k.template, k, false);
+    if (own4(k, "template")) templateOf(`${at8}.template`, k.template, k, false);
     if (own4(k, "templates")) {
-      if (own4(k, "template")) err(`${at7}.templates`, "VALUE_INVALID", "a kind gives its single template or its templates, not both");
-      if (!Array.isArray(k.templates) || !k.templates.length) err(`${at7}.templates`, "VALUE_INVALID", "templates is a non-empty list of templates");
+      if (own4(k, "template")) err(`${at8}.templates`, "VALUE_INVALID", "a kind gives its single template or its templates, not both");
+      if (!Array.isArray(k.templates) || !k.templates.length) err(`${at8}.templates`, "VALUE_INVALID", "templates is a non-empty list of templates");
       else {
         const purposes = /* @__PURE__ */ new Set();
         k.templates.forEach((t, j) => {
-          const ta = `${at7}.templates[${j}]`;
+          const ta = `${at8}.templates[${j}]`;
           templateOf(ta, t, k, true);
-          if (!isObj2(t)) return;
+          if (!isObj3(t)) return;
           if (typeof t.purpose !== "string" || !KIND_RE.test(t.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", "purpose matches ^[a-z][a-z0-9_]*$");
           else if (purposes.has(t.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", localize("jurisdictions.index.the_purpose_purpose_is_given", "the purpose {purpose} is given twice in {String}", { purpose: String(t.purpose), String: String(String(k.kind)) }));
           else purposes.add(t.purpose);
         });
       }
     }
-    if (own4(k, "shape") && !KIND_SHAPES.includes(k.shape)) err(`${at7}.shape`, "KIND_INVALID", localize("jurisdictions.index.shape_is_one_of_kind", "shape is one of {KIND_SHAPES}", { KIND_SHAPES: String(KIND_SHAPES.join(", ")) }));
+    if (own4(k, "shape") && !KIND_SHAPES.includes(k.shape)) err(`${at8}.shape`, "KIND_INVALID", localize("jurisdictions.index.shape_is_one_of_kind", "shape is one of {KIND_SHAPES}", { KIND_SHAPES: String(KIND_SHAPES.join(", ")) }));
     if (own4(k, "advisory")) {
-      if (!isStr(k.advisory)) err(`${at7}.advisory`, "VALUE_INVALID", "an advisory note is text");
-      if (k.tier !== 2) err(`${at7}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+      if (!isStr(k.advisory)) err(`${at8}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at8}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
     if (own4(k, "evidence")) {
       const ev = k.evidence;
-      const ea = `${at7}.evidence`;
-      if (!isObj2(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
+      const ea = `${at8}.evidence`;
+      if (!isObj3(ev)) err(ea, "VALUE_INVALID", "evidence is {standard, accepts, contestable?, basis}");
       else {
         fields(ea, ev, ["standard", "accepts", "contestable", "basis"]);
         if (!own4(ev, "standard") || ev.standard === void 0 || ev.standard === null || ev.standard === "")
@@ -45417,7 +45814,7 @@ function validateInto(p, errors) {
           err(`${ea}.standard`, "VALUE_INVALID", localize("jurisdictions.index.the_standard_is_text_of", "the standard is text of at most {EVIDENCE_STANDARD_MAX} characters", { EVIDENCE_STANDARD_MAX: String(EVIDENCE_STANDARD_MAX) }));
         const grades = (path, v) => v.forEach((g, j) => {
           const ga = `${path}[${j}]`;
-          if (!isObj2(g)) {
+          if (!isObj3(g)) {
             err(ga, "VALUE_INVALID", "an admitted grade is {grade, coattested?}");
             return;
           }
@@ -45433,12 +45830,12 @@ function validateInto(p, errors) {
         basis(ea, ev);
       }
     }
-    basis(at7, k);
+    basis(at8, k);
   });
   if (own4(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
-    const at7 = `deadlines[${i}]`;
-    if (!entry(at7, d)) return;
-    fields(at7, d, [
+    const at8 = `deadlines[${i}]`;
+    if (!entry(at8, d)) return;
+    fields(at8, d, [
       "rule",
       "applies_to",
       "units",
@@ -45463,58 +45860,58 @@ function validateInto(p, errors) {
       "status",
       "basis"
     ]);
-    str(`${at7}.rule`, d.rule, "rule");
+    str(`${at8}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at7}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
+      err(`${at8}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
     const legacy = own4(d, "days") && !own4(d, "units") && !own4(d, "amount");
     if (legacy) {
-      if (!isPosInt(d.days)) err(`${at7}.days`, "VALUE_INVALID", "days is a positive integer");
+      if (!isPosInt(d.days)) err(`${at8}.days`, "VALUE_INVALID", "days is a positive integer");
     } else {
-      if (own4(d, "days")) err(`${at7}.days`, "VALUE_INVALID", "days is the pre-T33 form of units and amount; give one form, not both");
-      if (!UNITS.includes(d.units)) err(`${at7}.units`, "UNIT_UNKNOWN", localize("jurisdictions.index.units_is_one_of_units", "units is one of {UNITS}", { UNITS: String(UNITS.join(", ")) }));
-      if (!isPosInt(d.amount)) err(`${at7}.amount`, "VALUE_INVALID", "amount is a positive integer");
+      if (own4(d, "days")) err(`${at8}.days`, "VALUE_INVALID", "days is the pre-T33 form of units and amount; give one form, not both");
+      if (!UNITS.includes(d.units)) err(`${at8}.units`, "UNIT_UNKNOWN", localize("jurisdictions.index.units_is_one_of_units", "units is one of {UNITS}", { UNITS: String(UNITS.join(", ")) }));
+      if (!isPosInt(d.amount)) err(`${at8}.amount`, "VALUE_INVALID", "amount is a positive integer");
     }
     const units = legacy ? "days" : d.units;
     if (own4(d, "count")) {
-      if (!COUNTS.includes(d.count)) err(`${at7}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-      else if (units !== "days") err(`${at7}.count`, "UNIT_UNKNOWN", "count is given with units: days only");
+      if (!COUNTS.includes(d.count)) err(`${at8}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+      else if (units !== "days") err(`${at8}.count`, "UNIT_UNKNOWN", "count is given with units: days only");
     }
-    if (own4(d, "direction") && !DIRECTIONS.includes(d.direction)) err(`${at7}.direction`, "DIRECTION_UNKNOWN", `direction is ${DIRECTIONS.join(" or ")}`);
-    if (!STARTS.includes(d.starts)) err(`${at7}.starts`, "ANCHOR_UNKNOWN", localize("jurisdictions.index.starts_is_one_of_starts", "starts is one of {STARTS}", { STARTS: String(STARTS.join(", ")) }));
+    if (own4(d, "direction") && !DIRECTIONS.includes(d.direction)) err(`${at8}.direction`, "DIRECTION_UNKNOWN", `direction is ${DIRECTIONS.join(" or ")}`);
+    if (!STARTS.includes(d.starts)) err(`${at8}.starts`, "ANCHOR_UNKNOWN", localize("jurisdictions.index.starts_is_one_of_starts", "starts is one of {STARTS}", { STARTS: String(STARTS.join(", ")) }));
     if (d.starts === "third_party") {
       const st = d.starter;
-      if (!isObj2(st) || Object.keys(st).some((k) => k !== "role" && k !== "body") || !offices.has(`${st.role}\0${st.body}`))
-        err(`${at7}.starter`, "ANCHOR_UNKNOWN", "a third_party start names its starter, {role, body} of a counterparty of this profile");
-    } else if (own4(d, "starter")) err(`${at7}.starter`, "VALUE_INVALID", "a starter is given only with starts: third_party");
-    if (own4(d, "owed_by") && !OWED_BY.includes(d.owed_by)) err(`${at7}.owed_by`, "VALUE_INVALID", `owed_by is ${OWED_BY.join(" or ")}`);
+      if (!isObj3(st) || Object.keys(st).some((k) => k !== "role" && k !== "body") || !offices.has(`${st.role}\0${st.body}`))
+        err(`${at8}.starter`, "ANCHOR_UNKNOWN", "a third_party start names its starter, {role, body} of a counterparty of this profile");
+    } else if (own4(d, "starter")) err(`${at8}.starter`, "VALUE_INVALID", "a starter is given only with starts: third_party");
+    if (own4(d, "owed_by") && !OWED_BY.includes(d.owed_by)) err(`${at8}.owed_by`, "VALUE_INVALID", `owed_by is ${OWED_BY.join(" or ")}`);
     if (own4(d, "consequence")) {
       const c = d.consequence;
-      if (!isObj2(c)) err(`${at7}.consequence`, "VALUE_INVALID", "consequence is {text, citation}");
+      if (!isObj3(c)) err(`${at8}.consequence`, "VALUE_INVALID", "consequence is {text, citation}");
       else {
-        fields(`${at7}.consequence`, c, ["text", "citation"]);
-        str(`${at7}.consequence.text`, c.text, "text");
-        str(`${at7}.consequence.citation`, c.citation, "citation");
+        fields(`${at8}.consequence`, c, ["text", "citation"]);
+        str(`${at8}.consequence.text`, c.text, "text");
+        str(`${at8}.consequence.citation`, c.citation, "citation");
       }
     }
-    if (own4(d, "defends") && d.defends !== true) err(`${at7}.defends`, "VALUE_INVALID", "defends is true, or absent");
-    if (own4(d, "roll") && typeof d.roll !== "boolean") err(`${at7}.roll`, "VALUE_INVALID", "roll is true or false");
+    if (own4(d, "defends") && d.defends !== true) err(`${at8}.defends`, "VALUE_INVALID", "defends is true, or absent");
+    if (own4(d, "roll") && typeof d.roll !== "boolean") err(`${at8}.roll`, "VALUE_INVALID", "roll is true or false");
     if (own4(d, "closures") && !closureLists.has(d.closures))
-      err(`${at7}.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_2", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(d.closures)) }));
+      err(`${at8}.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_2", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(d.closures)) }));
     if (own4(d, "computation") && !computationKeys.has(d.computation))
-      err(`${at7}.computation`, "COMPUTATION_UNKNOWN", localize("jurisdictions.index.no_computation_entry_of_this", "no computation entry of this profile has key '{String}'", { String: String(String(d.computation)) }));
+      err(`${at8}.computation`, "COMPUTATION_UNKNOWN", localize("jurisdictions.index.no_computation_entry_of_this", "no computation entry of this profile has key '{String}'", { String: String(String(d.computation)) }));
     if (own4(d, "extension")) {
       const x = d.extension;
-      if (!isObj2(x)) err(`${at7}.extension`, "VALUE_INVALID", "an extension is {days, count, when, citation?}");
+      if (!isObj3(x)) err(`${at8}.extension`, "VALUE_INVALID", "an extension is {days, count, when, citation?}");
       else {
-        fields(`${at7}.extension`, x, ["days", "count", "when", "citation"]);
-        if (!isPosInt(x.days)) err(`${at7}.extension.days`, "VALUE_INVALID", "days is a positive integer");
-        if (!COUNTS.includes(x.count)) err(`${at7}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
-        str(`${at7}.extension.when`, x.when, "when");
-        if (own4(x, "citation")) str(`${at7}.extension.citation`, x.citation, "citation");
+        fields(`${at8}.extension`, x, ["days", "count", "when", "citation"]);
+        if (!isPosInt(x.days)) err(`${at8}.extension.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!COUNTS.includes(x.count)) err(`${at8}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
+        str(`${at8}.extension.when`, x.when, "when");
+        if (own4(x, "citation")) str(`${at8}.extension.citation`, x.citation, "citation");
       }
     }
-    if (own4(d, "tolling")) list3(`${at7}.tolling`, d.tolling).forEach((t, j) => {
-      const ta = `${at7}.tolling[${j}]`;
+    if (own4(d, "tolling")) list3(`${at8}.tolling`, d.tolling).forEach((t, j) => {
+      const ta = `${at8}.tolling[${j}]`;
       if (!entry(ta, t)) return;
       fields(ta, t, ["when", "citation"]);
       str(`${ta}.when`, t.when, "when");
@@ -45522,37 +45919,37 @@ function validateInto(p, errors) {
     });
     if (own4(d, "observed")) {
       const o = d.observed;
-      if (!isObj2(o)) err(`${at7}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
+      if (!isObj3(o)) err(`${at8}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
       else {
-        fields(`${at7}.observed`, o, ["closures", "status", "basis"]);
+        fields(`${at8}.observed`, o, ["closures", "status", "basis"]);
         if (!closureLists.has(o.closures))
-          err(`${at7}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
-        statusBasis(`${at7}.observed`, o);
+          err(`${at8}.observed.closures`, "CLOSURES_UNKNOWN", localize("jurisdictions.index.no_holidays_entry_of_this_3", "no holidays entry of this profile is in a list named '{String}'", { String: String(String(o.closures)) }));
+        statusBasis(`${at8}.observed`, o);
       }
     }
     if (own4(d, "applies_on") && (!Array.isArray(d.applies_on) || !d.applies_on.length || !d.applies_on.every((x) => WEEKDAYS.includes(x)) || new Set(d.applies_on).size !== d.applies_on.length))
-      err(`${at7}.applies_on`, "VALUE_INVALID", localize("jurisdictions.index.applies_on_is_a_non", "applies_on is a non-empty list of {WEEKDAYS}, each once", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
+      err(`${at8}.applies_on`, "VALUE_INVALID", localize("jurisdictions.index.applies_on_is_a_non", "applies_on is a non-empty list of {WEEKDAYS}, each once", { WEEKDAYS: String(WEEKDAYS.join(", ")) }));
     if (own4(d, "due_at") && d.due_at !== "close_of_business" && minutes(d.due_at) === null)
-      err(`${at7}.due_at`, "VALUE_INVALID", "due_at is close_of_business or HH:MM");
-    str(`${at7}.citation`, d.citation, "citation");
-    statusBasis(at7, d);
+      err(`${at8}.due_at`, "VALUE_INVALID", "due_at is close_of_business or HH:MM");
+    str(`${at8}.citation`, d.citation, "citation");
+    statusBasis(at8, d);
   });
   if (own4(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
-    const at7 = `legal_organisations[${i}]`;
-    if (!entry(at7, o)) return;
-    fields(at7, o, ["name", "evaluates", "defends", "contacts", "basis"]);
-    str(`${at7}.name`, o.name, "name");
-    if (own4(o, "defends") && typeof o.defends !== "boolean") err(`${at7}.defends`, "VALUE_INVALID", "defends is true or false");
-    if (own4(o, "evaluates") && !Array.isArray(o.evaluates)) err(`${at7}.evaluates`, "VALUE_INVALID", "evaluates is a list of Tier 2 or 3 kinds");
+    const at8 = `legal_organisations[${i}]`;
+    if (!entry(at8, o)) return;
+    fields(at8, o, ["name", "evaluates", "defends", "contacts", "basis"]);
+    str(`${at8}.name`, o.name, "name");
+    if (own4(o, "defends") && typeof o.defends !== "boolean") err(`${at8}.defends`, "VALUE_INVALID", "defends is true or false");
+    if (own4(o, "evaluates") && !Array.isArray(o.evaluates)) err(`${at8}.evaluates`, "VALUE_INVALID", "evaluates is a list of Tier 2 or 3 kinds");
     else if (Array.isArray(o.evaluates)) o.evaluates.forEach((k, j) => {
-      if (!tier23.has(k)) err(`${at7}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", localize("jurisdictions.index.string_is_not_a_tier", "'{String}' is not a Tier 2 or 3 kind of this profile", { String: String(String(k)) }));
+      if (!tier23.has(k)) err(`${at8}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", localize("jurisdictions.index.string_is_not_a_tier", "'{String}' is not a Tier 2 or 3 kind of this profile", { String: String(String(k)) }));
     });
     if (!(Array.isArray(o.evaluates) && o.evaluates.length) && o.defends !== true)
-      err(`${at7}.evaluates`, "ORG_PURPOSE_MISSING", "a legal organisation evaluates at least one Tier 2 or 3 kind, or defends a group (defends: true)");
-    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at7}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+      err(`${at8}.evaluates`, "ORG_PURPOSE_MISSING", "a legal organisation evaluates at least one Tier 2 or 3 kind, or defends a group (defends: true)");
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at8}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
-      const ca = `${at7}.contacts[${j}]`;
-      if (!isObj2(c)) {
+      const ca = `${at8}.contacts[${j}]`;
+      if (!isObj3(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
       }
@@ -45560,31 +45957,31 @@ function validateInto(p, errors) {
       if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", localize("jurisdictions.index.how_is_one_of_contact", "how is one of {CONTACT_HOW}", { CONTACT_HOW: String(CONTACT_HOW.join(", ")) }));
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    basis(at7, o);
+    basis(at8, o);
   });
   if (own4(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list3("holidays", p.holidays).forEach((h, i) => {
-      const at7 = `holidays[${i}]`;
-      if (!entry(at7, h)) return;
-      fields(at7, h, ["year", "list", "citation", "offices", "days", "status", "basis"]);
+      const at8 = `holidays[${i}]`;
+      if (!entry(at8, h)) return;
+      fields(at8, h, ["year", "list", "citation", "offices", "days", "status", "basis"]);
       let key = "";
       if (own4(h, "list")) {
-        if (typeof h.list !== "string" || !KIND_RE.test(h.list)) err(`${at7}.list`, "HOLIDAY_INVALID", "list is a name matching ^[a-z][a-z0-9_]*$");
-        str(`${at7}.citation`, h.citation, "citation");
-      } else if (own4(h, "citation")) str(`${at7}.citation`, h.citation, "citation");
+        if (typeof h.list !== "string" || !KIND_RE.test(h.list)) err(`${at8}.list`, "HOLIDAY_INVALID", "list is a name matching ^[a-z][a-z0-9_]*$");
+        str(`${at8}.citation`, h.citation, "citation");
+      } else if (own4(h, "citation")) str(`${at8}.citation`, h.citation, "citation");
       if (own4(h, "offices")) {
         if (!Array.isArray(h.offices) || !h.offices.length) {
-          err(`${at7}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
+          err(`${at8}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
           key = `${i}`;
         } else {
           const seenOffices = /* @__PURE__ */ new Set();
           h.offices.forEach((o, j) => {
-            const oa = `${at7}.offices[${j}]`;
+            const oa = `${at8}.offices[${j}]`;
             const k = officeKey(o);
             if (typeof o === "string") {
               if (!roles.has(o)) err(oa, "HOLIDAY_INVALID", localize("jurisdictions.index.no_counterparty_of_this_profile", "no counterparty of this profile has role '{o}'", { o: String(o) }));
-            } else if (isObj2(o) && Object.keys(o).length === 1 && typeof o.venue === "string") {
+            } else if (isObj3(o) && Object.keys(o).length === 1 && typeof o.venue === "string") {
               if (!venueKinds.has(o.venue)) err(oa, "HOLIDAY_INVALID", localize("jurisdictions.index.no_kind_of_this_profile", "no kind of this profile with a venue is '{venue}'", { venue: String(o.venue) }));
             } else {
               err(oa, "HOLIDAY_INVALID", "an office is a counterparty role or {venue: <kind>}");
@@ -45597,16 +45994,16 @@ function validateInto(p, errors) {
         }
       }
       key = `${listKey(h)}${key}`;
-      if (!isYear(h.year)) err(`${at7}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      if (!isYear(h.year)) err(`${at8}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
       else if (years.has(`${h.year}\0${key}`)) err(
-        `${at7}.year`,
+        `${at8}.year`,
         "HOLIDAY_INVALID",
         own4(h, "list") ? own4(h, "offices") ? localize("jurisdictions.index.year_listed_twice_for_list_and_the_same_offices", "{year} is listed twice for the list {list} and the same offices", { year: String(h.year), list: String(h.list) }) : localize("jurisdictions.index.year_listed_twice_for_list_and_all_offices", "{year} is listed twice for the list {list} and all offices", { year: String(h.year), list: String(h.list) }) : own4(h, "offices") ? localize("jurisdictions.index.year_listed_twice_for_the_same_offices", "{year} is listed twice for the same offices", { year: String(h.year) }) : localize("jurisdictions.index.year_listed_twice_for_all_offices", "{year} is listed twice for all offices", { year: String(h.year) })
       );
       else years.add(`${h.year}\0${key}`);
       const dates = /* @__PURE__ */ new Set();
-      list3(`${at7}.days`, h.days).forEach((d, j) => {
-        const da = `${at7}.days[${j}]`;
+      list3(`${at8}.days`, h.days).forEach((d, j) => {
+        const da = `${at8}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
@@ -45615,43 +46012,43 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
-      statusBasis(at7, h);
+      statusBasis(at8, h);
     });
   }
   if (own4(p, "fiscal_year")) {
     const seen = /* @__PURE__ */ new Set();
     list3("fiscal_year", p.fiscal_year).forEach((f4, i) => {
-      const at7 = `fiscal_year[${i}]`;
-      if (!entry(at7, f4)) return;
-      fields(at7, f4, ["body", "start", "named_by", "label", "status", "basis"]);
-      if (f4.body !== "*" && !bodies.has(f4.body)) err(`${at7}.body`, "FISCAL_YEAR_INVALID", `body is a counterparty body of this profile, or * for every body`);
-      else if (seen.has(f4.body)) err(`${at7}.body`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.body_keeps_one_fiscal_year", "{body} keeps one fiscal year", { body: String(f4.body) }));
+      const at8 = `fiscal_year[${i}]`;
+      if (!entry(at8, f4)) return;
+      fields(at8, f4, ["body", "start", "named_by", "label", "status", "basis"]);
+      if (f4.body !== "*" && !bodies.has(f4.body)) err(`${at8}.body`, "FISCAL_YEAR_INVALID", `body is a counterparty body of this profile, or * for every body`);
+      else if (seen.has(f4.body)) err(`${at8}.body`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.body_keeps_one_fiscal_year", "{body} keeps one fiscal year", { body: String(f4.body) }));
       else seen.add(f4.body);
-      if (!isMonthDay(f4.start)) err(`${at7}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
-      if (!FISCAL_NAMED_BY.includes(f4.named_by)) err(`${at7}.named_by`, "FISCAL_YEAR_INVALID", `named_by is ${FISCAL_NAMED_BY.join(" or ")}`);
+      if (!isMonthDay(f4.start)) err(`${at8}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
+      if (!FISCAL_NAMED_BY.includes(f4.named_by)) err(`${at8}.named_by`, "FISCAL_YEAR_INVALID", `named_by is ${FISCAL_NAMED_BY.join(" or ")}`);
       if (!isStr(f4.label) || !FISCAL_PLACEHOLDERS.some((x) => f4.label.includes(x)) || (f4.label.match(/\{[^}]*\}/g) || []).some((x) => !FISCAL_PLACEHOLDERS.includes(x)))
-        err(`${at7}.label`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.label_is_a_template_using", "label is a template using {FISCAL_PLACEHOLDERS}", { FISCAL_PLACEHOLDERS: String(FISCAL_PLACEHOLDERS.join(", ")) }));
-      statusBasis(at7, f4);
+        err(`${at8}.label`, "FISCAL_YEAR_INVALID", localize("jurisdictions.index.label_is_a_template_using", "label is a template using {FISCAL_PLACEHOLDERS}", { FISCAL_PLACEHOLDERS: String(FISCAL_PLACEHOLDERS.join(", ")) }));
+      statusBasis(at8, f4);
     });
   }
   if (own4(p, "law_ranks")) {
     const seen = /* @__PURE__ */ new Set();
     list3("law_ranks", p.law_ranks).forEach((r, i) => {
-      const at7 = `law_ranks[${i}]`;
-      if (!entry(at7, r)) return;
-      fields(at7, r, ["kind", "level", "rank", "basis"]);
-      if (!STANDARD_SOURCE_KINDS.includes(r.kind)) err(`${at7}.kind`, "RANK_INVALID", localize("jurisdictions.index.kind_is_one_of_standard_2", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
-      if (!LAW_LEVELS.includes(r.level)) err(`${at7}.level`, "RANK_INVALID", localize("jurisdictions.index.level_is_one_of_law_3", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
-      if (!isPosInt(r.rank)) err(`${at7}.rank`, "RANK_INVALID", "rank is a positive integer, 1 the highest");
+      const at8 = `law_ranks[${i}]`;
+      if (!entry(at8, r)) return;
+      fields(at8, r, ["kind", "level", "rank", "basis"]);
+      if (!STANDARD_SOURCE_KINDS.includes(r.kind)) err(`${at8}.kind`, "RANK_INVALID", localize("jurisdictions.index.kind_is_one_of_standard_2", "kind is one of {STANDARD_SOURCE_KINDS}", { STANDARD_SOURCE_KINDS: String(STANDARD_SOURCE_KINDS.join(", ")) }));
+      if (!LAW_LEVELS.includes(r.level)) err(`${at8}.level`, "RANK_INVALID", localize("jurisdictions.index.level_is_one_of_law_3", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
+      if (!isPosInt(r.rank)) err(`${at8}.rank`, "RANK_INVALID", "rank is a positive integer, 1 the highest");
       const k = `${r.kind}\0${r.level}`;
-      if (seen.has(k)) err(at7, "RANK_INVALID", localize("jurisdictions.index.kind_at_level_is_ranked", "{kind} at {level} is ranked twice", { kind: String(r.kind), level: String(r.level) }));
+      if (seen.has(k)) err(at8, "RANK_INVALID", localize("jurisdictions.index.kind_at_level_is_ranked", "{kind} at {level} is ranked twice", { kind: String(r.kind), level: String(r.level) }));
       seen.add(k);
-      basis(at7, r);
+      basis(at8, r);
     });
   }
   if (own4(p, "instrument_key")) {
     const k = p.instrument_key;
-    if (!isObj2(k)) err("instrument_key", "VALUE_INVALID", "instrument_key is {jurisdiction, basis}");
+    if (!isObj3(k)) err("instrument_key", "VALUE_INVALID", "instrument_key is {jurisdiction, basis}");
     else {
       fields("instrument_key", k, ["jurisdiction", "basis"]);
       if (typeof k.jurisdiction !== "string" || !ID_RE.test(k.jurisdiction))
@@ -45661,31 +46058,31 @@ function validateInto(p, errors) {
   }
   const proceedingKinds = /* @__PURE__ */ new Set();
   if (own4(p, "proceeding_kinds")) list3("proceeding_kinds", p.proceeding_kinds).forEach((k, i) => {
-    const at7 = `proceeding_kinds[${i}]`;
-    if (!entry(at7, k)) return;
-    fields(at7, k, ["kind", "label", "forum_kind", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at7}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (proceedingKinds.has(k.kind)) err(`${at7}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice_2", "'{kind}' is given twice", { kind: String(k.kind) }));
+    const at8 = `proceeding_kinds[${i}]`;
+    if (!entry(at8, k)) return;
+    fields(at8, k, ["kind", "label", "forum_kind", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at8}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (proceedingKinds.has(k.kind)) err(`${at8}.kind`, "DUPLICATE_KIND", localize("jurisdictions.index.kind_is_given_twice_2", "'{kind}' is given twice", { kind: String(k.kind) }));
     else proceedingKinds.add(k.kind);
-    str(`${at7}.label`, k.label, "label");
-    if (!FORUM_KINDS.includes(k.forum_kind)) err(`${at7}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
-    basis(at7, k);
+    str(`${at8}.label`, k.label, "label");
+    if (!FORUM_KINDS.includes(k.forum_kind)) err(`${at8}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
+    basis(at8, k);
   });
   if (own4(p, "proceeding_flows")) {
     const flowed = /* @__PURE__ */ new Set();
     list3("proceeding_flows", p.proceeding_flows).forEach((f4, i) => {
-      const at7 = `proceeding_flows[${i}]`;
-      if (!entry(at7, f4)) return;
-      fields(at7, f4, ["kind", "stages", "citation", "basis"]);
-      if (!proceedingKinds.has(f4.kind)) err(`${at7}.kind`, "FLOW_INVALID", localize("jurisdictions.index.string_is_no_kind_of_2", "'{String}' is no kind of proceeding_kinds", { String: String(String(f4.kind)) }));
-      else if (flowed.has(f4.kind)) err(`${at7}.kind`, "FLOW_INVALID", localize("jurisdictions.index.kind_has_one_flow", "{kind} has one flow", { kind: String(f4.kind) }));
+      const at8 = `proceeding_flows[${i}]`;
+      if (!entry(at8, f4)) return;
+      fields(at8, f4, ["kind", "stages", "citation", "basis"]);
+      if (!proceedingKinds.has(f4.kind)) err(`${at8}.kind`, "FLOW_INVALID", localize("jurisdictions.index.string_is_no_kind_of_2", "'{String}' is no kind of proceeding_kinds", { String: String(String(f4.kind)) }));
+      else if (flowed.has(f4.kind)) err(`${at8}.kind`, "FLOW_INVALID", localize("jurisdictions.index.kind_has_one_flow", "{kind} has one flow", { kind: String(f4.kind) }));
       else flowed.add(f4.kind);
-      if (!Array.isArray(f4.stages) || !f4.stages.length) err(`${at7}.stages`, "FLOW_INVALID", "stages is a non-empty ordered list of {stage, label, reached_by}");
+      if (!Array.isArray(f4.stages) || !f4.stages.length) err(`${at8}.stages`, "FLOW_INVALID", "stages is a non-empty ordered list of {stage, label, reached_by}");
       else {
         const stages = /* @__PURE__ */ new Set();
         f4.stages.forEach((st, j) => {
-          const sa = `${at7}.stages[${j}]`;
-          if (!isObj2(st)) {
+          const sa = `${at8}.stages[${j}]`;
+          if (!isObj3(st)) {
             err(sa, "FLOW_INVALID", "a stage is {stage, label, reached_by}");
             return;
           }
@@ -45698,57 +46095,57 @@ function validateInto(p, errors) {
             err(`${sa}.reached_by`, "FLOW_INVALID", "reached_by is a non-empty list of event kinds");
         });
       }
-      str(`${at7}.citation`, f4.citation, "citation");
-      basis(at7, f4);
+      str(`${at8}.citation`, f4.citation, "citation");
+      basis(at8, f4);
     });
   }
   if (own4(p, "identifier_schemes")) {
     const seen = /* @__PURE__ */ new Set();
     list3("identifier_schemes", p.identifier_schemes).forEach((x, i) => {
-      const at7 = `identifier_schemes[${i}]`;
-      if (!entry(at7, x)) return;
-      fields(at7, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "basis"]);
-      if (!isStr(x.scheme)) err(`${at7}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
-      else if (seen.has(x.scheme)) err(`${at7}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice", "{scheme} is given twice", { scheme: String(x.scheme) }));
+      const at8 = `identifier_schemes[${i}]`;
+      if (!entry(at8, x)) return;
+      fields(at8, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "basis"]);
+      if (!isStr(x.scheme)) err(`${at8}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
+      else if (seen.has(x.scheme)) err(`${at8}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice", "{scheme} is given twice", { scheme: String(x.scheme) }));
       else seen.add(x.scheme);
-      str(`${at7}.label`, x.label, "label");
+      str(`${at8}.label`, x.label, "label");
       if (!Array.isArray(x.entity_kinds) || !x.entity_kinds.length || !x.entity_kinds.every((k) => typeof k === "string" && KIND_RE.test(k)))
-        err(`${at7}.entity_kinds`, "SCHEME_INVALID", "entity_kinds is a non-empty list of entity kinds");
-      if (!spaceForms[x.space]) err(`${at7}.space`, "SCHEME_INVALID", localize("jurisdictions.index.this_profile_has_no_space", "this profile has no space '{String}'", { String: String(String(x.space)) }));
-      else if (own4(x, "form") && !spaceForms[x.space].has(x.form)) err(`${at7}.form`, "SCHEME_INVALID", localize("jurisdictions.index.the_space_space_has_no", "the space {space} has no form '{String}'", { space: String(x.space), String: String(String(x.form)) }));
+        err(`${at8}.entity_kinds`, "SCHEME_INVALID", "entity_kinds is a non-empty list of entity kinds");
+      if (!spaceForms[x.space]) err(`${at8}.space`, "SCHEME_INVALID", localize("jurisdictions.index.this_profile_has_no_space", "this profile has no space '{String}'", { String: String(String(x.space)) }));
+      else if (own4(x, "form") && !spaceForms[x.space].has(x.form)) err(`${at8}.form`, "SCHEME_INVALID", localize("jurisdictions.index.the_space_space_has_no", "the space {space} has no form '{String}'", { space: String(x.space), String: String(String(x.form)) }));
       if (own4(x, "systems")) {
-        if (!Array.isArray(x.systems)) err(`${at7}.systems`, "SCHEME_INVALID", "systems is a list of origins");
+        if (!Array.isArray(x.systems)) err(`${at8}.systems`, "SCHEME_INVALID", "systems is a list of origins");
         else x.systems.forEach((o, j) => {
-          if (!origins.has(o)) err(`${at7}.systems[${j}]`, "SCHEME_INVALID", localize("jurisdictions.index.no_system_of_this_profile_3", "no system of this profile has origin '{String}'", { String: String(String(o)) }));
+          if (!origins.has(o)) err(`${at8}.systems[${j}]`, "SCHEME_INVALID", localize("jurisdictions.index.no_system_of_this_profile_3", "no system of this profile has origin '{String}'", { String: String(String(o)) }));
         });
       }
-      basis(at7, x);
+      basis(at8, x);
     });
   }
   if (own4(p, "classification_schemes")) {
     const seen = /* @__PURE__ */ new Set();
     list3("classification_schemes", p.classification_schemes).forEach((x, i) => {
-      const at7 = `classification_schemes[${i}]`;
-      if (!entry(at7, x)) return;
-      fields(at7, x, ["scheme", "label", "kind", "codes", "forms", "basis"]);
+      const at8 = `classification_schemes[${i}]`;
+      if (!entry(at8, x)) return;
+      fields(at8, x, ["scheme", "label", "kind", "codes", "forms", "basis"]);
       if (own4(x, "forms")) {
-        if (!Array.isArray(x.forms) || !x.forms.length) err(`${at7}.forms`, "SCHEME_INVALID", "forms is a non-empty list of patterns");
+        if (!Array.isArray(x.forms) || !x.forms.length) err(`${at8}.forms`, "SCHEME_INVALID", "forms is a non-empty list of patterns");
         else x.forms.forEach((f4, j) => {
-          if (!compile(f4)) err(`${at7}.forms[${j}]`, "SCHEME_INVALID", "a form is a pattern {re, flags?}");
+          if (!compile(f4)) err(`${at8}.forms[${j}]`, "SCHEME_INVALID", "a form is a pattern {re, flags?}");
         });
       }
-      if (!isStr(x.scheme)) err(`${at7}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
-      else if (seen.has(x.scheme)) err(`${at7}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice_2", "{scheme} is given twice", { scheme: String(x.scheme) }));
+      if (!isStr(x.scheme)) err(`${at8}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
+      else if (seen.has(x.scheme)) err(`${at8}.scheme`, "SCHEME_INVALID", localize("jurisdictions.index.scheme_is_given_twice_2", "{scheme} is given twice", { scheme: String(x.scheme) }));
       else seen.add(x.scheme);
-      str(`${at7}.label`, x.label, "label");
-      if (!CLASSIFICATION_KINDS.includes(x.kind)) err(`${at7}.kind`, "SCHEME_INVALID", localize("jurisdictions.index.kind_is_one_of_classification", "kind is one of {CLASSIFICATION_KINDS}", { CLASSIFICATION_KINDS: String(CLASSIFICATION_KINDS.join(", ")) }));
+      str(`${at8}.label`, x.label, "label");
+      if (!CLASSIFICATION_KINDS.includes(x.kind)) err(`${at8}.kind`, "SCHEME_INVALID", localize("jurisdictions.index.kind_is_one_of_classification", "kind is one of {CLASSIFICATION_KINDS}", { CLASSIFICATION_KINDS: String(CLASSIFICATION_KINDS.join(", ")) }));
       if (own4(x, "codes")) {
-        if (!Array.isArray(x.codes)) err(`${at7}.codes`, "SCHEME_INVALID", "codes is a list of {code, label}");
+        if (!Array.isArray(x.codes)) err(`${at8}.codes`, "SCHEME_INVALID", "codes is a list of {code, label}");
         else {
           const cs = /* @__PURE__ */ new Set();
           x.codes.forEach((c, j) => {
-            const ca = `${at7}.codes[${j}]`;
-            if (!isObj2(c) || !isStr(c.code) || !isStr(c.label) || Object.keys(c).some((k) => k !== "code" && k !== "label")) {
+            const ca = `${at8}.codes[${j}]`;
+            if (!isObj3(c) || !isStr(c.code) || !isStr(c.label) || Object.keys(c).some((k) => k !== "code" && k !== "label")) {
               err(ca, "SCHEME_INVALID", "a code is {code, label}");
               return;
             }
@@ -45757,77 +46154,77 @@ function validateInto(p, errors) {
           });
         }
       }
-      basis(at7, x);
+      basis(at8, x);
     });
   }
   if (own4(p, "lawful_demands")) {
     const seen = /* @__PURE__ */ new Set();
     list3("lawful_demands", p.lawful_demands).forEach((d, i) => {
-      const at7 = `lawful_demands[${i}]`;
-      if (!entry(at7, d)) return;
-      fields(at7, d, ["kind", "label", "covers", "within", "citation", "status", "basis"]);
-      if (typeof d.kind !== "string" || !KIND_RE.test(d.kind)) err(`${at7}.kind`, "DEMAND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-      else if (seen.has(d.kind)) err(`${at7}.kind`, "DEMAND_INVALID", localize("jurisdictions.index.kind_is_given_twice_3", "'{kind}' is given twice", { kind: String(d.kind) }));
+      const at8 = `lawful_demands[${i}]`;
+      if (!entry(at8, d)) return;
+      fields(at8, d, ["kind", "label", "covers", "within", "citation", "status", "basis"]);
+      if (typeof d.kind !== "string" || !KIND_RE.test(d.kind)) err(`${at8}.kind`, "DEMAND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+      else if (seen.has(d.kind)) err(`${at8}.kind`, "DEMAND_INVALID", localize("jurisdictions.index.kind_is_given_twice_3", "'{kind}' is given twice", { kind: String(d.kind) }));
       else seen.add(d.kind);
-      str(`${at7}.label`, d.label, "label");
+      str(`${at8}.label`, d.label, "label");
       if (!Array.isArray(d.covers) || !d.covers.length || !d.covers.every((c) => DEMAND_COVERS.includes(c)) || new Set(d.covers).size !== d.covers.length)
-        err(`${at7}.covers`, "DEMAND_INVALID", localize("jurisdictions.index.covers_is_a_non_empty", "covers is a non-empty list from {DEMAND_COVERS}", { DEMAND_COVERS: String(DEMAND_COVERS.join(", ")) }));
+        err(`${at8}.covers`, "DEMAND_INVALID", localize("jurisdictions.index.covers_is_a_non_empty", "covers is a non-empty list from {DEMAND_COVERS}", { DEMAND_COVERS: String(DEMAND_COVERS.join(", ")) }));
       const w = d.within;
-      if (!isObj2(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
-        err(`${at7}.within`, "DEMAND_INVALID", localize("jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", { units_list: UNITS.join(", ") }));
-      str(`${at7}.citation`, d.citation, "citation");
-      statusBasis(at7, d);
+      if (!isObj3(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
+        err(`${at8}.within`, "DEMAND_INVALID", localize("jurisdictions.index.within_is_amount_and_units", "within is {amount, units}, units one of {units_list}", { units_list: UNITS.join(", ") }));
+      str(`${at8}.citation`, d.citation, "citation");
+      statusBasis(at8, d);
     });
   }
   if (own4(p, "recurrences")) list3("recurrences", p.recurrences).forEach((r, i) => {
-    const at7 = `recurrences[${i}]`;
-    if (!entry(at7, r)) return;
-    fields(at7, r, ["body", "rrule", "dtstart", "citation", "status", "basis"]);
-    str(`${at7}.body`, r.body, "body");
+    const at8 = `recurrences[${i}]`;
+    if (!entry(at8, r)) return;
+    fields(at8, r, ["body", "rrule", "dtstart", "citation", "status", "basis"]);
+    str(`${at8}.body`, r.body, "body");
     const why = rruleFault(r.rrule);
-    if (why) err(`${at7}.rrule`, "RECURRENCE_INVALID", why);
-    if (!isLocalDateTime(r.dtstart)) err(`${at7}.dtstart`, "RECURRENCE_INVALID", "dtstart is a local date-time YYYY-MM-DDTHH:MM[:SS], read in the profile's time_zone");
-    str(`${at7}.citation`, r.citation, "citation");
-    statusBasis(at7, r);
+    if (why) err(`${at8}.rrule`, "RECURRENCE_INVALID", why);
+    if (!isLocalDateTime(r.dtstart)) err(`${at8}.dtstart`, "RECURRENCE_INVALID", "dtstart is a local date-time YYYY-MM-DDTHH:MM[:SS], read in the profile's time_zone");
+    str(`${at8}.citation`, r.citation, "citation");
+    statusBasis(at8, r);
   });
   if (own4(p, "legal_facts")) {
     const seen = /* @__PURE__ */ new Set();
     list3("legal_facts", p.legal_facts).forEach((f4, i) => {
-      const at7 = `legal_facts[${i}]`;
-      if (!entry(at7, f4)) return;
-      fields(at7, f4, ["key", "trigger", "statement", "citation", "threshold", "applies_to", "status", "basis"]);
-      if (typeof f4.key !== "string" || !KIND_RE.test(f4.key)) err(`${at7}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
-      else if (seen.has(f4.key)) err(`${at7}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice_2", "'{key}' is given twice", { key: String(f4.key) }));
+      const at8 = `legal_facts[${i}]`;
+      if (!entry(at8, f4)) return;
+      fields(at8, f4, ["key", "trigger", "statement", "citation", "threshold", "applies_to", "status", "basis"]);
+      if (typeof f4.key !== "string" || !KIND_RE.test(f4.key)) err(`${at8}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
+      else if (seen.has(f4.key)) err(`${at8}.key`, "VALUE_INVALID", localize("jurisdictions.index.key_is_given_twice_2", "'{key}' is given twice", { key: String(f4.key) }));
       else seen.add(f4.key);
-      if (!LEGAL_FACT_TRIGGERS.includes(f4.trigger)) err(`${at7}.trigger`, "TRIGGER_UNKNOWN", localize("jurisdictions.index.trigger_is_one_of_legal", "trigger is one of {LEGAL_FACT_TRIGGERS}", { LEGAL_FACT_TRIGGERS: String(LEGAL_FACT_TRIGGERS.join(", ")) }));
-      str(`${at7}.statement`, f4.statement, "statement");
-      str(`${at7}.citation`, f4.citation, "citation");
+      if (!LEGAL_FACT_TRIGGERS.includes(f4.trigger)) err(`${at8}.trigger`, "TRIGGER_UNKNOWN", localize("jurisdictions.index.trigger_is_one_of_legal", "trigger is one of {LEGAL_FACT_TRIGGERS}", { LEGAL_FACT_TRIGGERS: String(LEGAL_FACT_TRIGGERS.join(", ")) }));
+      str(`${at8}.statement`, f4.statement, "statement");
+      str(`${at8}.citation`, f4.citation, "citation");
       if (own4(f4, "threshold")) {
         const t = f4.threshold;
-        if (!isObj2(t) || Object.keys(t).some((k) => k !== "amount" && k !== "unit") || typeof t.amount !== "number" || !Number.isFinite(t.amount) || t.amount <= 0 || !isStr(t.unit))
-          err(`${at7}.threshold`, "VALUE_INVALID", "threshold is {amount, unit}, a positive amount and its unit");
+        if (!isObj3(t) || Object.keys(t).some((k) => k !== "amount" && k !== "unit") || typeof t.amount !== "number" || !Number.isFinite(t.amount) || t.amount <= 0 || !isStr(t.unit))
+          err(`${at8}.threshold`, "VALUE_INVALID", "threshold is {amount, unit}, a positive amount and its unit");
       }
       if (own4(f4, "applies_to")) {
-        if (!Array.isArray(f4.applies_to) || !f4.applies_to.length) err(`${at7}.applies_to`, "VALUE_INVALID", "applies_to is a non-empty list of kinds");
+        if (!Array.isArray(f4.applies_to) || !f4.applies_to.length) err(`${at8}.applies_to`, "VALUE_INVALID", "applies_to is a non-empty list of kinds");
         else f4.applies_to.forEach((k, j) => {
-          if (!profileKinds.has(k)) err(`${at7}.applies_to[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.string_is_no_kind_of_3", "'{String}' is no kind of this profile", { String: String(String(k)) }));
+          if (!profileKinds.has(k)) err(`${at8}.applies_to[${j}]`, "VALUE_INVALID", localize("jurisdictions.index.string_is_no_kind_of_3", "'{String}' is no kind of this profile", { String: String(String(k)) }));
         });
       }
-      statusBasis(at7, f4);
+      statusBasis(at8, f4);
     });
   }
   if (own4(p, "procedure_guides")) {
     const guided = /* @__PURE__ */ new Set();
     list3("procedure_guides", p.procedure_guides).forEach((g, i) => {
-      const at7 = `procedure_guides[${i}]`;
-      if (!entry(at7, g)) return;
-      fields(at7, g, ["kind", "items", "status", "basis"]);
-      if (!profileKinds.has(g.kind)) err(`${at7}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
-      else if (guided.has(g.kind)) err(`${at7}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_has_one_guide", "{kind} has one guide", { kind: String(g.kind) }));
+      const at8 = `procedure_guides[${i}]`;
+      if (!entry(at8, g)) return;
+      fields(at8, g, ["kind", "items", "status", "basis"]);
+      if (!profileKinds.has(g.kind)) err(`${at8}.kind`, "KIND_INVALID", localize("jurisdictions.index.string_is_no_kind_of_4", "'{String}' is no kind of this profile", { String: String(String(g.kind)) }));
+      else if (guided.has(g.kind)) err(`${at8}.kind`, "VALUE_INVALID", localize("jurisdictions.index.kind_has_one_guide", "{kind} has one guide", { kind: String(g.kind) }));
       else guided.add(g.kind);
-      if (!Array.isArray(g.items) || !g.items.length) err(`${at7}.items`, "VALUE_INVALID", "items is a non-empty list of {route, expect?, citation, after?}");
+      if (!Array.isArray(g.items) || !g.items.length) err(`${at8}.items`, "VALUE_INVALID", "items is a non-empty list of {route, expect?, citation, after?}");
       else g.items.forEach((it, j) => {
-        const ia = `${at7}.items[${j}]`;
+        const ia = `${at8}.items[${j}]`;
         if (!entry(ia, it)) return;
         fields(ia, it, ["route", "expect", "citation", "after"]);
         str(`${ia}.route`, it.route, "route");
@@ -45836,32 +46233,32 @@ function validateInto(p, errors) {
         if (own4(it, "after") && (!Array.isArray(it.after) || !it.after.length || !it.after.every((o) => typeof o === "string" && KIND_RE.test(o)) || new Set(it.after).size !== it.after.length))
           err(`${ia}.after`, "VALUE_INVALID", "after is a non-empty list of outcomes, each matching ^[a-z][a-z0-9_]*$, once");
       });
-      statusBasis(at7, g);
+      statusBasis(at8, g);
     });
   }
   if (own4(p, "phrasings")) list3("phrasings", p.phrasings).forEach((x, i) => {
-    const at7 = `phrasings[${i}]`;
-    if (!entry(at7, x)) return;
-    fields(at7, x, ["locale", "kind", "phrase", "basis"]);
-    if (!isLocale(x.locale)) err(`${at7}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
-    if (!PHRASING_KINDS.includes(x.kind)) err(`${at7}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_phrasing", "kind is one of {PHRASING_KINDS}", { PHRASING_KINDS: String(PHRASING_KINDS.join(", ")) }));
+    const at8 = `phrasings[${i}]`;
+    if (!entry(at8, x)) return;
+    fields(at8, x, ["locale", "kind", "phrase", "basis"]);
+    if (!isLocale(x.locale)) err(`${at8}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
+    if (!PHRASING_KINDS.includes(x.kind)) err(`${at8}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_phrasing", "kind is one of {PHRASING_KINDS}", { PHRASING_KINDS: String(PHRASING_KINDS.join(", ")) }));
     if (typeof x.phrase !== "string" || x.phrase.trim().length < PHRASE_MIN || x.phrase.length > PHRASE_MAX || /[\r\n]/.test(x.phrase))
-      err(`${at7}.phrase`, "VALUE_INVALID", localize("jurisdictions.index.phrase_is_phrase_min_phrase", "phrase is {PHRASE_MIN}\u2013{PHRASE_MAX} characters on one line", { PHRASE_MIN: String(PHRASE_MIN), PHRASE_MAX: String(PHRASE_MAX) }));
-    basis(at7, x);
+      err(`${at8}.phrase`, "VALUE_INVALID", localize("jurisdictions.index.phrase_is_phrase_min_phrase", "phrase is {PHRASE_MIN}\u2013{PHRASE_MAX} characters on one line", { PHRASE_MIN: String(PHRASE_MIN), PHRASE_MAX: String(PHRASE_MAX) }));
+    basis(at8, x);
   });
   if (own4(p, "pointers")) list3("pointers", p.pointers).forEach((x, i) => {
-    const at7 = `pointers[${i}]`;
-    if (!entry(at7, x)) return;
-    fields(at7, x, ["kind", "name", "does", "contacts", "hours", "languages", "source", "status", "basis"]);
-    if (!POINTER_KINDS.includes(x.kind)) err(`${at7}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_pointer", "kind is one of {POINTER_KINDS}", { POINTER_KINDS: String(POINTER_KINDS.join(", ")) }));
+    const at8 = `pointers[${i}]`;
+    if (!entry(at8, x)) return;
+    fields(at8, x, ["kind", "name", "does", "contacts", "hours", "languages", "source", "status", "basis"]);
+    if (!POINTER_KINDS.includes(x.kind)) err(`${at8}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_pointer", "kind is one of {POINTER_KINDS}", { POINTER_KINDS: String(POINTER_KINDS.join(", ")) }));
     if (!isStr(x.name) || x.name.length > POINTER_NAME_MAX || /[\r\n]/.test(x.name))
-      err(`${at7}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_the_bodys_own", "name is the body's own name, 1 to {POINTER_NAME_MAX} characters on one line", { POINTER_NAME_MAX: String(POINTER_NAME_MAX) }));
+      err(`${at8}.name`, "VALUE_INVALID", localize("jurisdictions.index.name_is_the_bodys_own", "name is the body's own name, 1 to {POINTER_NAME_MAX} characters on one line", { POINTER_NAME_MAX: String(POINTER_NAME_MAX) }));
     if (!isStr(x.does) || x.does.length > POINTER_DOES_MAX)
-      err(`${at7}.does`, "VALUE_INVALID", localize("jurisdictions.index.does_says_what_the_body", "does says what the body does and for whom, 1 to {POINTER_DOES_MAX} characters", { POINTER_DOES_MAX: String(POINTER_DOES_MAX) }));
-    if (!Array.isArray(x.contacts) || !x.contacts.length) err(`${at7}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+      err(`${at8}.does`, "VALUE_INVALID", localize("jurisdictions.index.does_says_what_the_body", "does says what the body does and for whom, 1 to {POINTER_DOES_MAX} characters", { POINTER_DOES_MAX: String(POINTER_DOES_MAX) }));
+    if (!Array.isArray(x.contacts) || !x.contacts.length) err(`${at8}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else x.contacts.forEach((c, j) => {
-      const ca = `${at7}.contacts[${j}]`;
-      if (!isObj2(c)) {
+      const ca = `${at8}.contacts[${j}]`;
+      if (!isObj3(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
       }
@@ -45869,105 +46266,105 @@ function validateInto(p, errors) {
       if (!POINTER_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", localize("jurisdictions.index.how_is_one_of_pointer", "how is one of {POINTER_HOW}", { POINTER_HOW: String(POINTER_HOW.join(", ")) }));
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    if (own4(x, "hours")) hours(`${at7}.hours`, x.hours);
+    if (own4(x, "hours")) hours(`${at8}.hours`, x.hours);
     if (own4(x, "languages")) {
-      if (!Array.isArray(x.languages) || !x.languages.length) err(`${at7}.languages`, "LOCALE_INVALID", "languages is a non-empty list of language tags");
+      if (!Array.isArray(x.languages) || !x.languages.length) err(`${at8}.languages`, "LOCALE_INVALID", "languages is a non-empty list of language tags");
       else x.languages.forEach((l, j) => {
-        if (!isLocale(l)) err(`${at7}.languages[${j}]`, "LOCALE_INVALID", "a language is one well-formed BCP 47 tag");
+        if (!isLocale(l)) err(`${at8}.languages[${j}]`, "LOCALE_INVALID", "a language is one well-formed BCP 47 tag");
       });
     }
     if (!own4(x, "source") || x.source === void 0 || x.source === null || x.source === "")
-      err(`${at7}.source`, "SOURCE_MISSING", "a pointer names the page it was read from, by address or citation");
-    else str(`${at7}.source`, x.source, "source");
-    if (x.status !== "researched") err(`${at7}.status`, "BASIS_INVALID", "a pointer's status is researched: it is read on the body's own page");
-    if (basis(at7, x) && !(test && x.basis === "TEST") && !basisParts(x.basis).every((b) => {
+      err(`${at8}.source`, "SOURCE_MISSING", "a pointer names the page it was read from, by address or citation");
+    else str(`${at8}.source`, x.source, "source");
+    if (x.status !== "researched") err(`${at8}.status`, "BASIS_INVALID", "a pointer's status is researched: it is read on the body's own page");
+    if (basis(at8, x) && !(test && x.basis === "TEST") && !basisParts(x.basis).every((b) => {
       const m = DATED_REF.exec(b);
       return !!m && isDate(m[1]);
     }))
-      err(`${at7}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
+      err(`${at8}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
   });
   if (own4(p, "records_help")) {
-    const h = p.records_help, at7 = "records_help";
-    if (!isObj2(h)) err(at7, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}");
+    const h = p.records_help, at8 = "records_help";
+    if (!isObj3(h)) err(at8, "VALUE_INVALID", "records_help is {law, days, extra_days, extension_reasons, portal?, faster?, citations, status, basis}");
     else {
-      fields(at7, h, ["law", "days", "extra_days", "extension_reasons", "portal", "faster", "citations", "status", "basis"]);
-      str(`${at7}.law`, h.law, "law");
-      if (!isPosInt(h.days)) err(`${at7}.days`, "VALUE_INVALID", "days is a positive integer");
-      if (!isPosInt(h.extra_days)) err(`${at7}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
-      if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at7}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
+      fields(at8, h, ["law", "days", "extra_days", "extension_reasons", "portal", "faster", "citations", "status", "basis"]);
+      str(`${at8}.law`, h.law, "law");
+      if (!isPosInt(h.days)) err(`${at8}.days`, "VALUE_INVALID", "days is a positive integer");
+      if (!isPosInt(h.extra_days)) err(`${at8}.extra_days`, "VALUE_INVALID", "extra_days is a positive integer");
+      if (!Array.isArray(h.extension_reasons) || !h.extension_reasons.length) err(`${at8}.extension_reasons`, "VALUE_INVALID", "extension_reasons is a non-empty list of {reason, citation}");
       else h.extension_reasons.forEach((r, j) => {
-        const ra = `${at7}.extension_reasons[${j}]`;
+        const ra = `${at8}.extension_reasons[${j}]`;
         if (!entry(ra, r)) return;
         fields(ra, r, ["reason", "citation"]);
         str(`${ra}.reason`, r.reason, "reason");
         str(`${ra}.citation`, r.citation, "citation");
       });
       if (own4(h, "portal")) {
-        if (!isObj2(h.portal)) err(`${at7}.portal`, "VALUE_INVALID", "portal is {name, url}");
+        if (!isObj3(h.portal)) err(`${at8}.portal`, "VALUE_INVALID", "portal is {name, url}");
         else {
-          fields(`${at7}.portal`, h.portal, ["name", "url"]);
-          str(`${at7}.portal.name`, h.portal.name, "name");
-          if (typeof h.portal.url !== "string" || !/^https?:\/\/[^\s/]+\S*$/.test(h.portal.url)) err(`${at7}.portal.url`, "VALUE_INVALID", "url is an http(s) address");
+          fields(`${at8}.portal`, h.portal, ["name", "url"]);
+          str(`${at8}.portal.name`, h.portal.name, "name");
+          if (typeof h.portal.url !== "string" || !/^https?:\/\/[^\s/]+\S*$/.test(h.portal.url)) err(`${at8}.portal.url`, "VALUE_INVALID", "url is an http(s) address");
         }
       }
       if (own4(h, "faster")) {
-        if (!isObj2(h.faster)) err(`${at7}.faster`, "VALUE_INVALID", "faster is {ordinance, window, request, citation}");
+        if (!isObj3(h.faster)) err(`${at8}.faster`, "VALUE_INVALID", "faster is {ordinance, window, request, citation}");
         else {
-          fields(`${at7}.faster`, h.faster, ["ordinance", "window", "request", "citation"]);
-          for (const f4 of ["ordinance", "window", "request", "citation"]) str(`${at7}.faster.${f4}`, h.faster[f4], f4);
+          fields(`${at8}.faster`, h.faster, ["ordinance", "window", "request", "citation"]);
+          for (const f4 of ["ordinance", "window", "request", "citation"]) str(`${at8}.faster.${f4}`, h.faster[f4], f4);
         }
       }
-      if (!isObj2(h.citations)) err(`${at7}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
+      if (!isObj3(h.citations)) err(`${at8}.citations`, "VALUE_INVALID", `citations is {${RECORDS_HELP_CITATIONS.join(", ")}}`);
       else {
-        fields(`${at7}.citations`, h.citations, RECORDS_HELP_CITATIONS);
-        for (const f4 of RECORDS_HELP_CITATIONS) str(`${at7}.citations.${f4}`, h.citations[f4], "the citation");
+        fields(`${at8}.citations`, h.citations, RECORDS_HELP_CITATIONS);
+        for (const f4 of RECORDS_HELP_CITATIONS) str(`${at8}.citations.${f4}`, h.citations[f4], "the citation");
       }
-      if (h.status !== "researched") err(`${at7}.status`, "BASIS_INVALID", "records_help is researched: it is read from the statute's own text");
-      if (basis(at7, h) && !(test && h.basis === "TEST") && !basisParts(h.basis).every((b) => {
+      if (h.status !== "researched") err(`${at8}.status`, "BASIS_INVALID", "records_help is researched: it is read from the statute's own text");
+      if (basis(at8, h) && !(test && h.basis === "TEST") && !basisParts(h.basis).every((b) => {
         const m = DATED_REF.exec(b);
         return !!m && isDate(m[1]);
       }))
-        err(`${at7}.basis`, "BASIS_INVALID", "records_help rests on the day the text was read, a dated entry YYYY-MM-DD");
+        err(`${at8}.basis`, "BASIS_INVALID", "records_help rests on the day the text was read, a dated entry YYYY-MM-DD");
     }
   }
   if (own4(p, "forums")) {
     const seen = /* @__PURE__ */ new Set();
     list3("forums", p.forums).forEach((f4, i) => {
-      const at7 = `forums[${i}]`;
-      if (!entry(at7, f4)) return;
-      fields(at7, f4, ["label", "forum_kind", "ids", "basis"]);
-      str(`${at7}.label`, f4.label, "label");
-      if (!FORUM_KINDS.includes(f4.forum_kind)) err(`${at7}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of_2", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
+      const at8 = `forums[${i}]`;
+      if (!entry(at8, f4)) return;
+      fields(at8, f4, ["label", "forum_kind", "ids", "basis"]);
+      str(`${at8}.label`, f4.label, "label");
+      if (!FORUM_KINDS.includes(f4.forum_kind)) err(`${at8}.forum_kind`, "VALUE_INVALID", localize("jurisdictions.index.forum_kind_is_one_of_2", "forum_kind is one of {FORUM_KINDS}", { FORUM_KINDS: String(FORUM_KINDS.join(", ")) }));
       if (isStr(f4.label)) {
         const k = `${f4.forum_kind}\0${f4.label}`;
-        if (seen.has(k)) err(`${at7}.label`, "VALUE_INVALID", localize("jurisdictions.index.the_forum_label_is_given", "the forum '{label}' is given twice", { label: String(f4.label) }));
+        if (seen.has(k)) err(`${at8}.label`, "VALUE_INVALID", localize("jurisdictions.index.the_forum_label_is_given", "the forum '{label}' is given twice", { label: String(f4.label) }));
         seen.add(k);
       }
       if (own4(f4, "ids")) {
-        if (!Array.isArray(f4.ids) || !f4.ids.length) err(`${at7}.ids`, "VALUE_INVALID", "ids is a non-empty list of {scheme, id}");
-        else f4.ids.forEach((x, j) => identifier(`${at7}.ids[${j}]`, x, "forum"));
+        if (!Array.isArray(f4.ids) || !f4.ids.length) err(`${at8}.ids`, "VALUE_INVALID", "ids is a non-empty list of {scheme, id}");
+        else f4.ids.forEach((x, j) => identifier(`${at8}.ids[${j}]`, x, "forum"));
       }
-      basis(at7, f4);
+      basis(at8, f4);
     });
   }
   if (own4(p, "local_names")) {
     const seen = /* @__PURE__ */ new Set();
     list3("local_names", p.local_names).forEach((n, i) => {
-      const at7 = `local_names[${i}]`;
-      if (!entry(at7, n)) return;
-      fields(at7, n, ["name", "kind", "explanations", "translations", "basis"]);
-      str(`${at7}.name`, n.name, "name");
-      if (!LOCAL_NAME_KINDS.includes(n.kind)) err(`${at7}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_local", "kind is one of {LOCAL_NAME_KINDS}", { LOCAL_NAME_KINDS: String(LOCAL_NAME_KINDS.join(", ")) }));
+      const at8 = `local_names[${i}]`;
+      if (!entry(at8, n)) return;
+      fields(at8, n, ["name", "kind", "explanations", "translations", "basis"]);
+      str(`${at8}.name`, n.name, "name");
+      if (!LOCAL_NAME_KINDS.includes(n.kind)) err(`${at8}.kind`, "KIND_INVALID", localize("jurisdictions.index.kind_is_one_of_local", "kind is one of {LOCAL_NAME_KINDS}", { LOCAL_NAME_KINDS: String(LOCAL_NAME_KINDS.join(", ")) }));
       else if (isStr(n.name)) {
         const k = `${n.name}\0${n.kind}`;
-        if (seen.has(k)) err(`${at7}.name`, "VALUE_INVALID", localize("jurisdictions.index.the_kind_name_is_given", "the {kind} '{name}' is given twice", { kind: String(n.kind), name: String(n.name) }));
+        if (seen.has(k)) err(`${at8}.name`, "VALUE_INVALID", localize("jurisdictions.index.the_kind_name_is_given", "the {kind} '{name}' is given twice", { kind: String(n.kind), name: String(n.name) }));
         seen.add(k);
       }
       for (const [f4, extra] of [["explanations", []], ["translations", ["source"]]]) {
         if (!own4(n, f4)) continue;
         const locales = /* @__PURE__ */ new Set();
-        list3(`${at7}.${f4}`, n[f4]).forEach((x, j) => {
-          const xa = `${at7}.${f4}[${j}]`;
+        list3(`${at8}.${f4}`, n[f4]).forEach((x, j) => {
+          const xa = `${at8}.${f4}[${j}]`;
           if (!entry(xa, x)) return;
           fields(xa, x, ["locale", "text", ...extra, "basis"]);
           if (!isLocale(x.locale)) err(`${xa}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
@@ -45983,7 +46380,7 @@ function validateInto(p, errors) {
           } else basis(xa, x);
         });
       }
-      basis(at7, n);
+      basis(at8, n);
     });
   }
 }
@@ -46007,13 +46404,13 @@ function rruleFault(v) {
   if (parts.has("UNTIL") && !/^\d{8}(?:T\d{6}Z?)?$/.test(parts.get("UNTIL"))) return "UNTIL is a date or date-time";
   return null;
 }
-var memberTypeKey = (e) => `${isObj2(e) ? String(e.member_type) : ""}\0${isObj2(e) && typeof e.organisation === "string" ? e.organisation : ""}`;
+var memberTypeKey = (e) => `${isObj3(e) ? String(e.member_type) : ""}\0${isObj3(e) && typeof e.organisation === "string" ? e.organisation : ""}`;
 function officeKey(o) {
   if (typeof o === "string") return `role:${o}`;
-  if (isObj2(o) && typeof o.venue === "string") return `venue:${o.venue}`;
+  if (isObj3(o) && typeof o.venue === "string") return `venue:${o.venue}`;
   return `?:${JSON.stringify(o)}`;
 }
-var listKey = (h) => isObj2(h) && typeof h.list === "string" ? h.list : "";
+var listKey = (h) => isObj3(h) && typeof h.list === "string" ? h.list : "";
 var officesKey = (offices) => Array.isArray(offices) ? [...new Set(offices.map(officeKey))].sort().join("") : "";
 var deepFreeze2 = (o) => {
   if (o && typeof o === "object") {
@@ -46030,21 +46427,21 @@ function get(id) {
 }
 function canon(v) {
   if (Array.isArray(v)) return `[${v.map(canon).join(",")}]`;
-  if (isObj2(v)) return `{${Object.keys(v).sort().filter((k) => k !== "basis" && k !== "profile" && k !== "bases").map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(",")}}`;
+  if (isObj3(v)) return `{${Object.keys(v).sort().filter((k) => k !== "basis" && k !== "profile" && k !== "bases").map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(",")}}`;
   return JSON.stringify(v);
 }
 function stable(v) {
   if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
-  if (isObj2(v)) return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`;
+  if (isObj3(v)) return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`;
   return JSON.stringify(v);
 }
 var tag = (e, profile) => ({ ...clone(e), profile, bases: [{ profile, basis: e.basis }] });
 function union(into, entries, profile) {
   for (const e of entries || []) {
     const k = canon(e);
-    const at7 = into.find((x) => x.__k === k);
-    if (at7) {
-      if (!at7.bases.some((b) => b.profile === profile && b.basis === e.basis)) at7.bases.push({ profile, basis: e.basis });
+    const at8 = into.find((x) => x.__k === k);
+    if (at8) {
+      if (!at8.bases.some((b) => b.profile === profile && b.basis === e.basis)) at8.bases.push({ profile, basis: e.basis });
     } else into.push(Object.assign(tag(e, profile), { __k: k }));
   }
 }
@@ -46102,7 +46499,7 @@ function combineInner(listIn) {
 }
 function merge(profiles) {
   const conflicts = [];
-  const conflict = (at7, values, says) => conflicts.push({ at: at7, values, says });
+  const conflict = (at8, values, says) => conflicts.push({ at: at8, values, says });
   const view = {
     id: profiles.map((p) => p.id).join("+"),
     name: profiles.map((p) => p.name).join("; "),
@@ -46326,7 +46723,7 @@ function merge(profiles) {
     const given = profiles.flatMap((p) => (p.standard_sources || []).map((e) => ({ profile: p.id, e: clone(e) })));
     const ONE = [
       [
-        (e) => isObj2(e.series) ? `${e.key}\0${e.series.key}` : null,
+        (e) => isObj3(e.series) ? `${e.key}\0${e.series.key}` : null,
         [
           ["series.label", (e) => e.series.label, (e) => {
             delete e.series.label;
@@ -46488,7 +46885,7 @@ function merge(profiles) {
         const carriesBasis = f4 === "venue" || f4 === "evidence" || f4 === "template";
         const vals = given.filter((g) => own4(g.k, f4)).map((g) => {
           let value = clone(g.k[f4]);
-          if (f4 === "venue" && isObj2(value)) {
+          if (f4 === "venue" && isObj3(value)) {
             const { hours, time_zone, cutoff, receipt, outages, facts, ...rest } = value;
             value = rest;
           }
@@ -46506,7 +46903,7 @@ function merge(profiles) {
           time_zone: localize("jurisdictions.index.local_day_undetermined", "its local day is undetermined")
         };
         for (const f4 of ["hours", "cutoff", "receipt", "time_zone"]) {
-          const vs = given.filter((g) => isObj2(g.k.venue) && own4(g.k.venue, f4)).map((g) => ({ profile: g.profile, value: g.k.venue[f4], basis: g.k.venue[f4].basis }));
+          const vs = given.filter((g) => isObj3(g.k.venue) && own4(g.k.venue, f4)).map((g) => ({ profile: g.profile, value: g.k.venue[f4], basis: g.k.venue[f4].basis }));
           if (vs.length && agree(vs)) e.venue[f4] = keep(vs);
           else if (vs.length) conflict(
             `action_kinds[${kind}].venue.${f4}`,
@@ -46514,14 +46911,14 @@ function merge(profiles) {
             localize("jurisdictions.index.the_active_profiles_give_different_6", "the active profiles give different {v1} for {kind}'s venue, so {v2}", { v1: String({ hours: "hours", cutoff: "cutoffs", receipt: "receipt rules", time_zone: "time zones" }[f4]), kind: String(kind), v2: String(SAYS[f4]) })
           );
         }
-        if (given.some((g) => isObj2(g.k.venue) && own4(g.k.venue, "outages"))) {
+        if (given.some((g) => isObj3(g.k.venue) && own4(g.k.venue, "outages"))) {
           const o = [];
-          for (const g of given) if (isObj2(g.k.venue)) union(o, g.k.venue.outages, g.profile);
+          for (const g of given) if (isObj3(g.k.venue)) union(o, g.k.venue.outages, g.profile);
           e.venue.outages = strip(o);
         }
-        if (given.some((g) => isObj2(g.k.venue) && own4(g.k.venue, "facts"))) {
+        if (given.some((g) => isObj3(g.k.venue) && own4(g.k.venue, "facts"))) {
           const byFact = /* @__PURE__ */ new Map();
-          for (const g of given) if (isObj2(g.k.venue)) for (const x of g.k.venue.facts || []) {
+          for (const g of given) if (isObj3(g.k.venue)) for (const x of g.k.venue.facts || []) {
             if (!byFact.has(x.fact)) byFact.set(x.fact, []);
             byFact.get(x.fact).push({ profile: g.profile, value: x, basis: x.basis });
           }
@@ -46814,132 +47211,132 @@ var PROJECT_ROSTER_TABLES = Object.freeze([
 ]);
 
 // ../bio-plane/src/project-roster/checks.mjs
-var said = (code, key = `refusal.${code}`) => hasWord(key) ? word(key) : null;
-var at3 = (fn, region) => `src/project-roster/index.mjs ${fn} > ${region}`;
+var said = (code) => hasWord(`refusal.${code}`) ? word(`refusal.${code}`) : null;
+var at4 = (fn, region) => `src/project-roster/index.mjs ${fn} > ${region}`;
 var PROJECT_ROSTER_CHECKS = Object.freeze({
   /* R3 (N335): an owner is a JOINED participant with the owner flag, so a target not joined is its own condition. */
   TARGET_NOT_JOINED: Object.freeze({
     check: "C-56.5",
-    where: at3("projectOwnerAdd", "is-owner-target-joined"),
+    where: at4("projectOwnerAdd", "is-owner-target-joined"),
     translation: said("TARGET_NOT_JOINED")
   }),
   /* R4 (REC-64): one owner is the floor. */
   LAST_OWNER: Object.freeze({
     check: "C-33.28",
-    where: at3("projectOwnerRemove", "is-owner-floor"),
+    where: at4("projectOwnerRemove", "is-owner-floor"),
     translation: said("LAST_OWNER")
   }),
   /* R9 (REC-149): the directory is a member's. */
   PROJECT_DIRECTORY_NEEDS_A_MEMBER: Object.freeze({
     check: "C-70.4",
-    where: at3("projectDirectory", "is-project-directory-member"),
+    where: at4("projectDirectory", "is-project-directory-member"),
     translation: said("PROJECT_DIRECTORY_NEEDS_A_MEMBER")
   })
 });
 var PROJECT_JOIN_REQUEST_CHECKS = Object.freeze({
   PROJECT_REQUEST_NEEDS_A_MEMBER: Object.freeze({
     check: "C-95.1",
-    where: at3("#noRequester", "is-join-request-member"),
+    where: at4("#noRequester", "is-join-request-member"),
     translation: said("PROJECT_REQUEST_NEEDS_A_MEMBER")
   }),
   PROJECT_REQUEST_NOT_OUTSIDE: Object.freeze({
     check: "C-95.2",
-    where: at3("projectRequest", "is-join-request-ask"),
+    where: at4("projectRequest", "is-join-request-ask"),
     translation: said("PROJECT_REQUEST_NOT_OUTSIDE")
   }),
   PROJECT_REQUEST_ALREADY_OPEN: Object.freeze({
     check: "C-95.3",
-    where: at3("projectRequest", "is-join-request-ask"),
+    where: at4("projectRequest", "is-join-request-ask"),
     translation: said("PROJECT_REQUEST_ALREADY_OPEN")
   }),
   PROJECT_REQUEST_NONE_OPEN: Object.freeze({
     check: "C-95.4",
-    where: at3("#noOpenRequest", "is-join-request-none-open"),
+    where: at4("#noOpenRequest", "is-join-request-none-open"),
     translation: said("PROJECT_REQUEST_NONE_OPEN")
   }),
   PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: Object.freeze({
     check: "C-95.5",
-    where: at3("projectRequestAnswer", "is-join-request-answer"),
+    where: at4("projectRequestAnswer", "is-join-request-answer"),
     translation: said("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER")
   }),
   PROJECT_REQUEST_UNKNOWN_ANSWER: Object.freeze({
     check: "C-95.6",
-    where: at3("projectRequestAnswer", "is-join-request-answer"),
+    where: at4("projectRequestAnswer", "is-join-request-answer"),
     translation: said("PROJECT_REQUEST_UNKNOWN_ANSWER")
   }),
   PROJECT_REQUEST_REQUESTER_INACTIVE: Object.freeze({
     check: "C-95.7",
-    where: at3("projectRequestAnswer", "is-join-request-answer"),
+    where: at4("projectRequestAnswer", "is-join-request-answer"),
     translation: said("PROJECT_REQUEST_REQUESTER_INACTIVE")
   }),
   PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: Object.freeze({
     check: "C-95.8",
-    where: at3("projectRequestAnswer", "is-join-request-answer"),
+    where: at4("projectRequestAnswer", "is-join-request-answer"),
     translation: said("PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT")
   }),
   PROJECT_REQUESTS_NOT_VISIBLE: Object.freeze({
     check: "C-95.9",
-    where: at3("projectRequests", "is-join-requests-project"),
+    where: at4("projectRequests", "is-join-requests-project"),
     translation: said("PROJECT_REQUESTS_NOT_VISIBLE")
   })
 });
 var PROJECT_SCOPE_CHECKS = Object.freeze({
   PROJECT_SCOPE_UNKNOWN: Object.freeze({
     check: "C-147.1",
-    where: at3("projectScopeSet", "is-project-scope-set"),
+    where: at4("projectScopeSet", "is-project-scope-set"),
     translation: said("PROJECT_SCOPE_UNKNOWN")
   }),
   PROJECT_SCOPE_NEEDS_HIDDEN: Object.freeze({
     check: "C-147.2",
-    where: at3("projectScopeSet", "is-project-scope-set"),
+    where: at4("projectScopeSet", "is-project-scope-set"),
     translation: said("PROJECT_SCOPE_NEEDS_HIDDEN")
   }),
   PROJECT_SCOPE_OWN_NOT_SOLE: Object.freeze({
     check: "C-147.3",
-    where: at3("projectScopeSet", "is-project-scope-set"),
+    where: at4("projectScopeSet", "is-project-scope-set"),
     translation: said("PROJECT_SCOPE_OWN_NOT_SOLE")
   }),
   PROJECT_SCOPE_UNCHANGED: Object.freeze({
     check: "C-147.4",
-    where: at3("projectScopeSet", "is-project-scope-set"),
+    where: at4("projectScopeSet", "is-project-scope-set"),
     translation: said("PROJECT_SCOPE_UNCHANGED")
   }),
   PROJECT_SCOPE_OWN: Object.freeze({
     check: "C-147.5",
-    where: at3("#guard", "is-project-scope-guard"),
+    where: at4("#guard", "is-project-scope-guard"),
     translation: said("PROJECT_SCOPE_OWN")
   }),
   PROJECT_SCOPE_KEEPS_HIDDEN: Object.freeze({
     check: "C-147.6",
-    where: at3("#guard", "is-project-scope-guard"),
+    where: at4("#guard", "is-project-scope-guard"),
     translation: said("PROJECT_SCOPE_KEEPS_HIDDEN")
   }),
   APPROVAL_RULE_INVALID: Object.freeze({
     check: "C-147.7",
-    where: at3("projectApprovalSet", "is-project-approval-set"),
+    where: at4("projectApprovalSet", "is-project-approval-set"),
     translation: said("APPROVAL_RULE_INVALID")
   }),
   APPROVAL_KIND_UNKNOWN: Object.freeze({
     check: "C-147.8",
-    where: at3("projectApprovalSet", "is-project-approval-set"),
+    where: at4("projectApprovalSet", "is-project-approval-set"),
     translation: said("APPROVAL_KIND_UNKNOWN")
   }),
   /* T50 (R31; N933; K3230): the stake per matter. The next free numbers after C-147.8 at this job's START. */
   MACHINE_CANNOT_SET_STAKE: Object.freeze({
     check: "C-147.9",
-    where: at3("projectStakeSet", "is-project-stake-set"),
+    where: at4("projectStakeSet", "is-project-stake-set"),
     translation: said("MACHINE_CANNOT_SET_STAKE")
   }),
   STAKE_MALFORMED: Object.freeze({
     check: "C-147.10",
-    where: at3("projectStakeSet", "is-project-stake-set"),
-    translation: said("STAKE_MALFORMED", "refusal.STAKE_MALFORMED.project")
+    where: at4("projectStakeSet", "is-project-stake-set"),
+    translation: hasWord("refusal.STAKE_MALFORMED.project") ? word("refusal.STAKE_MALFORMED.project") : null
     /* DEC-303: a project's own sentence */
   })
 });
 
 // ../bio-plane/src/project-roster/index.mjs
-var ROOT_ADMIN = Membership.ROOT_ADMIN;
+var ROOT_ADMIN2 = Membership.ROOT_ADMIN;
 function stakeFault({ by, stake, of = "project", projectId = null } = {}) {
   const row3 = (code, detail, translation) => ({
     ok: false,
@@ -47023,14 +47420,14 @@ var ProjectRoster = class _ProjectRoster {
   /* R15: the invitee's open request to that project, closed `granted` by the inviting owner at the act's time. A
      notice naming no member closes nothing: the statement below closes every open request of the project when the
      member is null, which is the lapse's form and never an invitation's. */
-  #invited({ projectId, memberId, by = null, at: at7 = null } = {}) {
+  #invited({ projectId, memberId, by = null, at: at8 = null } = {}) {
     if (typeof projectId !== "string" || !projectId || typeof memberId !== "string" || !memberId) return 0;
-    return this.#closeJoinRequests(projectId, memberId, "granted", by ?? null, null, at7 ?? (/* @__PURE__ */ new Date()).toISOString());
+    return this.#closeJoinRequests(projectId, memberId, "granted", by ?? null, null, at8 ?? (/* @__PURE__ */ new Date()).toISOString());
   }
   /* R16: every open request to the hidden project, closed `lapsed`, recorded with the owner who hid it and the date. */
-  #hidden({ projectId, by = null, at: at7 = null } = {}) {
+  #hidden({ projectId, by = null, at: at8 = null } = {}) {
     if (typeof projectId !== "string" || !projectId) return 0;
-    return this.#closeJoinRequests(projectId, null, "lapsed", by ?? null, null, at7 ?? (/* @__PURE__ */ new Date()).toISOString());
+    return this.#closeJoinRequests(projectId, null, "lapsed", by ?? null, null, at8 ?? (/* @__PURE__ */ new Date()).toISOString());
   }
   /* ===== R17 (K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
    *
@@ -47135,7 +47532,7 @@ var ProjectRoster = class _ProjectRoster {
   }
   /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others by handle. */
   #handleOf(id) {
-    return id === ROOT_ADMIN ? this.#founderHandle() : this.m.memberFacts(id)?.handle ?? id;
+    return id === ROOT_ADMIN2 ? this.#founderHandle() : this.m.memberFacts(id)?.handle ?? id;
   }
   /* R29: the founder's own handle, membership's (its R144); null while she holds none, and when membership offers none. */
   #founderHandle() {
@@ -47148,12 +47545,12 @@ var ProjectRoster = class _ProjectRoster {
   }
   /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others as they are. */
   #nm(id) {
-    return id === ROOT_ADMIN ? this.#founderHandle() : id;
+    return id === ROOT_ADMIN2 ? this.#founderHandle() : id;
   }
   /* R29: `{member, handle}` as a reader sees a member; the founder carries `founder: true` and her held handle, `null`
      while she holds none, never her id. */
   #person(member, handle) {
-    return member === ROOT_ADMIN ? { member, handle: this.#founderHandle(), founder: true } : { member, handle };
+    return member === ROOT_ADMIN2 ? { member, handle: this.#founderHandle(), founder: true } : { member, handle };
   }
   /* R1, R28: every participant of each of `ids`, any state, as a Map project -> rows in R1's order (owners first, then
      by handle, the founder, who has none until she holds one, after the handles; then by id). Each row is
@@ -47168,9 +47565,9 @@ var ProjectRoster = class _ProjectRoster {
          FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
         WHERE p.project_id IN (${ids.map(() => "?").join(",")}) AND (m.member_id IS NOT NULL OR p.member_id = ?)`,
       ...ids,
-      ROOT_ADMIN
+      ROOT_ADMIN2
     ))
-      out.get(r.project).push(r.member === ROOT_ADMIN ? { member: r.member, handle: fh, founder: true, state: r.state, owner: r.owner, comment: r.comment, created: r.created } : { member: r.member, handle: r.handle ?? r.member, state: r.state, owner: r.owner, comment: r.comment, created: r.created });
+      out.get(r.project).push(r.member === ROOT_ADMIN2 ? { member: r.member, handle: fh, founder: true, state: r.state, owner: r.owner, comment: r.comment, created: r.created } : { member: r.member, handle: r.handle ?? r.member, state: r.state, owner: r.owner, comment: r.comment, created: r.created });
     const key = (x) => x.handle === null ? "\uFFFF" : x.handle;
     const less = (a, b) => a < b ? -1 : a > b ? 1 : 0;
     for (const rows of out.values())
@@ -47194,7 +47591,7 @@ var ProjectRoster = class _ProjectRoster {
       return {
         ok: false,
         reason: "NOT_THE_OWNER",
-        detail: "only an owner of this project may propose another owner of it"
+        detail: localize("project-roster.index.owner_add_needs_an_owner", "only an owner of this project may propose another owner of it")
       };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
@@ -47210,7 +47607,7 @@ var ProjectRoster = class _ProjectRoster {
         translation: row3.translation,
         handle,
         ...p ? { state: p.state } : {},
-        detail: "an owner is a joined participant with the owner flag, so the member joins the project first"
+        detail: localize("project-roster.index.owner_must_be_joined_first", "an owner is a joined participant with the owner flag, so the member joins the project first")
       };
     }
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
@@ -47235,7 +47632,7 @@ var ProjectRoster = class _ProjectRoster {
           handle,
           have: have.sort().map((x) => this.#nm(x)),
           awaiting: awaiting.sort().map((x) => this.#nm(x)),
-          detail: "every existing owner must agree to an addition beyond the second"
+          detail: localize("project-roster.index.owner_add_needs_every_owner", "every existing owner must agree to an addition beyond the second")
         };
     }
     const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
@@ -47277,7 +47674,7 @@ var ProjectRoster = class _ProjectRoster {
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return named(blocked);
     const why = String(reason2 ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.rescue_needs_a_reason", "authority changes are recorded with a reason") };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -47316,14 +47713,14 @@ var ProjectRoster = class _ProjectRoster {
       return {
         ok: false,
         reason: "NOT_THE_OWNER",
-        detail: "only an owner of this project votes on its ownership"
+        detail: localize("project-roster.index.owner_remove_needs_an_owner", "only an owner of this project votes on its ownership")
       };
     const target = this.m.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.m.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
     const why = String(reason2 ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
+    if (!why) return { ok: false, reason: "NO_REASON", detail: localize("project-roster.index.owner_remove_needs_a_reason", "ownership changes are recorded with a reason") };
     const owners = this.m.projectOwners(projectId);
     const math = Membership.ownerMath(owners.length);
     if (!math.possible)
@@ -47348,7 +47745,7 @@ var ProjectRoster = class _ProjectRoster {
         ok: false,
         reason: "TARGET_CANNOT_VOTE",
         ...math,
-        detail: "the target is counted in the denominator but does not vote"
+        detail: localize("project-roster.index.owner_remove_target_cannot_vote", "the target is counted in the denominator but does not vote")
       };
     if (this.#one(
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
@@ -47469,9 +47866,9 @@ var ProjectRoster = class _ProjectRoster {
     );
   }
   /* R6: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at7) {
+  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at8) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at7);
+                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at8);
   }
   /* ===== R21–R24 (T45; Actions D4, D27; v0.2 rules 9, 15, 20) — A PROJECT'S SCOPE AND ITS SECOND APPROVAL =====
    *
@@ -47565,12 +47962,12 @@ var ProjectRoster = class _ProjectRoster {
       );
     const why = _ProjectRoster.#reason(reason2);
     if (!why) return _ProjectRoster.#noReason(
-      `a project's scope is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
+      localize("project-roster.index.scope_set_needs_a_reason", "a project's scope is set with a reason of at most {max} characters. Nothing was written.", { max: String(_ProjectRoster.REASON_MAX) })
     );
     if (this.m.visibilityOf(projectId) !== "hidden")
       return refusal8(
         "PROJECT_SCOPE_NEEDS_HIDDEN",
-        "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written."
+        localize("project-roster.index.scope_needs_a_hidden_project", "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written.")
       );
     if (scope === "own" || current === "own") {
       const participants = this.#one(`SELECT COUNT(*) AS n FROM project_participants WHERE project_id=?`, projectId).n;
@@ -47582,14 +47979,14 @@ var ProjectRoster = class _ProjectRoster {
     }
     if (scope === current)
       return refusal8("PROJECT_SCOPE_UNCHANGED", localize("project-roster.index.the_projects_scope_is_already", "the project's scope is already {scope}. Nothing was written.", { scope: String(scope) }));
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_scopes (project_id, scope, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId,
       scope,
       why,
       by,
-      at7
+      at8
     );
     return {
       ok: true,
@@ -47598,7 +47995,7 @@ var ProjectRoster = class _ProjectRoster {
       previous: current,
       reason: why,
       by,
-      at: at7,
+      at: at8,
       detail: localize("project-roster.index.the_scope_applies_from_now", "the scope applies from now on, to every act that would publish, cite or send; nothing already published, sent or cited changes.")
     };
   }
@@ -47636,16 +48033,24 @@ var ProjectRoster = class _ProjectRoster {
       return {
         ok: false,
         reason: "NOT_THE_OWNER",
-        detail: "only an owner of this project sets which of its acts need a second member's approval"
+        detail: localize("project-roster.index.approval_set_needs_an_owner", "only an owner of this project sets which of its acts need a second member's approval")
       };
     const refusal8 = (code, detail, extra) => _ProjectRoster.#scopeRefusal(code, projectId, detail, extra);
     if (!Array.isArray(needs))
-      return refusal8("APPROVAL_RULE_INVALID", "the rules are a list, empty to restore one member's approval. Nothing was written.", { entry: null, index: null });
+      return refusal8(
+        "APPROVAL_RULE_INVALID",
+        localize("project-roster.index.approval_rules_are_a_list", "the rules are a list, empty to restore one member's approval. Nothing was written."),
+        { entry: null, index: null }
+      );
     const clean = [];
     for (const [i, e] of needs.entries()) {
       const n = _ProjectRoster.#approvalEntry(e);
       if (!n)
-        return refusal8("APPROVAL_RULE_INVALID", `rule ${i + 1} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.`, { entry: e ?? null, index: i });
+        return refusal8(
+          "APPROVAL_RULE_INVALID",
+          localize("project-roster.index.approval_rule_is_not_valid", "rule {n} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.", { n: String(i + 1), kind: "{kind}", tier: "{tier}" }),
+          { entry: e ?? null, index: i }
+        );
       clean.push(n);
     }
     const held2 = clean.some((n) => n.kind) ? this.#actionKinds() : /* @__PURE__ */ new Set();
@@ -47654,16 +48059,16 @@ var ProjectRoster = class _ProjectRoster {
         return refusal8("APPROVAL_KIND_UNKNOWN", localize("project-roster.index.stringify_is_not_a_kind", "{stringify} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.", { stringify: String(JSON.stringify(n.kind)) }), { entry: n, index: i });
     const why = _ProjectRoster.#reason(reason2);
     if (!why) return _ProjectRoster.#noReason(
-      `a project's approval setting is set with a reason of at most ${_ProjectRoster.REASON_MAX} characters. Nothing was written.`
+      localize("project-roster.index.approval_set_needs_a_reason", "a project's approval setting is set with a reason of at most {max} characters. Nothing was written.", { max: String(_ProjectRoster.REASON_MAX) })
     );
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_approval_settings (project_id, needs, reason, set_by, at) VALUES (?,?,?,?,?)`,
       projectId,
       JSON.stringify(clean),
       why,
       by,
-      at7
+      at8
     );
     return {
       ok: true,
@@ -47671,7 +48076,7 @@ var ProjectRoster = class _ProjectRoster {
       needs: clean,
       reason: why,
       by,
-      at: at7,
+      at: at8,
       detail: clean.length ? localize("project-roster.index.the_acts_these_rules_match", "the acts these rules match need a second member's approval before sending.") : localize("project-roster.index.one_member_approves_every_act", "one member approves every act, the default.")
     };
   }
@@ -47717,9 +48122,9 @@ var ProjectRoster = class _ProjectRoster {
     }
     if (fault) return fault;
     const text2 = stake === null ? null : _ProjectRoster.stakeText(stake);
-    const at7 = this.#iso();
-    this.sql.exec(`INSERT INTO project_stakes (project_id, stake, set_by, at) VALUES (?,?,?,?)`, projectId, text2, by, at7);
-    return { ok: true, projectId, stake: text2, by: this.#handleOf(by), at: at7 };
+    const at8 = this.#iso();
+    this.sql.exec(`INSERT INTO project_stakes (project_id, stake, set_by, at) VALUES (?,?,?,?)`, projectId, text2, by, at8);
+    return { ok: true, projectId, stake: text2, by: this.#handleOf(by), at: at8 };
   }
   /** R32: THE STAKE, `{stake, set_by, set_at, history}`, history oldest first, each `{stake, set_by, set_at}`; none for
    *  a project with no record and for an id naming nothing; `"undetermined"` for a record that cannot be read. Asks no
@@ -47751,7 +48156,7 @@ var ProjectRoster = class _ProjectRoster {
   projectOwnersGone({ projectId, viewer = null } = {}) {
     try {
       const b = this.#bundle(projectId);
-      const asker = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      const asker = viewer === ROOT_ADMIN2 ? ROOT_ADMIN2 : viewerPredicate(viewer).member;
       if (!b || !asker || !this.m.isAdministrator(asker)) return noSuchProject(projectId);
       if (!this.m.inSight(projectId, viewer) && !this.#rescueAtExistence(projectId, viewer)) return noSuchProject(projectId);
       if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
@@ -47765,9 +48170,9 @@ var ProjectRoster = class _ProjectRoster {
      (its R152), null when any owner's is null (or membership offers none), no other instant standing in for it. */
   #inactiveSince(ids) {
     if (typeof this.m.memberStatusSince !== "function") return null;
-    const at7 = ids.map((id) => this.m.memberStatusSince(id));
-    if (!at7.length || at7.some((x) => typeof x !== "string")) return null;
-    return at7.reduce((a, b) => Date.parse(b) > Date.parse(a) ? b : a);
+    const at8 = ids.map((id) => this.m.memberStatusSince(id));
+    if (!at8.length || at8.some((x) => typeof x !== "string")) return null;
+    return at8.reduce((a, b) => Date.parse(b) > Date.parse(a) ? b : a);
   }
   /* ===== R8, R9 — THE VISIBILITY HISTORY AND THE DIRECTORY (§7.14) ===== */
   /** R8: THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the founder:
@@ -47810,7 +48215,7 @@ var ProjectRoster = class _ProjectRoster {
    *  past it, never derived from the page (a full page and a complete answer read alike). The page is the first `limit`
    *  in `bundle_id` order, so a page means the same thing twice. */
   projectDirectory({ viewer = null, limit = null } = {}) {
-    const gate = viewerPredicate(viewer === ROOT_ADMIN ? `member:${ROOT_ADMIN}` : viewer);
+    const gate = viewerPredicate(viewer === ROOT_ADMIN2 ? `member:${ROOT_ADMIN2}` : viewer);
     const member = gate.member;
     const refusal8 = (code, detail) => {
       const row3 = PROJECT_ROSTER_CHECKS[code];
@@ -47863,6 +48268,9 @@ var ProjectRoster = class _ProjectRoster {
    *
    *  R34 (T50): each row's `participation`, the viewer's own state.
    *
+   *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
+   *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked3 = {}) {
@@ -47880,7 +48288,7 @@ var ProjectRoster = class _ProjectRoster {
         WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
         LIMIT ?`,
-      ROOT_ADMIN,
+      ROOT_ADMIN2,
       ...gate.args,
       cursor,
       cursor,
@@ -47889,18 +48297,24 @@ var ProjectRoster = class _ProjectRoster {
     const truncated = rows.length > cap;
     const page = truncated ? rows.slice(0, cap) : rows;
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
-    const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
+    const me = viewer === ROOT_ADMIN2 ? ROOT_ADMIN2 : gate.member;
     const own5 = new Map(me && page.length ? this.#rows(
-      `SELECT project_id, state FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
+      `SELECT project_id, state, owner FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
       me,
       ...page.map((r) => r.id)
-    ).map((x) => [x.project_id, x.state]) : []);
+    ).map((x) => [x.project_id, x]) : []);
+    const scopes = new Map(page.length ? this.#rows(
+      `SELECT project_id, scope FROM project_scopes WHERE project_id IN (${page.map(() => "?").join(",")}) ORDER BY seq`,
+      ...page.map((r) => r.id)
+    ).map((x) => [x.project_id, x.scope]) : []);
     const projects = page.map((r) => ({
       id: r.id,
-      participation: own5.get(r.id) ?? null,
+      participation: own5.get(r.id)?.state ?? null,
+      mine: { in: own5.get(r.id)?.state === "joined", owner: !!own5.get(r.id)?.owner },
+      scope: scopes.get(r.id) ?? "none",
       name: this.#bundle(r.id)?.title ?? null,
       stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
-      owner: r.founder ? this.#person(ROOT_ADMIN, null) : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
+      owner: r.founder ? this.#person(ROOT_ADMIN2, null) : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [],
       activity: activity.get(r.id) ?? Array(_ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null
@@ -47923,7 +48337,7 @@ var ProjectRoster = class _ProjectRoster {
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_INVITATIONS_LIMIT);
     const empty = { ok: true, invitations: [], count: 0, limit: cap, truncated: false, next: null };
     try {
-      const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      const me = viewer === ROOT_ADMIN2 ? ROOT_ADMIN2 : viewerPredicate(viewer).member;
       if (!me || !this.#activeMemberRow(me)) return empty;
       const cursor = typeof after === "string" && after !== "" ? after : null;
       const rows = this.#rows(
@@ -47942,7 +48356,7 @@ var ProjectRoster = class _ProjectRoster {
       const invitations = page.map((r) => ({
         projectId: r.id,
         name: this.#bundle(r.id)?.title ?? null,
-        invited_by: r.by_id === ROOT_ADMIN ? this.#person(ROOT_ADMIN, null) : r.inviter ? { member: r.inviter, handle: r.inviter_handle ?? null } : null,
+        invited_by: r.by_id === ROOT_ADMIN2 ? this.#person(ROOT_ADMIN2, null) : r.inviter ? { member: r.inviter, handle: r.inviter_handle ?? null } : null,
         invited_at: r.at ?? null
       }));
       return {
@@ -48062,7 +48476,7 @@ var ProjectRoster = class _ProjectRoster {
      sight, so the ask is C-95.2 like any administrator's. A member's standing is membership's `memberFacts` (its R68). */
   #activeMemberRow(memberId) {
     if (memberId === null || memberId === void 0 || String(memberId).startsWith(MACHINE_CLASS_PREFIX)) return null;
-    if (memberId === ROOT_ADMIN) return { member_id: ROOT_ADMIN, handle: null, status: "active" };
+    if (memberId === ROOT_ADMIN2) return { member_id: ROOT_ADMIN2, handle: null, status: "active" };
     const f4 = this.m.memberFacts(memberId);
     return f4 && f4.status === "active" ? { member_id: memberId, handle: f4.handle, status: f4.status } : null;
   }
@@ -48073,8 +48487,8 @@ var ProjectRoster = class _ProjectRoster {
   #requester(by, viewer) {
     const me = this.#activeMemberRow(by);
     if (!me) return null;
-    if (me.member_id === ROOT_ADMIN)
-      return viewer === ROOT_ADMIN || viewerPredicate(viewer).member === ROOT_ADMIN ? me : null;
+    if (me.member_id === ROOT_ADMIN2)
+      return viewer === ROOT_ADMIN2 || viewerPredicate(viewer).member === ROOT_ADMIN2 ? me : null;
     return viewerPredicate(viewer).member === me.member_id ? me : null;
   }
   /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
@@ -48114,7 +48528,7 @@ var ProjectRoster = class _ProjectRoster {
      `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be answered twice
      and a withdrawn one cannot then be granted. A null `memberId` closes every open request of the project (R16's
      lapse). Answers the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at7) {
+  #closeJoinRequests(projectId, memberId, state, by, comment, at8) {
     const before = this.#one(
       `SELECT COUNT(*) AS n FROM project_join_requests
                                WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
@@ -48128,7 +48542,7 @@ var ProjectRoster = class _ProjectRoster {
       state,
       by,
       comment,
-      at7,
+      at8,
       projectId,
       memberId,
       memberId
@@ -48181,7 +48595,7 @@ var ProjectRoster = class _ProjectRoster {
         { asked: open.asked_at }
       );
     const c = _ProjectRoster.#requestComment(comment);
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`,
@@ -48189,7 +48603,7 @@ var ProjectRoster = class _ProjectRoster {
       me.member_id,
       shown,
       c,
-      at7
+      at8
     );
     return {
       ok: true,
@@ -48197,7 +48611,7 @@ var ProjectRoster = class _ProjectRoster {
       name: shown,
       state: "open",
       comment: c,
-      asked: at7,
+      asked: at8,
       detail: localize("project-roster.index.your_request_is_open_the", "your request is open. The project's owners answer it; until they do it stays open.")
     };
   }
@@ -48216,9 +48630,9 @@ var ProjectRoster = class _ProjectRoster {
         projectId,
         localize("project-roster.index.you_have_no_open_request", "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written.")
       );
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at7);
-    return { ok: true, projectId, state: "withdrawn", closed: at7 };
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at8);
+    return { ok: true, projectId, state: "withdrawn", closed: at8 };
   }
   /** R12: AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act; then ownership, through
    *  membership's `isProjectOwner` (§7's one owner predicate), so an administrator, the founder and every machine
@@ -48246,7 +48660,7 @@ var ProjectRoster = class _ProjectRoster {
     if (!this.m.isProjectOwner(projectId, by))
       return refusal8(
         "PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
-        localize("project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 \xA77.14; only owners invite, \xA77.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(this.#nm(by) ?? "an unnamed caller").slice(0, 80)) })
+        localize("project-roster.index.a_request_to_join_string", "a request to join {String} is answered by its OWNERS (Membership Architecture v2 \xA77.14; only owners invite, \xA77.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.", { String: String(String(projectId).slice(0, 80)), String_2: String(String(this.#nm(by) ?? localize("project-roster.index.an_unnamed_caller", "an unnamed caller")).slice(0, 80)) })
       );
     if (!_ProjectRoster.JOIN_REQUEST_ANSWERS.includes(want))
       return refusal8(
@@ -48274,16 +48688,16 @@ var ProjectRoster = class _ProjectRoster {
         { handle: target.handle }
       );
     const c = _ProjectRoster.#requestComment(comment);
-    const at7 = (/* @__PURE__ */ new Date()).toISOString();
-    if (want === "grant") this.m.participationWrite("invite", { projectId, memberId: target.member_id, by, at: at7 });
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at7);
+    const at8 = (/* @__PURE__ */ new Date()).toISOString();
+    if (want === "grant") this.m.participationWrite("invite", { projectId, memberId: target.member_id, by, at: at8 });
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at8);
     return {
       ok: true,
       projectId,
       handle: target.handle,
       state: want === "grant" ? "granted" : "declined",
       comment: c,
-      closed: at7,
+      closed: at8,
       ...want === "grant" ? {
         participation: "invited",
         detail: localize("project-roster.index.granted_as_an_invitation_the", "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4).")
@@ -50103,7 +50517,7 @@ CREATE TABLE IF NOT EXISTS reading_migrations (
 `;
 
 // ../bio-plane/src/extraction/words.mjs
-var WORD_KEYS2 = Object.freeze([
+var WORD_KEYS3 = Object.freeze([
   "capture.picture.unread",
   "document.unread.pages",
   "extraction.basis.file_link_assigned",
@@ -50148,7 +50562,7 @@ var WORD_KEYS2 = Object.freeze([
   "transcribe.why.silent",
   "transcribe.why.unbound"
 ]);
-var KEYS = new Set(WORD_KEYS2);
+var KEYS = new Set(WORD_KEYS3);
 var asked = /* @__PURE__ */ new Set();
 function say(key, vars = {}) {
   if (!KEYS.has(key)) throw new Error(`extraction: ${key} is not one of this module's word keys`);
@@ -50278,7 +50692,7 @@ function noSha(detail = null) {
 }
 
 // ../bio-plane/src/capture/words.mjs
-var WORD_KEYS3 = Object.freeze([
+var WORD_KEYS4 = Object.freeze([
   "acquisition.string.attempt_reported",
   "capture.authority_basis",
   "capture.basis.attempt_address_ever",
@@ -50335,7 +50749,7 @@ var WORD_KEYS3 = Object.freeze([
   "refusal.UPLOAD_NO_STATEMENT",
   "screen.held.withheld"
 ]);
-var KEYS2 = new Set(WORD_KEYS3);
+var KEYS2 = new Set(WORD_KEYS4);
 var asked2 = /* @__PURE__ */ new Set();
 function say2(key, vars = {}) {
   if (!KEYS2.has(key)) throw new Error(`capture: ${key} is not one of this module's word keys`);
@@ -50345,12 +50759,12 @@ function say2(key, vars = {}) {
 var rowWord3 = (code) => say2(`refusal.${code}`);
 
 // ../bio-plane/src/capture/checks.mjs
-var at4 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
+var at5 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
   EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
-    where: at4("evidenceAbsent", "is-evidence-held"),
+    where: at5("evidenceAbsent", "is-evidence-held"),
     translation: rowWord3("EVIDENCE_NOT_HELD")
   }),
   NOT_THE_CAPTURING_ACTOR: Object.freeze({
@@ -50382,11 +50796,11 @@ var CAPTURE_CHECKS = Object.freeze({
 });
 
 // ../bio-plane/src/acquisition/checks.mjs
-var at5 = (region) => `src/acquisition/index.mjs acquire > ${region}`;
+var at6 = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
     check: "C-28.13",
-    where: at5("is-capture-request-arm"),
+    where: at6("is-capture-request-arm"),
     translation: word("refusal.CAPTURE_NOT_DRAINING")
   })
 });
@@ -50395,21 +50809,21 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
      capture would file the shell as the content, which is the outcome this family exists to prevent. */
   RENDER_FLAG_MALFORMED: Object.freeze({
     check: "C-83.1",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_FLAG_MALFORMED")
   }),
   /* A render combined with an arm whose bytes are not a live page: an archive replay, a Drive export, or the
      continuation of a capture already filed. */
   RENDER_ARM_CONFLICT: Object.freeze({
     check: "C-83.2",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_ARM_CONFLICT")
   }),
   /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a BROWSER bound to something that is
      not a Fetcher, so there is no endpoint to open a devtools session on. Named rather than falling back. */
   RENDER_NO_RENDERER: Object.freeze({
     check: "C-83.3",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_NO_RENDERER")
   }),
   /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by renders in flight (D-492). The
@@ -50417,28 +50831,28 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
      naming a mechanism: a member told "used" would go away for the day when the answer may be a minute off. */
   RENDER_DEFERRED: Object.freeze({
     check: "C-83.4",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_DEFERRED")
   }),
   /* The render loads the page again, which is a second document load to the host, so it asks the per-host governor
      like any other (BOB #32 item 3: "through the host governor"). Refused by name when the host is cooling off. */
   RENDER_HOST_COOLING_OFF: Object.freeze({
     check: "C-83.5",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_HOST_COOLING_OFF")
   }),
   /* The shell is not an HTML page small enough to render (a PDF, an office file, a multipart giant). A document that
      is not a page has nothing a browser adds; capture it without `render`. */
   RENDER_NOT_A_PAGE: Object.freeze({
     check: "C-83.6",
-    where: at5("is-render-result"),
+    where: at6("is-render-result"),
     translation: word("refusal.RENDER_NOT_A_PAGE")
   }),
   /* The renderer did not produce a rendered document. The shell's bytes are held content-addressed and unregistered,
      exactly as TOO_LARGE's parts are; no document names them. */
   RENDER_FAILED: Object.freeze({
     check: "C-83.7",
-    where: at5("is-render-result"),
+    where: at6("is-render-result"),
     translation: word("refusal.RENDER_FAILED")
   }),
   /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a render over it WAITS, never dropped).
@@ -50446,7 +50860,7 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
      allowance is untouched and may have room, so the sentence must not say it is used. */
   RENDER_AT_CAPACITY: Object.freeze({
     check: "C-83.8",
-    where: at5("is-render-admit"),
+    where: at6("is-render-admit"),
     translation: word("refusal.RENDER_AT_CAPACITY")
   })
 });
@@ -50457,40 +50871,40 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
      having the field quietly dropped: a hop a caller can hand us is one a caller can invent. */
   DRIVE_HOP_FACT_SUPPLIED: Object.freeze({
     check: "C-48.1",
-    where: at5("is-drive-capture"),
+    where: at6("is-drive-capture"),
     translation: word("refusal.DRIVE_HOP_FACT_SUPPLIED")
   }),
   /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
     check: "C-48.2",
-    where: localize("acquisition.checks.at_and_the_same_condition", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both", { at: String(at5("is-drive-capture")) }),
+    where: localize("acquisition.checks.at_and_the_same_condition", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both", { at: String(at6("is-drive-capture")) }),
     translation: word("refusal.DRIVE_FOLDER_NOT_A_DOCUMENT")
   }),
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an export address here would mean
      guessing which conversion to ask for, and filing bytes whose format the record had invented. */
   DRIVE_KIND_UNDETERMINED: Object.freeze({
     check: "C-48.3",
-    where: localize("acquisition.checks.at_and_the_same_condition_2", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", { at: String(at5("is-drive-capture")) }),
+    where: localize("acquisition.checks.at_and_the_same_condition_2", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", { at: String(at6("is-drive-capture")) }),
     translation: word("refusal.DRIVE_KIND_UNDETERMINED")
   }),
   /* A DRIVE HOST WITH AN UNREAD PATH: not a document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
     check: "C-48.4",
-    where: localize("acquisition.checks.at_and_the_same_condition_3", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", { at: String(at5("is-drive-capture")) }),
+    where: localize("acquisition.checks.at_and_the_same_condition_3", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", { at: String(at6("is-drive-capture")) }),
     translation: word("refusal.DRIVE_SHAPE_UNRECOGNISED")
   }),
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when
      the file is not shared with anyone who has the link. It is never the document. */
   DRIVE_EXPORT_IS_THE_SHELL: Object.freeze({
     check: "C-48.5",
-    where: at5("is-drive-export"),
+    where: at6("is-drive-export"),
     translation: word("refusal.DRIVE_EXPORT_IS_THE_SHELL")
   }),
   /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT* HAPPEN: there is no fallback to the shell.
      A 403 or a 404 at the export address ends the capture with the failure named. */
   DRIVE_EXPORT_UNREACHABLE: Object.freeze({
     check: "C-48.6",
-    where: at5("is-drive-export"),
+    where: at6("is-drive-export"),
     translation: word("refusal.DRIVE_EXPORT_UNREACHABLE")
   }),
   /* THE SAME SHELL, CAUGHT ON THE BYTES, AND A SECOND CODE RATHER THAN C-48.5 FIRING TWICE (PL-4: one predicate at two
@@ -50498,7 +50912,7 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
      document and it was a web page", the more serious fact, which is why detection here is bytes-first (COFF-1). */
   DRIVE_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: "C-48.7",
-    where: at5("is-drive-bytes"),
+    where: at6("is-drive-bytes"),
     translation: word("refusal.DRIVE_EXPORT_BYTES_ARE_THE_SHELL")
   })
 });
@@ -50513,14 +50927,14 @@ var SWEEP_SCOPE_CHECKS = Object.freeze({
   /* A sweep-origin acquire that names no scope: refused before anything is fetched, never run unfenced. */
   SWEEP_SCOPE_MISSING: Object.freeze({
     check: "C-128.1",
-    where: at5("is-sweep-scope"),
+    where: at6("is-sweep-scope"),
     translation: word("refusal.SWEEP_SCOPE_MISSING")
   }),
   /* The source redirected the sweep to an address outside its scope: the redirect is not followed, nothing at its
      target is fetched and nothing is filed. */
   SWEEP_REDIRECT_OUT_OF_SCOPE: Object.freeze({
     check: "C-128.2",
-    where: at5("is-sweep-redirect"),
+    where: at6("is-sweep-redirect"),
     translation: word("refusal.SWEEP_REDIRECT_OUT_OF_SCOPE")
   })
 });
@@ -50651,7 +51065,7 @@ var ARCHIVE_CHECKS = Object.freeze({
      filed. The sentence is the design's (`refusal.BAD_FOR`), read by key. */
   BAD_FOR: Object.freeze({
     check: "C-139.21",
-    where: at5("is-for"),
+    where: at6("is-for"),
     translation: word("refusal.BAD_FOR")
   })
 });
@@ -50964,22 +51378,22 @@ function deriveMembership(structure, view) {
   const order = (a, b) => a.source.page - b.source.page || top(b.source.rect) - top(a.source.rect) || left(a.source.rect) - left(b.source.rect);
   items.sort(order);
   files.sort(order);
-  const at7 = (l) => [l.source.page, top(l.source.rect)];
+  const at8 = (l) => [l.source.page, top(l.source.rect)];
   const before = (p, q) => p[0] < q[0] || p[0] === q[0] && p[1] > q[1];
   const groups = items.map((it, i) => ({
     ...MEMBERSHIP_LABEL,
     item: end(it),
     region: {
-      from: { page: at7(it)[0], top: at7(it)[1] },
-      to: i + 1 < items.length ? { page: at7(items[i + 1])[0], top: at7(items[i + 1])[1] } : null
+      from: { page: at8(it)[0], top: at8(it)[1] },
+      to: i + 1 < items.length ? { page: at8(items[i + 1])[0], top: at8(items[i + 1])[1] } : null
     },
     files: []
   }));
   for (const f4 of files) {
-    const p = at7(f4);
+    const p = at8(f4);
     let g = -1;
     for (let i = 0; i < items.length; i++) {
-      if (before(p, at7(items[i]))) break;
+      if (before(p, at8(items[i]))) break;
       g = i;
     }
     if (g < 0) unplaced.push({ kind: "file", ...end(f4), why: "above_the_first_item" });
@@ -51878,9 +52292,9 @@ async function tier4Extend(transcription, { sha, storeName, i2text, chain, wired
   if (!(account && account.ok === true)) return refused2(account);
   const owner = account.level === "project" ? `project:${account.project}` : account.level === "group" ? "group" : `member:${member.startsWith("member:") ? member.slice(7) : member}`;
   if (typeof useCheck !== "function") return not(word("reading-pipeline.limits_account_pay"));
-  const at7 = typeof transcription.at === "string" && transcription.at ? transcription.at : (/* @__PURE__ */ new Date()).toISOString();
+  const at8 = typeof transcription.at === "string" && transcription.at ? transcription.at : (/* @__PURE__ */ new Date()).toISOString();
   try {
-    const limit = await useCheck({ owner, member, use: TRANSCRIBE_USE, at: at7 });
+    const limit = await useCheck({ owner, member, use: TRANSCRIBE_USE, at: at8 });
     if (limit) return refused2(limit);
   } catch {
     return not(word("reading-pipeline.limits_account_pay"));
@@ -52224,19 +52638,19 @@ function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {}) {
   return containerExtent;
 }
 function emittedFieldsOf(i2text) {
-  const isObj4 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-  const out = { metadata: isObj4(i2text) && isObj4(i2text.metadata) ? i2text.metadata : null };
-  if (isObj4(i2text) && Array.isArray(i2text.sheets)) {
+  const isObj5 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+  const out = { metadata: isObj5(i2text) && isObj5(i2text.metadata) ? i2text.metadata : null };
+  if (isObj5(i2text) && Array.isArray(i2text.sheets)) {
     const cells = {};
     for (const sh of i2text.sheets)
-      if (isObj4(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
+      if (isObj5(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
     out.cells = cells;
-  } else if (isObj4(i2text) && i2text.container === "docx") {
+  } else if (isObj5(i2text) && i2text.container === "docx") {
     if (!Array.isArray(i2text.tables)) out.cells = null;
     else {
       const cells = {};
       for (const t of i2text.tables)
-        if (isObj4(t) && typeof t.ref === "string" && t.ref) cells[t.ref] = Array.isArray(t.cells) ? t.cells : null;
+        if (isObj5(t) && typeof t.ref === "string" && t.ref) cells[t.ref] = Array.isArray(t.cells) ? t.cells : null;
       out.cells = cells;
     }
   }
@@ -52294,14 +52708,14 @@ async function bytesOf(evidence, doc) {
   if (total > MULTIPART_READ_MAX)
     return { bytes: null, why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(doc.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
   const out = new Uint8Array(total);
-  let at7 = 0;
+  let at8 = 0;
   for (const p of doc.parts) {
     const b = p && typeof p.sha256 === "string" ? await whole(p.sha256) : null;
     if (!b) return { bytes: null, why: word("reading-pipeline.why.part_held_evidence", { index_of: String(doc.parts.indexOf(p) + 1), parts: String(doc.parts.length) }) };
-    out.set(b.subarray(0, Math.max(0, total - at7)), at7);
-    at7 += b.length;
+    out.set(b.subarray(0, Math.max(0, total - at8)), at8);
+    at8 += b.length;
   }
-  return { bytes: at7 === total ? out : null, why: at7 === total ? null : word("reading-pipeline.why.parts_held_add") };
+  return { bytes: at8 === total ? out : null, why: at8 === total ? null : word("reading-pipeline.why.parts_held_add") };
 }
 async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
@@ -52604,7 +53018,7 @@ function renumberingMoves(map) {
   const same = (a, b) => !!a && !!b && a.para === b.para && a.run === b.run;
   return (map.paragraphs || []).some((p) => p && p.new !== p.old) || (map.runs || []).some((r) => r && !same(r.old, r.new)) || (map.tables || []).some((t) => t && t.new !== t.old);
 }
-function n26MigratedReading(reading, map, text2, { at: at7 = null } = {}) {
+function n26MigratedReading(reading, map, text2, { at: at8 = null } = {}) {
   const moved = { paragraphs: 0, runs: 0, tables: 0, unplaced: 0 };
   const runAt = new Map((map.runs || []).map((r) => [`${r.old.para}:${r.old.run}`, r]));
   const paraRef = (para, v) => ({
@@ -52718,7 +53132,7 @@ function n26MigratedReading(reading, map, text2, { at: at7 = null } = {}) {
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n26: {
-      at: at7,
+      at: at8,
       moved,
       why: "this reading was made before N26, when every branch of an mc:AlternateContent was read, so its paragraphs, runs and tables were numbered with the duplicated branch counted; it was read again from the stored bytes and every reference it holds was moved to N26's numbering"
     }
@@ -52737,7 +53151,7 @@ function pptxRenumberingMoves(map) {
   if (!map || !Array.isArray(map.slides)) return false;
   return map.slides.some((s) => s && Array.isArray(s.shapes) && s.shapes.some((x) => x && x.new !== x.old));
 }
-function n439MigratedReading(reading, map, text2, { at: at7 = null } = {}) {
+function n439MigratedReading(reading, map, text2, { at: at8 = null } = {}) {
   const moved = { shapes: 0, unplaced: 0 };
   const bySlide = new Map((map.slides || []).filter((s) => s && Number.isInteger(s.slide)).map((s) => [s.slide, s.shapes || []]));
   const walk = (v) => {
@@ -52774,7 +53188,7 @@ function n439MigratedReading(reading, map, text2, { at: at7 = null } = {}) {
   next.migrated = {
     ...reading.migrated && typeof reading.migrated === "object" ? reading.migrated : {},
     n439: {
-      at: at7,
+      at: at8,
       moved,
       why: "this reading was made before N439, when every branch of an mc:AlternateContent on a slide was read, so its slide text was doubled and its shapes were numbered with the duplicated branch counted; it was read again from the stored bytes and every shape reference it holds was moved to N439's numbering"
     }
@@ -54482,13 +54896,13 @@ var Extraction = class _Extraction {
       liveCalibration: (q) => this.#liveCalibration(q)
     });
     const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
-    const at7 = stampInstant("second");
+    const at8 = stampInstant("second");
     const door = {};
     if (typeof trace === "string" && trace) door.trace = trace;
     if (typeof memberRef === "string" && memberRef) door.memberRef = memberRef;
     let tx = null;
     try {
-      tx = reg.t.transcription({ member: by, project, at: at7, ...door });
+      tx = reg.t.transcription({ member: by, project, at: at8, ...door });
     } catch {
       tx = null;
     }
@@ -54557,7 +54971,7 @@ var Extraction = class _Extraction {
     keepUntested(reading, stored, untested);
     const act = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
     reading.reextracted = {
-      at: at7,
+      at: at8,
       by,
       engine: t3.engine ? t3.engine.engine : null,
       version: t3.engine ? t3.engine.version : null,
@@ -54746,9 +55160,9 @@ var CONTENT_EXTENT_OWN_CHECKS = Object.freeze({
     translation: word("refusal.CONTENT_EXTENT_NOT_USER_SPACE")
   }
 });
-var isObj3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj4 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 function contentCitedAs2(extent) {
-  const e = isObj3(extent) ? extent : {};
+  const e = isObj4(extent) ? extent : {};
   const v = e.cited_as;
   if ((v === void 0 || v === null || v === "") && e.kind === "envelope") return CONTENT_CITED_AS_ENVELOPE;
   return contentCitedAs(e);
@@ -56169,9 +56583,9 @@ function levelTargets(state, level) {
   return out;
 }
 function splitAddress(address) {
-  const at7 = address.search(/[\s#¶]/);
-  if (at7 <= 0) return { id: address, extent: null };
-  return { id: address.slice(0, at7), extent: address.slice(at7).trim() || null };
+  const at8 = address.search(/[\s#¶]/);
+  if (at8 <= 0) return { id: address, extent: null };
+  return { id: address.slice(0, at8), extent: address.slice(at8).trim() || null };
 }
 
 // ../agent-steps/src/drive.mjs
@@ -56314,7 +56728,7 @@ async function driveHarness(host, env, {
     /* R114: one log entry in its own tick, sent the moment it is made, spending the plane calls made since the
        last tick (itself included) and the wall time since. `{silent}` when the plane did not answer;
        `{landed}` whether the entry was appended; `{ended}` when the plane ended the run by it. */
-    tickEntry: async (entry, at7) => {
+    tickEntry: async (entry, at8) => {
       const spend2 = calls - accounted.at + 1;
       const sent = await call(
         "airuntick",
@@ -56332,8 +56746,8 @@ async function driveHarness(host, env, {
         for (const r of answer.refused ? [answer.refused] : whole ? [t] : bad)
           logSeq.refused({
             at: "airuntick.log",
-            step: at7.step,
-            to: at7.to,
+            step: at8.step,
+            to: at8.to,
             code: r?.code ?? r?.reason ?? null,
             check: r?.check ?? null,
             plane: r?.plane ?? r ?? null
@@ -56669,8 +57083,8 @@ async function settleAtDispatch({ call, runId, session, code, why }) {
 }
 
 // ../bio-plane/src/answers/checks.mjs
-var at6 = (fn, region) => `src/answers/${fn} > ${region}`;
-var row2 = (n, fn, region, translation) => Object.freeze({ check: `C-135.${n}`, where: at6(fn, region), translation });
+var at7 = (fn, region) => `src/answers/${fn} > ${region}`;
+var row2 = (n, fn, region, translation) => Object.freeze({ check: `C-135.${n}`, where: at7(fn, region), translation });
 var ANSWERS_CHECKS = Object.freeze({
   ANSWER_MALFORMED: row2(
     1,
@@ -57251,12 +57665,12 @@ async function handleAsk(req, env, deps) {
   const blocked = await assistantReady2(env, account);
   if (blocked) return blocked;
   const call = (op, query, post) => askPlane2(env, op, grant, store, query, post);
-  const relayed = (asked3, at7) => json2({
+  const relayed = (asked3, at8) => json2({
     ok: false,
     reason: "PLANE_REFUSED",
     code: "PLANE_REFUSED",
     worker: "agent-worker",
-    at: at7,
+    at: at8,
     detail: "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was worded.",
     plane_status: asked3.status ?? null,
     plane: asked3.body ?? null

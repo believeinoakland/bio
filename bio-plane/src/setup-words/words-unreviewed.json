@@ -19682,7 +19682,7 @@
       "en": "a member joins a project they were invited to. Being uninvited is not a refusal you can see.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1513
+      "line": 1062
     },
     {
       "id": "membership.index.a_member_row_already_holds",
@@ -19710,7 +19710,7 @@
       "en": "{act} on {String} is work inside that project, and {who} has not joined it (§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1077
+      "line": 626
     },
     {
       "id": "membership.index.adding_an_administrator_beyond_the",
@@ -19718,6 +19718,13 @@
       "module": "member-roster",
       "file": "bio-plane/src/member-roster/index.mjs",
       "line": 942
+    },
+    {
+      "id": "membership.index.adding_an_owner_to_a_project_whose_owners",
+      "en": "adding an owner to a project whose owners are all inactive (7.13)",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1152
     },
     {
       "id": "membership.index.administrator_status_is_granted_and",
@@ -19731,7 +19738,7 @@
       "en": "an administrator may add an owner only when EVERY owner of the project is inactive. While one is active the project is theirs to run, and 7.10 is the route.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1617
+      "line": 1165
     },
     {
       "id": "membership.index.an_invitation_lasts_a_whole",
@@ -19745,7 +19752,7 @@
       "en": "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1583
+      "line": 1132
     },
     {
       "id": "membership.index.choose_a_handle_it_is",
@@ -19766,7 +19773,7 @@
       "en": "{GATE_MARK} ({outside} OR {participant} OR {administers})",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 108
+      "line": 95
     },
     {
       "id": "membership.index.name_is_at_most_max",
@@ -19794,7 +19801,7 @@
       "en": "no other owner of this project is committed to it (every other owner has asked to leave, or there is none), and one committed owner is the floor, so a request to leave could never be carried out. Transfer ownership first: add another owner (7.10), then ask to leave; or deactivate the project (7.11). Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1545
+      "line": 1094
     },
     {
       "id": "membership.index.only_a_member_whose_status",
@@ -19815,14 +19822,14 @@
       "en": "only an owner of this project invites participants to it. An administrator directs no project, whatever it sees.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1489
+      "line": 1038
     },
     {
       "id": "membership.index.only_an_owner_of_this_2",
       "en": "only an owner of this project removes a participant from it. This REVERSES the earlier rule, under which an administrator removed and an owner could not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1567
+      "line": 1116
     },
     {
       "id": "membership.index.other_was_chosen_and_the",
@@ -19843,7 +19850,7 @@
       "en": "recorded as a request to leave. An owner of this project removes participants; this does not.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1552
+      "line": 1101
     },
     {
       "id": "membership.index.removal_takes_votesneeded_of_administrators",
@@ -19871,14 +19878,14 @@
       "en": "{stringify} is not a setting: a project is \"discoverable\" or \"hidden\", and nothing else. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1381
+      "line": 930
     },
     {
       "id": "membership.index.subject_is_v1_production_and",
       "en": "{subject} is {v1} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is {v2}'s, who is not an owner of it. Being a registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1120
+      "line": 669
     },
     {
       "id": "membership.index.the_choice_is_tell_or",
@@ -20000,18 +20007,25 @@
       "line": 1686
     },
     {
+      "id": "membership.index.this_project_has_no_owner_rows",
+      "en": "this project has no owner rows at all, which is a project created by a machine credential rather than a stranded one",
+      "module": "membership",
+      "file": "bio-plane/src/membership/index.mjs",
+      "line": 1157
+    },
+    {
       "id": "membership.index.this_project_is_discoverable_and",
       "en": "this project is discoverable and you are not one of its participants. Its existence and name are all it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1318
+      "line": 867
     },
     {
       "id": "membership.index.this_project_is_hidden_and",
       "en": "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9).",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1317
+      "line": 866
     },
     {
       "id": "membership.index.too_many_handles_were_checked",
@@ -20039,28 +20053,14 @@
       "en": "whether {String} can be found is its OWNERS' choice (Membership Architecture v2 §7.14), and {String_2} is not one of them. Seeing a project is not directing it. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 1343
+      "line": 892
     },
     {
       "id": "membership.index.whether_this_projects_own_rules",
       "en": "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made on a guess. Nothing was written.",
       "module": "membership",
       "file": "bio-plane/src/membership/index.mjs",
-      "line": 994
-    },
-    {
-      "id": "membership.order-build.line_v1_have_stringify_the",
-      "en": "line {v1}: have {stringify}, the file gives {stringify_2}",
-      "module": "membership",
-      "file": "bio-plane/src/membership/order-build.mjs",
-      "line": 47
-    },
-    {
-      "id": "membership.order-build.membership_out_is_stale_d",
-      "en": "membership: {out} is stale: {d}\n",
-      "module": "membership",
-      "file": "bio-plane/src/membership/order-build.mjs",
-      "line": 60
+      "line": 543
     },
     {
       "id": "money-checks.index.money_could_not_answer_message",
@@ -21705,28 +21705,28 @@
       "en": "a member's own requests to join are read by that member, signed in. A credential with no active member behind it has made none.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1201
+      "line": 1208
     },
     {
       "id": "project-roster.index.a_project_becomes_or_stops",
       "en": "a project becomes, or stops being, a member's own project only by its owner while that owner is its one participant, in any state. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 581
+      "line": 580
     },
     {
       "id": "project-roster.index.a_projects_requests_to_join",
       "en": "a project's requests to join are seen by the requester, the project's owners and administrators (Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a participant (§7.8). Your own requests are read without naming a project.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1217
+      "line": 1224
     },
     {
       "id": "project-roster.index.a_request_to_join_string",
       "en": "a request to join {String} is answered by its OWNERS (Membership Architecture v2 §7.14; only owners invite, §7.2), and {String_2} is not one of them. Administrators see requests and answer none. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1152
+      "line": 1159
     },
     {
       "id": "project-roster.index.a_stake_is_a_members",
@@ -21736,39 +21736,74 @@
       "line": 42
     },
     {
+      "id": "project-roster.index.an_unnamed_caller",
+      "en": "an unnamed caller",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 1159
+    },
+    {
+      "id": "project-roster.index.approval_rule_is_not_valid",
+      "en": "rule {n} is not one of {kind}, {tier} (1, 2 or 3) or {public: true}. Nothing was written.",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 631
+    },
+    {
+      "id": "project-roster.index.approval_rules_are_a_list",
+      "en": "the rules are a list, empty to restore one member's approval. Nothing was written.",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 625
+    },
+    {
+      "id": "project-roster.index.approval_set_needs_a_reason",
+      "en": "a project's approval setting is set with a reason of at most {max} characters. Nothing was written.",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 642
+    },
+    {
+      "id": "project-roster.index.approval_set_needs_an_owner",
+      "en": "only an owner of this project sets which of its acts need a second member's approval",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 621
+    },
+    {
       "id": "project-roster.index.asking_to_join_a_project",
       "en": "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A credential with no active member behind it asks nothing. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1090
+      "line": 1097
     },
     {
       "id": "project-roster.index.detail_a_request_is_open",
       "en": "{detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask again.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1048
+      "line": 1055
     },
     {
       "id": "project-roster.index.detail_a_request_to_join",
       "en": "{detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's bearer and the member bearer have nobody behind them to ask.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1040
+      "line": 1047
     },
     {
       "id": "project-roster.index.granted_as_an_invitation_the",
       "en": "granted as an invitation: the member is INVITED, and joins by the checkbox (§7.4).",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1178
+      "line": 1185
     },
     {
       "id": "project-roster.index.one_member_approves_every_act",
       "en": "one member approves every act, the default.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 650
+      "line": 648
     },
     {
       "id": "project-roster.index.one_owner_is_the_floor",
@@ -21778,6 +21813,48 @@
       "line": 384
     },
     {
+      "id": "project-roster.index.owner_add_needs_an_owner",
+      "en": "only an owner of this project may propose another owner of it",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 280
+    },
+    {
+      "id": "project-roster.index.owner_add_needs_every_owner",
+      "en": "every existing owner must agree to an addition beyond the second",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 312
+    },
+    {
+      "id": "project-roster.index.owner_must_be_joined_first",
+      "en": "an owner is a joined participant with the owner flag, so the member joins the project first",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 293
+    },
+    {
+      "id": "project-roster.index.owner_remove_needs_a_reason",
+      "en": "ownership changes are recorded with a reason",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 377
+    },
+    {
+      "id": "project-roster.index.owner_remove_needs_an_owner",
+      "en": "only an owner of this project votes on its ownership",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 371
+    },
+    {
+      "id": "project-roster.index.owner_remove_target_cannot_vote",
+      "en": "the target is counted in the denominator but does not vote",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 396
+    },
+    {
       "id": "project-roster.index.removing_this_owner_would_leave",
       "en": "removing this owner would leave only owners who have asked to leave ({map}), so nobody would be committed to the project. Add another owner first (7.10), or deactivate the project (7.11). Nothing was written.",
       "module": "project-roster",
@@ -21785,25 +21862,46 @@
       "line": 392
     },
     {
+      "id": "project-roster.index.rescue_needs_a_reason",
+      "en": "authority changes are recorded with a reason",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 347
+    },
+    {
+      "id": "project-roster.index.scope_needs_a_hidden_project",
+      "en": "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was written.",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 575
+    },
+    {
+      "id": "project-roster.index.scope_set_needs_a_reason",
+      "en": "a project's scope is set with a reason of at most {max} characters. Nothing was written.",
+      "module": "project-roster",
+      "file": "bio-plane/src/project-roster/index.mjs",
+      "line": 572
+    },
+    {
       "id": "project-roster.index.stringify_has_no_open_request",
       "en": "{stringify} has no open request to join this project, so there is nothing to answer. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1160
+      "line": 1167
     },
     {
       "id": "project-roster.index.stringify_is_already_a_participant",
       "en": "{stringify} is already a participant of this project, so a grant would invite nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1166
+      "line": 1173
     },
     {
       "id": "project-roster.index.stringify_is_not_a_kind",
       "en": "{stringify} is not a kind of action in your team's active jurisdiction profiles. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 639
+      "line": 638
     },
     {
       "id": "project-roster.index.stringify_is_not_a_scope",
@@ -21817,21 +21915,21 @@
       "en": "{stringify} is not an active member, and a grant is an invitation (§7.2), which goes to an active member. The request stays open. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1163
+      "line": 1170
     },
     {
       "id": "project-roster.index.stringify_is_not_an_answer",
       "en": "{stringify} is not an answer: a request is granted or declined, and nothing else. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1155
+      "line": 1162
     },
     {
       "id": "project-roster.index.the_acts_these_rules_match",
       "en": "the acts these rules match need a second member's approval before sending.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 649
+      "line": 647
     },
     {
       "id": "project-roster.index.the_inactive_owners_keep_their",
@@ -21845,21 +21943,21 @@
       "en": "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in member. A credential with no member behind it is outside no project, and an empty list would say something untrue about the record.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 801
+      "line": 799
     },
     {
       "id": "project-roster.index.the_projects_scope_is_already",
       "en": "the project's scope is already {scope}. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 584
+      "line": 583
     },
     {
       "id": "project-roster.index.the_scope_applies_from_now",
       "en": "the scope applies from now on, to every act that would publish, cite or send; nothing already published, sent or cited changes.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 590
+      "line": 589
     },
     {
       "id": "project-roster.index.the_stake_is_some_text",
@@ -21894,35 +21992,35 @@
       "en": "withdrawing a request to join is the requester's own act, and a credential with no active member behind it made none. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1127
+      "line": 1134
     },
     {
       "id": "project-roster.index.you_already_have_an_open",
       "en": "you already have an open request to join this project. One is open at a time: withdraw it to ask again. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1109
+      "line": 1116
     },
     {
       "id": "project-roster.index.you_can_already_see_this",
       "en": "you can already see this project, so there is nothing to ask: a participant is already in it (an invited one joins by the checkbox, §7.4), and an administrator's sight of a project is not a position in it (§7.3). Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1105
+      "line": 1112
     },
     {
       "id": "project-roster.index.you_have_no_open_request",
       "en": "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1130
+      "line": 1137
     },
     {
       "id": "project-roster.index.your_request_is_open_the",
       "en": "your request is open. The project's owners answer it; until they do it stays open.",
       "module": "project-roster",
       "file": "bio-plane/src/project-roster/index.mjs",
-      "line": 1117
+      "line": 1124
     },
     {
       "id": "promotion.gate.capture_absent_from_bucket",
