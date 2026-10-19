@@ -58,7 +58,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
-import { overdueOn, dayRange, localDay } from "../civil-time/index.mjs";
+import { overdueOn, dayRange, localDay, localClock } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
@@ -1416,20 +1416,19 @@ export class NoticeProducers {
   }
 
   /** R25 (DEC-299, DEC-333, DEC-335): an instant as a team reads a moment, `time.at` with `{date}` the local day with its
-   *  year (`date.daymonthyear`) and `{time}` the local clock (`time.clock`, `time.am`, `time.pm`), in `zone`; with no zone
-   *  held, the UTC reading and "UTC" after it. `civil-time` answers the day only, so the clock is read with
-   *  `Intl.DateTimeFormat` on the 24-hour cycle (BOB's, K3864). Null when the instant cannot be read (never raw text). */
+   *  year (`date.daymonthyear`) and `{time}` the local clock (`time.clock`, `time.am`, `time.pm`; civil-time's `localClock`,
+   *  R30), in `zone`; with no zone held, the UTC reading and "UTC" after it. Null when the instant cannot be read (never
+   *  raw text). */
   static #timeAt(at, zone) {
     const ms = typeof at === "string" && INSTANT.test(at) ? Date.parse(at) : NaN;
     if (!Number.isFinite(ms)) return null;
     const z = filled(zone) ? zone : "UTC";
     const date = dayInSentence(NoticeProducers.#localDay(ms, z), null);
-    let parts = null;
-    try { parts = new Intl.DateTimeFormat("en-US", { timeZone: z, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(ms); }
-    catch { return null; }
-    const hour = Number(parts.find((x) => x.type === "hour")?.value), minute = parts.find((x) => x.type === "minute")?.value;
-    if (!date || !Number.isInteger(hour) || !/^\d{2}$/.test(minute ?? "")) return null;
-    const clock = wordsOf("time.clock", { hour: String(hour % 12 || 12), minute, ampm: wordsOf(hour < 12 ? "time.am" : "time.pm") });
+    let wall = null;
+    try { wall = localClock(instantOf(ms), z); } catch { wall = null; }
+    if (!date || !wall || !Number.isInteger(wall.hour) || !Number.isInteger(wall.minute)) return null;
+    const minute = String(wall.minute).padStart(2, "0");
+    const clock = wordsOf("time.clock", { hour: String(wall.hour % 12 || 12), minute, ampm: wordsOf(wall.hour < 12 ? "time.am" : "time.pm") });
     const moment = wordsOf("time.at", { date, time: clock });
     return filled(zone) ? moment : `${moment} UTC`;
   }
