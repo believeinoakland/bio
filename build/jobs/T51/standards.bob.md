@@ -1,6 +1,6 @@
 # BOB to standards (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio standards tranche/T51 job/T51/standards`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3992: your J1 note on #eventDay: events' CR-7 job is running now and makes its reasons {key, vars}. Do it in this job (P10, nothing waits): pass events' when reason on as given, never String(w.why), so it is correct whether events answers a string today or {key, vars} after CR-7. Add a test with a {key, vars} reason. Re-run your tests and checks, then post COMPLETE again.

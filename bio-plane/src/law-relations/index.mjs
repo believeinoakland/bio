@@ -23,7 +23,7 @@ import { BOUNDS, LOWEST_GRADE, derivedId, isRecordId } from "../connection-gramm
 import { validAt } from "../civil-time/index.mjs";
 import { LAW_RELATIONS_CHECKS, refusal } from "./checks.mjs";
 import { LAW_SCHEMA, LAW_TABLES, migrateLaw } from "./schema.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { LAW_RELATIONS_CHECKS } from "./checks.mjs";
 export { LAW_SCHEMA, LAW_TABLES, migrateLaw };
@@ -296,8 +296,7 @@ export class LawRecords {
       effective = effectiveOf(a.effective);
       /* DEC-49 REGION is-temporal-effective */
       if (!effective)
-        return refusal("LAW_RELATION_NO_EFFECTIVE", "a temporal relation takes effect on a date (YYYY-MM-DD) or at an "
-                       + "enactment event ({event: EVT-…, edge: start or end}). Nothing was written.");
+        return refusal("LAW_RELATION_NO_EFFECTIVE", localize("law-relations.index.no_effective_detail", "a temporal relation takes effect on a date (YYYY-MM-DD) or at an enactment event ({event: EVT-…, edge: start or end}). Nothing was written."));
       /* END DEC-49 REGION is-temporal-effective */
     }
     const fault = reasonFault(a.reason);
@@ -335,8 +334,7 @@ export class LawRecords {
       .map((r) => ({ ...this.#relationAnswer(r), direction: r.from_standard === id ? "out" : "in" }));
     return { ok: true, standard: id, temporal: seen.filter((r) => r.class === "temporal"),
              referential: seen.filter((r) => r.class === "referential"), truncated: rows.length > SCAN_MAX,
-             says: "temporal relations (amends, repeals, renumbers, recodifies) and referential ones (refers to, defines, "
-                 + "excepts, implements, incorporates) are kept apart and never read as one list (D192)" };
+             says: localize("law-relations.index.says_kept_apart", "temporal relations (amends, repeals, renumbers, recodifies) and referential ones (refers to, defines, excepts, implements, incorporates) are kept apart and never read as one list (D192)") };
   }
 
   /** R2, R5, R6, R20: withdraw a relation, link or treatment, kept with who, when and why. */
@@ -614,8 +612,8 @@ export class LawRecords {
         ? { ...base, state: "verified", verified: true, held: held.found,
             why: word("law-relations.why.held_capture_states", { volume: String(c.volume), reporter: String(c.reporter), page: String(c.page), found: String(held.found.map((h) => h.standard).join(", ")) }) }
         : { ...base, state: "not verified", verified: false, held: [],
-            why: word("law-relations.why.held_capture_see", { volume: String(c.volume), reporter: String(c.reporter), page: String(c.page), truncated: String(held.truncated
-              ? `; only the first ${SCAN_MAX} court standards were read` : "") }) };
+            why: word("law-relations.why.held_capture_see", { volume: String(c.volume), reporter: String(c.reporter), page: String(c.page), truncated: held.truncated
+              ? word("law-relations.why.first_court_standards", { scan_max: String(SCAN_MAX) }) : "" }) };
     }
     if (!lookup) return { ...answer, lookup: null };
     const text = typeof citation === "string" ? citation : c ? `${c.volume} ${c.reporter} ${c.page}` : null;
@@ -623,8 +621,7 @@ export class LawRecords {
     try { l = text ? await this.k.citationLookup({ text, viewer }) : null; } catch { l = { ok: false, reason: "LOOKUP_FAILED" }; }
     if (!l || l.ok !== true)
       return { ...answer, lookup: { on: false, reason: l ? l.reason ?? null : "NO_TEXT",
-                                    says: "the keyed citation lookup did not answer (it is switched off, holds no key, or "
-                                        + "refused); this answer stands without it" } };
+                                    says: word("law-relations.says.keyed_citation_lookup") } };
     return { ...answer, lookup: { on: true, service: l.service ?? null, citations: l.citations ?? [], verified: false,
                                   label: l.label ?? word("law-relations.label.service_answer_verified") } };
   }
@@ -659,7 +656,7 @@ export class LawRecords {
    *  derived one only when the viewer may read the event. */
   neighbours({ node = null, kinds = null, at = null, page = null, viewer, scope = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("law-relations.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     const own = CONNECTION_KINDS.map((k) => k.kind);
     const asked = Array.isArray(kinds) ? kinds.filter((k) => own.includes(k)) : own;
     const id = typeof node === "string" ? node : "";
@@ -667,9 +664,9 @@ export class LawRecords {
     const live = [];
     for (const item of all) {
       let v;
-      try { v = validAt({ valid: item.valid }, at); } catch (e) { v = { undetermined: true, why: String(e?.message ?? e) }; }
+      try { v = validAt({ valid: item.valid }, at); } catch { v = { undetermined: true }; }
       if (v === "out" || (v && v.refused)) continue;
-      live.push(v === "in" ? item : { ...item, undetermined: { why: v.why || "undetermined at the date asked" } });
+      live.push(v === "in" ? item : { ...item, undetermined: { why: v.why || { key: "law-relations.why.undetermined_date_asked", vars: {} } } });
     }
     live.sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
     if (live.length > BOUNDS.hub)

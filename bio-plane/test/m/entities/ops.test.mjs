@@ -6,9 +6,8 @@ import { world, sha, MACHINE } from "./fixture.mjs";
 import { entitiesOf, entitiesOps, Entities } from "../../../src/entities/index.mjs";
 import { hiddenBundles } from "../../../src/membership/index.mjs";
 
-const OPS = ["readingname", "readingnameplan", "entitycreate", "entityalias", "relationdeclare", "aliaswithdraw",
-             "relationwithdraw", "resolutiondefect", "entity", "entitybyalias", "relation", "resolutions", "concerns",
-             "idmatch", "resolve", "resolvetestify", "entityidentify", "entitieskind", "entityidonly", "subjectsnamed", "entitysimilar"];
+/* The ops this module's map holds (R40), read from that map, its own declaration (K3268): no hand-list of them is kept. */
+const OPS = Object.keys(entitiesOps({}, new URL("https://do.invalid/"), {}));
 
 /* A world with a registry, a reading, resolutions, a relation and a defect report, the same every time it is built. */
 function seeded() {
