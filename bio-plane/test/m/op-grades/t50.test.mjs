@@ -9,15 +9,17 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS,
          MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
 import * as T50 from "../../../src/op-grades/t50.mjs";
+import { reqText, between, ticked } from "./declared.mjs";
 
 const root = (p) => fileURLToPath(new URL(`../../../../${p}`, import.meta.url));
 const gradeOf = (op) => (Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null);
 
 /* the fifteen ops R45 grades: the five reversible acts, the one undetermined act, and the nine reads */
-const REVERSIBLE = ["watchitem", "secondlook", "secondlookclear", "projectstakeset", "actionstake"];
-const WRITES = [...REVERSIBLE, "actioninquiry"];
-const READS = ["lookedat", "browse", "opencaptures", "capturegrade", "inquirypartition", "instances", "projectstake",
-  "projectownersgone", "stakeatpreparation"];
+const R45 = reqText(45);
+const REVERSIBLE = ticked(between(R45, "`RUNGS` assigns `reversible`", "`RUNG_ABSENT` holds")).filter((op) => T50.T50_RUNGS[op] === "reversible");
+const WRITES = [...REVERSIBLE, ...ticked(between(R45, "`RUNG_ABSENT` holds", "R3's tally")).filter((op) => Object.hasOwn(T50.T50_RUNG_ABSENT, op))];
+const READS = ticked(between(R45, "naming what it reads:", "Each of the six")).filter((op) => Object.hasOwn(T50.T50_NON_ACTS, op)
+  && T50.T50_NON_ACTS[op].startsWith("read: "));
 const FIFTEEN = [...WRITES, ...READS];
 
 /* the four acts DEC-300 (5) weighs Reversible, R47 */
@@ -57,8 +59,7 @@ test("R45: the five reversible rows are reversible and each is phone-true (R3's 
    + "actionstake, actioninquiry)", () => {
   for (const op of WRITES) assert.equal(phoneOf(op), true, op);
   for (const op of READS) assert.equal(phoneOf(op), true, op);
-  for (const op of ["watchitem", "secondlook", "secondlookclear", "projectstakeset", "actionstake", "actioninquiry"])
-    assert.notEqual(gradeOf(op), "reasoned", op);
+  for (const op of WRITES) assert.notEqual(gradeOf(op), "reasoned", op);
   /* control: a reversible row is not a rung the design would weigh above Reversible (the kit's 1 for projectstakeset and actionstake) */
   assert.equal(gradeOf("projectstakeset"), "reversible");
   assert.equal(gradeOf("actionstake"), "reversible");

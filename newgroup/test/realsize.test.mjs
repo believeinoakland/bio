@@ -27,7 +27,9 @@ import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 import { planeLimits, reportsBuilds } from "../src/index.mjs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
-import { run, release, armWith, restoreSigners, SIGNER, bump, sha } from "./fixture.mjs";
+import { run, release, armWith, restoreSigners, SIGNER, bump, sha, like } from "./fixture.mjs";
+const unesc = (t) => t.replace(/&#39;/g, "'");
+const UNREAD = like("installer.lag.bytes.unread", { version: /[0-9.]+/ });
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -53,26 +55,26 @@ test("R33 at the release's real size (~21 MB): the read-back, as a multipart bod
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT, src: REAL, fleet: false });
   const want = await sha(REAL);
-  const MISMATCH = new RegExp(`is not the ${NEXT.replace(/\./g, "\\.")} release&#39;s own bytes \\(read back, it hashes to [0-9a-f]{16}…; the release hashes to ${want.slice(0, 16)}…\\)`);
+  const MISMATCH = like("installer.lag.bytes.differ", { version: NEXT, got: /[0-9a-f]{16}…/, want: want.slice(0, 16) + "…" });
   for (const readBack of ["multipart", "raw"]) {
     const w = await run({ slug: "rs-repo", rel, readBack });
     assert.equal(w.planePuts.length, 2, readBack);
     assert.equal(w.planePuts[0].source, REAL, `${readBack}: the repository release installed, byte for byte`);
     assert.equal(w.page.status("verify"), "ok", readBack);
     assert.ok(w.page.done.includes(RUNNING), readBack);
-    assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `${readBack}: no lag named`);
+    assert.ok(!MISMATCH.test(unesc(w.page.done)) && !UNREAD.test(unesc(w.page.done)), `${readBack}: no lag named`);
   }
   /* The built-in release (no repository answering): the same, at the size Bob's install met. */
   for (const readBack of ["multipart", "raw"]) {
     const w = await run({ slug: "rs-builtin", rel: null, readBack });
     assert.equal(w.planePuts[0].source, RELEASE_SOURCE, `${readBack}: the built-in release installed`);
     assert.equal(w.page.status("verify"), "ok", `built-in, ${readBack}`);
-    assert.ok(!/is not the [0-9.]+ release&#39;s own bytes|could not be read back/.test(w.page.done), `built-in, ${readBack}: no lag named`);
+    assert.ok(!MISMATCH.test(unesc(w.page.done)) && !UNREAD.test(unesc(w.page.done)), `built-in, ${readBack}: no lag named`);
   }
   /* A mismatch is named, however the answer is shaped, and no success is claimed. */
   for (const readBack of ["differ", "fail"]) {
     const w = await run({ slug: "rs-bad", rel, readBack });
-    assert.match(w.page.done, readBack === "differ" ? MISMATCH : /could not be read back/, readBack);
+    assert.match(unesc(w.page.done), readBack === "differ" ? MISMATCH : UNREAD, readBack);
     assert.ok(!w.page.done.includes(RUNNING), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
   }
@@ -114,7 +116,11 @@ async function child(scenario) {
     ...(scenario.repo ? { repo: scenario.repo === "fleet" ? repoFleet : repo, signer: SIGNER.line } : {}) };
   const out = execFileSync(process.execPath, ["--expose-gc", here("./realsize-child.mjs"), JSON.stringify(cfg)],
     { encoding: "utf8", maxBuffer: 1 << 24, timeout: 300000 });
-  return JSON.parse(out.trim().split("\n").at(-1));
+  const r = JSON.parse(out.trim().split("\n").at(-1));
+  /* What the page said, read from the word table here (the child holds only the installer, so as not to disturb its memory). */
+  const said = unesc(r.done || "");
+  const differ = like("installer.lag.bytes.differ", { version: /[0-9.]+/ });
+  return { ...r, running: like("installer.success.running").test(said), byteLag: differ.test(said), mismatch: differ.test(said), unread: UNREAD.test(said) };
 }
 const within = (r, what) => {
   if (process.env.R33_REPORT) console.log(`R33 peak: ${what}: ${r.peakMB} MB live (baseline ${r.baselineMB}), resident growth ${r.rssGrowthMB} MB; ${JSON.stringify(r.samples)}`);
