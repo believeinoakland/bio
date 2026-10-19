@@ -757,7 +757,7 @@ export class Content {
     if (unknown.length)
       return { ok: false, reason: "FIXED_KEY_ONLY", rejected: unknown,
                detail: localize("content.index.the_content_read_is_fixed", "the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried {unknown}, which it refuses rather than ignores — a parameter silently dropped is a filter the caller believes was applied", { unknown: String(unknown.join(", ")) }) };
-    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
+    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: localize("content.index.content_requires_id", "content requires ?id=<content_id>") };
     const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, id);
     if (!r || !this.sees(r.bundle_id, viewer))
       return { ok: false, reason: "NO_SUCH_CONTENT", target: id,
@@ -890,7 +890,7 @@ export class Content {
     const seen = kind ? this.sees(target, viewer) : false;
     if (!kind || !seen || kind !== "information")
       return refusal("TRANSCRIBE_NO_DOCUMENT",
-        !target ? `pass bundleId=<INFO-…>: the document whose page you transcribed`
+        !target ? localize("content.index.pass_bundleid_info_document", "pass bundleId=<INFO-…>: the document whose page you transcribed")
         : kind && seen ? localize("content.index.target_is_not_a_document", "{target} is not a document, so it has no page to transcribe (DEC-21)", { target: String(target) })
           : localize("content.index.no_document_is_addressed_by_2", "no document is addressed by {target} in this record", { target: String(target.slice(0, 60)) }),
         { target: target || null });
@@ -963,7 +963,7 @@ export class Content {
     if (!t || !this.sees(t.bundle_id, viewer))
       return this.#transcribeRefusal("TRANSCRIPTION_NOT_FOUND",
         id ? localize("content.index.no_transcription_readable_here_is", "no transcription readable here is addressed by content_id '{id}…'", { id: String(id.slice(0, 16)) })
-           : `pass contentId=<the content id op=transcribe returned>`, { content_id: id || null });
+           : localize("content.index.pass_contentid_content_id", "pass contentId=<the content id op=transcribe returned>"), { content_id: id || null });
     /* END DEC-49 REGION is-transcription-source */
     return { ok: true, t };
   }
