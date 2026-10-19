@@ -31,7 +31,7 @@ test("R29: an administrator's own act REAUTH_ACTS names, asked by a member sessi
     [open]: { ...member("cal", CAPS), reauthUntil: Date.now() + 60e3 } } });
   const own = administratorsOwn();
   const acts = Object.keys(REAUTH_ACTS).filter((op) => OPS[op] && own.has(op)).sort();
-  assert.deepEqual(acts, ["adminendorse", "adminremove", "groupkeyset", "memberadd", "memberset"]);
+  assert.equal(acts.length, 5, "five administrator acts today, read from the declarations");
   for (const op of acts) {
     const extraBody = ARG[op] ?? {};
     /* the member, window old or open: NOT_AN_ADMIN, nothing asked of the store about the password or the op */

@@ -8,6 +8,7 @@
  */
 import worker, { CFG, ARMED_SIGNERS, planeLimits } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
@@ -24,6 +25,19 @@ function builtInAssets() {
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
 export const ORIGIN = "https://newgroup.believeinoakland.workers.dev";
 export const realFetch = globalThis.fetch;
+/* The text of a key before its first fill the caller does not give: every placeholder not in `vars` answers a NUL, and the head is what
+   comes before the first one (K3810: a test reads a sentence from the word table, never copies it). */
+export const headOf = (key, vars = {}) => word(key, new Proxy(vars, {
+  get: (t, k) => (k in t ? t[k] : "\u0000"), getOwnPropertyDescriptor: (t, k) => ({ value: k in t ? t[k] : "\u0000", enumerable: true, configurable: true }),
+})).split("\u0000")[0];
+/* A pattern for a key's sentence: each fill in `vars` is itself (a string, matched literally, or a RegExp), every other placeholder
+   matches anything. A test reads its expectation from the word table through this, never from a copy of the English. */
+export const like = (key, vars = {}) => {
+  const P = (n) => `\u0001${String(n)}\u0001`;
+  const text = word(key, new Proxy({}, { get: (_, n) => P(n), getOwnPropertyDescriptor: (_, n) => ({ value: P(n), enumerable: true, configurable: true }) }));
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(esc(text).replace(/\u0001(\w+)\u0001/g, (_, n) => (n in vars ? (vars[n] instanceof RegExp ? vars[n].source : esc(String(vars[n]))) : "[\\s\\S]*?")), "s");
+};
 export const jres = (o, status = 200) => new Response(JSON.stringify(o), { status });
 export const cfok = (result) => jres({ success: true, result });
 export const cferr = (message, status = 400, code = 0) => jres({ success: false, errors: [{ message, code }] }, status);
@@ -67,8 +81,9 @@ export function parsePage(raw) {
     step: (id, label) => events.push({ k: "step", id, label }),
     ok: (id, label) => events.push({ k: "ok", id, label: label ?? null }),
     no: (id, label) => { if (id !== undefined) events.push({ k: "no", id, label: label ?? null }); },
-    /* R51 (T47): a stop names the step in progress, its fourth argument. */
-    fail: (h, p, d, s) => { failed = { h, p, d, s }; },
+    /* R51, R75: a stop is one sentence by key (`said`), the line to act on beside it (`d`, when its key has one), and the
+       step in progress, named by `installer.stopped.at` (`s`). */
+    fail: (said, d, s) => { failed = { said, d: d || "", s: s || "" }; },
     done: (html) => { done = html; },
     /* R55: the progress page's one line saying from which release to which, and where. */
     says: (t) => { says = t; },
@@ -81,7 +96,7 @@ export function parsePage(raw) {
   const steps = [...new Set(events.filter((e) => e.k === "step").map((e) => e.id))];
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
-    failed ? `${failed.h} ${failed.p} ${failed.d}` : "", says || "", done || ""].join("\n");
+    failed ? `${failed.said} ${failed.d} ${failed.s}` : "", says || "", done || ""].join("\n");
   return { raw, events, steps, status, label, failed, done, words, says, waits };
 }
 
@@ -237,7 +252,11 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `choice` the mode a /begin carries (R62). */
   alongside = false, containersOff = false, expireAfter = null, sourceFlaky = 0, sourceDown = false, preSources = {}, preTags = {},
   rolloutKeepsImage = false, silentAddress = false, wakeAfter = 0, cfFlaky = null, typed, objects = {}, refuseDelete = [], lockedBy = null,
-  builtInFleet = false } = {}) {
+  builtInFleet = false,
+  /* R78 (K3868): what the copy records as its producing team when the run asks: a short name (the default, the slug: a copy that
+     recorded it at its first boot), `null` (records none: `group: null`), or "silent" (does not answer `op=instancegroup`);
+     `seedRefused` the code `op=instancegroupseed` refuses with. */
+  group = undefined, seedRefused = null } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -260,6 +279,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const rollouts = [], deleted = [], schedules = new Map();
   const refused = [], planePuts = [], enabled = new Set(), secretPuts = [];
   const tagged_world = builtInFleet ? builtInAssets() : {};
+  let recordedGroup = group === undefined ? slug : group === "silent" ? null : group;
+  const seeds = [];
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const membersOf = () => {
@@ -474,7 +495,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (enableFail) return cferr("could not enable", 500);
       enabled.add(u.split("/workers/scripts/")[1].split("/")[0]); return cfok({ enabled: true });
     } },
-    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u) => {
+    { m: (u) => /^https:\/\/[^/]+\.workers\.dev\//.test(u) && !u.startsWith(ORIGIN), f: (u, init = {}) => {
       const host = new URL(u).host;
       const [name, pre2] = host.split(".");
       /* R63: a copy already held answers what its facts say (`copy.held[slug]`), or nothing. */
@@ -485,6 +506,17 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       if (wakeAfter > 0 && (wakeTries++) < wakeAfter) throw new Error("ENOTFOUND " + host);
       const q = new URL(u).searchParams;
       const v = verOf(acct.get(slug)) || "0.0.0";
+      if (q.get("op") === "instancegroup") {
+        if (group === "silent") throw new Error("ENOTFOUND " + host);
+        return jres(recordedGroup ? { ok: true, group: recordedGroup } : { ok: true, group: null, detail: "NO_GROUP_RECORDED" });
+      }
+      if (q.get("op") === "instancegroupseed") {
+        seeds.push({ u, init });
+        if (seedRefused) return jres({ ok: false, code: seedRefused });
+        if (recordedGroup) return jres({ ok: false, code: "GROUP_ALREADY_RECORDED", group: recordedGroup });
+        recordedGroup = JSON.parse(init.body).slug;
+        return jres({ ok: true, group: recordedGroup });
+      }
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
       if (q.get("op") === "bootstrap") {
         if (copy.bootstrap) return copy.bootstrap(q, { v, members: membersOf() });
@@ -514,7 +546,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
   return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads, apps, rollouts,
-    classes, deleted, schedules, removed, secretPuts, sources, tags, rolledBack, bucketObjects };
+    classes, deleted, schedules, removed, secretPuts, sources, tags, rolledBack, bucketObjects, seeds, recorded: () => recordedGroup };
 }
 
 /* The binding a plane PUT carried, by name. */

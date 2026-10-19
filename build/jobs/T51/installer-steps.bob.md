@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,26 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio installer-steps tranche/T51 job/T51/installer-steps`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Your reading is right. `uses` is set now (signatures, instance-setup; setup-words joins at your second stage, as your R36 and the map say), and installer's uses gains installer-steps (K4068). `paths` and `tests` stay empty until your COMPLETE: the format check refuses a path naming nothing (K1043), so BOB fills them from your record (newgroup/src/steps/, newgroup/test/steps/) before the merge's ownership check. Until then your own ownership and coverage checks name your new files: expected, say so in COMPLETE. Write only those two directories and your record.
+
+## B3 · CHANGE
+
+CHANGE (K4083): installer (T51-128) is merged into tranche/T51 (the moved ranges deleted, re-exported from steps/). Your keys stage now (R36): merge tranche/T51; read every member-facing sentence of steps/ by key through setup-words' word(key, vars) from DEC-329's and DEC-331's families (installer.fleet.*, installer.image.*, installer.lag.*, installer.logs.*, installer.connect.*, installer.address.*, installer.probe.leftover, installer.release.nolimits, .badlimits); STEP_KEYS cut into the bundle beside the installer's; no inline sentence remains (the words check's 74 inline and 25 plain findings on your module go to 0); R20's and R30's T51 paragraphs met. Your edge to setup-words is in modules.json and your Uses (K4083). A sentence with no row is a REPORT (to UX-DESIGN through me), never inline English. Run installer's suites too (it re-exports your names). Then COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4087): the design @ 82cdc1716e (DEC-362, U392, answering your J3 REPORT) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: MERGE `82cdc1716e` (DEC-362), answering B375 (rows only, plus a reads entry; mid-layer is fine). (1) Each entry of `installer.fleet.partial.*`'s {list} is `installer.fleet.left.item` "{member} ({why})", {why} always an `installer.fleet.why.*` fragment: `why.integrity` (bundle or part failed its hash), `why.http` {status} (the source's HTTP error). (2) `why.refetch` "its files could not be fetched again for the upload" (R18). (3) The `installer.image.*` sentences stay the notice's; in the list use their fragment forms `installer.fleet.why.unpinned|unpullable|freeplan|planunknown|nopermission|permissionunknown` (noclass is the existing `why.class`); `installer.fleet.why.container.parse|class|policy|size|bindings|path|duplicate` name the cause (the bare row for any other); `why.program` stays one row; `installer.fleet.skip.manifest.reason` with {reason} (a why fragment) carries the manifest's reason. (4) words-reads.json has an `installer-steps` entry: exactly STEP_KEYS' 68 keys. Checks: format 64 and coverage 3 main's own; walks clean.  ## U393 · MERGE · re B376 · 2026-10-19 · session_01MBG5FH3gL4kdDPTNgGsGex · primary MERGE `112748edcf` (DEC-363), answering B376 (one row; mid-layer is fine): `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more. Checks as U392.   Draw the left-out list with them (the wire strings '<member> failed its integrity check' / 'http <n>' become why.integrity / why.http {status}; a failed second read why.refetch), add the new keys to STEP_KEYS, keep the words check at 0 and your suite green; then COMPLETE. installer's job is re-pointing its tests to your rows now (K4085); tell me in COMPLETE if any key it reads changed.
+
+## B5 · CHANGE
+
+CHANGE (K4092): a code review of every install situation (build/plan/install-situations.md; Bob asked whether the code handles them) found these gaps in YOUR files (newgroup/src/steps/). Each is a requirement you already hold that the code meets only in part; fix each with a test against the fake account and a control, in this job (P10):
+1. S9 (your R-lines carried from installer R67/R68): placeContainer reads back configuration.image only: also confirm the RUNNING instance serves the new image (the member's version through the copy's own path, as servingVerdict does for agent-worker), and when it still serves the old one after the rollout, restart that instance and re-confirm within the bound; still old = a named lag, never done.
+2. F5 (from installer R71): an application created with instances: 0 whose image then fails to pull is not detected: after placing, read the application's state within the bound, and a pull failure leaves the member out, named, with what the copy lacks.
+3. F10 (from installer R69): a later release that adds a Durable Object class to an EXISTING container member gets no migration (only fresh Workers do): apply the class migrations in order on an update too; and agent-worker's migration list (MEMBER_OBJECTS) is read from the release's signed member data, not hard-coded, if the release carries it (else REPORT what the release must carry).
+4. F4: cfCall honours Retry-After on a 429.
+5. F7: ensureSubdomain's choice is made before the copy is created (offer the free name up front), not after.
+6. F9 (note only, no change unless cheap): the lock is read-then-write, not atomic; if Cloudflare offers an atomic create (a create that fails when the name exists), use it.
+Merge tranche/T51 first. Then COMPLETE, listing what each item became.

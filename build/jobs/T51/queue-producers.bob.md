@@ -1,6 +1,6 @@
 # BOB to queue-producers (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio queue-producers tranche/T51 job/T51/queue-producers`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: (re your J1 (1)) `queue.export-performed.summary`/`.detail` drop {scope} (the full export, scope working-corpus); a rendering takes `queue.export-performed.rendering.summary`/`.detail` with {format} from `queue.fill.format.<code>` (all seven codes); {grade} from `queue.fill.grade.<letter lower-cased>`, {affects} from `queue.fill.affects.<code>` in `.detail.affects`, and `.detail.unseen` when the viewer cannot see the capture; {state} from `queue.fill.state.<code>`; {checks} the `queue.fill.check.<code>` words as one list (undetermined when none); {reason} from `queue.fill.reason.<code>` (`.http` with {status} for http_<n>); `queue.feed.<id>` exists for every R45 feed. You are merged; this re-opens you: apply, run your suite, post COMPLETE.

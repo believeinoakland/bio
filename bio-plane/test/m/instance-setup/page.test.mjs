@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as S from "../../../src/setup.mjs";
 import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 test("R83 R86 no export names the page: setupPage, SETUP_HTML and groupLine are gone, and no export is page HTML; HOSTING_CONTROL stays R47's one holder, re-exported as the leaf holds it (control: the block itself still renders)", () => {
   for (const name of ["setupPage", "SETUP_HTML", "groupLine", "PAGE_HTML", "pageOf"]) assert.equal(name in S, false, name);
@@ -17,21 +18,14 @@ test("R83 R86 no export names the page: setupPage, SETUP_HTML and groupLine are 
 });
 
 /* R47's conditions over one page's bytes, as a list of what fails (empty when it holds), so the negative controls below
-   run the same reading over a page that breaks it. The words are pinned here, in this test, not read from the block. */
+   run the same reading over a page that breaks it. The words are read by key from the word list (R97), never pinned here. */
 const OLD_CARD = /If you ever lose the\s+password you choose here/;
-const DEC_109 = [
-  /Before you choose a password: who controls your team's Civicsmith/,
-  /Whoever can sign in to the hosting account your team's Civicsmith runs in \(its Cloudflare account\) controls it\./,
-  /can replace the one-time password, claim it again, read everything in it and lock everyone else out,\s+and no vote of the team's administrators can stop them\./,
-  /Use a team account for it, not anyone's personal login\./,
-  /Add at least one other trusted person to that account\./,
-  /Where possible, let someone other than the team's administrators hold it\./,
-  /The same account is the way back in if the password you choose is lost[^<]*your team's Civicsmith to be claimed again\./,
-];
+const esc = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const DEC_109 = [HOSTING_CONTROL.keys.heading, ...HOSTING_CONTROL.keys.sentences].map((k) => esc(word(k)));
 function r47Fails(block) {
   const fails = [];
   if (!/^<div class="notice" id="hosting-control">/.test(block)) fails.push("no block");
-  for (const re of DEC_109) if (!re.test(block)) fails.push(`the block lacks ${re}`);
+  for (const w of DEC_109) if (!block.includes(w)) fails.push(`the block lacks ${w.slice(0, 40)}`);
   if (OLD_CARD.test(block)) fails.push("the reassurance-only card is still there");
   if (/<(?:input|button|select|textarea)\b/.test(block)) fails.push("the block carries a control");
   if (/acknowledg/i.test(block)) fails.push("the block asks for an acknowledgement");
@@ -54,9 +48,8 @@ test("R47 R63 the block held once for the screens and the installer says DEC-109
 });
 
 /* R47's T35 sentence (F10, K1874 (Q6)): the block ends by naming the guide to replacing the one-time password, in the
-   same held words for the page and the installer. The words are pinned here, in this test. */
-const GUIDE = "If the one-time password may have been seen, replace it: follow the guide \u201cReplace the one-time password\u201d "
-  + "in your team's Civicsmith, on its first page and in its members and keys section.";
+   same held words for the page and the installer. The words are read by key (R97). */
+const GUIDE = word(HOSTING_CONTROL.keys.guide.sentence);
 const lastParagraph = (html) => (html.match(/<p[^>]*>((?:(?!<p[ >]).)*)<\/p><\/div>$/s) || [])[1] ?? null;
 const text = (html) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 

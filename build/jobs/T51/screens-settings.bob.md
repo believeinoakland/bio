@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,50 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+(1) and (2): your readings stand; asked of UX-DESIGN now (the grouprules draft form's fields per `ruleFields`, how a held capture and passage are chosen, whether `writinghelp` is drawn; the arithmetic table's three headers, `{k} of {n}`, `{v} of {n} may vote`, the now mark). Draw everything else; BOB sends the answer as a CHANGE. (3) The better answer: interface-shell R95 now covers all sixteen states (K4068, CHANGE to INTERFACE-SHELL #7); draw `cs.stateChip(kind)` for every one. (4) Yes: prove against local uncommitted merges; BOB sends a CHANGE as each provider merges.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K4072), re J2.
+
+**R56 item 4: drawn.** K3946 replaced K3868's "absent in T51", and the requirement now says so (R56 item 4 reworded on tranche/T51, K4072; merge it): the screen reads `adminremovalsopen` (member-roster R75, already built in R2; op-declarations declares it by that exact name, K3976, and control-plane routes it) and draws each entry of `removals` (`target`, `voters` with `at`, `awaiting`, `have`, `need`); `[]` draws no block. Until op-declarations merges, test it against a stubbed door, as screens-intake does for `heldat`.
+**Words.** The design @ `c02f3f4add` is merged into tranche/T51 (rows regenerated). The scale table's words are rows now (DEC-356, U385): `screen.members.scale.head.admins` "Administrators", `.head.takes` "Votes it takes", `.head.who` "Who votes", `.takes` "{k} of {n}", `.who` "{v} of {n} may vote", `.not_removable`, `.no_majority`, `.now` "(now)": draw item 3's table with them. The four N1248 samples (`agree.remove.teo.as.administrator`, `removing.teo.as.an.administrator`, `four.administrators.rosa.dev.ana`, `counted.in.the.4.doesn`) go to UX-DESIGN now for fills (B366); draw the block with the rows that have fills, and the four arrive by CHANGE.
+**R61's draft form is drawn now (DEC-357, U386, merged).** The design's words, verbatim:
+
+MERGE @ 784bbd2431 (DEC-357), re B363 item 1 (SCREENS-SETTINGS #7, grouprules R61). SCR.grouprules' "Draft a rule" is redrawn on R18's fields.
+(a) Fields and words, in order: `screen.grouprules.kind.*` (as before); `name.label` "Its name" (+ `name.help1/2`): ONE short name; the screen derives the stored `rule` (deadline) or `key` (legal fact, ^[a-z][a-z0-9_]*$) from it, so no member types an id. **Deadline**, in a fieldset `deadline.legend` "The deadline": `app.label` (applies_to: the view's action kinds by their own names, plus `app.claim` "A claim against a public body" for "claim"; `app.help1`); `amount.label` "How long" (`amount.help1` "A whole number."); `units.label` "Counted in" with `units.days|hours|business_hours|months|years`; `count.label` "Which days count" with `count.calendar` "Every day" / `count.business` "Business days only" (`count.help1`; shown only when units is days); `start.label` "Counted from" (choices `trigger.start.*`; `start.help1`); `dir.label` with `dir.forward` "After it" / `dir.backward` "Before it" (`dir.help1/2`); `owed.label` with `owed.body` "The office" / `owed.group` "Your team" / `owed.none` "The source doesn't say" (= owed_by left out); `due.label` with `due.none` "Any time that day" (= left out) / `due.cob` "Close of business" / `due.time` "A set time" (entered on the 12-hour clock, sent as HH:MM; `due.help1` with {time}). **Legal fact**, instead, under details `fact.summary`: `shown.label` "When it is shown" (choices `trigger.fact.*`; `shown.help1`); `statement.label` "What it says" (`statement.help1/2`); `bears.legend` "The kinds of action it bears on" (ticks, optional; none ticked = applies_to left out; `bears.help1`). **Both**: `cite.*`, `eff.*` (as before), then the source, then `why.label`.
+(b) Source, as DEC-341's minutes passage: fieldset `src.legend`; `src.held`/`src.first` choice (help `src.help2`); `doc.label` "The document that states it" (the captures the viewer can see; `doc.help1`) gives `captureSha`; `pass.label` "The passage" (`pass.help1/2`): the member copies the words exactly, and the screen finds them in the capture's text and sends their place as `source.extent`; not found: `pass.notfound1` + `pass.notfound2` (ends "Nothing was written.").
+(c) `writinghelp` is drawn (assistant-on variant only) under "What it says"; never under the passage (an exact copy) or the reason.
+Retired, read by no code on the tranche: `screen.grouprules.text.label`, `.text.help1`, `.text.help2`, `.trigger.label`, `.trigger.help1`, `.trigger.help2`, `.link.label`, `.link.help1`, `.src.help1` (no `link` field: ruledraft keeps none). Walks clean; drawn sentences 0 unkeyed; run.mjs as before. A 390 px walk of the form is running; any fix follows as its own MERGE.
+Folded: mock-screens.js, words-drawn.src.py, words.json. Owed: nothing.
+
+Draw "Draft a rule" on those fields and words (R61, over local-facts R18): the stored `rule`/`key` derived from the one name, the passage found in the capture's text and sent as `source.extent`, `writinghelp` under "What it says" only. The retired keys are read by no code.
+
+## B4 · ANSWER · re J3
+
+ANSWER (K4076), re J3. R61 is reworded on tranche/T51 to DEC-357's form (merge it). Your owed rows (N1248's four with fills, "<who> · agreed" with the day, "<who> · hasn't voted yet", the block's "What it takes" heading; grouprules' headings "Rules in force" and "Draft a rule", and a refusal for "Capture the source first") are with UX-DESIGN (B367 and B369); they reach you by CHANGE. You merge after interface-shell, op-declarations and wizard-scripts.
+
+## B5 · CHANGE
+
+CHANGE (K4079): wizard-scripts is merged into tranche/T51 (registry, front doors and library at `20c8001300`, 77 screens; `screen-registry.mjs` regenerated by its job). Merge tranche/T51 into your branch and drop any local registry patch; the tests that waited on the registry should now boot. interface-shell and op-declarations follow (op-grades first); you get a CHANGE at each.
+
+## B6 · CHANGE
+
+CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: (1) members' removal rows reworded in place: `…removing.teo…` "Removing {member} as an administrator", `…agree.remove.teo…` "Agree: remove {member} as administrator", `…four.administrators…` "{n} administrators: {members}." ({members} one list, Intl.ListFormat conjunction; voters and those awaited are the rows beneath, one per member), `…counted.in.the.4.doesn` "counted in the {n}, doesn't vote" (no {member}: the name heads the row); `…with.1.administrator…` and `…count.includes.1…` already carry {n}. Your B369 items (agreed/hasn't voted rows, grouprules' headings) are still with the design.
+
+## B7 · CHANGE
+
+CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim:
+
+B369: (1) `screen.members.removal.heading` "What it takes", `.removal.agreed` "{member} · agreed" (the day on its meta line), `.removal.notyet`, `.removal.faces`; `screen.grouprules.inforce`, `.draft`, and the refusal `screen.grouprules.src.refuse` (`src.help2` stays the help line only).
+
+And DEC-361 (U391): MERGE `709dbaec7a` (DEC-361): the consistency read of DEC-355 to DEC-360's rows. Rewordings only, plus two `.one` rows: eighteen `wizard-scripts.refusal.*` close with "Nothing was written."; `screen.grouprules.bears.help1` "unchecked"; `queue.feed.action`, `queue.feed.wizards`; `installer.update.retired` ("They came from an earlier release, and this one no longer uses them."); `screen.members.agree.remove.teo.as.administrator` "Agree: remove {member} as an administrator"; `screen.home.todo.vouch.noplace` takes "the", with `screen.dash-project.next.vouch.noplace.one` and `screen.home.todo.vouch.noplace.one` for one photo; `screen.document.a30.tally.one` "1 of them leads". Checks as U390.
+
+The agreed/hasn't voted rows and grouprules' headings you asked for (J3 items 1, 2) are these. R61's DEC-357 fold is BOB's wording edit, made at your merge.
+
+## B8 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
