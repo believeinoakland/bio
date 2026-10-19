@@ -81,3 +81,28 @@ Tests and checks:
 Commit `b6401a7fff` on `job/T51/instance-setup`, pushed.
 
 Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 5, module lines 3607
+
+## J7 · COMPLETE · re B4
+
+COMPLETE (re B4). R98 is met; the CHANGE's R99 waits for plane's CR-24, as you scheduled it.
+
+Entries applied:
+- R98 (B4, option C): `setup-fleet.mjs` imports `setup-words/index.mjs` and nothing else. Its twelve texts are `word(key)` of R97's keys (`HOSTING_CONTROL`, `FORGOT_HELP`, `HOSTING_RECOVERY_DEPLOYER`); the `keys` fields are unchanged. The installer's bundle carries those keys because `newgroup/scripts/build.mjs` keeps the literal `word("…")` calls of every bundled module.
+- Tests: the R97 "imports nothing" control is replaced by R98's control (the only import is setup-words; no plane or store module). The N234 test loads the leaf as the module, not as a data: URL. Each text still equals `word(key)`.
+- Tranche merged before the change (B4 names R98 there).
+
+Checks and tests:
+- instance-setup: `node --test test/m/instance-setup/*.test.mjs`: 193 pass, 0 fail.
+- installer `requirements`, `t47`, `t48`, `t50`, `t51`: 101 tests, 96 pass, 0 fail. I did not run the whole installer suite, and `npm run embed` was not run. `newgroup/src/release.mjs` still embeds the earlier bundle text, which is a generated artifact: the installer's build should regenerate it. I did not touch it.
+- `checks/format.mjs`: 175 modules, 0 failures.
+- `checks/architecture.mjs instance-setup`: 27 product files, 0 failures.
+- `checks/coverage.mjs instance-setup`: 70 of 71 live ids named; the gap is R99, which is due at the later CHANGE. Expected until then.
+- `checks/words.mjs`: instance-setup has 0 inline findings. Seven testcopy findings remain, all in `file-safety`, not this module.
+- `checks/ownership.mjs instance-setup tranche/T51 job/T51/instance-setup`: 6 files changed by instance-setup, 0 failures.
+
+Found, not mine (no change made):
+- Installer tests do not copy any leaf text. The only match is the generated `release.mjs` above.
+
+Commit `55489f90f3` on `job/T51/instance-setup`, pushed.
+
+Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 8, module lines 3607
