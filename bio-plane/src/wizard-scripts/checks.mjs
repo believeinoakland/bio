@@ -1,3 +1,4 @@
+import { word } from "../setup-words/index.mjs";
 /* wizard-scripts' refusal rows (requirements: `build/requirements/wizard-scripts.md`, R20; K1364, K1393; T34's rows,
  * C-131.33–.41, awaiting stamp until T35's promotion job, plan Rules (5) 4). DEC-49: every
  * refusal this module answers carries its code, its row and the member's translation. A new family, C-131 (K1393): every
@@ -11,194 +12,174 @@ const at = (fn, region, file = "index.mjs") => `src/wizard-scripts/${file} ${fn}
 export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DRAFT_WIZARD: {
     check: "C-131.1", where: at("#machine", "is-wizard-member"),
-    translation: "Only a named member drafts, revises or submits a wizard script. A machine may propose steps; it never "
-      + "makes them a script's.",
+    translation: word("refusal.MACHINE_CANNOT_DRAFT_WIZARD"),
   },
   NO_SUCH_WIZARD: {
     check: "C-131.2", where: at("#noWizard", "is-no-such-wizard"),
-    translation: "There is no wizard script by that id that you can read here. One you may not see answers exactly as one "
-      + "that does not exist.",
+    translation: word("refusal.NO_SUCH_WIZARD"),
   },
   WIZARD_SCOPE_REFUSED: {
     check: "C-131.3", where: at("#scope", "is-wizard-scope"),
-    translation: "This is done by a member taking part in the script's project (or, for a draft, by its author), and you "
-      + "are not. Nothing was changed.",
+    translation: word("refusal.WIZARD_SCOPE_REFUSED"),
   },
   WIZARD_EDITOR_NOT_GRANTED: {
     check: "C-131.4", where: at("#notGranted", "is-wizard-editor"),
-    translation: "Starting a script from nothing, or adding a step it did not record, needs the advanced editor, which an "
-      + "administrator grants. You may reword, remove or reorder the steps you have.",
+    translation: word("refusal.WIZARD_EDITOR_NOT_GRANTED"),
   },
   WIZARD_RECORDING_CARRIES_VALUES: {
     check: "C-131.5", where: at("#recordingRefusal", "is-wizard-recording"),
-    translation: "A recording keeps the screens and the acts, never anything typed. A recorded step carried something "
-      + "else, so nothing was kept.",
+    translation: word("refusal.WIZARD_RECORDING_CARRIES_VALUES"),
   },
   WIZARD_NAME_REFUSED: {
     check: "C-131.6", where: at("wizardDraft", "is-wizard-draft"),
-    translation: "Name the script in one line of 1 to 200 characters.",
+    translation: word("refusal.WIZARD_NAME_REFUSED"),
   },
   WIZARD_STEP_REFUSED: {
     check: "C-131.7", where: at("#stepRefusal", "is-wizard-step"),
-    translation: "A step names a screen, the act on it (or none), what the member does and why, each at most 300 "
-      + "characters, and at most one labeled draft: the script's own words, an offered filing template or a "
-      + "registered machine draft.",
+    translation: word("refusal.WIZARD_STEP_REFUSED"),
   },
   NOT_A_DRAFT: {
     check: "C-131.8", where: at("#notADraft", "is-wizard-not-a-draft"),
-    translation: "This version has left draft, so its steps are fixed. Changing them makes a new version.",
+    translation: word("refusal.NOT_A_DRAFT"),
   },
   WIZARD_NO_PROPOSER: {
     check: "C-131.9", where: at("wizardPropose", "is-wizard-propose"),
-    translation: "Nobody is named as the one proposing these steps. Every proposal names who made it.",
+    translation: word("refusal.WIZARD_NO_PROPOSER"),
   },
   WIZARD_WHY_REFUSED: {
     check: "C-131.10", where: at("wizardPropose", "is-wizard-propose"),
-    translation: "Say why the steps are proposed, in 1 to 1,000 characters.",
+    translation: word("refusal.WIZARD_WHY_REFUSED"),
   },
   MACHINE_CANNOT_APPROVE_WIZARD: {
     check: "C-131.11", where: at("#machine", "is-wizard-member"),
-    translation: "Only a named member approves, widens, retires or withdraws a wizard script. A machine may propose "
-      + "steps; it never decides.",
+    translation: word("refusal.MACHINE_CANNOT_APPROVE_WIZARD"),
   },
   NOT_SUBMITTED: {
     check: "C-131.12", where: at("wizardApprove", "is-wizard-approve"),
-    translation: "Only a submitted version is approved, and this one is not submitted.",
+    translation: word("refusal.NOT_SUBMITTED"),
   },
   WIZARD_NOT_APPROVED: {
     check: "C-131.13", where: at("wizardApprove", "is-wizard-approve"),
-    translation: "Only an approved script is made team-wide, and this version is not the script's approved one.",
+    translation: word("refusal.WIZARD_NOT_APPROVED"),
   },
   NOT_AN_APPROVER: {
     check: "C-131.14", where: at("#notAnApprover", "is-wizard-not-an-approver"),
-    translation: "An owner of the script's project approves or retires it, and an administrator makes it team-wide or "
-      + "approves and retires a team-wide one. You are not the one who does this here.",
+    translation: word("refusal.NOT_AN_APPROVER"),
   },
   APPROVER_IS_AUTHOR: {
     check: "C-131.15", where: at("wizardApprove", "is-wizard-approve"),
-    translation: "The version's author is its only member contributor, so someone else approves it.",
+    translation: word("refusal.APPROVER_IS_AUTHOR"),
   },
   WIZARD_REASON_REFUSED: {
     check: "C-131.16", where: at("wizardRetire", "is-wizard-retire"),
-    translation: "Give the reason in 1 to 500 characters.",
+    translation: word("refusal.WIZARD_REASON_REFUSED"),
   },
   WIZARD_NOT_THE_GROUPS: {
     check: "C-131.17", where: at("#notTheGroups", "is-wizard-civicsmith"),
-    translation: "This script is from the Civicsmith library, shipped with the release and read-only to every team. A "
-      + "team cannot edit, retire or withdraw it; it may write its own.",
+    translation: word("refusal.WIZARD_NOT_THE_GROUPS"),
   },
   WIZARD_ALREADY_ENDED: {
     check: "C-131.18", where: at("#ended", "is-wizard-ended"),
-    translation: "This was already retired or withdrawn, as recorded, and that stands.",
+    translation: word("refusal.WIZARD_ALREADY_ENDED"),
   },
   WIZARDS_STATE_REFUSED: {
     check: "C-131.19", where: at("wizards", "is-wizards-state"),
-    translation: "Scripts are listed as offered, or by one of: draft, submitted, withdrawn, retired, broken, proposed.",
+    translation: word("refusal.WIZARDS_STATE_REFUSED"),
   },
   WIZARD_NO_STEPS: {
     check: "C-131.20", where: at("checkScript", "is-wizard-check"),
-    translation: "A script has at least one step.",
+    translation: word("refusal.WIZARD_NO_STEPS"),
   },
   WIZARD_SCREEN_UNKNOWN: {
     check: "C-131.21", where: at("checkScript", "is-wizard-check"),
-    translation: "A step names a screen the interface does not have.",
+    translation: word("refusal.WIZARD_SCREEN_UNKNOWN"),
   },
   WIZARD_ACT_UNKNOWN: {
     check: "C-131.22", where: at("checkScript", "is-wizard-check"),
-    translation: "A step names an act its screen does not offer.",
+    translation: word("refusal.WIZARD_ACT_UNKNOWN"),
   },
   WIZARD_STEP_NO_WHY: {
     check: "C-131.23", where: at("checkScript", "is-wizard-check"),
-    translation: "A step says what the member does and why. One leaves either unsaid.",
+    translation: word("refusal.WIZARD_STEP_NO_WHY"),
   },
   WIZARD_DRAFT_REFUSED: {
     check: "C-131.24", where: at("checkScript", "is-wizard-check"),
-    translation: "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
-      + "your team's Civicsmith registers, and this one is none of them.",
+    translation: word("refusal.WIZARD_DRAFT_REFUSED"),
   },
   WIZARD_STEP_CONCLUDES: {
     check: "C-131.25", where: at("checkScript", "is-wizard-check"),
-    translation: "A step places a draft on an act a machine is refused. Only the member's own words go there: a script "
-      + "may say what to do and why, and the member writes it.",
+    translation: word("refusal.WIZARD_STEP_CONCLUDES"),
   },
   WIZARD_TRIVIAL: {
     check: "C-131.26", where: at("checkScript", "is-wizard-check"),
-    translation: "A warning: the script has one step, and may not need a wizard.",
+    translation: word("refusal.WIZARD_TRIVIAL"),
   },
   WIZARD_DUPLICATE: {
     check: "C-131.27", where: at("checkScript", "is-wizard-check"),
-    translation: "A warning: an offered script already walks the same screens and acts in the same order.",
+    translation: word("refusal.WIZARD_DUPLICATE"),
   },
   WIZARD_ALREADY_REGISTERED: {
     check: "C-131.28", where: at("wizardRegister", "is-wizard-register"),
-    translation: "The screens and the library are registered once, at start, and they already are. Nothing was changed.",
+    translation: word("refusal.WIZARD_ALREADY_REGISTERED"),
   },
   WIZARD_PROGRESS_REFUSED: {
     check: "C-131.29", where: at("wizardProgress", "is-wizard-progress"),
-    translation: "Use is counted as a start, a step reached (one of the script's) or a finish, and nothing else. "
-      + "Stopping is not counted.",
+    translation: word("refusal.WIZARD_PROGRESS_REFUSED"),
   },
   WIZARD_USE_REFUSED: {
     check: "C-131.30", where: at("#useRefusal", "is-wizard-use"),
-    translation: "A script's use is read by the owners of its project and its author, and the candidates for new scripts "
-      + "by project owners and administrators. You are not one here.",
+    translation: word("refusal.WIZARD_USE_REFUSED"),
   },
   WIZARD_EDITOR_MEMBER_UNKNOWN: {
     check: "C-131.31", where: at("wizardEditorGrant", "is-wizard-editor-grant"),
-    translation: "The advanced editor is granted to a member of the team, and the one named is not one.",
+    translation: word("refusal.WIZARD_EDITOR_MEMBER_UNKNOWN"),
   },
   WIZARD_NO_SUCH_GRANT: {
     check: "C-131.32", where: at("wizardEditorRevoke", "is-wizard-editor-grant"),
-    translation: "There is no editor grant by that id.",
+    translation: word("refusal.WIZARD_NO_SUCH_GRANT"),
   },
   /* T34 (T34-52; DEC-139 (4)): a side trip that would not return. */
   WIZARD_VIA_REFUSED: {
     check: "C-131.33", where: at("checkScript", "is-wizard-check"),
-    translation: "A step's side trip goes to another wizard offered here that never leads back to this one, so the member "
-      + "always returns to the step they left. This one does not.",
+    translation: word("refusal.WIZARD_VIA_REFUSED"),
   },
   /* T34 (T34-90, T34-91; DEC-152, DEC-153; K1837, K1841): writing help in a member's own words. BOB's drafts. */
   WRITING_HELP_REFUSED: {
     check: "C-131.34", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
-    translation: "The assistant does not help word this: it is an act the assistant may never take, or one that cannot be "
-      + "undone. The words here are yours alone.",
+    translation: word("refusal.WRITING_HELP_REFUSED"),
   },
   WRITING_HELP_REASON_FIELD: {
     check: "C-131.35", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
-    translation: "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed.",
+    translation: word("refusal.WRITING_HELP_REASON_FIELD"),
   },
   WRITING_HELP_DRAFT_HELD: {
     check: "C-131.36", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
-    translation: "This field already holds a draft. Keep it, edit it or clear it before asking the assistant.",
+    translation: word("refusal.WRITING_HELP_DRAFT_HELD"),
   },
   WRITING_HELP_NOTHING_TOLD: {
     check: "C-131.37", where: at("writingHelp", "is-writing-help-request"),
-    translation: "Tell the assistant what you want to say first: it works only from what you tell it and what your team "
-      + "holds.",
+    translation: word("refusal.WRITING_HELP_NOTHING_TOLD"),
   },
   WRITING_HELP_FACT_ADDED: {
     check: "C-131.38", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
-    translation: "A sentence was left out because it said something you did not tell the assistant and your team's record "
-      + "does not hold.",
+    translation: word("refusal.WRITING_HELP_FACT_ADDED"),
   },
   WRITING_HELP_SUGGESTIONS_OFF: {
     check: "C-131.39", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
-    translation: "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your "
-      + "team holds.",
+    translation: word("refusal.WRITING_HELP_SUGGESTIONS_OFF"),
   },
   WRITING_HELP_FIRSTHAND_READ: {
     check: "C-131.40", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
-    translation: "For what you saw yourself, the assistant only helps word what you told it, and reads nothing else.",
+    translation: word("refusal.WRITING_HELP_FIRSTHAND_READ"),
   },
   ASSISTANT_DRAFT_UNAVAILABLE: {
     check: "C-131.41", where: at("writingHelp", "is-writing-help-request"),
-    translation: "The assistant cannot draft this yet. Write it in your own words; nothing was changed.",
+    translation: word("refusal.ASSISTANT_DRAFT_UNAVAILABLE"),
   },
   /* T41 (T41-50; N820, D52; K2574): R28's check of a proposal made for a tangled message. BOB's draft. */
   START_RUMOUR_AS_QUESTION: {
     check: "C-131.42", where: at("checkStartProposal", "is-start-rumour", "start.mjs"),
-    translation: "A rumour is followed as a lead, never put as a question about a person. This proposal put one as a "
-      + "question, so it was not offered.",
+    translation: word("refusal.START_RUMOUR_AS_QUESTION"),
   },
 });
 

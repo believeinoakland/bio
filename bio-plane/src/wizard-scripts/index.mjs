@@ -46,6 +46,7 @@ import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS, ELSEWHERE_DOOR } from "./front-doors.mjs";
 import { START_ROUTES, matchesOf, proposeStart } from "./start.mjs";
 import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
@@ -158,23 +159,23 @@ const startOf = (steps) => (Array.isArray(steps) && steps.length && isObj(steps[
 /* R2's shape (R4, R5's `WIZARD_STEP_REFUSED`): the first step that is not a step, numbered from 1, with why; or null. A
    draft may leave `what` and `why` empty (R12 judges that); a draft's source must be one of the three. */
 function stepShape(steps) {
-  if (!Array.isArray(steps)) return { step: null, why: "steps are a list" };
-  if (steps.length > STEPS_MAX) return { step: null, why: `a script has at most ${STEPS_MAX} steps` };
+  if (!Array.isArray(steps)) return { step: null, why: word("wizard-scripts.why.steps_list") };
+  if (steps.length > STEPS_MAX) return { step: null, why: word("wizard-scripts.refusal.steps_at_most", { max: STEPS_MAX }) };
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i], n = i + 1;
     if (!isObj(s)) return { step: n, why: "a step is {screen, act, what, why, draft?, via?}" };
     const extra = Object.keys(s).find((k) => !STEP_KEYS.includes(k));
     if (extra) return { step: n, why: `a step carries only screen, act, what, why, draft and via, not '${extra.slice(0, 40)}'` };
-    if (s.via !== undefined && s.via !== null && s.via !== "" && !oneLine(s.via, NAME_FIELD_MAX)) return { step: n, why: "a side trip names a script by its id" };
-    if (!oneLine(s.screen, NAME_FIELD_MAX)) return { step: n, why: "a step names its screen" };
-    if (s.act !== undefined && s.act !== null && !oneLine(s.act, NAME_FIELD_MAX)) return { step: n, why: "an act is an op's name, or none" };
+    if (s.via !== undefined && s.via !== null && s.via !== "" && !oneLine(s.via, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.side_trip_names") };
+    if (!oneLine(s.screen, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.step_names_screen") };
+    if (s.act !== undefined && s.act !== null && !oneLine(s.act, NAME_FIELD_MAX)) return { step: n, why: word("wizard-scripts.why.act_op_name") };
     for (const k of ["what", "why"])
       if (s[k] !== undefined && s[k] !== null && !textUpTo(s[k], STEP_TEXT_MAX, 0))
-        return { step: n, why: `'${k}' is text of at most ${STEP_TEXT_MAX} characters` };
+        return { step: n, why: word("wizard-scripts.refusal.step_text_length", { field: k, max: STEP_TEXT_MAX }) };
     if (s.draft !== undefined && s.draft !== null) {
       const d = canonicalDraft(s.draft);
       if (!d) return { step: n, why: "a draft is one of {text}, {template} or {machine}" };
-      if (d.text !== undefined && !textUpTo(d.text, DRAFT_TEXT_MAX)) return { step: n, why: `a draft's text is 1 to ${DRAFT_TEXT_MAX} characters` };
+      if (d.text !== undefined && !textUpTo(d.text, DRAFT_TEXT_MAX)) return { step: n, why: word("wizard-scripts.refusal.draft_text_length", { max: DRAFT_TEXT_MAX }) };
     }
   }
   return null;
@@ -260,9 +261,9 @@ const finding = (code, step, detail, extra) => {
    `offered` maps each offered script's id to its steps; a side trip whose own steps lead back to `self` through `via`,
    however far, never returns (DEC-139 (4)). */
 function viaRefusal(via, self, steps, offered) {
-  if (typeof via !== "string" || !via.trim()) return "a side trip names a script by its id";
-  if (self !== null && via === self) return "a side trip cannot go to the script itself";
-  if (!offered.has(via)) return `no script '${via.slice(0, 80)}' is offered here to go to`;
+  if (typeof via !== "string" || !via.trim()) return word("wizard-scripts.why.side_trip_names");
+  if (self !== null && via === self) return word("wizard-scripts.text.side_trip_go");
+  if (!offered.has(via)) return word("wizard-scripts.refusal.side_trip_not_offered", { script: via.slice(0, 80) });
   const seen = new Set(), queue = [via];
   const graph = (id) => (id === self ? steps : offered.get(id) || []);
   while (queue.length) {
@@ -272,7 +273,7 @@ function viaRefusal(via, self, steps, offered) {
     for (const t of graph(id)) {
       const next = isObj(t) && typeof t.via === "string" ? t.via : null;
       if (next === null) continue;
-      if (self !== null && next === self) return `the side trip to '${via.slice(0, 80)}' leads back to this script, so it would never return`;
+      if (self !== null && next === self) return word("wizard-scripts.refusal.side_trip_loops_back", { script: via.slice(0, 80) });
       queue.push(next);
     }
   }
@@ -295,27 +296,27 @@ export function checkScript(steps, { screens = [], ops = null, machineRefused = 
   const refusals = [], warnings = [];
   /* DEC-49 REGION is-wizard-check */
   if (!Array.isArray(steps) || !steps.length) {
-    refusals.push(finding("WIZARD_NO_STEPS", null, "a script has at least one step"));
+    refusals.push(finding("WIZARD_NO_STEPS", null, word("wizard-scripts.refusal.needs_one_step")));
     return { refusals, warnings };
   }
   steps.forEach((raw, i) => {
     const n = i + 1;
     const s = isObj(raw) ? raw : {};
     const acts = typeof s.screen === "string" ? reg.screens.get(s.screen) : undefined;
-    if (!acts) refusals.push(finding("WIZARD_SCREEN_UNKNOWN", n, `no screen '${String(s.screen ?? "").slice(0, 80)}' is registered`));
+    if (!acts) refusals.push(finding("WIZARD_SCREEN_UNKNOWN", n, word("wizard-scripts.refusal.screen_unknown", { screen: String(s.screen ?? "").slice(0, 80) })));
     else if (s.act !== undefined && s.act !== null && s.act !== ""
              && (typeof s.act !== "string" || !acts.has(s.act) || (reg.ops && !reg.ops.has(s.act))))
-      refusals.push(finding("WIZARD_ACT_UNKNOWN", n, `the screen '${s.screen}' offers no act '${String(s.act).slice(0, 80)}'`));
+      refusals.push(finding("WIZARD_ACT_UNKNOWN", n, word("wizard-scripts.refusal.act_unknown", { screen: s.screen, act: String(s.act).slice(0, 80) })));
     if (typeof s.what !== "string" || !s.what.trim() || typeof s.why !== "string" || !s.why.trim())
-      refusals.push(finding("WIZARD_STEP_NO_WHY", n, "the step does not say what the member does and why"));
+      refusals.push(finding("WIZARD_STEP_NO_WHY", n, word("wizard-scripts.refusal.step_needs_what_why")));
     if (s.draft !== undefined && s.draft !== null) {
       const d = canonicalDraft(s.draft);
       const ok = !!d && (d.text !== undefined ? textUpTo(d.text, DRAFT_TEXT_MAX)
         : d.template !== undefined ? (typeof templateOffered === "function" ? safe(() => templateOffered(d.template)) === true : true)
         : reg.machineDrafts.has(d.machine));
       if (!ok) refusals.push(finding("WIZARD_DRAFT_REFUSED", n, !d ? "a draft is one of {text}, {template} or {machine}"
-        : d.template !== undefined ? `no filing template '${d.template.slice(0, 80)}' is offered here`
-        : d.machine !== undefined ? `'${d.machine.slice(0, 80)}' is not a registered machine draft` : `a draft's text is 1 to ${DRAFT_TEXT_MAX} characters`));
+        : d.template !== undefined ? word("wizard-scripts.refusal.template_not_offered", { template: d.template.slice(0, 80) })
+        : d.machine !== undefined ? `'${d.machine.slice(0, 80)}' is not a registered machine draft` : word("wizard-scripts.refusal.draft_text_length_check", { max: DRAFT_TEXT_MAX })));
     }
     if (s.via !== undefined && s.via !== null && s.via !== "") {
       const why = viaRefusal(s.via, typeof self === "string" ? self : null, steps, offeredById);
@@ -326,16 +327,16 @@ export function checkScript(steps, { screens = [], ops = null, machineRefused = 
       const help = !!d && d.machine !== undefined && HELP_DRAFTS.includes(d.machine);
       const allowed = !!d && d.machine !== undefined && reg.machineDrafts.has(d.machine) && !help;
       if (typeof s.act === "string" && help && reg.helpRefused.has(s.act))
-        refusals.push(finding("WIZARD_STEP_CONCLUDES", n, `the assistant never helps word the act '${s.act}': it is refused to a machine or cannot be undone`));
+        refusals.push(finding("WIZARD_STEP_CONCLUDES", n, word("wizard-scripts.refusal.assistant_never_helps_act", { act: s.act })));
       else if (typeof s.act === "string" && reg.machineRefused.has(s.act) && !allowed && !help)
-        refusals.push(finding("WIZARD_STEP_CONCLUDES", n, `the act '${s.act}' is refused to a machine: no draft is placed on it but a registered labelled machine draft`));
+        refusals.push(finding("WIZARD_STEP_CONCLUDES", n, word("wizard-scripts.refusal.act_refused_to_machine", { act: s.act })));
     }
   });
-  if (steps.length === 1) warnings.push(finding("WIZARD_TRIVIAL", null, "the script has one step"));
+  if (steps.length === 1) warnings.push(finding("WIZARD_TRIVIAL", null, word("wizard-scripts.warning.single_step")));
   const mine = steps.map(pairKey).join("\u0001");
   for (const o of Array.isArray(offered) ? offered : []) {
     if (isObj(o) && Array.isArray(o.steps) && o.steps.map(pairKey).join("\u0001") === mine) {
-      warnings.push(finding("WIZARD_DUPLICATE", null, "an offered script walks the same screens and acts", { script: o.id ?? null }));
+      warnings.push(finding("WIZARD_DUPLICATE", null, word("wizard-scripts.warning.duplicate_script"), { script: o.id ?? null }));
       break;
     }
   }
@@ -459,7 +460,7 @@ export class WizardScripts {
   /* R20: absent and invisible are one answer. */
   #noWizard(asked) {
     /* DEC-49 REGION is-no-such-wizard */
-    return refuse("NO_SUCH_WIZARD", "no wizard script by that id is readable here; one you may not see answers the same",
+    return refuse("NO_SUCH_WIZARD", word("wizard-scripts.refusal.no_such_script"),
                   { script: typeof asked === "string" ? (parseVersionId(asked)?.script ?? str(asked)) : null });
     /* END DEC-49 REGION is-no-such-wizard */
   }
@@ -475,7 +476,7 @@ export class WizardScripts {
   }
   #notADraft(s, n, state) {
     /* DEC-49 REGION is-wizard-not-a-draft */
-    return refuse("NOT_A_DRAFT", `the version is ${state}, past draft: its steps are fixed`, { version: versionId(s.id, n), state });
+    return refuse("NOT_A_DRAFT", word("wizard-scripts.refusal.not_a_draft", { state }), { version: versionId(s.id, n), state });
     /* END DEC-49 REGION is-wizard-not-a-draft */
   }
   #notAnApprover(s, detail) {
@@ -485,13 +486,13 @@ export class WizardScripts {
   }
   #notTheGroups(s) {
     /* DEC-49 REGION is-wizard-civicsmith */
-    return refuse("WIZARD_NOT_THE_GROUPS", "a Civicsmith script is read-only to every team: teams cannot edit or retire it",
+    return refuse("WIZARD_NOT_THE_GROUPS", word("wizard-scripts.refusal.civicsmith_read_only"),
                   { script: s.id, origin: "civicsmith" });
     /* END DEC-49 REGION is-wizard-civicsmith */
   }
   #ended(s, ended, extra) {
     /* DEC-49 REGION is-wizard-ended */
-    return refuse("WIZARD_ALREADY_ENDED", ended.ending === "retired" ? "the script was already retired" : "the version was already withdrawn",
+    return refuse("WIZARD_ALREADY_ENDED", ended.ending === "retired" ? word("wizard-scripts.refusal.script_already_retired") : word("wizard-scripts.refusal.version_already_withdrawn"),
                   { script: s.id, ...(extra || {}), ended });
     /* END DEC-49 REGION is-wizard-ended */
   }
@@ -861,7 +862,7 @@ export class WizardScripts {
   #recordingRefusal(recorded) {
     /* DEC-49 REGION is-wizard-recording */
     if (!Array.isArray(recorded)) return refuse("WIZARD_STEP_REFUSED", "a recording is a list of {screen, act}", { step: null });
-    if (recorded.length > STEPS_MAX) return refuse("WIZARD_STEP_REFUSED", `a script has at most ${STEPS_MAX} steps`, { step: null });
+    if (recorded.length > STEPS_MAX) return refuse("WIZARD_STEP_REFUSED", word("wizard-scripts.refusal.steps_at_most_recording", { max: STEPS_MAX }), { step: null });
     for (let i = 0; i < recorded.length; i++) {
       const s = recorded[i];
       if (isObj(s) && Object.keys(s).some((k) => k !== "screen" && k !== "act"))
@@ -911,7 +912,7 @@ export class WizardScripts {
       if (target) proj = target.project;
     }
     const member = this.#member(author);
-    if (!proj || !this.#joined(proj, member)) return this.#scope(target, "a script is drafted by a joined participant of its project");
+    if (!proj || !this.#joined(proj, member)) return this.#scope(target, word("wizard-scripts.refusal.draft_joined_only"));
     if (!recording && !source && !this.#liveGrant(member))
       return this.#notGranted("a blank start needs the advanced editor, which an administrator grants");
     if (recording || (base && given(from))) {
@@ -922,7 +923,7 @@ export class WizardScripts {
     const named = base && !given(name) ? base.s.name.slice(0, WIZARD_NAME_MAX) : name;
     /* DEC-49 REGION is-wizard-draft */
     if (!target && !oneLine(named, WIZARD_NAME_MAX))
-      return refuse("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
+      return refuse("WIZARD_NAME_REFUSED", word("wizard-scripts.refusal.name_length", { max: WIZARD_NAME_MAX }), { max: WIZARD_NAME_MAX });
     /* END DEC-49 REGION is-wizard-draft */
     const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str(s.act) }))
       : base ? source.steps.map((s) => ({ screen: s.screen, act: s.act ?? null })) : null;
@@ -947,7 +948,7 @@ export class WizardScripts {
                      VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json(steps), sha, member, who, source && source.proposal ? source.proposal : null, at);
       return { ok: true, script: sid, version: versionId(sid, n), sha, state: "draft",
                ...(source && source.derived ? { derived_from: source.derived } : {}), ...(base ? { based_on: source.copy } : {}),
-               says: "a draft: only its author runs it, and it is offered to no one until it is submitted and approved" };
+               says: word("wizard-scripts.says.draft_author_runs") };
     });
   }
 
@@ -964,7 +965,7 @@ export class WizardScripts {
     if (s.origin === "civicsmith") return this.#notTheGroups(s);
     const member = this.#member(author);
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
-    if (!member || v.author !== member) return this.#scope(s, "a draft is revised by its author");
+    if (!member || v.author !== member) return this.#scope(s, word("wizard-scripts.refusal.revise_author_only"));
     const state = this.#stateOf(this.#events(s.id), n);
     if (state !== "draft") return this.#notADraft(s, n, state);
     const adopting = adopt !== null && adopt !== undefined && adopt !== "";
@@ -1022,11 +1023,11 @@ export class WizardScripts {
       proj = str(project);
       if (!proj || this.#call(() => this.membership.inSight(proj, viewer)) !== true) return this.#noWizard(project);
     }
-    const bad = Array.isArray(steps) && !steps.length ? { step: null, why: "a proposal proposes at least one step" } : stepShape(steps);
+    const bad = Array.isArray(steps) && !steps.length ? { step: null, why: word("wizard-scripts.why.proposal_proposes_least") } : stepShape(steps);
     if (bad) return this.#stepRefusal(bad);
     /* DEC-49 REGION is-wizard-propose */
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
-      return refuse("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
+      return refuse("WIZARD_WHY_REFUSED", word("wizard-scripts.refusal.proposal_why_length", { max: PROPOSAL_WHY_MAX }), { max: PROPOSAL_WHY_MAX });
     /* END DEC-49 REGION is-wizard-propose */
     const at = this.#when();
     const cut = (v) => (str(v) ? String(v).trim().slice(0, 200) : null);
@@ -1038,7 +1039,7 @@ export class WizardScripts {
       this.sql.exec(`INSERT INTO wiz_proposals (proposal_id, bundle_id, project, script_id, steps, sha, why, proposer, run, model, at)
                      VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json(canon), sha, why.trim(), who, cut(run), cut(model), at);
       return { ok: true, proposal: { id, project: proj, script: s ? s.id : null, sha, why: why.trim(), at, label: WizardScripts.#label(who) },
-               evidence: false, says: "proposed steps, stored apart: they are no script's until a member drafts from or adopts them" };
+               evidence: false, says: word("wizard-scripts.says.proposed_steps_stored") };
     });
   }
 
@@ -1054,7 +1055,7 @@ export class WizardScripts {
     if (s.origin === "civicsmith") return this.#notTheGroups(s);
     const member = this.#member(author);
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
-    if (!member || v.author !== member) return this.#scope(s, "a draft is submitted by its author");
+    if (!member || v.author !== member) return this.#scope(s, word("wizard-scripts.refusal.submit_author_only"));
     const state = this.#stateOf(this.#events(s.id), n);
     if (state !== "draft") return this.#notADraft(s, n, state);
     const steps = this.#steps(s, n);
@@ -1086,9 +1087,9 @@ export class WizardScripts {
     /* DEC-49 REGION is-wizard-approve */
     if (truthy(widen)) {
       if (state !== "approved" || s.retired)
-        return refuse("WIZARD_NOT_APPROVED", `the version is ${s.retired ? "of a retired script" : state}: only an approved project script is widened`,
+        return refuse("WIZARD_NOT_APPROVED", word("wizard-scripts.refusal.widen_not_approved", { state: s.retired ? "of a retired script" : state }),
                       { version: versionId(s.id, n), state });
-      if (!this.#isAdmin(member)) return this.#notAnApprover(s, "an administrator makes a script team-wide");
+      if (!this.#isAdmin(member)) return this.#notAnApprover(s, word("wizard-scripts.refusal.widen_admin_only"));
       if (s.widened) return { ok: true, script: s.id, existed: true, widened: s.widened, scope: "group" };
       const at = this.#when();
       this.sql.exec(`INSERT INTO wiz_events (script_id, version, bundle_id, event, actor, actor_name, detail, at) VALUES (?,NULL,?,?,?,?,?,?)`,
@@ -1096,13 +1097,13 @@ export class WizardScripts {
       return { ok: true, script: s.id, existed: false, scope: "group", widened: { by: { id: member, name: who }, at } };
     }
     if (state !== "submitted")
-      return refuse("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId(s.id, n), state });
+      return refuse("NOT_SUBMITTED", word("wizard-scripts.refusal.approve_not_submitted", { state }), { version: versionId(s.id, n), state });
     if (!this.#mayApprove(s, member))
-      return this.#notAnApprover(s, s.widened ? "an administrator approves a team-wide script" : "an owner of the script's project approves it");
+      return this.#notAnApprover(s, s.widened ? word("wizard-scripts.refusal.approve_team_wide_admin_only") : word("wizard-scripts.refusal.approve_owner_only"));
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
     const others = this.#contributors(s.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member && !others.length)
-      return refuse("APPROVER_IS_AUTHOR", "you are the version's author and its only member contributor: another member approves it",
+      return refuse("APPROVER_IS_AUTHOR", word("wizard-scripts.refusal.approve_not_own_work"),
                     { version: versionId(s.id, n) });
     /* END DEC-49 REGION is-wizard-approve */
     const { refusals, warnings } = this.#check(this.#steps(s, n), viewer, s.id, s.project);
@@ -1117,7 +1118,7 @@ export class WizardScripts {
                       s.id, prev, s.bundle_id, "updated", member, who, json({ by: n }), at);
       return { ok: true, version: versionId(s.id, n), state: "approved", approved: { by: { id: member, name: who }, at },
                updated: prev !== null && prev !== n ? versionId(s.id, prev) : null, warnings,
-               says: "approved: offered to every member who may see it; an earlier approved version stays readable, as updated" };
+               says: word("wizard-scripts.says.approved_offered_member") };
     });
   }
 
@@ -1127,11 +1128,11 @@ export class WizardScripts {
    *  grant answers it, `existed: true`. */
   wizardEditorGrant({ member = null, by = null } = {}) {
     const admin = this.#member(by);
-    if (!this.#isAdmin(admin)) return notAnAdmin(str(by), "granting the advanced wizard editor");
+    if (!this.#isAdmin(admin)) return notAnAdmin(str(by), word("wizard-scripts.refusal.grant_admin_action"));
     const id = str(member) ? str(member).replace(/^member:/, "") : null;
     const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
     /* DEC-49 REGION is-wizard-editor-grant */
-    if (!facts) return refuse("WIZARD_EDITOR_MEMBER_UNKNOWN", "no member by that id", { member: id ? id.slice(0, 80) : null });
+    if (!facts) return refuse("WIZARD_EDITOR_MEMBER_UNKNOWN", word("wizard-scripts.refusal.grant_no_such_member"), { member: id ? id.slice(0, 80) : null });
     /* END DEC-49 REGION is-wizard-editor-grant */
     const held = this.#liveGrant(id);
     if (held) return { ok: true, grant: held.grant_id, existed: true, member: { id, name: held.member_name },
@@ -1150,10 +1151,10 @@ export class WizardScripts {
   /** R8 (`op=wizardeditorrevoke`): an administrator revokes a grant, appended; a second revocation answers the first. */
   wizardEditorRevoke({ grant = null, by = null } = {}) {
     const admin = this.#member(by);
-    if (!this.#isAdmin(admin)) return notAnAdmin(str(by), "revoking the advanced wizard editor");
+    if (!this.#isAdmin(admin)) return notAnAdmin(str(by), word("wizard-scripts.refusal.revoke_admin_action"));
     const g = str(grant) ? this.#one(`SELECT * FROM wiz_editor_grants WHERE grant_id=?`, str(grant)) : null;
     /* DEC-49 REGION is-wizard-editor-grant */
-    if (!g) return refuse("WIZARD_NO_SUCH_GRANT", "no editor grant by that id", { grant: str(grant) });
+    if (!g) return refuse("WIZARD_NO_SUCH_GRANT", word("wizard-scripts.refusal.revoke_no_such_grant"), { grant: str(grant) });
     /* END DEC-49 REGION is-wizard-editor-grant */
     const held = this.#one(`SELECT * FROM wiz_editor_revocations WHERE grant_id=?`, g.grant_id);
     if (held) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held.actor, name: held.actor_name }, at: held.at } };
@@ -1178,12 +1179,12 @@ export class WizardScripts {
     const why = textUpTo(reason, ENDING_REASON_MAX);
     const reasonRefused = () => {
       /* DEC-49 REGION is-wizard-retire */
-      return refuse("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      return refuse("WIZARD_REASON_REFUSED", word("wizard-scripts.refusal.retire_reason_length", { max: ENDING_REASON_MAX }), { max: ENDING_REASON_MAX });
       /* END DEC-49 REGION is-wizard-retire */
     };
     if (version === null || version === undefined || version === "") {
       if (!this.#mayApprove(s, member))
-        return this.#notAnApprover(s, s.widened ? "an administrator retires a team-wide script" : "an owner of the script's project retires it");
+        return this.#notAnApprover(s, s.widened ? word("wizard-scripts.refusal.retire_team_wide_admin_only") : word("wizard-scripts.refusal.retire_owner_only"));
       if (!why) return reasonRefused();
       if (s.retired) return this.#ended(s, { ending: "retired", ...s.retired });
       const at = this.#when();
@@ -1191,13 +1192,13 @@ export class WizardScripts {
       this.sql.exec(`INSERT INTO wiz_events (script_id, version, bundle_id, event, actor, actor_name, detail, at) VALUES (?,NULL,?,?,?,?,?,?)`,
                     s.id, s.bundle_id, "retired", member, who, json({ reason: reason.trim() }), at);
       return { ok: true, script: s.id, retired: { by: { id: member, name: who }, at, reason: reason.trim() },
-               says: "retired: none of its versions is offered again; each stays readable with this reason" };
+               says: word("filing-templates.says.retired_versions_offered") };
     }
     const n = this.#versionOf(s, version);
     if (n === null) return this.#noWizard(named);
     const events = this.#events(s.id);
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
-    if (!member || v.author !== member) return this.#scope(s, "a version is withdrawn by its author");
+    if (!member || v.author !== member) return this.#scope(s, word("wizard-scripts.refusal.withdraw_author_only"));
     const state = this.#stateOf(events, n);
     if (state === "approved" || state === "updated") return this.#notADraft(s, n, state);
     if (!why) return reasonRefused();
@@ -1261,7 +1262,7 @@ export class WizardScripts {
       return { ok: true, state: "proposed", truncated: rows.length > WIZARDS_MAX,
                proposals: rows.slice(0, WIZARDS_MAX).map((p) => ({ id: p.proposal_id, project: p.project, script: p.script_id ?? null,
                  steps: parse(p.steps) || [], sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) })),
-               says: "proposed steps: none is offered, and none is a script's until a member drafts from or adopts them" };
+               says: word("wizard-scripts.says.proposed_steps_offered") };
     }
     /* R39 (T48; walk row 17): what is offered is listed to every member who may see it; each other state, as R10 says */
     const offered = !st || st === "offered";
@@ -1524,16 +1525,16 @@ export class WizardScripts {
     const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
     if (!at.offered && at.code === KEPT_AWAY && isObj(away) && away.ok === false) return { ...away, ...asked };
     if (!at.offered && at.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked };
-    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", asked);
+    if (!at.offered) return refuse(at.code, word("wizard-scripts.refusal.assistant_no_help_field"), asked);
     const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     /* DEC-49 REGION is-writing-help-request */
     if (!text.trim() || text.length > TOLD_MAX)
-      return refuse("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+      return refuse("WRITING_HELP_NOTHING_TOLD", word("wizard-scripts.refusal.assistant_tell_length", { max: TOLD_MAX }), { max: TOLD_MAX });
     /* END DEC-49 REGION is-writing-help-request */
     if (door) return { ...door, ...asked };
     /* DEC-49 REGION is-writing-help-request */
     const untested = this.#untested();
-    return refuse("ASSISTANT_DRAFT_UNAVAILABLE", "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
+    return refuse("ASSISTANT_DRAFT_UNAVAILABLE", word("wizard-scripts.refusal.assistant_draft_unavailable"),
                   { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()), ...(untested ? { untested } : {}) });
     /* END DEC-49 REGION is-writing-help-request */
   }
@@ -1582,7 +1583,7 @@ export class WizardScripts {
     const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version)
       : all ? this.#numbers(s.id) : this.#rows(`SELECT version FROM wiz_versions WHERE script_id=? AND author=? ORDER BY version`, s.id, me ?? "").map((r) => r.version);
     if (!all && !(s.origin === "group" && numbers.length))
-      return this.#useRefusal("a script's use is read by the owners of its project and its authors");
+      return this.#useRefusal(word("wizard-scripts.refusal.use_owners_authors_only"));
     const use = [];
     for (const n of numbers) {
       const days = new Map();
@@ -1609,7 +1610,7 @@ export class WizardScripts {
   wizardCandidates({ viewer = null } = {}) {
     const me = this.#member(viewer);
     const owner = !!me && this.#rows(`SELECT DISTINCT project FROM wiz_scripts`).some((r) => this.#isOwner(r.project, me));
-    if (!this.#isAdmin(me) && !owner) return this.#useRefusal("candidates are read by project owners and administrators");
+    if (!this.#isAdmin(me) && !owner) return this.#useRefusal(word("wizard-scripts.refusal.candidates_owners_admins_only"));
     const drops = [];
     for (const { s, n, steps } of this.#offeredScripts(viewer)) {
       const vid = versionId(s.id, n);

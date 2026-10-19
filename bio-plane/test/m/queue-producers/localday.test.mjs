@@ -6,7 +6,7 @@
    time is the one set and never converted, and none carries `due`; an item action-producers answers keeps its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, said, atWord } from "./world.mjs";
 
 const LA = "America/Los_Angeles";
 const placeOf = (zone) => () => (zone === null ? { time_zone: null } : { time_zone: { value: zone, status: "ruled", basis: "TEST" } });
@@ -69,8 +69,8 @@ test("R36: this module derives no day of its own: every item it produces is the 
   assert.match("2026-08-30T00:00:00Z", /T00:00:00Z$/);
   /* R37: the time is the one set, in the group's zone, never the UTC instant it maps to */
   const sched = byId(la)["CONDITION::edition-scheduled::CASE-SW@1"];
-  assert.ok(sched.summary.startsWith("Signed · publishes 2026-09-01, 09:30"), sched.summary);
-  assert.doesNotMatch(`${sched.summary} ${sched.detail}`, /16:30|T16|UTC/);
+  assert.equal(sched.summary, said("queue.edition-scheduled.summary", { when: atWord("2026-09-01", 9, 30), case: "CASE-SW", edition: 1 }));
+  assert.doesNotMatch(`${sched.summary} ${sched.detail}`, /4:30 PM|T16|UTC/);
   assert.match(sched.detail, /America\/Los_Angeles/);
 });
 

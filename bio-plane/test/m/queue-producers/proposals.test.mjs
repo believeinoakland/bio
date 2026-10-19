@@ -9,6 +9,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { proposalFindingItems, CARDINALITY_EXCEEDED } from "../../../src/queue-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 const NOW = "2026-09-01T00:00:00.000Z";
@@ -97,9 +98,9 @@ test("R2 (N107): one FINDING per (progression, stage), the cardinality finding a
   // the cardinality finding alone: its own kind and words, and not "required and absent"
   const need = m["FINDING::proc::need"];
   assert.equal(need.kind, CARDINALITY_EXCEEDED);
-  assert.doesNotMatch(need.summary + need.detail, /absent|without it/);
-  assert.match(need.summary, /Procurement: the 'need' stage holds more documents than it is declared to hold/);
-  assert.match(need.detail, /^2 instances of this progression thread more than one document at 'need' \(4 in all\), which is declared to hold exactly one/);
+  assert.equal(need.summary, word("queue.cardinality_exceeded.summary", { progression: "Procurement", stage: "need" }));
+  assert.equal(need.detail, word("queue.cardinality_exceeded.detail.exactly.other", { n: 2, documents: 4, stage: "need" }));
+  assert.deepEqual([need.summary_key, need.detail_key], ["queue.cardinality_exceeded.summary", "queue.cardinality_exceeded.detail.exactly.other"]);
   assert.deepEqual(need.basis.kinds, [CARDINALITY_EXCEEDED]);
   assert.equal(need.basis.n, 2);
   assert.equal(need.basis.cardinality, "1");
@@ -109,8 +110,10 @@ test("R2 (N107): one FINDING per (progression, stage), the cardinality finding a
   const award = m["FINDING::proc::award"];
   assert.equal(award.kind, "missing_predecessor");
   assert.deepEqual(award.basis.kinds, ["missing_predecessor", CARDINALITY_EXCEEDED]);
-  assert.match(award.summary, /the 'award' stage is always required and absent/);
-  assert.match(award.detail, /^1 instance of this progression reaches 'award' without it; and 1 instance of this progression thread more than one document at 'award' \(2 in all\), which is declared to hold at most one/);
+  assert.equal(award.summary, word("queue.missing_predecessor.summary", { progression: "Procurement", stage: "award" }));
+  assert.equal(award.detail, `${word("queue.missing_predecessor.detail.one", { stage: "award" })} ${word("queue.cardinality_exceeded.also", {
+    cardinality: word("queue.cardinality_exceeded.detail.atmost.one", { stage: "award", documents: 2 }) })}`, "the cardinality sentence joins it");
+  assert.deepEqual([award.summary_key, award.detail_key], ["queue.missing_predecessor.summary", "queue.missing_predecessor.detail.one"]);
   assert.deepEqual(award.basis.cardinality_exceeded, { n: 1, cardinality: "0..1", document_count: 2, grade: "B", grade_determined: true });
   assert.deepEqual(award.subject.bundles, ["B8", "B9", "B4", "B5", "B6", "B7"]);
   // a missing stage alone is as it was
@@ -201,7 +204,8 @@ test("R2: an overdue proposal leads with overdue_successor and says how many are
       grade: "B", grade_determined: true, prior_disposition: null, instances: [inst("E1"), inst("E2"), inst("E3", false)] }] };
   const [it] = proposalFindingItems(feed, { subjectsOf: (pk, e) => [`${e}-a`, `${e}-b`, `${e}-c`], homesOf: () => ({}), optionsOf: () => [], subjectsMax: 8 });
   assert.equal(it.kind, "overdue_successor");
-  assert.equal(it.detail, "3 instances of this progression reach 'Stage' without it, 2 past a declared deadline");
+  assert.equal(it.detail, word("queue.overdue_successor.detail.other", { stage: "Stage", n: 3, overdue: 2 }));
+  assert.equal(it.summary, word("queue.overdue_successor.summary", { progression: "Flow", stage: "Stage" }));
   assert.deepEqual(it.basis.kinds, ["missing_predecessor", "overdue_successor"]);
   assert.equal(it.basis.overdue_count, 2);
   assert.equal(it.subject.bundles.length, 8, "at most eight subject bundles are named");
@@ -229,10 +233,10 @@ test("R2, R11 (K2581): each proposal finding's counts are over the instances the
   const s = part["FINDING::p::s"];
   assert.deepEqual([s.kind, s.basis.n, s.basis.overdue_count, s.basis.grade, s.basis.kinds],
     ["missing_predecessor", 2, 0, "B", ["missing_predecessor"]], "n, overdue, grade and kind over the two seen instances only");
-  assert.equal(s.detail, "2 instances of this progression reach 'Stage' without it", "the sentence counts the seen instances");
+  assert.equal(s.detail, word("queue.missing_predecessor.detail.other", { stage: "Stage", n: 2 }), "the sentence counts the seen instances");
   const c = part["FINDING::p::c"];
   assert.deepEqual([c.basis.n, c.basis.document_count, c.basis.grade], [1, 2, "B"], "the cardinality group over its one seen instance");
-  assert.match(c.detail, /^1 instance of this progression thread more than one document at 'Cap' \(2 in all\)/);
+  assert.equal(c.detail, word("queue.cardinality_exceeded.detail.exactly.one", { stage: "Cap", documents: 2 }));
   assert.ok(!/E9|7 in all|\b3 instances/.test(JSON.stringify(run(["E1", "E2"]))), "R11: nothing of the unseen instance is counted or named");
   assert.equal(run([]).length, 0, "none seen: no item at all");
   /* the negative control: every instance seen, the feed's own counts stand */

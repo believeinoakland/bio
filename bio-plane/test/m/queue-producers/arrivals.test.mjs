@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const arrival = (over = {}) => ({ name: "Riverton", profile: "us-xx-riverton", profile_name: "City of Riverton",
   covers: ["Riverton", "Riverton County"], found_at: iso(NOW - 7200000), ...over });
@@ -43,8 +44,8 @@ test("R38: one CONDITION place-profile-arrived per arrival, keyed CONDITION::pla
   const it = byId(w.read("ada"))["CONDITION::place-profile-arrived::us-xx-riverton"];
   assert.equal(placeItems(w.read("ada")).length, 1, "raised once per arrival");
   assert.deepEqual([it.class, it.kind], ["CONDITION", "place-profile-arrived"]);
-  assert.match(it.summary, /"Riverton"/); assert.match(it.summary, /City of Riverton/);
-  assert.match(it.detail, /covers Riverton, Riverton County/);
+  assert.equal(it.summary, word("queue.place-profile-arrived.summary", { place: "Riverton", profile: "City of Riverton" }));
+  assert.equal(it.detail, `${word("queue.place-profile-arrived.detail", { place: "Riverton", profile: "City of Riverton" })} ${word("queue.place-profile-arrived.detail.covers", { covers: "Riverton, Riverton County" })}`);
   assert.match(it.detail, /\bstatus\b/, "a status in member text (R24)");
   assert.deepEqual(it.subject, { kind: "place_profile", id: "us-xx-riverton", name: "City of Riverton",
                                  covers: ["Riverton", "Riverton County"], place: "Riverton" });
@@ -78,8 +79,9 @@ test("R39: one FINDING wizard-base-updated per entry and recipient baseUpdates a
   const x = it[0];
   assert.deepEqual([x.class, x.kind, x.recipients], ["FINDING", "wizard-base-updated", ["ed"]]);
   assert.deepEqual([x.subject.kind, x.subject.id, x.subject.base_version], ["wizard", "WIZ-C", "WIZ-B@2"], "its subject the copy");
-  assert.match(x.summary, /"File a records request"/); assert.match(x.summary, /WIZ-B@2/); assert.match(x.summary, /"File it our way"/);
-  assert.match(x.detail, /nothing is changed in your copy unless you do\. This is told once\./);
+  assert.equal(x.summary, word("queue.wizard-base-updated.summary", { base: "File a records request", version: "WIZ-B@2", name: "File it our way" }));
+  assert.equal(x.detail, word("queue.wizard-base-updated.detail.versioned", { name: "File it our way", base: "File a records request", version: "WIZ-B@2", based_on: "WIZ-B@1" }));
+  assert.deepEqual([x.summary_key, x.detail_key], ["queue.wizard-base-updated.summary", "queue.wizard-base-updated.detail.versioned"]);
   assert.deepEqual(x.options.map((o) => o.id), ["wizardread", "wizardrevise"]);
   assert.deepEqual(x.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]]);
   assert.deepEqual(x.age, { state: "determined", since: iso(NOW - 600000), ms: 600000 });

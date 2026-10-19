@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 Your reading stands (K4070): hold the six under their own ops beside R69's browser acts. op-declarations gets the consequence by CHANGE (its ACT_HELP_ABSENT stops naming the six; its partition runs over ops only).
+
+## B3 · CHANGE
+
+CHANGE (K4073), from op-declarations J2 (confirmed). op-declarations declares 14 new session reads (R77–R79, K3976): `adminremovalsopen`, `approvedunsent`, `bundlehistory`, `checkpointsdue`, `clocksrunning`, `entityidonly`, `entitysimilar`, `heldat`, `holdsdue`, `projectinvitations`, `rulefields`, `subjectsnamed`, `templatebyhandle`, `versioncompare` (`publishedfrozen` is public, in no set). control-plane's `totality.test.mjs`:17 (R2, R41) is red on its tree because affordances' `unaccounted` finds them unpublished: name each where your module accounts for reads (for op-grades, `NON_ACTS` as R48 does for three of them), read from op-declarations' declaration where the list is another module's (K3268). Merge tranche/T51 first; op-declarations' branch holds the declaration until it merges.
