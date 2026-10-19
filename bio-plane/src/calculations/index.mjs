@@ -31,7 +31,7 @@
 import { canonicalJson, sha256HexSync, isHypothesisId, isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
 import { checkRecipe, evaluate as evaluateRecipe, resultKey, METHOD, parseFigure, draw as drawFrame, interval, divide,
   multiply, RATIO_DEFAULT } from "../calc-grammar/index.mjs";
-import { validAt, fiscalPeriod, isCalendarDate, localDay } from "../civil-time/index.mjs";
+import { validAt, fiscalPeriod, isCalendarDate, localDay, reasonText } from "../civil-time/index.mjs";
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
@@ -339,7 +339,7 @@ export class Calculations {
     const name = engine.version ? `${engine.name} ${engine.version}` : engine.name;
     const measured = MEASURED_ENGINES.includes(name);
     if (measured) return { ...g, engine: name, engine_measured: true, derivation_step: ENGINE_STEP };
-    return { grade: null, why: localize("calculations.index.its_values_were_computed_by", "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}", { name: String(name), v1: String(g.grade ? `; its capture alone reads ${g.grade}` : "") }),
+    return { grade: null, why: localize("calculations.index.its_values_were_computed_by", "its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}", { name: String(name), v1: g.grade ? word("calculations.why.capture_alone_reads", { grade: String(g.grade) }) : "" }),
       engine: name, engine_measured: false, derivation_step: ENGINE_STEP };
   }
 
@@ -570,7 +570,7 @@ export class Calculations {
     const listed = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...(typeof j.answer === "string" ? {} : { why: j.answer.why }) }));
     if (inside.length === 1 && !open.length) return { ok: true, key: str(key), at, state: "determined", table: inside[0].sha, vintages: listed };
     const why = inside.length > 1 ? word("calculations.vintages_valid_none", { inside: String(inside.length), at: String(at) })
-      : open.length ? word("calculations.whether_valid_undetermined", { open: String(open.map((j) => j.sha.slice(0, 12)).join(", ")), open_2: String(open.length > 1 ? "were" : "was"), at: String(at), open_3: String(open.map((j) => j.answer.why).join("; ")) })
+      : open.length ? word("calculations.whether_valid_undetermined", { open: String(open.map((j) => j.sha.slice(0, 12)).join(", ")), open_2: String(open.length > 1 ? "were" : "was"), at: String(at), open_3: String(open.map((j) => reasonText(j.answer.why ?? "")).join("; ")) })
       : word("calculations.vintage_valid", { key: String(str(key)), at: String(at) });
     return { ok: true, key: str(key), at, state: "undetermined", table: null, why, vintages: listed };
   }
@@ -923,7 +923,7 @@ export class Calculations {
         if (!isCalendarDate(day ?? "")) return no("CHANGE_DATE_UNDETERMINED", "the standard's version states no date its period starts from, so before and after cannot be told apart. Nothing was written.", { standard: ch.standard });
         ctx.change = { date: day, rests_on: { standard: str(ch.standard), period: r.period, says: word("calculations.says.version_period_starts", { day: String(day) }) } };
       } else if (isCalendarDate(ch.date ?? "")) ctx.change = { date: ch.date, rests_on: { says: word("calculations.says.date_member_named", { date: String(ch.date) }) } };
-      else return no("NO_CHANGE", "the change is {standard} or {date: YYYY-MM-DD}. Nothing was written.");
+      else return no("NO_CHANGE", localize("calculations.index.the_change_is_a_held", "the change is a held standard's version or a date (YYYY-MM-DD). Nothing was written."));
     }
     if (kind === "target_met") {
       const r = read(t.target);
@@ -1539,7 +1539,7 @@ export class Calculations {
       let e = null;
       try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
       if (e && typeof e.then === "function") e = null;
-      if (plain(e) && e.undetermined) return { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || "more than one entity") }) };
+      if (plain(e) && e.undetermined) return { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
       const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
       return id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
     }
@@ -1551,7 +1551,7 @@ export class Calculations {
       if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
       return { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
     }
-    return { why: "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk" };
+    return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
   }
 
   /** R14: `ingestMoney({binding, rows, reason?, by})`: money facts written through `money.recordFact`, machine-attributed,
@@ -1965,7 +1965,7 @@ export class Calculations {
    *  whose vintage is valid at that date, by person key, with the table's sha. No row is read into a line. Synchronous,
    *  as people asks it (its R18). */
   rosterRows({ organisation = null, at = null, viewer = null } = {}) {
-    if (!str(organisation) || !(typeof at === "string" && isCalendarDate(at.slice(0, 10)))) return { rows: [], tables: [], not_read: [], why: "an organisation and a date are needed" };
+    if (!str(organisation) || !(typeof at === "string" && isCalendarDate(at.slice(0, 10)))) return { rows: [], tables: [], not_read: [], why: localize("calculations.index.an_organisation_and_a_date", "an organisation and a date are needed") };
     const day = at.slice(0, 10);
     const view = this.#view();
     const rows = [], tables = [], notRead = [];
@@ -1979,7 +1979,7 @@ export class Calculations {
       let a = "undetermined";
       if (v) { try { a = validAt({ valid: { from: v.valid.from ?? null, to: v.valid.to ?? null, precision: "day", zone: "UTC" }, basis: v.basis ?? null }, { value: day, precision: "day", zone: "UTC" }, { view }); } catch { a = "undetermined"; } }
       if (a === "out") continue;
-      if (a !== "in") { notRead.push({ table: t.sha, why: v ? word("calculations.why.whether_vintage_valid", { day: String(day), first: String(a && a.why ? `: ${a.why}` : "") }) : word("calculations.why.table_states_vintage") }); continue; }
+      if (a !== "in") { notRead.push({ table: t.sha, why: v ? word("calculations.why.whether_vintage_valid", { day: String(day), first: String(a && a.why ? `: ${reasonText(a.why)}` : "") }) : word("calculations.why.table_states_vintage") }); continue; }
       const g = this.#heldTableSync(t.sha);
       if (!g) { notRead.push({ table: t.sha, why: word("calculations.why.the_table_s_bytes_are") }); continue; }
       tables.push(t.sha);

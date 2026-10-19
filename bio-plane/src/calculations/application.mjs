@@ -53,7 +53,7 @@ export const APPLICATION_RECIPES = Object.freeze([
   { recipe: "outcome_rate_by", inputs: { uses: "a frozen uses table (R32)" },
     terms: { by: "the column to group by: decider, subject, subject_kind, subject_sector, reason_stated, relationships, kind, provision_standard, or when (with period)",
       period: "for by: when, year or month", outcomes: "optional: the outcomes named; any other is counted apart" },
-    says: "the share of each outcome in each group, with the group's size" },
+    says: localize("calculations.application.the_share_of_each", "the share of each outcome in each group, with the group's size") },
   { recipe: "reasons_missing", inputs: { uses: "a frozen uses table (R32)" }, terms: { by: "optional: a column to group by" },
     says: word("calculations.says.share_acts_reason") },
   { recipe: "reasons_repeated", inputs: { uses: "a frozen uses table (R32)" }, terms: {},
@@ -67,7 +67,7 @@ export const APPLICATION_RECIPES = Object.freeze([
     says: word("calculations.says.outcome_shares_change") },
   { recipe: "target_met", inputs: { measure: "a calculation or cited figure (one period, the calculation's), or a table with from, to and value columns (one row per period)" },
     terms: { target: "the held standard carrying the target (standards R42)", body: word("calculations.body_measured_entity"), definition_differs: "optional: the member's words when the measure's definition differs from the target's" },
-    says: "per period, the measured value beside the threshold, with whether a target that binds the body was met; against a benchmark, the comparison alone, labelled" },
+    says: word("calculations.says.per_period_measured") },
   { recipe: "policy_against_practice", inputs: { practice: "a table, or a calculation answering a table, of the acts measured" },
     terms: { provision: "{standard, portion?}", departure: "the conditions (calc-grammar's select) a departing act meets, as the member defines departure" },
     says: word("calculations.says.measured_rate_departing") },
@@ -387,7 +387,7 @@ export function answerApplication(kind, plan, at, ctx = {}) {
       if (b.state === "binds") row.met = metOf(relation, tg.threshold.comparator);
       else {
         row.compared = benchmarkWords(relation, tg.threshold.unit) ?? "undetermined";
-        if (b.state === "benchmark") row.label = word("standard.binding.benchmark", { body: String(ctx.bodyLabel || b.body || "the body measured") });
+        if (b.state === "benchmark") row.label = word("standard.binding.benchmark", { body: String(ctx.bodyLabel || b.body || word("calculations.body_measured")) });
         else row.why = b.why || word("calculations.whether_target_binds");
       }
       return row;

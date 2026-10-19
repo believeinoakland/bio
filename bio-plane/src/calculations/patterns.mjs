@@ -189,7 +189,7 @@ async function byGroup(deps, field) {
       derivation: { occurrences: mine.map((u) => ({ duty: u.duty, occurrence: u.key, state: u.state })) },
       rests_on: [...new Set(mine.map((u) => u.duty))] });
   }
-  return { results, denominator: { n: units.length, of: word("calculations.duty_occurrences_with_recorded_met", { field: String(field === "office" ? "an obligor office" : "a proceeding they arose in") }), subjects: results.length }, evaluated: units.length };
+  return { results, denominator: { n: units.length, of: word("calculations.duty_occurrences_with_recorded_met", { field: String(field === "office" ? word("calculations.obligor_office") : word("calculations.proceeding_arose")) }), subjects: results.length }, evaluated: units.length };
 }
 
 /** R22: one pattern's run: `{results, denominator, evaluated}`. */
