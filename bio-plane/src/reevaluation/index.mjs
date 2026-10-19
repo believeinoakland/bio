@@ -137,12 +137,10 @@ const EVENT_REF = /^EVT-/, ACT_REF = /^ACT-/, CALC_REF = /^CALC-/;
 const isRowTarget = (id) => typeof id === "string" && (EVENT_REF.test(id) || ACT_REF.test(id) || CALC_REF.test(id)
   || id.startsWith("occurrence:"));
 /** R34, R21: what `eventChanged` answers when a telling states no instant it can order (events R16 states one). */
-const TELLING_UNTIMED = "the telling states no instant of the change, so it cannot be ordered against a dependent's last "
-  + "write and was not kept; that is not the same as no change";
+const TELLING_UNTIMED = localize("reevaluation.index.telling_untimed", "the telling states no instant of the change, so it cannot be ordered against a dependent's last write and was not kept; that is not the same as no change");
 /** R36, R21: what a notice raised across addresses says of its grade where content's comparison of the two captures
  *  (`passageAcross`, its R55) gives no answer. */
-export const ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content could not compare the "
-  + "passage with it, so whether the change touches this passage is undetermined; that is not the same as unaffected";
+export const ACROSS_UNDETERMINED_WHY = localize("reevaluation.index.across_undetermined", "the newer version is held at another address, and content could not compare the passage with it, so whether the change touches this passage is undetermined; that is not the same as unaffected");
 /** R33: the moves one page of accepted-work's `publisherMoves` is asked for (its R8's most). */
 export const MOVES_PAGE = 200;
 /** R33: the (dependent, move) pairs one `citedCaseDependents` read lists (default and most). */
@@ -160,17 +158,13 @@ export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred
   "source", "attribution", ...DOCKET_KINDS, "acceptance", CITED_CASE_MOVED, EVENT_CHANGED, CALCULATION_INPUT_CHANGED,
   ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
-const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
-  + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+const CORRECTIONS_UNREAD = localize("reevaluation.index.corrections_unread", "the contradiction module's tensions read could not be made, so whether a side this rests on was named wrong was not read and no corrected cause could be derived; that is not the same as none");
 /** R36, R21: what a sweep says when the held standards, or a provision's other addresses, could not all be read. */
-const STANDARDS_UNREAD = "the held standards, or the addresses a provision has been held under, could not all be read, so a "
-  + "notice of a newer version at another address may be missing; that is not the same as none";
+const STANDARDS_UNREAD = localize("reevaluation.index.standards_unread", "the held standards, or the addresses a provision has been held under, could not all be read, so a notice of a newer version at another address may be missing; that is not the same as none");
 /** R16, R21 (N457): what an answer says when no module registered a case edition's parts (R26), or a read of the work
  *  products a project owns could not be made. */
-const CASE_PARTS_ABSENT = "no module has registered the cited parts of a case edition, so which cases a project owns "
-  + "was not read and no wp_retraction cause could be derived; that is not the same as none";
-const WORK_PRODUCTS_UNREAD = "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction "
-  + "cause may be missing; that is not the same as none";
+const CASE_PARTS_ABSENT = localize("reevaluation.index.case_parts_absent", "no module has registered the cited parts of a case edition, so which cases a project owns was not read and no wp_retraction cause could be derived; that is not the same as none");
+const WORK_PRODUCTS_UNREAD = localize("reevaluation.index.work_products_unread", "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none");
 /** R16 (N457): the cases one page of R26's `cases` is asked for, while the work products a project owns are read. */
 export const WORK_PRODUCT_CASES_PAGE = 200;
 /** R30: the entries one page of the docket registration's `withdrawals` or `contested` is asked for. */
@@ -179,20 +173,14 @@ export const DOCKET_PAGE = 200;
 export const DOCKET_LIMIT_DEFAULT = 200;
 export const DOCKET_LIMIT_MAX = 200;
 /** R16, R21, R30: what an answer says when no module registered the docket, or a read of it could not be made. */
-const DOCKET_ABSENT = "no module has registered the docket, so no withdrawn or contested case edition was read and no "
-  + "withdrawal, contested or withdrawal wp_retraction cause could be derived; that is not the same as none";
-const DOCKET_UNREAD = "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or "
-  + "wp_retraction cause may be missing; that is not the same as none";
+const DOCKET_ABSENT = localize("reevaluation.index.docket_absent", "no module has registered the docket, so no withdrawn or contested case edition was read and no withdrawal, contested or withdrawal wp_retraction cause could be derived; that is not the same as none");
+const DOCKET_UNREAD = localize("reevaluation.index.docket_unread", "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or wp_retraction cause may be missing; that is not the same as none");
 /** R1, R21, R31: what an answer says when no module registered accepted work, or a read of it could not be made. */
-const ACCEPTED_WORK_ABSENT_WHY = "no module holding another team's work is registered, so no acceptance withdrawal or "
-  + "publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none";
-const ACCEPTANCE_UNREAD = "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is "
-  + "not the same as none";
+const ACCEPTED_WORK_ABSENT_WHY = localize("reevaluation.index.accepted_work_absent", "no module holding another team's work is registered, so no acceptance withdrawal or publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none");
+const ACCEPTANCE_UNREAD = localize("reevaluation.index.acceptance_unread", "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is not the same as none");
 /** R33, R21: what an answer says when no module keeps the publisher moves, or a read of them could not be made. */
-const MOVES_ABSENT_WHY = "the module holding another team's work keeps no publisher moves here, so no new edition or withdrawal "
-  + "of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none";
-const MOVES_UNREAD = "the cited cases' publisher moves could not all be read, so a cited_case_moved cause may be missing; "
-  + "that is not the same as none";
+const MOVES_ABSENT_WHY = localize("reevaluation.index.moves_absent", "the module holding another team's work keeps no publisher moves here, so no new edition or withdrawal of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none");
+const MOVES_UNREAD = localize("reevaluation.index.moves_unread", "the cited cases' publisher moves could not all be read, so a cited_case_moved cause may be missing; that is not the same as none");
 /* R1, R31: an imported finding reference (`inquiry-grammar` R11), as a leg's target names it. */
 const isRef = (id) => typeof id === "string" && !!parseImportedFindingRef(id);
 /** R27: the (dependent, candidate) entries one `correctedDependents` read lists (default and most). */
@@ -286,8 +274,9 @@ function movedDetail(ref, n, m, group, kase) {
   const what = m.kind === "edition" ? `published edition ${m.edition}`
     : m.edition === "all" ? word("reevaluation.withdrew_edition") : `withdrew edition ${m.edition}`;
   const words = m.kind === "edition" ? m.what_changed : m.reason;
-  return word("reevaluation.leg_rests_group", { ref: String(ref), n: String(n), kase: String(kase ? `, of case ${kase}` : ""), group: String(group ? ` by ${group}` : ""), what: String(what), seq: String(m.seq ?? "unnumbered"), date: String(m.date ? `, dated ${m.date}` : ""), words: String(words ? `: "${words}"` : ""), key_listed: String(m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""), taken_back: String(m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}`
-      + `${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : "") });
+  const keyListed = m.key_listed === false ? localize("reevaluation.index.key_not_listed", "The entry's signing key is not among the keys the imported case file lists.") : "";
+  const takenBack = m.taken_back ? localize("reevaluation.index.taken_back", "The publisher has since taken this entry back (entry {seq}{date}); the cause still stands.", { seq: String(m.taken_back.seq ?? "unnumbered"), date: m.taken_back.date ? `, dated ${m.taken_back.date}` : "" }) : "";
+  return word("reevaluation.leg_rests_group", { ref: String(ref), n: String(n), kase: String(kase ? `, of case ${kase}` : ""), group: String(group ? ` by ${group}` : ""), what: String(what), seq: String(m.seq ?? "unnumbered"), date: String(m.date ? `, dated ${m.date}` : ""), words: String(words ? `: "${words}"` : ""), key_listed: String(keyListed ? ` ${keyListed}` : ""), taken_back: String(takenBack ? ` ${takenBack}` : "") });
 }
 
 export class Reevaluation {
@@ -1088,8 +1077,7 @@ export class Reevaluation {
           ...(m.inquiry ? { inquiry: m.inquiry } : {}), ...(m.act ? { act: m.act } : {}), side,
           /* N359: a mark carries its marking act's instant (a member's `one_wrong`, or R36's concluding act); only a
              conclusion reached by basis-versions' own door has none, and the mark says why. */
-          ...(m.at ? {} : { since_why: `${typeof m.why === "string" && m.why ? `${m.why}; ` : ""}the tensions read states `
-                              + "no instant for this mark, and none is invented here" }),
+          ...(m.at ? {} : { since_why: localize("reevaluation.index.no_instant_for_mark", "{why}the tensions read states no instant for this mark, and none is invented here", { why: typeof m.why === "string" && m.why ? `${m.why}; ` : "" }) }),
           detail: `${what} was named wrong by a member's resolution of contradiction ${m.candidate}`
             + `${m.reason ? ` (${m.reason})` : ""}. It still resolves and says it was corrected; nothing resting on it `
             + `was moved, and whether this finding still stands is the members' to decide.`,
@@ -1413,7 +1401,7 @@ export class Reevaluation {
       try { dependents = this.#liveLegsOn(names); } catch { dependents = []; }
       const out = { ok: true, kept: true, at, dependents: dependents.length };
       this.#tellAfterCommit({ kind: EVENT_CHANGED, subject: id, source: EVENT_CHANGED, since: at, change,
-        detail: localize("reevaluation.index.the_event_id_v1_v2", "the event {id} {v1}; {v2}", { id: String(id), v1: String(change === "when_moved" ? "moved in time" : "had a participant re-resolved"), v2: String(dependents.length ? "what rests on it directly is named" : "nothing live here rests on it") }),
+        detail: localize("reevaluation.index.the_event_id_v1_v2", "the event {id} {v1}; {v2}", { id: String(id), v1: String(change === "when_moved" ? "moved in time" : "had a participant re-resolved"), v2: String(dependents.length ? localize("reevaluation.index.event_rests_directly", "what rests on it directly is named") : localize("reevaluation.index.event_nothing_live", "nothing live here rests on it")) }),
         dependents }, out);
       return out;
     } catch { return { ok: true, kept: false }; }
@@ -1691,8 +1679,7 @@ export class Reevaluation {
              ...(t0 && withheld ? { out_of_view: true } : {}),
              closed: closedOnly, closed_count: closedOnly.length,
              editions_read: reg !== null,
-             ...(reg === null ? { editions_why: "no module provides the published registry, so no edition was read "
-                                  + "and no edition cause could be derived; that is not the same as none" } : {}),
+             ...(reg === null ? { editions_why: localize("reevaluation.index.editions_absent", "no module provides the published registry, so no edition was read and no edition cause could be derived; that is not the same as none") } : {}),
              corrections_read: corr.read,
              ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags(), ...dk.flags(),
              ...refs.flags(), ...aw.flags(), ...mv.flags() };
@@ -1951,8 +1938,7 @@ export class Reevaluation {
     return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
              cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].candidate}` : null,
              wrote: false, corrections_read: read, ...(read ? {} : { corrections_why: CORRECTIONS_UNREAD }),
-             says: "each finding listed rests on a side a member's resolution named wrong; that side still resolves and "
-                 + "says it was corrected, nothing resting on it was moved, and a recorded re-evaluation closes the cause" };
+             says: localize("reevaluation.index.corrected_says", "each finding listed rests on a side a member's resolution named wrong; that side still resolves and says it was corrected, nothing resting on it was moved, and a recorded re-evaluation closes the cause") };
   }
 
   /* ---------------------------------------------------------------- R30: a case edition withdrawn or contested */
@@ -1999,9 +1985,7 @@ export class Reevaluation {
     return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
              cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].entry}` : null,
              wrote: false, ...dk.flags(),
-             says: "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member "
-                 + "finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is "
-                 + "evidence, and a recorded re-evaluation closes the cause" };
+             says: localize("reevaluation.index.docket_says", "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is evidence, and a recorded re-evaluation closes the cause") };
   }
 
   /** R30, R8: told by `docket` after its withdrawal or contesting act commits (its R13). Tells R8's listeners once, as
@@ -2070,7 +2054,7 @@ export class Reevaluation {
                     ...(rec ? {} : { withdrawal_read: false }), ...aw.flags() };
       this.#tellAfterCommit({ kind: "acceptance", subject: id, source: "acceptance", since,
         import: rec ? rec.import : null, edition: rec ? rec.edition : null, refs: rec ? rec.refs : [],
-        detail: localize("reevaluation.index.this_teams_acceptance_of_another", "this team's acceptance of another team's work was withdrawn ({id}{v1}); {v2}", { id: String(id), v1: String(rec ? `, edition ${rec.edition}` : ""), v2: String(dependents.length ? "what rests on it is named" : "nothing here rests on it") }),
+        detail: localize("reevaluation.index.this_teams_acceptance_of_another", "this team's acceptance of another team's work was withdrawn ({id}{v1}); {v2}", { id: String(id), v1: String(rec ? `, edition ${rec.edition}` : ""), v2: String(dependents.length ? localize("reevaluation.index.acceptance_rests_on_it", "what rests on it is named") : localize("reevaluation.index.acceptance_nothing_here", "nothing here rests on it")) }),
         dependents }, out);
       return out;
     } catch { return { ok: true, told: false, why: word("reevaluation.why.accepted_work_read") }; }
@@ -2126,9 +2110,7 @@ export class Reevaluation {
     return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
              cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].move}` : null,
              wrote: false, ...mv.flags(), ...refs.flags(),
-             says: "each finding listed rests on another team's finding at an edition its publisher has since replaced "
-                 + "or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, "
-                 + "and a recorded re-evaluation closes the cause" };
+             says: localize("reevaluation.index.acceptance_says", "each finding listed rests on another team's finding at an edition its publisher has since replaced or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, and a recorded re-evaluation closes the cause") };
   }
 
   /** R33, R8 (DEC-101 (3)): told by `case-import` after a docket read that recorded the move commits (its R18). Tells
@@ -2219,16 +2201,14 @@ export class Reevaluation {
           ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
           : { ord: l.ord, target: l.target, content_id: null, state: "not_asked", newer: null,
               says: null, affects: null,
-              why: "this leg rests on no cited passage (it cites another question, or a document this record "
-                 + "holds no bytes of), so there is no capture whose newer versions could be asked about" })
+              why: localize("reevaluation.index.no_cited_passage", "this leg rests on no cited passage (it cites another question, or a document this record holds no bytes of), so there is no capture whose newer versions could be asked about") })
       : [...byId.values()];
     return {
       ok: true, target: inquiry, content: inquiry ? null : cid,
       notices, count: notices.length, limit: inquiry ? max : 1, truncated,
       states: VERSION_NOTICE_STATES, grades: VERSION_NOTICE_GRADES,
       wrote: false, proposal_only: true,
-      visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
-        + "were not invited to is not in them",
+      visible_to: localize("reevaluation.index.visible_to_chains", "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them"),
       says: word("reevaluation.says.notice_computed_stored"),
     };
   }
@@ -2388,12 +2368,8 @@ export class Reevaluation {
     if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
     const out = { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
                   ...(across.read() ? {} : { standards_read: false, standards_why: STANDARDS_UNREAD }),
-                  ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the "
-                    + "cited parts of a case edition, so no case's owners were told of a newer version of what it cites; "
-                    + "that is not the same as none" } : {}),
-                  says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and "
-                      + "newer capture to that case's owners, only where the newer version affects the passage or whether "
-                      + "it does is undetermined; nothing was moved, and only a member's act moves a reference" };
+                  ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: localize("reevaluation.index.case_parts_no_owner_told", "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none") } : {}),
+                  says: localize("reevaluation.index.notices_says", "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference") };
     /* R8 (N406): each notice raised is told once the sweep's writes have committed, and a caller's transaction around
        it has too; a rolled-back sweep raised nothing and tells nothing. */
     for (const r of raised) {
@@ -2840,8 +2816,7 @@ export class Reevaluation {
              capture_sha: r.capture_sha, newer_capture: r.newer_capture, version: name, state: "suggested",
              bundleSha: answer.bundleSha,
              ...(legs[r.ord].grade ? { grade_not_carried: { grade: legs[r.ord].grade,
-               why: "the grade was given to the passage in the earlier capture; the newer passage is not graded until a "
-                  + "member grades it" } } : {}),
+               why: localize("reevaluation.index.grade_not_carried", "the grade was given to the passage in the earlier capture; the newer passage is not graded until a member grades it") } } : {}),
              says: word("reevaluation.says.new_reading_rests", { holder: String(r.holder), ord: String(r.ord) }) };
   }
 
@@ -2861,7 +2836,7 @@ export class Reevaluation {
                   who, when, text, r.notice_id);
     return { ok: true, notice: r.notice_id, holder: r.holder, ord: r.ord, act: "kept", author: who, at: when,
              why: text, capture_sha: r.capture_sha, newer_capture: r.newer_capture,
-             says: word("reevaluation.says.stays_earlier_version", { kind: String(r.kind === "case" ? `case ${r.holder}'s cited part ${r.target_id}` : `${r.holder}'s leg ${r.ord}`), capture_sha: String(r.capture_sha.slice(0, 12)), newer_capture: String(r.newer_capture.slice(0, 12)) }) };
+             says: word("reevaluation.says.stays_earlier_version", { kind: String(r.kind === "case" ? localize("reevaluation.index.kind_case_part", "case {holder}'s cited part {target}", { holder: String(r.holder), target: String(r.target_id) }) : `${r.holder}'s leg ${r.ord}`), capture_sha: String(r.capture_sha.slice(0, 12)), newer_capture: String(r.newer_capture.slice(0, 12)) }) };
   }
 
   /* ---------------------------------------------------------------- R16: a recorded re-evaluation */
