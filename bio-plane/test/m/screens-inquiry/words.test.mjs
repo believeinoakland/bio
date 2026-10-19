@@ -27,7 +27,7 @@ test("R44 the keys words-reads.json lists for the module are each a words.json w
   /* the list was taken from the module's code before T49; the keys it reads since (R23–R43, the dock's withheld reasons)
      are each asserted with hasWord above */
   for (const k of READS.reads) assert.ok(hasWord(k), k);
-  assert.equal(READS.unkeyed.length, 2, "the two strings the list marks unkeyed (record-grammar's headings) stay in source");
+  assert.equal(READS.unkeyed.length, 0, "DEC-366 keyed record-grammar's two headings: the list marks no string unkeyed");
 });
 
 test("R44 over fixtures, what the screens draw for a sample of their keys equals word(key, vars)", async () => {
