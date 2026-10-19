@@ -1,7 +1,7 @@
 /* screens-action R30 (T51-122; K3815, journey 22; DEC-335): the Action dashboard. Every sentence is asserted by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, ACTIONS, PROJECT, FILINGS, draft, FILING, READER, RO } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, ACTION, ACTION_ID, ACTIONS, PLAN, PROJECT, FILINGS, draft, FILING, READER, RO } from "./page.mjs";
 
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
@@ -87,4 +87,19 @@ test("R30, R27: a member who may read and not act reads the kit's sentence and s
   assert.equal(rows(p).length, 1);
   const f = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: { status: 502, text: "boom" } });
   assert.ok(main(f).querySelector('[data-state="failed"]'));
+});
+
+test("R30: a due, unjudged checkpoint on a plan whose started option made the action is 'our move'; control: a judged one is not, a plan with no action counts nowhere", async () => {
+  const due = { ok: true, items: [{ plan: "PLN-2026-aaaaaaaaaaaaaaaa-plan", project: PROJECT, scenario: 1, phase: "p1", days_since_due: 3 }] };
+  const plan = { ...PLAN, options: PLAN.options };
+  const sent = { ...DATA_PLANE, actions: ok(ONE), action: ok(SENT), checkpointsdue: ok(due), plan: ok(plan) };
+  const p = await open(ROUTES["dash-action"], sent);
+  assert.equal(p.byOp("checkpointsdue").length >= 1, true);
+  assert.ok(rows(p)[0].textContent.includes(W("screen.dash-action.tile.ours")), "our move");
+  const judged = await open(ROUTES["dash-action"], { ...sent, checkpointsdue: ok({ ok: true, items: [] }) });
+  assert.ok(!rows(judged)[0].textContent.includes(W("screen.dash-action.tile.ours")), "control: a judged checkpoint is not our move");
+  const noAction = await open(ROUTES["dash-action"], { ...sent, plan: ok({ ...plan, options: plan.options.map((o) => ({ ...o, action: null })) }) });
+  assert.ok(!rows(noAction)[0].textContent.includes(W("screen.dash-action.tile.ours")), "a plan with no action counts nowhere");
+  const approved = await open(ROUTES["dash-action"], { ...DATA_PLANE, actions: ok(ONE), action: ok(SENT), filingsfor: ok(FILINGS([draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })])) });
+  assert.ok(rows(approved)[0].textContent.includes(W("screen.dash-action.tile.ours")), "approvedunsent's items are the drafts at step send: the same");
 });
