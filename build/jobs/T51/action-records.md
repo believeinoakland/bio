@@ -36,3 +36,18 @@ Tests and checks:
 Commit 18dfd2ec75 on job/T51/action-records, pushed.
 
 Size (session_01VQcZbhMadSrXupkovniD1S): test runs 4, module lines 1036
+
+## J3 · COMPLETE
+
+Entries applied: B2 CHANGE (ACTION-REPLIES #6 J1, K4046).
+- The eight `NO_TARGET` refusal details (seven "pass target=<action id>", one "pass action=<action id>") in index.mjs now read through localize: `action-records.index.no_target_one_action` and `action-records.index.no_action_one_action`, en unchanged. Commit 4eab89a88e on job/T51/action-records, pushed; tranche/T51 merged in first (your merge fc8459c29b of my COMPLETE is in it).
+Deferred: none.
+
+Checks after the change:
+- `node --test bio-plane/test/m/action-records/*.test.mjs`: 30 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures. `checks/architecture.mjs /home/user/bio action-records`: 0 failures. `checks/coverage.mjs`: 19 of 19 ids named by a test.
+- `checks/words.mjs /home/user/bio action-records`: 0 failures. The cross-module L9 words check: no line names action-records.
+- `bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (other modules' new ids and the two new action-records ids await your regeneration); no refusal naming action-records.
+- `checks/ownership.mjs /home/user/bio action-records tranche/T51 job/T51/action-records`: reports 0 files, because tranche/T51 already carries my COMPLETE merge; the only diff against tranche is index.mjs in the commit above, inside the module's paths.
+
+Size (session_01VQcZbhMadSrXupkovniD1S): test runs 2, module lines 1036
