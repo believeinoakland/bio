@@ -92,3 +92,7 @@ Waiting: R77 (the sign step's minutes) needs case-inputs' minutesComparisonsOn a
 **Tests and checks.** `bio-plane/test/m/case-authoring/`: 192 of 192; `review` and `case-check` (users): 95 of 95. `checks/words.mjs`: no finding in case-authoring. format 0 failures; architecture 0 failures; coverage 49 of 49; channels 0. `setup-words/build.mjs --check`: only the expected stale-rows note.
 
 **Size (session_019Tn27tqyLrYtV6fEW46e5z): test runs 8, module lines 2796** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J5 · COMPLETE
+
+COMPLETE (T51-161). Words findings fixed (zero in case-authoring), R77 sign-step minutes added with minutes.test.mjs after merging tranche/T51 (case-inputs R19). Module tests 192/192, review+case-check 95/95; format, architecture, coverage 49/49, ownership 0 failures. Record: build/jobs/T51/case-authoring.md, branch job/T51/case-authoring, pushed.
