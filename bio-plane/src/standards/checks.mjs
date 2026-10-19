@@ -129,9 +129,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   STANDARD_SEARCH_MISSING: {
     check: 'C-112.36', where: at("#heldFields", "is-search-stated"),
-    translation: 'A standard looked for and not found is recorded with the searches made: the portals, sites or offices '
-      + 'searched, and any records request and its reply. None was given, or one is not in that form. Nothing was '
-      + 'written.',
+    translation: word('refusal.STANDARD_SEARCH_MISSING'),
   },
   FORCE_UNKNOWN: {
     check: 'C-112.37', where: at("#forceRefusal", "is-force-known"),
@@ -159,9 +157,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   COPY_UNKNOWN: {
     check: 'C-112.43', where: at("#copyFields", "is-copy-known"),
-    translation: 'A captured copy is official, a codifier\'s, the copy in force, a draft, superseded, produced in '
-      + 'answer to a records request, a vendor\'s model, or not known. This one names none of these. Nothing was '
-      + 'written.',
+    translation: word('refusal.COPY_UNKNOWN'),
   },
   COPY_CLAIM_NOT_CITED: {
     check: 'C-112.44', where: at("#copyFields", "is-copy-claim-cited"),
