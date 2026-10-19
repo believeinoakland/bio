@@ -18,6 +18,7 @@ import { LocalFacts } from "../../../src/local-facts/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FilingTemplates, filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
+import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 
 export { V, NOW };
@@ -92,7 +93,7 @@ function workerdShaped(st) {
  *  DOC), a live determination D of an act against two standards resting on F, the test profile active, and the layer-9
  *  modules, over storage shaped as workerd's (a cursor-answering `sql.exec`). `profiles` replaces the active profile
  *  list filings reads (ids or profile objects); actions reads record-core's setting, the test profile. */
-export function world({ profiles = undefined, group = "test-group" } = {}) {
+export function world({ profiles = undefined, group = "test-group", signing = false } = {}) {
   const w = publicationWorld({ group });
   workerdShaped(w.st);
   for (const m of ["olive", "bo", "cy", "quinn"]) w.member(m);
@@ -153,7 +154,10 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const localFacts = profiles === undefined ? undefined : localFactsOver(w, profiles, now);
   /* attestation (layer 3, after provenance), the real one: every attestation a capture holds (its R7), R9's exhibits. */
   const attestation = attestationOf(w.host, { record: w.record, provenance: w.prov });
+  /* R64: with `signing`, the host's own case-inputs is handed in, as the composition root's environment would have filings find it */
+  const ci = signing ? caseInputsOf(w.host) : null;
   const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, attestation, content: w.content, now, filingTemplates,
+                                ...(ci ? { caseInputs: ci } : {}),
                                 ...(profiles !== undefined ? { profiles: () => profiles, localFacts } : {}) });
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
@@ -197,7 +201,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, attestation, events, ents, roster, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
+    ...w, w, f, ci, attestation, events, ents, roster, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
     event: makeEvent, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */

@@ -17,6 +17,8 @@ import { PROFILE } from "./fixture.mjs";
 
 const WORDS = new Map(JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"))
   .words.map((w) => [w.key, w.en]));
+/* the keys this module reads that the design holds (words-reads.json: the module's own declaration), refusals aside */
+const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules.filings.reads;
 const fill = (key, o) => WORDS.get(key).replace(/\{(\w+)\}/g, (m, k) => (k in o ? String(o[k]) : m));
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
@@ -94,11 +96,8 @@ test("R51 R52 (words) every row of C-115 this module answers translates by words
 });
 
 test("R52 each keyed sentence this module writes is words.json's words for its key, read through setup-words, its placeholders as words.json names them; phrasing.no_list and the review copy's two sentences are now read by key too (the design lane holds them since T50)", () => {
-  const taken = ["prepared.rests.held", "prepared.rests.accepted", "packet.privileged", "packet.privileged.warning", "filings.election.notice",
-                 "recognition.staff_public", "pointer.record.supported", "pointer.record.unsupported", "pointer.record.contradicted",
-                 "pointer.position", "pointer.selfbenefit", "pointer.staff", "pointer.staff.notrun", "voice.group", "voice.group.means",
-                 "voice.self", "voice.self.means", "filings.secondapproval.given", "phrasing.no_list", "filings.review_copy.no_embargo",
-                 "filings.review_copy.terms"];
+  const taken = READS.filter((k) => WORDS.has(k) && !k.startsWith("refusal."));
+  assert.ok(taken.length >= 21, "the keys R52 names are among the module's reads");
   for (const k of taken) {
     assert.equal(hasWord(k), true, k);
     assert.equal(hasWord(k) && word(k, Object.fromEntries([...WORDS.get(k).matchAll(/\{(\w+)\}/g)].map((m) => [m[1], `<${m[1]}>`]))),

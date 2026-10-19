@@ -9,6 +9,8 @@ import { world, V, NOW, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW, 
 import { Filings, INBAND_RULE, inbandBlock } from "../../../src/filings/index.mjs";
 import { inbandQuartet } from "../../../src/inband.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OUTSIDER = V("quinn");
@@ -49,12 +51,13 @@ test("R22 an approved filing's bytes carry the in-band quartet: its hash over th
   assert.deepEqual([q.hash.sha256, q.date, q.author], [rehash(text), r.at, V("bo")]);
   assert.deepEqual(q, (await inbandQuartet({ subject: text, over: q.hash.over, date: r.at, author: V("bo"), bar: null, group: x.pr.groupFields() })).quartet,
                    "the one hasher's quartet, nothing computed beside it");
-  assert.deepEqual([q.floors.declared, q.floors.capture, q.floors.connection], [false, null, null], "the project declares no bar");
+  assert.deepEqual([q.floors.declared, q.floors.capture, q.floors.connection], [false, null, null], "no bar declared");
   assert.equal(r.bytes, `${text}\n${inbandBlock(q)}`);
   /* a reader holding only the bytes: the text above the rule, re-hashed */
   const above = r.bytes.slice(0, r.bytes.indexOf(`\n${INBAND_RULE}\n`));
   assert.equal(rehash(above), q.hash.sha256);
-  assert.ok(r.bytes.includes(`Hash: sha256 ${q.hash.sha256}`) && r.bytes.includes(`Author: ${V("bo")}`) && r.bytes.includes(`Date: ${r.at}`));
+  assert.ok(r.bytes.includes(word("filings.hash_sha_bytes", { sha256: q.hash.sha256, over: q.hash.over, bytes: q.hash.bytes, canonical: q.hash.canonical }))
+            && r.bytes.includes(word("filings.date_author", { date: r.at, author: V("bo") })));
   assert.equal(r.sha, sha(text), "R6's SHA-256 stays the approved text's");
   assert.deepEqual(JSON.parse(x.row(`SELECT inband FROM filing_approvals WHERE filing_id=?`, d.id).inband), q, "stored as served");
   /* the project declares its bar: the floors are the project's, both axes */
@@ -62,7 +65,7 @@ test("R22 an approved filing's bytes carry the in-band quartet: its hash over th
   const two = drafted(x);
   const r2 = await x.f.filingApprove({ filing: two.d.id, text: two.text, author: V("cy"), viewer: V("cy") });
   assert.deepEqual([r2.inband.floors.declared, r2.inband.floors.capture, r2.inband.floors.connection], [true, "B", "C"]);
-  assert.ok(r2.bytes.includes("Floors: capture B, connection C."));
+  assert.ok(r2.bytes.includes(word("filings.floors_capture_connection", { capture: "B", connection: "C", detail: r2.inband.floors.detail ?? "" }).trimEnd()));
   /* through the op, awaited as control-plane's dispatch awaits it */
   const three = drafted(x);
   const o = await x.op("filingapprove", { author: V("bo"), viewer: V("bo") }, { filing: three.d.id, text: three.text });
@@ -93,8 +96,8 @@ test("R23 communicationPrepare: any credential prepares a communication for an a
                                        preparer: MACHINE, viewer: MACHINE });
   assert.equal(m.ok, true, JSON.stringify(m).slice(0, 300));
   assert.deepEqual([m.form, m.label.state, m.label.machine_work, m.evidence], ["communication", "machine_proposed", true, false]);
-  assert.match(m.label.says, /communication/);
-  assert.match(m.says, /nobody has approved or sent it/);
+  assert.equal(m.label.says, proposalLabel(MACHINE, "communication").says);
+  assert.equal(m.says, word("filings.says.draft_communication_nobody"));
   assert.match(m.id, /^FIL-2026-\d{4}$/, "the drafts' own id space");
   assert.equal(m.text, "A briefing for the press on the works order.", "the preparer's words, no template read, any tier");
   assert.equal(x.text(T3), before, "stored apart: the action's bytes are untouched");
@@ -145,9 +148,9 @@ test("R25 every draft and packet shows each exhibit's capture grade (provenance'
   }
   assert.deepEqual([ex[evSha].grade.grade, ex[evSha].coattested], ["B", true], "a trusted timestamp and a co-archive");
   assert.deepEqual([ex[docSha].grade.grade, ex[docSha].coattested], [null, false]);
-  assert.match(ex[docSha].coattested_why, /neither a trusted timestamp nor a co-archive/);
+  assert.equal(ex[docSha].coattested_why, word("filings.record_holds", { stamp: word("filings.neither_a_trusted_timestamp_nor") }));
   assert.equal(d.venue_standard.state, "undetermined", "the profile states no standard for this kind");
-  assert.match(d.venue_standard.why, /grades are shown alone/);
+  assert.equal(d.venue_standard.why, word("filings.why.venue_standard_undetermined", { why: word("filings.profile_states_standard") }));
   for (const e of d.exhibits) assert.deepEqual([e.venue.state, e.venue.flagged], ["undetermined", false]);
   assert.deepEqual(JSON.parse(x.row(`SELECT exhibits FROM filing_drafts WHERE filing_id=?`, d.id).exhibits), d.exhibits, "stored with the draft");
   /* the Tier 3 kind's venue states a standard: the packet shows it beside the grades */
@@ -178,7 +181,7 @@ test("R25 the venue's standard flags an exhibit below every grade it accepts, on
   };
   const below = reading({ standard: "only originals", accepts: [{ grade: "A" }] }, "test-ev-a");
   assert.deepEqual([below.std.state, below.ev.state, below.ev.flagged], ["stated", "below", true]);
-  assert.match(below.ev.says, /below every grade the venue accepts/);
+  assert.equal(below.ev.says, word("filings.says.below_grade_venue"));
   assert.equal(below.r.ok, true, "flagged, never refused");
   const contest = reading({ standard: "copies admitted", accepts: [{ grade: "A" }], contestable: [{ grade: "B" }] }, "test-ev-c");
   assert.deepEqual([contest.ev.state, contest.ev.flagged], ["contestable", true]);
@@ -194,14 +197,14 @@ test("R25 the venue's standard flags an exhibit below every grade it accepts, on
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 200));
   const e = prep(x, A).exhibits.find((i) => i.sha256 === reply);
   assert.deepEqual([e.grade.grade, e.coattested, e.venue.state, e.venue.flagged], ["B", false, "below", true]);
-  assert.match(e.venue.says, /only co-attested/);
+  assert.equal(e.venue.says, word("filings.says.venue_accepts_grade"));
   assert.deepEqual(e.cited_by, [`${A}#0`], "the correspondence's capture is an exhibit");
   /* two profiles stating different standards: withheld, the grades alone */
   const y = world({ profiles: [withEvidence(x0, "test-ev-d1", { standard: "one", accepts: [{ grade: "A" }] }),
                                withEvidence(x0, "test-ev-d2", { standard: "two", accepts: [{ grade: "B" }] })] });
   const u = drafted(y).d;
   assert.equal(u.venue_standard.state, "undetermined");
-  assert.match(u.venue_standard.why, /different evidence standards/);
+  assert.equal(u.venue_standard.why, word("filings.why.venue_standard_undetermined", { why: word("filings.active_profiles_give") }));
 });
 
 test("R19 communications are keyed to their action and purged with it; the retired R26 library's table is written by nothing", async () => {

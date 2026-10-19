@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, PROFILE, WORDS, LAW, sha, WHY } from "./fixture.mjs";
 import { filingsOps, counselMarking, TEMPLATES_NAMED_MAX } from "../../../src/filings/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const prep = (x, action, over = {}) => x.f.filingPrepare({ action, preparer: V("bo"), viewer: V("bo"), ...over });
@@ -66,14 +67,14 @@ test("R28 R3 a filing takes at most one of template and text: the profile's file
   /* a named updated version: offered, said updated, naming its successor */
   const old = prep(x, A, { template: { id: T, version: 1 } });
   assert.deepEqual([old.ok, old.template.version, old.template_version.state, old.template_version.updated_by], [true, 1, "updated", v2]);
-  assert.match(old.template_version.says, /updated by/);
+  assert.equal(old.template_version.says, word("filings.says.version_updated", { number: 1, updated_by: v2 }));
   assert.equal(old.text, `To the Selectboard (Port Ellery Selectboard): the adoption recorded as ${x.ACT_EVENT} on 2026-03-02.`);
   /* the member's own words, filled as a template's (R3): template null */
   const own = prep(x, A, { text: WORDS });
   assert.deepEqual([own.ok, own.template], [true, null]);
   assert.equal(own.text, `To the Selectboard: the adoption recorded as ${x.ACT_EVENT} does not conform to P.E.B.L. § 12; MCBC 2025-3, under [UNFILLED: law].`);
   assert.deepEqual(own.unfilled.map((u) => u.name), ["law"]);
-  assert.ok(own.blanks.every((b) => b.source), "each filled blank names its source");
+  assert.ok(own.blanks.every((b) => b.source), "every filled blank has a source");
   /* both */
   const both = prep(x, A, { template: { id: T }, text: WORDS });
   assert.equal(both.reason, "TEMPLATE_AND_TEXT");
@@ -123,7 +124,8 @@ test("R28 naming neither, with no profile file template for the kind: TEMPLATE_N
   const O = x.action({ kind: "other" });
   const none = prep(x, O);
   assert.deepEqual([none.reason, none.templates], ["TEMPLATE_NOT_NAMED", []]);
-  assert.match(none.detail, /name a template or write the words/);
+  assert.equal(none.detail, localize("filings.index.reason_name_a_template_or_write", "{reason}: name a template{listed} or write the words", {
+    reason: localize("filings.index.the_profile_holds_no_file_template", "the profile holds no file template for this kind"), listed: "" }));
   const made = [];
   for (let i = 0; i < TEMPLATES_NAMED_MAX + 1; i++)
     made.push(approved(x, { kind: "other", profiles: "general", name: `other ${i}`, text: `Letter ${i}: {{act}}.`, reason: "a test kind" }));
@@ -157,16 +159,15 @@ test("R29 every draft records template {id, version, sha, origin}, or null for t
   const advisory = alt.action_kinds.find((k) => k.kind === "records_request").advisory;
   const [first, second, third] = d.text.split("\n\n");
   assert.equal(first, advisory, "the advisory first");
-  assert.match(second, /^This template was not written for test-filings-alt/);
-  assert.match(second, /test-port-ellery/);
+  assert.equal(second, word("filings.template_written_jurisdiction", { givers: "test-filings-alt", profiles: "test-port-ellery" }));
   assert.equal(third, "Under Test Stat. § 1.100, please send the records.");
   assert.equal(d.not_written_for, second);
   /* a general template, and one written for the kind's profile, say nothing of it */
   const G = approved(x, { kind: "records_request", profiles: "general", name: "general", text: "Under {{law}}.", reason: "a test" });
   const g = prep(x, R, { template: { id: G } });
-  assert.deepEqual([g.ok, "not_written_for" in g, g.text.includes("was not written for")], [true, false, false]);
+  assert.deepEqual([g.ok, "not_written_for" in g, g.text.includes(word("filings.template_written_jurisdiction", { givers: "", profiles: "" }).slice(0, 33))], [true, false, false]);
   const own = prep(x, x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" }), { template: { id: "TPL-test-records-request-alt" } });
-  assert.deepEqual([own.ok, own.template.origin, own.text.includes("was not written for")], [true, "profile", false]);
+  assert.deepEqual([own.ok, own.template.origin, own.text.includes(word("filings.template_written_jurisdiction", { givers: "", profiles: "" }).slice(0, 33))], [true, "profile", false]);
   /* the member's words */
   const w = prep(x, R, { text: "Under {{law}}." });
   assert.equal(w.template, null);
@@ -186,11 +187,11 @@ test("R29 filingsFor shows each draft's template with the version's state, appro
   t = shown();
   assert.equal(t.state, "updated");
   assert.deepEqual(t.flags.map((f) => [f.flag, f.by]), [["updated", v2]]);
-  assert.equal(t.flags[0].says, "prepared from version 1, since updated by version 2");
+  assert.equal(t.flags[0].says, word("filings.says.prepared_version_updated", { version: 1, updated_by: 2 }));
   retire(x, T, "the venue changed its form");
   t = shown();
   assert.deepEqual(t.flags.map((f) => f.flag), ["updated", "retired"]);
-  assert.match(t.flags[1].says, /retired: the venue changed its form/);
+  assert.equal(t.flags[1].says, word("filings.says.prepared_template_retired", { reason: "the venue changed its form" }));
   assert.equal(x.row(`SELECT text FROM filing_drafts WHERE filing_id=?`, d.id).text, d.text, "nothing in the draft changes");
   const ap = await x.f.filingApprove({ filing: d.id, text: d.text.replace("[UNFILLED: law]", LAW), author: V("bo"), viewer: V("bo") });
   assert.equal(ap.ok, true, "no approval is refused for it");
@@ -217,8 +218,8 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
   assert.deepEqual([p.template, b.template], [{ id: B, version: 1, sha: rec.sha, origin: "group" }, { id: B, version: 1, sha: rec.sha, origin: "group" }]);
   /* exported: the briefing's words under its heading and the marking */
   const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
-  const at = e.bytes.indexOf("## Briefing");
-  assert.ok(at > e.bytes.indexOf("## Consequences of the breach"), "after the six");
+  const at = e.bytes.indexOf(`## ${localize("filings.index.briefing", "Briefing")}`);
+  assert.ok(at > e.bytes.indexOf(`## ${word("filings.consequences_breach")}`), "after the six");
   assert.equal(e.bytes.slice(at).split("\n")[2], counselMarking(null));
   assert.ok(e.bytes.slice(at).includes(b.text));
   /* flagged as R29 flags a draft, nothing in the version changing */

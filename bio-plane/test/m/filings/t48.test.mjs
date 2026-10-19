@@ -119,7 +119,7 @@ test("R59 filingRead answers a draft as it was stored: its text, blanks with the
   assert.equal(r.filing, d.id);
   assert.ok(r.text.includes("the 2026 minutes") && r.text.includes("test-group") && !r.text.includes("a-different-group"), "not re-filled from the record");
   assert.deepEqual(r.fills.map((b) => [b.name, b.value, b.label.kind, b.label.by]), [["records", "the 2026 minutes", "member_fill", V("bo")]], "the member's fills, labelled hers");
-  assert.ok(r.blanks.find((b) => b.name === "group").source, "each filled blank names its source");
+  assert.ok(r.blanks.find((b) => b.name === "group").source, "every filled blank has a source");
   assert.deepEqual(r.approval, null);
   assert.deepEqual(r.sending, null);
   assert.deepEqual(r.offers, ["counsel_packet"]);
