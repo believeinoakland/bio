@@ -87,3 +87,18 @@ Checks after the merge (process repository, merged tree)
 Deferred: none. Requirements and tests unchanged since the first COMPLETE.
 
 Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 7, module lines 2241
+
+## J7 · COMPLETE
+
+COMPLETE again after CHANGE B5 (K3998). Merged tranche/T51 (lines and events, CR-7 now in) into job/T51/people (7fe02ab582) and pushed. Their keyed reasons break nothing here: the module's tests pass unchanged, so no code or test change was needed.
+
+Checks (process repository, merged tree)
+- node --test test/m/people/*.test.mjs: 66 pass, 0 fail.
+- checks/run.mjs /home/user/bio: format 0 failures; architecture 0 failures; no words finding in people (the one FAIL line naming "people" is strength's sentence, not this module).
+- checks/ownership.mjs people tranche/T51 job/T51/people: 0 failures.
+- checks/coverage.mjs people: 41 of 41 live requirement ids named by a test; 0 failures.
+- checks/architecture.mjs people: 0 failures.
+
+Deferred: none.
+
+Size (session_01Qbqab5EFYZCrkmKLgiPXzP): test runs 8, module lines 2241
