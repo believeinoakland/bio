@@ -104,7 +104,8 @@ import { outcomesLines, outcomesSectionLines } from "../case-grammar/index.mjs";
 /* R14, R34, R38, R74 (T47; N908; K2982): what other acts record about a case is `case-inputs`', asked through its one
    instance (`inputs`); its sign-step lines, its unread sentence and the 8,000-character bound are imported, one spelling
    each, never copied (K1333). */
-import { caseInputsOf, openRequestLine, OPEN_REQUEST_KEYS, OPEN_REQUESTS_UNREAD_SENTENCE, WHAT_CHANGED_MAX } from "../case-inputs/index.mjs";
+import { caseInputsOf, openRequestLine, OPEN_REQUEST_KEYS, OPEN_REQUESTS_UNREAD_SENTENCE, WHAT_CHANGED_MAX,
+         minutesLine } from "../case-inputs/index.mjs";
 /* R61 (N717; K2129): how a case uses the standards it measures against, judged by `case-checker`'s pure R21. */
 import { checkStandardsUse } from "../case-checker/standards.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -296,6 +297,16 @@ export class CaseAuthoring {
     const r = this.inputs.openRequestsOn({ case: at.case, members: at.members, viewer });
     if (!r.ok) return { read: false, undetermined: true, key: OPEN_REQUEST_KEYS.unread, says: OPEN_REQUESTS_UNREAD_SENTENCE };
     return { read: true, lines: r.rows.map((row) => ({ ...row, ...openRequestLine(row) })) };
+  }
+
+  /* R77 (T51; DEC-340): the sign step's minutes comparisons, read once from the same case and pins through
+     `case-inputs.minutesComparisonsOn` (its R19), each row with its `minutesLine`; a source unreadable, or the case not
+     yet known, is `{undetermined: true}` and no rows, never `[]`. It carries no sentence of its own. */
+  #minutesStep(at, viewer) {
+    if (!at) return { undetermined: true };
+    const r = this.inputs.minutesComparisonsOn({ case: at.case, members: at.members, viewer });
+    if (!r.ok) return { undetermined: true };
+    return r.rows.map((row) => ({ ...row, ...minutesLine(row) }));
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1701,6 +1712,8 @@ export class CaseAuthoring {
          blocker, never `first`, never `ready` (DEC-13: no reason is asked for signing while a window is open). */
       { step: 8, name: "sign", signer: str(a.author) || null,
         open_requests: this.#openRequestsStep(seen.openRequestsAt || null, a.viewer ?? null),
+        /* R77 (T51; DEC-340): the minutes beside the group's public comment; never a blocker, never `first`, never `ready`. */
+        minutes: this.#minutesStep(seen.openRequestsAt || null, a.viewer ?? null),
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals }
                                      : { reached: false, why: ratify.why },
         /* R75 (T47; N683; DEC-147; ratification R44): "Publish at…" beside "Publish now", exactly as ratification's

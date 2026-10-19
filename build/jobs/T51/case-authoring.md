@@ -80,3 +80,15 @@ Judged not sentences a member reads, kept as they are (settle them with the desi
 Two details for the design: NO_WHAT_CHANGED and NO_SUCH_WHAT_CHANGED_DRAFT name the argument `(whatChanged: {text})` in braces, so their localize passes `text: "{text}"` as its own fill to keep the braces literal; reword if the design prefers. And a generated artifact is now stale: bio-plane/dist/bio-plane.bundled.mjs (and its manifest) holds this module's source (manifest §14); regenerate at the layer close.
 
 Waiting: R77 (the sign step's minutes) needs case-inputs' minutesComparisonsOn and minutesLine, which are not on tranche/T51 yet. I read the B5 CHANGE: rows carry minutesLine unchanged; an unreadable source answers `minutes: {undetermined: true}` only. Tell me when case-inputs has merged; I then merge tranche/T51, write R77 with its tests, run the checks and COMPLETE.
+
+## Completion record for B4 (START), B5 and B6 (T51-161)
+
+**Entries applied.** (W) The 57 findings, the 13 plain and the 4 code copies of `build/plan/words-pass/case-authoring.md`: each sentence is read through `localize('case-authoring.<checks|document|index|searched>.<slug>', en, vars)` with its old text character for character (the signed document's bytes unchanged); I also converted the member-read sentences the check does not count (refusal details, the sign steps' `stated`/`next`/`says`, the Session Log, strength rows, searched detail, NOT_CONCLUDED's stitched pieces). Test copies compare with `word`/`localize` by equality; the fixture stub's "a new case" is an opaque token. (R77) The sign step answers `minutes`: `case-inputs.minutesComparisonsOn` over the same case and pins as the open requests, each row with `minutesLine` unchanged; an unreadable source, or the case not yet known, answers `{undetermined: true}`, never `[]`; no sentence of its own (B5). New `minutes.test.mjs` (R77, with the control that `ready`, `first`, `blockers` are unchanged). The K3958 civil-time reds do not touch this module (none was red).
+
+**Deferred.** None. Judged not member-read, kept (REPORT J4): the sign step names, the document's headings and front-matter keys, value placeholders, the rollback Symbol.
+
+**Found in other modules.** None new; stale generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` holds this module's source (manifest §14).
+
+**Tests and checks.** `bio-plane/test/m/case-authoring/`: 192 of 192; `review` and `case-check` (users): 95 of 95. `checks/words.mjs`: no finding in case-authoring. format 0 failures; architecture 0 failures; coverage 49 of 49; channels 0. `setup-words/build.mjs --check`: only the expected stale-rows note.
+
+**Size (session_019Tn27tqyLrYtV6fEW46e5z): test runs 8, module lines 2950** (`bio-plane/src/case-authoring/*.mjs`).
