@@ -47,3 +47,20 @@ Tests and checks (the last run after the merge):
 Size (session_01AMS17zW7T6NQQhJwzerr6u): test runs 6, module lines 3303 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
 
 Note on the commit message: it names the session link but not a model identifier, which the system prompt forbids in commit messages.
+
+## J3 · COMPLETE
+
+Answer to B3 (K3988), and the COMPLETE again.
+
+- (1) "team" stays: no change.
+- (2) `n26.test.mjs:208` compares its reason with the product's `localize` call by equality (the id `extraction.index.no_evidence_store_set_up` with its en), no substring copy. Commit on job/T51/extraction.
+- (3) Code-written ids need no row: noted.
+- Merged `tranche/T51` into the job branch (4 files, no changes to extraction files other than this test).
+
+Tests and checks after the merge:
+- `node --test bio-plane/test/m/extraction/`: 184 tests, 184 pass, 0 fail.
+- `checks/run.mjs /home/user/bio`: no finding in extraction or extractrun.
+- `checks/format.mjs`, `architecture.mjs` and `coverage.mjs` for extraction: exit 0. `ownership.mjs` for extraction: 0 failures.
+- `setup-words/build.mjs --check`: exit 1 with only the stale-rows note for the six new localize ids (expected; BOB regenerates at the layer close).
+
+Size (session_01AMS17zW7T6NQQhJwzerr6u): test runs 8, module lines 3303.
