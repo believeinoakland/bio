@@ -49,3 +49,7 @@ CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 a
 ## B6 · CHANGE
 
 CHANGE (K4083), re J3: wizard-scripts is merged again at the design 2a64c5ae77: screen-registry.mjs registers actionholdrelease on hold. Merge tranche/T51 and drop your local registry patch. interface-shell (cs.readonly, help lists) and op-declarations (holdsdue, approvedunsent, checkpointsdue) follow, each a CHANGE.
+
+## B7 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
