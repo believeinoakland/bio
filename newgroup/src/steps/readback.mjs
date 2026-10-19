@@ -1,4 +1,5 @@
 /* R14: the plane's script as the account now holds it, read back and compared with the release's own bytes. */
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { CF_API } from "./api.mjs";
 import { hex, multipartPart } from "./bytes.mjs";
 
@@ -44,7 +45,7 @@ async function readBack(token, acct, slug, release) {
     if (i < 2) await new Promise((res) => setTimeout(res, 1500));
   }
   return got === null
-    ? `the software your Cloudflare account holds for your team's Civicsmith could not be read back, so it is not confirmed to be the ${release.version} release's own bytes`
-    : `the software your Cloudflare account holds for your team's Civicsmith is not the ${release.version} release's own bytes (read back, it hashes to ${got.slice(0, 16)}…; the release hashes to ${want.slice(0, 16)}…)`;
+    ? word("installer.lag.bytes.unread", { version: release.version })
+    : word("installer.lag.bytes.differ", { version: release.version, got: got.slice(0, 16) + "…", want: want.slice(0, 16) + "…" });
 }
 export { scriptHash, releaseSha, readBack };
