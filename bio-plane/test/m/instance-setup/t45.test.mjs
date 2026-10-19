@@ -1,7 +1,7 @@
 /* T45 (T45-44): the group's declared stake (R77, R11), the records laws' stages checked when the profiles load (R76), and
    the group-identity source registered with public-read at start (R78), at the module's interface. */
 import test from "node:test";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { boot, providers, stubOver, doAnswer } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, DECLARED_STAKE_SETTING,
@@ -16,6 +16,17 @@ const historyRows = (w) => w.st.db.prepare(`SELECT * FROM declared_stake_history
 const settingRows = (w) => w.st.db.prepare(`SELECT * FROM settings WHERE name = 'declared_stake'`).all();
 
 /* ---- R77, R11: the group's declared stake ---- */
+
+/* The refusal's sentence for a stake that is not one: by what is wrong with it, each a whole sentence of this module's own (R96). */
+const stakeSentence = (bad) => {
+  const max = DECLARED_STAKE_MAX;
+  if (typeof bad !== "string") return localize("instance-setup.setup.stake_none_given", "The request names no stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { max });
+  const s = bad.trim(), chars = [...s].length;
+  if (!s) return localize("instance-setup.setup.stake_empty", "An empty stake is not a stake. A stake is one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { max });
+  if (/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
+    return localize("instance-setup.setup.stake_many_lines", "A stake of {chars} characters over more than one line is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { chars, max });
+  return localize("instance-setup.setup.stake_too_long", "A stake of {chars} characters is not one line of 1 to {max} characters with no control characters; null clears it. Nothing was changed.", { chars, max });
+};
 
 test("R77 R11 an administrator's set is recorded through record-core's setSetting under declared_stake with by, read back by getSetting and by R11 as {stake, set_by, set_at} with its history oldest first", async () => {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
@@ -57,7 +68,7 @@ test("R77 R11 an administrator's set is recorded through record-core's setSettin
 test("R77 refusals: a by that is not an administrator, a machine credential included, is refused NOT_AN_ADMIN (membership.notAnAdmin) before the stake is read, and nothing is written (control: an administrator's set is recorded)", async () => {
   const prov = providers({ admins: ["admin", "class:admin"] });
   const w = await boot({ env: { INSTANCE_NAME: "river-town" }, prov });
-  const expected = notAnAdmin("member:bo", "declaring what your team has at stake");
+  const expected = notAnAdmin("member:bo", localize("instance-setup.setup.what_declaring_stake", "declaring what your team has at stake"));
   for (const by of ["member:bo", "class:admin", "class:ai", null, "", undefined, 7]) {
     /* a malformed stake from a non-administrator is still NOT_AN_ADMIN: the first refusal is who asks */
     for (const stake of ["Our stake.", "x".repeat(DECLARED_STAKE_MAX + 1)]) {
@@ -87,7 +98,7 @@ test("R77 STAKE_MALFORMED (C-64.27): a stake of 1,001 characters, with a line br
     const r = w.m.declaredStakeSet({ stake: bad, by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "STAKE_MALFORMED", "STAKE_MALFORMED", "C-64.27", row.translation],
       JSON.stringify(bad));
-    assert.match(r.detail, /Nothing was changed/);
+    assert.equal(r.detail, stakeSentence(bad));
   }
   /* the bound counts characters, not UTF-16 units: 1,000 astral characters are a stake */
   assert.equal(w.m.declaredStakeSet({ stake: "😀".repeat(DECLARED_STAKE_MAX), by: "admin" }).ok, true);
@@ -237,7 +248,7 @@ test("R76 a lawStagesFindings that throws is answered stage_findings: null with 
   const set = w.m.profilesSet({ profiles: ["loaded-place"], by: "admin" });
   assert.equal(set.ok, true);
   assert.equal(set.stage_findings, null);
-  assert.match(set.stage_findings_detail, /could not be checked/);
+  assert.equal(set.stage_findings_detail, word("instance-setup.profiles.detail.stages_unchecked", { why: "broken check" }));
   assert.deepEqual(w.record.getSetting("jurisdiction_profiles"), ["loaded-place"]);
   const p = w.m.profiles();
   assert.deepEqual([p.ok, p.stage_findings], [true, null]);
