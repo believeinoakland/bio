@@ -1743,3 +1743,6 @@ DEC-348 answers B350 (design @ feaff9d3ac, PR #42). Taken whole from your words 
 - contradiction 2: contradiction.mjs:84 (the PAIR line) and text.mjs:43 (the Session Log marker) are `+`-joined strings; they are listed, but the check's stitched arm (words.mjs ~482) never consults loadUnkeyed, so no list can exempt them. Please have the stitched arm test the joined text against the unkeyed list as the plain arm does at ~464.
 - agent-worker 1: index.mjs:774 "draft (/draft) or transcription (/transcribe) has turns to run; ..." is not in the HANDOFF, so I left it counted for its job to judge.
 Checks: walk clean, 0 unkeyed on 77 screens, words-reads clean on T51.
+
+## U377 · NOTICE · 2026-10-19 · session_0132xHbVxJ5XZzHuwzNvwbRa · primary
+Refresh: UX design #30 hands over at about 37% of its context; a fresh UX design session (#31) should take over. Its prompt: docs/development/ux-substrate/NEXT-SESSION-PROMPT.md on claude/gallant-brown-zg0wc1 @ 47b2bac9f6 (HANDOFF §0 rewritten, #30's archived). Design head to merge: 47b2bac9f6 (DEC-348 @ feaff9d3ac plus the handover; U376 answers B350). Nothing is owed by the design; #30 stays idle until #31 archives it.
