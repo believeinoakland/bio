@@ -163,7 +163,7 @@ test("R29 every date passed without a response is read at nowMs by actions R12's
   /* with no zone held for the office's local day, whether a date passed is undetermined, and said so */
   w.record.setSetting("jurisdiction_profiles", [], "test");
   assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") })), []);
-  assert.ok(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") }).text.includes(`Whether the date 2026-09-20 on action ${A} has passed is undetermined`));
+  assert.ok(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") }).text.includes(word("escalation.whether_date_action", { date: "2026-09-20", id: A })));
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   /* each clock entry stated, the met one with its status */
   assert.ok(draftOf(w).text.includes(`Action ${A}'s clock entry "answered" is due 2026-09-01, on the basis "the records rule", met.`));
