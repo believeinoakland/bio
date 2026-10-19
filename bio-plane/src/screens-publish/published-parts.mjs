@@ -84,7 +84,8 @@ export const PUBLISHED_PARTS = Object.freeze({
       const served = legs.filter(function (l) { return l.served === true && P.cuts(l) === cut && P.titleOf(l); });
       const said = !named ? "" : cut ? cs.w("screen.published.cut.against.by.a.letter")
         : cs.w(named === 1 ? "screen.published.rests.on.the.council.minutes.one" : "screen.published.rests.on.the.council.minutes", { count: String(named) });
-      const titles = served.map(function (l) { return '<span class="rec">' + cs.esc(P.titleOf(l)) + "</span>"; }).join(" · ");
+      const titles = served.length ? cs.w(cut ? "screen.published.cutagainstby.lead" : "screen.published.restson.lead",
+        { items: { html: served.map(function (l) { return '<span class="rec">' + cs.esc(P.titleOf(l)) + "</span>"; }).join(", ") } }) : "";
       return said || titles ? '<p class="mk-small">' + said + (said && titles ? " " : "") + titles + "</p>" : "";
     };
     return part(false) + part(true);

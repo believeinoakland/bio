@@ -5,10 +5,9 @@
 
 export const PUBLISHED_PAGES = Object.freeze({
   /* R38: "Read it at a minimum strength": a minimum on each axis the case states its strengths on, and the browser act that
-     shows only the findings at or above it. The choices are the grades themselves (A to C, "–" for none): the drawing's
-     words for them ("No minimum", "C or better", …) are not in the word list yet. */
+     shows only the findings at or above it. */
   minimum: function (cs, view) {
-    const grades = [{ value: "", text: "–" }, { value: "C", text: "C" }, { value: "B", text: "B" }, { value: "A", text: "A" }];
+    const grades = [{ value: "", key: "screen.published.min.none" }, { value: "C", key: "screen.published.min.c" }, { value: "B", key: "screen.published.min.b" }, { value: "A", key: "screen.published.min.a" }];
     const fl = view.ui.floor || {};
     return view.parts.secTips(cs, "screen.published.read.it.at.a.minimum",
       '<p class="mk-note">' + cs.w("screen.published.choose.the.weakest.strength.you") + " " + cs.w("screen.published.the.page.then.shows.only") + "</p>"
@@ -88,7 +87,7 @@ export const PUBLISHED_PAGES = Object.freeze({
     if (body.state === "unavailable" || body.state === "withheld") {
       // the finding's identity and strengths, never an empty page; the reason as the plane gave it, in its words (DEC-342), and a
       // court order's orders as the answer states them
-      const why = body.state === "unavailable" ? (P.refusalText(cs, body) || cs.w("shell.unread")) : "";
+      const why = cs.w(body.state === "unavailable" ? "screen.published.finding.unreadable" : "screen.published.finding.withheld");
       const orders = body.state === "withheld" && body.orders !== undefined ? body.orders : f.withheld && f.withheld.orders;
       const listed = Array.isArray(orders) ? orders.map(function (o) { return '<p class="rec">' + cs.esc(typeof o === "string" ? o : o && (o.summary || o.entry || o.order) || "") + "</p>"; }).join("") : "";
       return head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '" data-body="' + cs.esc(body.state) + '"><p>' + strengths + "</p>"
@@ -108,7 +107,7 @@ export const PUBLISHED_PAGES = Object.freeze({
 
     // "What it rests on": one row for each leg of the signed bytes, in order, by what the answer states of it
     const legs = P.legs(f);
-    out += P.secTips(cs, "screen.published.what.it.rests.on", cs.sheet(legs.map(function (l) {
+    out += P.secTips(cs, "screen.published.what.it.rests.on", cs.sheet(legs.map(function (l, i) {
       const grade = P.gradeMark(cs, l.grade_axis, l.grade);
       const title = P.titleOf(l);
       let what;
@@ -120,7 +119,7 @@ export const PUBLISHED_PAGES = Object.freeze({
         what = '<span class="cs-card" tabindex="0" data-level="1" data-tip="' + cs.esc("<b>" + cs.w("screen.published.leg.namedonly") + "</b>" + cs.w("screen.published.leg.namedonly.explain"))
           + '">' + cs.w("screen.published.leg.namedonly") + "</span>";
       }
-      return cs.row("", what, grade);
+      return cs.row("", "<b>" + cs.w("screen.published.leg", { n: String(i + 1) }) + "</b> · " + cs.w(P.cuts(l) ? "screen.published.leg.cuts" : "screen.published.leg.supports") + " " + what, grade);
     }).join("")), ["screen.published.each.leg.is.one.thing.explain", "screen.published.a.leg.the.team.holds.explain", "screen.published.leg.grade.explain"]);
 
     // "What rests on what": the chain from the documents up to the finding, a line for each leg

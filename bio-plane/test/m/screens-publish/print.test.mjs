@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { open, main, text, drew, drewIn, day, word, ops, press, ok, C, F1, F2, FINDING, leg, publishedPlane, SIGNER_KEY } from "./fixtures.mjs";
+import { until, open, main, text, drew, drewIn, day, word, ops, press, ok, C, F1, F2, FINDING, leg, publishedPlane, SIGNER_KEY } from "./fixtures.mjs";
 
 const PUBLIC = { session: null };
 const PATH = `/app/published/${C}`;
@@ -31,6 +31,7 @@ test("R39 printing the whole case draws every finding open with its sources and 
   const { asked, done } = await printing(p);
   const before = p.requests.length;
   await press(p, "pubprint");
+  await until(p, () => asked.length);
   assert.equal(asked.length, 1, "print asked once");
   assert.equal(p.requests.length, before, "the screen sends nothing");
   const sheet = main(p).querySelector('[data-print-layout="full"]');
@@ -57,6 +58,7 @@ test("R39 printing a filtered view says it is one and how many findings it leave
   await press(p, "pubfloorset", { values: { "pb-fl-capture": "B", "pb-fl-connection": "B" } });
   const { asked, done } = await printing(p);
   await press(p, "pubprint");
+  await until(p, () => asked.length);
   assert.equal(asked.length, 1);
   const sheet = main(p).querySelector('[data-print-layout="filtered"]');
   assert.ok(sheet && sheet.querySelectorAll("article.mk-finding").length === 1);
@@ -73,6 +75,7 @@ test("R39 a fact the answer does not state is left out of the footer, not guesse
   const p = await open(PATH, { boot: PUBLIC, plane: nokey });
   await printing(p);
   await press(p, "pubprint");
+  await until(p, () => main(p).querySelector("[data-print-foot]"));
   const foot = main(p).querySelector("[data-print-foot]");
   assert.ok(foot && drewIn(foot, "screen.published.check.the.signature.at.the"));
   assert.ok(!foot.textContent.includes(word("screen.published.signed.for.lakeshore.tenants.by", { team: "River Town", member: "rosa", date: day("2026-11-18"), fingerprint })) && !/\{[a-z]+\}/.test(foot.textContent));
@@ -81,5 +84,6 @@ test("R39 a fact the answer does not state is left out of the footer, not guesse
   const q = await open(PATH, { boot: PUBLIC, plane: stated });
   await printing(q);
   await press(q, "pubprint");
+  await until(q, () => main(q).querySelector("[data-print-foot]"));
   assert.ok(drewIn(main(q).querySelector("[data-print-foot]"), "screen.published.signed.for.lakeshore.tenants.by", { team: "River Town", member: "rosa", date: day("2026-11-18"), fingerprint: "ab12 34cd" }), "a fingerprint the answer states is the one drawn");
 });

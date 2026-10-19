@@ -74,10 +74,10 @@ export const REVIEW_COPY = Object.freeze({
       const row = function (text) { return cs.row("", text, ""); };
       out.push(cs.sec("screen.review_copy.save.this.copy.as.a", '<div class="cs-gap" data-gap="refused" data-recall><span><b>' + cs.w("screen.review_copy.a.file.can.t.be") + "</b> "
         + cs.w("screen.review_copy.once.it.leaves.your.device") + " " + cs.w("screen.review_copy.stopping.the.sharing.of.a") + " " + cs.w("screen.review_copy.if.what.you.need.is") + "</span></div>"));
-      out.push(cs.sec("screen.review_copy.what.the.file.carries", cs.sheet(row(cs.w("screen.review_copy.a.code.that.names.exactly")) + row(cs.w("screen.review_copy.the.date.this.copy.last"))
-        + row(cs.w("screen.review_copy.the.minimum.strengths.it.was"))) + '<p class="mk-note">' + cs.w("screen.review_copy.the.file.does.not.say") + " " + cs.w("screen.review_copy.its.fingerprint.covers.them.so") + "</p>"));
+      out.push(cs.sec("screen.review_copy.what.the.file.carries", cs.sheet(row("<b>" + cs.w("screen.review_copy.carries.fingerprint") + "</b> " + cs.w("screen.review_copy.a.code.that.names.exactly")) + row(cs.w("screen.review_copy.the.date.this.copy.last"))
+        + row("<b>" + cs.w("screen.review_copy.carries.author") + "</b>") + row(cs.w("screen.review_copy.the.minimum.strengths.it.was"))) + '<p class="mk-note">' + cs.w("screen.review_copy.the.file.does.not.say") + " " + cs.w("screen.review_copy.its.fingerprint.covers.them.so") + "</p>"));
       out.push(cs.choice("rc-export-ack", "screen.review_copy.before.you.save.it", [{ value: "", text: "–" }, { value: "yes", key: "screen.review_copy.i.understand.that.this.file" }],
-        { acts: { yes: "reviewexport" }, act: { tone: "primary", data: { step: "save" } } }));
+        { acts: { yes: "reviewexport" }, act: { tone: "primary", label: "screen.review_copy.save.file", data: { step: "save" } } }));
       out.push(P.said(view, "reviewexport"));
       if (done && done.name) out.push('<div class="mk-acts" data-export-ready>' + cs.save(done.name, done.text) + "</div>");
       if (done && done.unstamped) out.push(P.fold(cs, "screen.review_copy.when.the.copy.can.t", "<p>" + cs.w("screen.review_copy.this.copy.could.not.be") + " " + cs.w("screen.review_copy.no.file.was.made") + "</p>"));

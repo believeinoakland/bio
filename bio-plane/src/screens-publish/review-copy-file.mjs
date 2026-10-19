@@ -34,8 +34,8 @@ export const REVIEW_COPY_FILE = Object.freeze({
       return cs.w("mark.scale." + axis + ".name") + " " + (typeof g === "string" && /^[A-D]$/.test(g) ? E(g) : "–");
     }).join(" · ");
     const para = function (labelKey, body) { return body ? "<h2>" + cs.w(labelKey) + "</h2>" + body : ""; };
-    const stampHtml = '<header data-stamp><p>' + cs.w("screen.review_copy.a.code.that.names.exactly") + ": <code>" + E(stamp.hash) + "</code></p>"
-      + "<p>" + cs.w("screen.review_copy.the.date.this.copy.last") + ": " + cs.date(stamp.date) + "</p><p>" + E(stamp.author) + "</p>"
+    const stampHtml = '<header data-stamp><p>' + cs.w("screen.review_copy.carries.fingerprint") + ": <code>" + E(stamp.hash) + "</code></p>"
+      + "<p>" + cs.w("screen.review_copy.the.date.this.copy.last") + ": " + cs.date(stamp.date) + "</p><p>" + cs.w("screen.review_copy.carries.author") + ": " + E(stamp.author) + "</p>"
       + "<p>" + cs.w("screen.review_copy.the.minimum.strengths.it.was") + ": " + floors + "</p></header>";
     const excluded = list(a.excluded).map(function (x) { return "<li>" + E(text(x)) + (x && x.reason ? " · " + E(x.reason) : "") + "</li>"; }).join("");
     const findings = list(copy.findings).map(function (f) { return "<li>" + E(text(f)) + "</li>"; }).join("");

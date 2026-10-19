@@ -58,12 +58,12 @@ test("R37 the falsifier override is drawn with who set it and when; a finding wi
   assert.equal(main(p).querySelector("details[data-fold='screen.published.falsifier.override.summary']").hasAttribute("open"), true);
 });
 
-test("R37 a body that is unavailable still draws the finding's identity and strengths and says why in the plane's words; a finding the edition does not hold, or NOT_PUBLISHED, is Nothing is here (controls)", async () => {
+test("R37 a body that is unavailable still draws the finding's identity and strengths and says why; a finding the edition does not hold, or NOT_PUBLISHED, is Nothing is here (controls)", async () => {
   const gone = FINDING(F1, { body: { state: "unavailable", from_sha: B1x(), code: "OBJECT_MISSING" } });
   const p = await open(findingPath(F1), { boot: PUBLIC, plane: publishedPlane([gone], { asked: F1 }) });
   assert.equal(main(p).querySelector("h1").textContent, word("screen.published.finding", { n: "1" }));
   const art = main(p).querySelector('[data-body="unavailable"]');
-  assert.ok(art && art.querySelector(".mk-grade, .cs-grade, [data-grade]") !== undefined && art.textContent.includes(word("refusal.OBJECT_MISSING")), "its strengths and the reason, by the code's words");
+  assert.ok(art && art.querySelector(".mk-grade, .cs-grade, [data-grade]") !== undefined && art.textContent.includes(word("screen.published.finding.unreadable")), "its strengths and the reason");
   assert.ok(!main(p).querySelector('[data-state="empty"]'), "never an empty page");
   const absent = await open(findingPath("FND-NOT-HERE"), { boot: PUBLIC, plane: publishedPlane([FINDING(F1)], { asked: F1 }) });
   assert.ok(main(absent).querySelector('[data-unavailable="nothing"]'));
