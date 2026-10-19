@@ -142,3 +142,16 @@ test("R8 with at, standardsIn carries R7's answer, relations and event bounds in
   assert.deepEqual([rest.items.map((x) => x.id), rest.truncated], [[ids[5]], false]);
   assert.equal(w.s.standardsIn({ viewer: V("carol"), at: "2015-01-01" }).count, 6);
 });
+
+test("K3992 a reason events gives as {key, vars} reaches inForceAt as given, never String()-ed: an event bound with no readable when answers undetermined with that reason; a string reason still reads as its sentence", () => {
+  const keyed = { key: "events.why.keyed_test", vars: { n: "1" } };
+  const fake = { readEvent: () => ({ ok: true, found: true, when: { undetermined: true, why: keyed } }) };
+  const w = seeded({ events: fake });
+  const s = w.declare({ period: null, period_basis: { from: { event: EV("keyed"), edge: "start" } } }).id;
+  const a = w.s.inForceAt({ standard: s, date: "2022-01-01" });
+  assert.equal(a.state, "undetermined");
+  assert.deepEqual(a.why, keyed, "the reason as given");
+  const b = seeded({ events: { readEvent: () => ({ ok: true, found: true, when: { undetermined: true, why: "a plain reason" } }) } });
+  const t = b.declare({ period: null, period_basis: { from: { event: EV("plain"), edge: "start" } } }).id;
+  assert.match(b.s.inForceAt({ standard: t, date: "2022-01-01" }).why, /a plain reason/);
+});

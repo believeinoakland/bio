@@ -299,14 +299,12 @@ export class Standards {
       try { return !!e.cite && new RegExp(e.cite.re, e.cite.flags || "").test(text); } catch { return false; }
     });
     if (!matches.length)
-      return undetermined("the citation matches the citation form of no source the active jurisdiction profiles list; "
-                          + "the standard is held all the same, and where it comes from is undetermined");
+      return undetermined(localize("standards.index.no_source_matches_citation", "the citation matches the citation form of no source the active jurisdiction profiles list; the standard is held all the same, and where it comes from is undetermined"));
     const first = matches[0];
     const key = (e) => JSON.stringify([e.source, e.kind, e.issuer, e.level ?? null]);
     const disagree = matches.filter((m) => m.profile !== first.profile && key(m) !== key(first));
     if (disagree.length)
-      return undetermined("the citation matches sources of different active jurisdiction profiles that disagree about "
-                          + "it, and none is chosen between them, so where it comes from is undetermined",
+      return undetermined(localize("standards.index.sources_disagree_none_chosen", "the citation matches sources of different active jurisdiction profiles that disagree about it, and none is chosen between them, so where it comes from is undetermined"),
                           { disagreeing: [first, ...disagree].map((e) => ({ profile: e.profile, source: e.source,
                             kind: e.kind, issuer: e.issuer, level: e.level ?? null, basis: e.basis })) });
     const level = typeof first.level === "string" && first.level ? first.level : "undetermined";
@@ -446,8 +444,7 @@ export class Standards {
         && isObj(c.extent) ? this.#extentRow(c.captureSha, c.extent, viewer) : null;
       /* DEC-49 REGION is-cited-by-held */
       if (!ok)
-        return refusal("STANDARD_CITED_BY_MISSING", "a standard held cited names where it is cited: cited_by {captureSha, "
-                       + "extent}, a passage of a held capture you may see. Nothing was written.");
+        return refusal("STANDARD_CITED_BY_MISSING", localize("standards.index.cited_by_names_where_cited", "a standard held cited names where it is cited: cited_by {captureSha, extent}, a passage of a held capture you may see. Nothing was written."));
       /* END DEC-49 REGION is-cited-by-held */
       return { ok: true, held, texts: [], detail: { captureSha: c.captureSha.trim().toLowerCase(), extent: c.extent,
                                                     content_id: ok.content_id, bundle_id: ok.bundle_id } };
@@ -741,8 +738,7 @@ export class Standards {
     if (!pair) return { ok: false, why: pairs.length ? word("standards.why.earlier_capture_retrieved")
                                                      : word("standards.why.two_captures_held") };
     return { ok: true, basis: { captures: [e, l], address: pair.address, after: pair.after, through: pair.through,
-                                says: "the period starts after the earlier capture and on or before the later one: it rests on "
-                                    + "the captures, never on an enactment date" } };
+                                says: localize("standards.index.period_starts_after_captures", "the period starts after the earlier capture and on or before the later one: it rests on the captures, never on an enactment date") } };
   }
 
   /* R38, R50: the receipts naming one capture (`provenance.receiptsOfCapture`, its R60), each as its R16 answers it;
@@ -967,8 +963,7 @@ export class Standards {
             return bad("period_basis", `gives an event for the period's ${side}, which also states a date: a bound is a date `
                        + "or an event, never both");
           periodBasis[side] = { event: b.event, edge: b.edge };
-        } else return bad("period_basis", `'s ${side} is a held passage {passage: content id} or an enactment event `
-                          + "{event: EVT-…, edge: start or end}");
+        } else return bad("period_basis", localize("standards.index.side_is_held_passage", "'s {side} is a held passage {passage: content id} or an enactment event {event: EVT-…, edge: start or end}", { side }));
       }
     }
     return { ok: true, fields: { instrument: key, portion, requires, copy: copyAnswer, current_through: currentThrough,
@@ -1210,8 +1205,12 @@ export class Standards {
     if (!r || r.ok === false || r.found === false)
       return { day: null, why: word("standards.why.event_held_read", { event_id: String(eventId) }) };
     const w = r.when !== undefined ? r.when : r.event ? r.event.when : undefined;
-    if (!w || w === "undetermined" || w.undetermined)
-      return { day: null, why: word("standards.why.event_record_read", { event_id: String(eventId), words: String(w && w.why ? w.why : "placed nowhere") }) };
+    if (!w || w === "undetermined" || w.undetermined) {
+      /* K3992: events' reason passes on as given, a string or {key, vars}; never String() of a keyed one */
+      const reason = w && w.why ? w.why : null;
+      if (reason && typeof reason === "object") return { day: null, why: reason };
+      return { day: null, why: word("standards.why.event_record_read", { event_id: String(eventId), words: String(reason ?? "placed nowhere") }) };
+    }
     if (w.precision === "edtf") return { day: null, why: word("standards.why.event_band_day", { event_id: String(eventId), value: String(w.value ?? w.start) }) };
     if (w.precision === "upper_bound")
       return { day: null, why: word("standards.why.event_upper_bound", { event_id: String(eventId) }) };
@@ -1241,7 +1240,7 @@ export class Standards {
     }
     for (const r of this.#law.boundsOn(row.standard_id)) {
       const eff = r.effective_date ? { day: r.effective_date } : this.#eventDay(r.effective_event, r.effective_edge, viewer);
-      if (!eff.day) { out.why.to = word("standards.bounds", { relation_id: String(r.relation_id), type: String(r.type), why: String(eff.why) }); out.unread = true; continue; }
+      if (!eff.day) { out.why.to = typeof eff.why === "object" ? eff.why : word("standards.bounds", { relation_id: String(r.relation_id), type: String(r.type), why: String(eff.why) }); out.unread = true; continue; }
       const end = new Date(Date.parse(`${eff.day}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
       if (out.to === null || end < out.to) out.to = end;
       out.bound_by.push({ relation: r.relation_id, type: r.type, effective: eff.day });
@@ -1298,7 +1297,8 @@ export class Standards {
       const overriding = { overridden_by: { standard: by.standard_id, portion: by.portion_path ?? null } };
       if (until === null || own.state === "undetermined")
         return { state: "undetermined", ...overriding,
-                 why: word("standards.why.overrides_portion_whether", { standard_id: String(by.standard_id), why: String(why || own.why), date: String(date) }) };
+                 why: (why || own.why) && typeof (why || own.why) === "object" ? (why || own.why)
+                   : word("standards.why.overrides_portion_whether", { standard_id: String(by.standard_id), why: String(why || own.why), date: String(date) }) };
       if (until === undefined || date < until)
         return { state: "overridden", ...overriding,
                  why: word("standards.why.displaces_portion", { standard_id: String(by.standard_id), portion_path: String(by.portion_path ? ` (${by.portion_path})` : ""), date: String(date), until: String(until ? `, until ${until}` : ", until its own key's next revision") }) };
@@ -1328,7 +1328,10 @@ export class Standards {
       state = "undetermined";
       const missing = [p.from === null ? p.why.from || word("standards.came_force") : null,
                        p.to === null ? p.why.to || word("standards.ceased_force") : null].filter(Boolean);
-      why = missing.length && !p.why.from && !p.why.to
+      /* K3992: a bound's reason from events or civil-time, keyed, is passed on as given */
+      const keyed = missing.find((x) => typeof x === "object");
+      why = keyed ? keyed
+        : missing.length && !p.why.from && !p.why.to
         ? word("standards.why.record_state_whether", { missing: String(missing.join(" or ")), date: String(date) })
         : missing.length ? word("standards.whether_force_undetermined", { missing: String(missing.join("; ")), date: String(date) })
         : (v && v.why) || word("standards.whether_it_was_in_force", { date: String(date) });
@@ -1537,8 +1540,7 @@ export class Standards {
         const items = [...docs.values()].slice(0, n);
         return { ok: true, target: t, of: row ? "standard" : "instrument", key, items, count: items.length, limit: n,
                  truncated: docs.size > n || refs.length >= SCAN_FOR,
-                 says: "documents whose readings cite it, as the readings state their references; a document you may not "
-                     + "see is neither answered nor counted" };
+                 says: localize("standards.index.documents_cite_it_as_stated", "documents whose readings cite it, as the readings state their references; a document you may not see is neither answered nor counted") };
       }
       const byCapture = /^[0-9a-f]{64}$/.test(t);
       const refs = this.#rows(`SELECT DISTINCT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs
@@ -2388,8 +2390,7 @@ export class Standards {
                     id, cite, kind, issuer, JSON.stringify(texts), why, act === null ? null : act.trim(), who, at, project);
       return { ok: true, proposal: this.#proposalAnswer(this.#proposal(id)), standard: false,
                says: PROPOSAL_SAYS
-                   + (texts.length ? "" : " It is stored with no captured text, and cannot be adopted until a member "
-                                          + "names the captured passages that hold the standard's words (R9)."),
+                   + (texts.length ? "" : localize("standards.index.proposal_stored_no_text", " It is stored with no captured text, and cannot be adopted until a member names the captured passages that hold the standard's words (R9).")),
                ...(texts.length ? {} : { text_held: false }) };
     });
   }
