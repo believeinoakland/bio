@@ -4,7 +4,7 @@
  * states that stop it (no key here, a phone, a member who is not an owner). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, drew, drewIn, day, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
+import { open, main, text, drew, drewIn, day, clock, word, ops, press, fill, tick, last, ok, refusedIn, pending, keptKey, answerSign, until, PREFLIGHT, P, DR, C, SHA, B1, E1, PHOTO } from "./fixtures.mjs";
 
 const PATH = `/app/ceremony/${P}/${DR}`;
 const R = "because";
@@ -181,7 +181,7 @@ test("R14 signed and waiting draws signedat with \"Move the time\" and \"Cancel 
   await until(p, () => main(p).querySelector('[data-signed="at"]'));
   assert.deepEqual(last(p, "publishat").body.at, { date: "2026-11-19", time: "06:00" });
   assert.equal(last(p, "publishat").body.members.length, 2);
-  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: "06:00", zone: "America/Los_Angeles" }));
+  assert.ok(drewIn(main(p).querySelector('[data-signed="at"]'), "signing.ceremony.signedat", { edition: "2", date: day("2026-11-19"), time: clock("06:00"), zone: "America/Los_Angeles" }));
   await press(p, "publishatmove", { values: { "ce-move-date": "2026-11-20", "ce-move-time": "07:30" }, reason: R });
   carries(last(p, "publishatmove").body, { case: C, edition: 2, at: { date: "2026-11-20", time: "07:30" } });
   const w = await open(PATH, { plane: { publishschedule: ok({ editions: [{ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "Z" } }] }) } });

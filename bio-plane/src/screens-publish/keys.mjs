@@ -46,7 +46,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.review-copy.reply.needed", "screen.review-copy.role.help", "screen.review-copy.role.label",
     "screen.review-copy.share", "screen.review-copy.until.bad", "screen.review-copy.until.help",
     "screen.review-copy.until.label", "screen.review-copy.until.nozone", "screen.review-copy.until.nozone.member",
-    "screen.review-copy.until.nozone.summary", "screen.review-outside.until.zone", "mark.outward.means",
+    "screen.review-copy.until.nozone.summary", "screen.review-outside.until.zone", "time.clock", "time.am", "time.pm", "mark.outward.means",
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   ceremony: Object.freeze([
@@ -82,7 +82,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.when.time", "screen.ceremony.withdraw.reason", "photo.refused.format", "signing.ceremony.who",
     "screen.ceremony.nothing", "case.links.editor", "shell.card.case-editor", "ceremony.gate.heading", "ceremony.gate.notargets",
     "ceremony.gate.other", "act.publish.here.ceremony", "signing.ceremony.declined", "signing.ceremony.signedat", "signing.ceremony.signednow", "signing.ceremony.nokey",
-    "signing.ceremony.keepkey", "signing.ceremony.notowner", "signing.ceremony.phone", "shell.unavailable.home",
+    "signing.ceremony.keepkey", "signing.ceremony.notowner", "signing.ceremony.phone", "time.clock", "time.am", "time.pm", "shell.unavailable.home",
     "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   published: Object.freeze([
@@ -155,7 +155,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.review-outside.comment.label", "screen.review-outside.comment.needed",
     "screen.review-outside.comments.go", "screen.review-outside.draft", "screen.review-outside.heading",
     "screen.review-outside.nolink", "screen.review-outside.sent", "screen.review-outside.until",
-    "screen.review-outside.until.zone", "screen.review-outside.untilstopped", "review.statement.title", "review.statement.help", "review.statement.note",
+    "screen.review-outside.until.zone", "time.clock", "time.am", "time.pm", "screen.review-outside.untilstopped", "review.statement.title", "review.statement.help", "review.statement.note",
     "review.statement.note.help", "review.statement.ack", "refusal.STATEMENT_ACK_NO_REASON", "refusal.NO_REVIEW_COPY",
   ]),
 });

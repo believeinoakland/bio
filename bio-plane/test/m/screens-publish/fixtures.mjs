@@ -137,8 +137,11 @@ export const drew = (p, key, vars = {}, el = main(p)) => text(p, el).includes(no
 export const drewIn = (el, key, vars = {}) => norm(el.textContent).includes(norm(word(key, vars)));
 /** The explanation an element carries (`data-tip`): its text, tags removed and entities read. */
 export const tipOf = (el) => norm(String(el.getAttribute("data-tip") || "").replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])));
-/** The day as the page draws a date (`cs.date`, interface-shell R6): day, month name, year. */
-export const day = (iso) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(iso));
+/** The day as the page draws a date (`cs.date`, interface-shell R6): `date.daymonthyear` with the month's own word (DEC-333). */
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+export const day = (iso) => { const [y, m, d] = String(iso).slice(0, 10).split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + MONTHS[m - 1]), year: String(y) }); };
+/** A time of day `HH:MM` as the page draws it (`time.clock`, the 12-hour clock; DEC-299). */
+export const clock = (hhmm) => { const [h, m] = String(hhmm).split(":").map(Number); return word("time.clock", { hour: String(h % 12 || 12), minute: String(m).padStart(2, "0"), ampm: word(h < 12 ? "time.am" : "time.pm") }); };
 export const ops = (p, el = main(p)) => el.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 export const button = (p, op, nth = 0) => main(p).querySelectorAll(`button[data-act="${op}"]`)[nth] || null;
 export function fill(p, values) {

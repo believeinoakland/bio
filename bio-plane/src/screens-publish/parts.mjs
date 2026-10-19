@@ -153,12 +153,21 @@ export const PARTS = Object.freeze({
     } catch (e) { return ""; }
   },
 
+  /* R41 (DEC-299): a wall-clock time `HH:MM` on the 12-hour clock, as `time.clock` writes it (midnight 12:00 AM, noon 12:00 PM);
+     "" when it is no time of day. */
+  clock: function (cs, hhmm) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ""));
+    if (!m || +m[1] > 23 || +m[2] > 59) return "";
+    const h = +m[1];
+    return cs.w("time.clock", { hour: String(h % 12 || 12), minute: m[2], ampm: cs.w(h < 12 ? "time.am" : "time.pm") });
+  },
+
   /* R27: the end of a review link as `screen.review-outside.until.zone` says it (date, time and zone in the team's zone);
      "" when the zone or the instant is not held (no UTC is drawn in its place). */
   untilIn: function (cs, view, until, zone) {
     const P = view.parts, day = P.localDay(until, zone), time = P.localTime(until, zone);
     if (!day || !time) return "";
-    return cs.w("screen.review-outside.until.zone", { date: { html: cs.date(day) }, time: time, zone: P.zoneName(zone) });
+    return cs.w("screen.review-outside.until.zone", { date: { html: cs.date(day) }, time: { html: P.clock(cs, time) }, zone: P.zoneName(zone) });
   },
 
   /* A date and time the member typed, `YYYY-MM-DD` and `HH:MM`, as `publishat` and `publishatmove` take them; null when

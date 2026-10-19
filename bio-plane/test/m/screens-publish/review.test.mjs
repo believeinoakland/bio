@@ -3,7 +3,7 @@
  * reader's page, its secret only in a request's body. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+import { open, main, text, tipOf, drew, drewIn, day, clock, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
 
 const PATH = `/app/review-copy/${P}`;
 /* Each field the act's owner takes, as sent; a reason the shell adds by the act's weight (interface-shell R11) aside. */
@@ -18,7 +18,7 @@ const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { va
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
-  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-outside.until.zone", { date: day("2099-10-20"), time: "23:59", zone: PACIFIC }));
+  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-outside.until.zone", { date: day("2099-10-20"), time: clock("23:59"), zone: PACIFIC }));
   assert.ok(!text(p).includes(day("2099-10-21")), "the group's day, not the UTC day");
   assert.equal(p.byOp("publishpreflight").length, 0, "R27: the zone is the copy answer's, not a separate publishpreflight read");
   assert.equal(main(p).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "until");
@@ -30,7 +30,7 @@ test("R18 a lapsed grant is drawn ended; a grant with no end date draws \"until 
   const lapsed = await open(PATH, { plane: withGrants([{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: "2020-03-11T06:59:59Z", zone: "America/Los_Angeles" }]) });
   assert.equal(main(lapsed).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "ended");
   assert.ok(drew(lapsed, "screen.review-copy.reads.ended", { edition: "2", until: day("2020-03-10") }));
-  assert.ok(!drew(lapsed, "screen.review-outside.until.zone", { date: day("2020-03-10"), time: "23:59", zone: PACIFIC }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
+  assert.ok(!drew(lapsed, "screen.review-outside.until.zone", { date: day("2020-03-10"), time: clock("23:59"), zone: PACIFIC }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
   const open_ = await open(PATH, { plane: withGrants([{ grant_id: "GRT-2", recipient: "Ana · editor" }]) });
   assert.ok(text(open_).includes("Ana · editor") && drew(open_, "screen.review-copy.reads.stop", { edition: "2" }));
   assert.equal(main(open_).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "open");
@@ -133,8 +133,8 @@ test("R17 review-outside: the link's end date, and \"Send your comment\" with th
   const until = { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z", zone: "America/Los_Angeles" } }) };
   const p = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: until });
-  assert.ok(drew(p, "screen.review-outside.until.zone", { date: day("2026-10-19"), time: "23:59", zone: PACIFIC }), "R27: the end day in the team's zone, never UTC");
-  assert.ok(!drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: "06:59" }), "the sentence that names UTC is not drawn");
+  assert.ok(drew(p, "screen.review-outside.until.zone", { date: day("2026-10-19"), time: clock("23:59"), zone: PACIFIC }), "R27: the end day in the team's zone, never UTC");
+  assert.ok(!drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: clock("06:59") }), "the sentence that names UTC is not drawn");
   const none = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana" } }) } });
   assert.ok(drew(none, "screen.review-outside.untilstopped"), "R18: a grant with no end date");

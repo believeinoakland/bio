@@ -202,7 +202,7 @@ export const CEREMONY = Object.freeze({
       const w = waiting || {};
       const at = w.at || ui.signed.at || {};
       out.push(cs.sec("screen.ceremony.signed", '<p role="status" data-signed="at">' + cs.w("signing.ceremony.signedat", {
-        edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: at.time || "", zone: at.zone || "" }) + "</p>"
+        edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: { html: P.clock(cs, at.time) }, zone: at.zone || "" }) + "</p>"
         + cs.field("ce-move-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-move-time", "screen.ceremony.when.time", { type: "time" })
         + '<div class="mk-acts">' + cs.act("publishatmove", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } })
         + cs.act("publishatcancel", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } }) + "</div>"
