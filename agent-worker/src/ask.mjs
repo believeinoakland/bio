@@ -72,15 +72,14 @@ export function readTool() {
  *  R3's shape) for the second; `load_layer` in both, gated by the switch that governs the ask (R56). */
 export function askTools(layers, contract = { fields: ANSWER_FIELDS, label: ANSWER_LABEL }) {
   const load = {
-    name: "load_layer", description: "load one of the skill pack's disclosed layers when the work needs it",
+    name: "load_layer", description: localize("agent-worker.ask.load_one_of_the_skill", "load one of the skill pack's disclosed layers when the work needs it"),
     input_schema: { type: "object", properties: { name: { type: "string", enum: layers } }, required: ["name"],
                     additionalProperties: false },
   };
   const read = readTool();
   const done = {
     name: "done_reading",
-    description: "end reading: the question as you read it, and at most one clarifying question when it cannot be "
-      + "answered without one",
+    description: localize("agent-worker.ask.end_reading_the_question_as", "end reading: the question as you read it, and at most one clarifying question when it cannot be answered without one"),
     input_schema: { type: "object", properties: {
       question_as_read: { type: "string" }, clarifying: { type: ["string", "null"] } },
       required: ["question_as_read"], additionalProperties: false },
@@ -92,8 +91,7 @@ export function askTools(layers, contract = { fields: ANSWER_FIELDS, label: ANSW
     label: { type: "string", enum: [contract.label] } };
   const answer = {
     name: "answer",
-    description: "the answer, in the answers contract: every sentence rests on what was read, quotes are exact, an "
-      + "absence names its level, and every rule is the plane's",
+    description: localize("agent-worker.ask.the_answer_in_the_answers", "the answer, in the answers contract: every sentence rests on what was read, quotes are exact, an absence names its level, and every rule is the plane's"),
     input_schema: { type: "object",
       properties: Object.fromEntries(contract.fields.map((k) => [k, hint[k] ?? {}])),
       required: [...contract.fields], additionalProperties: false },
@@ -110,7 +108,7 @@ export function admitRead(input) {
       detail: localize("agent-worker.ask.op_is_not_a_read", "'{op}' is not a read an ask may make; an ask reads only {ASK_OPS}", { op: String(op.slice(0, 60)), ASK_OPS: String(ASK_OPS.join(", ")) }) } };
   const args = input?.args == null ? {} : input.args;
   if (typeof args !== "object" || Array.isArray(args))
-    return { refused: { code: "ASK_ARGS_REFUSED", op, detail: "a read's arguments are a map of plain values" } };
+    return { refused: { code: "ASK_ARGS_REFUSED", op, detail: localize("agent-worker.ask.a_reads_arguments_are_a", "a read's arguments are a map of plain values") } };
   const query = {};
   for (const [k, v] of Object.entries(args)) {
     if (["op", "token", "store"].includes(k) || !/^[a-z_][a-z0-9_]{0,40}$/i.test(k)
@@ -201,8 +199,7 @@ export async function handleAsk(req, env, deps) {
   const conv = conversationOf(body.conversation);
   if (conv.bad)
     return refusal("BAD_CONVERSATION",
-      `conversation, when present, is this ask's earlier turns: at most ${CONVERSATION_MAX}, each {role: user or `
-      + "assistant, content: words}.", 400);
+      localize("agent-worker.ask.conversation_when_present_is_this", "conversation, when present, is this ask's earlier turns: at most {CONVERSATION_MAX}, each {shape}.", { CONVERSATION_MAX: String(CONVERSATION_MAX), shape: "{role: user or assistant, content: words}" }), 400);
   /* R110: past the shape checks and before any plane call or model turn (the ceiling is asked after). */
   const blocked = await assistantReady(env, account);
   if (blocked) return blocked;
@@ -211,11 +208,9 @@ export async function handleAsk(req, env, deps) {
   const call = (op, query, post) => askPlane(env, op, grant, store, query, post);
   const relayed = (asked, at) => json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED",
     worker: "agent-worker", at,
-    detail: "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was "
-          + "worded.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
+    detail: localize("agent-worker.ask.the_record_refused_this_ask", "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was worded."), plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
   const silentNow = (asked) => refusal("PLANE_SILENT",
-    "the record could not be reached, so nothing was read and no model was called. A failure to answer is not an "
-    + "answer.", 502, { detail_from_binding: asked.detail ?? null });
+    localize("agent-worker.ask.the_record_could_not_be_reached_so", "the record could not be reached, so nothing was read and no model was called. A failure to answer is not an answer."), 502, { detail_from_binding: asked.detail ?? null });
 
   /* (1) THE CEILING, BEFORE ANY MODEL CALL (ai-runs R50), its refusal relayed unchanged (R43). */
   const ceiling = await call("askceiling");
@@ -295,8 +290,7 @@ export async function handleAsk(req, env, deps) {
           used.reads += 1;
           await emit({ event: "read", op: admitted.op, record: recordOf(admitted.query) });
           const got = await call(admitted.op, admitted.query);
-          if (!got.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; "
-                                                  + "what it would have answered is not held" }, error: true };
+          if (!got.reached) return { content: { code: "PLANE_SILENT", detail: localize("agent-worker.ask.the_plane_did_not_answer", "the plane did not answer this read; what it would have answered is not held") }, error: true };
           const a = planeAnswer(got, admitted.op);
           if (!a.refused) found.count += newPassages(a.result, found.seen);
           /* R63: the model is handed the readers' text and `active` lists only; a field holding bytes is dropped and
@@ -320,7 +314,7 @@ export async function handleAsk(req, env, deps) {
         reference, runner: model.runner, mode: "ask", meter, system, messages, tools: tools.composing,
         finalTool: "answer", maxTurns: ASK_DECLARED.turns, ...traced,
         onTool: async (name, input) => (name === "load_layer" ? loadLayer(model, input)
-          : { content: "reading is closed; answer with the answer tool", error: true }),
+          : { content: localize("agent-worker.ask.reading_is_closed_answer_with", "reading is closed; answer with the answer tool"), error: true }),
       });
       spend(composed);
       await report(composed);
@@ -332,18 +326,15 @@ export async function handleAsk(req, env, deps) {
       const checked = await call("askcheck", null, { question: body.question, answer: composed.answer });
       if (!checked.reached)
         return await finish(refusedEvent("PLANE_SILENT",
-          "the record could not be reached to check the answer, so nothing is returned: an unchecked answer is never "
-          + "shown.", { detail_from_binding: checked.detail ?? null }));
+          localize("agent-worker.ask.the_record_could_not_be_reached_to", "the record could not be reached to check the answer, so nothing is returned: an unchecked answer is never shown."), { detail_from_binding: checked.detail ?? null }));
       const c = planeAnswer(checked, "askcheck");
       if (c.refused)
         return await finish(refusedEvent("PLANE_REFUSED",
-          "the record refused to check the answer, so nothing is returned. Its refusal is passed through exactly as "
-          + "it was worded.", { at: "askcheck", plane: c.refused.plane ?? null }));
+          localize("agent-worker.ask.the_record_refused_to_check", "the record refused to check the answer, so nothing is returned. Its refusal is passed through exactly as it was worded."), { at: "askcheck", plane: c.refused.plane ?? null }));
       const r = c.result || {};
       if (!r.answer || typeof r.answer !== "object")
         return await finish(refusedEvent("ASK_UNCHECKED",
-          "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never "
-          + "shown."));
+          localize("agent-worker.ask.the_records_checks_answered_without", "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never shown.")));
       /* R113: one `checked` event per cited passage as the check answers, before the last event; the check marks a
          holding it withheld as null in the answer it returns. */
       const kept = Array.isArray(r.answer.holdings) ? r.answer.holdings : [];

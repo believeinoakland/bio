@@ -13,6 +13,7 @@ import { READ_TEXT_MAX } from "../src/draft.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
 import { remoteBindings } from "./remote.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -190,7 +191,7 @@ section("R86 (R62) · a passage telling the model to read the record comes back 
   const second = JSON.parse(r.api[1].body);
   const result = second.messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])).find((c) => c.type === "tool_result");
   t("R86: the model's call of a tool it was not offered is refused here, as the tool's result",
-    [result?.is_error, JSON.stringify(result?.content ?? "").includes("is not a tool of this translation")], [true, true]);
+    [result?.is_error, JSON.stringify(result?.content ?? "").includes(localize("agent-worker.draft.string_is_not_a_tool_3", "'{String}' is not a tool of this translation", { String: "read" }))], [true, true]);
   t("R86: the model is still offered no read tool on its second turn", second.tools.map((x) => x.name), ["draft"]);
   t("R86: the account's secret is in no answer", r.text.includes(KEY_SECRET), false);
 }

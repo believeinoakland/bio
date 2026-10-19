@@ -1,6 +1,6 @@
 # agent-worker (T51)
 
-**Status** · session_01RTunPjz5nMUCRagijvxJzE · depth 2 · COMPLETE · handled B1
+**Status** · session_01WuXNA6bcbYEWzWXRuvLaq3 · depth 2 · COMPLETE · handled B5
 
 ## Record
 
@@ -45,3 +45,21 @@ Size (session_01RTunPjz5nMUCRagijvxJzE): test runs 12, module lines 2724
 ## J2 · COMPLETE
 
 agent-worker delegates to agent-steps (R119). src is 2,724 lines. Moved code, reads.mjs, holdings.mjs and the three ops.mjs names deleted; STEPS_HOST built; stale comment fixed. Moved suites and fixtures deleted; the kept arms stay as you listed; the control drivers are re-pointed to agent-steps' files and re-run (all as declared). npm test: only requirements R45 red, the stale bundle. Checks: format 0, ownership 0, coverage clean for agent-worker. Architecture: 5 failures of mine, one cause: tests import agent-steps fixtures and agent-steps is not yet in my uses. For you: (1) add agent-steps to agent-worker's uses in modules.json; (2) regenerate the stale agent-worker bundle at L6's close; (3) agent-harness/src/harness.mjs line 5 names MEANING_ARM as agent-worker's (now agent-steps' names.mjs). Details in my record.
+
+### Completion (B3 START, B4 CHANGE: the words pass, T51-209)
+
+**Entries applied.** All 44 conversion findings, the 35 `plain` findings and the 5 test copies of `build/plan/words-pass/agent-worker.md`, and B4's fold of `+` chains (civicos-process d424c32). Model prompts (`system` of `/draft`, action drafts, translation, reading, `/transcribe`), tool descriptions, tool results to the model and refusal details are `localize('agent-worker.<stem>.<slug>', en, vars)`, text unchanged character for character; wire shapes with braces (`{op: …}`, `{page, media_type, data}`) are passed as variables. Tests compare with `localize` by equality (`t35` R64 rows cut at the variable part; `t42`, `t48`, `harness.test` R59 firsthand sentence). `harness.test` FT0's codes are read from the plane fixture's `WIRE_CHECKS` and `NOT_PRINCIPAL`. `PLANE_OPS` keys in `ops.mjs` are now quoted: the check read only string literals, so the member's own declaration of its ops looked foreign to the hand-list arm (owners.mjs, plan.test, requirements 1428). `requirements.test` R37's list of byte-serving ops (not this module's, not importable below layer 8) is replaced by: no answer the suite received carries a data URL or long base64 run.
+
+**Judged no member reads, for the design's unkeyed list** (still failing the check until BOB lists them): `ops.mjs`:26, :27, :50, :53 (`PLANE_OPS` `why` fields, developer documentation of why an op is called). The codemod had already keyed :29 and :31 of the same table; those two rows would also be unkeyed text. `MODEL_TURNS` (`index.mjs`, the `/version` answer's `model_turns`) is a diagnostic statement, left as a literal; the check no longer flags it after the `+` fold.
+
+**Control drivers** re-run against the new text: `t42` 17/0 (arm 14 re-anchored), `t47` 12/0 (arm 9 re-anchored; it needs an id absent from the list, because the list wins), `t41` 9/0, `t46` 13/0, `cascade` 4/4, `agent-worker` 15/15 as declared, `wire-vocabulary` 3/3, `versions` baseline. `harness.control` 12 of 13: F4 never armed, because its anchor `cancelled: "a member stopped it"` in the plane's `ai-runs` source is gone; not mine (another module's source).
+
+**Tests.** `npm test` in `agent-worker/`: 21 of 22 suites; the red is `requirements.test.mjs` R45, the bundle stale (both R45 lines), nothing else. **Checks.** format 0; architecture 0; coverage: agent-worker not among failures; ownership 0 (16 files); words: only the 4 lines above; `setup-words build --check`: stale-rows note only. `checks/run.mjs`'s other failures are other modules'.
+
+**For BOB.** (1) the bundle `agent-worker/dist/*` is stale (R45); regenerate at the layer close. (2) `agent-steps` still needs listing in `uses` (B2). (3) The words check reads only string-literal ops, not identifier keys: consider that for the hand-list arm. (4) `harness.control` F4's anchor in `bio-plane/src/ai-runs` (the `cancelled` sentence) is stale. (5) Rows added to the design's review list: about 70 new `agent-worker.*` ids.
+
+Size (session_01WuXNA6bcbYEWzWXRuvLaq3): test runs 14, module lines 2598
+
+## J3 · COMPLETE
+
+Words pass applied (T51-209, B3, B4): all 84 findings keyed or compared by localize, text unchanged; 4 ops.mjs why strings left for the design's unkeyed list. npm test: only R45 (stale bundle). Controls re-pointed and green but harness F4 (anchor in ai-runs, not mine). Checks: format 0, architecture 0, ownership 0. Details and 5 items for you in my record.

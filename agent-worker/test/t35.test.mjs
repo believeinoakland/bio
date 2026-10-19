@@ -18,6 +18,7 @@ import { MODES, OPTION_KEYS } from "../../agent-harness/src/harness.mjs";
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
 import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -352,7 +353,7 @@ section("R59 · a draft with no grant: no read tool, only what the member told, 
     req.body.messages[0].role === "user" && JSON.stringify(req.body.messages[0].content).includes("I saw the crossing guard leave at 3."), true);
   const fh = await drive("draft", draftBody({ firsthand: true }));
   t("R59: a firsthand field's draft reads nothing and is told so", [fh.status, fh.model[0].body.tools.map((x) => x.name),
-    JSON.stringify(fh.model[0].body.messages).includes("only word what they told you")], [200, ["draft"], true]);
+    JSON.stringify(fh.model[0].body.messages).includes(localize("agent-worker.draft.this_field_records_what_the_2", "This field records what the member saw: only word what they told you."))], [200, ["draft"], true]);
   const on = await drive("draft", draftBody({ account: ON }));
   t("R59: with the switch on and no grant, the suggestions layer is loaded and still no read tool",
     [nonToolResultText(on.model[0]).includes("SUGGESTIONS-LAYER-WORDS"), on.model[0].body.tools.map((x) => x.name)], [true, ["draft"]]);
@@ -546,19 +547,21 @@ section("R64 · the words members read: your group's Civicsmith, or the thing it
   const NEVER = /\b(plane|instance|copy|server)\b/i;
   const ev = (r) => r.events.find((e) => e.event === "refused") || r.out;
   const rows = [];
+  /* a sentence as the module writes it, cut at each variable part, so a variable part the test does not know need not be restated */
+  const cut = (text) => text.split("\u0000");
   const ceiling = await drive("ask", askBody(), { planeCfg: { silent: ["askceiling"] } });
-  rows.push(["ask.mjs:161", ceiling.out?.detail, "the record could not be reached, so nothing was read and no model was called."]);
+  rows.push(["ask.mjs:161", ceiling.out?.detail, cut(localize("agent-worker.ask.the_record_could_not_be_reached_so", "the record could not be reached, so nothing was read and no model was called. A failure to answer is not an answer.", { why: "\u0000" }))]);
   const relayed = await (async () => { const p = plane(); const m = modelApi();
     const binding = { fetch: async (url, init) => (new URL(url).searchParams.get("op") === "askceiling"
       ? Response.json({ ok: false, reason: "AI_USE_CEILING_REACHED", code: "AI_USE_CEILING_REACHED" }, { status: 403 }) : p.binding.fetch(url, init)) };
     const saved = globalThis.fetch; globalThis.fetch = m.fn;
     try { const res = await worker.fetch(new Request("http://agent-worker/ask", { method: "POST", body: JSON.stringify(askBody()) }), { PLANE: binding });
           return res.json(); } finally { globalThis.fetch = saved; } })();
-  rows.push(["ask.mjs:158", relayed?.detail, "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was worded."]);
+  rows.push(["ask.mjs:158", relayed?.detail, cut(localize("agent-worker.ask.the_record_refused_this_ask", "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was worded.", { why: "\u0000" }))]);
   const nopack = await drive("ask", askBody(), { planeCfg: { noPack: true } });
-  rows.push(["ask.mjs:177", nopack.out?.detail, "no skill pack this ask can be instructed by was published, so no model was called"]);
+  rows.push(["ask.mjs:177", nopack.out?.detail, cut(localize("agent-worker.ask.no_skill_pack_this_ask", "no skill pack this ask can be instructed by was published, so no model was called: an ask answered without the pack's closed-book rule would answer from the model's own knowledge ({why}).", { why: "\u0000" }))]);
   const checkSilent = await drive("ask", askBody(), { planeCfg: { silent: ["askcheck"] } });
-  rows.push(["ask.mjs:280", ev(checkSilent)?.detail, "the record could not be reached to check the answer, so nothing is returned"]);
+  rows.push(["ask.mjs:280", ev(checkSilent)?.detail, cut(localize("agent-worker.ask.the_record_could_not_be_reached_to", "the record could not be reached to check the answer, so nothing is returned: an unchecked answer is never shown.", { why: "\u0000" }))]);
   const checkRefused = await (async () => { const p = plane(); const m = modelApi();
     const binding = { fetch: async (url, init) => (new URL(url).searchParams.get("op") === "askcheck"
       ? Response.json({ ok: false, reason: "GRANT_EXPIRED" }, { status: 403 }) : p.binding.fetch(url, init)) };
@@ -566,8 +569,9 @@ section("R64 · the words members read: your group's Civicsmith, or the thing it
     try { const res = await worker.fetch(new Request("http://agent-worker/ask", { method: "POST", body: JSON.stringify(askBody()) }), { PLANE: binding });
           return (await res.text()).split("\n").filter(Boolean).map((l) => JSON.parse(l)).find((e) => e.event === "refused"); }
     finally { globalThis.fetch = saved; } })();
-  rows.push(["ask.mjs:285", checkRefused?.detail, "the record refused to check the answer, so nothing is returned."]);
-  rows.push(["ask.mjs:286", checkRefused?.detail, "Its refusal is passed through exactly as it was worded."]);
+  const refusedToCheck = cut(localize("agent-worker.ask.the_record_refused_to_check", "the record refused to check the answer, so nothing is returned. Its refusal is passed through exactly as it was worded.", { why: "\u0000" }));
+  rows.push(["ask.mjs:285", checkRefused?.detail, refusedToCheck]);
+  rows.push(["ask.mjs:286", checkRefused?.detail, refusedToCheck]);
   const unchecked = await (async () => { const p = plane(); const m = modelApi();
     const binding = { fetch: async (url, init) => (new URL(url).searchParams.get("op") === "askcheck"
       ? Response.json({ ok: true, result: { ok: true, withheld: [] } }) : p.binding.fetch(url, init)) };
@@ -575,16 +579,16 @@ section("R64 · the words members read: your group's Civicsmith, or the thing it
     try { const res = await worker.fetch(new Request("http://agent-worker/ask", { method: "POST", body: JSON.stringify(askBody()) }), { PLANE: binding });
           return (await res.text()).split("\n").filter(Boolean).map((l) => JSON.parse(l)).find((e) => e.event === "refused"); }
     finally { globalThis.fetch = saved; } })();
-  rows.push(["ask.mjs:290", unchecked?.detail, "the record's checks answered without a checked answer, so nothing is returned"]);
+  rows.push(["ask.mjs:290", unchecked?.detail, cut(localize("agent-worker.ask.the_records_checks_answered_without", "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never shown.", { why: "\u0000" }))]);
   const PUBLISHED_VALUE = readFileSync(join(REPO, "bio-plane/dist/SECRETS.txt"), "utf8").split("\n")
     .find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
   const revoked = await resolveClaudeCascade({ ...ACCOUNT, secret: PUBLISHED_VALUE });
-  rows.push(["cascade.mjs:73", revoked.detail, "until then the team's API key serves them only while your team's Civicsmith holds it and it is on."]);
+  rows.push(["cascade.mjs:73", revoked.detail, cut(localize("agent-worker.cascade.the_member_connects_a_new", "The member connects a new one; until then the team's API key serves them only while your team's Civicsmith holds it and it is on.", { why: "\u0000" }))]);
   const unset = await resolveClaudeCascade({ ...ACCOUNT, secret: "" });
-  rows.push(["cascade.mjs:75", unset.detail, "Which account serves a member's act is your team's Civicsmith's to answer"]);
+  rows.push(["cascade.mjs:75", unset.detail, cut(localize("agent-worker.cascade.no_usable_claude_account_arrived", "no usable Claude account arrived for this act ({whose} was absent, empty, named no member{v1}, or of a kind its level does not hold). Which account serves a member's act is your team's Civicsmith's to answer (the project's, else the member's own, else the team's API key while it is held and on); a member whom none serves has no assistant.", { why: "\u0000", whose: localize("agent-worker.cascade.the_members_own_claude_account", "the member's own Claude account reference"), v1: "" }))]);
   for (const [row, detail, words] of rows)
-    t(`R64 (${row}): the member reads "${words.slice(0, 70)}…", and never plane, instance, copy or server`,
-      [typeof detail === "string" && detail.includes(words), typeof detail === "string" && NEVER.test(detail)], [true, false]);
+    t(`R64 (${row}): the member reads "${words[0].slice(0, 70)}…", and never plane, instance, copy or server`,
+      [typeof detail === "string" && words.every((w) => detail.includes(w)), typeof detail === "string" && NEVER.test(detail)], [true, false]);
   t("R64: the nine rows are each named above", rows.length, 9);
   t("R64: codes and field names stay: PLANE_REFUSED, PLANE_SILENT and plane_status are still answered",
     [relayed?.code, ceiling.out?.code, "plane_status" in (relayed || {})], ["PLANE_REFUSED", "PLANE_SILENT", true]);

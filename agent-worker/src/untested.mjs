@@ -6,6 +6,7 @@
  * The label is `run-rules`' own object (`untestedLabel(part)`, its R29), so the one check is equality with what that
  * function answers for the part the label names: any other value, or a part it labels nothing for, is not a label. */
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
@@ -22,5 +23,4 @@ export function untestedOf(body) {
 }
 
 /** The words of the refusal of a malformed label. */
-export const UNTESTED_BAD = "untested, when present, is the test-instance label exactly as the record's rules answer it for "
-  + "one part ({kind: untested, part, set, set_version, words}); what arrived is not one, so nothing was done.";
+export const UNTESTED_BAD = localize("agent-worker.untested.untested_when_present_is_the", "untested, when present, is the test-instance label exactly as the record's rules answer it for one part ({shape}); what arrived is not one, so nothing was done.", { shape: "{kind: untested, part, set, set_version, words}" });
