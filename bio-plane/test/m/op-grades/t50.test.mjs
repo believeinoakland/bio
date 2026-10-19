@@ -9,16 +9,17 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS,
          MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
 import * as T50 from "../../../src/op-grades/t50.mjs";
-import { declaredOps } from "./declared.mjs";
+import { reqText, between, ticked } from "./declared.mjs";
 
 const root = (p) => fileURLToPath(new URL(`../../../../${p}`, import.meta.url));
 const gradeOf = (op) => (Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null);
 
 /* the fifteen ops R45 grades: the five reversible acts, the one undetermined act, and the nine reads */
-const REVERSIBLE = declaredOps("following", "project-roster", "action-records").filter((op) => T50.T50_RUNGS[op] === "reversible" && op !== "planopen" && op !== "wizarddraft");
-const WRITES = [...REVERSIBLE, ...declaredOps("action-records").filter((op) => Object.hasOwn(T50.T50_RUNG_ABSENT, op))];
-const READS = declaredOps("membership", "retrieval", "acquisition", "capture", "inquiry", "progressions", "project-roster", "filings")
-  .filter((op) => Object.hasOwn(T50.T50_NON_ACTS, op) && T50.T50_NON_ACTS[op].startsWith("read: "));
+const R45 = reqText(45);
+const REVERSIBLE = ticked(between(R45, "`RUNGS` assigns `reversible`", "`RUNG_ABSENT` holds")).filter((op) => T50.T50_RUNGS[op] === "reversible");
+const WRITES = [...REVERSIBLE, ...ticked(between(R45, "`RUNG_ABSENT` holds", "R3's tally")).filter((op) => Object.hasOwn(T50.T50_RUNG_ABSENT, op))];
+const READS = ticked(between(R45, "naming what it reads:", "Each of the six")).filter((op) => Object.hasOwn(T50.T50_NON_ACTS, op)
+  && T50.T50_NON_ACTS[op].startsWith("read: "));
 const FIFTEEN = [...WRITES, ...READS];
 
 /* the four acts DEC-300 (5) weighs Reversible, R47 */

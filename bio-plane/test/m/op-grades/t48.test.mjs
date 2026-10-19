@@ -11,7 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
-import { declaredOps, asksNotTheAccount } from "./declared.mjs";
+import { reqText, ticked, readRows, asksNotTheAccount } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -23,11 +23,11 @@ const WRITES = { actionreplyquoting: "reversible", updateskip: "reasoned", updat
   updatestart: "reversible", planask: "reversible", stepsource: "reasoned", stepsourcewithdraw: "reasoned",
   lookedsince: "caller-owned" };
 const R39_ROWS = { translationdraft: "caller-owned", groupdescriptiondraft: "caller-owned", securitymap: "caller-owned" };
-const READS = declaredOps("following", "instance-setup", "ai-use", "explore", "standards", "filings", "action-holds")
-  .filter((op) => Object.hasOwn(T48.T48_NON_ACTS, op) && T48.T48_NON_ACTS[op].startsWith("read: "));
+const READS = readRows(T48.T48_NON_ACTS);
 const R41_READS = READS.filter((op) => op !== "proceedingdates" && op !== "updatenotice");
-const R41_CONTROL = [...declaredOps("action-plans", "connections", "membership")
-  .filter((op) => Object.hasOwn(T48.T48_RUNGS, op) || Object.hasOwn(T48.T48_RUNG_ABSENT, op)), ...R41_READS];
+/* the ops R41 names that T48's tables hold */
+const R41_CONTROL = ticked(reqText(41)).filter((op) => Object.hasOwn(T48.T48_RUNGS, op) || Object.hasOwn(T48.T48_RUNG_ABSENT, op)
+  || Object.hasOwn(T48.T48_NON_ACTS, op));
 const UPDATE = "release-directed: keyed by a verified release notice, reached from Settings › Updates and the "
   + "administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer "
   + "installs, with Cloudflare's consent)";

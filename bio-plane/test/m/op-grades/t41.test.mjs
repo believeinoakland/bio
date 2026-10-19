@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
-import { declaredReadOps, declaredNames, reqText, between, ticked } from "./declared.mjs";
+import { reqText, between, ticked, readRows } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ");
@@ -70,11 +70,8 @@ const TAKEN_BACK_BY = {
   stepoutcome: "stepoutcome", stepbywhen: "stepbywhen", guidepropose: "guidedraft",
 };
 /* every other op of op-declarations R41, R43 and R45: a read */
-const DECLARED_READS = new Set(declaredReadOps());
-/* T41's read rows that op-declarations declares as reads (`handlecheck` is R29's); `aiusage`'s row is re-worded here (R30)
-   and lives in T33's table */
-const R30_READS = [...Object.keys(T41_NON_ACTS).filter((op) => op !== "handlecheck" && DECLARED_READS.has(op)
-  && T41_NON_ACTS[op].startsWith("read: ")), "aiusage"];
+/* T41's read rows (`handlecheck` is R29's); `aiusage`'s row is re-worded here (R30) and lives in T33's table */
+const R30_READS = [...readRows(T41_NON_ACTS).filter((op) => op !== "handlecheck"), "aiusage"];
 const RETIRED = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
 
 test("R30: every write op-declarations R41, R43 and R45 declares, and actionseekspropose, carries R30's grade, the "
@@ -196,7 +193,7 @@ test("R30 (K2583): guidepropose graded as extractpropose (run-directed, labeled 
   for (const op of ["guidefor", "guide", "guideproposals"]) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
   /* the ops R30's K2583 sentence names: guidepropose, guideproposetocivicsmith (and the likenesses extractpropose and
      guideoffer, which are graded already), the reads guidefor, guide and guideproposals */
-  const FIVE = ticked(between(reqText(30), "(K2583)", "Every other op")).filter((op) => declaredNames().has(op) && !["extractpropose", "guideoffer"].includes(op));
+  const FIVE = ticked(between(reqText(30), "(K2583)", "Every other op")).filter((op) => Object.hasOwn(NON_ACTS, op) && !["extractpropose", "guideoffer"].includes(op));
   assert.equal(FIVE.length, 5);
   assert.deepEqual(FIVE.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(FIVE.map(phoneOf), FIVE.map(() => true));

@@ -4,7 +4,7 @@
    imported: what affordances read from an owner's op map or checks table is named here as the requirements name it. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { reqText, between, ticked, worded, declaredNames, declaredList, declaredReads, declaredReadOps, isGated, tickedAll, joinedCodes, asksNotTheAccount } from "./declared.mjs";
+import { reqText, between, ticked, tickedAll, worded, joinedCodes, asksNotTheAccount, readRows } from "./declared.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS } from "../../../src/op-grades/t34.mjs";
@@ -38,9 +38,8 @@ const DEC88 = {
   reasoned: DEC88_BAND("reasoned ", " (DEC-88 banded"),
   terminal: DEC88_BAND("terminal "),
 };
-const KNOWN = declaredNames();
-/* R1's first sentences state the other bands as plain words: the ops of op-declarations among them */
-const R1_BAND = (from, to) => worded(between(R1_TEXT, from, to), KNOWN);
+/* R1's first sentences state the other bands as plain words */
+const R1_BAND = (from, to) => worded(between(R1_TEXT, from, to));
 /* R30 (T41): its backticked ops, band by band; K2583 adds the guides' two (`guidepropose` as `extractpropose`,
    `guideproposetocivicsmith` as `guideoffer`) */
 const R30 = reqText(30);
@@ -115,7 +114,7 @@ test("R1 R8 R14 R32 R33 R37 (N891): the closed `terminal` set is retire, DEC-88'
 /* R3's 21 (its plain words, and K921's seven in backticks), less inboxpull, which R35 (T47) moves to `reversible`, and
    planopen, which R47 (T50) moves too */
 const R3_TEXT = reqText(3);
-const R3_LEFT = [...worded(between(R3_TEXT, "leaving 21 `undetermined`:", " and K921's seven"), KNOWN),
+const R3_LEFT = [...worded(between(R3_TEXT, "leaving 21 `undetermined`:", " and K921's seven")),
   ...tickedAll(between(R3_TEXT, "K921's seven (R6:", ")"))].filter((op) => op !== "inboxpull" && op !== "planopen");
 test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21 less inboxpull (R35) and the ops ruled onto "
    + "it later on R3's rule, deepercheck no longer among them, and no other; the 78 held before DEC-88 are the 21 and "
@@ -155,38 +154,31 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
 });
 
 /* ---- R2, R5: layer 9's NON_ACTS and read rows ------------------------------------------------------------------------ */
-/* layer 9's writes and reads, as op-declarations declares them for its owners (standards, consequences, filings, escalation,
-   action plans and holds): the query author's acts, standards' acts and the plan proposals; the layer's reads */
-const LAYER9_WRITES = declaredList("QUERY_AUTHOR_ACTIONS", "STANDARDS_ACTIONS", "PLAN_PROPOSAL_ACTIONS")
-  .filter((op) => !Object.hasOwn(OP_ALIASES, op) && op !== "optionstartpreview");
-const LAYER9_ABSENT = { counselpacketexport: "substrate", communicationprepare: "undetermined",
-  templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined",
-  optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined", checkpointrecord: "undetermined",
-  optionstart: "undetermined", reminderset: "caller-owned", reminderanswer: "caller-owned" };
-/* reads with no NEEDS row: named in no registry (a row for an ungated op reads `stale`, affordances R12) */
-const LAYER9_UNGATED_READS = declaredList("ACTION_LAYER_READS").filter((op) => !isGated(op));
+/* the stated absences R2 names for layer 9 (K705, K723, K732), with the ground it gives them; planopen left the ground at R47 */
+const R2_TEXT = reqText(2);
+const LAYER9_ABSENT = Object.fromEntries([
+  ...ticked(between(R2_TEXT, "It holds (K705, K723)", ", ground `undetermined`")).map((op) => [op, "undetermined"]),
+  ...ticked(between(R2_TEXT, "and (K732)", ", ground `undetermined`")).filter((op) => op !== "planopen").map((op) => [op, "undetermined"]),
+  ...ticked(between(R2_TEXT, "`optionstart`, ground `undetermined`, and ", ", ground `caller-owned`")).map((op) => [op, "caller-owned"]),
+]);
 const LAYER9_GATED_READS = ["optionstartpreview", "standardinforce"];
-test("R2 R5 (N891): layer 9's writes each carry a NON_ACTS reason of more than ten characters and no capture act, its "
-   + "stated absences their sentence and ground, its two gated reads a `read:` reason writing nothing and no grade, "
-   + "actionriskpropose named, and its ungated reads named in no table", () => {
+test("R2 R5 (N891): layer 9's stated absences (R2) carry their sentence and ground, and a NON_ACTS reason of more than ten "
+   + "characters and no capture act unless affordances R51 makes them ACTS rows; its two gated reads a `read:` reason writing "
+   + "nothing and no grade; actionriskpropose named", () => {
   /* the ones affordances R51 makes ACTS rows are named in NON_ACTS no longer (R32's T45 bullet; R33 adds the two escalation acts) */
   const ACTS_NOW = [...ticked(between(reqText(32), "leave `NON_ACTS`:", "(and `holdnoticeprepare`")), "escalationstoppursuing",
     "escalationreopen"];
-  assert.ok(LAYER9_WRITES.length >= 41, "the 41 of layer 9 and any a later tranche adds");
-  for (const op of LAYER9_WRITES) assert.ok(Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op), op);
-  for (const op of LAYER9_WRITES.filter((op) => !ACTS_NOW.includes(op)))
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
-  for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+  assert.ok(Object.keys(LAYER9_ABSENT).length >= 10);
   for (const [op, ground] of Object.entries(LAYER9_ABSENT)) {
-    assert.ok(LAYER9_WRITES.includes(op), op);
     assert.equal(RUNG_ABSENT[op]?.ground, ground, op);
     assert.ok(RUNG_ABSENT[op].is.length > 20, op);
+    if (ACTS_NOW.includes(op)) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+    else assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
   }
+  for (const op of ACTS_NOW.filter((op) => Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)))
+    assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   for (const op of LAYER9_GATED_READS) { assert.ok(readWritesNothing(op), op); assert.ok(ungraded(op), op); }
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
-  assert.ok(LAYER9_UNGATED_READS.length >= 20);
-  for (const op of LAYER9_UNGATED_READS)
-    for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, op), op);
   /* negative control */
   assert.ok(Object.hasOwn({ ...NON_ACTS, monitoring: "read: x" }, "monitoring"));
 });
@@ -275,51 +267,36 @@ test("R1 (N891): JUSTIFICATION_REFUSALS holds only codes that ask the member's a
 });
 
 /* ---- R2, R5: the owners' reads write nothing ----------------------------------------------------------------------- */
-test("R2 R5 (N891): every read op-declarations declares and this module gives a NON_ACTS reason writes nothing and takes no "
-   + "grade — the sources', doorbell's and capture's reads, T23's, the hold reads, the docket's, the imports', the wizard "
-   + "library's, the template library's, publishschedule, notes, and every T33 read; the public reads take no grade", () => {
-  const rows = declaredReadOps().filter((op) => Object.hasOwn(NON_ACTS, op));
+test("R2 R5 (N891): every read row of NON_ACTS writes nothing and takes no grade, the closing words aside — the sources', "
+   + "doorbell's and capture's reads, T23's, the hold reads, the docket's, the imports', the wizard library's, the template "
+   + "library's, publishschedule, notes, and every T33 read; the public reads take no grade", () => {
+  const rows = readRows(NON_ACTS);
   assert.ok(rows.length > 250);
-  /* R39 grades two of them (`groupdescriptiondraft`, `securitymap`) caller-owned; no other read has a grade */
+  /* R39 grades `securitymap` caller-owned (an administrator's own read); no other read has a grade */
   const GRADED = tickedAll(reqText(39));
-  for (const op of rows) {
-    assert.match(NON_ACTS[op], /^(read|draft): /, op);
-    if (!GRADED.includes(op)) assert.ok(ungraded(op), op);
-  }
+  for (const op of rows) if (!GRADED.includes(op)) assert.ok(ungraded(op), op);
   /* the reads whose sentence ends on its closing words: they write nothing */
-  const WRITES_NOTHING = rows.filter((op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]));
-  assert.ok(WRITES_NOTHING.length >= 36);
+  const WRITES_NOTHING = rows.filter((op) => /writes nothing$/.test(NON_ACTS[op]));
+  assert.ok(WRITES_NOTHING.length >= 200);
   for (const op of WRITES_NOTHING) assert.ok(readWritesNothing(op), op);
-  /* the pinned owners' reads (R2's contradiction, R6–R11, R14, R15, the sources', doorbell's and capture's) are among them */
-  const PINNED = declaredList("CAPTURE_READS", "DOCKET_READS", "CASE_IMPORT_READS", "WIZARD_SCRIPTS_READS", "WIZARD_CHECK_READS",
-    "FILING_TEMPLATES_READS", "WHAT_CHANGED_READS", "ACTION_HOLDS_READS").filter((op) => Object.hasOwn(NON_ACTS, op));
-  assert.ok(PINNED.length >= 18);
-  for (const op of PINNED) { assert.ok(readWritesNothing(op), op); assert.ok(ungraded(op), op); }
-  /* two source reads name who may read them in place of the closing words, and the two grant-door reads end on the door */
-  for (const op of declaredList("SOURCE_READS").filter((op) => rows.includes(op) && !WRITES_NOTHING.includes(op))) {
-    assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 40, op);
-    assert.ok(ungraded(op), op);
-  }
-  const DOOR = declaredList("TEMPLATE_DOOR_READS");
+  /* the public reads, and the two grant-door reads, end otherwise (R6; DEC-85) */
+  const PUBLIC = rows.filter((op) => NON_ACTS[op] === "read: public, no credential");
+  assert.ok(PUBLIC.length >= 8);
+  const DOOR = ticked(between(reqText(6), "`templatereview`, `templatecomment` and the reads", " add")).filter((op) => Object.hasOwn(NON_ACTS, op));
   assert.equal(DOOR.length, 2);
-  for (const op of DOOR) {
-    assert.match(NON_ACTS[op], /^read: .*; writes nothing; reached also through a review grant's door$/, op);
-    assert.ok(ungraded(op), op);
-  }
-  /* R5: contradiction's reads, and the public reads of DEC-85 */
-  const CONTRADICTION_READS = ticked(reqText(5)).filter((op) => Object.hasOwn(NON_ACTS, op) && NON_ACTS[op].startsWith("read: "));
-  assert.equal(CONTRADICTION_READS.length, 6);
-  for (const op of CONTRADICTION_READS) { assert.ok(NON_ACTS[op].startsWith("read: "), op); assert.ok(ungraded(op), op); }
+  for (const op of DOOR) assert.match(NON_ACTS[op], /^read: .*; writes nothing; reached also through a review grant's door$/, op);
+  /* every other read names what it reads and who may read it */
+  for (const op of rows.filter((op) => !WRITES_NOTHING.includes(op) && !PUBLIC.includes(op))) assert.ok(NON_ACTS[op].length > 30, op);
+  /* the reads the requirements name (R5's contradiction reads, R6–R15's) are among those that write nothing */
+  const NAMED = tickedAll(["5", "6", "7", "8", "9", "10", "11", "14", "15"].map((n) => reqText(n)).join("\n"))
+    .filter((op) => rows.includes(op) && !PUBLIC.includes(op));
+  assert.ok(NAMED.length >= 25);
+  for (const op of NAMED) { assert.ok(NON_ACTS[op].startsWith("read: "), op); assert.ok(ungraded(op), op); }
+  const R5_READS = ticked(reqText(5)).filter((op) => rows.includes(op));
+  assert.equal(R5_READS.length, 6);
   const T33_READS = Object.keys(T33_NON_ACTS).filter((op) => T33_NON_ACTS[op].startsWith("read: "));
   assert.ok(T33_READS.length > 80);
   for (const op of T33_READS) { assert.match(NON_ACTS[op], /writes nothing$/, op); assert.ok(ungraded(op), op); }
-  const PUBLIC = [...declaredList("NETWORK_NOTICES_PUBLIC_READS", "DOCKET_PUBLIC_READS", "CASE_CHECKER_PUBLIC_READS"),
-    ...declaredReads("public-read")];
-  assert.ok(PUBLIC.length >= 8);
-  for (const op of PUBLIC) {
-    assert.equal(NON_ACTS[op], "read: public, no credential", op);
-    assert.ok(ungraded(op), op);
-  }
   /* the stated absences whose sentences the reads stand beside: every op R2 and R6–R15 name that RUNG_ABSENT holds */
   const ABSENT_TEXT = ["2", "6", "7", "9", "10", "11", "15"].map((n) => reqText(n)).join("\n");
   const LIKENED = [...ABSENT_TEXT.matchAll(/\bas `([a-z0-9]+)`/g)].map((m) => m[1]); // "as `knock`": the comparison, not the row

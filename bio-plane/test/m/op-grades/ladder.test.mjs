@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as G from "../../../src/op-grades/index.mjs";
-import { reqText, between, ticked, tickedCodes, worded, declaredNames, asksNotTheAccount } from "./declared.mjs";
+import { reqText, between, ticked, tickedCodes, worded, asksNotTheAccount } from "./declared.mjs";
 
 const { RUNG_LADDER, RUNGS, RUNG_ABSENT, RUNG_ABSENCE_GROUNDS, JUSTIFICATION_REFUSALS, IRREVERSIBLE_CORRECTION_KEY,
         CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS, MACHINE_REFUSALS, NON_ACTS, OP_ALIASES, phoneOf } = G;
@@ -16,9 +16,8 @@ const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUN
 /* (T47) R37 re-grades `publish` from irreversible to terminal (it prepares; caseratify signs; K3100 doubt 9), and R35
    moves `inboxpull` from R2's `undetermined` to `reversible` */
 const R1_TEXT = reqText(1);
-const KNOWN = declaredNames();
-/* R1 states the other bands as plain words: the ops of op-declarations among them */
-const BAND = (from, to) => worded(between(R1_TEXT, from, to), KNOWN);
+/* R1 states the other bands as plain words */
+const BAND = (from, to) => worded(between(R1_TEXT, from, to));
 const R1 = {
   irreversible: [],
   attested: BAND("attested ", "; terminal"),

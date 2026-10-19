@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import * as T45 from "../../../src/op-grades/t45.mjs";
-import { declaredOps, declaredReadOps, reqText, between, ticked, asksNotTheAccount } from "./declared.mjs";
+import { reqText, between, ticked, readRows, asksNotTheAccount } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]);
@@ -66,8 +66,7 @@ const TAKEN_BACK_BY = {
   plancomment: "plancomment", declaredstakeset: "declaredstakeset",
 };
 /* every other op T45's owners serve: a read, or (statusreportdraft) a labeled draft that writes nothing */
-const DECLARED_READS = new Set(declaredReadOps());
-const R32_READS = Object.keys(T45.T45_NON_ACTS).filter((op) => DECLARED_READS.has(op) && T45.T45_NON_ACTS[op].startsWith("read: "));
+const R32_READS = readRows(T45.T45_NON_ACTS);
 /* (T46; K2881) agent-worker R76's two record drafts beside plan-work's */
 const R32_DRAFTS = ["statusreportdraft", "infractiondraft", "bearingdraft"];
 const ALL = [...Object.keys(R32_WRITES), ...R32_READS, ...R32_DRAFTS];
@@ -215,9 +214,8 @@ test("R32 (K2881, K2996): grouprules and advocacychecks reads, advocacycheck `un
     assert.ok(NON_ACTS[op].startsWith("draft: ") && /writes nothing of the record/.test(NON_ACTS[op]), op);
     assert.equal(gradeOf(op), null, op);
   }
-  /* the ops of local-facts, case-account and agent-worker in T45's tables that are no rule act (R32's own) */
-  const T45_OPS = new Set([...Object.keys(T45.T45_NON_ACTS), ...Object.keys(T45.T45_RUNGS), ...Object.keys(T45.T45_RUNG_ABSENT)]);
-  const FIVE = declaredOps("local-facts", "case-account", "agent-worker").filter((op) => T45_OPS.has(op) && !op.startsWith("rule"));
+  /* the five T46 adds to T45's tables beside R32's first lists (K2881, K2996): the last reads and drafts, the check */
+  const FIVE = [...R32_READS.slice(-2), ...Object.keys(R32_WRITES).filter((op) => op === "advocacycheck"), ...R32_DRAFTS.slice(-2)];
   assert.equal(FIVE.length, 5);
   assert.deepEqual(FIVE.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(FIVE.map(phoneOf), FIVE.map(() => true));
