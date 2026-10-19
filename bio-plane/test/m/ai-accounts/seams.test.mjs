@@ -170,20 +170,22 @@ test("R25: servingAccountOf answers which account serves a member and its two sw
 
 test("R25: notYourAccount, noAccount and accountMemberNotActive each answer their own row, C-29.14, C-29.20 and C-29.15, with the caller's detail", () => {
   const w = world();
-  const a = w.a.notYourAccount("an ask's grant is minted only under the member's own live session. Nothing was minted.");
+  const grant = localize("credentials.index.an_asks_grant_is", "an ask's grant is minted only under the member's own live session. Nothing was minted.");
+  const a = w.a.notYourAccount(grant);
   assert.deepEqual(a, { ok: false, reason: "NOT_YOUR_ACCOUNT", code: "NOT_YOUR_ACCOUNT", check: "C-29.14",
     translation: AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.translation,
-    detail: "an ask's grant is minted only under the member's own live session. Nothing was minted." });
+    detail: grant });
   const n = w.a.noAccount("ann");
   assert.equal(n.code, "NO_ACCOUNT");
   assert.equal(n.check, "C-29.20");
   assert.equal(n.member, "ann");
   assert.match(n.detail, /no Claude account serves this member/);
   assert.match(w.a.noAccount("ann", "own").detail, /no Claude account reference of their own/);
-  const x = w.a.accountMemberNotActive("a standing question runs only for an active member. Nothing was minted.", { member: "ann" });
+  const standing = localize("credentials.index.a_standing_question_runs", "a standing question runs only for an active member. Nothing was minted.");
+  const x = w.a.accountMemberNotActive(standing, { member: "ann" });
   assert.deepEqual(x, { ok: false, reason: "ACCOUNT_MEMBER_NOT_ACTIVE", code: "ACCOUNT_MEMBER_NOT_ACTIVE", check: "C-29.15",
     translation: AI_ACCOUNT_CHECKS.ACCOUNT_MEMBER_NOT_ACTIVE.translation,
-    detail: "a standing question runs only for an active member. Nothing was minted.", member: "ann" });
+    detail: standing, member: "ann" });
 });
 
 /* ===== R26: onAccountCleared ===== */
