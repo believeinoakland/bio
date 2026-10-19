@@ -78,7 +78,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         if (ran.dropped.length) out.dropped = ran.dropped;
         out.state = { ...out.state, reports: ran.reports, scope: ran.scope,
                       reportsRefused: [...(out.state.reportsRefused || []), ...ran.refused] };
-        out.note += `; ${ran.reports.length} sub-session(s) reported, ${ran.refused.length} returned no report`;
+        out.note += localize("agent-steps.work.sub_session_s_reported_length", "; {reports} sub-session(s) reported, {refused} returned no report", { reports: String(ran.reports.length), refused: String(ran.refused.length) });
       }
 
       /* THE INTERNET LEVEL REQUESTS ACQUISITION AND DOES NOT PERFORM IT (§4
@@ -213,7 +213,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         }
         if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
           resolved.push({ citation: address, bundle: hit.bundle_id, address: null, chain: null,
-                          reason: "the cited record names no source address, so no version chain can hold it" });
+                          reason: localize("agent-steps.work.the_cited_record_names_no_source", "the cited record names no source address, so no version chain can hold it") });
           continue;
         }
         const target = hit ? hit.source_locator.trim() : address;
@@ -228,12 +228,9 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
       if (rereadRefused.length) out.refused = rereadRefused;
 
       out.note = localize("agent-steps.work.length_report_s_taken_length", "{length} REPORT(s) taken, {length_2} REFUSED; {reread} of {length_3} citation(s) re-read BY ADDRESS{v1}; {holdingsNote}{v2}. No document was returned by a sub-session and none was loaded", { length: String(taken.length), length_2: String(refused.length), reread: String(reread), length_3: String(addresses.length), v1: String(rereadRefused.length
-                  ? `, and ${rereadRefused.length} read(s) could NOT be made — the plane refused `
-                    + `'${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD `
-                    + "rather than empty"
+                  ? localize("agent-steps.work.and_length_read_s_could_not", ", and {length} read(s) could NOT be made — the plane refused '{code}', so what they would have answered is UNREAD rather than empty", { length: String(rereadRefused.length), code: String(rereadRefused[0].code ?? "?") })
                   : ""), holdingsNote: String(holdingsNote(holdings)), v2: String(fenced.length
-                  ? `; ${fenced.length} cited record(s) (${fenced.slice(0, 5).map((f) => `'${f}'`).join(", ")}) are not answered `
-                    + "to the run's credential, so each is UNDETERMINED and none is held"
+                  ? localize("agent-steps.work.length_cited_record_s_ids_are", "; {length} cited record(s) ({ids}) are not answered to the run's credential, so each is UNDETERMINED and none is held", { length: String(fenced.length), ids: String(fenced.slice(0, 5).map((f) => `'${f}'`).join(", ")) })
                   : "") });
       out.state = { ...state, reports: taken, rereads: (state.rereads || 0) + reread,
                     reportsRefused: [...(state.reportsRefused || []), ...refused], holdings };
@@ -289,12 +286,11 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
            makes the note honest even if the refusal check above is ever weakened:
            an answer with no rows collection is NOT zero rows, and the old
            `Array.isArray(got.rows) ? got.rows.length : 0` said it was. */
-        said = "how many meaning-grain row(s) the record holds for this query is UNDETERMINED — the "
-             + "plane answered without a rows collection this member could read";
+        said = localize("agent-steps.work.how_many_meaning_grain_row_s", "how many meaning-grain row(s) the record holds for this query is UNDETERMINED — the plane answered without a rows collection this member could read");
       } else {
         said = localize("agent-steps.work.length_meaning_grain_row_s", "{length} meaning-grain row(s) queried at the '{MEANING_ARM}' grain", { length: String(read.result.rows.length), MEANING_ARM: String(MEANING_ARM) });
       }
-      out.note = localize("agent-steps.work.said_no_document_was_loaded", "{said}; no document was loaded. {length} level(s) observed EMPTY and written down as §9's kind{v1}", { said: String(said), length: String(empties.length), v1: String(wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "") });
+      out.note = localize("agent-steps.work.said_no_document_was_loaded", "{said}; no document was loaded. {length} level(s) observed EMPTY and written down as §9's kind{v1}", { said: String(said), length: String(empties.length), v1: String(wronged ? localize("agent-steps.work.wronged_reported_empty_and_state", "; {wronged} reported empty and {state}, so not written down", { wronged: String(wronged), state: String(unconfirmed === "contradicted" ? localize("agent-steps.work.contradicted_by_the_read", "contradicted by the read") : localize("agent-steps.work.not_confirmed_by_the_read", "not confirmed by the read")) }) : "") });
       /* R116 (T50; N1187; K3557; `agent-harness` R19): A DISAGREEMENT BETWEEN LEVELS IS STATED AND READ ONCE, NEVER LOOPED.
          For each (record, levels) pair the judgement named that the table has not settled (`disagreementsToSettle`, once
          per pair per run, whatever the pass or segment), the record is read at passage grain through the one reader
@@ -312,16 +308,16 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
           level: pair.levels[0], subject: "compose -> levels disagree", state: "LOOKED_INDETERMINATE", governed: false,
           condition: null, terminal: false, bound: null,
           detail: localize("agent-steps.work.named_disagree_about_record_v1", "{named} disagree about {record}: {v1}", { named: String(named), record: String(pair.record), v1: String(got.refused
-            ? `the record was unread (the plane refused '${String(got.refused.code ?? "?")}')`
-            : n === null ? "the record was read, and the plane answered without a list of passages this member could count"
-            : `the record was read at passage grain (${n} passage(s))`) }).slice(0, LOG_DETAIL_MAX),
+            ? localize("agent-steps.work.the_record_was_unread_the_plane", "the record was unread (the plane refused '{code}')", { code: String(got.refused.code ?? "?") })
+            : n === null ? localize("agent-steps.work.the_record_was_read_and_the", "the record was read, and the plane answered without a list of passages this member could count")
+            : localize("agent-steps.work.the_record_was_read_at_passage", "the record was read at passage grain ({n} passage(s))", { n: String(n) })) }).slice(0, LOG_DETAIL_MAX),
           disagree: { record: pair.record, levels: [...pair.levels] },
         });
         if (got.refused) out.refused = [...(Array.isArray(out.refused) ? out.refused : out.refused ? [out.refused] : []), got.refused];
       }
       if (statements.length) {
         out.logEntries = [...(out.logEntries || []), ...statements];
-        out.note += `; ${statements.length} disagreement(s) between levels stated and each record read once at passage grain`;
+        out.note += localize("agent-steps.work.disagreement_s_between_levels_stated", "; {length} disagreement(s) between levels stated and each record read once at passage grain", { length: String(statements.length) });
       }
       out.state = { ...state, candidates };
       return out;
@@ -382,7 +378,7 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
         terminal: false, bound: null,
         detail: localize("agent-steps.work.dropped_before_any_write_named", "dropped before any write: {named} already held on the question", { named: String(named.join(", ")) }).slice(0, LOG_DETAIL_MAX),
       }));
-      out.note = localize("agent-steps.work.proposed_candidate_s_compared_against", "{proposed} candidate(s) compared against {size} on the record; {length} survived{v1}{v2}", { proposed: String(proposed), size: String(names.size), length: String(queue.length), v1: String(droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : ""), v2: String(elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "") });
+      out.note = localize("agent-steps.work.proposed_candidate_s_compared_against", "{proposed} candidate(s) compared against {size} on the record; {length} survived{v1}{v2}", { proposed: String(proposed), size: String(names.size), length: String(queue.length), v1: String(droppedHere.length ? localize("agent-steps.work.already_held_dropped_length", "; {length} already held, dropped ({names})", { length: String(droppedHere.length), names: String(droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")) }) : ""), v2: String(elsewhere ? localize("agent-steps.work.named_a_question_other_than_the", "; {elsewhere} named a question other than the run's target and were NOT compared", { elsewhere: String(elsewhere) }) : "") });
       out.state = { ...state, queue };
       return out;
     }
@@ -447,8 +443,8 @@ export async function performStep(call, state, runId, model = null, logSeq = nul
       const queue = [...(state.queue || [])];
       if (changed) queue.unshift(state.submission);
       out.note = changed
-        ? "the submission was changed in answer to the refusal"
-        : "the refusal could not be answered by changing the submission; the candidate is dropped";
+        ? localize("agent-steps.work.the_submission_was_changed", "the submission was changed in answer to the refusal")
+        : localize("agent-steps.work.the_refusal_could_not_be_submission", "the refusal could not be answered by changing the submission; the candidate is dropped");
       out.state = { ...state, adjusted: changed, queue };
       return out;
     }
@@ -471,13 +467,13 @@ export async function performPlanStep(call, state, runId) {
       const ask = async ({ op, query }) => {
         const got = planeAnswer(await call(op, query), op);
         const id = Object.values(query || {}).filter((v) => v != null && v !== "").join(" ") || null;
-        if (got.silent) { undetermined.push({ op, id, code: null, why: "the plane did not answer" }); return null; }
+        if (got.silent) { undetermined.push({ op, id, code: null, why: localize("agent-steps.work.the_plane_did_not_answer", "the plane did not answer") }); return null; }
         if (got.refused) { undetermined.push({ op, id, code: got.refused.code ?? null, check: got.refused.check ?? null }); return null; }
         reads.push({ op, query, answer: got.result });
         return got.result;
       };
       let planDoc = null, earlier = [];
-      if (!state.planId) undetermined.push({ op: "plan", id: null, code: null, why: "the run names no plan" });
+      if (!state.planId) undetermined.push({ op: "plan", id: null, code: null, why: localize("agent-steps.work.the_run_names_no_plan", "the run names no plan") });
       else {
         const answered = await ask(PLAN_READS.plan(state.planId));
         planDoc = answered && typeof answered === "object" ? (answered.plan ?? answered) : null;
@@ -488,14 +484,14 @@ export async function performPlanStep(call, state, runId) {
         /* The earlier plans of the SAME project only: another project's plan is never read, and the run's own plan
            is the one read above. */
         earlier = plans ? earlierPlans(plans, project, state.planId) : [];
-      } else if (planDoc) undetermined.push({ op: "plans", id: null, code: null, why: "the plan names no project" });
+      } else if (planDoc) undetermined.push({ op: "plans", id: null, code: null, why: localize("agent-steps.work.the_plan_names_no_project", "the plan names no project") });
       for (const r of planDoc ? planSubjectReads(planDoc) : [PLAN_READS.profile()]) {
         const answered = await ask(r);
         if (r.op !== "profiles" || !answered) continue;
         const view = answered.view && typeof answered.view === "object" ? answered.view : answered;
         for (const fact of PROFILE_FACTS)
           if (!(fact in view)) undetermined.push({ op: "profiles", id: fact, code: null,
-                                                   why: "the plane's profile answer does not publish it" });
+                                                   why: localize("agent-steps.work.the_plane_s_profile_answer_does", "the plane's profile answer does not publish it") });
       }
       /* R78: a re-examination run reads, besides R51's reads, the recorded response and the procedure guide for its
          action's kind, under the same credential and the same rule: what cannot be read is UNDETERMINED in `why`. */
@@ -522,8 +518,8 @@ export async function performPlanStep(call, state, runId) {
       const candidates = state.candidates || [];
       if (!held || held.silent || held.refused) {
         if (held?.refused) out.refused = held.refused;
-        out.note = localize("agent-steps.work.the_plan_could_not_be", "the plan could NOT be read ({v1}), so {length} candidate(s) were compared against NOTHING and say so rather than being reported new", { v1: String(held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'`
-                   : held?.silent ? "the plane was silent" : "the run names no plan"), length: String(candidates.length) });
+        out.note = localize("agent-steps.work.the_plan_could_not_be", "the plan could NOT be read ({v1}), so {length} candidate(s) were compared against NOTHING and say so rather than being reported new", { v1: String(held?.refused ? localize("agent-steps.work.the_plane_refused_code", "the plane refused '{code}'", { code: String(held.refused.code ?? "?") })
+                   : held?.silent ? localize("agent-steps.work.the_plane_was_silent", "the plane was silent") : localize("agent-steps.work.the_run_names_no_plan", "the run names no plan")), length: String(candidates.length) });
         out.state = { ...state, queue: [...candidates] };
         return out;
       }
@@ -567,8 +563,8 @@ export async function performPlanStep(call, state, runId) {
       const queue = [...(state.queue || [])];
       if (changed) queue.unshift(state.submission);
       out.note = changed
-        ? "the proposal was changed in answer to the refusal, and keeps its place"
-        : "the refusal could not be answered by changing the proposal; it is dropped";
+        ? localize("agent-steps.work.the_proposal_was_changed", "the proposal was changed in answer to the refusal, and keeps its place")
+        : localize("agent-steps.work.the_refusal_could_not_be_proposal", "the refusal could not be answered by changing the proposal; it is dropped");
       out.state = { ...state, adjusted: changed, queue };
       return out;
     }
@@ -590,7 +586,7 @@ export async function reexaminationReads(ask, response, undetermined) {
   const m = typeof response === "string" ? RESPONSE_ID.exec(response) : null;
   if (!m) {
     undetermined.push({ op: "action", id: typeof response === "string" ? response.slice(0, 200) : null, code: null,
-                        why: "the run's recorded response names no action entry this member can read" });
+                        why: localize("agent-steps.work.the_run_s_recorded_response_names", "the run's recorded response names no action entry this member can read") });
     return;
   }
   const action = m[1], ord = Number(m[2]);
@@ -599,15 +595,15 @@ export async function reexaminationReads(ask, response, undetermined) {
   const doc = answered && typeof answered.action === "object" && answered.action ? answered.action : answered;
   const entry = (Array.isArray(doc.correspondence) ? doc.correspondence : []).find((e) => e && Number(e.ord) === ord);
   if (!entry)
-    undetermined.push({ op: "action", id: response, code: null, why: "the action answered holds no such correspondence entry" });
+    undetermined.push({ op: "action", id: response, code: null, why: localize("agent-steps.work.the_action_answered_holds_no", "the action answered holds no such correspondence entry") });
   else if (typeof entry.artifact_sha === "string" && entry.artifact_sha)
     await ask({ op: "reading", query: { sha256: entry.artifact_sha } });
   else
     undetermined.push({ op: "reading", id: response, code: null,
-                        why: "the response is a member's account or a non-response, with no capture to read" });
+                        why: localize("agent-steps.work.the_response_is_a_member_s", "the response is a member's account or a non-response, with no capture to read") });
   const kind = typeof doc.kind === "string" && doc.kind ? doc.kind : null;
   if (kind) await ask({ op: "procedureguides", query: { kind } });
-  else undetermined.push({ op: "procedureguides", id: action, code: null, why: "the action answered names no kind" });
+  else undetermined.push({ op: "procedureguides", id: action, code: null, why: localize("agent-steps.work.the_action_answered_names_no", "the action answered names no kind") });
 }
 
 /** R97 — the targets the plan judgement named for one level, as `agent-harness` R12 takes them, `{id, extent}`. A
