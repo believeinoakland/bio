@@ -17,6 +17,8 @@ import { parse } from "../../../src/setup-words/vendor/acorn.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { allCases, libraryAnswer, keyLines, BAD_PARTS } from "./battery.mjs";
 import { like, sentenceOf, W } from "./fixture.mjs";
+import { WORD_ROWS } from "../../../src/setup-words/rows.mjs";
+const TABLE = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SRC = join(HERE, "..", "..", "..", "src", "case-checker");
@@ -162,4 +164,23 @@ test("R27 (control): every part that is no stored ZIP this checker reads is name
     const departures = CC.readCaseFile([part]).departures;
     assert.ok(departures.some((d) => d.startsWith(prefix) && like(rowKeys[name], { name: "a.txt" }).test(d.slice(prefix.length))), `${name}: ${departures.join(" | ")}`);
   }
+});
+
+test("R27 (K4024, K4027): the program carries the words of case-grammar's manifest reasons, and answers a manifest fault offline with the row's words", async () => {
+  const built = await buildProgram();
+  const ids = callsOf(readFileSync(join(SRC, "..", "case-grammar", "casefile.mjs"), "utf8"), "casefile.mjs").filter((c) => c.id.startsWith("case-grammar.casefile."));
+  assert.ok(ids.length >= 40, `${ids.length} ids`);
+  for (const { id, en } of ids) for (const piece of (TABLE.get(id) ?? en).split(/\{[A-Za-z0-9_]+\}/).filter((p) => p.length > 6 && /^[\x20-\x7e]+$/.test(p) && !/["\\]/.test(p)))
+    assert.ok(built.text.includes(piece), `${id}: the program lacks "${piece}"`);
+  const c = allCases().find((x) => x.name === "a manifest that is not the format");
+  const dir = mkdtempSync(join(tmpdir(), "case-checker-manifest-"));
+  try {
+    writeFileSync(join(dir, "case-checker.mjs"), built.text);
+    writeFileSync(join(dir, "p.zip"), c.parts[0]);
+    const out = execFileSync(process.execPath, ["case-checker.mjs", "p.zip"], { cwd: dir, encoding: "utf8", env: { PATH: process.env.PATH } });
+    const offline = JSON.parse(out.slice(out.indexOf("\n{") + 1)).integrity.departures;
+    const library = (await libraryAnswer(c)).integrity.departures;
+    assert.ok(library.length > 0);
+    assert.deepEqual(offline, library);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
