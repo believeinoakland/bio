@@ -15,3 +15,11 @@ Not yet run: node checks/run.mjs (full suite) — held until the architecture ch
 
 Cause: needs Bob.
 architecture.mjs store-door: 2 failures. dispatch.mjs and test/m/store-door/routes.test.mjs import translations, which store-door does not declare in its uses in build/modules.json. One act for Bob: add "translations" to store-door's uses in build/modules.json (layer 11, the same layer; instance-setup already declares it). I may not edit build/modules.json (not my path). Everything else in my job is done and pushed; COMPLETE waits on this edge.
+
+## J3 · COMPLETE
+
+COMPLETE. Entries applied: T51-143 (door calls translations directly; code in dispatch.mjs, merged tranche/T51 at ddbe6a05c2). B2 applied: translations is in store-door's uses (K4068).
+Words: 3 of the 4 findings fixed (dispatch.mjs:308, :333 via localize; routes.test.mjs:42 hand-list replaced). Left as B2 says: dispatch.mjs:245 `error` (legacy key, unkeyed with the design, K3944).
+Deferred: none. Found in another module: answer-envelope/page-policy.test.mjs imports control-plane's signpage.mjs, which is not earlier in the order (architecture, whole-product run; not my module). Coverage failures in other modules (24) are not store-door's.
+Tests: store-door suite 48 of 48 pass (3 runs). Checks: format 0 failures; architecture store-door 0 failures; coverage store-door 16 of 16; ownership 0 failures; words store-door: only dispatch.mjs:245. setup-words --check: stale rows only, expected. checks/run.mjs whole product: 1 architecture failure and 1 words failure in another module, none in store-door.
+Size (session_01XqQ6pkMvBPshebczrsb5RM): test runs 3, module lines 650.
