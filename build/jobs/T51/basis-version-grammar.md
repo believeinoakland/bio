@@ -1,6 +1,6 @@
 # basis-version-grammar (T51)
 
-**Status** · session_01Li5Ruh25jG9z6HXjjRE9eL · depth 2 · WORKING · handled B1
+**Status** · session_01Li5Ruh25jG9z6HXjjRE9eL · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Record
 
