@@ -23992,7 +23992,13 @@
    "key": "screen.home.area.edition.draftonly.comments",
    "en": "A draft of {case} is shared for review until {until}, {count} comments to answer",
    "protected": false,
-   "note": "DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 1 or more: draw \"1 comment\" via .comments.one's wording when 1)"
+   "note": "DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 2 or more; .one for one)"
+  },
+  {
+   "key": "screen.home.area.edition.draftonly.comments.one",
+   "en": "A draft of {case} is shared for review until {until}, 1 comment to answer",
+   "protected": false,
+   "note": "DEC-363 (B376): the one-comment form of .edition.draftonly.comments"
   },
   {
    "key": "screen.project.standdown.heading",

@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4913,
+  "screen": 4914,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15737,
+  "total": 15738,
   "protected": 934
  },
  "words": [
@@ -59524,7 +59524,14 @@
    "en": "A draft of {case} is shared for review until {until}, {count} comments to answer",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 1 or more: draw \"1 comment\" via .comments.one's wording when 1)"
+   "note": "DEC-360 (B370): screens-daily, Home R64; the same, with recipients' comments ({count} 2 or more; .one for one)"
+  },
+  {
+   "key": "screen.home.area.edition.draftonly.comments.one",
+   "en": "A draft of {case} is shared for review until {until}, 1 comment to answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-363 (B376): the one-comment form of .edition.draftonly.comments"
   },
   {
    "key": "screen.project.standdown.heading",

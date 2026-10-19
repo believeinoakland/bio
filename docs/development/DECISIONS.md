@@ -5616,3 +5616,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: each entry of `installer.fleet.partial.*`'s {list} is `installer.fleet.left.item` "{member} ({why})", {why} always an `installer.fleet.why.*` fragment, never a whole sentence; new fragments for a failed fingerprint (`why.integrity`), an HTTP error (`why.http` {status}) and a failed second read at upload (`why.refetch`), and list forms of the six `installer.image.*` reasons (the `installer.image.*` sentences stay the notice's); `installer.fleet.why.container.<cause>` for parse, class, policy, size, bindings, path and duplicate (the bare row for a cause not named); `installer.fleet.skip.manifest.reason` carries the manifest's reason. `words-reads.json` gains an `installer-steps` entry whose reads are exactly STEP_KEYS' 68 keys (`words-reads-mod-5.src.mjs`).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/words-reads-mod-5.src.mjs`, `screens/words-reads.json`.
 owed: nothing.
+
+### DEC-363 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_01MBG5FH3gL4kdDPTNgGsGex; the development process also runs on his primary account since K1428) (BOB's HANDOFF B376, screens-daily T51-118; K4086)
+for: design
+question: Home's edition line for a draft with exactly one comment on a case with no published edition.
+why it is Bob's: it is not (P17): the design's words.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: `screen.home.area.edition.draftonly.comments.one` "A draft of {case} is shared for review until {until}, 1 comment to answer"; `.draftonly.comments` is for two or more.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`.
+owed: nothing.
