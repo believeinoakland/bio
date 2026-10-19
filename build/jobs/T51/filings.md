@@ -26,3 +26,21 @@ Found outside my module:
 3. Inherited reds in modules that use filings, none caused here: escalation R12 (a civil-time reason object where a string is expected) and R30 ("What we did" capitalised), action-plans R47, action-producers R23 (date.daymonth), affordances (four: ACT_HELP keys, a local-facts rule entry).
 
 Deferred, none. Note for the requirements: R64 says `filed` is "the approved text of the action's latest communication recorded sent"; I take the latest of the action's drafts or communications recorded sent (a filing and a communication are one id space, R23).
+
+## J3 · COMPLETE
+
+T51-154 applied on `job/T51/filings` (tranche/T51 merged in, B2/B3 handled), pushed.
+
+**Entries applied**
+- Words rule: the 16 findings are fixed (`node checks/words.mjs … filings`: inline 0, plain 0, testcopy 0, handlist 0, missingkey 0; 0 failures; the 13-module run names none of mine). Every refusal `detail`, the entry's value tokens and the packet's section titles read through `localize('filings.index.*' | 'filings.outward.*' | 'filings.dates.*', en)`; the handlist (t46) is assembled from the design's reads list for this module; the test copies compare with `word`/`localize`, and the sentence-holding regexes and substring checks of the tests (about 90) now compare with `word`/`localize` too (K3964). Judged unread (wire grammar): see REPORT J2.
+- K4036 reds: `said` (`words.mjs`) says a `{key, vars}` reason in words (nested reasons too); `dates.mjs` uses it where it builds the business-day sentence. The two reds (`packet.test.mjs` :241 R9, :290 R30) stay red until action-clocks' fix merges (its `whyOf` hands over "[object Object]"); `t51.test.mjs` proves `said` itself.
+- R64: `minutesComparisonsOn` registered once with `case-inputs.registerMinutesComparisons` (when handed `caseInputs` or `env`; the plane must hand one, REPORT J2 item 1). It reads `content.passageText(passage.content_id)` as B2 says, after `content.sees`; throws when id or text is missing. Tested on stand-ins for actions R108 and the passage's content row; re-run when actions merges.
+- R65: `templatesForAction` answers `not_offered` (filing-templates `unofferedFor`, its R35, real in tests) and `court_petition`; a kind filed with a court lists nothing.
+- The hold notice, counsel packet (R47, R8, R9) unchanged apart from the words.
+
+**Tests and checks** (from the process repo)
+- `node --test bio-plane/test/m/filings/`: tests 140, pass 138, fail 2 (the two reds above).
+- format: 176 modules, 175 requirements files; 0 failures. architecture filings: 26 product files, 144 relative imports; 0 failures. coverage filings: 64 of 64 live requirement ids named by a test; 0 failures. ownership filings: 23 files changed; 0 failures. words filings: 0 failures. `setup-words/build.mjs --check`: stale-rows note only (new `localize` ids), none naming a refusal of mine.
+- Dependents run (escalation, action-plans, plan-work, action-producers, affordances): failures all outside filings (REPORT J2 item 3); plan-work 50/50.
+
+Size (session_01AuFZ1srU2g5cYW4DV5f15N): test runs 14, module lines 3712
