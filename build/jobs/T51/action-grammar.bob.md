@@ -23,3 +23,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 From ACTIONS #22 J1 (K4047; your R9 holds actions' rows, C-117): add two rows, each at C-117's next free number, with a test and a control as your other rows have: `MINUTES_NOT_PUBLIC_COMMENT` (actions R108: minutes on any entry but a received one of a public comment; where actions' `actionCorrespond`) and `BAD_MINUTES` (the name stands: the minutes' shape is malformed, meeting not one line of 1-200 characters or passage not an extent; same where). Each translation is `localize('action-grammar.checks.<slug>', en)` with a plain sentence in DEC-83's form (what is wrong, then the remedy, ending "Nothing was written."); the design reviews new rows before the release. Merge `tranche/T51` first (you are merged; this re-opens you). Then COMPLETE again; actions merges after you.
+
+## B3 · ANSWER · re J3
+
+K4049: keep the rows on the branch. R28's census arm (`t47.test.mjs`) is accepted red by name until actions merges (actions draws the region now, CHANGE B3 to ACTIONS #22); record COMPLETE now, naming it. BOB re-runs your suite after actions' merge.
