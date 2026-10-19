@@ -49,3 +49,14 @@ T51-221 progress report (all of the module's words work is done and tested; 161/
  - Short non-sentence glue left as code: the `### Session <at> | Set / Withdrew the project's bar | <who>` header of a project's Session Log entry, "no bar" in a log line, the type words ("record") and the `capture A` axis/grade pairs, ids and the `undetermined:`/`issuer:` origin keys.
 
 Design rows I used (all existing in words.json): `refusal.<CODE>` for the 23 translations; `strength.*` for the whys, stops, filter, note and out-of-view sentence. New `localize` ids (no row existed): `strength.arithmetic.*` (11), `strength.index.*` (about 60), `strength.method.*` (3), `strength.origins.*` (1). One flaw fixed in my own module: a graded leg that states no axis was named "the leg's grade is on the null axis"; it is now named with the existing `strength.inert.leg_states_axis` sentence (R9: no axis, inert). Not run yet: `checks/run.mjs`, `setup-words/build.mjs --check`.
+
+## J5 · COMPLETE
+
+T51-221 applied (commit edc5083d5c on job/T51/strength, tranche/T51 merged after B4).
+
+Entries applied: every words finding of build/plan/words-pass/strength.md except the accepted unkeyed ones. word(key) for the 23 refusal translations (refusal.<CODE>) and every sentence with a strength.* row; localize for the rest (strength.arithmetic/index/method/origins ids); the 12 plain findings judged and keyed; the 2 K3962 and all other test copies converted to word/localize equality. Flaw fixed: a graded leg with no axis was named "on the null axis"; now strength.inert.leg_states_axis (R9).
+Unkeyed, accepted in B4: method.mjs V1_LINES/V2_LEGS (signed versions) and index.mjs "## Session Log" marker (16 words-check lines).
+Deferred: nothing.
+Found outside: program.mjs and plane bundle stale (BOB regenerates at R6 close); case-checker R13/R25 red until then.
+Tests: node --test test/m/strength/: 161 pass, 0 fail. Checks: format 0; architecture 0; coverage strength 40 of 40; ownership 0; run.mjs: words findings in strength only the 16 unkeyed lines; setup-words --check: stale-rows note only.
+Size (session_01VDy17VXpJGNDxKUojKpxFw): test runs 12, module lines 2932
