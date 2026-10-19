@@ -80,7 +80,7 @@ test("R1: a co-archive is never a hop, and every derived hop is stamped reconstr
 const knockDoc = (id, { receipt = true, bytes = `handed in ${id}` } = {}) => ({
   file: `snapshots/${id}`, locator: `knock:${id}`, retrieved: "2026-09-30T12:00:00Z",
   authority_state: "undetermined", authority_basis: "handed in at the doorbell; no authority is asserted",
-  capture: { method: "doorbell knock, received, hashed at receipt", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+  capture: { method: "knock fixture method", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
              actor_class: "member", actor: "member:ruth", sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes) },
   source: { kind: "knocker", named: false, pseudonym: null,
             ...(receipt ? { receipt: { knock_id: id, sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received: "2026-09-30T11:00:00Z" } } : {}) },
