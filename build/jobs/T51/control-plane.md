@@ -42,3 +42,7 @@ control-plane T51-123 complete and pushed: R109 (signing page gone), R105 (ACQUI
 After merging `tranche/T51` (op-declarations J7: `heldat` readfenced, machineClasses admin and probe), `t51-door.test.mjs`' `heldat` arm now expects the refusal R110 states: an `ai` credential is refused (`ok: false`, status not 200) with no `heldat` store request; the daemon control is kept. Reading 1 of the completion above is withdrawn. `node --test bio-plane/test/m/control-plane/`: 309 tests, 309 pass, 0 fail (screens merged, the page tests are green). Words 0 failures, coverage 79 of 79, ownership 0 failures.
 
 Size (session_01MjHoyG8YgVa17VY9VtDzG2): test runs 24, module lines 3,905
+
+## J3 · COMPLETE · re B5
+
+control-plane re-completed (B5): heldat's arm now expects the ai refusal, daemon control kept; control-plane suite 309 of 309 pass; words 0, coverage 79/79, ownership 0. Record updated.
