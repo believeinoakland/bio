@@ -71,5 +71,5 @@ Recognises which host-technology stack served a captured document (`identify`) a
 
 - **Registration.** R1 requires the four built-in handlers registered (in order `client_rendered`, `aspnet_webforms`, `wordpress`, `conservative`: a shell can also be served by ASP.NET or WordPress, so `client_rendered` goes first) at this module's own interface, so `identify` is testable here without `docprofile`. `docprofile/registry.mjs` registers them today and stays `docprofile`'s; this module's job decides where its own registration sits (the handlers import `REGION` and `CONFIDENCE` from `index.mjs`, so beware an import cycle), and `docprofile`'s job then stops registering and only re-exports.
 - **`register`/`handlers`, `applyRules`/`applyBoundary`.** The stack registry's `register`/`handlers` and the two rule primitives are how the built-in handlers and `digests` work; no other module calls them, so they are not required. The job may keep, narrow or drop them as long as R1–R19 hold.
-- **The `legacy-ui` edge.** `civicos-ui/app.html`'s bundled copy of `docprofile` calls `fidelity()` (R11) directly (`tools/bundle-docprofile.mjs`); legacy-ui's edges are its own (K633).
+- **No edge from the old interface.** (The retired `legacy-ui`, K4100, once bundled `docprofile`; no such edge exists now.)
 - The events' error message names `docprofile`; the copy may name this module.

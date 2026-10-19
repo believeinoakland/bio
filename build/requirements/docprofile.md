@@ -235,10 +235,7 @@ content type's own declaration of its contract is `doctypes` R4 (T33-12).
   `compare()` (its R10). The four built-in handlers are registered by `site-profiles` itself (its
   Suggestions); this module's `registry.mjs` stops registering them once it does, and only
   re-exports.
-- **The `legacy-ui` edge.** `civicos-ui/app.html`'s bundled copy of this package calls `fidelity()`
-  directly (`tools/bundle-docprofile.mjs`'s flattened build), which is real use of `site-profiles` R11 (was R26) from outside
-  `bio-plane/src` — but `build/modules.json`'s `legacy-ui` entry declares `uses: ["legacy-checks"]`
-  only, not `docprofile`. Worth BOB's attention as a missing `uses` edge; not settled here.
+- **No edge from the old interface.** (The retired `legacy-ui`, K4100, once bundled a copy of this package; nothing outside `bio-plane/src` uses it now.)
 - **The T33 split (T33-12).** `doctypes` merges first, then this module's job deletes its copies. R4's
   "always returns a type" assumes `generic` (now `doctypes`') is registered; a test of this module
   registers `doctypes`' types, or a stub fallback, before asking. How `doctypeFor` answers with no type

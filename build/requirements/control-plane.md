@@ -227,7 +227,7 @@ Each op below is routed through its owner's own map (R26's pattern) with the sta
 - `admission` (K624): its gates, called in R28's order, and the caller it admits (class, session, member, viewer, identity, `ai` credential), from which R17 stamps.
 - `membership`: `claim` (R15), `existenceAct` (R27), `isAdministrator`.
 - `runtime-limits`: `liveToken` (R15).
-- `signatures`: the signing page (R1). (T51: R109 deletes the page and the import, `src/signpage.mjs`, so this module imports nothing of `signatures` any more; the `modules.json` edge is BOB's to remove at the job's merge.)
+- (`signatures`: once the signing page (R1). T51: R109 deletes the page and the import, `src/signpage.mjs`, so this module imports nothing of `signatures` any more; the `modules.json` edge is BOB's to remove at the job's merge.)
 - `public-read`: `inbandQuartet` (its R7, was `publication` R16; K651), for the review copy's answer (R20).
 - `instance-setup`: its public group read, the reports' handlers (T51: R1 no longer builds the setup page through `setupPage`, which `GET /` has not used since T47, R82); `instanceSetupOf` and its `start`, `instanceSetupOps` (N348; `plane` R1 since T19's layer-11 fold).
 - `skills`: `renderPack`, `machineFences` (R41).

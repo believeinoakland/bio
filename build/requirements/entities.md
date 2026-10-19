@@ -137,7 +137,7 @@ Terms. An **entity** is `{entity_id, kind, label, note, declared_by, at, aliases
 - `docs/architecture/BIO_Declared_Bias_v0_1.md` safeguard 4 (the registry, aliases, justified and citable relations; every registry kind a legal subject).
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §7.9 (sight).
 - Bob's ruling DEC-52 (a machine may declare, resolve and testify, and is named).
-- DEC-150 (2) and K1867 (N699): the group's offices read whole for the setup page's offices section (R51). K1902 (2): one sector list (R50).
+- DEC-150 (2) and K1867 (N699): the group's offices read whole for the offices section of the settings screens (R51). K1902 (2): one sector list (R50).
 - DEC-76 item 3 ("a wrong subject match also reports a defect in `entities`") and `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §9 (R38; N345).
 - Framework §13 and safeguard 4, on how the registry is kept: as tables for the whole instance, with authorship on every row and its append-only history (R8), not a document anyone promotes; the canon's text of §13 is changed to match and drops its outdated word for the registry (K106, N71).
 
