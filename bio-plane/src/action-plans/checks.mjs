@@ -46,9 +46,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   SUBJECT_MALFORMED: {
     check: 'C-124.4', where: at("refuseMalformed", "is-subject-shaped"),
-    translation: 'A matter is either {kind: inquiry, inquiry} for a question still open, or {kind: outcome, '
-      + 'determination, standard} for one standard\'s outcome of a determination. The one named was neither. '
-      + 'Nothing was written.',
+    translation: word('refusal.SUBJECT_MALFORMED'),
   },
   NO_SUCH_INQUIRY: {
     check: 'C-124.5', where: at("refuseNoSuchInquiry", "is-inquiry-seen"),
@@ -220,13 +218,11 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R21: the project's kind of work ---- */
   WORK_KIND_UNKNOWN: {
     check: 'C-124.44', where: at("#workKindsCheck", "is-work-kind-known"),
-    translation: 'A project\'s kinds of work are drawn from: reporting, fixing, legal, oversight, other. Nothing was '
-      + 'written.',
+    translation: word('refusal.WORK_KIND_UNKNOWN'),
   },
   MACHINE_CANNOT_SET_WORK_KIND: {
     check: 'C-124.45', where: at("#workKindsCheck", "is-work-kind-member"),
-    translation: 'A project\'s kinds of work are set by an owner of the project. An automated credential cannot set '
-      + 'them. Nothing was written.',
+    translation: word('refusal.MACHINE_CANNOT_SET_WORK_KIND'),
   },
 
   /* ---- R30, R31, R34: the planning run ---- */

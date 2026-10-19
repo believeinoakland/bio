@@ -188,7 +188,8 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   assert.deepEqual(unreached, ["PLAN_HISTORY_REWRITTEN"]);
   /* the reads answered their sentences: checks, liveness, the disclosure, the preview */
   const all = sentences(said).map(([, s]) => s).join("\n");
-  for (const words of ["no longer live", "suspected matter", "Suggested by the assistant", "a check informs", "a preview of starting",
+  const SUGGESTED = DISCLOSURE("RUN", "planning@1").split(" in run")[0];
+  for (const words of ["no longer live", "suspected matter", SUGGESTED, "a check informs", "a preview of starting",
                        "when_subject names a matter of the plan", "that matter is not one the plan is about"])
     assert.ok(all.includes(words), words);
   assert.deepEqual(offending(said), [], "no member-facing sentence calls a matter a subject");

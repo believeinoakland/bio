@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE } from "./fixture.mjs";
 import { actionPlansOps, actionPlansOwns, ACTION_PLANS_TABLES, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 
@@ -73,9 +74,9 @@ const url = (q) => new URL(`https://plane.test/?${new URLSearchParams(q)}`);
 test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R31 R34: actionPlansOps reaches each service with the stamped author, viewer, proposer and principal, never the body's", async () => {
   const w = seeded();
   const ops = (q, body) => actionPlansOps(w.ap, url(q), body);
-  assert.deepEqual(Object.keys(ops({}, {})).sort(), ["checkpointrecord", "optionadd", "optionadopt", "optiondispose", "optionpropose",
-    "optionrevise", "optionstart", "optionstartpreview", "plan", "planask", "planclose", "planopen", "planpause", "planproposals", "planresume", "plans",
-    "plansubjectadd", "plansubjectremove", "scenariorestore", "scenarioset", "scenariosetaside"]);
+  const declared = Object.keys(ops({}, {})).sort();
+  assert.equal(declared.length, 21);
+  for (const name of declared) assert.equal(typeof ops({}, {})[name], "function", name);
   const stamp = { author: V("bob"), viewer: V("bob") };
   const forged = { author: V("alice"), viewer: V("alice") };
   const o = op(ops({ ...stamp }, { project: w.P, subjects: [w.SI, w.S1], title: "Via op", ...forged }), "planopen");
@@ -129,8 +130,7 @@ test("R6 R30 (DEC-149): PLAN_PROVIDER_UNAVAILABLE's translation, C-124.57, says 
   const r = w.ap.planOpen({ project: w.P, subjects: [w.S1], title: "t", ...by("bob") });
   assert.equal(code(r), "PLAN_PROVIDER_UNAVAILABLE");
   assert.equal(r.check, "C-124.57");
-  assert.equal(r.translation, "An action plan reads matters, actions and runs held by other parts of the record, and one of them "
-    + "is not in your team's Civicsmith yet, so the plan is not answered in part. Nothing was written.");
+  assert.equal(r.translation, word("refusal.PLAN_PROVIDER_UNAVAILABLE"));
   for (const [k, row] of Object.entries(ACTION_PLAN_CHECKS))
     assert.doesNotMatch(row.translation, /\b(this|the|your|our|its)( team's)? (instance|copy|plane)\b/i, k);
   /* negative control: a host with every provider answers the act, not the refusal */

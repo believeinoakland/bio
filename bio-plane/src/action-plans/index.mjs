@@ -78,7 +78,7 @@ import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS
          SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
          checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES, OFFER_KINDS, INFRACTION_OUTCOMES, MARK_KINDS, CLOSE_NOTE_MAX,
          CLOSING_NOTES_MAX, MARKS_MAX } from "./values.mjs";
-import { localize } from "../setup-words/index.mjs";
+import { localize, word } from "../setup-words/index.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
 export { ACTION_PLAN_CHECKS, PLAN_WORDS } from "./checks.mjs";
@@ -100,11 +100,9 @@ const OFFER_WORDS = Object.freeze({
 /* R20, R47: the closing note's prompt, its key and words.json's words for it, read by key (DEC-194). */
 const CLOSE_NOTE_PROMPT = Object.freeze({ key: "plan.close.lessons", en: PLAN_WORDS["plan.close.lessons"] });
 /* R46 (b): what the look-again read says when no zone is held. */
-const LOOK_AGAIN_UNDETERMINED = "no time zone is held for this place, so the day to look again cannot be told and no plan is "
-  + "answered due by it";
+const LOOK_AGAIN_UNDETERMINED = word("action-plans.time_zone_held");
 /* R48: what a date check says when no zone is held. */
-const DAY_UNDETERMINED = "no time zone is held for this place, so the plan's local day is undetermined and the date is not "
-  + "compared with the UTC day in its place";
+const DAY_UNDETERMINED = word("action-plans.time_zone_held_place");
 /* R40: what a paused plan's read says of it. */
 const PAUSED_SAYS = localize("action-plans.plan_paused_set", "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and its own checkpoints are not due until it is resumed. Every act stays open to members.");
 /* R37: the preview's own mode of R18's path, and what it says. */
@@ -358,8 +356,8 @@ export class ActionPlans {
       const s = normSubject(list[i]);
       const key = s ? subjectKey(s) : null;
       if (!s || keys.has(key))
-        return refuseMalformed(s ? `matter ${i} is named twice. Nothing was written.`
-          : `matter ${i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.`, i);
+        return refuseMalformed(s ? localize("action-plans.index.matter_named_twice", "matter {i} is named twice. Nothing was written.", { i })
+          : localize("action-plans.index.matter_is_neither", "matter {i} is neither {kind: inquiry, inquiry} nor {kind: outcome, determination, standard}. Nothing was written.", { i }), i);
       keys.add(key);
       items.push({ subject: s, key });
     }
@@ -461,8 +459,7 @@ export class ActionPlans {
         || list.some((d) => !isObj(d) || !isDay(d.date) || !isLine(d.basis, NOTE_MAX));
       /* DEC-49 REGION is-option-date */
       if (bad)
-        return refusal("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each `
-          + "basis naming the statute, order or commitment that sets it. Nothing was written.");
+        return refusal("DATE_REFUSED", localize("action-plans.index.regulated_dates_list", "regulated dates are a list of at most {max} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.", { max: DATES_MAX }));
       /* END DEC-49 REGION is-option-date */
       for (const d of list) dates.push({ date: d.date, basis: d.basis });
     }
@@ -1285,7 +1282,7 @@ export class ActionPlans {
     for (const ph of sc.phases)
       if (isObj(ph.starts) && ph.starts.when_duty && !starts.has(ph.id))
         starts.set(ph.id, { duty: ph.starts.when_duty.duty, occurrence: ph.starts.when_duty.occurrence ?? null, state_asked: ph.starts.state,
-                            state: null, holds: false, since: null, says: "the phase that leads here has not led here yet, so no occurrence is read" });
+                            state: null, holds: false, since: null, says: localize("action-plans.says.phase_leads_here_not_led", "the phase that leads here has not led here yet, so no occurrence is read") });
     return { judged, times, starts };
   }
 
@@ -2135,8 +2132,7 @@ function decisionsOf(history) {
 }
 
 /* R43: a mark's label: machine work, written by the plan's re-examination; it decides nothing. */
-const MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: "marked by the plan's re-examination (machine "
-  + "work) after a response was recorded; it decides nothing, and what the team chose changes only by a member's act" });
+const MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: word("action-plans.says.marked_plan_examination") });
 /* R43: the response that caused a mark, `{action, ord}`; null when it is not one. */
 function causeOf(c) {
   if (typeof c === "string") { const m = /^([^#\s]{1,120})#(\d{1,6})$/.exec(c); return m ? { action: m[1], ord: Number(m[2]) } : null; }
@@ -2262,8 +2258,7 @@ export function refuseNoSubject(detail, count) {
 /** R1, R4: a matter that is not one, named twice, measured by no standard named, or not in the plan. */
 export function refuseMalformed(detail, index) {
   /* DEC-49 REGION is-subject-shaped */
-  return refusal("SUBJECT_MALFORMED", detail || "a matter is {kind: inquiry, inquiry} or {kind: outcome, determination, "
-    + "standard}. Nothing was written.", { index: index ?? null });
+  return refusal("SUBJECT_MALFORMED", detail || word("refusal.SUBJECT_MALFORMED"), { index: index ?? null });
   /* END DEC-49 REGION is-subject-shaped */
 }
 
