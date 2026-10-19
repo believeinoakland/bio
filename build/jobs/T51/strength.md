@@ -60,3 +60,7 @@ Deferred: nothing.
 Found outside: program.mjs and plane bundle stale (BOB regenerates at R6 close); case-checker R13/R25 red until then.
 Tests: node --test test/m/strength/: 161 pass, 0 fail. Checks: format 0; architecture 0; coverage strength 40 of 40; ownership 0; run.mjs: words findings in strength only the 16 unkeyed lines; setup-words --check: stale-rows note only.
 Size (session_01VDy17VXpJGNDxKUojKpxFw): test runs 12, module lines 2932
+
+## J6 · COMPLETE
+
+B5 done: pulled process main (d424c32), merged tranche/T51, ran checks/words.mjs strength: 15 findings, all and only the accepted unkeyed set (method.mjs published-version texts V1_LINES/V2_LEGS incl. chains judged per sentence; index.mjs '## Session Log' marker), no other file. Nothing new to fix. Strength tests 161 pass. Unkeyed for the design list: as in J4/J5.
