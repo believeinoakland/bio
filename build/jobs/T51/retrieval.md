@@ -107,3 +107,11 @@ Localized through `localize`, each `en` byte-identical to its text: the refusal 
 Tests: `bio-plane/test/m/retrieval/`, 167 of 167 pass; citation `recorded.test.mjs`, 12 of 12. Checks: words for retrieval shows only the five registration sentences; architecture 0 failures; format 0; coverage 79 of 79; `setup-words --check` names no retrieval refusal (rows stale, expected); ownership re-run below.
 
 Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924
+
+## J6 · COMPLETE
+
+B6 applied (K4002). Localized: the refusal details at index.mjs 1248, 1252, 1257, 1329/1348, 1350, 1471, the registration details 296 and 405, and the NO_FTS_ID detail 1073, each en byte-identical. The search test compares the NO_FTS_ID detail with localize. The five start-up registration sentences are left, as you ruled.
+
+Tests: retrieval 167 of 167 pass; citation recorded.test 12 of 12. Checks: words for retrieval shows only the five registration sentences; architecture 0 failures; format 0; coverage 79 of 79; setup-words --check names no retrieval refusal; ownership 0 failures. Pushed to job/T51/retrieval, record Completion (B6, K4002).
+
+Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924
