@@ -14,7 +14,7 @@ import { getFormat, readingDialect } from "../formats.mjs";
 import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { readingProvenance, describePages } from "./readingprov.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "./readingprov.mjs";
 export { ReadHooks, readHooksOf } from "./hooks.mjs";
@@ -216,8 +216,8 @@ export function mergeTier3Text(base, ocr, eligible, { kept = [] } = {}) {
     if (baseGlyphs === null ? reported > 0 : baseGlyphs > 0)
       return { ok: false, filled: [], appended: [], refused: [], refusedWhy: [], unanswered: [],
                why: word("reading-pipeline.why.document_text_merged", { base_glyphs: String(baseGlyphs === null
-                        ? `${reported} character(s) its producer counted and no text this merge can read`
-                        : `${baseGlyphs} decoded glyph(s)`) }) };
+                        ? localize("reading-pipeline.index.reported_characters", "{reported} character(s) its producer counted and no text this merge can read", { reported: String(reported) })
+                        : localize("reading-pipeline.index.decoded_glyphs", "{glyphs} decoded glyph(s)", { glyphs: String(baseGlyphs) })) }) };
     return { ok: true, text: ocr, filled: ocrPages.map((p) => p.page).filter(Number.isInteger),
              appended: [], refused: [], refusedWhy: [], unanswered: [], wholesale: true };
   }
@@ -281,7 +281,7 @@ export function tier3Note(m, memberNote, layerPages) {
   const say = [];
   const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
-    say.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(m.filled.length), kept: String(kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : "") }));
+    say.push(word("reading-pipeline.scanned_page_transcribed", { filled: String(m.filled.length), kept: String(kept ? word("reading-pipeline.already_text_kept", { kept: kept === 1 ? "page" : "pages" }) : "") }));
   if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
     say.push(word("reading-pipeline.page_already_held", { appended: String(m.appended.length), appended_2: String(m.appended.length === 1 ? "that page is" : "those pages are") }));
   if (m.unanswered.length)
@@ -353,11 +353,8 @@ export function tier3LoopNote(loop) {
   const say = [];
   const named = (ps) => describePages(ps.filter(Number.isInteger));
   if (loop.notAsked.length)
-    say.push(`${loop.notAsked.length} of them (${named(loop.notAsked)}) were not asked for in this `
-           + `request: the OCR member reads one page per call and one request may make at most `
-           + `${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker `
-           + `invocations per request — their claim, not measured on this runtime); a re-read `
-           + `(op=pdfstructure&ocr=1) asks for them next`);
+    say.push(localize("reading-pipeline.index.pages_not_asked_request", "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request — their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next",
+      { count: String(loop.notAsked.length), pages: String(named(loop.notAsked)), limit: String(OCR_INVOCATIONS_PER_REQUEST) }));
   if (loop.threw)
     say.push(word("reading-pipeline.call_failed_page", { at: String(named([loop.threw.at])), rest: String(loop.threw.rest.length), rest_2: String(named(loop.threw.rest)) }));
   if (loop.refused.length)
@@ -431,14 +428,11 @@ function withKeptPages(text, kept, seed) {
 export function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
   if (r.ok !== true)
-    return { ok: false, why: `the OCR member declined to transcribe this document`
-                             + `${typeof r.reason === "string" ? ` (${r.reason})` : ""}` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_declined", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }) };
   if (!(typeof r.engine === "string" && r.engine) || !(typeof r.version === "string" && r.version))
-    return { ok: false, why: `the OCR member did not name its engine and version, so nothing it `
-                             + `produced could be re-run or calibrated later` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_name") };
   if (!(typeof r.cap === "string" && r.cap) || !(typeof r.measured_by === "string" && r.measured_by))
-    return { ok: false, why: `the OCR member reported no MEASURED fidelity for itself; a `
-                             + `transcription's ceiling is a measurement, never a default` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_reported") };
   const pages = Array.isArray(r.pages) ? r.pages : [];
   let anchorless = 0, kept = 0, floored = 0, undetermined = 0;
   const outPages = [];
@@ -461,8 +455,7 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
                                      codes: null, count: 1, why: x.why })) });
   }
   if (!outPages.length)
-    return { ok: false, why: `the OCR member returned no page this record could anchor, so nothing `
-                             + `it produced can be checked against the document` };
+    return { ok: false, why: word("reading-pipeline.why.ocr_member_returned") };
   const chain = appendStep([{ step: "pixels", cap: r.cap, measured_by: r.measured_by, calibration }],
                            { step: "ocr", engine: r.engine, version: r.version,
                              cap: r.cap, measured_by: r.measured_by, calibration });
@@ -599,12 +592,10 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
     } else if (keepSeeded().ok && seeded.length) {
       /* R30: no member is bound, and the pages an earlier reading transcribed are kept all the same. */
       const rest = unanswered.length;
-      ocrNote = word("reading-pipeline.page_document_without_text", { seeded: String(seeded.length), rest: String(rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your team's `
-                      + `Civicsmith, so nothing is claimed about what they say` : "") });
+      ocrNote = word("reading-pipeline.page_document_without_text", { seeded: String(seeded.length), rest: String(rest ? word("reading-pipeline.text_layer_read", { rest: String(rest) }) : "") });
     } else {
       /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
-      ocrNote = "this document has no text layer to read and no OCR engine is installed "
-              + "in your team's Civicsmith, so nothing is claimed about what it says";
+      ocrNote = word("reading-pipeline.document_text_layer");
     }
   }
   /* D-418 (R6): a document still wants OCR when it was selected and nothing was filled, or a selected page is
@@ -639,7 +630,7 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
 export const TRANSCRIBE_USE = "transcribe";
 export const AI_TRANSCRIPTION_SOURCE = "unmeasured: the AI's reading of a page that is only a picture is "
   + "undetermined until its accuracy is measured (text-chain R104; BIO_Investigation_v0_1.md §6)";
-export const AI_READING_LABEL = "the AI's reading";
+export const AI_READING_LABEL = localize("reading-pipeline.index.ai_reading_label", "the AI's reading");
 
 /* R29: the pages Civicsmith's own text recognition could not read, ascending: a page still carrying a marker that
    selects it for OCR (tier 3 did not fill it), or one OCR filled with no glyph (every region below its floor). None
@@ -703,8 +694,7 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
     return not(refusalSays(r));
   };
   if (!pages.length) {
-    out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked "
-               + "to transcribe";
+    out.aiNote = word("reading-pipeline.page_left_civicsmith");
     return out;
   }
   const { member = null, project = null, accounts = null, credentials = null, useCheck = null, transcribe = null }
@@ -737,10 +727,9 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
     res = await transcribe({ account, capture_sha: sha, store: storeName, pages: [...pages], use: TRANSCRIBE_USE });
   } catch { return not(word("reading-pipeline.reached")); }
   const r = res && typeof res === "object" ? res : {};
-  if (r.ok !== true) return not(`the AI declined${typeof r.reason === "string" ? ` (${r.reason})` : ""}`);
+  if (r.ok !== true) return not(localize("reading-pipeline.index.ai_declined", "the AI declined{reason}", { reason: typeof r.reason === "string" ? ` (${r.reason})` : "" }));
   const engine = typeof r.engine === "string" ? r.engine.trim() : "";
-  if (!engine) return not("the AI's answer did not name the model that read the pages, so nothing it produced could be "
-                          + "re-run or measured later");
+  if (!engine) return not(word("reading-pipeline.answer_name_model"));
   const version = typeof r.version === "string" && r.version.trim() ? r.version.trim() : null;
   const answered = (Array.isArray(r.pages) ? r.pages : [])
     .filter((p) => p && Number.isInteger(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0)
@@ -1021,17 +1010,17 @@ export function readingFromWire({ wired, docType, chain, wiredTier, fmt, retriev
         : positioned
           ? word("reading-pipeline.references_carry_read", { positioned: String(positioned), entities: String(entities.length) })
           : word("reading-pipeline.no_reference_carries_where_it", { position_why: String(wired.position_why
-              || "this reader does not say where") });
+              || word("reading-pipeline.reader_say")) });
     reading = {
       content_type: wtype.key, reader_version: wtype.version ?? null,
       read_from_text: true, found: entities.length > 0,
       entities, facts: wired.parse_error ? {} : (wfacts || {}), at: retrieved,
       text_source: chain, text_tier: wiredTier, text_container: fmt,
       basis: (wired.parse_error
-        ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
+        ? word("reading-pipeline.why.reader_parse_text", { key: String(wtype.key), fmt: String(fmt), parse_error: String(wired.parse_error) })
         : (entities.length
-            ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}`
-            : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`))
+            ? word("reading-pipeline.why.read_reader_tier", { key: String(wtype.key), version: String(wtype.version), fmt: String(fmt), chain: String(describeChain(chain)), wired_tier: String(wiredTier), why: String(wired.why) })
+            : word("reading-pipeline.why.reader_found_entities", { key: String(wtype.key), fmt: String(fmt), wired_tier: String(wiredTier) })))
         + (tier2note ? ` — ${tier2note}` : "")
         + (ocrNote ? ` — ${ocrNote}` : "")
         + (posNote ? ` — ${posNote}` : ""),
@@ -1112,7 +1101,7 @@ export function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {})
     containerExtent = {
       container: "pdf", levels: ["images"], images: placements,
       ...(placements ? {} : { images_why: pdfPaints.why
-        || "a placement the structure op reported could not be read as {page, rect}" }),
+        || localize("reading-pipeline.index.placement_not_read", "a placement the structure op reported could not be read as {shape}", { shape: "{page, rect}" }) }),
     };
   }
   return containerExtent;
@@ -1190,8 +1179,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
                                         liveCalibration = null, transcription = null } = {}) {
   try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }); }
   catch (e) {
-    const reading = failed(document, null, `the reading could not be composed (${String(e && e.message || e).slice(0, 200)}), `
-      + `so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
+    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }));
     reading.metadata = null;   /* R28: no entry's answer reached the reading */
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
@@ -1238,9 +1226,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     reading.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading };
   };
-  if (!sha) return early(failed(doc, null, "the document names no capture digest, so there are no bytes to read"));
+  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read")));
   /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
-  if (!evidence) return early(failed(doc, null, "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read"));
+  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store")));
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: word("acquisition.why.evidence_store_read") }));
   const bytes = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
@@ -1254,7 +1242,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes)
-    return early(failed(doc, docType, got.why || "the capture's bytes are not held in the evidence store, so nothing was read"));
+    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read")));
 
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
@@ -1282,13 +1270,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           entities, facts: facts || {}, at: retrieved,
           title,
           basis: entities.length
-            ? word("reading-pipeline.why.read_reader", { key: String(docType.type.key), version: String(docType.type.version), entities: String(entities.some((e) => e.source) ? "" : " — no reference carries where it was read: this "
-                + "document was read as one undivided string, which names no part of a container to point at") })
+            ? word("reading-pipeline.why.read_reader", { key: String(docType.type.key), version: String(docType.type.version), entities: String(entities.some((e) => e.source) ? "" : localize("reading-pipeline.index.read_one_undivided_string", " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at")) })
             : word("reading-pipeline.why.reader_found_entities_document", { key: String(docType.type.key) }),
           position_parts: 0,
           position_why: entities.some((e) => e.source) ? null
-            : "the text was read back as one decoded string, which carries no container structure, so "
-            + "where in the document a reference was read cannot be said",
+            : word("reading-pipeline.text_read_back"),
         };
       } catch (e) {
         reading = {
@@ -1394,7 +1380,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       }
       reading = wired
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
-        : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`]
+        : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — ")) };
       /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
@@ -1406,12 +1392,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), `
-        + `so nothing is claimed about its text`, { page_count: null, page_boxes: null, container_extent: null });
+      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { page_count: null, page_boxes: null, container_extent: null });
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null;
     }
   } else {
-    reading = failed(doc, docType, `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
+    reading = failed(doc, docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
                      { page_count: null, page_boxes: null, container_extent: null });
   }
 

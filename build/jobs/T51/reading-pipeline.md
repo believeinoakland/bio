@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01UF9sUjrAaCC7RhZToJezwo · depth 2 · COMPLETE · handled B1
+**Status** · session_01Lok5rc1LRdKaFhnhJxw8j2 · depth 3 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -30,3 +30,53 @@ COMPLETE: T51-133 (reading-pipeline, K3820's red).
 - Commit message: no model identifier, as the system prompt asks; the attribution reminder asked for a Co-Authored-By line naming the model, which I left out for that reason. Say if you want it added.
 
 Size (session_01UF9sUjrAaCC7RhZToJezwo): test runs 3, module lines 1795
+
+## J2 · BLOCKED
+
+BLOCKED, cause: reading (K3678).
+
+Job T51-190 (words pass, 11 findings + 10 plain + 4 test copies). I have made no change to any file.
+
+Why I stopped: step 2 requires reading the module's code whole, and the words fixes touch
+- bio-plane/src/reading-pipeline/index.mjs (1,435 lines), of which I have read only the regions around the findings (about 300 lines);
+- bio-plane/src/reading-pipeline/readingprov.mjs (260 lines), of which I have read only lines 165-256;
+- the finding-holding tests origin.test.mjs, convert-tiers.test.mjs, read.test.mjs (586 lines), text-units.test.mjs (435 lines), and dec149.test.mjs (its NO_STORE copy changes with the key below).
+Reading those whole is about 80k tokens in this session, past the half-window point (mechanics §6.1), so I cannot finish the reads in this window either. I am not editing from partial reads.
+
+What the fixes need from BOB, decided before I start:
+1. reading-pipeline.no_evidence_store already holds a row ("Your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read." - capital Y, final period). The source sentence is lowercase with no period. Plan: use word("reading-pipeline.no_evidence_store"), which changes the member-facing casing and adds a period. OK to change the wording this way? (Alternative: a new localize id with the current text, leaving the reserved key unused.)
+2. Fragments with no row (the "reported characters" count, "no reference carries where it was read: this document was read as one undivided string", and the test copies of the `origin` register sentences): plan to add localize('reading-pipeline.index.<slug>', en) at the site, with no test copying the text. OK?
+3. Every other finding maps to an existing row (for example why.ocr_member_name, why.ocr_member_reported, why.ocr_member_returned, reader_parse_text, read_reader_tier, reader_found_entities, text_layer_read, document_text_layer, already_text_kept, text_read_back, text_carries_per, says.read_classified_different, says.read_classified_different_text, reader_say). Plan: word() at each site; no rows.mjs edit.
+
+Next step on your word (or on reading the whole files if you prefer I continue in a fresh window): I will read index.mjs, readingprov.mjs and the five test files whole, make the edits, and run the module's tests and checks.
+
+Session: session_01GJErmRTWWrhmqcKEnHY1X6. Branch: job/T51/reading-pipeline at its origin head.
+
+## J3 · COMPLETE
+
+COMPLETE: T51-190 (reading-pipeline words pass), applied on B3's answer (K3987).
+
+**Entries applied.** All 11 findings, 10 plain findings and 4 test copies of `build/plan/words-pass/reading-pipeline.md`; `checks/words.mjs` for the module: `inline 0, plain 0, testcopy 0, missingkey 0; 0 failures`.
+- `index.mjs`: `word()` at each site whose sentence has a row (`reader_say`, `reader_parse_text`, `read_reader_tier`, `reader_found_entities`, `already_text_kept`, `text_layer_read`, `document_text_layer`, `why.ocr_member_declined`, `_name`, `_reported`, `_returned`, `no_evidence_store`, `text_read_back`). Also, beyond the list, two sentences with rows: `page_left_civicsmith`, `answer_name_model`. `localize()` for three fragments with no row: `reading-pipeline.index.reported_characters`, `.decoded_glyphs`, `.read_one_undivided_string`.
+- `readingprov.mjs`: `text_carries_per`, `says.read_classified_different`, `says.read_classified_different_text`, `why.text_surface_answered`.
+- Tests: `convert-tiers` (`scanned()` / `keptClause()` built from the rows), `read` (equality with `why.content_type_declares`), `text-units` (`tier_read_essentially_nothing`), `dec149` (`NO_STORE` by key), `origin` (probe signals are now identifiers, not sentences; the full `checks/run.mjs` flagged them as copies of court-doctypes' sentences).
+
+**Member-facing wording changes (the list wins, K3930):** the no-evidence-store basis now reads "Your team's Civicsmith … cannot be read." (capital, period; B3 approved); `provenance.pages_why` spells "itemized". The latter changed the pinned docx digest in `pieces.test.mjs`; I re-pinned once, after confirming that replacing "itemized" back with "itemised" reproduces the old digest.
+
+**Deferred / for BOB (not changed):** sentences the check does not count and that I left as literals: `tier3LoopNote`'s not-asked sentence, `the AI declined (…)`, and the failed-reading basis strings in `read` / `readInner` (`the document names no capture digest…`, `the capture's bytes are not held…`, `the reading could not be composed…`, `the {fmt} entry produced no text…`, `…could not read these bytes…`, `the document was not read as text…`), `images_why` in `containerExtentOf`. They are member-readable; BOB decides whether the design stream gets them as rows (I would not add ids unasked). `LAYER_FIDELITY_SOURCE`, `NAMED_ENGINE_SOURCE`, `AI_TRANSCRIPTION_SOURCE` are stored chain text (signed-record grammar, K1333): left as is. `readingprov.mjs` `compareProvenance`'s undetermined sentence stays a `localize` with its own id; a row `says.reading_provenance_whether` exists with different text.
+
+**Found in another module:** none. `rows.mjs` is stale for the three new `reading-pipeline.index.*` ids (expected; `build.mjs --check` names them, no refusal).
+
+**Tests and checks:** `node --test test/m/reading-pipeline/*.test.mjs test/m/extraction/read.test.mjs`: `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding each `pass 1, fail 0`; tier-pagewise probe exit 0. `format`: `0 failures`; `architecture`: `0 failures`; `coverage`: `34 of 34 live requirement ids named; 0 failures`; `ownership`: `0 failures`; `checks/run.mjs`: no line naming reading-pipeline.
+
+Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 6, module lines 1795
+
+## J4 · COMPLETE
+
+COMPLETE (B4, K3989): the member-readable literals are keyed. `tranche/T51` merged into the branch.
+
+`localize` ids added in `index.mjs`: `reading-pipeline.index.pages_not_asked_request` (tier3LoopNote's not-asked sentence, with count, pages, limit), `.ai_declined`, `.ai_reading_label` (the exported `AI_READING_LABEL`, English unchanged), `.placement_not_read` (`images_why`), `.reading_not_composed`, `.no_capture_digest`, `.bytes_not_held`, `.entry_no_text`, `.entry_not_read_bytes`, `.document_not_read_text` with `.multipart` and `.non_textual_large` for its reason. English unchanged. No test held these sentences, so no test changed. Left as is: `LAYER_FIDELITY_SOURCE`, `NAMED_ENGINE_SOURCE`, `AI_TRANSCRIPTION_SOURCE` (stored chain text, signed grammar, K1333), `refused` fallback in `refusalSays` (a code, not a sentence).
+
+Checks: `checks/words.mjs` for the module `inline 0, plain 0, testcopy 0, unkeyed 0; 0 failures`; module tests `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding `pass 1, fail 0` each; probe exit 0; format, architecture, coverage (34 of 34), ownership `0 failures`; `checks/run.mjs` names nothing in reading-pipeline. `rows.mjs` is stale for the new `reading-pipeline.index.*` ids (expected).
+
+Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 9, module lines 1800

@@ -87,7 +87,7 @@ test("R1: a type with no reader answers read_from_text false and says so; a read
     t.parse = undefined;
     const n = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
     assert.deepEqual([n.read_from_text, n.found, n.entities], [false, false, []]);
-    assert.match(n.basis, new RegExp(`the ${t.key} content type declares no reader, so this document has no reading`));
+    assert.equal(n.basis, word("reading-pipeline.why.content_type_declares", { key: String(t.key) }));
     t.parse = () => { throw new Error("boom in the reader"); };
     const f = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
     assert.deepEqual([f.found, f.read_from_text, f.entities], [false, true, []]);
