@@ -713,6 +713,7 @@ async function installRun(emit0, code, saved, guard) {
     }
     /* F7: the address names that would be tried, fixed now and used as they are (nothing is registered here). */
     offer = await offerSubdomain(token, acct.id, slug).catch((e) => { if (approve(e)) throw e; return null; });
+    if (offer?.candidates?.length) await emit.says(word("installer.address.offer", { prefix: offer.candidates[0] }));
     emit.ok("room");
   } catch (e) {
     if (special(e)) throw e;
@@ -739,7 +740,7 @@ async function installRun(emit0, code, saved, guard) {
   if (resumed) {
     try {
       const found = await foreignContainers(api, names, release, loaded);
-      if (found.foreign) return emit.fail(word("installer.update.stopped.foreign"));
+      if (found.foreign) return emit.fail(word("installer.install.stopped.foreign"));
       retiredParts = found.retired;
     } catch (e) { if (special(e)) throw e; /* the list could not be read: R74 stops on what it finds */ }
   }

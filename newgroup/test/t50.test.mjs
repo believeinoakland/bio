@@ -497,6 +497,14 @@ test("R70 what is missing is found before anything is created: a free-plan accou
   const free = await run({ slug: "pre-free", plan: "free" });
   assert.equal(free.page.retry.label, word("screen.install.stopped.plan.done"));
   assert.equal(free.page.retry.body.slug, "pre-free");
+  /* F7: an account with no workers.dev prefix is told, before anything is created, the free one it is offered; one that has a prefix is told nothing. */
+  const fresh = await run({ slug: "offer-one", subdomain: null });
+  assert.equal(fresh.page.says, word("installer.address.offer", { prefix: "offer-one" }));
+  assert.equal(fresh.page.status("addr"), "ok");
+  const stepsBefore = fresh.page.events.findIndex((e) => e.id === "r2");
+  assert.ok(stepsBefore > fresh.page.events.findIndex((e) => e.id === "room"), "said in the room step, before the first resource");
+  const had = await run({ slug: "offer-two" });
+  assert.equal(had.page.says, null);
   /* Control: a clean account passes all four checks. */
   const clean = await run({ slug: "clean-one" });
   assert.equal(clean.page.status("plan"), "ok");

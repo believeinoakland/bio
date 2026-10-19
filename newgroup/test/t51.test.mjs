@@ -71,7 +71,7 @@ test("R74 the Workers on the copy's member names are examined too: one that this
   /* An install that continues an unfinished copy meets the same check. */
   const half = heldCopy({ slug: "r74-wk-resume", finished: false, members: [], version: "0.1.0" });
   const resumed = await run({ slug: "r74-wk-resume", rel, ...half, pre: { ...half.pre, "pdf-worker-r74-wk-resume": [] } });
-  assert.equal(resumed.page.failed.said, word("installer.update.stopped.foreign"));
+  assert.equal(resumed.page.failed.said, word("installer.install.stopped.foreign"));
   assert.equal(resumed.planePuts.length, 0, "nothing uploaded");
   assert.ok(!resumed.page.steps.includes("install"), "the install did not begin");
   /* Control: the copy's own members update; a Worker of another copy (another slug) is not judged. */
