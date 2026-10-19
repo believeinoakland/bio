@@ -111,7 +111,7 @@ export function inquiryMd(id, versions = []) {
     : [];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
           "current_state: open", "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
-          `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", ...vs, "---", "",
+          `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human", "references: []", "state_history: []", ...vs, "---", "",
           "## Question", "", "What happened?", "", "## Session Log", ""].join("\n");
 }
 export function infoMd(id, state = "collected") {

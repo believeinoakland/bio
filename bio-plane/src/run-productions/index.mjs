@@ -73,22 +73,14 @@ export const EXTRACT_PROPOSALS_LIMIT_MAX = 500;
  *  answer says when it was. */
 export const EXTRACT_RATIO_DOCUMENTS_MAX = 64;
 
-export const EXTRACT_PROPOSALS_SAYS = "these readings are PROPOSALS. A machine read text this record already holds and "
-  + "said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction "
-  + "coverage";
-export const EXTRACT_PROPOSAL_ROW_SAYS = "a machine proposed this reading. It is not extraction coverage and it is not "
-  + "part of any finding — it becomes part of one when a MEMBER cites it, and not before";
+export const EXTRACT_PROPOSALS_SAYS = localize("run-productions.index.extract_proposals_says", "these readings are PROPOSALS. A machine read text this record already holds and said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction coverage");
+export const EXTRACT_PROPOSAL_ROW_SAYS = localize("run-productions.index.extract_proposal_row_says", "a machine proposed this reading. It is not extraction coverage and it is not part of any finding — it becomes part of one when a MEMBER cites it, and not before");
 /** R21: on every proposed connection. */
-export const PROPOSED_CONNECTION_SAYS = "the system proposed this connection. It is not a connection of the record and "
-  + "not part of any finding until a member takes it up; its grade is worked out from how the link is established, "
-  + "never from the machine's say-so";
+export const PROPOSED_CONNECTION_SAYS = localize("run-productions.index.proposed_connection_says", "the system proposed this connection. It is not a connection of the record and not part of any finding until a member takes it up; its grade is worked out from how the link is established, never from the machine's say-so");
 /** R23: on every bearing note. */
-export const BEARING_NOTE_SAYS = "the system's note on what this document says about the question, and what it does "
-  + "not. Each sentence is tied to the document's own words. It is shown beside the document, never in its place; it "
-  + "is not the document's content and is never cited as evidence";
+export const BEARING_NOTE_SAYS = localize("run-productions.index.bearing_note_says", "the system's note on what this document says about the question, and what it does not. Each sentence is tied to the document's own words. It is shown beside the document, never in its place; it is not the document's content and is never cited as evidence");
 /** R24: on every slice a run reads. */
-export const READ_PAGES_SAYS = "the text the record holds for these pages, read by a run a few pages at a time within "
-  + "its pages bound";
+export const READ_PAGES_SAYS = localize("run-productions.index.read_pages_says", "the text the record holds for these pages, read by a run a few pages at a time within its pages bound");
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -629,15 +621,12 @@ export class RunProductions {
     /* DEC-49 REGION is-production-run */
     if (typeof run !== "string" || !run.trim())
       return { refusal: this.#refuse("NO_RUN",
-        `the EXTRACT role works in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, `
-        + `resumes it and checks it plane-side. A production outside one would be a second place a machine writes`) };
+        localize("run-productions.index.the_extract_role_works", "the EXTRACT role works in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes")) };
     const runId = run.trim();
     const r = this.aiRuns.runFor(runId, viewer);
     if (!r)
       return { refusal: this.#refuse("NO_SUCH_RUN",
-        `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the `
-        + `objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would `
-        + `help; it may not start one`, { run: runId }) };
+        localize("run-productions.index.no_such_run_is_open", "no run is open under {runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one", { runId }), { run: runId }) };
     /* END DEC-49 REGION is-production-run */
     const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane, act });
     if (notPrincipal)
@@ -809,11 +798,12 @@ export class RunProductions {
         const q = proposedReadingGrade({ ref: "connection", label: link.grounds, quote: c.quote, source: c.source },
                                        textAt(c.source));
         const verified = q.verified_quote === true;
+        const linkWhy = { A: localize("run-productions.index.link_source_own", "the source's own link"),
+          B: localize("run-productions.index.link_shared_identifier", "an identifier the two share"),
+          C: c.how === "date" ? localize("run-productions.index.link_date_alone", "a date alone") : localize("run-productions.index.link_name_alone", "a name alone") };
         const why = verified
-          ? word("run-productions.earned_link_rests", { letter: String(link.letter), first: String({ A: "the source's own link", B: "an identifier the two share",
-              C: `a ${c.how === "date" ? "date" : "name"} alone` }[link.letter]), grounds: String(String(link.grounds).slice(0, 80)) })
-          : `earned undetermined: the quote is not the capture's own text at the place given, so how the link is `
-            + `established cannot be read from the record. A letter would be the machine's say-so`;
+          ? word("run-productions.earned_link_rests", { letter: String(link.letter), first: String(linkWhy[link.letter]), grounds: String(String(link.grounds).slice(0, 80)) })
+          : localize("run-productions.index.earned_undetermined_quote", "earned undetermined: the quote is not the capture's own text at the place given, so how the link is established cannot be read from the record. A letter would be the machine's say-so");
         linkRows.push({ id: connectionProposalId(runId, sha, c.to_kind, c.to.trim(), c.quote, pos), kind: c.to_kind,
                         to: c.to.trim(), role: c.to_kind === "person" ? String(c.role).trim().slice(0, 200) : null,
                         how: c.how, grounds: String(link.grounds).slice(0, 400), quote: c.quote, pos,
@@ -931,8 +921,7 @@ export class RunProductions {
         `a ${kind} is named by the record's entity id (ENT-…), and ${to.slice(0, 80)} is not one`, { at_index, to: to.slice(0, 80) });
     if (kind === "person" && !nonBlank(c.role))
       return this.#refuse("CONNECTION_PERSON_NO_ROLE",
-        `a connection to a person is to their part in a public matter (D13), so it names the public role its quote `
-        + `shows`, { at_index });
+        localize("run-productions.index.connection_person_no_role", "a connection to a person is to their part in a public matter (D13), so it names the public role its quote shows"), { at_index });
     if (typeof c.quote !== "string" || c.quote === "" || readingSource(c.source) == null)
       return this.#refuse("CONNECTION_NO_QUOTE",
         `a proposed connection carries its exact quote and the readable place it stands (IC-1's element-reference `
