@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_015aYMNxepX61Evw4qN8aqmA · depth 2 · COMPLETE · handled B2
+**Status** · session_015aYMNxepX61Evw4qN8aqmA · depth 2 · COMPLETE · handled B3
 
 ## Completion (T51-195)
 
@@ -22,7 +22,9 @@
 - `node checks/ownership.mjs /home/user/bio entities tranche/T51 job/T51/entities`: 1 file changed by entities, 0 failures.
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only; no refusal names entities.
 
-Size (session_015aYMNxepX61Evw4qN8aqmA): test runs 4, module lines 2402
+**Re-completion (B3, K3998).** After the merge of `tranche/T51`, `t48.test.mjs` held events' sentence "status as of a date is read of an entity of kind proceeding" (events' `localize('events.index.status_as_of_a_date', …)`) as a test string, which K3986 counts as a copy. That sentence has no words row, and events exports neither it nor its key, so the test cannot take it by equality. The test now passes its own caller sentence through `notAProceeding` and asserts it comes back unchanged, which is what R53 requires (the caller's detail named). Words check for entities: 0 failures; entities tests 131 pass, 0 fail; `checks/run.mjs`: format and architecture 0 failures; ownership 1 file.
+
+Size (session_015aYMNxepX61Evw4qN8aqmA): test runs 5, module lines 2402
 
 ## Completion (T51-30)
 
@@ -50,3 +52,7 @@ T51-30 applied: R57-R61 met (matched_by/names, onlyByIdentifier, subjectsNamed, 
 ## J2 · COMPLETE
 
 T51-195 (entities, words pass) is done and pushed at cddeabe61b. The 46 findings of build/plan/words-pass/entities.md are fixed by the words rule: 0 failures from checks/words.mjs for entities. entities tests: 131 pass, 0 fail (4 civil-time keyed-reason reds fixed in t33). checks/run.mjs: format and architecture 0 failures; ownership 0 failures; setup-words --check gives only the stale-rows note. Readings, none unread-member strings, and other-module findings are in build/jobs/T51/entities.md under Completion (T51-195). Size: test runs 4, module lines 2402.
+
+## J3 · COMPLETE
+
+B3 (K3998) done and pushed. t48.test.mjs no longer holds events' status sentence: it passes its own caller sentence through notAProceeding. Words check for entities: 0 failures. Entities tests 131 pass, 0 fail. checks/run.mjs: format and architecture 0 failures. Ownership: 1 file. Size: test runs 5, module lines 2402. Re-completion in build/jobs/T51/entities.md.
