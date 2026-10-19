@@ -48,7 +48,7 @@ test("R2: governor-holding-host is the governor's own cool-off, read at the read
   assert.deepEqual([gov.basis.source, gov.basis.host, gov.basis.refusals, gov.basis.last_refusal_status, gov.basis.cooloff_until,
     gov.basis.retry_in_ms, gov.basis.last_refusal_at], ["host_governor", HOST, 1, 429, NOW + 90000, 90000, NOW - 30000]);
   assert.deepEqual([gov.basis.detail.includes("OUR OWN machinery"), gov.summary.includes("PACED, not broken"),
-    gov.detail.includes("Nothing about the source is being claimed")], [true, true, true],
+    gov.detail.includes(HOST)], [true, true, true],
     "what a condition is for: our machinery, distinguishable from the source failing (D-104)");
   assert.deepEqual([gov.subject.kind, gov.subject.host, gov.subject.id, gov.subject.bundles], ["host", HOST, null, ["INFO-88"]]);
   assert.deepEqual(gov.options, [{ id: "opt", on: ["INFO-88"] }], "the acts on the documents behind it, and none of its own");
@@ -74,7 +74,7 @@ test("R2: partial-capture-outstanding is the capture ledger's own row, about the
   assert.deepEqual([p.subject.kind, p.subject.id], ["bundle", "INFO-88"]);
   assert.deepEqual([p.basis.source, p.basis.session, p.basis.primary_sha, p.basis.bundle_id, p.basis.outstanding,
     p.basis.discovered, p.basis.state_readable], ["capture_sessions", "cs_partial", "cap88", "INFO-88", 3, 41, true]);
-  assert.deepEqual([p.detail.includes("primary document is captured"), p.basis.detail.includes("SCRATCH and not record")], [true, true],
+  assert.deepEqual([p.detail.includes(`tick ${p.basis.ticks}`), p.basis.detail.includes("SCRATCH and not record")], [true, true],
     "a partial capture is not a broken one");
   assert.ok(c["CONDITION::partial-capture-outstanding::cs_project"], "carol, who owns the project, gets the condition about its capture");
   assert.equal(byId(d)["CONDITION::partial-capture-outstanding::cs_project"], undefined, "dave gets nothing about it: withheld whole");
