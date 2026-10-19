@@ -12,7 +12,7 @@ import { Walk, FAIL } from "../../../src/journey-check/walker.mjs";
 import { designMock, WIDTHS } from "../../../src/journey-check/design.mjs";
 import { CARRIED_STATES, walkStates } from "../../../src/journey-check/states.mjs";
 import { walkPublished } from "../../../src/journey-check/published.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const COMMIT = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 let B, dir, mock;
@@ -40,7 +40,7 @@ test("R21: a state the live screen reaches is paired at both widths; control: a 
   assert.equal(written.length, 2, "one state, two widths");
   for (const f of written) assert.ok(existsSync(join(walk.out, f)), f);
   assert.deepEqual(walk.failures, []);
-  assert.deepEqual(walk.notes, [`${states[1].screen}, ${states[1].state}: not reached on this instance`]);
+  assert.deepEqual(walk.notes, [localize("journey-check.states.name_not_reached_on_this_instance", "{name}: not reached on this instance", { name: `${states[1].screen}, ${states[1].state}` })]);
 });
 
 /* a fixture instance holding a published case, drawn as the screen draws it: the minimum strength, the filtered view's notice and
