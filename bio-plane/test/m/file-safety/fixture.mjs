@@ -13,6 +13,7 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { fileSafetyOf } from "../../../src/file-safety/index.mjs";
+import { EICAR_FOUND } from "../../../../file-scanner/src/providers/routes.mjs";
 
 export { infoMd, provDoc };
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b, "utf8") : Buffer.from(b)).digest("hex");
@@ -123,7 +124,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
         return reply(r, r.ok === false && r.code ? 400 : 200);
       }
       if (u.pathname === "/provider/test") {
-        const t = s.test[body.tool.provider_id] ?? { passed: true, detail: "the EICAR test file answered found" };
+        const t = s.test[body.tool.provider_id] ?? { passed: true, detail: EICAR_FOUND };
         return reply({ ok: true, ...t });
       }
       if (u.pathname === "/provider/forward") return reply(s.forward ? s.forward(body) : { ok: true, sent_at: new Date(at).toISOString() });

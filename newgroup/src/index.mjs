@@ -83,7 +83,7 @@ export const CFG = {
  * `signers.mjs`, so the embed step can verify the built-in copy against the
  * SAME list without importing the module it generates (2026-09-18, DIST). */
 /* R80: every name this module exported before the split is exported still; the moved ones are `installer-steps`'. */
-export { ARMED_SIGNERS, BROWSER_BINDING, INSTANCE_AI_BINDING, SEAL_BINDING, OWN_HOSTS_BINDING, PROFILES_BINDING, MEMBER_OBJECTS, SourceUnavailable,
+export { ARMED_SIGNERS, BROWSER_BINDING, INSTANCE_AI_BINDING, SEAL_BINDING, OWN_HOSTS_BINDING, PROFILES_BINDING, SourceUnavailable,
   objectMigrations, CONTAINER_PART, WORKER_PART, containerDescriptor, containerClasses, workerDescriptor, VPC_MEMBER, VPC_BINDING, vpcServiceOk,
   planeLimits, memberLimits, reportsBuilds, instanceAiOk, PER_REQUEST_DATASET, filterExcludes } from "./steps/index.mjs";
 async function fetchRepoManifest() {
