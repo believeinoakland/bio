@@ -46,3 +46,7 @@ REPORT (T51-151). (1) Stale generated artifacts, regenerate at R8's close: `bio-
 ## J3 · COMPLETE
 
 T51-151 done: the checker's ~110 sentences are read by key (66 design rows by word(), 101 localize ids), the 162 words findings, 8 plain findings and the test copy cleared except `spec.mjs` (reported). Module tests 94: 92 pass, the 2 reds are R13/R25 on the stale program.mjs (yours to regenerate; 94 of 94 with it regenerated locally). format, architecture, coverage (27 of 27), ownership: 0 failures; words: only spec.mjs; setup-words --check: stale-rows note only. Merged tranche/T51 (38f8fb1321) before the last run. Details in build/jobs/T51/case-checker.md.
+
+## J4 · COMPLETE · re B3
+
+CHANGE B3 processed: tranche/T51 was already merged. No says-words.mjs is needed: the program bundles the word table and case-grammar's 45 casefile ids are read through setup-words like mine, so it carries their words. New test in words.test.mjs checks the program carries every case-grammar.casefile.* sentence and answers a manifest fault offline with the library's exact departures. Module tests 95, only R13/R25 red (stale program.mjs, yours). Pushed.
