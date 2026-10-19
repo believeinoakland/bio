@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 4914,
+  "screen": 4923,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -136,7 +136,7 @@
   "skills": 28,
   "wizard-scripts": 66,
   "notice-producers": 20,
-  "network-notices": 18,
+  "network-notices": 20,
   "duties": 79,
   "strength": 69,
   "basis-versions": 23,
@@ -229,7 +229,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 15738,
+  "total": 15749,
   "protected": 934
  },
  "words": [
@@ -47838,7 +47838,7 @@
   },
   {
    "key": "screen.project.dev.is.standing.down.as",
-   "en": "Dev is standing down as an owner.",
+   "en": "{member} is standing down as an owner.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-330: B306 A47: drawn sentence"
@@ -59773,7 +59773,7 @@
   },
   {
    "key": "screen.document.revisions.truncated",
-   "en": "Only the newest {n} revisions are shown here; this copy has more.",
+   "en": "Not every revision is shown here: {n} are, and this copy has more.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-360 (B371 1): screens-inquiry, document R65; a cut history"
@@ -60260,6 +60260,83 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-362 (B375): installer-steps (T51-127, R36); skip.manifest with the manifest's own reason, {reason} a why fragment"
+  },
+  {
+   "key": "screen.question.decision.change",
+   "en": "Change your decision",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, question; the fold's summary (say003 is the question inside it)"
+  },
+  {
+   "key": "screen.question.compare.axis",
+   "en": "{axis}: {change}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, question R72; an axis with no citation to name, {axis} the card word, {change} a screen.question.word.* word; with a citation draw screen.question.say054 ({change}, {source}), which carries the \"since … was cited\" tail"
+  },
+  {
+   "key": "screen.dash-project.next.vouch.one",
+   "en": "Vouch for the photo you captured at {place}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, dash-project; the one-photo form of screen.dash-project.next.vouch"
+  },
+  {
+   "key": "screen.project.scale.now",
+   "en": "(now)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, project R75; marks the table row for the current number of owners"
+  },
+  {
+   "key": "screen.project.scale.takes",
+   "en": "{votes} of {owners}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, project R75; Votes it takes at three owners or more"
+  },
+  {
+   "key": "screen.project.scale.who",
+   "en": "{voters} of {owners} may vote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, project R75; the Why cell at three owners or more"
+  },
+  {
+   "key": "network-notices.level.very_active",
+   "en": "Very active",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry; a level, 10 to 13 of 13 weeks; one family with .level.active|quiet|dormant (network-notices.active stays for its older readers)"
+  },
+  {
+   "key": "network-notices.level.some_work",
+   "en": "Some work",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry; a level, 4 to 6 of 13 weeks; one family with the other .level.* rows"
+  },
+  {
+   "key": "screen.document.a34.kept.noreason",
+   "en": "Kept citing the earlier version, by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, document R69; a keep with no reason given"
+  },
+  {
+   "key": "screen.document.a34.moved.noreason",
+   "en": "Citations moved to this copy by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, document R69; a move with no reason given"
+  },
+  {
+   "key": "screen.document.compare.fingerprint",
+   "en": "Fingerprint: {digest}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-364 (B379 A): screens-inquiry, document; a file's digest in the compare panel, {digest} shortened as the page draws fingerprints"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
