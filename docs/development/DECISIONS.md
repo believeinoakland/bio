@@ -5496,3 +5496,18 @@ decided: 2026-10-19 · the design session (P17)
 the design: rows, each a label after its number as home's other readings: `screen.home.rd.document`/`documents`, `screen.home.rd.case`/`cases`, `screen.home.rd.followed.one` ("person followed")/`.other` ("people followed"), `screen.home.rd.clock` ("clock running")/`clocks`, `screen.home.rd.security` ("security level") after its value `screen.home.rd.level.ordinary`/`raised`/`high` (the security screen's levels in lower case). The drawing's "usual" becomes "ordinary", the security screen's own word. A reading at zero is never shown (DEC-219).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
 owed: nothing.
+
+### DEC-355 · answered
+raised: 2026-10-19 · the UX design session with Bob on his primary account (session_015Xbtuq76wzNCHo4wDiS4Ws; the development process also runs on his primary account since K1428) (BOB's HANDOFF B362; journey-check R17; DEC-281; K3472, K3930, K4066)
+for: design
+question: 69 code rows say "group"; which mean the team, and which another sense?
+why it is Bob's: it is not (P17): the design's words and its rule.
+provisional: as below.
+alternative: none weighed: each row's sense is read from its own text.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-19 · the design session (P17)
+the design: (1) 29 rows mean the team and get a words.json row under the same id saying "team" (the table wins, K3930), American spelling fixed on the way ("labeled", "organization", "defense", "catalog"): the 27 `skills.skilldoctrine.*` rows in the team sense (the team's own writing, choices, record and language, "from team to team", "members or teams") and `case-grammar.casefile.group` ("the source team is named by its slug"). (2) 40 rows keep "group" in another sense and join `GROUP_SENSE` in `build_words.mjs`: a grouping of reasons or legs (inquiry 5, strength 12, calc-grammar, calculations, case-authoring's axis group), regular-expression groups (link-sweep 8, court-citations), SQL `GROUP BY` (query-language), the owner token or parameter `group` (ai-use 7, strength's `&group=`, promotion's `group:` line), a kind of organization ("a civic group by role": action-grammar, `skills.skilldoctrine.an_action_is_addressed_to`) and the verb ("groups by the address": `skills.skilldoctrine.the_count_a_run_publishes`). R17's rule run over the tranche's rows with these words leaves only journey-check's own two.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/build_words.mjs`.
+owed: nothing.
