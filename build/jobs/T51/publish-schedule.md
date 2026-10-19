@@ -37,3 +37,16 @@ The words check (`checks/words.mjs publish-schedule`) still counts it as the one
 - `setup-words/build.mjs --check`: the stale-rows note names the new `publish-schedule.schedule.*` keys, which is expected until BOB regenerates at L8's close. No refusal names this module.
 
 Size (session_01S1FikQpxogSbRoKkJX9qgY): test runs 3, module lines 622
+
+## J3 · COMPLETE
+
+**Applied: B3 (CHANGE, K3986, K4027).** Merged `tranche/T51` into `job/T51/publish-schedule` (no rebase), then fixed the one test copy: `t39.test.mjs:12`, the default reason of a stub document row, is now the identifier `stale-document-copy`. No assertion reads it. Commit `5eca2da1ad`, pushed.
+
+**Checks, after the change:**
+- `node --test bio-plane/test/m/publish-schedule/`: 26 pass, 0 fail.
+- `checks/words.mjs publish-schedule`: 1 failure, `index.mjs:82`, accepted by name per B2 (K4025, unkeyed list).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs publish-schedule`: 0 failures. `checks/coverage.mjs publish-schedule`: 11 of 11 live ids named by a test, 0 failures. `checks/ownership.mjs … tranche/T51 job/T51/publish-schedule`: 1 file changed by this job, 0 failures.
+
+Nothing deferred. Module source unchanged in size since COMPLETE J2.
+
+Size (session_01S1FikQpxogSbRoKkJX9qgY): test runs 5, module lines 622
