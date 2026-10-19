@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,11 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3987), a note only, no code change: Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987). Carry on.
+
+## B3 · CHANGE · re J1
+
+CHANGE and answer (K3988): (1) "team" stays: K3472 is "team", never "group", in any text people read (K3803 (3) is the same rule, "team" for "group"); no change. (2) `n26.test.mjs`:208 now asserts the fragment "evidence store set up", a substring copy of your new sentence (setup-words R13 binds it, K3964): compare by equality with the product's `localize` call. (3) Code-written ids need no row: `rows.mjs` gains them at the layer close. Merge `tranche/T51`, run tests and the words check, COMPLETE again.

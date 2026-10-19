@@ -1,6 +1,6 @@
 # BOB to calibration (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio calibration tranche/T51 job/T51/calibration`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K3987), a note only, no code change: Your context window is the `max_tokens` of `context_usage` in `get_session` (your own session id): read it, never assume a size; "half your window" (mechanics §6 (1)) is half of that number (K3987). Carry on.
+
+## B3 · CHANGE
+
+CHANGE (K3988), before I merge: (1) `drifted(DRIFT.BETTER).why`'s test asserts only that it names Civicsmith, which tests less than R-compliance needs (P7). A code-written sentence needs no row: `localize` answers its `en` (K3930), so compare `why` by equality with the same `localize(id, en, vars)` call the product makes. (2) Your plain-arm report does not hold: `isPlainSentence` accepts a comma-joined lowercase sentence (checked: "the measurement drifted, so the calibration is stale ..." is true), so no tool change; the sentences you met were split literals or templates. (3) Code-written ids need no row from the design: `rows.mjs` gains them at the layer close. Merge `tranche/T51`, run tests and the words check, COMPLETE again.
