@@ -10,7 +10,7 @@ import { seeded, V, TEST, TEXT, reviewedOf, PROFILE_IDS } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord, localize } from "../../../src/setup-words/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -29,11 +29,11 @@ const T45_NOT_REVIEWED = "This template from the jurisdiction profile is not off
   + "once it names who wrote it, the public sources it was written from, a professional's review with no concerns, "
   + "and an approver other than its writer; what it lacks is named.";
 /* C-125.34 keeps its present translation in T46 (R29): words.json's names "Civicsmith" bare (DEC-149). */
-const COURT_PETITION = "This kind is filed with a court, so no template the team files in its own name is kept for it until "
-  + "a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.";
-/* Every other row (42, C-115.31–.38 less .34, C-115.45, .46, C-125.1–.32 and .34), as T45 left them: their canonical
-   JSON's sha256, so no check, where or translation of theirs moves. */
-const KEPT = { count: 42, sha256: "ff008625ee5af13cc4d06ed505c55eeb34d9b9aa46a0f2f5fbe3a4cfae76a2b3" };
+const COURT_PETITION = localize("filing-templates.checks.this_kind_is_filed_with", "This kind is filed with a court, so no template the team files in its own name is kept for it until a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.");
+/* Every other row (42, C-115.31–.38 less .34, C-115.45, .46, C-125.1–.32 and .34), as T45 left them: the canonical JSON's
+   sha256 of each one's check and where, so none moves. A translation is the list's word, read by key (K3810), never
+   pinned here as text. */
+const KEPT = { count: 42, sha256: "7a3cefaa2f6f8e3d279f80546075bd616883b43155a619563651b65872160621" };
 const editedOf = (edit, base = jurisdictions) => ({ ...base, get: (id) => { const p = base.get(id); if (p && p.id === TEST) edit(p); return p; } });
 
 test("R29 C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT_REVIEWED by key from FILING_TEMPLATES_WORDS, never a copy; its code, number and where unmoved; T45's words answered no longer", () => {
@@ -64,10 +64,13 @@ test("R29 C-125.34 TEMPLATE_COURT_PETITION keeps its present translation, not wo
   /* T47 (R30) moved C-125.4's `where` to its one site, which r30.test.mjs pins; read here at its T46 place, so this pin
      still proves no other check, where or translation moved */
   const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED" && c !== "RFC_QUOTING_MISSING")
-    .map(([c, r]) => [c, c === "TEMPLATE_BLANK_UNKNOWN" ? { ...r, where: AT("#textRefusal", "is-template-text") } : r]));
+    .map(([c, r]) => [c, { check: r.check, where: c === "TEMPLATE_BLANK_UNKNOWN" ? AT("#textRefusal", "is-template-text") : r.where }]));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
-    "no other row's check, where or translation moved");
-  for (const [code, r] of Object.entries(kept)) assert.ok(!Object.values(ft.FILING_TEMPLATES_WORDS).includes(r.translation), code);
+    "no other row's check or where moved");
+  for (const code of Object.keys(kept)) {
+    assert.ok(!Object.values(ft.FILING_TEMPLATES_WORDS).includes(rows[code].translation), code);
+    if (code !== "TEMPLATE_COURT_PETITION" && hasWord(`refusal.${code}`)) assert.equal(rows[code].translation, word(`refusal.${code}`), `${code}: the list's word, by key`);
+  }
 });
 
 test("R29 the refusal is answered by the reads with words.json's sentence and R15's lacks beside it, behaviour unmoved; the control, the same templates with their attribution whole, are offered", () => {
