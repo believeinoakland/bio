@@ -78,18 +78,18 @@ function resolveAt(p, at) {
   const date = at && typeof at === "object" ? at.date : null, time = at && typeof at === "object" ? at.time : null;
   if (typeof date !== "string" || !isCalendarDate(date) || typeof time !== "string" || !HHMM.test(time))
     return { ok: false, reason: "PUBLISH_AT_MALFORMED",
-             detail: "a publishing time is a date (YYYY-MM-DD, a real day) and a 24-hour time (HH:MM, 00:00 to 23:59)" };
+             detail: localize("publish-schedule.schedule.a_publishing_time_is_a", "a publishing time is a date (YYYY-MM-DD, a real day) and a 24-hour time (HH:MM, 00:00 to 23:59)") };
   const zone = groupZone(p);
   if (!zone)
     return { ok: false, reason: "PUBLISH_AT_NO_ZONE",
-             detail: "the team holds no time zone, so a local time cannot be read; it is never read as UTC" };
+             detail: localize("publish-schedule.schedule.the_team_holds_no_time", "the team holds no time zone, so a local time cannot be read; it is never read as UTC") };
   let b = null;
   try { b = bounds({ value: `${date}T${time}`, precision: "minute", zone }); } catch { b = null; }
   if (!b || !b.earliest)
     return { ok: false, reason: "PUBLISH_AT_NO_ZONE", detail: localize("publish-schedule.schedule.the_teams_time_zone_zone", "the team's time zone ({zone}) cannot be read", { zone: String(zone) }) };
   if (!(ms(b.earliest) > ms(clock(p))))
     return { ok: false, reason: "PUBLISH_AT_PAST", at: { date, time, zone }, publish_at: b.earliest,
-             detail: "that time is not after now; publishing now is the ceremony's own commit" };
+             detail: localize("publish-schedule.schedule.that_time_is_not_after", "that time is not after now; publishing now is the ceremony's own commit") };
   return { ok: true, at: { date, time, zone }, publish_at: b.earliest };
 }
 
@@ -143,7 +143,7 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
   const id = str(caseArg ?? caseId), ed = Number(edition);
   if (!id || !Number.isInteger(ed) || ed < 1 || !str(docSha) || !str(signature))
     return { ok: false, reason: "MALFORMED",
-             detail: "a waiting edition names its case, a positive edition, the document's sha and the signature" };
+             detail: localize("publish-schedule.schedule.a_waiting_edition_names_its", "a waiting edition names its case, a positive edition, the document's sha and the signature") };
   const when = resolveAt(p, at);
   if (!when.ok) return when;
   const doc = one(p, `SELECT doc_sha, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
@@ -241,8 +241,8 @@ function ownersRow(p, caseId, edition, by) {
   const g = viewerPredicate(by);
   if (g.scope === "DENY" || (g.scope === "member" && g.member === null && by !== "admin"))
     return { ok: false, reason: "MACHINE_CANNOT_SCHEDULE_PUBLISH",
-             detail: "a publishing time is moved or cancelled by a member who owns the case's project, never a machine" };
-  const notWaiting = { ok: false, reason: "NOT_WAITING", detail: "no edition of that case waits to be published" };
+             detail: localize("publish-schedule.schedule.a_publishing_time_is_moved", "a publishing time is moved or cancelled by a member who owns the case's project, never a machine") };
+  const notWaiting = { ok: false, reason: "NOT_WAITING", detail: localize("publish-schedule.schedule.no_edition_of_that_case", "no edition of that case waits to be published") };
   const doc = one(p, `SELECT case_id, edition, text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
   if (!doc || !p.publication.hasCaseStanding(doc, by)) return notWaiting;
   const last = one(p, `SELECT * FROM scheduled_editions WHERE case_id=? AND edition=? ORDER BY seq DESC LIMIT 1`,
@@ -251,10 +251,10 @@ function ownersRow(p, caseId, edition, by) {
   if (last.state !== "waiting")
     return { ...notWaiting, state: last.state, detail: localize("publish-schedule.schedule.that_edition_no_longer_waits", "that edition no longer waits: it is {state}", { state: String(last.state) }) };
   if (ms(last.publish_at) <= ms(clock(p)))
-    return { ...notWaiting, state: "waiting", detail: "that edition's time has come, so it is being published or stopped" };
+    return { ...notWaiting, state: "waiting", detail: localize("publish-schedule.schedule.that_editions_time_has_come", "that edition's time has come, so it is being published or stopped") };
   const project = projectOf(p, caseId, edition);
   if (!project || g.scope !== "participant" || !p.membership.isProjectOwner(project, g.member))
-    return { ok: false, reason: "NOT_A_CASE_OWNER", detail: "only an owner of the case's project moves or cancels its time" };
+    return { ok: false, reason: "NOT_A_CASE_OWNER", detail: localize("publish-schedule.schedule.only_an_owner_of_the", "only an owner of the case's project moves or cancels its time") };
   return { ok: true, row: last, member: g.member };
 }
 
