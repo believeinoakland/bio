@@ -17,12 +17,7 @@ const at = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
    there, then re-taken here by key; a row never holds a copy of its sentence. `words.json` holds every row of this
    module, so each row reads its key. */
 export const READING_GUIDES_WORDS = Object.freeze({
-  "refusal.GUIDE_CARRIES_CONDUCT": "A reading guide says only what to look for in a document, and where. Each item opens with \"Look "
-    + "for\", \"Note whether\", \"Note where\", \"Check whether\", \"Check that\", \"Watch for\" or \"Compare\", and "
-    + "none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A "
-    + "procedure guide may name the acts and duties of a route, but none of its items speaks to the "
-    + "assistant or tells it what to do. The item named does not keep to this. Reword it. Nothing was "
-    + "written.",
+  "refusal.GUIDE_CARRIES_CONDUCT": word("refusal.GUIDE_CARRIES_CONDUCT"),
   "refusal.GUIDE_ITEMS_REFUSED": word("refusal.GUIDE_ITEMS_REFUSED"),
   "refusal.GUIDE_MEMBER_ACT": word("refusal.GUIDE_MEMBER_ACT"),
   "refusal.GUIDE_KIND_UNKNOWN": word("refusal.GUIDE_KIND_UNKNOWN"),
@@ -37,8 +32,7 @@ export const READING_GUIDES_WORDS = Object.freeze({
   "refusal.GUIDE_NO_GROUP_SLUG": word("refusal.GUIDE_NO_GROUP_SLUG"),
   "refusal.GUIDE_RETIRE_NOT_APPROVER": word("refusal.GUIDE_RETIRE_NOT_APPROVER"),
   "refusal.GUIDE_RETIRED": word("refusal.GUIDE_RETIRED"),
-  "refusal.GUIDE_BASED_ON_UNKNOWN": "A guide may say which guide or proposal it is based on, and the one named is not a guide or proposal "
-    + "you can see. Nothing was written.",
+  "refusal.GUIDE_BASED_ON_UNKNOWN": word("refusal.GUIDE_BASED_ON_UNKNOWN"),
   "refusal.GUIDE_PROPOSAL_NOT_MACHINE": word("refusal.GUIDE_PROPOSAL_NOT_MACHINE"),
   "refusal.GUIDE_RUN_MISSING": word("refusal.GUIDE_RUN_MISSING"),
   "refusal.GUIDE_ITEM_UNSOURCED": word("refusal.GUIDE_ITEM_UNSOURCED"),

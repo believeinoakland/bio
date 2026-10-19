@@ -36,3 +36,9 @@ Size (session_017dxijPVwvN3Wk5fPMK9V4W): test runs 8, module lines 1155
 ## J2 · COMPLETE
 
 B2 applied: merged tranche/T51; the adopted arm answers origin adopted with approved_by and approved_at (already so in code); added the R15 test for it. Module tests 60/60; format, architecture, coverage, ownership, words: 0 failures.
+
+## Completion after B3 (CHANGE, K4015)
+
+Merged tranche/T51 and pulled the process repository (words check judging `+` chains). `checks/words.mjs /home/user/bio reading-guides` found 2 inline copies (checks.mjs `GUIDE_CARRIES_CONDUCT` and `GUIDE_BASED_ON_UNKNOWN`, rows of `words.json` held as `+` chains): both now read by `word("refusal.<CODE>")`, as the module's other rows. Words check now: 0 findings in reading-guides. Module tests 60 of 60; format, architecture, coverage, ownership 0 failures. Unkeyed list (no person reads): as in the first completion (provider-registration diagnostics, library.mjs release-time messages).
+
+Size (session_017dxijPVwvN3Wk5fPMK9V4W): test runs 10, module lines 1149
