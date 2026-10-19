@@ -28,3 +28,28 @@ Size (session_01GRpmGF7jXboFitBgdF89Tk): test runs 8, module lines 2081
 ## J1 · COMPLETE
 
 T51-238 done. Words: all 9 findings fixed (rows by word, the rest by localize ids action-clocks.<index|count|ics>.*; refusal details and trace/basis fragments converted too); nothing judged unread, so no REPORT. The 8 reds are green: whyOf rendered civil-time's {key, vars} with String(); it now uses civil-time's reasonText where this module builds a sentence. Shape of why for filings: computeDeadline.why, proposal.undetermined and CLOCK_PROPOSAL_UNDETERMINED.why are rendered strings, never {key, vars}. Module tests 74/74; format, architecture, coverage (23/23), ownership 0 failures; words 0 for this module (also in the 14-module cross run). Stale: setup-words rows.mjs / words-unreviewed.json (my new localize ids; BOB regenerates). Details in the record.
+
+## J2 · COMPLETE
+
+T51-267 done: `clocksRunning({viewer})` (R24) is built and its op `clocksrunning` joins `actionClocksOps`.
+
+**Entries applied.**
+- R24: `clocksRunning` counts the `pending` clock entries of the visible actions not `resolved` or `abandoned`: `total`, and `by_owed` for `group`, `body` and `undetermined` (R18), each `{count, next}` with `next` the earliest valid date (null when none). It reads at most 500 actions (`CLOCKS_RUNNING_ACTIONS_MAX`), `truncated` stated; it writes nothing. It adds no sentence and no refusal, so no word or row is needed.
+- The module header and the op map's comment name T51 and R24.
+
+**Tests.** New file `bio-plane/test/m/action-clocks/t51.test.mjs`, three tests each naming R24: (1) the counts over three actions (one `owed_by: group` with two entries, one `body`, one undetermined) with a met entry not counted, a resolved action's pending entry not counted, a viewer who sees no action counting none, and the proposals table unchanged; (2) 501 actions, 500 read, `truncated` true; (3) the op reads the viewer from the query and not from the body. One existing assertion changed: `reminders.test.mjs` (the R4 R6 ops test) pins the op key list, which now includes `clocksrunning`.
+
+**Deferred.** None.
+
+**Found in another module.** None. No other module changed.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/action-clocks/*.test.mjs`: tests 77, pass 77, fail 0. Before the change the new file did not exist; the pinned op list failed until updated, then passed.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio action-clocks`: 0 failures.
+- `checks/coverage.mjs /home/user/bio action-clocks`: 24 of 24 live ids named, 0 failures.
+- `checks/ownership.mjs /home/user/bio action-clocks tranche/T51 job/T51/action-clocks`: 0 failures.
+- `checks/run.mjs /home/user/bio`: format and architecture 0 failures; coverage 24 failures, none in action-clocks; words: no finding naming action-clocks (the failures it lists are in other modules, e.g. wizard-scripts).
+- `bio-plane/src/setup-words/build.mjs --check`: `words-unreviewed.json` reported stale or absent. Expected; the generated artifacts were not regenerated (BOB regenerates at the layer close).
+
+Size (session_01DhBxoHRd3fUcaMLx8zTL85): test runs 7, module lines 2108
