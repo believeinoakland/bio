@@ -191,8 +191,7 @@ function stepDeclared(held, detail) {
 }
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
-  detail: "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This "
-        + "holds for deactivated projects too, because their names are still cited." });
+  detail: localize("promotion.index.project_name_taken", "a project by that name already exists in your team's Civicsmith, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited.") });
 
 class Promotion {
   #record; #membership; #now; #order; #rosterOf; #roster = null;
@@ -236,19 +235,29 @@ class Promotion {
     const man = read("_history/manifest.json");
     const entries = man && Array.isArray(man.entries) ? man.entries.filter(isObj) : [];
     /* A stored file's size is known from the bytes held under any path that carries its digest. */
-    const sizes = new Map();
+    const sizes = new Map(), texts = new Map();
     for (const v of Object.values(image)) {
       const sha = typeof v === "string" ? fileDigestOf({ text: v }) : isObj(v) ? v.sha256 : null;
       const bytes = typeof v === "string" ? inlineBytesOf({ text: v }) : isObj(v) ? v.bytes : null;
       if (typeof sha === "string" && Number.isSafeInteger(bytes) && !sizes.has(sha)) sizes.set(sha, bytes);
+      if (typeof sha === "string" && typeof v === "string" && !texts.has(sha)) texts.set(sha, v);
     }
+    /* R59: the capture a revision's own `data/provenance.json` names for the document, read from the bytes that
+       revision held (the live file or the copy under the next snap key); absent when it names none. */
+    const captureOf = (files) => {
+      const f = files.find((x) => x.path === "data/provenance.json");
+      const sha = f && texts.has(f.sha256) ? (() => {
+        try { return JSON.parse(texts.get(f.sha256))?.documents?.[0]?.capture?.sha256; } catch { return null; }
+      })() : null;
+      return typeof sha === "string" && sha ? { capture_sha: sha } : {};
+    };
     const all = entries.map((e) => {
       const rec = read(`_history/promotion_${e.key}.json`);
       const written = rec && Array.isArray(rec.files) ? rec.files.filter(isObj) : [];
       const files = written.map((f) => ({ path: f.name, sha256: f.sha256 ?? null, bytes: sizes.get(f.sha256) ?? null }));
       const md = files.find((f) => f.path === "bundle.md");
       return { seq: e.seq, snapKey: e.key, kind: e.kind, author: e.author ?? null, at: e.created ?? null,
-               sha256: md ? md.sha256 : null, files };
+               sha256: md ? md.sha256 : null, ...captureOf(files), files };
     }).sort((a, b) => b.seq - a.seq);
     const live = record.readFile(bundle, "bundle.md");
     const fm = live && typeof live.text === "string" ? parseFrontmatter(live.text).data : null;
@@ -1148,9 +1157,7 @@ class Promotion {
     /* DEC-49 REGION is-machine-reopen */
     if (!who || isMachineIdentity(who))
       return refusal("MACHINE_CANNOT_REOPEN",
-        "reopening is a named member's judgement that a question the team set down has to be worked again. A "
-        + "machine credential may surface a question and pursue one, and may not overturn the team's own "
-        + "disposition. Sign in as a member.");
+        localize("promotion.index.machine_cannot_reopen", "reopening is a named member's judgement that a question the team set down has to be worked again. A machine credential may surface a question and pursue one, and may not overturn the team's own disposition. Sign in as a member."));
     /* END DEC-49 REGION is-machine-reopen */
     /* R22 */
     const why = String(reason ?? "").trim();
@@ -1181,9 +1188,7 @@ class Promotion {
       if (!m.ok) return { ...m, target };
       if (!m.value)
         return { ok: false, reason: "NOT_SET_DOWN", target, from: head.currentState, reopenable: REOPENABLE_FROM,
-                 detail: "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is "
-                       + "a member of a published or prepared case. A concluded inquiry in no case moves forward by "
-                       + "publishing a new edition rather than quietly reverting to open still wearing its conclusion." };
+                 detail: localize("promotion.index.not_set_down", "reopening picks up something the team SET DOWN (deferred or dismissed) or a finding that is a member of a published or prepared case. A concluded inquiry in no case moves forward by publishing a new edition rather than quietly reverting to open still wearing its conclusion.") };
     }
     const declared = fm.object_type ?? head.type;
     const spec = vocabFor(STATES, declared);
