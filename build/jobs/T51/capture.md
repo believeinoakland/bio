@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01Hpc4xpSYy9jXRfRGxtGfm6 · depth 2 · WORKING · handled B1
+**Status** · session_01Hpc4xpSYy9jXRfRGxtGfm6 · depth 2 · WORKING · handled B2
 
 ## J1 · COMPLETE
 
