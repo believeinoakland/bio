@@ -79,11 +79,10 @@ const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, 
 test("R11, R5: every op of local-facts' and filing-templates' maps is in the route map and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = [...Object.keys(localFactsOps(null, u, null)), ...Object.keys(filingTemplatesOps(null, u, null))];
-  /* (T45; K2811, plan rule 4 (11)) local-facts' four new ops of member-drafted rules (its R10–R14); (T46; N935) and
-     `grouprules` (its R12), now in its own map, which R39 spreads */
-  assert.deepEqual(Object.keys(localFactsOps(null, u, null)), ["factconfirm", "factstatus", "factsdue", "ruledraft", "ruleconfirm",
-                                                               "rulewithdraw", "ruleoffer", "grouprules"]);
-  assert.ok(ops.includes("templates") && ops.includes("templatedraft") && ops.length === 21, ops.join());
+  /* K3268 (T51): the ops are read from the two owners' own maps, never listed here: local-facts' (its R10–R15, `grouprules`
+     and `rulefields` among them) and filing-templates' (`templates`, which is its own, K991, among them) */
+  assert.ok(ops.length > 0 && ops.includes("rulefields") && ops.includes("templatebyhandle"), "R66: the T51 reads are in the owners' maps");
+  assert.ok(Object.keys(filingTemplatesOps(null, u, null)).includes("templates"), "op=templates is filing-templates'");
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);

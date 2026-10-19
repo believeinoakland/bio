@@ -40,7 +40,7 @@ test("R6: the Worker's module exports `default { fetch }` and `Store`, and nothi
   assert.equal(entry.default.fetch.limits, PLANE_LIMITS, "the fetch is control-plane's door (`makeFetch`)");
 });
 
-test("R6: in the runtime, the door answers through the hooks: the version, the setup page, a public read bound to the plane, the bootstrap report and an admitted op's handler", async () => {
+test("R6: in the runtime, the door answers through the hooks: the version, the interface page at the root, a public read bound to the plane, the bootstrap report and an admitted op's handler", async () => {
   const v = await mf.dispatchFetch("http://x/version");
   assert.equal(await v.text(), "9.9.9\n");
   const page = await mf.dispatchFetch("http://x/");
@@ -95,12 +95,16 @@ test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names th
   assert.deepEqual(cfg.compatibility_flags, ["nodejs_compat"]);
 });
 
-test("R7: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry", () => {
+test("R7, R64: `package.json`'s `test` runs the module tests and `test:system` the old system suites; no other `test:*` entry; the build holds no render step", () => {
   const pkg = JSON.parse(readFileSync(join(PLANE, "package.json"), "utf8"));
   assert.equal(pkg.scripts.test, 'node --test "test/m/**/*.test.mjs"');
   assert.equal(pkg.scripts["test:system"], 'node --test "test/system/**/*.test.mjs"');
   assert.deepEqual(Object.keys(pkg.scripts).filter((k) => k.startsWith("test")), ["test", "test:system"]);
-  for (const k of ["build", "deploy", "dev", "embed:sign"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
+  /* R64 (T51-125; K3832): the build holds no render step: `build` is the bundle alone and `embed:sign` is gone; the others stay */
+  assert.equal(pkg.scripts.build, "node scripts/build-plane.mjs");
+  assert.equal(Object.hasOwn(pkg.scripts, "embed:sign"), false);
+  assert.equal(Object.values(pkg.scripts).some((v) => /embed:sign|embed-signpage/.test(v)), false);
+  for (const k of ["deploy", "dev"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
 });
 
 test("R7 (T39; N810, K2346): `devDependencies` hold `pdfjs-dist` at an exact version, with its lock, so doc-clean's R5 pdf.js oracle runs wherever the module tests run", () => {

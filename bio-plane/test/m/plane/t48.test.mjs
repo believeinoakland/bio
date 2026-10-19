@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { relative } from "node:path";
 import { store, deployed, GATE_FLAGS, GATE_SET, GATE_PARTS, disclosed } from "./fixture.mjs";
-import { MODULE_MAPS, ownMaps } from "./maps.mjs";
+import { MODULE_MAPS, ownMaps, servedThroughDoor } from "./maps.mjs";
 import { assistantGateOf, askOp, doorHeaders, READ_PASSAGE_MAX } from "../../../src/plane/ask.mjs";
 import { frontDoorPointer } from "../../../src/plane/wiring.mjs";
 import { transcriberOf } from "../../../src/plane/transcribe.mjs";
@@ -414,27 +414,17 @@ test("R55 (T48): the Worker's ask arm passes the door's trace and member ref on 
 
 /* Instants and minted ids differ between two objects; everything else must not. */
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
-/* the ops T48's owners add to the maps this module spreads: action-replies R10 (`actionreplyquoting`), filings R59
-   (`filingread`), action-holds R16 (`pressurefor`), ai-use R14 (`aiuseovertime`) */
-const T48_OPS = ["actionreplyquoting", "filingread", "pressurefor", "aiuseovertime", "updatenotice", "updatestart", "updatelater", "updateskip"];
+/* T48's new ops are served by these owners' maps (action-replies R10, filings R59, action-holds R16, ai-use R14, instance-setup's
+   update ops): the ops are read from the owners' own maps (K3268), never listed here. */
+const T48_OWNERS = ["action-replies", "filings", "action-holds", "ai-use", "instance-setup"];
 
 test("R5 (T48; K3280, K3282, K3266; action-replies R10, filings R59, action-holds R16, ai-use R14): the route map is re-pinned to T48's ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; control: an op no map serves is in none", async () => {
   const u = new URL("http://do/");
   const x = await store(), twin = await store();
   const keys = Object.keys(x.s.routes(u, null));
-  for (const op of T48_OPS) {
-    const owner = ownMaps(x.ctx, u, null, x.env).find(([, m]) => Object.hasOwn(m, op));
-    assert.ok(owner, `no module's map serves ${op}`);
-    assert.ok(keys.includes(op), `the route map lacks ${op}`);
-    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&project=PROJ-2026-none&target=ACT-2026-none&filing=FIL-2026-none&owner=member:nobody`;
-    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
-    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
-    let direct;
-    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
-    assert.equal(res.status, 200, `${op} (${owner[0]})`);
-    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
-  }
-  assert.deepEqual(T48_OPS.map((op) => ownMaps(x.ctx, u, null, x.env).filter(([, m]) => Object.hasOwn(m, op)).length), [1, 1, 1, 1, 1, 1, 1, 1],
-                   "each is served by exactly one module's map");
+  const { served, failed } = await servedThroughDoor(x, twin, T48_OWNERS);
+  assert.deepEqual(failed, []);
+  const owners = (op) => ownMaps(x.ctx, u, null, x.env).filter(([, m]) => Object.hasOwn(m, op)).length;
+  assert.deepEqual(served.filter(([op]) => owners(op) !== 1), [], "each is served by exactly one module's map");
   assert.equal(keys.includes("zzprobe48"), false);
 });

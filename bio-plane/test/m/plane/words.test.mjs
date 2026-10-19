@@ -5,25 +5,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { SCREENS } from "../../../src/plane/screens.mjs";
+import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 
-/* the keys this module reads, by where they are drawn: its screens' titles and purposes, and its answers' details */
-const SCREEN_KEYS = {
-  queue: ["screen.queue.name", "screen.queue.purpose"],
-  finder: ["screen.finder.name", "screen.finder.purpose"],
-  subjects: ["screen.people.purpose"],
-  themes: ["screen.theme.purpose"],
-  projects: ["screen.projects.purpose"],
-  review: ["screen.held.purpose"],
-  members: ["screen.members.name", "screen.members.purpose"],
-  add: ["screen.capture.name", "screen.capture.purpose"],
-  bundle: ["screen.document.name", "screen.document.purpose"],
-  inquiry: ["screen.question.name", "screen.question.purpose"],
-  project: ["screen.project.name", "screen.project.purpose"],
-  action: ["screen.action.name", "screen.action.purpose"],
-  "review-copy": ["screen.review-copy.name", "screen.review-copy.purpose"],
-  "published-case": ["screen.published.name", "screen.published.purpose"],
-};
+/* the keys this module reads: its answers' details. (T51; R24) The plane draws no screen title or purpose: the 26 `screen.*`
+   keys it once read for `plane/screens.mjs` left with that file; a surface reads a screen's own keys itself. */
 const ANSWER_KEYS = [
   "ai.draft.planunread", "ai.draft.recordsunread", "ai.keepaway.unread", "refusal.AGENT_WORKER_UNBOUND",
   "refusal.AGENT_WORKER_SILENT", "refusal.ASK_NOT_A_MEMBER", "refusal.NO_SUCH_NOTE", "refusal.PASSAGE_TOO_LONG",
@@ -35,7 +20,7 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
   .modules.plane.reads;
 
 test("R56 (T49; K3366): every key the plane reads is one the words list holds (`hasWord`), and each is one of the keys `words-reads.json` lists for plane; control: a key no list holds is not", () => {
-  const keys = [...Object.values(SCREEN_KEYS).flat(), ...ANSWER_KEYS];
+  const keys = [...ANSWER_KEYS];
   for (const k of keys) {
     assert.equal(hasWord(k), true, `${k} is held by the words list`);
     assert.ok(READS.includes(k) || RULED.includes(k), `${k} is a key words-reads.json lists for plane, or one BOB ruled (K3381)`);
@@ -43,16 +28,11 @@ test("R56 (T49; K3366): every key the plane reads is one the words list holds (`
   assert.equal(hasWord("zz.no.such.key"), false, "negative control: an unknown key is not held");
 });
 
-test("R56 (T49; K3366; setup-words R11): the screens registry draws each keyed title and purpose as `word` gives it, filled with no variables; a screen with no key keeps its own words", () => {
-  const byId = (id) => SCREENS.find((s) => s.id === id);
-  for (const [id, keys] of Object.entries(SCREEN_KEYS)) {
-    const s = byId(id);
-    assert.ok(s, `the registry holds ${id}`);
-    const nameKey = keys.find((k) => k.endsWith(".name")), purposeKey = keys.find((k) => k.endsWith(".purpose"));
-    if (nameKey) assert.equal(s.title, word(nameKey), `${id} title`);
-    assert.equal(s.purpose, word(purposeKey), `${id} purpose`);
+test("R56 (T49; K3366; R24, T51): the plane reads no `screen.*` key: the one registry carries each screen's own keys for the surfaces that draw them", () => {
+  for (const s of SCREEN_REGISTRY) {
+    assert.equal(hasWord(`screen.${s.id}.name`), true, `${s.id} name`);
+    assert.equal(s.name, word(`screen.${s.id}.name`), `${s.id} name by key`);
   }
-  assert.equal(byId("record").title, "Your accountability record", "unkeyed: stays in source");
 });
 
 test("R56 (T49; K3366; setup-words R11): each answer's detail is `word` of its key, through the plane's ask path; the passage limit is filled with its maximum; control: a missing placeholder throws WORD_VAR_MISSING and an unknown key throws UNKNOWN_WORD", () => {

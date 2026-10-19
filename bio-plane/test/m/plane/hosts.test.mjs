@@ -9,6 +9,9 @@ import { store } from "./fixture.mjs";
 import { ownHostsOf } from "../../../src/plane/wiring.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../../../src/capture-sources/credentials.mjs";
+import { CAPTURE_CREDENTIAL_CHECKS } from "../../../src/capture-sources/credentials.mjs";
+/* the refusal for a credential on the group's own host: capture-sources' check C-105.12, named by its declaration (K3962) */
+const OWN_HOST = Object.keys(CAPTURE_CREDENTIAL_CHECKS).find((c) => CAPTURE_CREDENTIAL_CHECKS[c].check === "C-105.12");
 
 const PLANE_AT = "https://bio-oak.acct.workers.dev";
 const claim = (address) => ({ domain_claim: { domain: "oakwatch.example.org", instance_address: address } });
@@ -39,9 +42,9 @@ test("R2 (F16, K2038; capture R73, acquisition R42, capture-sources R55): a stor
                           VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   const supply = (host) => captureCredentialsOf(x.ctx).credentialSupply({ kind: "other", host, secret: "s", scope: "member", by: "ann" });
   const own = await supply("pdf-worker.acct.workers.dev");
-  assert.equal(own.reason ?? own.code, "CAPTURE_CREDENTIAL_OWN_HOST", JSON.stringify(own).slice(0, 300));
+  assert.equal(own.reason ?? own.code, OWN_HOST, JSON.stringify(own).slice(0, 300));
   const site = await supply("oakwatch.example.org");
-  assert.notEqual(site.reason ?? site.code, "CAPTURE_CREDENTIAL_OWN_HOST", "the claimed domain is the group's website, not its Civicsmith");
+  assert.notEqual(site.reason ?? site.code, OWN_HOST, "the claimed domain is the group's website, not its Civicsmith");
   const real = globalThis.fetch, fetched = [];
   globalThis.fetch = async (u) => { fetched.push(String(u instanceof Request ? u.url : u)); return new Response("x"); };
   try {
@@ -57,7 +60,7 @@ test("R2 negative control (F16 low, capture-sources R65): a store with no claim 
   x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                           VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   const r = await captureCredentialsOf(x.ctx).credentialSupply({ kind: "other", host: "pdf-worker.acct.workers.dev", secret: "s", scope: "member", by: "ann" });
-  assert.notEqual(r.reason ?? r.code, "CAPTURE_CREDENTIAL_OWN_HOST");
+  assert.notEqual(r.reason ?? r.code, OWN_HOST);
 });
 
 test("R5 (K2042; acquisition R43): the route map carries `coarchiveset` and `coarchivestate` on acquisition's one instance: on by default, set by an administrator, refused to anyone else, as acquisition answers called directly", async () => {

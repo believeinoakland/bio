@@ -87,14 +87,13 @@ import { queueProducersOf } from "../queue-producers/index.mjs";
 import { machineryProducersOf } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
-import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
+import { wizardScriptsOf, wizardScriptsOps, SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { translationsOf, translationsOps } from "../translations/index.mjs";
 import { instanceSetupOf, instanceSetupOps, disclosureReadOf, DISCLOSURE_READER } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
 import { promotionStep } from "../store-door/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
-import { SCREENS } from "./screens.mjs";
 import { eventsOf, eventsOps } from "../events/index.mjs";
 import { linesOf, linesOps } from "../lines/index.mjs";
 import { moneyOf, moneyOps } from "../money/index.mjs";
@@ -259,8 +258,9 @@ export class Store extends DurableObject {
        `ceilingRefusal`: answers judges a limit through ai-use's `useCheck` on its own host (its R30). */
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx),
-      /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
-      screens: SCREENS });
+      /* R24 (T51; K3807): the one registry, wizard-scripts' `SCREEN_REGISTRY` (the design's), for its explain read; the plane
+         carries none of its own. */
+      screens: SCREEN_REGISTRY });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
     reevaluationOf(ctx, { env, acceptedWork, calculations });
@@ -383,7 +383,8 @@ export class Store extends DurableObject {
     const filingTemplates = filingTemplatesOf(ctx);
     /* R39 (K2858): filings handed the plane's one action-holds instance, the project roster (migrated in R3's pass,
        so its second-approval read sees the roster), case-check and accepted-work. */
-    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation,
+    /* K4051 (filings R64): handed `env`, so its registration of the minutes comparisons with case-inputs runs in production. */
+    filingsOf(ctx, { env, actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation,
                      actionHolds, projectRoster: projectRosterOf(ctx), caseCheck, acceptedWork });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the

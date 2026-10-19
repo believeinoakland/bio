@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { relative } from "node:path";
 import { store } from "./fixture.mjs";
-import { MODULE_MAPS, ownMaps } from "./maps.mjs";
+import { MODULE_MAPS, ownMaps, servedThroughDoor } from "./maps.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { instanceSetupOf, ASSISTANT_DISCLOSURE } from "../../../src/setup.mjs";
 import { caseInputsOf, caseInputsOps } from "../../../src/case-inputs/index.mjs";
@@ -92,28 +92,18 @@ test("R45 (T47; N908, N961; case-inputs R16, action-records R15): case-inputs' m
   assert.equal(keys.includes("statementackzz"), false);
 });
 
-/* T47's new ops served through owners' maps (op-declarations R57–R59, R61; tasks R19; R45's list), each to be reached
-   through the door. `signintrace` is the Worker door's own (control-plane R87), never a store route, so not listed. */
-const T47_OPS = ["projectlist", "projectquestions", "drawquestion", "projectbarset", "monitorset", "peopledirectory",
-  "unlock", "reauth", "passwordresetlink", "passwordresetlook", "passwordreset",
-  "grouplogoset", "grouplanguagesset", "grouplanguages", "signrequest"];
+/* T47's new ops are served by these owners' maps (op-declarations R57–R59, R61; tasks R19; R45's list): the ops are read from
+   the owners' own maps (K3268), never listed here. `signintrace` is the Worker door's own (control-plane R87), never a store
+   route. */
+const T47_OWNERS = ["project-roster", "citation", "basis-versions", "strength", "monitoring", "people", "credentials", "instance-setup",
+                    "store-door"];
 
 test("R45, R48 (T47; op-declarations R57–R59, R61; tasks R19): the route map is re-pinned to T47's new ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; an op no map serves is no route", async () => {
   const u = new URL("http://do/");
   const x = await store(), twin = await store();
   const keys = Object.keys(x.s.routes(u, null));
-  for (const op of T47_OPS) {
-    const owner = ownMaps(x.ctx, u, null, x.env).find(([, m]) => Object.hasOwn(m, op));
-    assert.ok(owner, `no module's map serves ${op}`);
-    assert.ok(keys.includes(op), `the route map lacks ${op}`);
-    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&project=PROJ-2026-none&case=CASE-2026-none&edition=1`;
-    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
-    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
-    let direct;
-    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
-    assert.equal(res.status, 200, `${op} (${owner[0]})`);
-    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
-  }
+  const { failed } = await servedThroughDoor(x, twin, T47_OWNERS);
+  assert.deepEqual(failed, []);
   assert.equal(keys.includes("signintrace"), false, "the sign-in trace is the Worker door's, no store route");
   assert.equal(keys.includes("zzprobe47"), false);
 });
