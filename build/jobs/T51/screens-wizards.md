@@ -31,3 +31,7 @@ TWO THINGS FOR BOB: (1) DEPENDENCY: templatebyhandle is not in op-declarations' 
 Merged `tranche/T51` (op-declarations now declares `templatebyhandle`; no local stand-in was ever committed). Module suite against the real providers: 59 pass, 0 fail. Checks: words (module and whole-repo grep for this module) 0 findings; format, architecture, coverage 19/19, ownership 0 failures; `setup-words/build.mjs --check` reports only the expected stale-rows note, naming an op-declarations row. R19 names `screen.guide.draft.template` (K4069), as used.
 
 Size (session_01M31mHwuWGwKStqD3B57zBx): test runs 13, module lines 888
+
+## J2 · COMPLETE · re B3
+
+CHANGE B3 processed: tranche/T51 merged, suite against the real providers 59 pass, 0 fail (templatebyhandle is now declared). words 0 in the module, format, architecture, coverage 19/19, ownership 0 failures; setup-words --check shows only the expected stale-rows note (an op-declarations row). Pushed. Nothing still fails.
