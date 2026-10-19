@@ -22,7 +22,7 @@ function actionFake(log, { facts = { action_clock_overdue: { bound: 20, truncate
     log.push(a);
     const homes = (s) => (typeof a.homesOf === "function" ? a.homesOf(s) : { state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
     const opts = (s) => (typeof a.optionsOf === "function" ? a.optionsOf(s) : []);
-    const door = { id: "actioncorrespond", label: "Record a reply", weight: "single" };
+    const door = { id: "actioncorrespond", label: "the door option", weight: "single" };
     return answered.set(a, { facts, items: [
       { id: "CONDITION::action-clock-overdue::ACT-1::0", class: "CONDITION", kind: "action-clock-overdue", case: homes(["ACT-1"]),
         due: "2026-08-20", subject: { kind: "action", id: "ACT-1", entry: 0 }, summary: "Noticed: no reply recorded by 2026-08-20",
