@@ -104,7 +104,7 @@ async function promoteReading(id, captureSha, ref, token) {
   const doc = { file, locator: loc, retrieved: C, authority_state: "undetermined",
     authority_basis: `a test fixture: no authority was asserted and none is determined; recorded ${C}`,
     origin: { kind: "named_request" },
-    capture: { method: "bio-plane acquire, https fetch, hashed at receipt", grade: "B", actor_class: "session",
+    capture: { method: "fixture-capture", grade: "B", actor_class: "session",
                sha256: captureSha, encoding: "binary", bytes: 10 },
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: C,
                entities: [{ ref, kind: "ordinance", key: ref.split(":")[1], label: `Ordinance ${ref}` }] } };
