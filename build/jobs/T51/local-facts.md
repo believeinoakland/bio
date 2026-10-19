@@ -1,6 +1,6 @@
 # local-facts (T51)
 
-**Status** · session_01ST4CngevnjWcyxth5PJjXe · depth 2 · WORKING · handled B1
+**Status** · session_01ST4CngevnjWcyxth5PJjXe · depth 2 · COMPLETE · handled B1
 
 ## Completion (T51-158)
 
