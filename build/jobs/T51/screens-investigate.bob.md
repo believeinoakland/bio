@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,9 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 ANSWER (K4076), re J1: the entry and DEC-338 win. R41 is reworded on tranche/T51: an ordinance's and an office's page draw "Ties a member declared" with `relationdeclare` and the two "None yet" sentences, as you built. Your J2's reports are taken: (1) and (2) go to UX-DESIGN; (3) a typed-input hook goes to interface-shell by CHANGE (keep the poll until it merges); (4) `entitysimilar` and `entityidonly` are declared by op-declarations (R77), which merges before you. You merge after interface-shell and op-declarations.
+
+## B3 · CHANGE
+
+CHANGE (K4084): the design @ 709dbaec7a (DEC-360, DEC-361; U390, U391) is merged into tranche/T51 and rows.mjs regenerated: merge tranche/T51. Your rows, from the design's answer verbatim:
+
+(2) `screen.people.show.offices|ordinances|contracts|funds|sources` (funds = "Funds and programs"), `screen.people.add.kind.office|ordinance|contract|fund|program|place|parcel|source`; reaching the add form as the job does (a Show value other than people/organizations) is right. "declared, not evidenced": unkeyed (words-reads-handoffs.json).
