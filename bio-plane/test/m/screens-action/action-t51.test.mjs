@@ -36,16 +36,16 @@ test("R26: control: an empty question is refused in place and sends nothing; an 
 
 test("R27: a member who may read and not act reads the kit's sentence with the screen's noun on `action` and sees no act; every read is still made; control: a member who may act reads none", async () => {
   const p = await open(ROUTES.action, { ...DATA_PLANE, whoami: ok(READER) });
-  assert.ok(text(p).includes(W("shell.readonly", { noun: W("screen.action.name") })), "the sentence");
+  assert.ok(text(p).includes(W("shell.readonly", { noun: W("shell.readonly.noun.action") })), "the sentence");
   assert.deepEqual(ops(p), [], "none of the module's acts is drawn");
   for (const op of ["action", "filingsfor", "pressurefor", "templatesforaction"]) assert.ok(p.byOp(op).length >= 1, `${op} is read`);
   assert.ok(main(p).querySelector("details.mk-details") === null && p.doc.getElementById("action-question") === null, "no field of an act");
   const q = await open(ROUTES.action, DATA_PLANE);
-  assert.ok(!text(q).includes(W("shell.readonly", { noun: W("screen.action.name") })));
+  assert.ok(!text(q).includes(W("shell.readonly", { noun: W("shell.readonly.noun.action") })));
   assert.ok(ops(q).length > 5, "she sees her acts");
   for (const id of ["plan", "request", "matter", "start-send"]) {
     const s = await open(ROUTES[id], { ...DATA_PLANE, whoami: ok(READER) });
-    assert.ok(text(s).includes(W("shell.readonly", { noun: W(`screen.${id}.name`) })), `${id} follows the same rule`);
+    assert.ok(text(s).includes(W("shell.readonly", { noun: W(`shell.readonly.noun.${id}`) })), `${id} follows the same rule`);
   }
 });
 

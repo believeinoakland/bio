@@ -94,7 +94,10 @@ export const hold = Object.freeze({
         + cs.field("hold-press", "screen.hold.press.label", { rec: true, max: 500, help: "screen.hold.press.help1" }) + helpOf("screen.hold.press.help2")
         + '<div class="mk-acts">' + cs.act("pressurerecord", {}) + helpPress + "</div>") : "";
 
-      const release = cs.sec("screen.hold.release", '<p class="mk-note">' + cs.w("screen.hold.release.form") + "</p>");
+      // releasing a hold: the place, the member's reason; what will start being deleted again is said first
+      const release = cs.sec("screen.hold.release", '<p class="mk-note">' + cs.w("screen.hold.release.form") + "</p>"
+        + (options.length ? cs.field("hold-release-why", "screen.hold.release.reason", { rec: true, max: 500, help: "screen.hold.release.reason.help" })
+          + '<div class="mk-acts">' + cs.act("actionholdrelease", {}) + "</div>" : ""));
       return whereSec + place + notice + press + release;
     });
   },
@@ -123,6 +126,17 @@ export const hold = Object.freeze({
         if (!account || !project) return null;
         const at = new Date(cs.now()).toISOString().slice(0, 10);
         return { body: { project: project, pressure: { kind: cs.value("hold-press-kind") || "other", note: account.slice(0, 500) }, account: account, at: at } };
+      },
+      rereads: ["due"],
+    },
+    {
+      // R32: "Release the hold, with a reason": at the place chosen; any member who can see it, no approval.
+      op: "actionholdrelease", reasonField: "reason",
+      send: function (view, el, cs) {
+        let place = null;
+        try { place = JSON.parse(String(cs.value("hold-for") || "")); } catch (e) { place = null; }
+        const reason = String(cs.value("hold-release-why") || "").trim();
+        return place ? { body: Object.assign({}, place, { reason: reason }) } : null;
       },
       rereads: ["due"],
     },
@@ -172,7 +186,7 @@ export const holdNotice = Object.freeze({
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.holdnotice.sent.heading") + '"><span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w("screen.holdnotice.outward.1") + " " + cs.w("screen.holdnotice.outward.2") + "</p>"
       + cs.field("hold-sent-at", "screen.start-send.sentat", { type: "date" })
-      + cs.field("hold-sent-how", "screen.start-send.how")
+      + cs.choice("hold-sent-how", "screen.start-send.how", ["email", "message", "person", "other"].map(function (k) { return [k, "screen.holdnotice.how." + k]; }))
       + cs.field("hold-account", "screen.holdnotice.account.label", { area: true, rec: true, help: "screen.holdnotice.account.help" })
       + '<div class="mk-acts">' + cs.act("holdnoticesent", { tone: "primary" }) + helpSent + "</div></div>");
     const not = cs.sec("screen.holdnotice.not.heading", '<p class="mk-note">' + cs.w("screen.holdnotice.not.records") + " " + cs.w("screen.holdnotice.not.nomember") + "</p>");
@@ -204,7 +218,7 @@ export const holdNotice = Object.freeze({
         const at = String(cs.value("hold-sent-at") || "").trim();
         const account = String(cs.value("hold-account") || "").trim();
         if (!place || !/^\d{4}-\d{2}-\d{2}$/.test(at) || !account) return null;
-        return { body: { place: place, at: at, medium: String(cs.value("hold-sent-how") || "").trim() || "email", account: account } };
+        return { body: { place: place, at: at, medium: String(cs.value("hold-sent-how") || "email"), account: account } };
       },
       rereads: [],
     },

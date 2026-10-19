@@ -155,7 +155,7 @@ export const action = Object.freeze({
       const asked = view.ui.asked || null;
       const receipt = asked && asked.inquiry
         ? cs.row("", cs.w("screen.action.ask.done", { project: ownProject && ownProject.title ? ownProject.title : "" }),
-          aLink("question", asked.inquiry, "screen.question.name")) : "";
+          aLink("question", asked.inquiry, "screen.action.openquestion")) : "";
       const askForm = '<p class="mk-small">' + cs.w("action.noreply.question.help") + "</p>"
         + cs.field("action-question", "action.noreply.question.label", { max: 500, rec: true, help: "action.noreply.question.field.help" })
         + '<div class="mk-acts">' + ask + helpAsk + "</div>";
@@ -242,7 +242,7 @@ export const action = Object.freeze({
         const from = g.origin === "group"
           ? cs.w("screen.action.templates.approved", { member: P.who(g.approved_by), date: { html: g.approved_at ? cs.date(g.approved_at) : "" } }) : cs.w("screen.action.profilefact.from");
         return (Array.isArray(g.items) ? g.items : []).map(function (it) {
-          return cs.row("", cs.esc(it.route || "") + '<span class="meta">' + (it.expect ? cs.esc(it.expect) + " · " : "") + (it.citation ? cs.esc(it.citation) + " · " : "") + from + "</span>", "", "");
+          return cs.row("", cs.esc(it.route || "") + '<span class="meta">' + (it.expect ? cs.w("screen.action.guide.expect", { expectation: it.expect }) + " · " : "") + (it.citation ? cs.w("screen.action.guide.source", { citation: it.citation }) + " · " : "") + from + "</span>", "", "");
         }).join("");
       }).join("");
       const teamGuides = guides.filter(function (g) { return g.origin === "group"; }).length;

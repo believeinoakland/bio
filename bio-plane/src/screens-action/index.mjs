@@ -44,9 +44,9 @@ const EXTRA = {
   actionnew: ["screen.request.name", "screen.request.purpose", "screen.capture.saw.when", "screen.action.dates", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined",
     "screen.start-send.rests", "screen.plan.matter.n", "screen.action.kind.other", "refusal.ACTION_KIND_UNKNOWN", "refusal.ACTION_BASIS_REFUSED", "refusal.COUNTERPARTY_REFUSED",
     "refusal.CLOCK_REFUSED", "screen.start-send.draft.machine", "state.empty"],
-  hold: ["screen.action.pressure.kind", "screen.action.pressure.legal", "screen.action.pressure.retaliation", "screen.action.pressure.discrediting", "screen.action.pressure.other",
+  hold: ["act.actionholdrelease.label.hold", "act.actionholdrelease.does", "screen.action.pressure.kind", "screen.action.pressure.legal", "screen.action.pressure.retaliation", "screen.action.pressure.discrediting", "screen.action.pressure.other",
     "screen.start-send.draft.machine"],
-  holdnotice: ["screen.start-send.sentat", "screen.start-send.how", "screen.start-send.outward", "screen.start-send.draft.template", "screen.start-send.draft.machine", "shell.unavailable.nothing"],
+  holdnotice: ["screen.holdnotice.how.email", "screen.holdnotice.how.message", "screen.holdnotice.how.person", "screen.holdnotice.how.other", "screen.start-send.sentat", "screen.start-send.how", "screen.start-send.outward", "screen.start-send.draft.template", "screen.start-send.draft.machine", "shell.unavailable.nothing"],
   counsel: ["screen.person.kind.name", "screen.people.kind.organization"],
   "dash-action": ["home.needsyou.title", "screen.action.kind.other", "screen.plan.matter.n", "screen.actionnew.name", "screen.queue.reminder.on", "act.reminderanswer.label.dash-action",
     "act.taskresolve.label.dash-action", "act.filingapprove.label.dash-action", "act.actioncreate.label.dash-action", "act.reminderanswer.does", "act.taskresolve.does"],
@@ -74,8 +74,9 @@ const wordsOf = (s) => {
   const id = s.id;
   const own = SCREEN_WORDS.filter((k) => k.startsWith(`screen.${id}.`) || (BORROWS[id] || []).some((p) => k.startsWith(p))
     || (SHARED_OWN[id] || []).includes(k));
+  const noun = s.acts.length ? `shell.readonly.noun.${id}` : null;
   const acts = s.acts.flatMap((a) => [a.label || `act.${a.op}.label.${id}`, OWED.includes(a.op) ? `act.owed_${a.op}.does` : `act.${a.op}.does`]);
-  return Object.freeze([...new Set([...SHARED, `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...own])]);
+  return Object.freeze([...new Set([...SHARED, ...(noun ? [noun] : []), `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...own])]);
 };
 
 /** The screens, in the order a member meets them: the plan, starting and sending, a records request, one action, one matter, the

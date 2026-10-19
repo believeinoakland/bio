@@ -43,7 +43,7 @@ export const counsel = Object.freeze({
     return head + cs.state("action", function (a) {
       const purpose = view.ui["choice:cp-purpose"] || "claim";
       const defence = purpose === "defence";
-      const who = cs.sec("screen.counsel.who.heading", cs.field("cp-name", "screen.person.kind.name") + cs.field("cp-org", "screen.people.kind.organization")
+      const who = cs.sec("screen.counsel.who.heading", cs.field("cp-name", "screen.counsel.who.name") + cs.field("cp-org", "screen.counsel.who.org")
         + '<p class="mk-note">' + (P.required(a) ? cs.w("screen.counsel.who.required") : cs.w("screen.counsel.who.optional")) + "</p>"
         + cs.choice("cp-purpose", "screen.counsel.purpose.label", [["claim", "screen.counsel.purpose.claim"], ["defence", "screen.counsel.purpose.defense"]], { acts: {}, value: "claim" })
         + twoHelp("screen.counsel.purpose.help1") + twoHelp("screen.counsel.purpose.help2")

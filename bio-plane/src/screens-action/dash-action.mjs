@@ -68,7 +68,9 @@ export const dashAction = Object.freeze({
       const noreply = theirs.filter(function (x) { const c = P.nextClock(x.v); return c && String(c.date) < today; });
       // the status readings: each the count of the rows below that hold the fact; none drawn at zero
       const reading = function (key, n, change) { return n ? cs.reading({ label: key, value: String(n), change: change || null }) : ""; };
-      const tiles = reading("screen.dash-action.tile.clocks", running.length) + reading("screen.dash-action.tile.ours", ours.length)
+      const oursDay = ours.map(function (x) { const c = P.nextClock(x.v); return c ? String(c.date) : ""; }).filter(Boolean).sort()[0] || "";
+      const tiles = reading("screen.dash-action.tile.clocks", running.length, week.length ? { key: "screen.dash-action.tile.dueweek", fills: { n: String(week.length) } } : null)
+        + reading("screen.dash-action.tile.ours", ours.length, oursDay ? { key: "screen.dash-action.tile.dueday", fills: { day: { html: cs.date(oursDay) } } } : null)
         + reading("screen.dash-action.tile.theirs", theirs.length, noreply.length ? { key: "screen.dash-action.tile.noreply", fills: { n: String(noreply.length) } } : null);
       const status = tiles ? '<div class="mk-tiles">' + tiles + "</div>" : "";
 
@@ -112,7 +114,7 @@ export const dashAction = Object.freeze({
         if (x.whose === "theirs") return cs.w("screen.dash-action.next.record");
         return "";
       };
-      const table = move.length ? cs.sec("screen.dash-action.every.heading", '<table class="mk-table"><thead><tr><th>' + cs.w("screen.action.kind.other") + "</th><th>"
+      const table = move.length ? cs.sec("screen.dash-action.every.heading", '<table class="mk-table"><thead><tr><th>' + cs.w("screen.dash-action.col.action") + "</th><th>"
         + cs.w("screen.dash-action.col.to") + "</th><th>" + cs.w("screen.dash-action.col.whose") + "</th><th>" + cs.w("screen.dash-action.col.clock") + "</th><th>"
         + cs.w("screen.dash-action.col.next") + "</th></tr></thead><tbody>" + move.map(function (x) {
           const kindName = P.kindWord(cs, x.v.kind || "other", false, voc.action_kind_labels);

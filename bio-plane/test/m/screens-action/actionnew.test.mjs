@@ -142,8 +142,8 @@ test("R29: `request` leads to the composer for any other kind, in both of its st
 
 test("R27: a member who may read and not act is told so and sees none of the composer's acts", async () => {
   const p = await open(ROUTES.actionnew, { ...PLANE, whoami: ok(READER) });
-  assert.ok(text(p).includes(W("shell.readonly", { noun: W("screen.actionnew.name") })), "the kit's read-only sentence, the screen's name its noun");
+  assert.ok(text(p).includes(W("shell.readonly", { noun: W("shell.readonly.noun.actionnew") })), "the kit's read-only sentence, the screen's name its noun");
   assert.deepEqual(ops(p), []);
   const q = await open(ROUTES.actionnew, PLANE);
-  assert.ok(!text(q).includes(W("shell.readonly", { noun: W("screen.actionnew.name") })), "control: a member who may act reads no such sentence");
+  assert.ok(!text(q).includes(W("shell.readonly", { noun: W("shell.readonly.noun.actionnew") })), "control: a member who may act reads no such sentence");
 });

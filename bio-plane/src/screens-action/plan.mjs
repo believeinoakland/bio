@@ -70,7 +70,7 @@ export const plan = Object.freeze({
           }
         }
         const who = function (by) { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? cs.w("member.founder.unnamed") : cs.esc(id); };
-        return ro + title + cs.sec("screen.plan.list", cs.sheet(live.concat(closed).map(function (x) {
+        return ro + title + (v.truncated ? '<p class="mk-note">' + cs.w("screen.plan.list.more") + "</p>" : "") + cs.sec("screen.plan.list", cs.sheet(live.concat(closed).map(function (x) {
           const st = ["open", "paused", "closed"].includes(x.state) ? x.state : "closed";
           return cs.row("", '<a class="cs-ref" href="/app/plan/' + encodeURIComponent(x.id) + '" data-nav>' + cs.esc(x.title || x.id) + "</a>"
             + '<span class="meta">' + cs.w("screen.plan.state." + st) + (x.opened_at && x.opened_by ? " · " + cs.w("screen.plan.opened", { date: { html: cs.date(x.opened_at) }, name: { html: who(x.opened_by) } }) : "") + "</span>", "", "");

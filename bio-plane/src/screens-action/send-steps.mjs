@@ -68,7 +68,7 @@ export function readFiling(cs, view, filing) {
 /** R27: the kit's read-only sentence for a member who may read and not act, the screen's own name its noun (`shell.readonly`,
  *  `interface-shell` R94); "" for a member who may act. */
 export function readOnly(cs, noun) {
-  return typeof cs.readonly === "function" ? cs.readonly(noun) : "";
+  return typeof cs.readonly === "function" ? cs.readonly(String(noun).replace(/^screen\.(.+)\.name$/, "shell.readonly.noun.$1")) : "";
 }
 
 /** R28: a kind in its words, `screen.action.kind.<kind>` (or `screen.start-send.kind.<kind>` with `lower`), else the profile's

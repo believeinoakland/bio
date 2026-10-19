@@ -41,6 +41,16 @@ test("R32: placing the hold sends the place chosen and the reason, any projects 
   said(p, "screen.hold.release");
 });
 
+test("R32: releasing a hold is drawn on `hold`: the place, the member's reason in `screen.hold.release.reason`, confirmed because it cannot be undone", async () => {
+  const p = await open(ROUTES.hold, { ...DATA_PLANE, actionholdrelease: ok({ ok: true }) });
+  said(p, "screen.hold.release.form");
+  assert.ok(text(p).includes(W("screen.hold.release.reason")));
+  await press(p, "actionholdrelease", { values: { "hold-release-why": "the claim was dropped" }, reason: "x", confirm: true });
+  const b = last(p, "actionholdrelease").body;
+  assert.deepEqual([b.target, b.ord], [ACTION_ID, 2]);
+  assert.ok(b.reason.includes("the claim was dropped"), "her reason goes with it");
+});
+
 test("R32: pressure that arrived outside any action is recorded in a project, creating no action; `actionhold` is no longer drawn on `action`", async () => {
   const p = await open(ROUTES.hold, { ...DATA_PLANE, pressurerecord: ok({ ok: true }) });
   await press(p, "pressurerecord", { values: { "hold-press": "A letter from the owner's lawyer, received October 3" }, reason: "x" });
@@ -73,8 +83,8 @@ test("R33: 'Record that I sent it' sends the day, how it was sent and the copy o
   for (const k of ["screen.holdnotice.outward.1", "screen.holdnotice.outward.2", "screen.holdnotice.not.records", "screen.holdnotice.not.nomember", "screen.holdnotice.sent.none"]) said(p, k);
   const none = await press(p, "holdnoticesent", { reason: "x" });
   assert.equal(p.byOp("holdnoticesent").length, 0, "the day and the account are needed");
-  await press(p, "holdnoticesent", { values: { "hold-sent-at": "2026-10-10", "hold-sent-how": "an email", "hold-account": "I emailed the notice to the team's members." }, reason: "x" });
-  assert.deepEqual({ ...last(p, "holdnoticesent").body, reason: undefined }, { place: { target: ACTION_ID, ord: 2 }, at: "2026-10-10", medium: "an email", account: "I emailed the notice to the team's members.", reason: undefined });
+  await press(p, "holdnoticesent", { values: { "hold-sent-at": "2026-10-10", "hold-sent-how": "message", "hold-account": "I emailed the notice to the team's members." }, reason: "x" });
+  assert.deepEqual({ ...last(p, "holdnoticesent").body, reason: undefined }, { place: { target: ACTION_ID, ord: 2 }, at: "2026-10-10", medium: "message", account: "I emailed the notice to the team's members.", reason: undefined });
   assert.deepEqual(Object.keys(last(p, "holdnoticesent").body).filter((k) => /recipient|to|read|comply|member/.test(k)), [], "control: neither a recipient nor a read is sent");
   assert.ok(none);
 });

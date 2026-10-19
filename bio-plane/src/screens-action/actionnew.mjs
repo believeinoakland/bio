@@ -103,7 +103,7 @@ export const actionNew = Object.freeze({
         + cs.choice("an-legk", "screen.actionnew.rests.does", legKinds) + '<p class="mk-note">' + cs.w("screen.actionnew.rests.needed") + "</p>") : "";
 
       // when things are due: each date says where it comes from
-      const dueSec = cs.sec("screen.actionnew.due", cs.field("an-due-text", "screen.action.dates") + cs.field("an-due-date", "screen.capture.saw.when", { type: "date" })
+      const dueSec = cs.sec("screen.actionnew.due", cs.field("an-due-text", "screen.actionnew.due.what") + cs.field("an-due-date", "screen.actionnew.due.when", { type: "date" })
         + cs.field("an-due-because", "screen.actionnew.due.because") + '<p class="mk-note">' + cs.w("screen.actionnew.due.note") + "</p>");
 
       return intro + whoSec + asksSec + careSec + restsSec + dueSec + templates + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>";
