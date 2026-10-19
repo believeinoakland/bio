@@ -1,4 +1,4 @@
-/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/images.mjs newgroup/src/release.mjs newgroup/src/signers.mjs newgroup/src/account.mjs newgroup/src/cfx.mjs newgroup/src/words.mjs newgroup/scripts/build.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
+/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/images.mjs newgroup/src/release.mjs newgroup/src/held.mjs newgroup/src/steps/*.mjs newgroup/src/words.mjs newgroup/scripts/build.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
  *
  * DIST-13 — THE INSTALLER'S COMMITTED BUNDLE IS FRESH, OR THE GATE SAYS WHICH WAY IT IS NOT.
  *
@@ -72,6 +72,9 @@ t("(B) the bundle's RELEASE_BINARY is the one src/release.mjs carries (by sha256
   shaBinary(literal(committed, "RELEASE_BINARY")), want.source);
 
 const fresh = await bundleText(esbuild);
+/* N1254: the test closes what it opens. esbuild's service is a child process that holds the suite's stdout pipe: left running it
+   keeps a reader of that pipe (a runner, `| tail`) waiting for an end that never comes, though the suite itself has finished. */
+await esbuild.stop();
 t("(C) the WHOLE committed bundle is byte-identical to a fresh build of newgroup/src (catches installer code the bundle lags)",
   { bytes: committed.length, sha256: sha(committed) }, { bytes: fresh.length, sha256: sha(fresh) });
 

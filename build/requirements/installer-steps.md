@@ -106,7 +106,8 @@ Terms. A **session** is `new Session(token, onWait)`: the run's connection to th
 - `instance-setup`: `FLEET_BINDINGS` (`bio-plane/src/setup-fleet.mjs`; R11), the member binding names, imported, never copied.
 - Over the wire only: Cloudflare's management API (accounts, Workers, R2, Durable Object namespaces, Containers, Logpush), the public release repository, and each copy's own address (`op=bootstrap`, `op=selftest`).
 - Tests only: the stateful fake account factored out of `installer`'s fixture (`newgroup/test/steps/world.mjs`, moved there by copy), and the signer the suites sign with (`NS_RELEASE`, `NS_FLEET`).
-- It uses no `setup-words` (R36), no `jurisdictions`, no `interface-assets`, no `bundler`, and nothing of `installer`.
+- `setup-words`: `word(key, vars)` and the rows, from R36's keys stage (K4083).
+- It uses no `jurisdictions`, no `interface-assets`, no `bundler`, and nothing of `installer`.
 
 ### Invariants
 
