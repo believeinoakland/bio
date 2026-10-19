@@ -10,6 +10,7 @@ import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "../../../src/doorbell/checks.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { EXPECT } from "./expect.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -150,7 +151,7 @@ test("R5: the instance limit of 10, RATE_GLOBAL 429 with its row and stated boun
   const r = await c.knock({ content: "g10", sourceAddress: "10.9.9.9", now: t0 });
   assert.deepEqual([r.reason, r.code, r.check, r.translation], ["RATE_GLOBAL", "RATE_GLOBAL", row("RATE_GLOBAL").check, row("RATE_GLOBAL").translation]);
   assert.deepEqual([rateRows(rows), inboxRows(rows), tallied(rows)], [...before, 1]);
-  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this team's inbox in any 10 minutes, estimated by a sliding window");
+  assert.equal(KNOCK.statedGlobal, word("doorbell.stated_global", { global: "10", window_ms: "10" }));
   /* a source over its own limit and the instance's is RATE_IP */
   const both = setup();
   for (let i = 0; i < 5; i++) await both.c.knock({ content: `h${i}`, sourceAddress: "10.1.0.1", now: t0 });
@@ -220,20 +221,20 @@ test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's five rows are in this modul
 });
 
 test("R9: a C-85 translation is the row's sentence, names no figure, says the group can see how often its doorbell turns people away, and a code with no row fails as an internal error", async () => {
-  const SEEN = "The team can see how often its doorbell turns people away.";
   for (const code of ["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY"]) {
     assert.equal(typeof row(code).translation, "string");
     assert.ok(!/\d/.test(row(code).translation), `${code}'s translation names no figure`);
-    assert.ok(row(code).translation.includes(SEEN), `${code} says the group can see how often it turns people away`);
+    assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   }
-  assert.ok(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation.includes(SEEN), "C-118.3 too");
+  assert.equal(DOORBELL_CHECKS.KNOCKER_SECRET_WEAK.translation, EXPECT.KNOCKER_SECRET_WEAK, "C-118.3 too");
   for (const code of ["RATE_IP", "RATE_GLOBAL"])
-    assert.ok(row(code).translation.startsWith("Your material was not received."), `${code} begins with what happened`);
+    assert.equal(row(code).translation, EXPECT[code], `${code} is its row's sentence`);
   assert.ok(!/saturated/.test(row("RATE_GLOBAL").translation), "the saturation sentence is replaced");
   /* the knocker receives these words through the op */
   const w = setup();
   for (let i = 0; i < 5; i++) await w.send(knock({ contentText: `s${i}` }));
-  assert.ok((await w.send(knock({ contentText: "s5" }))).body.translation.includes(SEEN));
+  const refused = (await w.send(knock({ contentText: "s5" }))).body;
+  assert.equal(refused.translation, EXPECT[refused.reason]);
   const { c } = setup();
   const saved = KNOCK_CHECKS.RATE_IP;
   try {

@@ -7,7 +7,7 @@
  * relayed through `capture`'s `relayUnanswered` (R24), never a second copy of it. */
 import { relayUnanswered } from "../capture/ops.mjs";
 import { DOORBELL_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* R2, R6, R7. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because
@@ -50,7 +50,7 @@ export function knockPayloadTooLarge(cap, evidence) {
                   + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_PAYLOAD_TOO_LARGE", code: "KNOCK_PAYLOAD_TOO_LARGE",
            check: row.check, translation: row.translation, maxBytes: cap,
-           detail: evidence ? undefined : "this team's inbox stores knocks inline; large material needs its evidence storage configured" };
+           detail: evidence ? undefined : localize("doorbell.door.inline_storage_needs_evidence", "this team's inbox stores knocks inline; large material needs its evidence storage configured") };
   /* END DEC-49 REGION is-knock-payload-too-large */
 }
 
