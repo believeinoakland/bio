@@ -41,7 +41,17 @@ test("R75 two owners, one standing down: pressing Stand down opens the vote in p
   /* what it takes: the whole table, the live row marked, from the answer's own numbers */
   const live = main(p).querySelector('[data-arith="owners"] tr[aria-current="true"]');
   assert.equal(live.getAttribute("data-owners"), "2");
-  assert.equal(main(p).querySelectorAll('[data-arith="owners"] tr').length, 9, "the whole table, 1 to 9 owners");
+  assert.equal(main(p).querySelectorAll('[data-arith="owners"] tbody tr').length, 9, "the whole table, 1 to 9 owners");
+  assert.deepEqual(main(p).querySelectorAll('[data-arith="owners"] th').map((th) => th.textContent),
+    ["owners", "takes", "why"].map((k) => word("screen.project.scale.head." + k)), "the table's column headings, by their keys");
+  /* the headings of the three sections, by their keys; the live row said as a sentence with the departing owner's own vote at two owners */
+  const heads = main(p).querySelectorAll("h2").map((h) => h.textContent);
+  for (const k of ["screen.project.standdown.heading", "screen.project.how.it.changes.with.the", "screen.project.standdown.beforevote"]) assert.ok(heads.includes(word(k)), k);
+  assert.ok(says(e, "screen.project.this.takes.2.of.2", { n: "2", total: "2", member: "mai" }) && says(e, "screen.project.with.two.owners.standing.down"), "what it takes, at two owners");
+  assert.ok(says(e, "screen.project.standdown.notyet", { member: "dev" }) && says(e, "screen.project.standdown.notyet", { member: "mai" }), "each owner who has not voted");
+  assert.ok(says(e, "screen.project.the.change.waits.for.ana", { member: "dev" }), "and what the change waits for");
+  assert.ok(!says(e, "screen.project.standdown.agreed", { member: "dev" }), "nobody has agreed");
+  assert.ok(!says(e, "refusal.VOTES_SHORT"), "control: no short-vote refusal before one is answered");
   assert.ok(says(live, "screen.project.2.of.2.the.departing") && says(live, "screen.project.both.agree.a.resignation.the"), "the two-owner row in the drawing's words");
   assert.ok(says(main(p), "screen.project.how.it.changes.with.the") && says(main(p), "screen.project.owners.follow.the.same.rule"));
   /* each owner, and whether she has voted (nobody has) */
@@ -57,6 +67,7 @@ test("R75 two owners, one standing down: pressing Stand down opens the vote in p
   assert.ok(says(c[2], "screen.project.ownerstand.standing.down.is.possible.at") && says(c[2], "screen.project.ownerstand.with.2.owners.an.owner"));
   assert.ok(says(c[3], "screen.project.ownerstand.this.is.a.vote.you") && says(c[3], "screen.project.ownerstand.at.2.owners.the.departing"));
   assert.ok(says(c[4], "screen.project.ownerstand.a.reason.in.your.words") && says(c[4], "screen.project.ownerstand.nothing.is.drafted.or.suggested"));
+  assert.ok(says(c[4], "screen.project.ownerstand.required"), "the reason is marked required, by its key");
   assert.ok(p.doc.getElementById("project-ownerstand-reason"), "her reason, written by her");
   assert.ok(!actsIn(main(p)).includes("writinghelp"), "no writing help, no draft");
   assert.ok(says(main(p), "screen.project.ownerstand.a.project.with.no.owner") && says(main(p), "screen.project.ownerstand.check.that.another.owner.remains"));
@@ -78,8 +89,12 @@ test("R75 sending the vote: no reason sends nothing and says so; with her reason
   assert.deepEqual([q.projectId, q.handle, q.reason], [P, "mai", "I am stepping back; dev carries it."]);
   /* the counts redrawn from the answer (VOTES_SHORT: have a count, need the threshold); the vote stays open */
   assert.ok(stateE(p), "still open");
-  assert.ok(says(stateE(p), "screen.members.2.of.3.have.agreed", { n: "1", total: "2" }));
+  assert.ok(says(stateE(p), "screen.project.1.of.2.have.agreed", { n: "1", total: "2" }));
   assert.equal(stateE(p).querySelector('[data-vote-for="mai"]').getAttribute("data-voted"), "yes");
+  /* a short vote is said by its own words (the vote is recorded, the removal waits) and its row now reads agreed */
+  assert.ok(says(stateE(p), "refusal.VOTES_SHORT"), "VOTES_SHORT by its words, in the vote");
+  assert.ok(says(stateE(p).querySelector('[data-vote-for="mai"]'), "screen.project.standdown.agreed", { member: "mai" }));
+  assert.ok(says(stateE(p).querySelector('[data-vote-for="dev"]'), "screen.project.standdown.notyet", { member: "dev" }), "and dev has not");
   /* CONSENSUS_REQUIRED, as the requirement words it: have and awaiting named */
   const waiting = ok({ ok: true, projectId: P, changes: [{ change: "remove", target: "dev", proposed_by: "rosa", proposed_at: "2026-10-09T09:00:00Z", agreed: ["rosa"], awaiting: ["mai"] }] });
   const k = await open(at, { plane: { projectparticipants: THREE, projectownerarith: arith(3), projectownervotes: waiting,
@@ -91,7 +106,7 @@ test("R75 sending the vote: no reason sends nothing and says so; with her reason
   await k.settle();
   assert.deepEqual([k.byOp("projectownerremove")[0].query.handle, k.byOp("projectownerremove")[0].query.reason], ["dev", "dev has handed it over"]);
   assert.ok(stateE(k), "the vote stays open");
-  assert.ok(says(stateE(k), "screen.members.2.of.3.have.agreed", { n: "1", total: "2" }), "counted from have and awaiting");
+  assert.ok(says(stateE(k), "screen.project.1.of.2.have.agreed", { n: "1", total: "2" }), "counted from have and awaiting");
 });
 
 test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down casts none (check 4 does not hold, nothing offered); another owner's agree opens the same vote", async () => {
@@ -108,7 +123,11 @@ test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down
   const row = MATH(3);
   assert.deepEqual([...live.querySelectorAll("td")].map((td) => td.textContent).slice(1), [`${row.votesNeeded}/${row.owners}`, `${row.eligibleVoters}/${row.owners}`], "the live row is the answer's: 2 of 3, 2 may vote");
   assert.ok(says(e, "project.owners.pending.remove", { who: "rosa", by: "dev", date: day("2026-10-09"), agreed: "dev", awaiting: "mai" }));
-  assert.ok(says(e, "screen.members.2.of.3.have.agreed", { n: "1", total: String(row.votesNeeded) }), "k of m have agreed so far");
+  assert.ok(says(e, "screen.project.1.of.2.have.agreed", { n: "1", total: String(row.votesNeeded) }), "k of m have agreed so far");
+  assert.ok(says(e, "screen.project.standdown.takes", { n: String(row.votesNeeded), total: String(row.owners) }), "what it takes, from the live row");
+  assert.ok(says(e, "screen.project.standdown.agreed", { member: "dev" }) && says(e, "screen.project.by.standing.down.17.october", { date: day("2026-10-09") }) === false, "dev agreed (he proposed it, and is not the one standing down)");
+  assert.ok(says(e, "screen.project.standdown.notyet", { member: "mai" }) && says(e, "screen.project.the.change.waits.for.ana", { member: "mai" }), "mai has not, and the change waits for her");
+  assert.ok(says(e.querySelector('[data-vote-for="mai"]'), "screen.project.agree.dev.stands.down.as", { member: "rosa" }), "her act reads Agree: rosa stands down as owner");
   assert.deepEqual(checks(p).slice(0, 4).map((x) => x.getAttribute("data-holds")), ["yes", "yes", "yes", "yes"]);
   /* control: her own row at three owners: she casts none */
   const own = await opened({ projectparticipants: THREE, projectownerarith: arith(3) });

@@ -20,7 +20,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 /* mai (the harness's member) owns the project beside dev */
 const OWNER = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 1 }] }) };
 const section = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word(key));
-const TELL = "screen.project.notice.tell.the.network.you.are";
+const TELL = "screen.project.notice.heading";
 const fold = (p) => main(p).querySelector('[data-fold="noticerefusal"]');
 /* a prepared revision, as network-notices R2 answers it: exactly R3's fields, the statement over its digest */
 const prepared = (rev, extra = {}) => ({ ok: true, revision: JSON.stringify(rev), digest: DIGEST, statement: `bio-working-on ${NID} ${rev.revision || 1} ${DIGEST}\n`,
@@ -81,6 +81,7 @@ test("R76 an owner is offered the entry (what a notice is, that it is public and
   assert.equal(p.doc.getElementById("project-notice-wording").value, "", "nothing filled from the project");
   assert.equal(p.doc.getElementById("project-notice-since").value, "", "no date filled in");
   assert.ok(says(main(p), "screen.project.notice.only.an.owner.can.do") && says(main(p), "screen.project.notice.what.the.notice.says"));
+  assert.equal(p.doc.getElementById("project-notice-collab").querySelector("legend").textContent, word("screen.project.notice.legend.welcome"), "the tick's legend, by its key");
   assert.ok(says(section(p, "screen.project.notice.what.the.public.sees"), "screen.project.notice.work.by.the.assistant.is"), "what the public sees, and what the team's Civicsmith works out");
   assert.ok(says(btn(p, "noticeprepare", "preview"), "act.noticeprepare.label.project"));
   assert.ok(!btn(p, "noticepost"), "no sign button before a preview");
@@ -110,6 +111,8 @@ test("R76 Preview sends noticeprepare with the fields and writes nothing; the an
   assert.ok(c.querySelector(".cs-tag-outward") && says(c, "screen.connect.outward"), "the outward tag");
   assert.ok(says(c, "screen.project.notice.anyone.can.read.this.including") && says(c, "screen.project.notice.stopping.the.notice.later.ends"), "the warning, in the design's words");
   assert.ok(says(c, "screen.project.notice.i.understand.that.this.is"));
+  assert.equal(c.querySelector("fieldset legend").textContent, word("screen.project.notice.legend.sign"), "the acknowledgement's legend, by its key");
+  assert.ok(says(c, "network-notices.status.open"), "the notice's state, by its key");
   assert.equal(c.querySelector('[data-notice="statement"]').textContent, prepared(REV1).statement.trim(), "the statement the key will sign");
   assert.ok(says(c, "screen.project.notice.your.key.signs.this.exact") && says(c, "screen.project.notice.a.preview.is.good.for"));
   assert.ok(!c.querySelector('[data-notice="caution"]'), "no caution when none");
@@ -124,6 +127,7 @@ test("R76 Preview sends noticeprepare with the fields and writes nothing; the an
   /* the caution (two open and no published work) is drawn, never refuses */
   const cautious = await previewed(prepare(REV1, { caution: "two_open_without_published_work" }));
   assert.ok(section(cautious, "screen.project.notice.once.you.preview.it").querySelector('[data-notice="caution"]'));
+  assert.ok(says(section(cautious, "screen.project.notice.once.you.preview.it"), "screen.project.notice.your.team.has.two.other"), "the caution's fixed sentence, no fills");
   assert.ok(says(section(cautious, "screen.project.notice.once.you.preview.it"), "screen.project.notice.you.can.still.publish.readers"));
 });
 
@@ -237,6 +241,8 @@ test("R77 an open notice is drawn to an owner as published: its wording, when, s
   assert.ok(says(pub, "state.item.published.name") && pub.textContent.includes(day("2026-10-17")), "published");
   assert.ok(says(pub, "screen.project.notice.working.on.it.since.3", { date: day("2026-10-03") }) && says(pub, "network-notices.others_working_welcome"));
   assert.equal(pub.querySelector('[data-notice="level"]').textContent, word("network-notices.active"), "the level of the five, in its words");
+  assert.ok(says(pub, "network-notices.status.open"), "the notice's state, by its key");
+  assert.ok(says(s, "screen.project.notice.thenotice"), "the notice's heading");
   assert.ok(says(pub, "screen.project.notice.as.the.teams.civicsmith.worked", { date: day("2026-10-17") }), "as worked out on its date");
   assert.ok(says(pub, "screen.project.notice.the.next.monthly.check.is", { date: day("2026-11-01") }), "the next monthly check");
   assert.ok(says(pub, "screen.project.notice.1.case.published.from.this", { n: "1" }), "the case published from this project");
@@ -245,6 +251,7 @@ test("R77 an open notice is drawn to an owner as published: its wording, when, s
   const c = section(p, "screen.project.notice.change.it.or.stop.it");
   assert.ok(c.querySelector("#project-notice-handoff") && says(c, "screen.project.notice.if.you.stop.where.the"));
   assert.deepEqual(c.querySelectorAll("button[data-act]").map((b) => [b.getAttribute("data-act"), b.getAttribute("data-mode")]), [["noticeprepare", "change"], ["noticeprepare", "stop"]]);
+  assert.ok(says(btn(p, "noticeprepare", "change"), "screen.project.notice.change") && says(btn(p, "noticeprepare", "stop"), "screen.project.notice.stop"), "the two acts' labels by their keys");
   assert.ok(says(c, "screen.project.notice.a.change.is.a.new") && says(c, "screen.project.notice.a.stop.is.signed.too") && says(c, "screen.project.notice.neither.removes.what.was.published"));
   /* controls: no act removes or hides an earlier revision; the entry is not drawn beside a published notice; a read draws nothing written */
   assert.deepEqual([...new Set(actsIn(s).concat(actsIn(c)))], ["noticeprepare"]);
@@ -257,7 +264,10 @@ test("R77 the level words: the five levels by their keys where the list holds th
   const levelOf = async (level) => section(await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ level: { level, as_of: "2026-10-17" } })) } }), TELL).querySelector('[data-notice="level"]');
   assert.equal((await levelOf("Very active")).textContent, word("network-notices.active"));
   assert.equal((await levelOf("Some work")).textContent, word("network-notices.some_work"));
-  for (const other of ["Active", "Quiet", "Dormant"]) assert.equal(await levelOf(other), null, `${other}: no word is composed here (no key)`);
+  assert.equal((await levelOf("Active")).textContent, word("network-notices.level.active"));
+  assert.equal((await levelOf("Quiet")).textContent, word("network-notices.level.quiet"));
+  assert.equal((await levelOf("Dormant")).textContent, word("network-notices.level.dormant"));
+  assert.equal(await levelOf("Something else"), null, "a level the list does not hold names none (no word is composed here)");
   /* a lapse running names the rule; no cases draws no count */
   const lapsing = await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ lapse_date: "2026-12-01", attestations: [] })) } });
   const pub = section(lapsing, TELL).querySelector('[data-notice="published"]');
@@ -268,6 +278,8 @@ test("R77 the level words: the five levels by their keys where the list holds th
   /* a monthly missed for want of a key: the last attested level with its date stands, marked */
   const missed = await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ missed_monthlies: [{ month: "2026-11", at: "2026-11-01T00:00:00Z" }] })) } });
   assert.equal(section(missed, TELL).querySelector('[data-notice="published"]').getAttribute("data-missed"), "1");
+  assert.ok(says(section(missed, TELL), "screen.project.notice.missed", { level: word("network-notices.active"), date: day("2026-10-17") }), "the missed check, with the last level attested and its date");
+  assert.ok(!section(lapsing, TELL).querySelector('[data-notice="missed"]'), "control: no missed line when none was missed");
   assert.ok(says(section(missed, TELL), "screen.project.notice.as.the.teams.civicsmith.worked", { date: day("2026-10-17") }));
 });
 
@@ -346,8 +358,10 @@ test("R77 controls: a project with no notice draws only the entry; a read that f
   assert.ok(section(failed, TELL).querySelector('[data-state="failed"]'));
   assert.ok(!btn(failed, "noticeprepare", "open"), "an unread state is not offered a notice as if there were none");
   for (const status of ["stopped", "lapsed", "closed"]) {
-    const p = await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ status })) } });
+    const p = await open(at, { plane: { ...OWNER, notices: notices(NOTICE({ status, lapse_date: status === "lapsed" ? "2026-12-01" : null })) } });
     assert.equal(section(p, TELL).querySelector('[data-notice="last"]').getAttribute("data-status"), status);
+    assert.ok(says(section(p, TELL).querySelector('[data-notice="last"]'), "network-notices.status." + status), `${status}: its state by its key`);
+    assert.equal(says(section(p, TELL), "screen.project.notice.lapsed.on", { date: day("2026-12-01") }), status === "lapsed", `${status}: the lapse date is said only for a lapsed notice`);
     assert.ok(btn(p, "noticeprepare", "open"), status);
     assert.equal(section(p, "screen.project.notice.change.it.or.stop.it"), undefined, `${status}: nothing to change or stop`);
   }
