@@ -21,9 +21,7 @@ export const FINDING_KINDS = Object.freeze([
     word('file-safety.kind.downloader')),
   kind('dropper', ['dropper', 'trojandropper'],
     word('file-safety.kind.dropper')),
-  kind('trojan', ['trojan', 'trj'],
-    'A trojan pretends to be something harmless while doing something harmful, such as giving someone else control of '
-      + 'the computer.'),
+  kind('trojan', ['trojan', 'trj'], word('file-safety.kind.trojan')),
   kind('macro', ['macro', 'macros', 'w97m', 'x97m', 'o97m', 'vba'],
     word('file-safety.kind.macro')),
   kind('exploit', ['exploit', 'exp', 'cve'],
