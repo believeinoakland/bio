@@ -46,3 +46,7 @@ Size (session_01BRhBQme4TGHsPej7wEteGu): test runs 9, module lines 2,432
 ## J1 · COMPLETE
 
 T51-30 applied: R57-R61 met (matched_by/names, onlyByIdentifier, subjectsNamed, similarSubjects, page). entities tests 131/0; format, architecture, coverage 61/61, ownership 0 failures. Consumers: same reds as base (retrieval words keys; date/word tests), none new. Stale generated: bio-plane/dist bundle and release copy. Readings and details in my record.
+
+## J2 · COMPLETE
+
+T51-195 (entities, words pass) is done and pushed at cddeabe61b. The 46 findings of build/plan/words-pass/entities.md are fixed by the words rule: 0 failures from checks/words.mjs for entities. entities tests: 131 pass, 0 fail (4 civil-time keyed-reason reds fixed in t33). checks/run.mjs: format and architecture 0 failures; ownership 0 failures; setup-words --check gives only the stale-rows note. Readings, none unread-member strings, and other-module findings are in build/jobs/T51/entities.md under Completion (T51-195). Size: test runs 4, module lines 2402.
