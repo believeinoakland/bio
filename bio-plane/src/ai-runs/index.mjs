@@ -1055,11 +1055,7 @@ export class AiRuns {
       return { run, started: false,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT "
-                   + "PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as "
-                   + "amended 2026-09-18), and the contribute capability "
-                   + "is only the floor beneath that. These are two different facts about an "
-                   + "account and they are refused separately so each names its own remedy" };
+               note: localize("ai-runs.index.starting_an_investigation_over", "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy") };
     /* R89 (T50; N1186; credentials R79): THE PROJECT THE RUN IS OPENED IN, judged here with the gate it belongs to and
        recorded at the open. A run over a project is in that project, whatever `project` carries; a run over a question names
        one explicitly: a project the opening member has joined that draws on the question (`run-rules` R6's refusal,
@@ -1171,8 +1167,7 @@ export class AiRuns {
         + "after: pass response=<the recorded response's id>");
     /* asked here, in order, and again just before the insert (below), with no await between that ask and the write */
     const reexamOpen = () => (reexam && this.#reexamRunning(plan, responseId)
-      ? planRefusal("AI_RUN_REEXAM_OPEN", "a re-examination of this plan after this response is already running; "
-        + "its result is the one to read", { plan: String(plan).slice(0, 60), response: responseId.slice(0, 60) })
+      ? planRefusal("AI_RUN_REEXAM_OPEN", localize("ai-runs.index.a_re_examination_of_this", "a re-examination of this plan after this response is already running; its result is the one to read"), { plan: String(plan).slice(0, 60), response: responseId.slice(0, 60) })
       : null);
     const runningAlready = reexamOpen();
     if (runningAlready) return runningAlready;
@@ -1187,11 +1182,9 @@ export class AiRuns {
     const ownStep = place != null || work != null;
     /* DEC-49 REGION is-airun-open-step */
     if (runOrigin === "explore" && (!ownStep || stepId))
-      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the "
-        + "step's place and work, and no step", note: word("consequences.nothing") });
+      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: localize("ai-runs.index.an_exploring_run_works", "an exploring run works as a system step of its own: pass the step's place and work, and no step"), note: word("consequences.nothing") });
     if (stepId && (ownStep || !this.#stepSeen(stepId, viewer)))
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? "a run works one step: an existing one, or a step of its own "
-        + "by its place and work, not both" : localize("ai-runs.index.no_step_stepid_is_open", "no step '{stepId}' is open to this caller", { stepId: String(stepId.slice(0, 60)) }), step: stepId.slice(0, 60),
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? localize("ai-runs.index.a_run_works_one", "a run works one step: an existing one, or a step of its own by its place and work, not both") : localize("ai-runs.index.no_step_stepid_is_open", "no step '{stepId}' is open to this caller", { stepId: String(stepId.slice(0, 60)) }), step: stepId.slice(0, 60),
         note: word("consequences.nothing") });
     /* END DEC-49 REGION is-airun-open-step */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
@@ -1304,7 +1297,7 @@ export class AiRuns {
     if (overLimit) return { run, started: false, ...AiRuns.#shed(overLimit) };
     /* R73, R74: a system step of its own needs steps, asked before anything is written. */
     if (ownStep && !this.#steps())
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: word("consequences.nothing") });
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: localize("ai-runs.index.the_runs_own_step", "the run's own step cannot be made: steps is not reachable"), note: word("consequences.nothing") });
 
     /* R47 (K660): THE CHECK A LATER MODULE REGISTERED FOR THIS MODE, applied LAST, synchronously, just before the
        write, and its refusal passed on unchanged. A planning run with no check registered is refused (fail closed); so
@@ -1582,9 +1575,7 @@ export class AiRuns {
       return { run, ticked: false, found: true, status: row.status,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
-                   + "(DEC-63), and the contribute capability is only the floor beneath "
-                   + "that. Nothing was appended and no budget was spent" };
+               note: localize("ai-runs.index.continuing_a_run_over", "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent") };
     if (row.status !== "running")
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
@@ -1620,8 +1611,7 @@ export class AiRuns {
     const calls = usage == null ? [] : Array.isArray(usage) ? usage : null;
     if (!calls)
       return { run, ticked: false, found: true, status: row.status,
-               ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", "`usage` is a list with one entry per conversation that "
-                 + "reached the model since the last tick, each {mode, model, usage, calls}.")),
+               ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.usage_is_a_list", "`usage` is a list with one entry per conversation that reached the model since the last tick, each {mode, model, usage, calls}."))),
                note: word("ai-runs.note.appended_budget_spent") };
     /* R52: the calls are counted to the account the run recorded as paying (`principal_claude`) and the member whose act
        the run is (`principal_claude_ref`); a run that names no member (one opened before T33-50) cannot have its calls
@@ -1665,7 +1655,7 @@ export class AiRuns {
       if (seg) {
         const bad = this.#aiRunAppend(run, {
           level: "meaning", subject: "segment -> end", ...this.#aiRunRestatedState(run), governed: false,
-          detail: localize("ai-runs.index.the_segment_ended_by_v1", "the segment ended (by: {v1}; {v2}{v3}). Refusals it met: {v4}", { v1: String(seg.by ?? "its own segment bound"), v2: String(seg.done ? "the run's work is done" : "the run's work is not done"), v3: String(seg.error ? `; in error ${seg.error}` : ""), v4: String(seg.refusals.length ? seg.refusals.join(", ") : "none") }),
+          detail: localize("ai-runs.index.the_segment_ended_by_v1", "the segment ended (by: {v1}; {v2}{v3}). Refusals it met: {v4}", { v1: String(seg.by ?? "its own segment bound"), v2: String(seg.done ? localize("ai-runs.index.the_runs_work_is_done", "the run's work is done") : localize("ai-runs.index.the_runs_work_is_not_done", "the run's work is not done")), v3: String(seg.error ? `; in error ${seg.error}` : ""), v4: String(seg.refusals.length ? seg.refusals.join(", ") : "none") }),
         }, now, 0, row.principal_claude || null, row.step || null);
         if (bad) refused.push(bad); else appended += 1;
       }
@@ -1818,9 +1808,7 @@ export class AiRuns {
         return { run, terminated: false, found: true, ok: false,
                  code: gate.code, check: gate.check,
                  translation: gate.translation, detail: gate.detail,
-                 note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
-                     + "(DEC-63), and the contribute capability is only the floor beneath "
-                     + "that. The run is untouched and is still running" };
+                 note: localize("ai-runs.index.closing_a_run_over", "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running") };
     }
     let ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
     /* R76: at close the run answers its actual cost, to its paying account's owners only */
@@ -2263,7 +2251,7 @@ export class AiRuns {
       /* R82: a worker that has not accepted within the bound is a call that did not complete (B6's "still running" reading
          is retired: the worker now answers at once, so no answer means no acceptance), and it is logged as such below. */
       outcome = { state: "SILENT", status: null,
-                  reason: elapsed ? "no acceptance within the bound" : word("ai-runs.reason.call_did_complete") };
+                  reason: elapsed ? localize("ai-runs.index.no_acceptance_within_the_bound", "no acceptance within the bound") : word("ai-runs.reason.call_did_complete") };
     } finally { clearTimeout(timer); }
     if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
       /* R83: an accepted dispatch is a heartbeat, the lease counted from it */
@@ -3266,10 +3254,10 @@ export class AiRuns {
         ? use.countUsage({ owner: row.principal_claude, member: `member:${payer}`, use: "run", mode: e.mode, model: e.model ?? null,
                            /* R88: the conversation's effort beside its model, ai-use R15's to judge; null where none is stated */
                            effort: e.effort ?? null, usage: e.usage, calls: e.calls, at: AiRuns.#aiIso(ms), act: String(row.run) })
-        : this.#refuse("AI_RUN_CONSUME_INVALID", "the entry is not an object {mode, model, usage, calls}.");
+        : this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.the_entry_is_not", "the entry is not an object {mode, model, usage, calls}."));
       if (!said || said.ok !== true)
         return { ...(said || this.#refuse("AI_RUN_CONSUME_INVALID", localize("ai-runs.index.the_entry_could_not_be", "the entry could not be counted."))),
-                 detail: localize("ai-runs.index.usage_entry_v1_v2", "usage entry {v1}: {v2}", { v1: String(i + 1), v2: String((said && said.detail) || "it could not be counted") }) };
+                 detail: localize("ai-runs.index.usage_entry_v1_v2", "usage entry {v1}: {v2}", { v1: String(i + 1), v2: String((said && said.detail) || localize("ai-runs.index.it_could_not_be_counted", "it could not be counted")) }) };
     }
     return null;
   }
