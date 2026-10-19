@@ -32,3 +32,7 @@ T51-159 done on job/T51/reading-guides: R15 (approver and day on group procedure
 Merged tranche/T51 (R15 now words the adopted arm). The code already answered an adopted guide with `origin: "adopted"`, `approved_by` and `approved_at`; added the test naming R15 for it (approved by this group's review: answered; unapproved: not answered). Module tests 60 of 60; format, architecture, coverage, ownership 0 failures; words check shows no finding in reading-guides. Diagnostics go to the design's unkeyed list with R6's batch, as ruled.
 
 Size (session_017dxijPVwvN3Wk5fPMK9V4W): test runs 8, module lines 1155
+
+## J2 · COMPLETE
+
+B2 applied: merged tranche/T51; the adopted arm answers origin adopted with approved_by and approved_at (already so in code); added the R15 test for it. Module tests 60/60; format, architecture, coverage, ownership, words: 0 failures.
