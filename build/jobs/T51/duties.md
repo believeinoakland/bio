@@ -65,3 +65,20 @@ Ruling for BOB to record (this job's ownership does not include build/rulings.md
 - vocab.mjs stays a leaf (inquiry-grammar imports it, K1799), so the two connection words it holds are `wordKey`s, resolved in index.mjs with `word` (duties.word.owed, duties.word.holds_power); keyed civil-time reasons are relayed as {key, vars}, and duties' tests assert the key (reasonText for text). Proposed as K3990.
 
 Commits on job/T51/duties: 3f3ec4a099 (the words pass), then the revert of build/rulings.md to tranche/T51's (ownership).
+
+## J4 · REPORT
+
+B3 (CHANGE, K3997) applied; not COMPLETE yet: it needs lines and local-facts merged into tranche/T51 first.
+
+Applied on job/T51/duties (commits a3e567b71d, 973a345016):
+- `index.mjs`: the holder read of lines' `holderAt` now reads `h.undetermined === true` and `h.why` as a key, through lines' `reasonText` (exported by lines' job branch, J4); the sentence fills `duty decider` text as before.
+- `response.test.mjs`: the drafted group rule carries `effective_from: "2026-01-01"` (local-facts R18, DEC-341).
+
+Tranche/T51 was merged at 3ef1afe710 (K3997). Lines and local-facts are not merged into it yet, so I tested against their job branches in a scratch worktree (removed afterwards):
+- with job/T51/lines and job/T51/local-facts: 70 pass, 4 fail. The 4 are R27 and R19 of `uses` tests, which read `lines.why.no_line_covers` through `word()`: `rows.mjs` has no lines rows yet (UNKNOWN_WORD). They pass once BOB regenerates rows at the layer close; the holder path itself is covered by these tests after the merge.
+- on the current tranche (lines not merged): the module fails to load, because lines' `reasonText` is not exported yet. This is why I wait rather than merge.
+- R5 over real local-facts (response.test) is red on the current tranche only because local-facts has not merged; it is green on job/T51/local-facts.
+
+Waiting on BOB: merge job/T51/lines and job/T51/local-facts into tranche/T51 (and regenerate setup-words rows, or confirm that the `uses` tests may be re-run after that). Then tell me, and I will merge tranche/T51, re-run the duties tests and checks, and post COMPLETE.
+
+Checks run before this report: words 0 failures, format 0, architecture 0, coverage 33 of 33, ownership 0 failures, setup-words --check: stale-rows note only.
