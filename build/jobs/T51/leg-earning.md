@@ -57,3 +57,21 @@ Commit on `job/T51/leg-earning` (the CHANGE commit, after `23317d2ae2`; no rebas
 **Deferred.** None.
 
 Size (session_01RTtq97ZaJKFYsmuNFMRacD): test runs 3, module lines 1387
+
+## J4 · COMPLETE
+
+## B3 CHANGE settled · leg-earning, COMPLETE again
+
+Commit `3e584bfff9` on `job/T51/leg-earning`, after merging `tranche/T51` (its merge commit is on the branch; no rebase).
+
+**Applied.** The fallback reason in `legCapped` (`index.mjs`, the `earned.grade == null` arm, flagged at line 100 as a copy of a design row) now reads `word("leg-earning.why.document_capture_support")`. That row is the same sentence exactly, with no placeholders, so the `+` chain it replaces is gone.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/leg-earning/*.test.mjs`: 57 of 57 pass, 0 fail.
+- `checks/words.mjs` (d424c32, with the `+`-chain fold): no finding under `leg-earning`.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs leg-earning`: 0 failures. `checks/coverage.mjs leg-earning`: 16 of 16 live ids named, 0 failures.
+- `checks/ownership.mjs leg-earning tranche/T51 job/T51/leg-earning`: 0 failures.
+
+**Deferred.** None.
+
+Size (session_01RTtq97ZaJKFYsmuNFMRacD): test runs 4, module lines 1386
