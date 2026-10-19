@@ -7,7 +7,7 @@
 
 export const SCREEN_KEYS = Object.freeze({
   "case-editor": Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.case-editor.name", "screen.case-editor.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.case-editor.name", "screen.case-editor.purpose",
     "act.casedraft.label.case-editor", "act.casedraft.does", "act.whatchangedpropose.label.case-editor",
     "act.whatchangedpropose.does", "act.statementack.label.case-editor", "act.statementack.does",
     "act.attribute.label.case-editor", "act.attribute.does", "act.writinghelp.label.case-editor",
@@ -35,7 +35,7 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   "review-copy": Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.review-copy.name", "screen.review-copy.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.review-copy.name", "screen.review-copy.purpose",
     "act.reviewgrant.label.review-copy", "act.reviewgrant.does", "act.reviewrevoke.label.review-copy",
     "act.reviewrevoke.does", "act.reviewcomment.label.review-copy", "act.reviewcomment.does",
     "screen.review-copy.comments", "screen.review-copy.from.member", "screen.review-copy.from.reader",
@@ -58,7 +58,7 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   ceremony: Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.ceremony.name", "screen.ceremony.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.ceremony.name", "screen.ceremony.purpose",
     "act.publishpreflight.label.ceremony", "act.publishpreflight.does", "act.publishtensions.label.ceremony",
     "act.publishtensions.does", "act.caseratify.label.ceremony", "act.caseratify.does", "act.publish.label.ceremony",
     "act.publish.does", "act.publishat.label.ceremony", "act.publishat.does", "act.obscuremark.label.ceremony",
@@ -99,7 +99,7 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   published: Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.published.name", "screen.published.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
     "act.verify.label.published", "act.verify.does", "act.publishedcase.label.published", "act.publishedcase.does",
     "screen.published.below", "screen.published.dated", "screen.published.download", "screen.published.download.done",
     "screen.published.download.failed", "screen.published.edition", "screen.published.evidence",
@@ -133,7 +133,7 @@ export const SCREEN_KEYS = Object.freeze({
     "mark.scale.connection.name", "mark.scale.connection.means", "mark.grade.reading",
   ]),
   imported: Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.imported.name", "screen.imported.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.imported.name", "screen.imported.purpose",
     "act.caseimport.label.imported", "act.caseimport.does", "act.importaccept.label.imported",
     "act.importaccept.does", "act.importflag.label.imported", "act.importflag.does", "act.importwatch.label.imported",
     "act.importwatch.does", "screen.imported.accept", "screen.imported.checked.label",
@@ -150,7 +150,7 @@ export const SCREEN_KEYS = Object.freeze({
     "mark.origin.accepted.means", "mark.origin.flagged.name", "mark.origin.flagged.means",
   ]),
   docket: Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.docket.name", "screen.docket.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket.name", "screen.docket.purpose",
     "act.docketfile.label.docket", "act.docketfile.does", "act.docketpost.label.docket", "act.docketpost.does",
     "screen.docket.drafted", "screen.docket.entries", "screen.docket.file", "screen.docket.file.needed",
     "screen.docket.from.help", "screen.docket.from.label", "screen.docket.kind.correction",
@@ -167,14 +167,14 @@ export const SCREEN_KEYS = Object.freeze({
     "shell.unavailable.home", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   "docket-public": Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.docket-public.name", "screen.docket-public.purpose", "screen.docket-public.sub",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.docket-public.name", "screen.docket-public.purpose", "screen.docket-public.sub",
     "screen.docket-public.back", "screen.docket.kind.correction", "screen.docket.kind.court-order", "screen.docket.kind.edition",
     "screen.docket.kind.other", "screen.docket.kind.outcome", "screen.docket.kind.reaction", "screen.docket.kind.response",
     "screen.docket.kind.statement", "screen.docket.kind.withdrawal", "screen.published.grouppage", "shell.unavailable.nothing.says",
     "shell.unavailable.nothing.title",
   ]),
   doorbell: Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.doorbell.name", "screen.doorbell.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.doorbell.name", "screen.doorbell.purpose",
     "act.knock.label.doorbell", "act.knock.does", "screen.doorbell.file.help", "screen.doorbell.file.label",
     "screen.doorbell.happens.court", "screen.doorbell.happens.only", "screen.doorbell.happens.phrase",
     "screen.doorbell.happens.reads", "screen.doorbell.heading", "screen.doorbell.note.label",
@@ -184,7 +184,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.doorbell.sub",
   ]),
   "review-outside": Object.freeze([
-    "state.loading", "state.empty", "state.failed", "screen.review-outside.name", "screen.review-outside.purpose",
+    "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.review-outside.name", "screen.review-outside.purpose",
     "act.reviewcomment.label.review-outside", "act.reviewcomment.does", "act.statementack.label.review-outside",
     "act.statementack.does", "screen.review-outside.comment", "screen.review-outside.comment.help",
     "screen.review-outside.comment.label", "screen.review-outside.comment.needed",

@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01PQvprfcu1QzmpPKVtTTPqR · depth 2 · COMPLETE · handled B6
+**Status** · session_016iKmE55Vo6kaM1uCr7HpH5 · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -46,3 +46,26 @@ T51-121 applied whole, merged with tranche/T51 at the B6 tip, run against the re
 **Tests and checks:** module `node --test test/m/screens-publish/`: 134 pass, 0 fail (twice in a row). format 0 failures; architecture (screens-publish) 0; coverage 43 of 43 ids; words over every L11 module together: no line names screens-publish; ownership 0 failures; `setup-words build.mjs --check`: the expected stale-rows note on another module's row. `checks/run.mjs` over the whole product shows other modules' words and one answer-envelope architecture failure, none mine.
 
 Size (session_01PQvprfcu1QzmpPKVtTTPqR): test runs 14, module lines 2440
+
+## J4 · COMPLETE
+
+CR-28 (K4149) applied. `refusal.uncatalogued` is added to every screen's `words` in `keys.mjs`: `parts.mjs` `refusalText` (reached by a failed read and by `refused`) draws it on all nine screens. It is the only one of the 19 keys a screen of this module draws.
+
+**Not drawn here (18 keys; BOB sends the list to the design to drop from `words-reads.json`).** The shell's `refusalOf` (interface-shell R83) uses a screen's own function or own key for a code first, and `refusal.<CODE>` only when the screen maps none, so these rows are never reached:
+- `refusal.KNOCK_EMPTY`, `KNOCK_PAYLOAD_TOO_LARGE`, `KNOCK_ENVELOPE_TOO_LARGE`, `KNOCKER_SECRET_WEAK`, `RATE_IP`, `RATE_GLOBAL`, `BAD_CONTENT`, `KNOCK_NOT_STORED`, `REQUIRED_ARGUMENT_MISSING`: `doorbell.mjs`:35 maps each to its own `screen.doorbell.refused.*` key.
+- `refusal.REVIEW_BAD_UNTIL`: `review-copy.mjs`:110 maps it to `screen.review-copy.until.bad`.
+- `refusal.NO_ATTESTING_KEY`, `NO_SIGNERS`, `CASE_SIGNER_NOT_AN_OWNER`: `ceremony.mjs`:321–358 draw them with their own functions (`screen.ceremony.refused.nokey` / `.notowner`).
+- `refusal.NO_TARGET`: `ceremony.mjs`:100 leaves it out of the blockers and draws `ceremony.gate.notargets`.
+- `refusal.NOT_PUBLISHED`, `refusal.IMPORT_NO_SUCH_EDITION`: an absent-subject code, drawn as "Nothing is here" (`published.mjs`:40, `imported.mjs` ABSENT_CODES); never as a refusal.
+- `screen.action.pressure.kind`: the generator read the dynamic key `"screen.action.pressure." + kind` (`docket.mjs`:72) as a literal; the real keys (`.legal`, `.retaliation`, `.discrediting`, `.other`) are listed.
+- `screen.ceremony.signs.lines`: not drawn. The ceremony lists every statement signed (R13) and then draws `screen.ceremony.signs.count`. If the design means `.lines` (DEC-259, "after the lines drawn") to replace `.count`, that is a requirement change for BOB.
+
+**Tests and checks.** `node --test test/m/screens-publish/`: 133 pass, 1 fail. The failure is `common.test.mjs` R24, which stays red until the design drops the 18 keys above (it names exactly those 18). Process `checks/run.mjs`: format 0, architecture 0, words 0 findings. The coverage failures it lists are in other modules. `coverage.mjs screens-publish`: 43 of 43. ownership 0 failures. I did not run `journey.test.mjs`.
+
+**Found elsewhere:** nothing.
+
+Size (session_016iKmE55Vo6kaM1uCr7HpH5): test runs 2, module lines 1
+
+## J5 · COMPLETE
+
+CR-28 applied; see J4 in my record. One of the 19 keys is added (`refusal.uncatalogued`, on every screen). The other 18 are "not drawn here" with reasons in J4: nine doorbell refusals and REVIEW_BAD_UNTIL map to own keys; NO_ATTESTING_KEY, NO_SIGNERS and CASE_SIGNER_NOT_AN_OWNER have own functions; NO_TARGET, NOT_PUBLISHED and IMPORT_NO_SUCH_EDITION are handled before any refusal is drawn; `screen.action.pressure.kind` is a generator artifact of a dynamic key; `screen.ceremony.signs.lines` is not drawn (design may mean it to replace `.count`: your call). R24 in common.test.mjs therefore stays red until the design drops those 18; the other 133 tests pass. Checks: format 0, architecture 0, words 0, ownership 0, coverage 43/43.
