@@ -38,3 +38,22 @@ Commit `f98173a2e0` on `job/T51/leg-earning` (merged `tranche/T51` first, `899ea
 - `node checks/ownership.mjs /home/user/bio leg-earning tranche/T51 job/T51/leg-earning`: 3 files changed by leg-earning, 0 failures.
 
 Size (session_01RTtq97ZaJKFYsmuNFMRacD): test runs 2, module lines 1387
+
+## J3 · COMPLETE
+
+## B2 CHANGE settled · leg-earning, COMPLETE again
+
+Commit on `job/T51/leg-earning` (the CHANGE commit, after `23317d2ae2`; no rebase, no merge needed: `tranche/T51` did not change a file this job reads).
+
+**Applied.** Both ceiling sites now read `word("leg-earning.ceiling.grade_reachable_capture", { unreachable_capture_grade: String(UNREACHABLE_CAPTURE_GRADE) })`: `index.mjs:670` and `index.mjs:850`. Their two `localize` ids (`leg-earning.index.grade_unreachable_capture_grade_is` and `_2`) are gone. `words.test.mjs` compares both ceilings with the same `word` call, so the test follows the row.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/leg-earning/*.test.mjs`: 57 of 57 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs leg-earning`: 0 failures. `checks/coverage.mjs leg-earning`: 16 of 16 live ids named, 0 failures.
+- `checks/words.mjs`: no finding under `leg-earning`.
+- `setup-words/build.mjs --check`: exits 1 on the stale `rows.mjs` note only (word 18492 is the new code row `leg-earning.index.capture_route_no_ruling`); no refusal naming leg-earning. BOB regenerates at the layer close.
+- `checks/ownership.mjs leg-earning tranche/T51 job/T51/leg-earning`: 3 files changed by leg-earning, 0 failures.
+
+**Deferred.** None.
+
+Size (session_01RTtq97ZaJKFYsmuNFMRacD): test runs 3, module lines 1387
