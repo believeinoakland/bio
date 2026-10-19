@@ -354,7 +354,8 @@ export class PlanWork {
       /* DEC-49 REGION is-review-rhythm */
       if (!r || !Array.isArray(r.instances) || !r.instances.length)
         return refusal("REVIEW_RHYTHM_REFUSED", !zone ? localize("plan-work.index.no_time_zone_was_given", "no time zone was given and none is held for this place. Nothing was written.")
-          : `a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly)${r && r.reason ? `: ${r.reason}` : ""}. Nothing was written.`);
+          : localize("plan-work.index.a_rhythm_is_recurrence", "a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly){why}. Nothing was written.",
+            { why: r && r.reason ? `: ${r.reason}` : "" }));
       /* END DEC-49 REGION is-review-rhythm */
       held = { rrule: recurrence.rrule, dtstart: recurrence.dtstart, zone };
     }
@@ -561,8 +562,8 @@ export class PlanWork {
     else if (kind === "draft") found = this.#drafts(p, viewer).has(on.draft);
     /* DEC-49 REGION is-comment-target */
     if (!found)
-      return { r: refusal("COMMENT_TARGET_REFUSED", "a comment is on {option}, {action} or {draft} of this plan, one you can "
-        + "see. Nothing was written.") };
+      return { r: refusal("COMMENT_TARGET_REFUSED", localize("plan-work.index.a_comment_is_on_one",
+        "a comment is on an option, an action or a draft of this plan, one you can see. Nothing was written.")) };
     /* END DEC-49 REGION is-comment-target */
     return { kind, id: on[kind] };
   }
@@ -1063,8 +1064,8 @@ function reportFrom(from) {
   if (isObj(from) && from.assistant === true && Object.keys(from).every((k) => k === "assistant" || k === "as_of")
       && (asOf === undefined || asOf === null || (typeof asOf === "string" && ISO_TS_RE.test(asOf))))
     return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null }) };
-  return { r: refuseText(null, 200, "from", { says: "from is one line of your own, or {assistant: true, as_of?} when the "
-    + "text began as the assistant's draft" }) };
+  return { r: refuseText(null, 200, "from", { says: localize("plan-work.index.from_is_one_line_of_your",
+    "from is one line of your own, or {assistant: true, as_of?} when the text began as the assistant's draft") }) };
 }
 /* R8, R14, R16: a kept `from` as read back; the assistant's draft with R16's label, whatever label an earlier row held. */
 function fromOf(stored) {
