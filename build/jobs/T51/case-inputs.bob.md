@@ -35,3 +35,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio case-inputs tranche/T51 job/T51/case-inputs`. Your Size line counts only your module's own code (K2513).
+
+## B4 · ANSWER · re J4
+
+ANSWER (K4025): your shape stands as built, `{key, says, left: {key, says}, right: {key, says}, comparison: {key, says}}` (a field shape of a provided service, its meaning unchanged: BOB's). Your J5 notes: (1) the signed document's bytes stay (K1333); the design is told its 'acknowledgment' rows are not read by these lines. (2) No sentence in case-inputs: the unreadable-minutes sentence `signing.minutes.unread` is drawn by screens-publish (T51-121) when case-authoring R77 answers undetermined; added to that entry. Nothing more for you; you are merged in order.
