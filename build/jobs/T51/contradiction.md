@@ -55,3 +55,7 @@ Tests: node --test bio-plane/test/m/contradiction/: 120 pass, 0 fail, 8 todo (ba
 Reading note: I read the requirements, the words-pass file, contradiction.mjs, checks.mjs, text.mjs, derive.mjs and index.mjs whole (all 3,049 lines), and the tests that held a finding (by their lines).
 
 Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 6 (+8 dependents'), module lines 3641 (bio-plane/src/contradiction.mjs and bio-plane/src/contradiction/, all files).
+
+## J3 · COMPLETE
+
+CHANGE B3 handled. Pulled civicos-process d424c32, merged tranche/T51 (no conflict), ran node checks/words.mjs /home/user/bio contradiction: 7 findings, the same seven as J2, none new from the chained-literal rule; no member-read sentence among them. For the design's unkeyed list: contradiction.mjs:31 JUDGEMENT_PROMPT, :99 RECOMMEND_PROMPT, :84 pair line (model input pinned by digest, R2/R41/R57); index.mjs:2001 derived-id method string (hashed identifier); index.mjs:361 and :364 registerRunGate details (module wiring); text.mjs:43 the '## Session Log' heading splice. Other open item unchanged: modules.json contradiction uses needs setup-words (9 architecture failures until added). Tests: node --test bio-plane/test/m/contradiction/: 120 pass, 0 fail, 8 todo. Size (session_01Sh7KmqBakPppJ1owzmtxQf): test runs 7, module lines 3641.
