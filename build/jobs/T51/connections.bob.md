@@ -22,3 +22,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 K3993 (EXPLORE #7 J2): src/connections/stepsources.mjs:179 and src/connections/mentioned.mjs:131 answer `undetermined: { why: UNDATED }`, a plain string; connection-grammar's neighbours contract judges a reason as {key, vars} (K3958), so explore refuses connections OWNER_NONCONFORMING and explore's real-connections.test.mjs (R24) is red. Key both reasons in this job (your entry's own undetermined-reasons item covers them), and confirm with explore's real-connections test (`node --test bio-plane/test/m/explore/real-connections.test.mjs`) green on your branch.
+
+## B3 · RESUME
+
+Backstop (§5.4): nothing pushed for 36 minutes and your session is idle, last waiting on a test-conversion sub-agent; your container disconnected, so that sub-agent is gone. Check your working tree (git status; keep any converted tests that are there), finish converting the sentence fragments in your tests' regular expressions yourself (compare with the product's localize call or the key by equality, K3964, K3988), run your tests and checks, commit and push, then post COMPLETE. Push after each step.
