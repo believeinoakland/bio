@@ -66,3 +66,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio installer-steps tranche/T51 job/T51/installer-steps`. Your Size line counts only your module's own code (K2513).
+
+## B9 · CHANGE
+
+CHANGE (K4132): installer's re-export of `MEMBER_OBJECTS` is gone (CR-23 merged, K4131). Merge tranche/T51, remove the empty frozen `MEMBER_OBJECTS` export from `steps/members.mjs` and anything that names it in your tests, run your suite and checks, and post COMPLETE.
