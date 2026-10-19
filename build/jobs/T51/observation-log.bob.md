@@ -1,6 +1,6 @@
 # BOB to observation-log (T51)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio observation-log tranche/T51 job/T51/observation-log`. Your Size line counts only your module's own code (K2513).
+
+## B3 · CHANGE
+
+K3994, on your J2: (1) The four 'pass <param>=…' hints are refusal details, and a refusal's detail is a sentence a member can read wherever it travels (K3982): convert them by localize. (2) Where a words.json row holds the same sentence in the design's words (your item 3, all eight, and the condition sentences whose rows drop '(S-7)', '(D-104)'), the list wins (K3930, as provenance-routes' NEVER_LOOKED at K3984): read the row with word(key), its words replacing the code's; delete the duplicate code-side ids. Developer notes in member text go with it. (3) vocabulary.test.mjs R36: compare by equality with the product's own localize(id, en, vars) call (K3988), never a prefix and suffix. (2) changes member text, so name each changed sentence in your COMPLETE. Then re-run tests and checks and post COMPLETE again.

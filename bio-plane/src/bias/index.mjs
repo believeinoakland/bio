@@ -52,7 +52,7 @@ import { word, localize } from "../setup-words/index.mjs";
 
 /* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. Its
    words say "the whole group", never "the instance" (DEC-149); the scope value stays `instance`. */
-export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole team";
+export const INSTANCE_ADOPTION_ACT = localize("bias.index.adopting_bias_set_whole_team", "adopting a bias set for the whole team");
 export const INSTANCE_ADOPTION_REMEDY = word("bias.project_owners_set");
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
@@ -428,10 +428,8 @@ class Bias {
     const marker = pinsProposed.length === 0 ? {} : {
       pins_proposed: pinsProposed,
       pins_proposed_stated:
-        "each entry is an adoption whose PINNED REVISION is one the team has offered and not "
-        + "accepted: the member's act REPLACED that scope's lens with those bytes and is not a "
-        + "pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin "
-        + "puts no lens in force until the revision it names stands at 'adopted'",
+        localize("bias.index.each_entry_is_an_adoption_whose",
+                 "each entry is an adoption whose PINNED REVISION is one the team has offered and not accepted: the member's act REPLACED that scope's lens with those bytes and is not a pre-authorisation of whatever the proposal becomes (BOB #32, 2026-09-24), and such a pin puts no lens in force until the revision it names stands at 'adopted'"),
     };
 
     if (unresolved.length > 0)
@@ -439,8 +437,8 @@ class Bias {
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, unresolved_pins: unresolved, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
-                     + "so which statements are in force cannot be computed" } };
+               stated: localize("bias.index.undetermined_adoption_pins_revision",
+                     "undetermined: an adoption pins a revision whose bytes this record cannot produce, so which statements are in force cannot be computed") } };
 
     if (adoptions.length === 0)
       return { answer: { ok: true, scope: st, scope_id: sid, in_force: false,
@@ -467,8 +465,8 @@ class Bias {
           if (target && target.locked) {
             lockViolations.push({ project_bundle: a.bundle_id, statement_id: s.statement_id,
                                   nullifies: s.nullifies, instance_bundle: target.bundle_id,
-                                  detail: "a project override naming a LOCKED team statement is a "
-                                        + "conformance error; the team statement stands" });
+                                  detail: localize("bias.index.a_project_override_naming_locked",
+                                                   "a project override naming a LOCKED team statement is a conformance error; the team statement stands") });
           } else if (target) {
             effective.delete(s.nullifies);
             level.delete(s.nullifies);
@@ -651,8 +649,8 @@ class Bias {
         continue;
       }
       if (BIAS_VERDICT_WHOLESALE.test(s) || BIAS_VERDICT_SPEAKER.some((re) => re.test(s))) {
-        residue.push({ text: s, why: "this reads as a verdict on a source, and declared bias may never "
-                                   + "issue verdicts — refused for the machine exactly as for a member",
+        residue.push({ text: s, why: localize("bias.index.this_reads_as_a_verdict",
+                                              "this reads as a verdict on a source, and declared bias may never issue verdicts — refused for the machine exactly as for a member"),
                        check: BIAS_CHECKS.BIAS_STATEMENT_ISSUES_A_VERDICT.check });
         continue;
       }
@@ -722,8 +720,8 @@ class Bias {
     const none = {
       ok: true, description: null, offered: false, proposed: false, authored: false, statements: [],
       installed: false, adopted: false, writes: 0,
-      stated: "there is no description of the team to start a declared bias from: a member writes the set's "
-            + "statements, each with its subject and justification, from the beginning",
+      stated: localize("bias.index.there_is_no_description_of",
+            "there is no description of the team to start a declared bias from: a member writes the set's statements, each with its subject and justification, from the beginning"),
     };
     let d = null;
     try {
@@ -966,9 +964,8 @@ class Bias {
     if (row.cleared_at == null) return { settled: false };
     if (row.settled_kind == null)
       return { settled: true, at: row.cleared_at, kind: null, kind_state: "undetermined",
-               stated: "this debt was settled before the record kept which act settled it. The only act "
-                     + "there was then is the lens moving back, and naming it here would be attributing "
-                     + "the settlement to an act nobody recorded" };
+               stated: localize("bias.index.this_debt_was_settled_before",
+                     "this debt was settled before the record kept which act settled it. The only act there was then is the lens moving back, and naming it here would be attributing the settlement to an act nobody recorded") };
     return { settled: true, at: row.cleared_at, kind: row.settled_kind, kind_state: "determined" };
   }
 
@@ -992,9 +989,8 @@ class Bias {
         "a resolution is recorded under the member who made it, and there is no member on this call");
     if (isMachineStamp(who))
       return refusal("BIAS_DEBT_MACHINE_CANNOT_RESOLVE",
-        "settling a bias debt is a judgement that the lens change does not bear on the finding, and that "
-        + "is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential "
-        + "may raise the obligation, surface it and prepare what it needs, and may not answer it");
+        localize("bias.index.settling_bias_debt_is_a",
+                 "settling a bias debt is a judgement that the lens change does not bear on the finding, and that is a named member's judgement (DEC-24: derived informs, authored binds). A machine credential may raise the obligation, surface it and prepare what it needs, and may not answer it"));
     if (!said)
       return refusal("BIAS_DEBT_NO_REASON",
         "this act settles an obligation the record raised, and the whole of what it records is the "
@@ -1028,8 +1024,8 @@ class Bias {
   biasDebt({ run = null, viewer = null, limit = null } = {}) {
     const id = String(run ?? "").trim();
     const absent = { ok: true, run: id || null, found: false,
-                     note: "no bias debt is on record for this work: it either never carried one, or it is not "
-                         + "one this reader can open" };
+                     note: localize("bias.index.no_bias_debt_is_on",
+                         "no bias debt is on record for this work: it either never carried one, or it is not one this reader can open") };
     if (!id) return absent;
     const seen = Bias.#gate("bd.context_id", viewer);
     const row = this.#one(`SELECT bd.* FROM bias_debts bd WHERE bd.run = ? AND (${seen.sql})`, id, ...seen.args);
@@ -1161,10 +1157,10 @@ class Bias {
       return { re_ran: target, discharged: false, outcome: "lens_undetermined",
                lens_ran_under: formed, lens_in_force: inForce,
                stated: formed == null
-                 ? "this work was made under no lens that can be read, so whether it ran under the lens now in "
-                 + "force is undetermined and it discharges nothing"
-                 : "no lens is in force for this work's context, so whether it ran under the current one is "
-                 + "undetermined and it discharges nothing" };
+                 ? localize("bias.index.this_work_was_made_under",
+                   "this work was made under no lens that can be read, so whether it ran under the lens now in force is undetermined and it discharges nothing")
+                 : localize("bias.index.no_lens_is_in_force",
+                   "no lens is in force for this work's context, so whether it ran under the current one is undetermined and it discharges nothing") };
     if (formed !== inForce)
       return { re_ran: target, discharged: false, outcome: "other_lens",
                lens_ran_under: formed, lens_in_force: inForce,
