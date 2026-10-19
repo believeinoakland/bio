@@ -50,7 +50,7 @@ Commit `8db31889dd`. Module lines unchanged (2346).
 
 CHANGE B2 done at commit 8db31889dd (record at the next commit). Merged tranche/T51 at 1b44464d70, then fixed the four test copies in tools.test.mjs (273, 274, 432, 433) with neutral fixture strings of the same shape. Reading the owner's file-scanner rows with word() was tried first and failed the checker (missingkey), so the neutral form holds. Words check reads 0 for file-safety; module tests 64/64; format, architecture, coverage 0 failures; ownership 1 file, 0 failures. Record section appended. Ready for your merge.
 
-## Completion (T51-222 is intent; this is the RW round, B3: words, K4015)
+## Completion (RW words round, B3, K4015)
 
 RW words round (B3, K4015) done at commit 1ae346f0cb. Merged tranche/T51 (no rebase); the job branch was already at origin.
 
