@@ -41,3 +41,7 @@ CHANGE (K4079): wizard-scripts is merged into tranche/T51 (registry, front doors
 ## B5 · CHANGE
 
 CHANGE (K4080): the design @ `2a64c5ae77` (DEC-359) is merged into tranche/T51 and `rows.mjs` regenerated: merge tranche/T51. Your rows, from the design's answer verbatim: `screen.published.leg` {n}, `.leg.supports`, `.leg.cuts`, `.restson.lead` / `.cutagainstby.lead` {items}, `.min.none|c|b|a`, `screen.review_copy.save.file`, `.carries.fingerprint`, `.carries.author`, `screen.published.finding.unreadable`/`.withheld`, `shell.card.hold`.
+
+## B6 · CHANGE
+
+CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_ACTS, the new reads), admission, answer-envelope, store-door, signin-door and interface-shell (R90–R103, the kit options, cs.readonly, cs.download verify, cs.print, the typed-input hook) are merged into tranche/T51. Merge tranche/T51 into your branch, drop any local stand-in of a provider (BROWSER_ACTS, the shell's options, a patched registry), re-run your suite against the real providers, and post COMPLETE (or name what still fails and whose it is). You merge in modules.json order once your same-layer uses are merged.
