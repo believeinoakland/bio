@@ -159,7 +159,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
           for (const width of WIDTHS) {
             await p.setViewportSize(viewportOf(width));
             await p.goto(new URL(addressOf(s.id), copy).href); await settle(p);
-            for (const e of await escapedOnPage(p, { entered })) walk.fail(FAIL.PSEUDO, `${s.id} at ${width}px: ${e.element}: "${e.text}" escaped the word list`);
+            for (const e of await escapedOnPage(p, { entered })) walk.fail(FAIL.PSEUDO, localize("journey-check.run.id_at_width_px_element", "{id} at {width}px: {element}: \"{text}\" escaped the word list", { id: String(s.id), width: String(width), element: String(e.element), text: String(e.text) }));
           }
         }, { expect: [ABSENCE] }).catch(going);
       }
@@ -254,8 +254,8 @@ export async function publicPass(walk, b, base, { pages = publicPages(), registr
           await p.setViewportSize(viewportOf(width));
           await p.goto(new URL(addressOf(id), base).href); await settle(p);
           const st = await drawnState(p, id);
-          if (!st.drawn) { if (width === WIDTHS[0]) walk.notes.push(`${id}: not drawn signed out at its bare address, so its title and weight marks were not checked (${st.why})`); continue; }
-          for (const l of await dec340Limits(p, id, { isPublic: true, phone: width <= 390 })) walk.fail(FAIL.DEC340, `${id} at ${width}px: ${l.kind}: ${l.detail}`);
+          if (!st.drawn) { if (width === WIDTHS[0]) walk.notes.push(localize("journey-check.run.id_not_drawn_signed_out", "{id}: not drawn signed out at its bare address, so its title and weight marks were not checked ({why})", { id: String(id), why: String(st.why) })); continue; }
+          for (const l of await dec340Limits(p, id, { isPublic: true, phone: width <= 390 })) walk.fail(FAIL.DEC340, localize("journey-check.run.id_at_width_px_kind", "{id} at {width}px: {kind}: {detail}", { id: String(id), width: String(width), kind: String(l.kind), detail: String(l.detail) }));
         }
       }, { expect: [/^(?:NOT_FOUND|NO_SUCH_[A-Z_]+|[A-Z_]+_NOT_FOUND|NOT_VISIBLE|NOT_A_PARTICIPANT)$/, 401, 403, 404] }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
     }
@@ -320,7 +320,7 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
               if (width !== 1280) { await p.setViewportSize(viewportOf(width)); await p.reload(); await settle(p); }
               for (const l of await pageLimits(p, { width, slugs })) walk.fail(l.kind, `${s.id} at ${width}px: ${l.detail}`);
               /* R28 (DEC-340): the screen's title, the explanations, the masthead's name, Projects' controls */
-              for (const l of await dec340Limits(p, s.id, { isPublic: false, phone: width <= 390 })) walk.fail(FAIL.DEC340, `${s.id} at ${width}px: ${l.kind}: ${l.detail}`);
+              for (const l of await dec340Limits(p, s.id, { isPublic: false, phone: width <= 390 })) walk.fail(FAIL.DEC340, localize("journey-check.run.id_at_width_px_kind", "{id} at {width}px: {kind}: {detail}", { id: String(s.id), width: String(width), kind: String(l.kind), detail: String(l.detail) }));
               const live = await p.screenshot();
               const design = await mock.draw(s.id, width);
               if (!design) walk.fail(FAIL.DESIGN, localize("journey-check.run.id_the_design_mock_at", "{id}: the design mock at {commit} draws no such screen", { id: String(s.id), commit: String(mock.commit) }));

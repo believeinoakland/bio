@@ -6,6 +6,7 @@
    is a note "<screen>, <state>: not reached on this instance" (never a pass, never a failure), listed for BOB's own live walk. */
 import { join, relative } from "node:path";
 import { FAIL } from "./walker.mjs";
+import { localize } from "../setup-words/index.mjs";
 import { pair, WIDTHS, viewportOf } from "./design.mjs";
 import { settle } from "./walker.mjs";
 
@@ -42,7 +43,7 @@ export async function walkStates(walk, b, mock, { out, page = null, base = null,
     const design = {};
     for (const width of WIDTHS) {
       const d = await mock.drawState(st.screen, st.control, st.option, width);
-      if (d.why) { walk.fail(FAIL.DESIGN, `${name}: ${d.why} (the design mock at ${mock.commit})`); break; }
+      if (d.why) { walk.fail(FAIL.DESIGN, localize("journey-check.states.name_why_the_design_mock_at", "{name}: {why} (the design mock at {commit})", { name: String(name), why: String(d.why), commit: String(mock.commit) })); break; }
       design[width] = d.png;
     }
     if (!design[WIDTHS[0]] || !design[WIDTHS[1]]) continue;
@@ -59,7 +60,7 @@ export async function walkStates(walk, b, mock, { out, page = null, base = null,
       }
       await page.setViewportSize(viewportOf(WIDTHS[0]));
     }
-    if (!ok) { walk.notes.push(`${name}: not reached on this instance`); continue; }
+    if (!ok) { walk.notes.push(localize("journey-check.states.name_not_reached_on_this_instance", "{name}: not reached on this instance", { name: String(name) })); continue; }
     for (const width of WIDTHS)
       written.push(relative(out, await pair(b, livePng[width], design[width], join(out, "pairs", `state-${st.screen}-${st.state.replace(/[^a-z0-9]+/gi, "-")}-${width}.png`), { title: `${name}, ${width}px` })));
   }

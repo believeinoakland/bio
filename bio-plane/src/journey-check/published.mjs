@@ -12,6 +12,7 @@ import { FAIL, settle, StepFailed } from "./walker.mjs";
 import { pair, WIDTHS, viewportOf } from "./design.mjs";
 import { requireWord, byWord, wordPattern } from "./words.mjs";
 import { requireDrawn } from "./journeys.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const PUBLISHED_ENV = "JOURNEY_PUBLISHED_CASE";
 
@@ -24,7 +25,7 @@ export async function walkPublished(walk, b, base, mock, { path = process.env[PU
     await ctx.route("**/*", (r) => {
       const req = r.request();
       if (new URL(req.url()).host !== walk.copyHost) { walk.foreign(req.url()); return r.abort("blockedbyclient"); }
-      if (req.headers().authorization) { walk.fail(FAIL.STEP, `published: a request carried an Authorization header: ${req.method()} ${new URL(req.url()).pathname}`); return r.abort("blockedbyclient"); }
+      if (req.headers().authorization) { walk.fail(FAIL.STEP, localize("journey-check.published.published_a_request_carried_an", "published: a request carried an Authorization header: {method} {pathname}", { method: String(req.method()), pathname: String(new URL(req.url()).pathname) })); return r.abort("blockedbyclient"); }
       return r.continue();
     });
     const page = walk.watch(await ctx.newPage());
@@ -33,11 +34,11 @@ export async function walkPublished(walk, b, base, mock, { path = process.env[PU
     page.on("request", (q) => { if (["POST", "PUT", "PATCH", "DELETE"].includes(q.method())) sent += 1; });
     for (const width of WIDTHS) {
       await page.setViewportSize(viewportOf(width));
-      await walk.step(page, `published at ${width}px: the case, signed out`, async (p) => {
+      await walk.step(page, localize("journey-check.published.published_at_width_px_the", "published at {width}px: the case, signed out", { width: String(width) }), async (p) => {
         await p.goto(url); await settle(p);
         await requireDrawn(walk, p, "published");
         const design = await mock.draw("published", width);
-        if (!design) walk.fail(FAIL.DESIGN, `published: the design mock at ${mock.commit} draws no such screen`);
+        if (!design) walk.fail(FAIL.DESIGN, localize("journey-check.published.published_the_design_mock_at", "published: the design mock at {commit} draws no such screen", { commit: String(mock.commit) }));
         else walk.pairs.push(relative(out, await pair(b, await p.screenshot(), design, join(out, "pairs", `published-${width}.png`), { title: `published, ${width}px, signed out` })));
       }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
     }

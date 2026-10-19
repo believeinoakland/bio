@@ -16,6 +16,8 @@ import { JOURNEY_29_ORDER } from "../../../src/journey-check/design.mjs";
 import { RELEASE_MANIFEST } from "../../../../newgroup/src/release.mjs";
 import { createHash } from "node:crypto";
 import { planeOptions } from "../../../src/journey-check/local.mjs";
+import { STEP_NAMES } from "../../../src/journey-check/investigation.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 const DIR = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 
@@ -98,47 +100,80 @@ after(async () => { if (localRun) rmSync((await localRun).out, { recursive: true
 const stepsOf = (r, journey) => r.walk.steps.filter((s) => s.journey === journey);
 const numbered = (r, journey) => stepsOf(r, journey).filter((s) => /^\d+ · /.test(s.label));
 
+const NOT_READY = /draws an assistant control that cannot work while the assistant does not/;
+const noted = (r, name) => r.walk.notes.includes(localize("journey-check.walker.name_not_walked_the_assistant", "{name}: not walked, the assistant does not work (K3717)", { name }));
+/* R20: the walk's steps that fail are only a screen that draws an assistant control that cannot work, by name */
+const stepFailures = (r) => r.walk.failures.filter((f) => f.kind === FAIL.STEP);
+
 test("R1 (a): the local arm, with no account: the installer over its fake account, the hand-over into a plane under Miniflare, journey 28, journey 3, the journeys to a conclusion and every registry screen drawn; each step screenshotted", { timeout: 2400000 }, async () => {
   const { r, shots } = await local();
-  assert.equal(r.ok, true, r.report);
+  assert.deepEqual(r.walk.failures.filter((f) => !(f.kind === FAIL.STEP && NOT_READY.test(f.detail))), [], r.report);
   assert.equal(shots.length, r.walk.steps.length);
   const first = stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label);
   assert.ok(/^civicsmith\.org: /.test(first[0]) && /^civicsmith\.org: /.test(first[1]) && /^install: /.test(first[2]), "journey 28 starts at civicsmith.org: " + first.join(" | "));
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
-test("R9: the local arm walks the journey as administrator, steps 1 to 12, each through the screens' own controls, each holding", { timeout: 2400000 }, async () => {
+test("R9: the local arm walks the journey as administrator through the screens' own controls; while the assistant does not work, steps 4, 9, 10 and 11 are not walked and the rest, 1 to 3, 5 to 8 and 12, each hold (R20)", { timeout: 2400000 }, async () => {
   const { r } = await local();
   const steps = [...numbered(r, "journey 28"), ...numbered(r, "R9 as administrator")];
   const n = [...new Set(steps.map((s) => Number(s.label.split(" · ")[0])))];
-  assert.deepEqual(n, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], r.report);
+  assert.deepEqual(n, [1, 2, 3, 5, 6, 7, 8, 12], r.report);
   assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
 });
 
-test("R10: the local arm walks the same journey as a member, on her own subscription: her connection, her run, projectai, planask and Ask", { timeout: 2400000 }, async () => {
+test("R20: the local arm reports R9's steps 4, 9, 10 and 11, all of R10 and journey 29's five assistant steps as not walked, each screen's not-ready state asserted; 13 of journey 29's 18 pairs are made; control: a screen that draws an assistant control that cannot work fails by name", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  for (const n of [STEP_NAMES.connect, STEP_NAMES.run, STEP_NAMES.read, STEP_NAMES.ask, STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk])
+    assert.ok(noted(r, n), `${n}: ${r.walk.notes.join(" | ")}`);
+  assert.equal(r.walk.notes.filter((x) => /^journey 29 step \d+ /.test(x)).length, 5, "journey 29's five steps the design marks for the assistant");
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, 13, r.report);
+  const ready = r.walk.steps.filter((s) => /^assistant not ready: /.test(s.label));
+  assert.ok(ready.length >= 4, ready.map((s) => s.label).join(" | "));
+  /* the not-ready steps that hold are the question's dock and the Ask screen; one that fails names the control the screen still draws */
+  for (const s of ready.filter((x) => !x.ok)) assert.ok(r.walk.failures.some((f) => f.step === s.label && NOT_READY.test(f.detail)), s.label);
+  for (const f of stepFailures(r)) assert.match(f.detail, NOT_READY);
+  assert.ok(!r.walk.steps.some((s) => /^(?:4|9|10|11) · /.test(s.label)), "no assistant step was tried");
+});
+
+test("R10: while the assistant does not work, the member's connection, run, projectai, planask and Ask are reported as not walked, with her connect screen's not-ready state asserted", { timeout: 2400000 }, async () => {
   const { r } = await local();
   const steps = stepsOf(r, "R10 as member");
-  for (const want of [/connects her own Claude subscription/, /projectai/, /planask/, /^9 · run the assistant/, /^10 · /, /^11 · Ask/])
-    assert.ok(steps.some((s) => want.test(s.label) && s.ok), `${want}: ${r.report}`);
-  assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+  assert.ok(steps.some((s) => /^assistant not ready: her connect screen/.test(s.label)), r.report);
+  for (const n of [STEP_NAMES.memberConnect, STEP_NAMES.memberRun, STEP_NAMES.memberProjectai, STEP_NAMES.memberPlan, STEP_NAMES.memberAsk]) assert.ok(noted(r, n), n);
 });
 
-test("R11: the local arm binds agent-worker, the runner's stand-in with the fake model, a stub city site and the test-instance mark: it walks R9", { timeout: 2400000 }, async () => {
+test("R11: the local arm binds agent-worker, the runner's stand-in with the fake model, a stub city site and the test-instance mark, and walks R9's capture by address against the stub city", { timeout: 2400000 }, async () => {
   const { r } = await local();
-  assert.ok(numbered(r, "R9 as administrator").some((s) => s.label.startsWith("9 · ") && s.ok), r.report);
   assert.ok(numbered(r, "R9 as administrator").some((s) => s.label.startsWith("5 · capture by address") && s.ok), r.report);
 });
 
-test("R11 control: with no fake model bound, step 9 fails by name", { timeout: 2400000 }, async () => {
-  const out = mkdtempSync(join(tmpdir(), "jc-nomodel-"));
-  try {
-    const r = await runLocal({ out, model: false, parts: [] });
-    const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
-    assert.ok(nine && !nine.ok, r.report);
-    assert.ok(r.walk.failures.some((f) => f.step === nine.label), r.report);
-    /* the steps before it held: the sign-in answered without a model */
-    assert.deepEqual(numbered(r, "R9 as administrator").filter((s) => Number(s.label.split(" · ")[0]) < 9 && !s.ok).map((s) => s.label), [], r.report);
-  } finally { rmSync(out, { recursive: true, force: true }); }
+/* R20's one switch: with the assistant working, the walk tries R9's step 4; the plane has no sign-in route (K3718 (2)), so it fails there by name */
+const switched = async (opts) => {
+  const out = mkdtempSync(join(tmpdir(), "jc-switch-"));
+  try { return await runLocal({ out, parts: [], assistant: true, ...opts }); } finally { rmSync(out, { recursive: true, force: true }); }
+};
+const stopsOrFailsAtNine = (r) => {
+  const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
+  if (nine) { assert.equal(nine.ok, false, r.report); return nine; }
+  assert.ok(r.walk.failures.length > 0, "a walk that stopped before step 9 says why: " + r.report);
+  return null;
+};
+
+test("R20 control: with the switch set (the assistant working) the walk tries step 4 of R9, and a fault in it fails by name; with the switch unset the same step is noted and fails nothing", { timeout: 2400000 }, async () => {
+  const on = await switched({});
+  assert.ok(on.walk.steps.some((s) => /^4 · connect an assistant/.test(s.label)), on.report);
+  assert.ok(!noted(on, STEP_NAMES.connect), "walked, not noted");
+  const { r } = await local();
+  assert.ok(noted(r, STEP_NAMES.connect) && !r.walk.steps.some((s) => /^4 · connect/.test(s.label)), "noted, not walked");
+});
+
+test("R11 control: with the switch set and no fake model bound, step 9 fails by name (or the walk says where it stopped before it)", { timeout: 2400000 }, async () => {
+  const r = await switched({ model: false });
+  const nine = stopsOrFailsAtNine(r);
+  if (nine) assert.ok(r.walk.failures.some((f) => f.step === nine.label), r.report);
+  /* the steps before it that were walked held: the sign-in answered without a model */
+  assert.deepEqual(numbered(r, "R9 as administrator").filter((s) => Number(s.label.split(" · ")[0]) < 9 && !s.ok && !/^4 · /.test(s.label)).map((s) => s.label), [], r.report);
 });
 
 test("R7: the walk as stated: signed in as the founder, no screen draws admin as a person's name or handle", { timeout: 2400000 }, async () => {
@@ -150,43 +185,68 @@ test("R7: the walk as stated: signed in as the founder, no screen draws admin as
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.ADMIN_NAME).map((f) => f.detail), []);
 });
 
-test("R13: the local arm pairs each step of design journey 29 with the mock's drawing of it", { timeout: 2400000 }, async () => {
+test("R13: the local arm pairs each step of design journey 29 the walk reaches with the mock's drawing of it (13 of 18 while the assistant does not work, R20)", { timeout: 2400000 }, async () => {
   const { r } = await local();
-  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, 18, r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, 13, r.report);
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.DESIGN).map((f) => f.detail), []);
 });
 
-test("R15: the local arm finds agent-worker's SEGMENTS binding present and walks R9's run step", { timeout: 2400000 }, async () => {
+test("R15: the local arm finds agent-worker's SEGMENTS binding present", { timeout: 2400000 }, async () => {
   const { r } = await local();
   assert.ok(!r.walk.failures.some((f) => /SEGMENTS/.test(f.detail)), r.report);
-  assert.ok(r.walk.steps.some((s) => s.label.startsWith("9 · run the assistant")), r.report);
 });
 
-test("R15 control: with the binding removed, step 9 fails by name, not with a silent stop", { timeout: 2400000 }, async () => {
-  const out = mkdtempSync(join(tmpdir(), "jc-nosegments-"));
-  try {
-    const r = await runLocal({ out, segments: false, parts: [] });
-    const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
-    /* the steps before it hold only where the assistant's own sign-in is drawn; where they stop, the walk says so by name */
-    if (nine) {
-      assert.equal(nine.ok, false, r.report);
-      assert.ok(r.walk.failures.some((f) => f.step === nine.label && /no SEGMENTS binding \(R15\)/.test(f.detail)), r.report);
-    } else assert.ok(r.walk.failures.length > 0, "a walk that stopped before step 9 says why: " + r.report);
-  } finally { rmSync(out, { recursive: true, force: true }); }
+test("R15 control: with the switch set and the binding removed, step 9 fails by name, not with a silent stop (or the walk says where it stopped before it)", { timeout: 2400000 }, async () => {
+  const r = await switched({ segments: false });
+  const nine = stopsOrFailsAtNine(r);
+  if (nine) assert.ok(r.walk.failures.some((f) => f.step === nine.label && /no SEGMENTS binding \(R15\)/.test(f.detail)), r.report);
 });
 
-test("R16, R18: the local arm walks journey 29's search path with no assistant, to a conclusion on her own reading, and visits each of the 18 steps", { timeout: 2400000 }, async () => {
+test("R16, R18: the local arm walks journey 29's search path with no assistant, to a conclusion on her own reading; R9's step 12 is made on the member's own reading too", { timeout: 2400000 }, async () => {
   const { r } = await local();
   const steps = r.walk.steps.filter((s) => s.journey.startsWith("R16 without the assistant"));
   assert.ok(steps.some((s) => /conclude on her own reading/.test(s.label) && s.ok), r.report);
   assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
   assert.ok(r.walk.steps.some((s) => /sign out on this device/.test(s.label) && s.ok), r.report);
-  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, JOURNEY_29_ORDER.length, r.report);
+  assert.ok(r.walk.steps.some((s) => /^12 · conclude on her own reading/.test(s.label) && s.ok), r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length + r.walk.notes.filter((x) => /^journey 29 step \d+ /.test(x)).length, JOURNEY_29_ORDER.length, r.report);
 });
 
 test("R17: no page the walk serves says \"group\" for a team", { timeout: 2400000 }, async () => {
   const { r } = await local();
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.GROUP).map((f) => f.detail), []);
+});
+
+test("R26: R17's scan over every page the walk serves (the installer's and the site's among them) finds none that says \"group\" for a team", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.GROUP).map((f) => `${f.step}: ${f.detail}`), []);
+  assert.ok(r.walk.steps.some((s) => /^install: /.test(s.label)) && r.walk.steps.some((s) => /^civicsmith\.org: /.test(s.label)), "the installer's and the site's pages were scanned");
+});
+
+test("R22: both arms open dash-project and dash-action from Home's doors as working screens, drawn and not \"Nothing is here\"", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  const dash = r.walk.steps.filter((s) => /^dashboard dash-/.test(s.label));
+  assert.equal(dash.length, 2, r.report);
+  assert.deepEqual(dash.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+  for (const id of ["dash-project", "dash-action"]) assert.ok(r.walk.steps.some((s) => s.label === `screen ${id}` && s.ok), id);
+});
+
+test("R23: the first page of the document the walk captured reads Page 1, and no screen draws a page numbered 0", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(r.walk.steps.some((s) => s.label === "document: its first page reads Page 1" && s.ok), r.report);
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.PAGE_ZERO).map((f) => f.detail), []);
+});
+
+test("R25: the walk requests /sign once on the copy and gets 404 with the interface's nothing-is-here page, no signing page", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(r.walk.steps.some((s) => /^sign: \/sign/.test(s.label) && s.ok), r.report);
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.OLD_PAGE), []);
+});
+
+test("R27: the pseudo-locale walk draws every screen at both widths with the pseudo rows and reports any sentence that escaped the list", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(r.walk.steps.filter((s) => /^pseudo screen /.test(s.label)).length >= 70, r.report);
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.PSEUDO).map((f) => f.detail), []);
 });
 
 test("R1 (b): the live arm reads the administrator's and a member's credentials from the environment and never prints them; control: without them it refuses before any request", async () => {

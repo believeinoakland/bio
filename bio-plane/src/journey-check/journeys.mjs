@@ -452,7 +452,7 @@ export function sweepAsFounder(walk, page, base, { handle, screens = undefined }
 export const DASHBOARDS = Object.freeze(["dash-project", "dash-action"]);
 export async function walkDashboards(walk, page, base) {
   for (const id of DASHBOARDS) {
-    await walk.step(page, `dashboard ${id}: opened from the door on Home`, async (p) => {
+    await walk.step(page, localize("journey-check.journeys.dashboard_id_opened_from_the_door", "dashboard {id}: opened from the door on Home", { id: String(id) }), async (p) => {
       await open(walk, p, base, "/app", "home");
       const door = p.locator(`#cs-main a[href^="/app/${id}"]`).first();
       try { await door.waitFor({ state: "visible", timeout: 8000 }); } catch { throw new Error(`Home draws no door to ${id}`); }

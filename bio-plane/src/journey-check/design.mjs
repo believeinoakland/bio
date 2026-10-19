@@ -139,19 +139,22 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
        control or option, so a mock missing a state fails by its name */
     async drawState(id, control, option, width) {
       const r = await page.evaluate(([id, control, option, dev]) => {
-        if (!REG.some((x) => x.id === id)) return "the mock draws no such screen";
+        if (!REG.some((x) => x.id === id)) return "screen";
         const W = window.CS_WALK; Object.assign(W.st, { mode: "screen", id, ai: false, dev, step: 0 }); W.draw();
         const sel = document.getElementById(control);
-        if (!sel) return `the mock offers no control ${control}`;
+        if (!sel) return "control";
         const o = [...sel.options].find((x) => new RegExp(option, "i").test(x.textContent));
-        if (!o) return `the mock's ${control} offers no state like /${option}/`;
+        if (!o) return "option";
         sel.value = o.value; sel.dispatchEvent(new Event("change", { bubbles: true }));
         const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
         sc.style.transform = "none";
         Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
         return "ok";
       }, [id, control, option, width <= PHONE ? "phone" : "desktop"]);
-      return r === "ok" ? { png: await page.locator("#vscale").screenshot() } : { why: r };
+      if (r === "ok") return { png: await page.locator("#vscale").screenshot() };
+      return { why: r === "screen" ? localize("journey-check.design.the_mock_draws_no_such_screen", "the mock draws no such screen")
+        : r === "control" ? localize("journey-check.design.the_mock_offers_no_control", "the mock offers no control {control}", { control: String(control) })
+          : localize("journey-check.design.the_mock_s_offers_no_state", "the mock's {control} offers no state like /{option}/", { control: String(control), option: String(option) }) };
     },
     /* R18: every step of design journey `journey` as the design's file holds it, in its order, the assistant's and the
        no-assistant's alike: `{s, v, act, only}` (`only` is "ai", "noai" or null) */

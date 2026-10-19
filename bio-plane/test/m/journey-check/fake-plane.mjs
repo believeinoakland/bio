@@ -13,8 +13,16 @@
    nothing-is-here page, or, with `signPage: true`, a page holding a form. */
 import { createServer } from "node:http";
 import { word } from "../../../src/setup-words/index.mjs";
+import { wordOf, publicPages } from "../../../src/journey-check/checks.mjs";
+import { registryScreens } from "../../../src/journey-check/screens.mjs";
 
 const WORDS = { empty: word("question.empty.heading"), nothing: word("shell.unavailable.nothing.title"), connected: word("screen.connect.own.subscription", { plan: "Pro", date: "14 October 2026" }) };
+
+/* R28: each screen's tab title, the word of its screen (interface-shell R102): the public form on a public page */
+const PUBLIC = new Set(publicPages());
+const TITLES = Object.fromEntries(registryScreens().map((s) => [s.id, PUBLIC.has(s.id)
+  ? wordOf("page.title.public", { page: wordOf(`screen.${s.id}.name`), team: "Lakeshore Tenants" })
+  : wordOf("page.title", { screen: wordOf(`screen.${s.id}.name`), team: "Lakeshore Tenants" })]));
 
 const CSS = `body{margin:0;font:16px sans-serif}.cs-frame{display:block;width:100%}.cs-testband{display:block;padding:4px}
 .cs-main{display:block;padding:16px 16px 80px}.cs-tabs{position:fixed;left:0;right:0;bottom:0;height:48px;display:flex;background:#eee}
@@ -43,6 +51,7 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true, ass
   const id = location.pathname === "/app" ? "home" : location.pathname.slice(5).split("/")[0];
   const who = await (await fetch("/api/?op=whoami", { headers: { authorization: "Bearer " + sessionStorage.getItem("t") } })).json();
   const flaws = ${JSON.stringify(flaws)}, FLAW = ${JSON.stringify(FLAW)};
+  document.title = ${JSON.stringify(TITLES)}[id] || document.title;
   const f = flaws[id];
   const acts = '<button class="cs-btn" data-act="testify" type="button">Testify</button>'
     + (${JSON.stringify(adminActs)} && who.result.administer && id === "members" ? '<button class="cs-btn" data-act="memberadd" type="button">Invite a member</button>' : "");

@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, documentKind, refusalsIn } from "../../../src/journey-check/walker.mjs";
+import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, LEGACY_UI_WORKER, documentKind, refusalsIn } from "../../../src/journey-check/walker.mjs";
 import { drawnState, sweepScreens, registryScreens, EXCEPTED, INSTALLER_SCREENS } from "../../../src/journey-check/screens.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
 import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
@@ -195,18 +195,30 @@ test("R2: a registry screen the shell does not draw fails: its \"Nothing here\" 
   await ctx.close();
 });
 
-test("R2 (K3137): the sweep opens every registry screen but `site` and the `dash-*` treatments (and the installer's own two pages, walked in the journey)", () => {
+test("R2 (K3137), R22: the sweep opens every registry screen but `site` (and the installer's own two pages, walked in the journey); `dash-action` and `dash-project` are swept", () => {
   const all = registryScreens().map((s) => s.id);
   const swept = sweepScreens().map((s) => s.id);
-  assert.deepEqual(EXCEPTED, ["site", "dash-home", "dash-action", "dash-project"]);
-  /* exactly those the registry lists of the excepted and the installer's (DEC-218 retired `dash-home` from it) */
+  assert.deepEqual(EXCEPTED, ["site"]);
+  /* exactly those the registry lists of the excepted and the installer's (R22: `dash-action` and `dash-project` are drawn and walked) */
   const held = [...EXCEPTED, ...INSTALLER_SCREENS].filter((id) => all.includes(id)).sort();
   assert.deepEqual(all.filter((id) => !swept.includes(id)).sort(), held);
   for (const id of ["site", "install", "update"]) assert.ok(held.includes(id), id);
-  for (const id of ["front", "setup", "join", "home", "members", "account", "capture", "doorbell", "published"]) assert.ok(swept.includes(id), id);
+  for (const id of ["front", "setup", "join", "home", "members", "account", "capture", "doorbell", "published", "dash-action", "dash-project"]) assert.ok(swept.includes(id), id);
 });
 
 test("R2 (interface-shell R35): the sweep expects only the absence answers the shell draws as \"Nothing is here\" or \"You can't open this\"", () => {
   for (const c of ["NOT_FOUND", "NO_SUCH_CASE", "PROJECT_NOT_FOUND", "NOT_VISIBLE", "NOT_A_PARTICIPANT"]) assert.ok(ABSENCE.test(c), c);
   for (const c of ["NO_REVIEW_COPY", "REQUIRED_ARGUMENT_MISSING", "SESSION_LOCKED", "NOT_FOUNDED"]) assert.equal(ABSENCE.test(c), false, c);
+});
+
+test("R25: the old pages stay failures after the old interface is deleted: the setup page's title and a document from a host named civicos fail as OLD_PAGE with the same messages; control: the interface passes", async () => {
+  assert.equal(LEGACY_UI_WORKER, "civicos");
+  assert.equal(SETUP_PAGE_TITLE, "Your accountability record");
+  const setup = await walked("/");
+  assert.deepEqual(kinds(setup), [FAIL.OLD_PAGE]);
+  assert.match(setup.failures[0].detail, /is the setup page/);
+  const legacy = await walked("/app/legacy");
+  assert.deepEqual(kinds(legacy), [FAIL.OLD_PAGE]);
+  assert.match(legacy.failures[0].detail, /civicos\.grp\.workers\.dev is legacy-ui/);
+  assert.deepEqual((await walked("/app")).failures, []);
 });
