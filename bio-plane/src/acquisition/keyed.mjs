@@ -67,8 +67,7 @@ export async function keyedFetch(store, { service = null, request = null, purpos
                   { service: typeof service === "string" ? service.slice(0, 40) : null });
   /* K1449: never one a daemon uses. An act with no viewer named is the in-plane caller's own; a machine's is refused. */
   if (viewer !== undefined && viewer !== null && isMachineIdentity(viewer))
-    return refuse("NOT_PERMITTED", "a keyed outside service is used for a member's or an operator's act, never by a "
-      + "machine credential or the daemon; nothing was fetched", { service });
+    return refuse("NOT_PERMITTED", localize("acquisition.keyed.a_keyed_outside_service", "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched"), { service });
   const r = request && typeof request === "object" ? request : {};
   const method = r.method === undefined ? "GET" : r.method;
   /* R28's fence and the key's: a public locator, on the service's own host and no other. */
@@ -90,7 +89,7 @@ export async function keyedFetch(store, { service = null, request = null, purpos
   try { k = creds ? await creds.keyedServiceFor({ service }) : null; } catch { k = null; }
   if (!k || k.ok !== true || typeof k.key !== "string" || !k.key) {
     if (k && k.ok === false) return { ...k, service };
-    return refuse("KEYED_SERVICE_OFF", "the team's key for this service is off or not held; the caller goes on without it",
+    return refuse("KEYED_SERVICE_OFF", localize("acquisition.keyed.the_team_s_key_for", "the team's key for this service is off or not held; the caller goes on without it"),
                   { code: "KEYED_SERVICE_OFF", service });
   }
   const key = k.key;
@@ -108,14 +107,14 @@ export async function keyedFetch(store, { service = null, request = null, purpos
         ...(r.form ? { body: new URLSearchParams(r.form).toString() } : {}) }) });
   } catch {
     /* as R23: a thrown fetch's message can carry what rode the request, so none is carried */
-    return refuse("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the team's key rode it", { service });
+    return refuse("FETCH_FAILED", localize("acquisition.keyed.the_request_to_the_service", "the request to the service did not complete; its error is not carried because the team's key rode it"), { service });
   }
   if (out.refusedByGovernor)
     return refuse("HOST_COOLING_OFF", localize("acquisition.keyed.the_per_host_governor_is", "the per-host governor is holding requests to {host} ({reason})", { host: String(svc.host), reason: String(out.reason) }),
                   { service, retry_in_ms: out.retry_in_ms || 0 });
   const res = out.res;
   const body = await readBounded(res);
-  if (body.failed) return refuse("FETCH_FAILED", "the service's answer broke off while it was read", { service });
+  if (body.failed) return refuse("FETCH_FAILED", localize("acquisition.keyed.the_service_s_answer_broke", "the service's answer broke off while it was read"), { service });
   if (body.oversize) return refuse("TOO_LARGE", localize("acquisition.keyed.the_services_answer_is_over", "the service's answer is over {KEYED_ANSWER_MAX} bytes; it was not read", { KEYED_ANSWER_MAX: String(KEYED_ANSWER_MAX) }), { service });
   const contentType = ((res.headers && res.headers.get("content-type")) || "").split(";")[0].trim().toLowerCase() || null;
   const retryAfter = (res.headers && res.headers.get("retry-after")) || null;
@@ -153,9 +152,9 @@ function serviceAddress(u) {
  *  the service off it answers R36's refusal and the recogniser's own reading stands alone. It writes nothing. */
 export async function citationLookup(store, { text = null, viewer = null, ownHosts = null } = {}) {
   if (typeof viewer !== "string" || !viewer.trim())
-    return refuse("NOT_PERMITTED", "a citation lookup is a member's or an operator's act, and none was named; nothing was sent");
+    return refuse("NOT_PERMITTED", localize("acquisition.keyed.a_citation_lookup_is_a", "a citation lookup is a member's or an operator's act, and none was named; nothing was sent"));
   if (typeof text !== "string" || !text.trim())
-    return refuse("BAD_TEXT", "there is no text to look citations up in; nothing was sent");
+    return refuse("BAD_TEXT", localize("acquisition.keyed.there_is_no_text", "there is no text to look citations up in; nothing was sent"));
   if (text.length > CITATION_TEXT_MAX)
     return refuse("TEXT_TOO_LONG", localize("acquisition.keyed.the_service_reads_at_most", "the service reads at most {CITATION_TEXT_MAX} characters a request and this text is {length}; nothing was sent", { CITATION_TEXT_MAX: String(CITATION_TEXT_MAX), length: String(text.length) }), { max: CITATION_TEXT_MAX, length: text.length });
   const k = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", viewer, ownHosts,
@@ -174,7 +173,7 @@ export async function citationLookup(store, { text = null, viewer = null, ownHos
   let rows;
   try { rows = JSON.parse(k.text); } catch { rows = null; }
   if (!Array.isArray(rows))
-    return refuse("SERVICE_ANSWER_UNREADABLE", "the service's answer is not the list of citations its documentation describes", { service: "courtlistener" });
+    return refuse("SERVICE_ANSWER_UNREADABLE", localize("acquisition.keyed.the_service_s_answer_is", "the service's answer is not the list of citations its documentation describes"), { service: "courtlistener" });
   const citations = rows.filter((x) => x && typeof x === "object").map((x) => ({
     citation: str(x.citation),
     normalized: Array.isArray(x.normalized_citations) ? x.normalized_citations.filter((n) => typeof n === "string") : [],

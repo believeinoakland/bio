@@ -89,7 +89,7 @@ test("R44: a listed address is recorded on the receipt as {tool, listed, categor
     assert.deepEqual([r.body.document.capture.sha256, r.body.document.capture.grade, r.body.document.provenance_chain.length],
                      [plain.body.document.capture.sha256, EARNED_CAPTURE_CEILING, plain.body.document.provenance_chain.length]);
     assert.equal(plain.body.document.capture.grade, EARNED_CAPTURE_CEILING);
-    assert.equal("reputation" in r.body.document, false, "the document itself is unchanged");
+    assert.equal("reputation" in r.body.document, false, "reputation is not written onto the document");
   }
   /* the archive arm's grade stays the archive's, listed or not */
   const w = world();

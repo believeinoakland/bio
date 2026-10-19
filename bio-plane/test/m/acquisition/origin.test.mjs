@@ -6,6 +6,7 @@
    that matches as court-doctypes R2 does (`ctx.origin` `"member"`, else refused with its why). Both are test-local,
    registered through docprofile's `registerDoctype`; this file is its own test process. */
 import { test } from "node:test";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { world, run, sha } from "./fixture.mjs";
 import { profileOf } from "../../../src/acquisition/index.mjs";
@@ -21,13 +22,13 @@ registerDoctype({
     return { match: true, confidence: "certain", signals: [`origin ${JSON.stringify(ctx.origin ?? null)}`] };
   },
 });
-const MEMBER_ONLY = "an account-gated register is read only from a member's own capture";
+const MEMBER_ONLY = localize("court-doctypes.ecourt.member_only", "an account-gated register is read only from a member's own capture");
 registerDoctype({
   key: "member_only_register", label: "a member-only register", version: 1, contract: null,
   detect(ctx) {
     if (!/Register of Actions/.test(String((ctx && ctx.text) || ""))) return { match: false, confidence: "none", signals: [] };
-    if (ctx.origin !== "member") return { match: false, confidence: "none", signals: ["a register of actions"], why: MEMBER_ONLY };
-    return { match: true, confidence: "certain", signals: ["a register of actions", "a member's own capture"] };
+    if (ctx.origin !== "member") return { match: false, confidence: "none", signals: [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions")], why: MEMBER_ONLY };
+    return { match: true, confidence: "certain", signals: [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions"), "origin member"] };
   },
 });
 
@@ -92,5 +93,5 @@ test("R17 (N615): a type read only from a member's own capture never matches an 
   const supplied = await profileOf({ ev, sha: sha(bytes), ct: "text/html", total: bytes.length, locator: ROA_AT,
                                      retrieved: "2026-10-06T12:00:00Z", origin: "member" });
   assert.equal(supplied.content_type, "member_only_register");
-  assert.deepEqual(supplied.content_type_signals, ["a register of actions", "a member's own capture"]);
+  assert.deepEqual(supplied.content_type_signals, [localize("court-doctypes.ecourt.a_register_of_actions", "a register of actions"), "origin member"]);
 });

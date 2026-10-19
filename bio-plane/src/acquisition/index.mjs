@@ -240,7 +240,7 @@ async function archiveEligibility(cap, address) {
   const reach = cap.sourceReachability({ addressNorm: normalizeAddress(address) });
   if (!reach.fallback_eligible)
     return { ok: false, status: 409, payload: { ok: false, reason: "NOT_ELIGIBLE",
-      detail: "archive.org is a backup source and this document has not been unreachable long enough to justify one",
+      detail: localize("acquisition.index.archive_org_is_a_backup", "archive.org is a backup source and this document has not been unreachable long enough to justify one"),
       reachability: reach } };
   /* THEIR figure, ours to obey conservatively (ARCHIVE-FALLBACK.md): set on first contact, a third-party number,
      never presented as measured (K72 (12)). */
@@ -346,7 +346,7 @@ function replayed(res, ahead, reader) {
  *  (`chooseMemento`). Every refusal is an answer `{ok: false, status, payload}`. */
 async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked = null, take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
-  if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
+  if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: localize("acquisition.index.the_archive_has_no_endpoint", "the archive has no endpoint for this address") } };
   const considered = [], rows = [], tried = new Set();
   const call = async (url, purpose, headers = null) => {
     let g;
@@ -358,7 +358,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     return { res: g.res };
   };
   const archiveRefused = (res, what) => ({ ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_REFUSED", status: res.status,
-    detail: res.status === 429 ? "the archive is rate-limiting us; the governor will hold this host"
+    detail: res.status === 429 ? localize("acquisition.index.the_archive_is_rate_limiting", "the archive is rate-limiting us; the governor will hold this host")
                                : localize("acquisition.index.the_archives_what_answered_status", "the archive's {what} answered {status}", { what: String(what), status: String(res.status) }), considered } });
   /* One memento, raw, its redirects followed by hand within the archive's public addresses. */
   const tryMemento = async (uri) => {
@@ -455,7 +455,7 @@ function chooseMemento(m, sha, bytes, address, asked = null) {
  *  instant and the answer states it beside the memento's own datetime. */
 export async function archiveLookup(cap, { address, at } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
-    return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
+    return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: localize("acquisition.index.the_document_address_must_be", "the document address must be https on a public host") } };
   const asked = askedInstant(at);
   if (!asked.ok) return { status: asked.status, body: asked.payload };
   const el = await archiveEligibility(cap, address);
@@ -466,7 +466,7 @@ export async function archiveLookup(cap, { address, at } = {}) {
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
       return { fail: { ok: false, status: 413, payload: { ok: false, reason: "TOO_LARGE", bytes: h.bytes, maxBytes: CAPTURE_MAX,
-        retrieval_locator: locator, detail: "the memento exceeds what this surface will capture even in parts" } } };
+        retrieval_locator: locator, detail: localize("acquisition.index.the_memento_exceeds_what_this", "the memento exceeds what this surface will capture even in parts") } } };
     const row = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
     return selectCapture([row]).ok ? { sha: h.sha, bytes: h.bytes } : { row };
   } });
@@ -616,7 +616,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const addr = body.address;
     if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
       return answer(400, { ok: false, reason: "BAD_ADDRESS",
-        detail: "an archive-sourced capture names the document address, not a replay locator" });
+        detail: localize("acquisition.index.an_archive_sourced_capture_names", "an archive-sourced capture names the document address, not a replay locator") });
     /* R35: the instant asked about, refused before anything is fetched when it is not one */
     archiveAt = askedInstant(body.at);
     if (!archiveAt.ok) return answer(archiveAt.status, archiveAt.payload);
@@ -648,8 +648,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         const row = SWEEP_SCOPE_CHECKS.SWEEP_SCOPE_MISSING;
         return answer(400, { ok: false, reason: "SWEEP_SCOPE_MISSING", code: "SWEEP_SCOPE_MISSING", check: row.check,
           translation: row.translation, op, matched_sweep: crOrigin.matched_sweep,
-          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); "
-                + "this one named none, so nothing was fetched" });
+          detail: localize("acquisition.index.a_sweep_origin_acquire_names", "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched") });
       }
       /* END DEC-49 REGION is-sweep-scope */
       sweepScope = sc;
@@ -703,7 +702,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let locator = session ? session.locator : body.locator;
   if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, { ok: false, reason: "BAD_LOCATOR",
-      detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address" });
+      detail: localize("acquisition.index.a_locator_must_be_https", "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address") });
   /* DEC-49 REGION is-own-host
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
@@ -855,7 +854,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     await noteOutcome("fetch_failed", null);
     /* R23: a thrown fetch's message can carry what rode the request, so none is carried when a credential did. */
     return answer(502, { ok: false, reason: "FETCH_FAILED", locator,
-      detail: crCredential ? "the fetch did not complete; its error is not carried because a supplied credential rode it"
+      detail: crCredential ? localize("acquisition.index.the_fetch_did_not_complete", "the fetch did not complete; its error is not carried because a supplied credential rode it")
                            : String(e && e.message || e) });
   }
   /* The address the bytes came from: the last hop this call followed, else the runtime's post-redirect URL. */
@@ -944,7 +943,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       if (archiveMemento) return answer(502, archiveBroke(String(e && e.message || e)).payload);
       await noteOutcome("fetch_failed", null);
       return answer(502, { ok: false, reason: "FETCH_FAILED", locator,
-        detail: crCredential ? "the body broke off while it was read; its error is not carried because a supplied credential rode it"
+        detail: crCredential ? localize("acquisition.index.the_body_broke_off_credential", "the body broke off while it was read; its error is not carried because a supplied credential rode it")
                              : localize("acquisition.index.the_body_broke_off_while", "the body broke off while it was read ({String})", { String: String(String(e && e.message || e)) }) });
     }
     const { done, value } = chunk;
@@ -978,7 +977,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (oversize) {
     try { await reader.cancel(); } catch { /* the source may already be gone */ }
     return answer(413, { ok: false, reason: "TOO_LARGE", bytes: total, maxBytes: MAX,
-                         detail: "the document exceeds what this surface will capture even in parts" });
+                         detail: localize("acquisition.index.the_document_exceeds_what_this", "the document exceeds what this surface will capture even in parts") });
   }
   await flush();
   let sha = whole.hex();
@@ -997,7 +996,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   const multipart = parts.length > 1;
   if (!multipart) {
     if (parts[0].sha256 !== sha)
-      return answer(500, { ok: false, reason: "HASH_DISAGREEMENT", detail: "the incremental hash and the block hash of the same bytes differ" });
+      return answer(500, { ok: false, reason: "HASH_DISAGREEMENT", detail: localize("acquisition.index.the_incremental_hash_and_the", "the incremental hash and the block hash of the same bytes differ") });
     existed = partHeldBefore[0];
   } else {
     let reg = null;
@@ -1036,7 +1035,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       catch { /* an unreleased reservation under-uses the allowance; it never fails the refusal */ }
       return answer(422, { ok: false, reason: "RENDER_NOT_A_PAGE", ...renderRow("RENDER_NOT_A_PAGE"),
         op, content_type: ct || null, bytes: total, multipart,
-        detail: localize("acquisition.index.the_served_bytes_are_v1", "the served bytes are {v1}, not an HTML page; nothing was filed.", { v1: String(multipart ? "too large to be a single page" : `\`${ct || "(no content type)"}\``) }) });
+        detail: localize("acquisition.index.the_served_bytes_are_v1", "the served bytes are {v1}, not an HTML page; nothing was filed.", { v1: String(multipart ? localize("acquisition.index.too_large_to_be_a", "too large to be a single page") : `\`${ct || "(no content type)"}\``) }) });
     }
     /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
     /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
@@ -1059,7 +1058,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const renderedExisted = !!(await ev.head(rsha));
     if (!renderedExisted) await ev.put(rsha, rbytes);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
-                      method: "bio-plane acquire, https fetch, hashed at receipt", ...(ct ? { content_type: ct } : {}), transport };
+                      method: localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"), ...(ct ? { content_type: ct } : {}), transport };
     renderRecorded = rb.render;
     renderedAuth = renderedAuthority({ asserted: authorityAsserted, render: renderRecorded, at: retrieved });
     /* The render's own navigation, reported to the governor like any load. */
@@ -1175,17 +1174,17 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     provenance_chain: [{
       who: firstHopWho((cap.env || {}).INSTANCE_NAME, (cap.env || {}).VERSION),
       asserts: renderRecorded
-        ? localize("acquisition.index.these_bytes_are_the_document", "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}", { v1: String(renderRecorded.engine || "renderer (engine not reported)"), locator: String(locator), retrieved: String(retrieved), locator_2: String(locator), v2: String(completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : "") })
+        ? localize("acquisition.index.these_bytes_are_the_document", "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}", { v1: String(renderRecorded.engine || "renderer (engine not reported)"), locator: String(locator), retrieved: String(retrieved), locator_2: String(locator), v2: completenessReading(renderRecorded) ? localize("acquisition.index.the_whole_page_qualifier", "; {reading}, so they are not asserted to be the whole page", { reading: String(completenessReading(renderRecorded)) }) : "" })
         : localize("acquisition.index.these_bytes_were_served_for", "these bytes were served for {locator} at {retrieved}", { locator: String(locator), retrieved: String(retrieved) }),
       evidence: renderRecorded
-        ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment"
-        : "first-party https fetch, hashed at receipt, transport record on this document",
+        ? localize("acquisition.index.first_party_https_fetch_of_the", "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment")
+        : localize("acquisition.index.first_party_https_fetch_transport", "first-party https fetch, hashed at receipt, transport record on this document"),
       bound: false, via,
     }, ...(archiveHopRecorded ? [archiveHopRecorded] : []), ...(driveHopRecorded ? [driveHopRecorded] : [])],
     capture: {
       method: renderRecorded ? RENDERED_METHOD : multipart
         ? localize("acquisition.index.bio_plane_acquire_https_fetch", "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt", { length: String(parts.length) })
-        : "bio-plane acquire, https fetch, hashed at receipt",
+        : localize("acquisition.index.bio_plane_acquire_hashed_at_receipt", "bio-plane acquire, https fetch, hashed at receipt"),
       /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
       ...(via === "archive.org" ? { authority: word("acquisition.authority.internet_archive") } : {}),
@@ -1367,7 +1366,7 @@ async function zipPastBound(ev, parts) {
     const names = new Set(l.entries.map((e) => normalizePartName(e.name || "")));
     if (names.has(CONTENT_TYPES_PART) || names.has(ODF_MIMETYPE_PART)) return null;
     return { format: "zip", confidence: "likely",
-             signals: ["magic: PK\\x03\\x04 in the stored bytes", "listed whole over the stored parts",
+             signals: ["magic: PK\\x03\\x04 in the stored bytes", localize("acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts"),
                        `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
   } catch { return null; }
 }
@@ -1410,7 +1409,7 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
       "only an HTML page has subresources; the capture is unaffected and complete" } };
   let obj = null;
   try { obj = await ev.get(sha); } catch { obj = null; }
-  if (!obj) return { subs: null, skipped: { reason: "PRIMARY_UNREADABLE", detail: "the primary capture did not read back" } };
+  if (!obj) return { subs: null, skipped: { reason: "PRIMARY_UNREADABLE", detail: localize("acquisition.index.the_primary_capture_did_not", "the primary capture did not read back") } };
   const primaryBytes = new Uint8Array(await obj.arrayBuffer());
   /* capture R23: the platform's ceiling as last OBSERVED, discarded every so often (probeDue) to run to refusal again. */
   let limit = null;
