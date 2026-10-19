@@ -19,16 +19,7 @@ export const FRONTIER_LIMIT_DEFAULT = 200;
 export const FRONTIER_LIMIT_MAX = 2000;
 
 /* `#internet`'s note (R48). */
-export const FRONTIER_INTERNET_NOTE =
-  "the internet level's frontier reads a member's LEADS (section 4.5): the latest look per subject over "
-  + "the looks at leads THIS VIEWER MAY READ, and each lead nobody has followed. Visibility is the lead's "
-  + "own rule — its author, the joined participants of a project it was shared to, a machine key only "
-  + "within a member's minted scope — applied to the looks BEFORE they are grouped, so every list, date, "
-  + "count and cause here is computed from what you may read and nothing else: a lead outside your reach "
-  + "moves none of them. `tally` is therefore scoped to you (`tally_scope`), unlike the other three "
-  + "levels. An empty answer carries `empty` with its cause, because an empty frontier and one that looked "
-  + "and found nothing are different facts. `not_read` names what else sits at this level and is not in "
-  + "this read. A lead is never evidence";
+export const FRONTIER_INTERNET_NOTE = localize("retrieval.frontier.internet_note", "the internet level's frontier reads a member's LEADS (section 4.5): the latest look per subject over the looks at leads THIS VIEWER MAY READ, and each lead nobody has followed. Visibility is the lead's own rule — its author, the joined participants of a project it was shared to, a machine key only within a member's minted scope — applied to the looks BEFORE they are grouped, so every list, date, count and cause here is computed from what you may read and nothing else: a lead outside your reach moves none of them. `tally` is therefore scoped to you (`tally_scope`), unlike the other three levels. An empty answer carries `empty` with its cause, because an empty frontier and one that looked and found nothing are different facts. `not_read` names what else sits at this level and is not in this read. A lead is never evidence");
 
 export class Frontier {
   constructor(r) { this.r = r; }
@@ -461,12 +452,9 @@ export class Frontier {
     const reach = who == null ? null : this.obs.leadReach(viewer, identity);
     const notRead = [
       { subject_kind: "unstated", authority_kind: "run",
-        why: "an investigative run's open-internet searches are folded run-log rows whose subject kind was "
-           + "never recorded; they are read per run through op=airunlog, which gates each on the run's "
-           + "context. This read does not include them, and says nothing about whether any exist" },
+        why: localize("retrieval.frontier.run_searches_not_read", "an investigative run's open-internet searches are folded run-log rows whose subject kind was never recorded; they are read per run through op=airunlog, which gates each on the run's context. This read does not include them, and says nothing about whether any exist") },
       { subject_kind: "address", authority_kind: "acquire",
-        why: "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on "
-           + "this build (op=frontier&level=document), not here" },
+        why: localize("retrieval.frontier.acquire_not_here", "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on this build (op=frontier&level=document), not here") },
     ];
     const base = { level: "internet", found: true, built: true, limit: cap,
                    reads: { authority_kind: "lead", subject_kind: "description" }, not_read: notRead,

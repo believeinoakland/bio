@@ -293,7 +293,7 @@ export class Retrieval {
       return { ok: false, reason: "FACTS_MALFORMED", detail: "a registration names its module and its function" };
     if (this.#actionFacts)
       return { ok: false, reason: "FACTS_DECLARED", module, declaredBy: this.#actionFacts.module,
-               detail: "the action facts are registered once" };
+               detail: localize("retrieval.index.action_facts_once", "the action facts are registered once") };
     this.#actionFacts = { module, fn };
     return { ok: true, module };
   }
@@ -402,7 +402,7 @@ export class Retrieval {
       return bad("a relation is a table, a key and a column, each an SQL identifier");
     const held = this.#fields.find((f) => f.field === field);
     if (held) return { ok: false, reason: "FIELD_DECLARED", module, field, declaredBy: held.module,
-                       detail: "a field is registered once" };
+                       detail: localize("retrieval.index.field_registered_once", "a field is registered once") };
     this.#fields.push({ module, field, table, key, col, seq: this.#fields.length });
     this.#fields.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     this.#via = Object.freeze({ projection: PROJECTION_RELATION,
@@ -827,7 +827,7 @@ export class Retrieval {
       /* R88: the OR reading is never offered across routes, since it would count what the query was refused for. */
       const n = routesCrossed(or.ast) ? 0 : this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
-                               detail: "no record matches all of these terms; this many match any of them" };
+                               detail: localize("retrieval.index.no_record_matches_all", "no record matches all of these terms; this many match any of them") };
     }
     out.gate.applied = tally.applied;
     return out;
@@ -1035,24 +1035,19 @@ export class Retrieval {
         /* R54 (K105): the proximity operator, stated in the published grammar. */
         say("retrieval.syntax.near_finds_words"),
         say("retrieval.syntax.field_value_filters"),
-        "field:>value, field:<value, field:a..b compare and range",
+        localize("retrieval.index.field_compare_range", "field:>value, field:<value, field:a..b compare and range"),
         say("retrieval.syntax.field_asks_field"),
         say("retrieval.syntax.fm_path_fm"),
         say("retrieval.syntax.leg_resolves_concerns"),
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
-        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
-        + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
-        + "record has replaced, content:machine by who minted it, content:ocr by the chain's last step, "
-        + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
-        "content: does NOT search the text of the documents -- it searches what has been cited or marked "
-        + "citable in them, so an empty answer is a fact about citation and never about what a document says",
+        localize("retrieval.index.content_reaches_layer", "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages"),
+        localize("retrieval.index.content_searches_citations", "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says"),
         say("retrieval.syntax.passage_searches_documents"),
         say("retrieval.syntax.content_cap_undetermined"),
         say("retrieval.syntax.content_chain_apply"),
         say("retrieval.syntax.content_cap_apply"),
-        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
-        + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
+        localize("retrieval.index.meaning_arm_takes", "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)"),
         say("retrieval.syntax.leg_asks_record"),
         say("retrieval.syntax.sort_field_sort"),
       ],
@@ -1075,7 +1070,7 @@ export class Retrieval {
     const findings = [];
     for (const r of rows) {
       if (r.fts_id === null || r.fts_id === undefined) {
-        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: "the record has no text index key" });
+        findings.push({ bundleId: r.bundle_id, finding: "NO_FTS_ID", detail: localize("retrieval.index.record_no_text_index_key", "the record has no text index key") });
         continue;
       }
       const have = this.#one(`SELECT ${FTS_COLUMNS.join(", ")} FROM bundles_fts WHERE rowid=?`, r.fts_id);
@@ -1250,16 +1245,16 @@ export class Retrieval {
   /** R18: create a selection. `kind` is decided by what the caller supplied, not by size: an explicit id list is an
    *  enumeration, a bare query is a query selection. Bob settled that select-all means the query, 2026-07-25. */
   async selectionCreate({ q = "", viewer = null, owner = null, sort = null, dir = null, ids = null, kind = null } = {}) {
-    if (!owner) return { ok: false, reason: "NO_OWNER", detail: "a selection is owned by the credential that made it" };
+    if (!owner) return { ok: false, reason: "NO_OWNER", detail: localize("retrieval.index.selection_owned_by_credential", "a selection is owned by the credential that made it") };
     this.sweepSelections();
     const wanted = kind || (Array.isArray(ids) && ids.length ? "enumerated" : "query");
     if (wanted !== "query" && wanted !== "enumerated")
-      return { ok: false, reason: "BAD_KIND", detail: "a selection is 'query' or 'enumerated'" };
+      return { ok: false, reason: "BAD_KIND", detail: localize("retrieval.index.selection_kind_query_enumerated", "a selection is 'query' or 'enumerated'") };
     const tally = { applied: 0 };
     let members = [];
     if (wanted === "enumerated") {
       const list = [...new Set((ids || []).map(String))];
-      if (!list.length) return { ok: false, reason: "EMPTY", detail: "an enumerated selection needs at least one id" };
+      if (!list.length) return { ok: false, reason: "EMPTY", detail: localize("retrieval.index.enumerated_needs_one_id", "an enumerated selection needs at least one id") };
       if (list.length > SELECTION_MAX_ITEMS)
         return { ok: false, reason: "TOO_LARGE", limit: SELECTION_MAX_ITEMS, got: list.length,
                  detail: localize("retrieval.index.an_enumeration_this_large_is", "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.") };
@@ -1331,7 +1326,7 @@ export class Retrieval {
     /* END DEC-49 REGION is-selection-known */
     /* Ownership is enforced, not inferred from the handle being hard to guess. */
     if (!owner || sel.owner !== owner)
-      return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+      return { ok: false, reason: "NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
     const now = new Date(this.#selNowMs());
     const expires = new Date(now.getTime() + SELECTION_TTL_MS).toISOString();
     this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`, now.toISOString(), expires, handle);
@@ -1350,9 +1345,9 @@ export class Retrieval {
       const sel = typeof handle === "string" && handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
       if (!sel || sel.expires < this.#nowIso()) return none;
       if (!owner || sel.owner !== owner)
-        return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+        return { ok: false, reason: "NOT_YOURS", detail: localize("retrieval.index.selection_readable_by_credential", "a selection is readable only by the credential that made it") };
       return this.#selectionAnswer(sel, viewer, "report", sel.expires);
-    } catch { return { ...none, detail: "the selection could not be read, so it is answered as one not held" }; }
+    } catch { return { ...none, detail: localize("retrieval.index.selection_not_read_not_held", "the selection could not be read, so it is answered as one not held") }; }
   }
 
   /* R19, R20, R77: one selection's answer under `viewer` at `weight`, `expires` the life it now has. */
@@ -1473,7 +1468,7 @@ export class Retrieval {
    *  `query-language`'s refusal. It writes nothing: no selection, no observation, no row of its own (R32). */
   runSaved({ form = null, owner = null, viewer = null, limit = null } = {}) {
     const notYours = { ok: false, reason: "NOT_YOUR_QUERY", code: "NOT_YOUR_QUERY",
-                       detail: "no saved query of yours answers to that" };
+                       detail: localize("retrieval.index.no_saved_query_of_yours", "no saved query of yours answers to that") };
     const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
     if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
     /* N584: the check that the form compiles as saved is made with R72's relations and R69's zone, the ones `answers`
@@ -1706,6 +1701,11 @@ function registerFigures(r) {
 
 /** R58, K3: the ops this module answers (R78 adds none: its decorations reach `op=search`'s page through `search`), as entries of the store's op map (its dispatcher spreads them in). `url` carries
  *  the control plane's stamps (`viewer`, `owner`, `identity`), never taken from the caller's own parameters there. */
+/* The names `retrievalRoutes` answers (R58, R66, R90): this module's own list, which its test pins the map against. */
+export const RETRIEVAL_ROUTE_OPS = Object.freeze(["browse", "contentaxis", "file", "findin", "frontier", "image", "index", "list",
+  "meaningrows", "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck",
+  "select", "selection", "selectionlist", "selectionrelease"]);
+
 export function retrievalRoutes(r, url, body) {
   const q = url.searchParams;
   return {
