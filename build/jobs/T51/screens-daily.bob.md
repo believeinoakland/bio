@@ -60,3 +60,9 @@ CHANGE (K4093): op-grades, affordances, tasks, queue, op-declarations (BROWSER_A
 ## B9 · CHANGE
 
 CHANGE (K4094): journey-check's pseudo-locale walk (R27) finds profile link slugs drawn as text on elsewhere ('Report-an-Issue-OAK', 'get-legal-help', the hyphenated names in span.muted): draw each link's own label from the profile data, never its id; a test with a control.
+
+## B10 · CHANGE
+
+CHANGE (K4107; SCREENS-INQUIRY #12 J7 (2), from the local walk, journey-check R1 (a) / R22). Merge tranche/T51 into your branch first: R51 is reworded there.
+
+Home's Investigation door (`home.mjs`:311, `area("investigation", "/app/dash-project", ...)`) opens the bare path; `dash-project` is a subject screen (`screens-inquiry` R79, `/app/dash-project/<project>`), so the shell draws "Nothing is here" (interface-shell R61 rule 1). R51 now reads: the door opens `/app/dash-project/<project>` of the project with the newest `lastChange`, else the first `projectlist` lists (the `plist` and `latest` you already compute); with no project it opens `projects`, never the bare path. Test it at your interface (the door's address with several projects, with one, with none). Then run your suite and checks, and post COMPLETE again. Model and workers as your START said.
