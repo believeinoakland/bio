@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, registration, V, MACHINE, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const F = V("frank");
 const ON = { on: true, account: { kind: "own", level: "member" } };   /* as the door resolves it: never the key (B4) */
@@ -200,10 +201,9 @@ test("R20 T34's rows: WIZARD_VIA_REFUSED and the eight writing-help rows are C-1
   const want = ["WIZARD_VIA_REFUSED", "WRITING_HELP_REFUSED", "WRITING_HELP_REASON_FIELD", "WRITING_HELP_DRAFT_HELD", "WRITING_HELP_NOTHING_TOLD",
                 "WRITING_HELP_FACT_ADDED", "WRITING_HELP_SUGGESTIONS_OFF", "WRITING_HELP_FIRSTHAND_READ", "ASSISTANT_DRAFT_UNAVAILABLE"];
   assert.deepEqual(want.map((c) => row(c).check), want.map((_, i) => `C-131.${33 + i}`));
-  assert.equal(row("ASSISTANT_DRAFT_UNAVAILABLE").translation, "The assistant cannot draft this yet. Write it in your own words; nothing was changed.");
-  assert.equal(row("WRITING_HELP_REASON_FIELD").translation, "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed.");
-  assert.equal(row("WIZARD_DRAFT_REFUSED").translation, "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
-    + "your team's Civicsmith registers, and this one is none of them.");
+  assert.equal(row("ASSISTANT_DRAFT_UNAVAILABLE").translation, word("refusal.ASSISTANT_DRAFT_UNAVAILABLE"));
+  assert.equal(row("WRITING_HELP_REASON_FIELD").translation, word("refusal.WRITING_HELP_REASON_FIELD"));
+  assert.equal(row("WIZARD_DRAFT_REFUSED").translation, word("refusal.WIZARD_DRAFT_REFUSED"));
   for (const [code, r] of Object.entries(wz.WIZARD_SCRIPTS_CHECKS))
     for (const word of [/this instance/i, /the instance/i, /this copy/i, /this plane/i, /the plane/i, /\bserver\b/i]) assert.ok(!word.test(r.translation), `${code}: ${word}`);
 });
