@@ -118,7 +118,7 @@ const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "dra
   /* T48 (R62; N1018, K3112): `case-inputs`' two opaque prefixes (its R6, R9; record-grammar R46) */
   OUTC: "carried outcome" });
 /* A prefix whose id reads better named after the word "id" than before it: `WCD`, whose object is a phrase (T48, R62). */
-const MINTED_ID_FOR = Object.freeze({ WCD: "a draft of a new edition's statement of what changed" });
+const MINTED_ID_FOR = Object.freeze({ WCD: localize("record-core.index.a_draft_of_a_new", "a draft of a new edition's statement of what changed") });
 
 /* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. Minting
    follows `form` alone: a row that also carries `legacy: "sequential"` (`CALC`, K1728; `ACD`, K2616) is minted opaque, its counter never
@@ -249,7 +249,7 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
   const retained = outcomes.length - applied;
   const head = { op: act, weight: "per-item", count, applied, retained, items: outcomes };
   if (retained === 0)
-    return { ok: true, ...head, detail: `every one of the ${count} item(s) was applied, each by op=${act}'s own rules.` };
+    return { ok: true, ...head, detail: localize("record-core.index.every_one_of_the_count", "every one of the {count} item(s) was applied, each by op={act}'s own rules.", { count: String(count), act: String(act) }) };
   /* DEC-49 REGION is-per-item-retained */
   return { ok: false, reason: "SET_ITEMS_RETAINED", code: "SET_ITEMS_RETAINED",
            check: PER_ITEM_CHECKS.SET_ITEMS_RETAINED.check,
@@ -630,8 +630,7 @@ export class RecordCore {
   static #anonymousLease(actor) {
     if (typeof actor === "string" && actor.trim()) return null;
     /* DEC-49 REGION is-anonymous-lease */
-    return rowRefusal("ANONYMOUS_LEASE", "a lease is taken under a named actor — a member (from a session) or a machine "
-      + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock.");
+    return rowRefusal("ANONYMOUS_LEASE", localize("record-core.index.a_lease_is_taken_under", "a lease is taken under a named actor — a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock."));
     /* END DEC-49 REGION is-anonymous-lease */
   }
 
@@ -1671,8 +1670,9 @@ export class RecordCore {
       : Array.isArray(check) && check.length && check.every((c) => typeof c === "function") ? [...check] : null;
     /* DEC-49 REGION is-store-gate-registration */
     if (!named || !d || d.module !== module || !checks)
-      return rowRefusal("STORE_GATE_MALFORMED", "a store gate names its module, a table that module declared and a check to "
-        + `run; nothing was registered${d && named && d.module !== module ? ` (${d.name} is ${d.module}'s)` : ""}.`,
+      return rowRefusal("STORE_GATE_MALFORMED", d && named && d.module !== module
+        ? localize("record-core.index.a_store_gate_names_its_2", "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).", { table: String(d.name), owner: String(d.module) })
+        : localize("record-core.index.a_store_gate_names_its", "a store gate names its module, a table that module declared and a check to run; nothing was registered."),
         { module: named ? module : null, table: typeof table === "string" ? table : null, ...(d ? { declaredBy: d.module } : {}) });
     if (this.#gates.has(table))
       return rowRefusal("STORE_GATE_DECLARED", localize("record-core.index.table_s_checks_are_already", "{table}'s checks are already registered by {module}; the first still runs.", { table: String(table), module: String(this.#gates.get(table).module) }), { module, table, heldBy: this.#gates.get(table).module });
@@ -1748,8 +1748,7 @@ export class RecordCore {
     if (!d || d.module !== module || d.classes.expunge !== "tombstone")
       return rowRefusal("EXPUNGE_NOT_DECLARED", localize("record-core.index.string_is_not_a_table", "{String} is not a table {String_2} declared expunge: tombstone; nothing was removed.", { String: String(String(table)), String_2: String(String(module)) }), { table: named });
     if (!said(by) || by.trim().startsWith("token:"))
-      return rowRefusal("EXPUNGE_NOT_A_MEMBER", "an expunge is a member's act, named by that member; a machine or absent actor "
-        + "removes nothing.", { table: named });
+      return rowRefusal("EXPUNGE_NOT_A_MEMBER", localize("record-core.index.an_expunge_is_a_members", "an expunge is a member's act, named by that member; a machine or absent actor removes nothing."), { table: named });
     const n = keyed ? Number(this.#one(`SELECT COUNT(*) AS n FROM ${d.name} WHERE ${w.sql}`, ...w.args).n) : 0;
     if (!n)
       return rowRefusal("EXPUNGE_NOTHING", localize("record-core.index.no_row_of_name_matches", "no row of {name} matches the key; nothing was removed.", { name: String(d.name) }), { table: named });
@@ -1829,8 +1828,7 @@ export class RecordCore {
       return rowRefusal("SETTING_VALUE_REQUIRED", localize("record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded."));
     const text = roundTripsJson(value) ? jsonText(value) : null;
     if (text === null)
-      return rowRefusal("SETTING_NOT_JSON", "a setting's value is stored as JSON, and this value cannot be stored as written; "
-        + "nothing was recorded.", { name: n });
+      return rowRefusal("SETTING_NOT_JSON", localize("record-core.index.a_settings_value_is_stored", "a setting's value is stored as JSON, and this value cannot be stored as written; nothing was recorded."), { name: n });
     if (n === "jurisdiction_profiles"
         && !(Array.isArray(value) && value.every((v) => typeof v === "string" && v.trim() !== "")
              && new Set(value).size === value.length))

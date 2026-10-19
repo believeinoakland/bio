@@ -11,7 +11,8 @@ import { createHash } from "node:crypto";
 import { ID_TABLE, idPattern } from "../../../src/record-grammar/index.mjs";
 import { recordOf, RecordCore, mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage } from "./storage.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
+const mintDetail = (what) => localize("record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", { what });
 
 const fresh = () => { const s = storage(); const rc = recordOf({ storage: s }); rc.migrate(); return { s, rc }; };
 const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
@@ -156,7 +157,7 @@ test("R76 R62: after 64 hits in a row allocId answers MINT_EXHAUSTED for the pre
   const before = dump(s);
   const r = draws(Array.from({ length: 64 }, () => bytesFor(tail)).flat(), () => rc.allocId("PFA", "2026"));
   assert.deepEqual(r, mintExhausted("PFA"));
-  assert.equal(r.detail, "your team's Civicsmith could not find a free person fact id: every one it drew was already taken. Nothing was written.");
+  assert.equal(r.detail, mintDetail("person fact id"));
   assert.deepEqual(dump(s), before);
   assert.equal(rc.allocIdOp("PFA", "2026").ok, undefined, "a fresh draw succeeds again");
 });
@@ -168,7 +169,7 @@ test("R62 (K1728, K2431, K2617): mintExhausted names each opaque prefix's object
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
     assert.deepEqual([r.ok, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "C-59.6", p]);
-    assert.equal(r.detail, `your team's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
+    assert.equal(r.detail, mintDetail(`${what} id`));
   }
   const all = [...Object.keys(names), ...RecordCore.GATED_ID_PREFIXES, "SRC"].map((p) => mintExhausted(p).detail);
   assert.equal(new Set(all).size, all.length, "one sentence per prefix, none shared");
@@ -190,14 +191,14 @@ test("R76 R62 (T41, K2431): STP and GUD are minted opaque, recorded in the ledge
     assert.deepEqual(r, mintExhausted(p));
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", p]);
     assert.equal(r.translation, RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation);
-    assert.equal(r.detail, `your team's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
+    assert.equal(r.detail, mintDetail(`${what} id`));
     assert.deepEqual(dump(s), before, "nothing was written");
   }
   /* the negative control: a prefix that only begins with their letters is neither minted opaque nor named */
   for (const p of ["STPX", "GUDE"]) {
     const { rc } = fresh();
     assert.equal(rc.allocId(p, "2026").id, `${p}-2026-0001`, `${p} is not opaque: the counter mints it`);
-    assert.equal(mintExhausted(p).detail, "your team's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
+    assert.equal(mintExhausted(p).detail, mintDetail("id"));
   }
 });
 
@@ -227,14 +228,14 @@ test("R76 R62 (T42, K2616, K2617): ACD, opaque with legacy: 'sequential', is min
   assert.deepEqual(r, mintExhausted("ACD"));
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", "ACD"]);
   assert.equal(r.translation, RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation);
-  assert.equal(r.detail, "your team's Civicsmith could not find a free case account draft id: every one it drew was already taken. Nothing was written.");
+  assert.equal(r.detail, mintDetail("case account draft id"));
   assert.deepEqual(dump(s), before, "nothing was written");
   assert.deepEqual(mintExhausted("ACD", { draft: "x", detail: "mine" }).detail, r.detail, "extra never replaces the sentence");
   /* the negative controls: a prefix that only begins or ends with its letters is neither minted opaque nor named */
   for (const p of ["ACDX", "XACD", "acd"]) {
     const { rc: rc2 } = fresh();
     assert.equal(rc2.allocId(p, "2026").id, `${p}-2026-0001`, `${p} is not opaque: the counter mints it`);
-    assert.equal(mintExhausted(p).detail, "your team's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
+    assert.equal(mintExhausted(p).detail, mintDetail("id"));
   }
 });
 
