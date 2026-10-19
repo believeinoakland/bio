@@ -8,6 +8,7 @@ import { webcrypto } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
 import { InstanceSetup, instanceSetupOps } from "../../../src/setup.mjs";
 import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -103,8 +104,8 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
       aiKeptAway: () => (p.keepAway.on === false ? null : {
         ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.check,
         translation: AI_ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
-        detail: p.keepAway.on === true ? "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent."
-          : "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
+        detail: p.keepAway.on === true ? localize("ai-accounts.index.the_team_keeps_its_material", "the team keeps its material away from every assistant, so no account was read or used. Nothing was sent.")
+          : localize("ai-accounts.index.whether_the_team_keeps_its", "whether the team keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent."),
         keep_away: p.keepAway.on === true ? { reason: p.keepAway.reason, set_by: p.keepAway.set_by, set_at: p.keepAway.set_at }
           : { reason: null, set_by: null, set_at: null } }),
     },

@@ -3,7 +3,7 @@
    from its provider's published fact, gated by the viewer and homed through the walk queue passes in (queue R7). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, byId, NOW, iso } from "./world.mjs";
+import { world, byId, NOW, iso, said, dayWord } from "./world.mjs";
 
 const drawing = (list) => Object.assign(list, { bound: 32, truncated: false });
 
@@ -73,7 +73,8 @@ test("R2: export-performed, one per export, to an administrator member or the ad
   assert.ok(!("catalogue_id" in e), "R8: queue stamps the catalogue id at its mint");
   assert.deepEqual(e.basis.bounds.limit, 200, "the latest 200");
   /* K899 (1): text a member reads says "record" where it said "bundle"; the field names stay. */
-  assert.equal(e.summary, `A full working-corpus export was taken on ${iso(NOW)}: 3 records, 4 files`);
+  assert.equal(e.summary, said("queue.export-performed.summary", { scope: "", date: dayWord("2026-09-01"),
+    records: said("queue.export-performed.records.other", { n: 3 }), files: said("queue.export-performed.files.other", { n: 4 }) }));
   assert.ok(!/bundle/i.test(`${e.summary} ${e.detail} ${e.basis.detail}`), "no member-read sentence says bundle");
   assert.equal(e.basis.bundles, 3, "the field keeps its name");
 });

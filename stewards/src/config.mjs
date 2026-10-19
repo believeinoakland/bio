@@ -1,5 +1,6 @@
 /* stewards: the service's vocabulary, its configuration (R1, R10), and the deploy check (R2, R21). Pure: no I/O. */
 import { GROUP_SLUG_RE } from "../../bio-plane/src/setup-fleet.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
 export const KINDS = Object.freeze(["fabricated_evidence", "harassment", "impersonation", "other"]);
 export const DECISIONS = Object.freeze(["dismiss", "withdraw"]);
@@ -83,28 +84,28 @@ const asConfig = (w) => (typeof w === "string" ? parseJsonc(w) : w || {});
    in words. Secret values are never seen here, only their names. */
 export function checkOpen({ wranglerJsonc, secretNames = [] } = {}) {
   let cfg;
-  try { cfg = asConfig(wranglerJsonc); } catch { return [{ name: "wrangler.jsonc", problem: "the deploy configuration could not be read" }]; }
+  try { cfg = asConfig(wranglerJsonc); } catch { return [{ name: "wrangler.jsonc", problem: localize("stewards.config.deploy_configuration_unreadable", "the deploy configuration could not be read") }]; }
   const vars = cfg.vars || {}, problems = [];
-  if (!(("STEWARDS_ADDRESS") in vars)) problems.push({ name: "STEWARDS_ADDRESS", problem: "is not set: the stewards' contact address is missing" });
-  else if (!validAddress(vars.STEWARDS_ADDRESS)) problems.push({ name: "STEWARDS_ADDRESS", problem: "is not exactly one e-mail address" });
+  if (!(("STEWARDS_ADDRESS") in vars)) problems.push({ name: "STEWARDS_ADDRESS", problem: localize("stewards.config.address_not_set", "is not set: the stewards' contact address is missing") });
+  else if (!validAddress(vars.STEWARDS_ADDRESS)) problems.push({ name: "STEWARDS_ADDRESS", problem: localize("stewards.config.address_not_one", "is not exactly one e-mail address") });
   for (const n of ["REPORT_RETENTION_DAYS", "CONTACT_RETENTION_DAYS"]) {
-    if (!(n in vars)) problems.push({ name: n, problem: "is not set: a retention period in days is missing" });
-    else if (retentionDays(vars[n]) == null) problems.push({ name: n, problem: "is not a whole number of days from 1 to 3650" });
+    if (!(n in vars)) problems.push({ name: n, problem: localize("stewards.config.retention_not_set", "is not set: a retention period in days is missing") });
+    else if (retentionDays(vars[n]) == null) problems.push({ name: n, problem: localize("stewards.config.retention_not_days", "is not a whole number of days from 1 to 3650") });
   }
   const names = new Set(secretNames);
-  for (const n of OPEN_SECRETS) if (!names.has(n)) problems.push({ name: n, problem: "is not among the Worker's secrets" });
-  for (const n of OPEN_SECRETS) if (n in vars) problems.push({ name: n, problem: "must be a secret, never a plain variable" });
+  for (const n of OPEN_SECRETS) if (!names.has(n)) problems.push({ name: n, problem: localize("stewards.config.secret_missing", "is not among the Worker's secrets") });
+  for (const n of OPEN_SECRETS) if (n in vars) problems.push({ name: n, problem: localize("stewards.config.secret_in_vars", "must be a secret, never a plain variable") });
   const dest = (cfg.send_email || []).find((b) => b.name === "NOTIFY")?.destination_address;
-  if (dest != null && dest !== vars.STEWARDS_ADDRESS) problems.push({ name: "NOTIFY", problem: "the mail binding's destination is not STEWARDS_ADDRESS" });
+  if (dest != null && dest !== vars.STEWARDS_ADDRESS) problems.push({ name: "NOTIFY", problem: localize("stewards.config.notify_destination_differs", "the mail binding's destination is not STEWARDS_ADDRESS") });
   return problems.length ? problems : null;
 }
 
 /* R2, R21: the account the configuration deploys to is the project's pinned one. */
 export function checkAccount(wranglerJsonc) {
   let cfg;
-  try { cfg = asConfig(wranglerJsonc); } catch { return { name: "account_id", problem: "the deploy configuration could not be read" }; }
+  try { cfg = asConfig(wranglerJsonc); } catch { return { name: "account_id", problem: localize("stewards.config.deploy_configuration_unreadable", "the deploy configuration could not be read") }; }
   return cfg.account_id === PINNED_ACCOUNT ? null
-    : { name: "account_id", problem: `is not the project's pinned Cloudflare account (${PINNED_ACCOUNT})` };
+    : { name: "account_id", problem: localize("stewards.config.account_not_pinned", "is not the project's pinned Cloudflare account ({account})", { account: PINNED_ACCOUNT }) };
 }
 
 /* R3: the report's fields, in R3's refusal order. Answers {code, field} or {report}. */

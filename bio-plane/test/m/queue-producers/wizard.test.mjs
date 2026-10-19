@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const DAY = 86400000;
 const page = (entries, extra = {}) => ({ ok: true, entries, cursor: null, truncated: false, ...extra });
@@ -50,8 +51,11 @@ test("R32 (wizard-scripts R13; DEC-121 (5)): FINDINGs wizard-withdrawn and wizar
   assert.deepEqual(wd.subject, { kind: "wizard_version", id: "WIZ-a@2", script: "WIZ-a", version: 2, name: "File a records request",
     project: "PRJ-1", refusal: { code: "WIZARD_SCREEN_UNKNOWN", check: "C-131.4", translation: REFUSAL.translation } },
     "its subject the version, naming its name and the first refusal");
-  assert.ok(wd.summary.includes("File a records request") && rs.summary.includes("File a records request"), "naming its name");
-  assert.ok(wd.detail.includes(REFUSAL.translation), "the first refusal in plain words, the row's translation");
+  assert.equal(wd.summary, word("queue.wizard-withdrawn.summary", { name: "File a records request" }), "naming its name");
+  assert.equal(rs.summary, word("queue.wizard-restored.summary", { name: "File a records request" }));
+  assert.equal(wd.detail, `${word("queue.wizard-withdrawn.detail")} ${word("queue.wizard-withdrawn.detail.reason", { reason: REFUSAL.translation })}`,
+    "the first refusal in plain words, the row's translation");
+  assert.equal(rs.detail, word("queue.wizard-restored.detail"));
   assert.ok(!rs.detail.includes(REFUSAL.translation) && !("refusal" in rs.subject), "a return names no refusal");
   assert.deepEqual(wd.recipients, ["olga", "alice"]); assert.deepEqual(byId(w.read("ada"))[G].recipients, ["ada", "bob"]);
   assert.deepEqual(wd.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY });
@@ -87,7 +91,8 @@ test("R33 (wizard-scripts R7, R17; DEC-121 (1)): one OBLIGATION wizard-approval-
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "wizard-approval-requested"]);
   assert.deepEqual(it.subject, { kind: "wizard_version", id: "WIZ-a@3", script: "WIZ-a", version: 3, name: "File a records request",
     author: "alice", project: "PRJ-1" }, "its subject the version, naming its name and author");
-  assert.ok(it.summary.includes("alice") && it.summary.includes("File a records request"));
+  assert.equal(it.summary, word("queue.wizard-approval-requested.summary", { author: "alice", name: "File a records request" }));
+  assert.equal(it.detail, word("queue.wizard-approval-requested.detail"));
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "aged from the submission");
   assert.equal(byId(w.read("ada"))[A].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["olga"]);
@@ -164,7 +169,7 @@ test("R39 against wizard-scripts itself (its R26, K1869 (4)): a copy whose base 
       `${m}, an approver of the copy (no editor holds a grant): told once`);
     const x = items[0];
     assert.deepEqual([x.recipients, x.subject.id, x.subject.base_version, x.basis.based_on], [[m], cp.script, n2.version, base.version]);
-    assert.match(x.summary, /"Base"/); assert.match(x.summary, /"Copy"/);
+    assert.equal(x.summary, word("queue.wizard-base-updated.summary", { base: "Base", version: n2.version, name: "Copy" }));
     assert.deepEqual(x.basis.steps, { copy: fx.STEPS, base: [fx.STEPS[1], fx.STEPS[0]] }, "both step lists, to see what changed");
     assert.deepEqual(x.age.since, "2026-10-06T00:00:00Z", "aged from the instant R26 first found the pair");
     assert.deepEqual(x.options.map((o) => o.id), ["wizardread", "wizardrevise"]);
