@@ -42,3 +42,7 @@ B4 and B5 applied (pushed). B5: op-declarations now uses promotion and basis-ver
 ## J5 · COMPLETE
 
 B6 applied (pushed 1b1edc7c1c; tranche/T51 merged in): bootstrapfacts is named among the store-internal routes with no spec (t47.test.mjs R62/R63/R6). op-declarations tests 230, pass 230, fail 0; ownership 0 failures; architecture 0 failures. B4/B5 as in J4. Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 21, module lines 3318
+
+## J6 · COMPLETE
+
+B7 applied (pushed; tranche/T51 merged in at the design 2a64c5ae77). Two of my tests changed, no table did: t51 (R78) no longer pins the exact acts of hold, holdnotice, counsel and grouprules (the registry now adds actionholdrelease on hold: declared, asserted), and t50 (R73/R21) takes the seven browser acts as their own class (R76) in wizard-scripts' registryActGaps, which now lists them as owed gaps. op-declarations tests 230, pass 230, fail 0; architecture, coverage (78 of 78), words, ownership: 0 failures. Size (session_01T6nKNiTXDaZwbSfpynQUSn): test runs 23, module lines 3318
