@@ -175,7 +175,7 @@ test("R2 a pressure mark: refusals in order, each writing nothing; appended once
   assert.ok(!Object.values(DOCKET_CHECKS).some((r) => ["C-117.15", "C-117.17"].includes(r.check)), "nor their checks");
   for (const kind of PRESSURE_KINDS) assert.equal(w.docket.docketPressure({ entry: file(w).entry, pressure: { kind }, author: V("alice"), viewer: V("alice") }).ok, true);
   const d = w.docket.docketOf({ case: CASE, viewer: V("bob") });
-  assert.deepEqual(d.entries.find((x) => x.entry === e).pressure, ok.pressure);
+  assert.deepEqual(d.entries.find((x) => x.entry === e).pressure, { ...ok.pressure, by: { member: "bob", handle: "h_bob" } }, "R30: and who made it");
 });
 
 test("R11 a record entry is taken back by a later record act with a reason, and reads taken-back; nothing is deleted", () => {
