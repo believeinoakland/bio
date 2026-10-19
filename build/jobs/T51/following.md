@@ -11,3 +11,25 @@ Findings outside this module's code (nothing here is changed by this job):
 3. `node checks/run.mjs /home/user/bio` reports failures in other modules (wizard-scripts testcopy and others; coverage 24 failures across modules). None names `following`. `words.mjs` over monitoring, following, link-sweep and scheduler has no finding naming following.
 
 Nothing deferred. No flaw found in another module's code.
+
+## J2 · COMPLETE
+
+Applied T51-155 (B1):
+- The 45 `plain` findings in `index.mjs` are each read through `localize("following.index.<slug>", en, vars)`, the slugs listed in the commit's diff. The refusals and their codes are unchanged.
+- The 2 test copies are fixed in `test/m/following/fixture.mjs`: the provenance sentence and the matter-not-of-plan detail are `localize` calls under `following.fixture.*` ids.
+- The entry's read-key item: `following.unscheduled.read_member_act` and `following.why.key_repeated_row` are held in `rows.mjs` and read by the module; the five refusal keys the design's list lacks are in REPORT.
+
+Deferred: none.
+
+Tests (run from `bio-plane`): `node --test test/m/following/`: 112 pass, 0 fail, before and after the fixture fix. No layer tests named in the manifest.
+
+Checks (process repo, against /home/user/bio on `job/T51/following`):
+- `checks/format.mjs`: 176 modules, 0 failures
+- `checks/architecture.mjs following`: 0 failures
+- `checks/coverage.mjs following`: 35 of 35 live ids named, 0 failures
+- `checks/ownership.mjs following tranche/T51 job/T51/following`: 0 failures
+- `checks/words.mjs following`: 0 failures
+- `checks/words.mjs monitoring following link-sweep scheduler`: no finding names `following`
+- `checks/run.mjs`: no finding names `following` (other modules' failures in REPORT)
+
+Size (session_01UBHjrsbnMdNqWryj6ZQxAG): test runs 2, module lines 2197
