@@ -38,3 +38,19 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 K4003: retrieval's merge keyed 'a selection is readable only by the credential that made it', so your test/m/retrieval-browse/fixture.mjs:173 now counts as a test copy (K3986). Merge tranche/T51, read it through the product's own call (localize with retrieval's id and en, by equality, or a neutral string if the fixture only needs a stand-in), re-run tests and checks (words 0 for retrieval-browse), COMPLETE again.
+
+## B4 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T51), the completion round (§5.7 (0); P10 as amended, K3915): **CR-29 · retrieval-browse** (read the entry line whole). Model: claude-haiku-5-5.
+Your requirements: `build/requirements/retrieval-browse.md` (read whole). No requirement changes; your entry fixes a red the tranche's full module run found (K2704), traced by BOB's reading worker.
+BOB's notes for this job:
+1. (K4149; full module run) `t36.test.mjs`:156 asserts `/another shape/` against `recorded_not_read[3].why`, a copy of the old English of `retrieval-browse.findin.read_another_shape`, which the design reworded (DEC-347). A test never copies a sentence (K3810): assert the reason's key (or read the text from the word table). Test-only.
+2. The local walk runs once more after this round (Bob, K4111): do not run `journey.test.mjs`.
+Your layer has closed; this round runs as a layer (§5.3 to §5.6). Nothing found here waits for the next tranche (K3915): a flaw in your module is fixed in this job, one in another module is a REPORT.
+Reading (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry, your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a test asserts the key or reads the text from the word table, never copies it. Every refusal a control. Report flaws in other modules to BOB (P9).
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Never edit a generated artifact (manifest §14); report one you make stale.
+Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio retrieval-browse tranche/T51 job/T51/retrieval-browse`. Your Size line counts only your module's own code (K2513).
