@@ -20,3 +20,9 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio actions tranche/T51 job/T51/actions`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+Two changes (K4041); merge `tranche/T51` into your branch first (actions' requirements changed):
+1. R108, worded (field added, meaning unchanged; FILINGS #22 J1): the minutes' passage is recorded as content by the author's act, `content.mint` (its R12, R13: mint or find, `mintedBy` the author) at that extent, and `minutes.passage` keeps the row's `content_id` beside `captureSha` and `extent`, so filings R64 reads its text through `content.passageText(content_id)` (its R46). Test it: the stored passage carries the id; a second reply at the same extent finds the same row.
+2. CONFORMANCE #24 J1: `test/m/actions/t34.test.mjs`:101 copies your own `localize("actions.index.an_action_recorded_for_a_2", …)` sentence (`index.mjs`:1240) as a literal: compare with `localize`/`word` by equality (K3810).

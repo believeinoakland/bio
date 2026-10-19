@@ -161,7 +161,7 @@ export function actionBasisFindings(fm, findings) {
     if (success) { /* a success record: no canonical-id finding */ }
     else if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
-        `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical record id`, REPAIRS));
+        localize('action-grammar.grammar.action_basis_i_target_string_is', "action_basis[{i}].target '{String}' is not a canonical record id", { i: String(i), String: String(l.target).slice(0, 40) }), REPAIRS));
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {
       findings.push(f('C-2.10', 'error',
         localize('action-grammar.grammar.action_basis_i_target_target', 'action_basis[{i}].target \'{target}\' is an ACTION: an action does not rest on our own action. Evidence for what we did is evidence somebody else produced (DEC-14)', { i: String(i), target: String(target) }),

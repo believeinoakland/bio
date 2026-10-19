@@ -10,30 +10,26 @@ import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 export const ZONE = "UTC";
 
 /* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle"; T34-87
-   (DEC-149) re-words three more. Each old phrase with its new one; the golden file stays as recorded and is compared with
-   these applied, so no other byte of it moves. */
+   (DEC-149) re-words three more. T51 (K3949, the words pass) wrote those re-wordings into golden.json once, so the golden
+   holds the words the product holds; each old phrase is kept here only to assert that none of them remains. */
 export const REWORDED = [
-  ["' is not a canonical bundle id", "' is not a canonical record id"],
-  ["point the edge at the ACTN- bundle whose correspondence this answers", "point the edge at the ACTN- record whose correspondence this answers"],
-  /* T34-87 (DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "the plane" or "this
-     instance": `requestLifecycleOf`'s `says` (R8), C-2.10's kind finding (R7) and C-101.1's translation (R9). */
-  ["The plane derives only the days", "Your team's Civicsmith derives only the days"],
-  ["' is not a kind this instance offers", "' is not a kind your team's Civicsmith offers"],
-  ["An action is one of the kinds this instance offers:", "An action is one of the kinds your team's Civicsmith offers:"],
+  "' is not a canonical bundle id",
+  "point the edge at the ACTN- bundle whose correspondence this answers",
+  "The plane derives only the days",
+  "' is not a kind this instance offers",
+  "An action is one of the kinds this instance offers:",
 ];
 /* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
    array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded
-   sentence with the one it reads now; applied as REWORDED is. Not a re-wording, so not REWORDED's (its test asks that no
-   old phrase remains, and this one is the start of its successor). */
+   sentence with the one it reads now, applied to the golden file as it is compared. Not a re-wording, so it is not
+   REWORDED's (its test asks that no old phrase remains, and this one is the start of its successor). */
 export const GROWN = [
   ["is not one of: granted, denied, partial, reversed, affirmed, none_stated\"", "is not one of: granted, denied, partial, reversed, affirmed, none_stated, none_exists\""],
 ];
-const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
-export const GOLDEN = JSON.parse([...REWORDED, ...GROWN].reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
+export const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
+export const GOLDEN = JSON.parse(GROWN.reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
 /** How many times each grown sentence occurs in the golden file as recorded. */
 export const GROWN_COUNTS = GROWN.map(([was]) => RECORDED.split(was).length - 1);
-/** How many times each old phrase occurs in the golden file as recorded (so a test can say every one was re-worded). */
-export const REWORDED_COUNTS = REWORDED.map(([was]) => RECORDED.split(was).length - 1);
 
 /** JSON's view of a value, so a comparison with the golden file sees exactly what it holds. */
 export const plain = (v) => (v === undefined ? { undefined: true } : JSON.parse(JSON.stringify(v)));
