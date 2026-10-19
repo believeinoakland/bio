@@ -74,8 +74,7 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   STANDARD_PROPOSER_UNNAMED: {
     check: 'C-112.14', where: at("standardPropose", "is-proposer-named"),
-    translation: 'This proposal carries nobody. A proposal is labelled with who made it, and one nobody can be named '
-      + 'for could say nothing. Nothing was written.',
+    translation: word('refusal.STANDARD_PROPOSER_UNNAMED'),
   },
   STANDARD_NO_SUCH_PROPOSAL: {
     check: 'C-112.15', where: at("standardAdopt", "is-proposal-held"),
