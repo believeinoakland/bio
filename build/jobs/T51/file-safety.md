@@ -111,3 +111,7 @@ Tests and checks run (summary lines):
 - `bio-plane/src/setup-words/build.mjs --check`: rows.mjs and words-unreviewed.json match; no refusal naming file-safety.
 
 **Size (session_01FZWRQ2Kz7BQHTbB7ocRjzr), cumulative:** test runs 3, module lines 2342
+
+## J4 · COMPLETE
+
+CHANGE B4 done at commit b7de3d9d1b; record at 69ff9ec4f7. The `potentially_unwanted` and `test` kind sentences in `kinds.mjs` now read through `word(key)` with their words.json rows, as the trojan kind did. The row for `potentially_unwanted` reads "showing ads" (was "adverts"); members read the design's words. No test held the text; the rows test compares by equality. Words check: 0 failures for file-safety (unkeyed 51). Module tests 64/64; format, architecture, coverage, ownership 0 failures; setup-words --check clean. The whole-product run still shows 1,629 failures in other modules, none in file-safety. Details: build/jobs/T51/file-safety.md, Completion (CHANGE B4).
