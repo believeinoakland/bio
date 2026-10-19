@@ -90,3 +90,32 @@ Size (session_018652bxpkEPx4gMoCSpbHne): test runs 14, module lines 1626
 **COMPLETE** again, for B4 (CHANGE, K3980). `tranche/T51` merged (no conflict). The six test copies now compare with `localize` by id (`t35-words` three, plus the hosting-access act; `t46-handles-doors` the doors act) or carry a non-sentence message (`t19-enrol-boot`). `checks/words.mjs /home/user/bio membership`: 0 failures. `membership` suites 172 pass, 0 fail. Coverage 49 of 49, architecture and ownership 0 failures. No source change; module lines 1626.
 
 Size (session_018652bxpkEPx4gMoCSpbHne): test runs 3, module lines 1626
+
+## J6 · COMPLETE
+
+**COMPLETE**, RW (words, B5), on `job/T51/membership` (commit `058368a0a2`); `tranche/T51` merged first (no conflict).
+
+**Entries applied**
+1. **Finding (the one the check lists).** `membership/index.mjs` ~1127: a refusal's `detail` ("the member named holds no participation in this project…") was a two-literal `+` chain, counted as an inline sentence. It now reads `localize("membership.index.the_member_named_holds_no", en)`; the English is unchanged. New id, fixed once. No table key or code was touched.
+2. **Other findings:** none. `words.mjs membership` lists 0 findings (before: 1 inline).
+
+**Deferred**: none in this module.
+
+**Inherited red (not this job's, unchanged by it)**: `test/m/membership/t50-words.test.mjs` R151 "the keys it reads are the `reads` list for it in words-reads.json" fails on `tranche/T51` before this job's edit, and fails the same way with the edit reverted. It compares `WORD_KEYS` with the `membership` `reads` list in `docs/development/ux-substrate/screens/words-reads.json`; the design's split of that entry (DEC-345, U373, K3981) is the pending merge that should bring the two into line. Nothing in `membership` changes it, and I did not edit the list.
+
+**Found in other modules** (not changed): `checks/run.mjs` on `/home/user/bio` shows 1,629 words failures and 22 coverage failures, none in `membership`. Architecture 0 failures; format 0 failures; channels 0 failures.
+
+**Setup-words**: `setup-words/build.mjs --check` reports `rows.mjs` stale for the new `membership.index.the_member_named_holds_no` row (expected; BOB regenerates at the layer close). No refusal naming `membership`.
+
+**Checks**, from the process repository:
+- `checks/words.mjs /home/user/bio membership`: inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0; 0 failures.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio membership`: 0 failures.
+- `checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`: 0 failures (1 file changed by membership, in its paths).
+- `checks/run.mjs /home/user/bio`: architecture 0, format 0, channels 0; no finding names `membership`.
+
+**Tests**: `node --test test/m/membership/*.test.mjs test/members.test.mjs` from `bio-plane/`: 171 pass; 1 fail, the inherited R151 reads-list test above (the same test fails with the edit reverted).
+
+**Raw lines of source**: `bio-plane/src/membership/` four files: 1,625 (unchanged by RW).
+
+Size (session_018mYefzYbzbFYsZ9Kx9F2np): test runs 5, module lines 1625
