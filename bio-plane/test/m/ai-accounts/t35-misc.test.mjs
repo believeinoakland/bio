@@ -142,7 +142,7 @@ test("R30 (credentials R48's share): the account sweep rows (DEC-149): each memb
   assert.equal(unsealed.detail, localize("ai-accounts.index.your_teams_civicsmith_has_no", "your team's Civicsmith has no seal secret set, so a key cannot be kept sealed or read. Nothing was stored or read."));
   /* the unknown kind's detail */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
-    "the kind your team's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
+    localize("ai-accounts.index.the_kind_your_teams_civicsmith", "the kind your team's Civicsmith holds is {ACCOUNT_KINDS}; a Claude subscription is connected through Claude Code's own sign-in, never held as a token. Nothing was written.", { ACCOUNT_KINDS: "apikey" }));
   /* a sealed key that no longer opens */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
