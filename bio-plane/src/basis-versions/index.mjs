@@ -46,10 +46,12 @@ import { biasOf } from "../bias/index.mjs";
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
 import { acceptedWorkOf, ACCEPTED_WORK_CHECKS } from "../accepted-work/index.mjs";
+/* the version grammar is `basis-version-grammar`'s (T51, CR-9; K624, K3946): imported, and re-exported whole below so
+   every reader of this module's names keeps them (K3268) */
 import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
-         isImportedRef, isDerivedKindRef } from "./grammar.mjs";
-import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
-         versionNeedsReason, VERSION_NAME_RE, isBoilerplate, SUFFICIENCY_UNCLAIMED } from "./checks.mjs";
+         isImportedRef, isDerivedKindRef, VERSION_KIND_CHECKS, VERSION_MACHINE, versionNeedsReason,
+         VERSION_NAME_RE } from "../basis-version-grammar/index.mjs";
+import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
          appendConclusionEntry } from "./text.mjs";
 import { BASIS_VERSIONS_TABLES, migrateBasisVersions } from "./schema.mjs";
@@ -58,7 +60,9 @@ import { VERSION_REASON_MAX, drawsOn, EXTENT_FIELDS, LEG_COPY_KEYS } from "./sha
 
 export { READING_MIN, CONCLUSION_BIAS_EFFECTS, VERSION_REASON_MAX };
 
-export * from "./grammar.mjs";
+export * from "../basis-version-grammar/index.mjs";
+export { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, BOILERPLATE_FORMS, isBoilerplate }
+  from "./checks.mjs";
 export { BASIS_VERSIONS_SCHEMA, BASIS_VERSIONS_TABLES } from "./schema.mjs";
 
 /** R9: versions per read (default and ceiling), and legs per version returned. */
@@ -249,8 +253,8 @@ export class BasisVersions {
                                 code: "VERSION_LEG_UNRESOLVED",
                                 translation: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.translation,
                                 detail: localize("basis-versions.index.basis_version_name_rests_on", "basis version '{name}' rests on '{target_id}', which does not resolve in this store: an account of the evidence names material the record holds, or it points a reader at nothing while claiming support", { name: String(v.name), target_id: String(leg.target_id) }),
-                                repairs: ["capture or promote the target first, then compose the version on it",
-                                          "or drop the leg — a version may honestly rest on less"] }] };
+                                repairs: [localize("basis-versions.index.capture_or_promote_the_target", "capture or promote the target first, then compose the version on it"),
+                                          localize("basis-versions.index.or_drop_the_leg_a", "or drop the leg — a version may honestly rest on less")] }] };
       }
     }
     /* END DEC-49 REGION basis-version-resolve */
@@ -271,8 +275,8 @@ export class BasisVersions {
                findings: [{ check: BASIS_VERSION_CHECKS.VERSION_FROZEN.check, code: "VERSION_FROZEN",
                             translation: BASIS_VERSION_CHECKS.VERSION_FROZEN.translation,
                             detail: localize("basis-versions.index.basis_version_name_of_bundleid", "basis version '{name}' of {bundleId} is frozen and this promotion changes it in place ({changed}): a version is frozen once written, because two members exploring one version collide otherwise and comparison stops meaning anything when the thing being compared shifts underneath them", { name: String(v.name), bundleId: String(bundleId), changed: String(changed) }),
-                            repairs: [`add a NEW version with its own name and derived_from: '${v.name}'`,
-                                      `or restore '${v.name}' to the composition the record holds`] }] };
+                            repairs: [localize("basis-versions.index.add_a_new_version_with", "add a NEW version with its own name and derived_from: '{name}'", { name: String(v.name) }),
+                                      localize("basis-versions.index.or_restore_name_to_the", "or restore '{name}' to the composition the record holds", { name: String(v.name) })] }] };
     }
     /* END DEC-49 REGION basis-version-freeze */
     /* R3 (N522; DEC-112 (6), DEC-96 item 1): a leg on another group's finding rests on an acceptance in force at the
@@ -312,9 +316,8 @@ export class BasisVersions {
                    const ord = x?.ord;
                    const owner = fresh.find((y) => y.leg.ord === ord);
                    return { ...x,
-                            ...(owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version `
-                              + `'${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another team's finding "
-                              + "whose acceptance at the edition named could not be established"}` } : {}) };
+                            ...(owner ? { version: owner.version, detail: localize("basis-versions.index.basis_version_legs_ord_version", "basis_version_legs[{ord}] (version '{version}'): {why}", { ord: String(ord), version: String(owner.version), why: String(x?.detail ?? x?.message
+                              ?? localize("basis-versions.index.rests_on_another_team_s", "rests on another team's finding whose acceptance at the edition named could not be established")) }) } : {}) };
                  }) };
     }
     /* R49 (N834): a member's revision cites as hers only the machine-proposed passages she took up. Asked over each leg
@@ -362,9 +365,11 @@ export class BasisVersions {
     if (ans && typeof ans === "object" && !("thrown" in ans) && ans.ok === false && typeof ans.then !== "function")
       return ans;
     const row = machinePassageUnchecked(
-      `the read registered by ${src.module} that says whether ${author} may cite as theirs a passage a machine `
-      + `proposed ${ans && typeof ans === "object" && "thrown" in ans ? "failed" : "answered neither a verdict nor a refusal"}, `
-      + `so ${legs.length} leg(s) of a basis version are refused rather than trusted. Nothing was written.`,
+      localize("basis-versions.index.the_read_registered_by_module", "the read registered by {module} that says whether {author} may cite as theirs a passage a machine proposed {outcome}, so {n} leg(s) of a basis version are refused rather than trusted. Nothing was written.",
+        { module: String(src.module), author: String(author), n: String(legs.length),
+          outcome: ans && typeof ans === "object" && "thrown" in ans
+            ? localize("basis-versions.index.failed", "failed")
+            : localize("basis-versions.index.answered_neither_a_verdict_nor", "answered neither a verdict nor a refusal") }),
       { legs: legs.map((l) => ({ version: l.version, ord: l.ord, target: l.target })) });
     return { ...row, ok: false, reason: row?.reason ?? row?.code ?? "MACHINE_PASSAGE_UNCHECKED",
              findings: Array.isArray(row?.findings) ? row.findings : [row] };
@@ -477,8 +482,7 @@ export class BasisVersions {
     const inq = id == null ? "" : String(id).trim();
     if (!inq)
       return refuse("BASIS_VERSIONS_NO_INQUIRY",
-        "op=basisversions answers for ONE inquiry: pass id=<INQ-…>. Versions are versions of a "
-        + "question's basis, and there is no default question.");
+        localize("basis-versions.index.op_basisversions_answers_for_one", "op=basisversions answers for ONE inquiry: pass id=<INQ-…>. Versions are versions of a question's basis, and there is no default question."));
     if (!isInquiryId(inq))
       return refuse("BASIS_VERSIONS_NOT_AN_INQUIRY",
         localize("basis-versions.index.inq_is_not_an_inquiry", "{inq} is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one; an empty list here would say this thing has none when it could not have any.", { inq: String(inq.slice(0, 60)) }));
@@ -524,22 +528,22 @@ export class BasisVersions {
    *  target answers one refusal (R33). Five dimensions in a fixed order, each `{same, a, b}`; `legs` is
    *  `{taken_up, let_go, kept}` by target (with its extent, content id and capture), in each version's order. */
   compareVersions({ target = null, a = null, b = null, project = null, viewer = null } = {}) {
-    const refuse = (key, detail) => {
+    /* R55 (DEC-337): the words are the list's, read by key through the row; no sentence is held here */
+    const refuse = (key) => {
       const row = BASIS_VERSION_CHECKS[key];
-      return { ok: false, reason: key, check: row.check, code: key, translation: row.translation, detail };
+      return { ok: false, reason: key, check: row.check, code: key, translation: row.translation };
     };
     try {
       const inq = String(target ?? "").trim();
       if (!inq || !isInquiryId(inq) || !this.#seen(inq, viewer))
-        return refuse("VERSION_COMPARE_NO_INQUIRY", localize("basis-versions.index.no_question_by_that_id", "no question by that id is readable here."));
+        return refuse("VERSION_COMPARE_NO_INQUIRY");
       const na = String(a ?? "").trim(), nb = String(b ?? "").trim();
-      if (!na || !nb) return refuse("VERSION_COMPARE_NO_VERSION", "pass a=<reading> and b=<reading>.");
+      if (!na || !nb) return refuse("VERSION_COMPARE_NO_VERSION");
       const get = (n) => this.#one(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, inq, n);
       const ra = get(na), rb = get(nb);
       const missing = [[na, ra], [nb, rb]].filter(([, r]) => !r).map(([n]) => n);
       if (missing.length)
-        return { ...refuse("VERSION_COMPARE_NO_SUCH_VERSION", localize("basis-versions.index.this_question_holds_no_reading", "this question holds no reading by that name.")),
-                 missing: missing.slice(0, 2) };
+        return { ...refuse("VERSION_COMPARE_NO_SUCH_VERSION"), missing: missing.slice(0, 2) };
       const legsOf = (n) => this.#rows(
         `SELECT ord, target_id, content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=?
           ORDER BY ord`, inq, n);
@@ -588,7 +592,7 @@ export class BasisVersions {
       return { ok: true, a: na, b: nb, differs: Object.values(dimensions).filter((d) => !d.same).length, of: 5,
                dimensions, legs };
     } catch {
-      return refuse("VERSION_COMPARE_NO_INQUIRY", localize("basis-versions.index.no_question_by_that_id_2", "no question by that id is readable here."));
+      return refuse("VERSION_COMPARE_NO_INQUIRY");
     }
   }
 
@@ -693,14 +697,12 @@ export class BasisVersions {
         ? { state: "adopted", text: nc, version: nv }
         : BasisVersions.undeterminedClaim(
             localize("basis-versions.index.this_conclusion_names_reading_nv", "this conclusion names reading '{nv}' and a claim, but {v1}, so which claim was concluded cannot be established from the record and is undetermined (INVESTIGATIVE-SESSION.md §7.1 item 6) — never taken on the frontmatter's word.", { nv: String(nv.slice(0, 80)), v1: String(!v
-              ? "the inquiry carries no such reading"
-              : "that reading does not state the claim recorded") }));
+              ? localize("basis-versions.index.the_inquiry_carries_no_such", "the inquiry carries no such reading")
+              : localize("basis-versions.index.that_reading_does_not_state", "that reading does not state the claim recorded")) }));
     }
     return { project: null, inquiry: String(inquiryId), relationship: "no_project", state: "concluded",
              relationship_established: false,
-             relationship_detail: "this conclusion is written in the inquiry's own bytes and names no project, "
-                                + "so the relationship that drew it cannot be established; it is read as the "
-                                + "no-project relationship's (INVESTIGATIVE-SESSION.md §7.1 item 5).",
+             relationship_detail: localize("basis-versions.index.this_conclusion_is_written_in", "this conclusion is written in the inquiry's own bytes and names no project, so the relationship that drew it cannot be established; it is read as the no-project relationship's (INVESTIGATIVE-SESSION.md §7.1 item 5)."),
              conclusion: s(fm.conclusion), falsifier: s(fm.falsifier) ?? "", claim };
   }
 
@@ -893,16 +895,14 @@ export class BasisVersions {
     const target = String(a.target ?? "").trim();
     if (!target)
       return refuse("VERSION_ACT_NO_INQUIRY",
-        "a reading belongs to one question: pass target=<INQ-…>. There is no default question and "
-        + "there must not be one.");
+        localize("basis-versions.index.a_reading_belongs_to_one", "a reading belongs to one question: pass target=<INQ-…>. There is no default question and there must not be one."));
     if (!isInquiryId(target))
       return refuse("VERSION_ACT_NOT_AN_INQUIRY",
         localize("basis-versions.index.target_is_not_an_inquiry", "{target} is not an inquiry, so it holds no readings of its evidence to act on.", { target: String(target.slice(0, 60)) }), { target });
     const vname = String(a.version ?? "").trim();
     if (!vname)
       return refuse("VERSION_ACT_NO_VERSION",
-        "a question can hold several readings of its evidence: pass version=<name>. Acting on the "
-        + "wrong one is worse than being asked which was meant.", { target });
+        localize("basis-versions.index.a_question_can_hold_several", "a question can hold several readings of its evidence: pass version=<name>. Acting on the wrong one is worse than being asked which was meant."), { target });
     const who = String(a.author ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_MOVE_VERSION",
@@ -953,11 +953,10 @@ export class BasisVersions {
     const why = String(a.reason ?? "").trim();
     if (versionNeedsReason(to) && !why)
       return refuse("VERSION_NO_REASON",
-        `op=version${act} records WHY. ${to === "rejected"
-          ? "The record of what was turned down is the anti-omission instrument (§6 rule 4) and it is "
-            + "worthless without the reason"
-          : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement "
-            + "from an oversight"}.`, { target, version: vname, from, to });
+        to === "rejected"
+          ? localize("basis-versions.index.op_version_act_records_why", "op=version{act} records WHY. The record of what was turned down is the anti-omission instrument (§6 rule 4) and it is worthless without the reason.", { act: String(act) })
+          : localize("basis-versions.index.op_version_act_records_why_2", "op=version{act} records WHY. Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight.", { act: String(act) }),
+        { target, version: vname, from, to });
     /* C-25.32: a reason that arrived and cannot be stored is a different refusal from one that never arrived. */
     if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why)
         || (versionNeedsReason(to) && why.length < VERSION_REASON_MIN))
@@ -1011,8 +1010,7 @@ export class BasisVersions {
       projectId = String(a.project ?? "").trim();
       if (!projectId)
         return refuse("VERSION_CURRENT_NO_PROJECT",
-          "pass project=<PROJ-…>: what a project stands on is the project's own dated declaration, "
-          + "and there is no default project.", { target, version: vname });
+          localize("basis-versions.index.pass_project_proj_what_a", "pass project=<PROJ-…>: what a project stands on is the project's own dated declaration, and there is no default project."), { target, version: vname });
       projectRow = this.#visible(projectId, a.viewer ?? null);
       /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
       if (!projectRow) { const existence = this.membership.existenceAct(projectId, a.viewer ?? null); if (existence) return existence; }
@@ -1104,13 +1102,10 @@ export class BasisVersions {
   }
 
   static #affirmationDetail(vname, { declared, missing, unknown }) {
-    return `'${vname.slice(0, 60)}' rests on ${declared.length} separately sufficient parts and this `
-      + `answer counts the STRONGEST of them, so accepting it is a claim that each one would `
-      + `carry the finding on its own. ${missing.length
-          ? `Not affirmed: ${missing.slice(0, 8).join(", ")}.` : ``}${unknown.length
-          ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass `
-      + `affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by `
-      + `default, because that is exactly how a finding gets strengthened by repackaging.`;
+    return localize("basis-versions.index.vname_rests_on_n_separately", "'{vname}' rests on {n} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. {notAffirmed}{notPart} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.",
+      { vname: String(vname.slice(0, 60)), n: String(declared.length),
+        notAffirmed: missing.length ? localize("basis-versions.index.not_affirmed_list", "Not affirmed: {list}.", { list: String(missing.slice(0, 8).join(", ")) }) : "",
+        notPart: unknown.length ? localize("basis-versions.index.named_but_not_part_of", " Named but not part of this reading: {list}.", { list: String(unknown.slice(0, 8).join(", ")) }) : "" });
   }
 
   /* R53: the refusal also carries `part`, and its translation is the list's, filled with it (the row's own sentence
@@ -1130,10 +1125,10 @@ export class BasisVersions {
                translation: row.translation, detail };
     };
     const md = this.#doc(pid);
-    if (md === null) return unwritable(`${pid} has no readable file, so its stance cannot be recorded`);
+    if (md === null) return unwritable(localize("basis-versions.index.pid_has_no_readable_file", "{pid} has no readable file, so its stance cannot be recorded", { pid: String(pid) }));
     const pfm = parseFrontmatter(md).data || {};
     let text = setCurrentVersionRow(md, inquiryId, vname, who, when);
-    if (text === null) return unwritable(`${pid}'s current_versions block could not be rewritten in place`);
+    if (text === null) return unwritable(localize("basis-versions.index.pid_s_current_versions_block_could", "{pid}'s current_versions block could not be rewritten in place", { pid: String(pid) }));
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
       localize("basis-versions.index.session_when_stands_on_who", "### Session {when} | Stands on | {who}\nTrigger: op=versioncurrent on {inquiryId}\nChanges: this project now stands on reading '{vname}' of {inquiryId_2}.\n{v1}", { when: String(when), who: String(who), inquiryId: String(inquiryId), vname: String(vname), inquiryId_2: String(inquiryId), v1: String(why ? `Reason: ${why}\n` : "") }));
@@ -1260,16 +1255,15 @@ export class BasisVersions {
     if (!b || normalizeType(b.object_type) !== "inquiry")
       return refusal("NARROW_NO_INQUIRY",
         tgt ? localize("basis-versions.index.no_question_by_the_id", "no question by the id '{tgt}' is readable here. A question you may not see answers exactly as one that does not exist.", { tgt: String(tgt.slice(0, 60)) })
-            : `pass target=<INQ-…>: the question whose reading holds the citation.`, { target: tgt || null });
+            : localize("basis-versions.index.pass_target_inq_the_question", "pass target=<INQ-…>: the question whose reading holds the citation."), { target: tgt || null });
     const text = this.#doc(b.bundle_id);
     const fm = text !== null ? (parseFrontmatter(text).data || {}) : {};
     const versions = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const vrow = vname ? versions.find((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname) : null;
     if (!vrow)
       return refusal("NARROW_NO_SUCH_VERSION",
-        vname ? localize("basis-versions.index.bundle_id_holds_no_reading", "{bundle_id} holds no reading named '{vname}'.{v1}", { bundle_id: String(b.bundle_id), vname: String(vname.slice(0, 64)), v1: String(versions.length ? "" : " It holds no readings at all: the live basis is not a reading, and "
-                  + "a citation on it is made more specific by a reading taken from it.") })
-              : `pass version=<the name of the reading that holds the citation>.`,
+        vname ? localize("basis-versions.index.bundle_id_holds_no_reading", "{bundle_id} holds no reading named '{vname}'.{v1}", { bundle_id: String(b.bundle_id), vname: String(vname.slice(0, 64)), v1: String(versions.length ? "" : localize("basis-versions.index.it_holds_no_readings_at_all", " It holds no readings at all: the live basis is not a reading, and a citation on it is made more specific by a reading taken from it.")) })
+              : localize("basis-versions.index.pass_version_the_name_of", "pass version=<the name of the reading that holds the citation>."),
         { target: b.bundle_id, version: vname || null,
           known: versions.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
     const legRows = (Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [])
@@ -1380,9 +1374,7 @@ export class BasisVersions {
     return { ok: true, target: src.b.bundle_id, version: src.vname, ord: src.k, leg,
              subject: list.subject, candidates: list.candidates, counts: list.counts,
              limit: NARROW_CANDIDATES_MAX, truncated: list.truncated, absence, proposal_only: true,
-             says: "every entry here is MACHINE WORK and a PROPOSAL. Listing it wrote nothing and cited "
-                 + "nothing; which passage is on point to this question is the member's judgment, made by "
-                 + "op=narrow in the member's own name." };
+             says: localize("basis-versions.index.every_entry_here_is_machine_work", "every entry here is MACHINE WORK and a PROPOSAL. Listing it wrote nothing and cited nothing; which passage is on point to this question is the member's judgment, made by op=narrow in the member's own name.") };
   }
 
   /** R24, R26, R27 (`op=narrow`): THE ACT. A new version `suggested`, `derived_from` the old, identical but for the
@@ -1418,8 +1410,7 @@ export class BasisVersions {
         localize("basis-versions.index.this_call_names_map_which", "this call names {map}, which this act does not take. The fields it takes are: {keys}.", { map: String(unknown.map((k) => `'${k}'`).join(", ")), keys: String(Object.keys(EXTENT_FIELDS).join(", ")) }), { got: unknown });
     if (!authored.length)
       return refusal("NARROW_NO_EXTENT",
-        "pass extent={…}: the part of the document the citation should now point at, or the content_id "
-        + "of a proposed passage.", { target: src.b.bundle_id });
+        localize("basis-versions.index.pass_extent_the_part_of", "pass extent={…}: the part of the document the citation should now point at, or the content_id of a proposed passage."), { target: src.b.bundle_id });
     for (const k of authored) {
       const raw = String(bag[k]).trim();
       if (raw.length > 200 || /["\\\r\n#]/.test(raw))
@@ -1445,8 +1436,8 @@ export class BasisVersions {
       if (chosenRow.bundle_id !== src.leg.target || chosenRow.capture_sha !== src.row.capture_sha)
         return refusal("NARROW_OTHER_CAPTURE",
           localize("basis-versions.index.the_citation_rests_on_target", "the citation rests on {target} as captured at {capture_sha}…, and the part named is {v1}.", { target: String(src.leg.target), capture_sha: String(src.row.capture_sha.slice(0, 12)), v1: String(chosenRow.bundle_id === src.leg.target
-            ? `in a DIFFERENT copy of it (${String(chosenRow.capture_sha).slice(0, 12)}…)`
-            : `in a different document (${chosenRow.bundle_id})`) }),
+            ? localize("basis-versions.index.in_a_different_copy_of", "in a DIFFERENT copy of it ({capture}…)", { capture: String(chosenRow.capture_sha).slice(0, 12) })
+            : localize("basis-versions.index.in_a_different_document_bundle", "in a different document ({bundle_id})", { bundle_id: String(chosenRow.bundle_id) })) }),
           { from_capture: src.row.capture_sha, to_capture: chosenRow.capture_sha, to_bundle: chosenRow.bundle_id });
     }
     /* END DEC-49 REGION is-narrow-extent */
@@ -1468,23 +1459,22 @@ export class BasisVersions {
     /* DEC-49 REGION is-narrow-claim */
     if (relation !== "narrower")
       return refusal("NARROW_NOT_NARROWER",
-        localize("basis-versions.index.the_citation_points_at_ref", "the citation points at {ref} and the part named ({describeExtent}) is {v1}. Narrowing only ever points a citation at less of its document.", { ref: String(src.row.ref), describeExtent: String(describeExtent(newExtent)), v1: String(relation === "same" ? "that same part"
-          : relation === "wider" ? "WIDER than it"
-          : relation === "disjoint" ? "a different place, not a part of it"
-          : "not one this record can compare with it") }),
+        localize("basis-versions.index.the_citation_points_at_ref", "the citation points at {ref} and the part named ({describeExtent}) is {v1}. Narrowing only ever points a citation at less of its document.", { ref: String(src.row.ref), describeExtent: String(describeExtent(newExtent)), v1: String(relation === "same" ? localize("basis-versions.index.that_same_part", "that same part")
+          : relation === "wider" ? localize("basis-versions.index.wider_than_it", "WIDER than it")
+          : relation === "disjoint" ? localize("basis-versions.index.a_different_place_not_a", "a different place, not a part of it")
+          : localize("basis-versions.index.not_one_this_record_can", "not one this record can compare with it")) }),
         { relation, from: src.extent, to: newExtent });
     if (!name || !VERSION_NAME_RE.test(name) || existingNames.has(nameWritten))
       return refusal("NARROW_NAME",
-        !name ? "pass name=<a name for the new reading>."
+        !name ? localize("basis-versions.index.pass_name_a_name_for", "pass name=<a name for the new reading>.")
           : existingNames.has(nameWritten)
             ? localize("basis-versions.index.name_already_names_a_reading", "'{name}' already names a reading of {bundle_id}{v1}", { name: String(name.slice(0, 64)), bundle_id: String(src.b.bundle_id), v1: String(nameWritten === src.vname
-              ? ` — it is the reading being narrowed, and reusing its name would change it in place.` : `.`) })
+              ? localize("basis-versions.index.it_is_the_reading_being", " — it is the reading being narrowed, and reusing its name would change it in place.") : `.`) })
             : localize("basis-versions.index.name_is_not_a_name", "'{name}' is not a name a reading can carry: letters, digits, space, dot, dash and underscore, starting with a letter or digit, at most 64 characters.", { name: String(name.slice(0, 64)) }),
         { name: name || null, taken: existingNames.has(nameWritten) });
     if (!description || isBoilerplate(description))
       return refusal("NARROW_NO_DESCRIPTION",
-        "pass description=<what changed and why>: which citation now points at less of its document, and "
-        + "why that part is the one on point.", { name });
+        localize("basis-versions.index.pass_description_what_changed_and", "pass description=<what changed and why>: which citation now points at less of its document, and why that part is the one on point."), { name });
     /* END DEC-49 REGION is-narrow-claim */
 
     /* THE COMPOSITION — the source version copied, one leg re-pointed. The partition is carried and asserted in the
@@ -1524,7 +1514,7 @@ export class BasisVersions {
     const toKey = canonicalExtent(newExtent);
     const matched = this.#narrowCandidateList(src).candidates.find((c) => canonicalExtent(c.extent) === toKey) || null;
     const promoted = this.appendVersion({ target: src.b.bundle_id, version, grounds, legs, author: who, at: nowIso,
-      log: localize("basis-versions.index.session_nowiso_narrowed_a_citation", "### Session {nowIso} | Narrowed a citation | {who}\nTrigger: op=narrow on {bundle_id}\nChanges: reading '{nameWritten}' derived from '{vname}', in state suggested; piece {k} ({target}) now points at {fmSafe} instead of {fmSafe_2}. '{vname_2}' is unchanged.{v1}{v2}\n", { nowIso: String(nowIso), who: String(who), bundle_id: String(src.b.bundle_id), nameWritten: String(nameWritten), vname: String(src.vname), k: String(src.k), target: String(src.leg.target), fmSafe: String(fmSafe(describeExtent(newExtent))), fmSafe_2: String(fmSafe(src.row.ref)), vname_2: String(src.vname), v1: String(matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`), v2: String(Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``) }) });
+      log: localize("basis-versions.index.session_nowiso_narrowed_a_citation", "### Session {nowIso} | Narrowed a citation | {who}\nTrigger: op=narrow on {bundle_id}\nChanges: reading '{nameWritten}' derived from '{vname}', in state suggested; piece {k} ({target}) now points at {fmSafe} instead of {fmSafe_2}. '{vname_2}' is unchanged.{v1}{v2}\n", { nowIso: String(nowIso), who: String(who), bundle_id: String(src.b.bundle_id), nameWritten: String(nameWritten), vname: String(src.vname), k: String(src.k), target: String(src.leg.target), fmSafe: String(fmSafe(describeExtent(newExtent))), fmSafe_2: String(fmSafe(src.row.ref)), vname_2: String(src.vname), v1: String(matched ? localize("basis-versions.index.chosen_from_a_machine_proposal", " Chosen from a machine proposal ({source}).", { source: String(matched.source) }) : localize("basis-versions.index.named_by_the_member", " Named by the member.")), v2: String(Object.keys(dropped).length ? localize("basis-versions.index.the_old_grade_was_not", " The old grade was not carried: a part earns only from what is in it.") : ``) }) });
     if (!promoted.ok) return { ...promoted, target: src.b.bundle_id, name: nameWritten };
     const after = this.#one(`SELECT content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ord=?`,
                             src.b.bundle_id, nameWritten, src.k);

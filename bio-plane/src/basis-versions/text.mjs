@@ -7,12 +7,10 @@
  * restricted parser reads and the only shape any writer in this tree emits. */
 
 import { flattenBiasApplied } from "../inquiry-grammar/index.mjs";
+import { fmSafe } from "../basis-version-grammar/index.mjs";
 
-/** Frontmatter-safe text: the restricted grammar has no escapes, so a derived string loses its line breaks, and a
- *  quote or backslash becomes an apostrophe. An authored field is refused by name before it gets here. */
-export function fmSafe(s) {
-  return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
-}
+export { fmSafe };
+
 
 /** A quoted, frontmatter-safe scalar. */
 export const quoted = (s) => `"${fmSafe(String(s ?? ""))}"`;

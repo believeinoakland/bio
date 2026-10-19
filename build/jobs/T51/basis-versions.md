@@ -1,6 +1,6 @@
 # basis-versions (T51)
 
-**Status** · session_01LSyNpJD3npEurHcTzv9LS6 · depth 2 · COMPLETE · handled B2
+**Status** · session_01778SRJXwE8E8B1xtKcWZ2m · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -24,3 +24,25 @@ COMPLETE (T51-53 · basis-versions), answering B2.
 **Checks.** format 0 failures; architecture 0 failures; coverage 52 of 52 ids, 0 failures; ownership 0 failures.
 
 Size (session_01LSyNpJD3npEurHcTzv9LS6): test runs 40, module lines 4,199
+
+## J3 · BLOCKED
+
+Cause: needs BOB (a prerequisite is not on tranche/T51). Your START says basis-version-grammar (T51-148) and inquiry-grammar (CR-8) have merged. At tranche/T51 5fb50f87d2 neither has: (1) bio-plane/src/basis-version-grammar/ does not exist, its modules.json row (index 82) has empty paths/tests/uses, and there is no build/jobs/T51/basis-version-grammar.md (only BOB's .bob.md, B1); origin/job/T51/basis-version-grammar is at aaa6347031 'R6 open'. (2) origin/job/T51/inquiry-grammar has no job record, and inquiry-grammar's standardLegFindings (grammar.mjs:1468) is still not exported. CR-9 is delegation by import and re-export of the new module, so I cannot delete grammar.mjs or the grammar half of checks.mjs, nor build the standard-leg judgment, until both merge. I have changed nothing. I merged tranche/T51 into my branch and read my requirements, words findings and the split map. Please merge the two jobs into tranche/T51 and send RESUME or CHANGE; I will then merge tranche/T51 and start. (The words findings that do not touch the moved code could proceed now if you prefer: say so.)
+
+## J4 · REPORT
+
+REPORT (part 1 of CR-9, pushed; the delegation waits on your CHANGE). Done now, basis-versions 183 pass / 0 fail / 1 todo, format 0, architecture 0: (1) words: every inline finding in index.mjs and conclude.mjs converted by localize (details, repairs, session-log fragments, 'says'); the three test copies (dec149-strings now asserts no plane-naming and the names it carries, not the sentences), acts.test's op hand-list (the six from VERSION_ACT_TO, the rest one by one), the two fixture strings. (2) R55 (DEC-337): the three VERSION_COMPARE_* rows read word('refusal.VERSION_COMPARE_*'); compareVersions holds no second sentence (its detail is gone); new test 'R55 (DEC-337)' holds each translation equal to word of its key. VERSION_NOT_ACCEPTED and VERSION_CURRENT_NO_PROJECT rows now read their list rows by key too. (3) R52 relay and its test already existed (divided.test.mjs), unchanged and green. (4) amended() in registration.test.mjs is the R43 golden test, which the split map copies to the new module; I leave it for the delegation step. NOT converted, for your ruling (K3944): (a) checks.mjs 'where' strings (15 rows 'src/basis-versions/index.mjs #moveVersionState, reached from…') are source locators read by control-plane's region checks, not sentences a member reads: identifiers. (b) Findings in grammar.mjs (166,194,314,320,408–445) and checks.mjs SUGGEST_KINDS (656–666) sit in code that moves to basis-version-grammar; I leave them to that module and delete the copies in the delegation. Found in another module: contradiction/index.mjs:1781 [copy] holds a words.json sentence ('concluded through basis-versions' own door; …'). Waiting for CHANGE once basis-version-grammar and inquiry-grammar have merged.
+
+## J5 · COMPLETE
+
+COMPLETE (CR-9 · basis-versions), answering B5 and B6.
+
+Entries applied. (1) Delegation (C57, P6): grammar.mjs deleted; checks.mjs keeps the store rows (BASIS_VERSION_STORE_CHECKS: C-25.11, .16–.18, .37–.39), the six acts', the conclusion's, narrowing's and the boilerplate roster, and exports BASIS_VERSION_CHECKS = {...BASIS_VERSION_GRAMMAR_CHECKS, ...store rows}, re-exporting VERSION_KIND_CHECKS and SUFFICIENCY_UNCLAIMED; index.mjs imports from basis-version-grammar and 'export *' re-exports it whole, plus BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, BOILERPLATE_FORMS, isBoilerplate, so no user re-points; text.mjs re-exports fmSafe from the new module; the factory registers through its registerBasisVersionGrammar(record) (registrant stays 'basis-versions'; one code, one site). (2) CR-9 standard leg (N1251): met in basis-version-grammar R10; the test.todo and its control are replaced by a promotion test: a version and a member's own reading (R51) on a passage, a standard and a calculation leg hold all three, projected with their types; control: a lead is refused by name and a standard leg on a testimony axis is refused by inquiry-grammar's own code, never VERSION_LEG_NOT_CITABLE. (3) Copied test arms deleted (grammar R1–R5, sufficiency 3, registration 4 -> the factory test kept as R6, imported-legs 2); amended() went with them (N1216). (4) R55 refusals by key (DEC-337), new test; R52 relay and its test (divided.test.mjs) unchanged and green. (5) Words (K3949, K3957, K3962): all inline/test-copy findings of my module fixed (J4); B6's '+'-chain rule run against civicos-process main: no new finding.
+
+Deferred. None.
+
+Words not converted, for the design's unkeyed list: the 15 'where' strings in checks.mjs ('src/basis-versions/index.mjs #moveVersionState, reached from…'): source locators read by control-plane's region checks, no person reads them. The grammar's and SUGGEST_KINDS' findings went with the moved code. In another module: contradiction/index.mjs:1781 [copy] holds a words.json sentence.
+
+Tests/checks. basis-versions 183 pass, 0 fail with basis-version-grammar's 11 (194 together). Users, mine vs a worktree of tranche/T51: strength 161/0, run-productions 59/0, reevaluation 145/0, skills 130/0, review 61/0, store-door 48/0, project-stage 23/0 all green; inherited reds, every failing test also fails on tranche/T51 and mine fail strictly fewer: contradiction 2 (conformance battery 'undetermined reason not a key', K3958), affordances 4, answer-envelope 4, plane 1, queue-producers 2. Not run by me: agent-steps' fixture (absent). format 0 failures; architecture 0; coverage 45 of 45 ids, 0; ownership 0 failures; words: only the 15 locators; setup-words build --check: stale-rows note only (accepted-work word, not mine).
+
+Size (session_01778SRJXwE8E8B1xtKcWZ2m): test runs 14, module lines 2,825

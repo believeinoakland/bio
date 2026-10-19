@@ -18,7 +18,7 @@ function acceptance(accepted = new Set()) {
   const acceptedLegRefusals = ({ legs, viewer }) => {
     calls.push({ legs: legs.map((l) => `${l.target}@${l.target_edition}`), viewer });
     return legs.filter((l) => !accepted.has(`${l.target}@${l.target_edition}`)).map((l) => ({
-      check: "C-21.4", code: "IMPORTED_NOT_ACCEPTED", translation: "not accepted at that edition", ord: l.ord, ref: l.target,
+      check: "C-21.4", code: "IMPORTED_NOT_ACCEPTED", translation: "NOT_ACCEPTED", ord: l.ord, ref: l.target,
       detail: `${l.target} is not accepted at edition ${l.target_edition}` }));
   };
   return { calls, accepted, acceptedLegRefusals };
@@ -35,28 +35,6 @@ function withRefs(name, refs, extra = {}) {
 const fm = (b) => ({ id: Q, object_type: "inquiry", basis_versions: b.versions, basis_version_grounds: b.grounds,
                      basis_version_legs: b.legs });
 
-test("R3: a version's leg on an imported finding reference passes C-25.10 and C-25.14 when inquiry-grammar R11 judges its form, and a malformed one is R11's C-21.3, never C-25.10", () => {
-  const ok = [];
-  basisVersionFindings(fm(withRefs("first", [[REF, 2]])), ok);
-  assert.deepEqual(ok, [], "a well-formed leg on another team's finding raises nothing");
-  for (const bad of [{ target_edition: undefined }, { grade: "A" }, { grade_axis: "capture" }, { extent_kind: "page", extent_page: 1 },
-                     { content_id: "f".repeat(64) }, { extent_capture: "e".repeat(64) }]) {
-    const b = withRefs("first", [[REF, 2, bad]]);
-    if ("target_edition" in bad) delete b.legs[1].target_edition;
-    const f = [];
-    basisVersionFindings(fm(b), f);
-    assert.ok(f.length >= 1, JSON.stringify(bad));
-    assert.ok(f.every((x) => x.check === "C-21.3"), `${JSON.stringify(bad)}: ${JSON.stringify(f.map((x) => x.check))}`);
-  }
-  /* the role arm still asks it; a local id that is not a ref is judged as before */
-  const role = [];
-  basisVersionFindings(fm(withRefs("first", [[REF, 2, { role: "decorates" }]])), role);
-  assert.deepEqual(role.map((x) => x.check), ["C-25.10"]);
-  const notRef = [];
-  basisVersionFindings(fm(withRefs("first", [[`imported:${IMP}`, 2]])), notRef);
-  assert.ok(notRef.some((x) => x.check === "C-25.10"), "a spelling R11 does not match is not a ref");
-});
-
 test("R3, R6: at the promotion a malformed leg on another group's finding is BASIS_VERSION_REFUSED with R11's C-21.3 finding and its translation, and accepted-work is not asked", () => {
   const aw = acceptance();
   const w = world({ acceptedWork: aw });
@@ -65,19 +43,6 @@ test("R3, R6: at the promotion a malformed leg on another group's finding is BAS
   assert.equal(r.reason, "BASIS_VERSION_REFUSED");
   assert.deepEqual(r.findings.map((f) => [f.check, f.code, typeof f.translation]), [["C-21.3", "IMPORTED_LEG_MALFORMED", "string"]]);
   assert.deepEqual(aw.calls, []);
-});
-
-test("R3, R5: the edition a leg on another group's finding names is in the composition after the leg_capture lines, and a composition without one is unchanged", () => {
-  const [v] = versionsIn(fm(withRefs("first", [[REF, 2]])));
-  const lines = v.composition.split("\n");
-  assert.equal(lines[lines.length - 1], "leg_edition\t1\t2");
-  const [plain] = versionsIn(fm(version("first", [DOC])));
-  assert.ok(!plain.composition.includes("leg_edition"));
-  const w = versionAsWritten({ name: "x", description: "a reading of it", author: "member:alice", at: "2026-09-27T00:00:00Z",
-    legs: [{ target: REF, target_edition: 3, role: "supports" }, { target: DOC, role: "supports" }] });
-  assert.equal(w.legs[0].target_edition, 3);
-  assert.ok(!("extent_kind" in w.legs[0]), "a leg on another team's finding carries no extent");
-  assert.equal(w.legs[1].extent_kind, "document");
 });
 
 test("R3: a new version's leg on another group's finding not accepted at its edition is refused BASIS_VERSION_REFUSED with accepted-work R3's finding (C-21.4), and nothing is written", () => {

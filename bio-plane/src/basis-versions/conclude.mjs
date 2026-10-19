@@ -18,10 +18,7 @@ export const READING_MIN = 12;
  *  its caps and encoding are inquiry-grammar's, K2479). */
 export const CONCLUSION_BIAS_EFFECTS = Object.freeze(["inference_refused", "scrutiny_raised"]);
 /** R51: the question has nothing for an own reading to rest on (inquiry R45's detail, one text for both doors). */
-const NO_BASIS_DETAIL = "a conclusion rests on something. An open inquiry may hold a claim with no legs at "
-  + "all — a standing objective the team means to pursue — but concluding one that "
-  + "rests on nothing would put the record's name to an assertion nothing supports. "
-  + "Add a basis[] leg (and the same target in references[]) first.";
+const noBasisDetail = () => localize("basis-versions.conclude.a_conclusion_rests_on_something", "a conclusion rests on something. An open inquiry may hold a claim with no legs at all — a standing objective the team means to pursue — but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.");
 
 /* R16, R17, R20, R21: a conclusion refusal's row (C-32.2, C-33.x), carried at its site with its code, so the refusal is
    translated wherever it is read (DEC-49). */
@@ -37,15 +34,15 @@ function conclusionBiasApplied(raw) {
   if (raw === undefined || raw === null || raw === "") return { entries: [] };
   let list = raw;
   if (typeof raw === "string") {
-    try { list = JSON.parse(raw); } catch { return bad("bias_applied is a JSON list of {statement, effect}, and this is not JSON"); }
+    try { list = JSON.parse(raw); } catch { return bad(localize("basis-versions.conclude.bias_applied_is_a_json_list", "bias_applied is a JSON list of {statement, effect}, and this is not JSON")); }
   }
   /* a row-shaped object is the grammar's other input form; a caller sends a list */
-  if (!Array.isArray(list)) return bad("bias_applied is a list of {statement, effect}");
+  if (!Array.isArray(list)) return bad(localize("basis-versions.conclude.bias_applied_is_a_list_of", "bias_applied is a list of {statement, effect}"));
   const trimmed = list.map((e) => (e && typeof e === "object" && !Array.isArray(e) && typeof e.statement === "string"
     ? { ...e, statement: e.statement.trim() } : e));
   const findings = [];
   biasAppliedFindings("the conclusion", trimmed, findings, { effects: CONCLUSION_BIAS_EFFECTS, checkId: row.check });
-  if (findings.length) return bad(findings[0].message ?? findings[0].detail ?? "bias_applied is malformed", findings);
+  if (findings.length) return bad(findings[0].message ?? findings[0].detail ?? localize("basis-versions.conclude.bias_applied_is_malformed", "bias_applied is malformed"), findings);
   return { entries: trimmed.map((e) => ({ statement: e.statement, effect: e.effect })) };
 }
 
@@ -85,25 +82,19 @@ export class ConcludeFamily {
                detail: localize("basis-versions.conclude.concluding_records_what_was_concluded", "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a record the catalog rejects. An undetermined answer is stated as undetermined, never left blank.") };
     if (concl && pid)
       return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM", ...concludeRow("CONCLUSION_IS_THE_CLAIM"),
-               detail: "a project concludes by ADOPTING the claim of the reading it stands on, and that claim "
-                     + "is what was concluded (INVESTIGATIVE-SESSION.md §7.1). A separate conclusion text could "
-                     + "say what no claim said. Send what you want to add beyond the claim as commentary= — it "
-                     + "is recorded in your name and is never evidence — or state the claim itself on a "
-                     + "reading first." };
+               detail: localize("basis-versions.conclude.a_project_concludes_by_adopting", "a project concludes by ADOPTING the claim of the reading it stands on, and that claim is what was concluded (INVESTIGATIVE-SESSION.md §7.1). A separate conclusion text could say what no claim said. Send what you want to add beyond the claim as commentary= — it is recorded in your name and is never evidence — or state the claim itself on a reading first.") };
     if (!fals && !noFals)
       return { ok: false, reason: "NO_FALSIFIER", ...concludeRow("NO_FALSIFIER"),
                detail: localize("basis-versions.conclude.a_conclusion_states_what_would", "a conclusion states what would OVERTURN it. Without that the finding cannot be checked by anyone, including its author, and a record that cannot be checked claims more than it can support. If no falsifier can honestly be stated, SAY SO rather than inventing one: conclude again with no_falsifier=1 and the record will carry `no falsifier stated` in your name and with today's date, on every surface this finding appears on and in the signed bytes if it is ever published.") };
     if (fals && noFals)
       return { ok: false, reason: "FALSIFIER_AND_NONE_STATED", ...concludeRow("FALSIFIER_AND_NONE_STATED"),
-               detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
-                     + "two different claims about this finding and your team's Civicsmith will not choose "
-                     + "between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
+               detail: localize("basis-versions.conclude.you_have_both_stated_a", "you have both stated a falsifier and asked to record that none was stated. Those are two different claims about this finding and your team's Civicsmith will not choose between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty.") };
     /* END DEC-49 REGION is-conclude-answer */
     /* R51: 1 to 500 characters once made frontmatter-safe; it takes the place of a named reading (`version`) and, with
        no project, has nowhere for commentary to go */
     if (hasReading && (ownText.length < READING_MIN || ownText.length > VERSION_REASON_MAX || vname || (comm && !pid)))
       return { ok: false, reason: "BAD_READING", code: "BAD_READING", translation: word("refusal.BAD_READING"),
-               detail: localize("basis-versions.conclude.reading_is_reading_min_to", "reading is {READING_MIN} to {VERSION_REASON_MAX} characters{v1}{v2}", { READING_MIN: String(READING_MIN), VERSION_REASON_MAX: String(VERSION_REASON_MAX), v1: String(vname ? ", and it takes the place of version, which was also named" : ""), v2: String(comm && !pid ? "; commentary beside it needs a project" : "") }) };
+               detail: localize("basis-versions.conclude.reading_is_reading_min_to", "reading is {READING_MIN} to {VERSION_REASON_MAX} characters{v1}{v2}", { READING_MIN: String(READING_MIN), VERSION_REASON_MAX: String(VERSION_REASON_MAX), v1: String(vname ? localize("basis-versions.conclude.and_it_takes_the_place", ", and it takes the place of version, which was also named") : ""), v2: String(comm && !pid ? localize("basis-versions.conclude.commentary_beside_it_needs_a", "; commentary beside it needs a project") : "") }) };
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > VERSION_REASON_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
@@ -113,11 +104,9 @@ export class ConcludeFamily {
     if (bias.refused) return bias.refused;
     if (bias.entries.length && !pid)
       return { ok: false, reason: "BAD_BIAS_APPLIED", ...concludeRow("BAD_BIAS_APPLIED"),
-               detail: "bias applications are recorded with a PROJECT's conclusion and checked against that project's "
-                     + "lens in force; a conclusion drawn with no project carries none. Conclude for a project "
-                     + "(project=), or send no bias_applied." };
+               detail: localize("basis-versions.conclude.bias_applications_are_recorded_with", "bias applications are recorded with a PROJECT's conclusion and checked against that project's lens in force; a conclusion drawn with no project carries none. Conclude for a project (project=), or send no bias_applied.") };
     if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "a conclusion answers ONE question: pass target=<inquiry id>" };
+      return { ok: false, reason: "NO_TARGET", detail: localize("basis-versions.conclude.a_conclusion_answers_one_question", "a conclusion answers ONE question: pass target=<inquiry id>") };
     /* an inquiry the viewer may not see answers exactly as an absent one */
     const b = this.k.visible(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
@@ -127,7 +116,7 @@ export class ConcludeFamily {
     let text = this.k.doc(target);
     if (text === null)
       return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
+               detail: localize("basis-versions.conclude.this_inquiry_has_no_readable", "this inquiry has no readable bundle.md, so its state cannot be moved") };
     const fm = parseFrontmatter(text).data || {};
     /* THE MAP RULE: the machine is record-grammar's (`STATES`, once the catalogue's), over the DECLARED spelling. A
        project may conclude a question whose own state already reads `concluded` (one relationship's conclusion must
@@ -153,7 +142,7 @@ export class ConcludeFamily {
       const pmd = this.k.doc(pid);
       if (pmd === null)
         return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
-                 detail: "this project has no readable bundle.md, so its conclusion cannot be recorded" };
+                 detail: localize("basis-versions.conclude.this_project_has_no_readable", "this project has no readable bundle.md, so its conclusion cannot be recorded") };
       pfm = parseFrontmatter(pmd).data || {};
     }
 
@@ -164,17 +153,10 @@ export class ConcludeFamily {
     /* DEC-49 REGION is-conclude-claim — REC-124/C-33.34. Every arm is the same fact: no claim to adopt. */
     if (!pid && comm)
       return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target,
-               detail: "commentary is what a member adds BEYOND a PROJECT's adopted claim, and it is recorded "
-                     + "on that project's conclusion. A conclusion drawn with no project carries the member's "
-                     + "own words in conclusion= beside the claim it adopts, so there is nowhere for commentary "
-                     + "to go. Conclude for a project (project=), or send no commentary." };
+               detail: localize("basis-versions.conclude.commentary_is_what_a_member", "commentary is what a member adds BEYOND a PROJECT's adopted claim, and it is recorded on that project's conclusion. A conclusion drawn with no project carries the member's own words in conclusion= beside the claim it adopts, so there is nowhere for commentary to go. Conclude for a project (project=), or send no commentary.") };
     if (!pid && !vname)
       return { ok: false, reason: "NO_CLAIM", ...concludeRow("NO_CLAIM"), target,
-               detail: "a conclusion adopts the claim of a reading, and the claim is what was concluded "
-                     + "(INVESTIGATIVE-SESSION.md §7.1). Drawn with no project there is no reading the question "
-                     + "stands on, so name it: conclude with version=<the accepted reading whose claim this "
-                     + "conclusion adopts>. A conclusion whose claim is undetermined asserts nothing anyone "
-                     + "can check." };
+               detail: localize("basis-versions.conclude.a_conclusion_adopts_the_claim", "a conclusion adopts the claim of a reading, and the claim is what was concluded (INVESTIGATIVE-SESSION.md §7.1). Drawn with no project there is no reading the question stands on, so name it: conclude with version=<the accepted reading whose claim this conclusion adopts>. A conclusion whose claim is undetermined asserts nothing anyone can check.") };
     let want = vname;
     if (pid) {
       if (!drawsOn(pfm, target))
@@ -207,7 +189,7 @@ export class ConcludeFamily {
     /* a conclusion rests on the adopted reading's legs, and without a project also on the live basis C-2.8 requires;
        NO_BASIS is minted at inquiry's one site (its R45, D-484, N186) */
     if (adopted.leg_count < 1 || (!pid && legs.length < 1))
-      return actNoBasis(NO_BASIS_DETAIL, { target });
+      return actNoBasis(noBasisDetail(), { target });
 
     if (pid) {
       const forced = this.#biasInForce(bias.entries, pid, target, viewer);
@@ -275,9 +257,7 @@ export class ConcludeFamily {
                                                    blurb: concl, author: who });
     if (!withHistory)
       return { refused: { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target: b.bundle_id,
-               detail: "this document's state_history block cannot be extended in place, and a conclusion "
-                     + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" } };
+               detail: localize("basis-versions.conclude.this_document_s_state_history_block", "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)") } };
     text = withHistory;
     text = setScalar(text, "prior_state", b.current_state);
     text = setScalar(text, "current_state", "concluded");
@@ -296,7 +276,7 @@ export class ConcludeFamily {
     }
     text = setScalar(text, "last_updated", `"${when}"`);
     text = appendSessionLog(text,
-      localize("basis-versions.conclude.session_when_concluded_who_trigger", "### Session {when} | Concluded | {who}\nTrigger: op=conclude on {bundle_id}\nChanges: state {current_state} to concluded.\nConclusion: {concl}\nAdopted: reading '{version}', claim: {claim}\n{v1}", { when: String(when), who: String(who), bundle_id: String(b.bundle_id), current_state: String(b.current_state), concl: String(concl), version: String(adopted.version), claim: String(adopted.claim), v1: String(noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${who} at ${when}\n` : `Falsifier: ${fals}\n`) }));
+      localize("basis-versions.conclude.session_when_concluded_who_trigger", "### Session {when} | Concluded | {who}\nTrigger: op=conclude on {bundle_id}\nChanges: state {current_state} to concluded.\nConclusion: {concl}\nAdopted: reading '{version}', claim: {claim}\n{v1}", { when: String(when), who: String(who), bundle_id: String(b.bundle_id), current_state: String(b.current_state), concl: String(concl), version: String(adopted.version), claim: String(adopted.claim), v1: String(noFals ? localize("basis-versions.conclude.falsifier_no_falsifier_stated_recorded", "Falsifier: NO FALSIFIER STATED — recorded by {who} at {when}\n", { who: String(who), when: String(when) }) : localize("basis-versions.conclude.falsifier_falsifier", "Falsifier: {falsifier}\n", { falsifier: String(fals) })) }));
     return { text };
   }
 
@@ -319,7 +299,7 @@ export class ConcludeFamily {
       const cites = refs.filter((x) => x && typeof x === "object" && x.rel === "cites" && String(x.target ?? "").trim() === t);
       return !(cites.length && cites.every((x) => x.status === "severed"));
     });
-    if (!live.length) return actNoBasis(NO_BASIS_DETAIL, { target });
+    if (!live.length) return actNoBasis(noBasisDetail(), { target });
     const taken = new Set((Array.isArray(fm.basis_versions) ? fm.basis_versions : [])
       .map((r) => fmSafe(r?.name ?? "")));
     let n = 1;
@@ -369,7 +349,7 @@ export class ConcludeFamily {
       const md = this.k.doc(pid);
       if (md === null)
         return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
-                 detail: "this project has no readable bundle.md, so its conclusion cannot be recorded" };
+                 detail: localize("basis-versions.conclude.this_project_has_no_readable_2", "this project has no readable bundle.md, so its conclusion cannot be recorded") };
       const withCurrent = setCurrentVersionRow(md, target, name, who, when);
       if (withCurrent === null) {
         const row = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
@@ -449,10 +429,8 @@ export class ConcludeFamily {
     text = setScalar(text, "last_updated", `"${f.when}"`);
     text = appendSessionLog(text, f.act === "withdrawn"
       ? localize("basis-versions.conclude.session_when_conclusion_withdrawn_who", "### Session {when} | Conclusion withdrawn | {who}\nTrigger: op=withdrawconclusion on {inquiryId} for {pid}\nChanges: this project withdrew its conclusion on {inquiryId_2} (reading '{version}', concluded {withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.\nReason: {reason}\n", { when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), pid: String(pid), inquiryId_2: String(inquiryId), version: String(f.version), withdrawsAt: String(f.withdrawsAt), reason: String(f.reason) })
-      : localize("basis-versions.conclude.v1_session_when_concluded_who", "{v1}### Session {when} | Concluded | {who}\nTrigger: op=conclude on {inquiryId} for {pid}\nChanges: this project concluded {inquiryId_2} on reading '{version}', adopting its claim.\nClaim: {claim}\n{v2}{v3}{v4}", { v1: String(f.alsoCurrent ? `### Session ${f.when} | Stands on | ${f.who}\n`
-          + `Trigger: op=conclude on ${inquiryId}\n`
-          + `Changes: this project now stands on reading '${f.version}' of ${inquiryId}, written by ${f.who}.\n` : ``), when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), pid: String(pid), inquiryId_2: String(inquiryId), version: String(f.version), claim: String(f.claim), v2: String(f.noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${f.who} at ${f.when}\n` : `Falsifier: ${f.falsifier}\n`), v3: String(f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : ""), v4: String(f.bias && f.bias.length
-          ? `Bias applied: ${f.bias.map((e) => `${e.statement} (${e.effect})`).join("; ")}\n` : "") }));
+      : localize("basis-versions.conclude.v1_session_when_concluded_who", "{v1}### Session {when} | Concluded | {who}\nTrigger: op=conclude on {inquiryId} for {pid}\nChanges: this project concluded {inquiryId_2} on reading '{version}', adopting its claim.\nClaim: {claim}\n{v2}{v3}{v4}", { v1: String(f.alsoCurrent ? localize("basis-versions.conclude.session_when_stands_on_who", "### Session {when} | Stands on | {who}\nTrigger: op=conclude on {inquiryId}\nChanges: this project now stands on reading '{version}' of {inquiryId_2}, written by {who_2}.\n", { when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), version: String(f.version), inquiryId_2: String(inquiryId), who_2: String(f.who) }) : ``), when: String(f.when), who: String(f.who), inquiryId: String(inquiryId), pid: String(pid), inquiryId_2: String(inquiryId), version: String(f.version), claim: String(f.claim), v2: String(f.noFals ? localize("basis-versions.conclude.falsifier_no_falsifier_stated_recorded_2", "Falsifier: NO FALSIFIER STATED — recorded by {who} at {when}\n", { who: String(f.who), when: String(f.when) }) : localize("basis-versions.conclude.falsifier_falsifier_2", "Falsifier: {falsifier}\n", { falsifier: String(f.falsifier) })), v3: String(f.commentary ? localize("basis-versions.conclude.commentary_who_not_evidence_commentary", "Commentary ({who}, not evidence): {commentary}\n", { who: String(f.who), commentary: String(f.commentary) }) : ""), v4: String(f.bias && f.bias.length
+          ? localize("basis-versions.conclude.bias_applied_list", "Bias applied: {list}\n", { list: String(f.bias.map((e) => `${e.statement} (${e.effect})`).join("; ")) }) : "") }));
     return this.k.repromote({ bundleId: pid, base: projectRow.bundle_sha, text, when: f.when, author: f.who,
       meta: { object_type: pfm.object_type ?? "project", title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: f.when,
@@ -474,7 +452,7 @@ export class ConcludeFamily {
       return { ok: false, reason: "BAD_REASON",
                detail: localize("basis-versions.conclude.a_reason_is_at_most", "a reason is at most {EDGE_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes", { EDGE_REASON_MAX: String(EDGE_REASON_MAX) }) };
     if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "a withdrawal answers ONE question: pass target=<inquiry id>" };
+      return { ok: false, reason: "NO_TARGET", detail: localize("basis-versions.conclude.a_withdrawal_answers_one_question", "a withdrawal answers ONE question: pass target=<inquiry id>") };
     const pid = String(project ?? "").trim();
     const b = this.k.visible(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
@@ -488,8 +466,7 @@ export class ConcludeFamily {
       return { ok: false, reason: "NOT_A_PROJECT", target, project: pid || null,
                detail: pid
                  ? localize("basis-versions.conclude.pid_is_not_a_project_2", "{pid} is not a project readable here, so there is no relationship with this question to withdraw a conclusion from.", { pid: String(pid.slice(0, 60)) })
-                 : "a withdrawal is a PROJECT's act on its own conclusion: pass project=<project id>. A "
-                   + "conclusion drawn with no project is the inquiry's own state, and moving it is op=reopen's." };
+                 : localize("basis-versions.conclude.a_withdrawal_is_a_project", "a withdrawal is a PROJECT's act on its own conclusion: pass project=<project id>. A conclusion drawn with no project is the inquiry's own state, and moving it is op=reopen's.") };
     const denied = this.k.bv.membership.projectAuthority(pid, identity, "joined", "withdrawconclusion");
     if (denied) return { ...denied, target };
     const rec = this.k.bv.conclusionRecordOf(pid, target, viewer);
