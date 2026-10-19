@@ -214,9 +214,9 @@ export const AFFORDANCES = { vocabularies: { action_kind: [...KINDS, "profile_ki
 export const OFFICES = { ok: true, subject: QUESTION, offices: [{ addressee: { state: "named", kind: "office", role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-2026-1111111111111111" } }] };
 /** `holdsdue` (action-holds R19): what still wants a hold, wherever it arrived. */
 export const HOLDS_DUE = { ok: true, items: [
-  { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter from the city's counsel", by: "member:mai", at: "2026-10-09T09:00:00Z" },
-  { arrived: { docket_entry: "DKT-2026-1", case: "CASE-2026-1" }, project: PROJECT, kind: "legal", note: "a notice of claim", by: "member:dev", at: "2026-10-01T09:00:00Z" },
-  { arrived: { pressure: "PRS-2026-1" }, project: PROJECT, kind: "legal", note: "a letter from the owner's lawyer", by: "member:ana", at: "2026-10-03T09:00:00Z" }], truncated: false, cursor: null };
+  { arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, note: "a letter from the city's counsel", marked_by: "member:mai", marked_at: "2026-10-09T09:00:00Z" },
+  { arrived: { docket_entry: "DKT-2026-1", case: "CASE-2026-1" }, project: PROJECT, note: "a notice of claim", marked_by: "member:dev", marked_at: "2026-10-01T09:00:00Z" },
+  { arrived: { pressure: "PRS-2026-1" }, project: PROJECT, note: "a letter from the owner's lawyer", marked_by: "member:ana", marked_at: "2026-10-03T09:00:00Z" }], truncated: false, cursor: null };
 export const COUNSEL_PROJECT = "PROJ-2026-cccccccccccccccc";
 export const ROSTER = { ok: true, count: 2, limit: 200, truncated: false, projects: [{ id: PROJECT, name: "Pothole repairs", stage: null, scope: "none" },
   { id: COUNSEL_PROJECT, name: "The rent dispute", stage: null, scope: "counsel_matter" }] };

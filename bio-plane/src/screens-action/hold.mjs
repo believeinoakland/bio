@@ -57,9 +57,9 @@ export const hold = Object.freeze({
       // where the pressure arrived: a reply, a docket entry, pressure recorded outside any action, and the counsel matters
       const line = function (m) {
         const ar = m.arrived || {};
-        const first = ar.action ? cs.w("screen.hold.reply") : ar.docket_entry ? cs.w("screen.hold.marked", { member: P.who(m.by) }) : cs.w("screen.hold.outside");
-        return cs.row("", first + (m.note ? " · " + cs.esc(m.note) : "") + '<span class="meta">' + (m.at ? cs.date(m.at) + " · " : "")
-          + (ar.action ? cs.w("screen.hold.marked", { member: P.who(m.by) }) + " · " : "") + cs.w("screen.hold.nohold") + "</span>", "", "");
+        const first = ar.action ? cs.w("screen.hold.reply") : ar.docket_entry ? cs.w("screen.hold.marked", { member: P.who(m.marked_by) }) : cs.w("screen.hold.outside");
+        return cs.row("", first + (m.note ? " · " + cs.esc(m.note) : "") + '<span class="meta">' + (m.marked_at ? cs.date(m.marked_at) + " · " : "")
+          + (ar.action ? cs.w("screen.hold.marked", { member: P.who(m.marked_by) }) + " · " : "") + cs.w("screen.hold.nohold") + "</span>", "", "");
       };
       const counselLine = function (p) {
         return cs.row("", cs.esc(p.name || p.id) + '<span class="meta">' + cs.w("screen.hold.counsel.row") + "</span>", "", "");
@@ -70,7 +70,7 @@ export const hold = Object.freeze({
       // place the hold: the place chosen, the reason in the member's own words, other projects it may reach
       const subject = String(view.subject || "");
       const options = rows.filter(function (m) { return P.placeOf(m); }).map(function (m) {
-        return { value: JSON.stringify(P.placeOf(m)), text: m.at ? cs.date(m.at) : "", m: m };
+        return { value: JSON.stringify(P.placeOf(m)), text: m.marked_at ? cs.date(m.marked_at) : "", m: m };
       }).concat(counsel.map(function (p) { return { value: JSON.stringify({ project: p.id }), text: p.name || p.id }; }));
       const pre = options.find(function (o) { const ar = o.m && o.m.arrived ? o.m.arrived : {}; return subject && (ar.action === subject || ar.docket_entry === subject); });
       const others = projects.map(function (b) { return { value: b.bundle_id, text: b.title || b.bundle_id, on: false }; });
