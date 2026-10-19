@@ -62,3 +62,21 @@ CHANGE B3 applied: filings and actionPlans getters handed to controlPlaneOwnerOp
 ## J4 · COMPLETE
 
 CHANGE B4: the t50 R63 502 was the test world's store stub (a bare Store whose fetch needs a Request, asked with an address as a Durable Object stub accepts); fixed in the world, no plane flaw. Suite 266/266, checks 0 failures.
+
+## J5 · COMPLETE
+
+CR-24 (R67) applied: the ask's reading language is read from `translations` (`translationsOf(ctx).readingLanguage`, its R10) at `plane/ask.mjs`; instance-setup's delegate is no longer asked by the plane.
+- `test/m/plane/door.test.mjs` (R1, R5, R67): instance-setup's routes are 36; translations' nine are compared against `translationsOps` and driven through the door; route set equals instance-setup's 36 plus translations' 9.
+- `test/m/plane/t48.test.mjs` (R50, R67): the spy moves to `translations.readingLanguage`; controls unchanged (no language set answers LANGUAGE_NOT_SET; a malformed tag answers LANGUAGE_MALFORMED).
+Deferred: none.
+
+Found in other modules (for BOB, not fixed here):
+- `checks/coverage.mjs` over all modules reports 7 modules with ids named by no test: agent-harness R17, agent-runner R36 R37 R38 R40, installer-steps R26 R31, instance-setup R99 (CHANGE after this merges, per CR-24), journey-check R19, screens-inquiry R83, screens-settings R62.
+- Full `npm test` in bio-plane (all test/m, not only plane) shows 107 failures in other modules: journey-check (12 files), case-checker program R13/R25, doc-clean R4 (workerd memory). Plane's suite is green.
+
+Tests and checks:
+- `node --test "test/m/plane/*.test.mjs" test/system/migrate-released.test.mjs`: tests 267, pass 267, fail 0.
+- door.test.mjs 6/6; t48.test.mjs 13/13.
+- format 0 failures; architecture 0 failures; coverage (plane) 67 of 67; ownership (plane, tranche/T51, job/T51/plane) 0 failures; words 0 failures; `checks/run.mjs` ran: coverage fails only in other modules listed above.
+
+Size (session_011vKkDz3Fp8T8FuWAfs336Z): test runs 4, module lines 2307
