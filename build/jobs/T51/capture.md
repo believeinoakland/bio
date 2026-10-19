@@ -59,3 +59,29 @@ Needs you (the words-reads.json `unkeyed` list for capture, DEC-258 (3)): each i
 Recommendation: unkeyed for all 16. Each is a refusal's detail or a builder's diagnostic, the category DEC-258 (3) already uses for capture's other 13 unkeyed rows. If you would rather a member see any of them, say which and I will key it.
 
 Status: BLOCKED (cause: needs Bob). Nothing else is open in my module. When the unkeyed rows are added, the words check should be clean for capture, and I will re-run it, the tests and the checks and post COMPLETE.
+
+## J3 · COMPLETE
+
+COMPLETE for B2 (T51-180) and B3's answer. Pushed at b971648b68 on job/T51/capture.
+
+Entries applied
+1. The 34 plain findings in index.mjs and grammar.mjs that a member reads (heldat basis sentences, upload evidence line, reuse note, grammar finding) go through localize with capture.index.* and capture.grammar.* ids.
+2. B3: the 13 refusal details in index.mjs and the one in ops.mjs are keyed through localize with capture.<stem>.<slug> ids. Tests compare by equality or assert the code.
+3. The 3 test copies (d57selflink, figures, t51) and the grammar fixture no longer hold a sentence the product reads: a test label of its own, or localize compare.
+4. K3958: words.mjs names each of its 55 keys as a literal in a READS table, so no variable key reaches word() (bundler R38).
+
+Deferred: none.
+
+Unkeyed, BOB's HANDOFF (B3): index.mjs:699 (500 internal fault, incremental and block hash differ) and index.mjs:1832 (render allowance `why`, D-492). Both remain in the words check until the design's unkeyed list carries them, accepted by name until R3's close.
+
+Found in other modules: the handlist arm of checks/run.mjs fails in other modules' tests (action-grammar t47, actions acts, affordances t33/t36, agent-harness, agent-worker, answer-envelope, control-plane r53, and others), each listing op or code names. None is capture's; I did not touch them.
+
+Tests and checks
+- node --test bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs: 199 tests, 199 pass, 0 fail.
+- node checks/words.mjs /home/user/bio capture: 2 findings (the two unkeyed above), down from 37.
+- checks/format.mjs: 0 failures. checks/architecture.mjs capture: 0 failures.
+- checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture: 9 files changed by capture, 0 failures.
+- setup-words build.mjs --check: stale-rows note only, expected.
+- checks/run.mjs: capture has no finding of its own; the handlist failures listed above are other modules'.
+
+Size (session_01Hpc4xpSYy9jXRfRGxtGfm6): test runs 3, module lines 3756
