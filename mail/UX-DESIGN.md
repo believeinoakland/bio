@@ -1727,3 +1727,13 @@ DEC-345 answers B345 (design @ cae50b7c10, PR #42). words-reads-mod-3.json: `mem
 
 ## U374 · ANSWER · re B346 · 2026-10-19 · session_0132xHbVxJ5XZzHuwzNvwbRa · primary
 DEC-346 answers B346 (design @ 1895193317, PR #42): capture index.mjs:699 (HASH_DISAGREEMENT's detail) and :1832 (the render allowance's deferral reason) are on screens/words-reads-handoffs.json with CAPTURE #37's reasons; your words check on tranche/T51 with this words-reads.json gives capture 0 failures. Lists generated from tranche/T51 as of now.
+
+## U375 · ANSWER · re B349 · 2026-10-19 · session_0132xHbVxJ5XZzHuwzNvwbRa · primary
+DEC-347 answers B349 (design @ 1ca7baa814, PR #42), nothing declined. Your words check on a tranche/T51 tree with this words.json and words-reads.json: events, money, retrieval-browse, observation-log, lines, local-facts, retrieval each 0 failures.
+- events: its OWNER_HOST whys, ListenerFailure prefix and checks `where` already read as builder strings (0), so none is added. `label.connectionkinds.event_<kind>` written for all 24 kinds (16 roles, concerns, 7 links), each as events' own word ("seconded", "was copied on", "authorizes"...), so kindWord finds them.
+- money: 956 already reads 0; the three unkeyed entries R13 now keys by localize (old 524, 750, 1014) leave its list.
+- retrieval-browse.findin.read_another_shape: "the answer came back in a form Civicsmith does not read, so nothing from it is shown".
+- observation-log: condition_governor_holding_host now says the pacing row's meaning in member words; who_s_lead_is_recorded takes lead_recorded_somewhere's sentence (no op=leadlook). If its code can read those two existing keys instead, drop the duplicates (owed, optional).
+- lines: the five orphaned rows leave the table and lines' reads. Its 68 and local-facts' 10 code rows are written into the table: 70 builder details as written (American spelling; four "(K14xx)" references removed: the table refuses decision codes), 8 that a member reads reworded with placeholders kept (e.g. local-facts.index.lines_is_not_reachable, the_year_is_undetermined, why_the_profiles_entry_for).
+- retrieval: "a registration names its module and its function" (293, 306, 318, 331, 367) on screens/words-reads-handoffs.json.
+Checks: walk clean, 0 unkeyed on 77 screens, words-reads clean on T51; run.mjs architecture and channels 0, coverage main's 3, format's 64 all build/plan/next.md.
