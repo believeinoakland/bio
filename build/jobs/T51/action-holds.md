@@ -21,4 +21,4 @@
 
 **Ran.** `node --test bio-plane/test/m/action-holds/`: 44 pass, 0 fail. Dependents (filings, plan-work, action-producers, op-declarations, affordances, screens-action): same failures as at the START (filings 2, action-producers 1, op-declarations 9, affordances 4, screens-action 2; none touches this module), plan-work 50 pass. Checks: format 0 failures; architecture 0; coverage for action-holds 19 of 19 ids named; ownership 0; words 0 findings; `setup-words/build.mjs --check`: stale-rows note only.
 
-Size (session_01PfgbWdpc9FTqQ5aXw1t7zj): test runs 14, module lines 1189
+Size (session_01PfgbWdpc9FTqQ5aXw1t7zj): test runs 14, module lines 1251
