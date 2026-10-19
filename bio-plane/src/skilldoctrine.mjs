@@ -1552,6 +1552,10 @@ export function interfaceTranslationLayer(catalog) {
  * ========================================================================= */
 
 /** The rules of §4 an action draft works under (R45), in §4's order, each the table's own object. */
+/** R45's stated absence of the drafts, named by the acts the catalogue lacks: the one sentence the layer hands on, so a
+ *  test compares the layer's answer with it by equality. */
+export const draftsAbsentSentence = (ids) => localize("skills.skilldoctrine.the_planes_published_catalogue_holds_8", "the plane's published catalogue holds none of the acts {map}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.", { map: String(ids.join(", ")) });
+
 export const ACTION_DRAFTING_RULES = Object.freeze([1, 2, 3, 9, 12, 16, 19, 21].map(actionRule));
 
 /* THE ACTS THE LAYER NAMES (R45), each by the requirement that defines it and named once here as a SELECTOR over the
@@ -1587,7 +1591,7 @@ export function actionDraftingLayer(catalog) {
   const named = ACTION_DRAFTING_ACTS.drafts;
   const drafts = named.some((a) => byId.has(a.id));
   const statusReport = byId.has(STATUS_REPORT_ACT.id);
-  const draftsAbsentBecause = localize("skills.skilldoctrine.the_planes_published_catalogue_holds_8", "the plane's published catalogue holds none of the acts {map}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.", { map: String(named.map((a) => a.id).join(", ")) });
+  const draftsAbsentBecause = draftsAbsentSentence(named.map((a) => a.id));
   if (!drafts && !statusReport) return {
     load_when: "never, in this edition",
     sourcing: "absent",

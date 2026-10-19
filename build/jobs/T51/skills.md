@@ -69,3 +69,10 @@ Tests: 130/130 skills tests pass (130 before).
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 3, module lines 2919.
 
 Note for the record of this job: I started on a stale local job branch by mistake and fast-forwarded it to tranche/T51 (no commits lost; origin/job/T51/skills is an ancestor of the result).
+
+## Completion again (B3, K4010)
+
+- **Settled (B3):** R25's translation check no longer reads run-rules' source; the test keeps its equality with `runRules.translationOf`. R45's stated absence is now compared by equality with `draftsAbsentSentence(DRAFTS)`, the product's own sentence builder, exported from `skilldoctrine.mjs` (the layer calls it with the catalogue's acts; the sentence is unchanged). Item 2 (`STATUS_REPORT_LOAD_WHEN`, an AI-instruction constant) accepted as B3 says.
+- **Checks:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail. Words check for `skills`: 0 failures. Exports: no existing export changed; three added (`DEC27_LIMIT`, `STATUS_REPORT_LOAD_WHEN`, `draftsAbsentSentence`). Architecture 0 failures; coverage 51 of 51; ownership 0 failures.
+
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 4, module lines 2923

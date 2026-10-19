@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
+import { draftsAbsentSentence } from "../../../src/skilldoctrine.mjs";
 import { actionDraftingLayer, procedureGuideLayer, ACTION_DRAFTING_RULES, ACTION_DRAFTING_ACTS, ACTION_RULE_TABLE,
          STATUS_REPORT_ACT, STATUS_REPORT_LOAD_WHEN, STATUS_REPORT_TASK,
          ACTION_RULES, FILING_RULES, ACTION_SOURCE, ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
@@ -221,8 +222,7 @@ test("R48 control: with none of the four published, the layer is R45's stated ab
     assert.equal(layer.load_when, "never, in this edition");
     assert.equal(layer.sourcing, "absent");
     assert.deepEqual(layer.body, {});
-    assert.match(layer.absent_because, /holds none of the acts/);
-    for (const id of ["textcheck", "infractiondraft", "bearingdraft"]) assert.ok(layer.absent_because.includes(id), id);
+    assert.equal(layer.absent_because, draftsAbsentSentence(DRAFTS));
     assert.ok(!JSON.stringify(layer).includes(STATUS));
   }
   /* And the one act alone is enough to lift it: the control's control. */
