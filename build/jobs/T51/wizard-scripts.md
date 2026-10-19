@@ -1,6 +1,6 @@
 # wizard-scripts (T51)
 
-**Status** · session_0192jMRKKhCkVUkwJyJXBS3f · depth 2 · COMPLETE · handled B5
+**Status** · session_0192jMRKKhCkVUkwJyJXBS3f · depth 2 · COMPLETE · handled B6
 
 ## J1 · BLOCKED
 
@@ -93,3 +93,18 @@ Checks on job/T51/wizard-scripts (merged tranche/T51):
 - Cross-module (K3986): the wizard script-name copies in screens-daily and screens-wizards test files belong to those jobs.
 
 Size (session_0192jMRKKhCkVUkwJyJXBS3f): test runs 21, module lines 2674 (own code; the three generated files excluded).
+
+## J6 · COMPLETE
+
+COMPLETE · T51-139 wizard-scripts, after B6 (CHANGE, the design at 2a64c5ae77). Head: the commit that carries this (job/T51/wizard-scripts).
+
+Applied B6: tranche/T51 merged; the registry at 2a64c5ae77 (77 screens, 442 acts: 287 declared, 132 function, 23 owed; the new act actionholdrelease on hold is registered); the pins in build-data.mjs and data.mjs moved; the doors and library regenerated (the library's content is unchanged, so the 16 re-taken scripts name 2a64c5ae77); counts re-pinned in t48, t50 and t51; the R44 test names 2a64c5ae77.
+
+Checks on job/T51/wizard-scripts:
+- module suite: 106 pass, 0 fail
+- words: 0 failures (inline 0, plain 0, testcopy 0, handlist 0)
+- format 0 failures; architecture 0; coverage 44 of 44; ownership 0 (no change to the module's paths in this round)
+- setup-words --check: rows.mjs matches words.json and the source
+- build-data.mjs --check: green
+
+Size (session_0192jMRKKhCkVUkwJyJXBS3f): test runs 24, module lines 2674 (own code; the three generated files excluded).
