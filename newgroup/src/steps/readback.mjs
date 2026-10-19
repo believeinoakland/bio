@@ -1,6 +1,6 @@
 /* R14: the plane's script as the account now holds it, read back and compared with the release's own bytes. */
 import { word } from "../../../bio-plane/src/setup-words/index.mjs";
-import { CF_API } from "./api.mjs";
+import { cfRaw } from "./api.mjs";
 import { hex, multipartPart } from "./bytes.mjs";
 
 /* R33 (Distribution §5, "byte-verified on read-back"; K3441): the plane's script as the account now holds it, read back and
@@ -13,12 +13,9 @@ import { hex, multipartPart } from "./bytes.mjs";
    them) and costs several copies of a 21 MB module, past a Worker's 128 MB. The part is found by byte offsets in the
    downloaded bytes and hashed as a view of them: the one copy held is the download itself. */
 async function scriptHash(token, acct, slug) {
-  let r;
-  try {
-    r = await fetch(`${CF_API}/accounts/${acct}/workers/scripts/${slug}`,
-      { headers: { authorization: token.bearer, accept: "application/javascript+module" } });
-  } catch { return null; }
-  if (!r.ok) return null;
+  /* A 429 or 5xx backs off as every call does and a 401 asks for approval again (R1); what never mends reads as nothing readable. */
+  const r = await cfRaw(token, `/accounts/${acct}/workers/scripts/${slug}`, { headers: { accept: "application/javascript+module" } });
+  if (!r) return null;
   const ct = r.headers.get("content-type") || "";
   let bytes = new Uint8Array(await r.arrayBuffer());
   if (/multipart/i.test(ct)) {

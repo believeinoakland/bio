@@ -140,7 +140,8 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
   rel = null, sourceFlaky = 0, sourceDown = false, sourceChange = null, containers = "ok", rolloutKeepsImage = false,
   refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseVpc = false, refuseSchedules = false, logpush = [],
   lookupFail = [], settingsBlind = false, copy = {}, wakeAfter = 0, silentAddress = false, objects = {}, refuseDelete = [],
-  expireAfter = null, cfFlaky = null, refuseSecretDelete = false } = {}) {
+  expireAfter = null, cfFlaky = null, refuseSecretDelete = false,
+  pullFails = false, startingFor = 0, memberServes = null } = {}) {
   const scripts = new Map(Object.entries(pre));
   const buckets = new Set([...(r2 === "exists" ? [`bio-captures-${slug}`] : []), ...preBuckets]);
   const sources = new Map(Object.entries(preSources));
@@ -149,7 +150,7 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
   const apps = preApps.map((a) => ({ ...a }));
   const bucketObjects = new Map(Object.entries(objects).map(([b, keys]) => [b, [...keys]]));
   const state = { calls: [], planePuts: [], puts: [], refused: [], rollouts: [], removed: [], schedules: new Map(), enabled: new Set(),
-    secretPuts: [], rolledBack: [], reads: [], sourceRequests: [], addressRequests: [], scripts, buckets, sources, tags, classes, apps, bucketObjects };
+    secretPuts: [], rolledBack: [], reads: [], appReads: 0, sourceRequests: [], addressRequests: [], scripts, buckets, sources, tags, classes, apps, bucketObjects };
   let prefix = subdomain, cfCalls = 0, flakyLeft = cfFlaky ? cfFlaky.times : 0, sourceFlakyLeft = sourceFlaky, wakeTries = 0;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const putScript = async (u, init) => {
@@ -229,7 +230,16 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
       const mth = (init.method || "GET").toUpperCase();
       if (containers === "read") return cferr("Authentication error", 403, 10000);
       const one = /\/containers\/applications\/([^/]+)(\/rollouts)?$/.exec(u);
-      if (mth === "GET" && one && !one[2]) { const a = apps.find((x) => x.id === one[1]); return a ? cfok(a) : cferr("not found", 404); }
+      /* `pullFails`: "health" (an instance failed to start) or "rollout" (the rollout failed); `startingFor`: the first n reads of an
+         application show it starting and its rollout pending. */
+      const starting = () => state.appReads <= startingFor;
+      const oneRollout = /\/containers\/applications\/([^/]+)\/rollouts\/([^/]+)$/.exec(u);
+      if (mth === "GET" && oneRollout) return cfok({ id: oneRollout[2], status: pullFails === "rollout" ? "failed" : starting() ? "pending" : "completed" });
+      if (mth === "GET" && one && !one[2]) {
+        const a = apps.find((x) => x.id === one[1]);
+        state.appReads++;
+        return a ? cfok({ ...a, health: { instances: { active: 0, failed: pullFails === "health" ? 1 : 0, starting: starting() ? 1 : 0 } } }) : cferr("not found", 404);
+      }
       if (mth === "GET") return cfok(apps);
       if (mth === "DELETE" && one) {
         const i = apps.findIndex((x) => x.id === one[1]);
@@ -347,7 +357,10 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
       if (wakeAfter > 0 && (wakeTries++) < wakeAfter) throw new Error("ENOTFOUND " + host);
       const v = verOf(scripts.get(slug)) || "0.0.0";
       if (q.get("op") === "selftest") return copy.selftest ? copy.selftest(q) : jres({ ok: true, bindings: { STORE: true } });
-      if (q.get("op") === "bootstrap") return copy.bootstrap ? copy.bootstrap(q, { v }) : jres({ ok: true, version: v, storeVersion: v, memberVersions: {} });
+      /* `memberServes`: {member: n}: that member serves an older build until n rollouts have been asked. */
+      const served = memberServes ? Object.fromEntries(Object.entries(memberServes).map(([m, n]) =>
+        [m, { state: "SERVING", version: state.rollouts.length >= n ? v : "0.0.1" }])) : {};
+      if (q.get("op") === "bootstrap") return copy.bootstrap ? copy.bootstrap(q, { v }) : jres({ ok: true, version: v, storeVersion: v, memberVersions: served });
       return jres({ ok: false });
     } },
   ];
