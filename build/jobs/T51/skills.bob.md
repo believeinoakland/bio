@@ -55,3 +55,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Never edit a generated artifact (manifest §14); report one you make stale.
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio skills tranche/T51 job/T51/skills`. Your Size line counts only your module's own code (K2513).
+
+## B6 · CHANGE
+
+CHANGE (K4154). The design's DEC-372 (merged into tranche/T51) rewrote the row `skills.skilldoctrine.wherever_a_member_writes_in`'s label as "asked by" and the asking member's handle, in words; the canon says "asked by <handle>". `writing.test.mjs` (R36) is red on it. Merge `origin/tranche/T51`; add that one difference to your word conversion (the canon's `<handle>` in that label read as the row's words for it), with a control that another changed word in the same clause still fails; run your suite and post COMPLETE. Do not run the walk.
