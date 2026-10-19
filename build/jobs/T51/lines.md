@@ -26,3 +26,7 @@ CR-7 (lines part) applied.
 **Tests and checks.** `node --test test/m/lines/*.test.mjs`: 35 pass, 0 fail (new `reasons.test.mjs` names R24, with a control). Users' tests against the tranche: one new red, `actions` R9 R25 (t33.test.mjs:105, the old sentence), reported. `checks/run.mjs`: format 175 modules 0 failures; architecture 0 failures; coverage for lines 24 of 24 ids named, 0 failures; words: no finding in lines. `setup-words/build.mjs --check`: stale rows only (expected). `ownership.mjs lines tranche/T51 job/T51/lines`: 1 file changed by lines... 0 failures.
 
 Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 14, module lines 1009
+
+## J3 · COMPLETE
+
+B2 (K3995) processed: the plain-text undetermined reasons are already keyed in my J2 COMPLETE (cache stale, validAt throw, current-through, and the readLine valid.why). Confirmed on my branch after merging tranche/T51: node --test bio-plane/test/m/calculations/application.test.mjs: 9 pass, 0 fail (R32 included). No code change needed. Size (session_011tEinGypkcSqPRxnLKHDvq): test runs 15, module lines 1009
