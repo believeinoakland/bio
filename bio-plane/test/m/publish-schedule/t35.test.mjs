@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, V, SIG } from "./fixture.mjs";
 import { SCHEDULED_CHECK_UNAVAILABLE, PUBLISH_SCHEDULE_CHECKS } from "../../../src/publish-schedule/index.mjs";
 import { rowOf } from "../../../src/publish-schedule/checks.mjs";
+import { hasWord, word } from "../../../src/setup-words/index.mjs";
 
 const CASE = "CASE-2026-0001";
 
@@ -67,9 +68,9 @@ test("R9 R2 (N687) a waiting edition no publisher could check is stopped with ro
                "src/publish-schedule/schedule.mjs unchecked > is-scheduled-check-available");
   assert.throws(() => rowOf("SCHEDULED_SOURCES_CHANGED"), /no row/, "the negative control: a code with no row here throws");
   assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
+  assert.ok(hasWord("refusal.SCHEDULED_CHECK_UNAVAILABLE"), "the translation is the word table's row, by key");
   assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, { code: "SCHEDULED_CHECK_UNAVAILABLE", check: "C-122.5",
-    translation: "This edition was not published at its set time, because the checks it needed then could not be run. "
-      + "Nothing was published. Sign it again to publish it." });
+    translation: word("refusal.SCHEDULED_CHECK_UNAVAILABLE") });
   for (const pub of [null, { publishScheduled() { throw new Error("boom"); } }, { publishScheduled: () => ({}) }]) {
     const { w, sched } = waiting();
     sched();
