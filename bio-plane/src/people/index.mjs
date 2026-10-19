@@ -50,8 +50,8 @@ export const EXPUNGE_GROUNDS = Object.freeze(["unlawful", "confidential", "court
 /* R26 (K1486): the members' words for the identity kinds. */
 export const IDENTITY_KIND_WORDS = Object.freeze([
   { kind: "same_as", word: "same person?", class: "evidentiary" },
-  { kind: "not_same_as", word: "claimed not the same person", class: "evidentiary" },
-  { kind: "unsure", word: "unsure whether the same person", class: "evidentiary" },
+  { kind: "not_same_as", word: word("label.identityclaimkinds.not_same_as"), class: "evidentiary" },
+  { kind: "unsure", word: word("label.identityclaimkinds.unsure"), class: "evidentiary" },
 ]);
 /* R29 (K1471, K1473, K1486): words no outward text of this module uses. */
 export const FORBIDDEN_WORDS = Object.freeze(["knows", "conflict", "suspicious", "most connected"]);
@@ -99,12 +99,15 @@ const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...
    never English. A reason an owner answers (civil-time, lines, events, duties) is passed on as that owner answers it. */
 const why = (key, vars = {}) => ({ key, vars });
 const answered = (w) => filled(w) || (isObj(w) && filled(w.key));
-/* R40 (K3865): the sentence a reason reads as, through `word`, for the two sites connection-grammar's contract judges as a
-   string and for a composed key's `{why}` fill; an owner's sentence is itself, and a key `word` cannot read is null. */
+/* R40 (K3865): the sentence a reason reads as, through `word`, for a composed key's `{why}` fill (lines R21 takes its
+   owner's reason as text); an owner's sentence is itself, and a key `word` cannot read is null. */
 const sentenceOf = (w) => {
   if (filled(w)) return w;
   try { return isObj(w) && filled(w.key) ? word(w.key, w.vars ?? {}) : null; } catch { return null; }
 };
+/* R40 (connection-grammar R6): a hop's undetermined reason is a `{key, vars}`; an owner's reason that is no key is the
+   owner's failure to say why, answered with `key` instead. */
+const keyedReason = (w, key) => (isObj(w) && filled(w.key) ? w : why(key));
 /* N617: every act is recorded under the control plane's stamp; a row never carries a null `by`. */
 const noBy = (what) => refuse("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 const json = (v) => { try { return JSON.parse(v); } catch { return null; } };
@@ -470,7 +473,7 @@ export class People {
 
   /* R2 (K1488): Civicsmith's sentence, "claimed the same person, grade B, because ...", never "is the same person". */
   static #why(kind, grade, because) {
-    const said = kind === "same_as" ? "claimed the same person" : kind === "not_same_as" ? "claimed not the same person"
+    const said = kind === "same_as" ? word("label.identityclaimkinds.same_as") : kind === "not_same_as" ? word("label.identityclaimkinds.not_same_as")
       : word("people.claimed_unsure_whether");
     return localize("people.index.said_grade_grade_because_because", "{said}, grade {grade}, because {because}", { said: String(said), grade: String(grade), because: String(because) });
   }
@@ -502,7 +505,7 @@ export class People {
        each, valid at its record's date (civil-time.validAt). */
     if (!shared) return { failed: word("people.two_records_share") };
     const ls = isObj(ev.lines) ? ev.lines : null;
-    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: "the evidence names the cited line held by each record (lines: {a, b})" };
+    if (!ls || !filled(ls.a) || !filled(ls.b)) return { failed: localize("people.index.evidence_names_cited_line", "the evidence names the cited line held by each record (lines: {a, b})") };
     const read = (id) => { try { const r = this.#lines.readLine({ lineId: id, viewer: MACHINE_VIEWER }); return r && r.found ? r.line ?? r : null; } catch { return null; } };
     const la = read(ls.a), lb = read(ls.b);
     if (!la || la.withdrawn) return { failed: word("people.line_held_withdrawn", { first: String(ls.a) }) };
@@ -1754,7 +1757,7 @@ export class People {
    *  and grade the claim's. */
   neighbours({ node, kinds = null, at, page = null, viewer, scope = null, host: _host = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
-      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      return { refused: "VIEWER_MISSING", why: localize("people.index.read_names_member", "a read names the member reading; an absent viewer is neither an administrator nor the public") };
     const want = Array.isArray(kinds) ? kinds.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
     if (!filled(node) || this.#denied(viewer) || !want.length) return { items: [] };
     const rows = this.#rows(`SELECT * FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL ORDER BY claim_id`, node, node)
@@ -1768,11 +1771,10 @@ export class People {
       const cited = ["a", "b"].filter((e) => isObj(ev[e]) && filled(ev[e].captureSha))
         .map((e) => ({ source: ev[e].captureSha, extent: ev[e].extent ?? null, end: e }));
       const evidence = cited.length ? cited : [{ source: `testimony:${c.by_actor ?? "a member"}`, statement: c.note }];
-      /* R40 (K3865): connection-grammar judges this reason as a string, the sentence `word` reads; `why_key` stands beside it */
+      /* R40 (N1226; connection-grammar R6): an undetermined hop's reason is its `{key, vars}`, passed on as civil-time answers it */
       items.push({ id: c.claim_id, from: c.a, to: c.b, kind: c.kind, owner: MODULE, valid, evidence,
                    grade: { assertion: c.grade, ends: [c.grade, c.grade] }, derived: null, why: c.why,
-                   ...(j === "in" ? {} : { undetermined: { why: sentenceOf(j.why) ?? word("people.why.owner_settle_validity"),
-                                                            why_key: isObj(j.why) ? j.why : null } }) });
+                   ...(j === "in" ? {} : { undetermined: { why: keyedReason(j.why, "people.why.owner_settle_validity") } }) });
     }
     if (items.length > BOUNDS.hub)
       return { items: [], hub: { set_size: items.length, why: word("people.why.person_end_identity", { hub: BOUNDS.hub }),
@@ -1787,7 +1789,7 @@ export class People {
 defaultRegistry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k })), neighbours: (args) => {
   const p = People.forHost(args && args.host);
   if (!p) return { refused: "OWNER_HOST_AMBIGUOUS",
-                   why: "people's neighbours needs the host it reads (args.host) when this isolate holds no single people instance" };
+                   why: word("people.why.people_neighbors_needs") };
   return p.neighbours(args);
 } });
 
