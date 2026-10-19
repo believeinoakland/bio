@@ -59,3 +59,17 @@ COMPLETE (re B9, K4094). This module draws no legend from a provider slug: `secu
 ## J6 · REPORT
 
 CORRECTION to J5: it said 178 pass; the commit it announced had one failing test (the words test saw "Acme Scan", a joined name not in the record's data), which I had not yet fixed. Fixed and pushed now: the tool is drawn as "vendor · product" like the catalogue's own rows, and the R43 test no longer mistakes that name for the catalogue list. Suite 178 pass, 0 fail; words check 0; coverage 60 of 60. Everything else in J5 stands.
+
+## J7 · COMPLETE
+
+**CR-20 · screens-screens-settings: R62 met.** (K4120, FILE-SCANNER #8 J8.)
+
+- **Entries applied:** R62. `security` reads `handling.on_own` (file-scanner R33) for the every-file box and the `routine` use, in place of the two matches on `recipient`'s English (former `security.mjs`:56 and :167; the matcher is gone). Fixtures carry `on_own` (the catalogue entry `false`, the own entry `true`). The R62 test (`security.test.mjs`) covers an own server named in Spanish (`on_own: true`: box drawn, `use: "routine"`) and a server named in English as the organization's own but flagged `false` (no box, `use: "on_request"`).
+- **Merge:** `tranche/T51` merged into the job branch first (`c06d20cc1a`), as BOB's START asks, for file-scanner R33.
+- **Deferred:** none.
+- **Found in another module, or in this module's words list (not changed here):** the R39 test (`contract.test.mjs`:71) fails, `act.claim.label.setup is a key this module reads`. `docs/development/ux-substrate/screens/words-reads.json` lists that key under `screens-settings` (line 12485), but `keys.mjs` does not hold it and no screen here draws it. It fails the same way on the merged tranche without my change, so it is inherited from the reads list, not from R62. Which side is wrong (the reads list, or a screen that should draw the claim label) is a BOB call; I have not added or removed the key. Also: `checks/run.mjs` shows words findings in `instance-setup` (`setup-fleet.mjs`:42–67) and `file-safety` (tests), both outside this module.
+- **Tests and checks:** module suite 179 tests, 178 pass, 1 fail (the R39 key above, pre-existing). R62 passes. `checks/format.mjs` 0 failures; `checks/architecture.mjs screens-settings` 0 failures; `checks/coverage.mjs screens-settings` 61 of 61 live requirement ids named by a test; `checks/ownership.mjs` 0 failures (3 files, all this module's); `checks/run.mjs`: no finding names a `screens-settings` file.
+- Commit `8a78242ac1`, pushed to `job/T51/screens-settings`.
+- Size (session_01K19GNa6yQamxgFprY4YSqT): test runs 7, module lines 4288
+
+Waiting on BOB (J7).
