@@ -5509,12 +5509,6 @@
    "note": "DEC-260"
   },
   {
-   "key": "case-disclosures.document_case_findings",
-   "en": "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {earned_capture_ceiling} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgment.",
-   "protected": false,
-   "note": "DEC-260"
-  },
-  {
    "key": "case-disclosures.capture_letter",
    "en": "no capture letter ({grade_basis})",
    "protected": false,

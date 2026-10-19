@@ -938,7 +938,6 @@ w("case-disclosures.without_attestation_outsider", "Without co-attestation an ou
 w("case-disclosures.stated_source_consent", "stated with the source's consent")
 w("case-disclosures.stated_already_public", "stated because it is already public, as cited")
 w("case-disclosures.document_grade_attestation", "## Each Document's Grade And Co-attestation")
-w("case-disclosures.document_case_findings", "Each document this case's findings rest on, one level deep, with the grade its capture earns and whether a trusted timestamp and a third party's co-archive attest it. A co-attested Grade {earned_capture_ceiling} document is enough to publish on; one that is not is published only as self-attested, by the owner's stated acknowledgment.")
 w("case-disclosures.capture_letter", "no capture letter ({grade_basis})")
 w("case-disclosures.obtained_late_proves", "obtained LATE: it proves the bytes existed by then, not at capture")
 w("case-disclosures.timestamp_archive", "(a timestamp at {timestamp_at}, no co-archive)")

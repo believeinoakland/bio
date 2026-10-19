@@ -4915,24 +4915,6 @@
    "note": "DEC-260: case-inputs, acks.rows.map()"
   },
   {
-   "key": "case-inputs.acks.rows.map.participant",
-   "en": "- {by}, a participant of {project}, on {at}",
-   "protected": false,
-   "note": "DEC-260: case-inputs, acks.rows.map()"
-  },
-  {
-   "key": "case-inputs.acks.rows.map.given_draft",
-   "en": "given on draft {draft}",
-   "protected": false,
-   "note": "DEC-260: case-inputs, acks.rows.map()"
-  },
-  {
-   "key": "case-inputs.document.list_stops_acknowledgments",
-   "en": "- (the list stops here; more acknowledgments are recorded than this document lists)",
-   "protected": false,
-   "note": "DEC-260: case-inputs, page/document"
-  },
-  {
    "key": "case-inputs.document.nobody_acknowledged_case",
    "en": "{ack_prose_head} Nobody acknowledged it FOR THIS CASE. An acknowledgment is never required to publish — a team may be one person — and its absence is stated rather than left for a reader to infer.",
    "protected": false,
@@ -4977,30 +4959,6 @@
   {
    "key": "case-inputs.why.source_answered_malformed",
    "en": "the source answered a malformed row",
-   "protected": false,
-   "note": "DEC-260: case-inputs, why"
-  },
-  {
-   "key": "case-inputs.listed.reading_draft_named",
-   "en": "this is a reading of draft {draft}, which {by} named as the draft of edition {edition} of {case_id} when publishing it ({at}), so it is a reading of that case.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.listed.edition_already_signed",
-   "en": "That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.listed.case_document_authored",
-   "en": "Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.",
-   "protected": false,
-   "note": "DEC-260: case-inputs, listed"
-  },
-  {
-   "key": "case-inputs.why.case_document_authored",
-   "en": "this case document was authored before acknowledgments were recorded, so it has no list to add to; it is left exactly as it was signed-for-review",
    "protected": false,
    "note": "DEC-260: case-inputs, why"
   },
