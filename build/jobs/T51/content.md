@@ -54,3 +54,19 @@ Job T51-188 · content (the words pass, K3949 / K3957 / K3962): done. Commit a36
 - `node checks/ownership.mjs /home/user/bio content tranche/T51 job/T51/content`: "8 files changed by content …; 0 failures" (seven code and test files plus the start record).
 
 Size (session_01JPMzjtaiYQhhvavJECf8NY): test runs 1, module lines 3531
+
+## J3 · COMPLETE
+
+Job T51-188 · content, CHANGE B4 (K3988) done. Commit 54c8dbdc4e keys the three `detail` strings through `localize` with their English unchanged: `content.index.content_requires_id`, `content.index.pass_bundleid_info_document`, `content.index.pass_contentid_content_id`. Merged `origin/tranche/T51` into `job/T51/content` (merge commit f54a4f4a42; no rebase, no reset); the merge brought no change to content's files.
+
+**Checks, as run after the merge.**
+- `node --test bio-plane/test/m/content/`: tests 132, pass 132, fail 0.
+- `node checks/words.mjs /home/user/bio content`: "words: 1 modules … inline 0, plain 0, testcopy 0 … 0 failures".
+- `node checks/run.mjs /home/user/bio`: "format: 175 modules, 174 requirements files; 0 failures"; "architecture: 3617 product files … 0 failures". Coverage's 30 failures are other modules'.
+- `node bio-plane/src/setup-words/build.mjs --check`: no refusal naming content (stale-rows note only).
+- `node checks/coverage.mjs /home/user/bio content`: "55 of 55 live requirement ids named by a test; 0 failures".
+- `node checks/ownership.mjs /home/user/bio content tranche/T51 job/T51/content`: "8 files changed by content …; 0 failures".
+
+**Deferred.** None.
+
+Size (session_01JPMzjtaiYQhhvavJECf8NY): test runs 2, module lines 3531
