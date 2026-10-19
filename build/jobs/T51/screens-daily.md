@@ -96,3 +96,7 @@ Not drawn: `act.queuemute.here.queue_project`: no muted entry of the plane's ans
 ## J6 · COMPLETE
 
 COMPLETE (SCREENS-DAILY #9), re B9 (K4094). `elsewhere` now draws a web link by the contact's own `label` when the profile holds one, else by its site's name (oaklandca.gov), never the address's path; a source that is an address is drawn as its site; the full address stays the link's target. Test with a control (no slug as text; a source in words stays). Suite 164 of 164; format, architecture, coverage (62 of 62), ownership, words: 0 failures. Pushed @ job/T51/screens-daily. Note for journey-check/jurisdictions: pointer contacts hold no `label` (R89), so the site's name is what is drawn today; a `label` field in R89 would let the profile name its links.
+
+## J7 · COMPLETE
+
+COMPLETE (SCREENS-DAILY #9), re B10 (K4107). Home's Investigation door opens `/app/dash-project/<project>` of the newest-changed project, else the first `projectlist` lists, and `/app/projects` with none (R51). Tested with several, one, none changed and none listed. Suite 165 of 165; format, architecture, coverage (62 of 62), ownership, words: 0 failures. Pushed @ job/T51/screens-daily. For BOB: Home's Action door still opens the bare `/app/dash-action`; if `dash-action` is also a subject screen it has the same defect (the CHANGE named Investigation only).
