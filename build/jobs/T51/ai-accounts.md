@@ -31,3 +31,12 @@ Completion of T51-175 (ai-accounts, the words findings). Commit 3669033966 on jo
 **Commit note:** the commit carries the Claude-Session line only; the model-name Co-Authored-By line is left out because the session's rule forbids a model identifier in a commit.
 
 Size (session_01UqVXapoj5wpdUoADSpasF2): test runs 2, module lines 2147
+
+## J2 · COMPLETE
+
+CHANGE B2 applied (K3974). Tranche/T51 merged first (14905d7049 on the job branch, no rebase).
+- `t35-misc.test.mjs`:145 (the unknown-kind detail) now compares the whole detail with `localize('ai-accounts.index.the_kind_your_teams_civicsmith', en, { ACCOUNT_KINDS: 'apikey' })` by equality; the product reads that detail by `localize` already (index.mjs:392).
+- Tests: `node --test bio-plane/test/m/ai-accounts/` 114 pass, 0 fail.
+- Checks: words 0 failures (testcopy 0); format 0; architecture 0; coverage 34 of 34 ids named, 0 failures; ownership 0 failures; setup-words --check shows the stale-rows note only, expected.
+- Committed and pushed; state COMPLETE.
+Size (session_01UqVXapoj5wpdUoADSpasF2): test runs 3, module lines 2147
