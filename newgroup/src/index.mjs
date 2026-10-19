@@ -2462,7 +2462,8 @@ async function runRemove(emit0, code, saved, guard) {
     if (special(e)) throw e;
     return emit.fail(word("installer.remove.refused.remains", { remaining: (e.remaining || []).join(", ") }), word("installer.cfsaid", { said: e.message }));
   }
-  emit.done(removedPanel({ team: slug, done: n }));
+  await emit.says(word("installer.remove.done", { n }));
+  emit.done(removedPanel({ team: slug }));
 }
 
 /* ---------------------------------------------------------------- routes */

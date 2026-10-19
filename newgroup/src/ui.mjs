@@ -460,8 +460,7 @@ ${copy.unknown.map((u) => `<p class="small">${escText(u)}</p>`).join("")}
 </section>`;
 
 /* R65: when the account is clear, the way to a new install (a new consent, R62). */
-export const removedPanel = ({ team, done }) => `<section id="removed"><h2>${escText(word("installer.removed.title"))}</h2>
+export const removedPanel = ({ team }) => `<section id="removed"><h2>${escText(word("installer.removed.title"))}</h2>
 <p>${escText(word("installer.removed.what", { team }))}</p>
-<p id="removed-done">${escText(word("installer.remove.done", { n: done }))}</p>
 <p>${escText(word("installer.removed.next"))}</p>
 <div class="ng-acts"><a class="cs-btn" data-tone="primary" id="after-remove" href="/">${escText(word("act.bootstrap.label.install"))}</a></div></section>`;
