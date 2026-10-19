@@ -55,3 +55,7 @@ Size (session_016KXEuu4bL97DYXetKZYwhK): test runs 12, module lines 1363
 - `node bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (see 3).
 
 Size (session_01AFeyrJPobdYm3SJyPqCdRf): test runs 1, module lines 1365
+
+## J2 · COMPLETE
+
+Words pass (T51-263) complete on job/T51/retrieval-browse at d3e08f3414 (commit 3cfecfabab for the code). 25 plain findings converted to localize, plus two unflagged sentences (new_since refusal, read-shape reason) and four test copies. Module tests 51/51 pass; words, architecture, coverage and ownership 0 failures for this module. Full run.mjs shows no failure naming retrieval-browse. Report points (record, Completion T51-263): the requirements' cut clause is superseded (K3964); the read-shape en names 'events R49' and is for the design lane; rows.mjs is stale for the new ids (BOB regenerates at layer close). Co-author model line omitted from commits per the system rule on model identifiers.
