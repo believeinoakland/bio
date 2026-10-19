@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import * as scheduler from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW, FILE_CONSUMERS } from "./fixture.mjs";
 import { world as fsWorld, pdf } from "../file-safety/fixture.mjs";
+import { FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";
 
 const { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, FILE_SAFETY_CONSUMERS, SCHED_GRACE_MS, Scheduler, schedulerOf } = scheduler;
 const FIVE = ["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"];
@@ -158,9 +159,9 @@ test("R24, R11, R18: a restarted instance re-derives the five's wakes from file-
   assert.deepEqual(st.kv.get("sched_files"), { "file-scan": { last: NOW, more: false }, "file-forward": { hour: NOW, to: NOW, log: true } }, "left as it was");
 });
 
-test("R24, R3: a refusal file-safety answers (SCANNER_ABSENT, RENDERER_ABSENT, DEEPER_CHECKS_UNREADABLE, FORWARD_PERIOD_INVALID) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
-  const refusals = ["SCANNER_ABSENT", "RENDERER_ABSENT", "DEEPER_CHECKS_UNREADABLE", "FORWARD_PERIOD_INVALID", "SCANNER_ABSENT"]
-    .map((code) => ({ ok: false, code, reason: code, detail: "refused" }));
+test("R24, R3: a refusal file-safety answers (one of its declared refusal codes) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
+  const declared = Object.keys(FILE_SAFETY_CHECKS).filter((c) => /_(ABSENT|UNREADABLE|INVALID)$/.test(c));
+  const refusals = FIVE.map((_, i) => ({ ok: false, code: declared[i % declared.length], reason: declared[i % declared.length], detail: "refused" }));
   const later = [NOW + 86_400_000, NOW + 300_000, NOW + 300_000, NOW + 3_600_000, NOW + 600_000];
   const fired = new Set();
   const set = Object.fromEntries(FIVE.map((n, i) => [n, { wake: () => (fired.has(n) ? later[i] : NOW), tick: () => { fired.add(n); return refusals[i]; } }]));

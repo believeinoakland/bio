@@ -633,7 +633,7 @@ export class Scheduler {
         const fs = this.#owner("fileSafety");
         r = fs && typeof fs.onFileWork === "function"
           ? fs.onFileWork("scheduler", () => (this.#firing ? null : this.arm().catch(() => null)))
-          : { ok: false, reason: "NOTICE_ABSENT", detail: "the file-safety owner offers no onFileWork" };
+          : { ok: false, reason: "NOTICE_ABSENT", detail: localize("scheduler.index.the_file_safety_owner_offers_no_onfilework", "the file-safety owner offers no onFileWork") };
       } catch (e) { r = { ok: false, reason: "NOTICE_THREW", detail: message(e) }; }
       this.#fault("fileSafety", r);
     }
