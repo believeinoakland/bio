@@ -81,8 +81,7 @@ test("R1 (DEC-88) createEntity refuses ENTITY_NO_NOTE with its own row (C-91.8) 
 test("R1 C-91.8 ENTITY_NO_NOTE is this module's own row, with R1's translation word for word, naming no place (R31); its number is its own", () => {
   const row = ENTITY_CHECKS.ENTITY_NO_NOTE;
   assert.deepEqual([row.check, row.where], ["C-91.8", "src/entities/index.mjs createEntity > is-entity-noted"]);
-  assert.equal(row.translation, "A subject is registered with a note in your own words saying who or what it is and why it belongs "
-    + "in the registry, and this one has none. Nothing was written.");
+  assert.equal(row.translation, word("refusal.ENTITY_NO_NOTE"));
   assert.ok(Object.isFrozen(row));
   assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
   const checks = Object.values(ENTITY_CHECKS).map((r) => r.check);

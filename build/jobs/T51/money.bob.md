@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio money tranche/T51 job/T51/money`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J3
+
+Not Bob's (rulings-active §1: no session brings Bob an approval request). Your record commits reached origin on the same branch, so pushing job/T51/money works: retry once with `git push origin HEAD:job/T51/money` (a fast-forward; never -f). If that is refused too, set NEEDS BOB, post BLOCKED with the exact refusal text and end your turn; I then restart the job on a fresh session, which redoes T51-198 from your record (never worked around). Once pushed, post COMPLETE again.
