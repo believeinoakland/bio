@@ -8,23 +8,26 @@
  * a public registry image". The member names stay as the fleet statement gives them; what each provides is said beside.
  */
 
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+
 const PINNED = /^[a-z0-9][a-z0-9.-]*(?::[0-9]{1,5})?\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
 const PULLABLE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com|[a-z0-9-]+-docker\.pkg\.dev)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
 
-export const IMAGE_UNPINNED = "this release does not pin its image to one exact build (a sha256 digest), so it cannot be checked";
-export const IMAGE_UNPULLABLE = "this release's image is not yet published where your Cloudflare account can pull it";
+/* The reason's identity, never its words: the key the sentence is read by (installer.image.*), said by `imageSaid`. */
+export const IMAGE_UNPINNED = "installer.image.unpinned";
+export const IMAGE_UNPULLABLE = "installer.image.unpullable";
 
-/* null when the image installs; else why not, in words. */
+/* The reason `why` (one of the two above) said for the part `part`, in the design's words. */
+export const imageSaid = (why, part) => (why === IMAGE_UNPINNED ? word("installer.image.unpinned", { part }) : word("installer.image.unpullable", { part }));
+
+/* null when the image installs; else why not (IMAGE_UNPINNED or IMAGE_UNPULLABLE). */
 export function imageWhy(image) {
   if (typeof image !== "string" || !PINNED.test(image)) return IMAGE_UNPINNED;
   if (!PULLABLE.test(image)) return IMAGE_UNPULLABLE;
   return null;
 }
 
-/* R38 (T36): what your team's Civicsmith lacks while a container member is left out, said beside its reason. */
-export const CONTAINER_LACKS = Object.freeze({
-  /* R57: the assistant does not run in a container, so the absence of `agent-runner` names nothing the assistant lacks. */
-  "file-scanner": "your team's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not "
-    + "scanned, and a high-risk file opens only in its safe view once one can be made",
-});
-export const lacksOf = (member) => (member in CONTAINER_LACKS ? CONTAINER_LACKS[member] : (member === "agent-runner" ? "" : "what it provides is missing from your team's Civicsmith until it is installed"));
+/* R38 (T36): what your team's Civicsmith lacks while a container member is left out, said beside its reason; "" for a member
+   whose absence names nothing the assistant lacks (R57: the assistant does not run in a container). */
+export const lacksOf = (member) => (member === "file-scanner" ? word("installer.image.lacks.scanner")
+  : member === "agent-runner" ? "" : word("installer.image.lacks.other", { part: member }));

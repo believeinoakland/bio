@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (15719 design words, 934 protected; SHA-256
-   f44b1a30247944622c33322db053eee06621cd4fb95f2f081f30a5ea839ee9c4) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (15737 design words, 934 protected; SHA-256
+   03c16cac4591d4e6995a6817136d25087e07dbdeff774d2520482fdaee961941) followed by 6639 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "f44b1a3024";
+export const WORDS_COMMIT = "03c16cac45";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true,"design"],
@@ -8666,6 +8666,24 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.DIGEST_MISMATCH.download","The file that arrived doesn't match the fingerprint your team holds for it, so it was not saved or opened. Nothing was changed. Try the download again.","DEC-360 (B371 2): interface-shell R98; the browser-side check before a download is saved",null,false,"design"],
   ["screen.dash-project.next.vouch.noplace.one","Vouch for the photo you captured","DEC-360 (B371 1): the one-photo form",null,false,"design"],
   ["screen.home.todo.vouch.noplace.one","Vouch for the photo you captured","DEC-360 (B371 1): the one-photo form on Home",null,false,"design"],
+  ["installer.fleet.left.item","{member} ({why})","DEC-362 (B375): installer-steps (T51-127, R36); one entry of installer.fleet.partial.*'s {list}, joined as a list; {why} an installer.fleet.why.* fragment, never a whole sentence",null,false,"design"],
+  ["installer.fleet.why.integrity","its files didn't match the fingerprints this release states for them","DEC-362 (B375): installer-steps (T51-127, R36); a bundle or part failed its hash",null,false,"design"],
+  ["installer.fleet.why.http","Civicsmith's software source answered with error {status} for its files","DEC-362 (B375): installer-steps (T51-127, R36); an HTTP error for the member, {status} the number",null,false,"design"],
+  ["installer.fleet.why.refetch","its files could not be fetched again for the upload","DEC-362 (B375): installer-steps (T51-127, R36); the second read at upload failed (installer-steps R18)",null,false,"design"],
+  ["installer.fleet.why.unpinned","this release doesn't tie its software to one exact build","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.unpinned, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.unpullable","its software isn't published yet where your Cloudflare account can get it","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.unpullable, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.freeplan","containers need the Workers Paid plan, and this account is on the free plan","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.freeplan, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.planunknown","the installer couldn't check which Workers plan the account is on","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.planunknown, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.nopermission","the permission you approved doesn't include Workers Containers","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.nopermission, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.permissionunknown","the installer couldn't confirm that the permission you approved includes Workers Containers","DEC-362 (B375): installer-steps (T51-127, R36); the list form of installer.image.permissionunknown, which stays the notice's whole sentence",null,false,"design"],
+  ["installer.fleet.why.container.parse","this release's description of its container can't be read","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (parse); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.class","this release's description of its container names no class for it","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (class); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.policy","this release's description of its container states a policy the installer can't apply","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (policy); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.size","this release's description of its container states a size the installer can't use","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (size); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.bindings","this release's description of its container names connections the installer can't make","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (bindings); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.path","this release's description of its container names a part that isn't in the release","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (path); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.why.container.duplicate","this release's description of its container names the same class twice","DEC-362 (B375): installer-steps (T51-127, R36); installer.fleet.why.container by cause (duplicate); the bare row stays for a cause not named",null,false,"design"],
+  ["installer.fleet.skip.manifest.reason","This release names helper programs but doesn't say how they are uploaded ({reason}), so none were installed. Your team's Civicsmith itself installed normally; a corrected release fixes this at the next update.","DEC-362 (B375): installer-steps (T51-127, R36); skip.manifest with the manifest's own reason, {reason} a why fragment",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
