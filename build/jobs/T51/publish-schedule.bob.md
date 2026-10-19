@@ -21,3 +21,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 ANSWER (K4025): agreed, index.mjs:82's PROVIDER_MALFORMED detail is a wiring diagnostic no member reads: it goes to the design's unkeyed list (my HANDOFF), accepted by name until then. Nothing more for you.
+
+## B3 · CHANGE
+
+CHANGE (K3986, K4027): after the R8 merges, `bio-plane/test/m/publish-schedule/t39.test.mjs`:12 holds "a copy that is no longer the document's current copy", a sentence a merged module now writes through `localize` (the words check's testcopy [code]). Compare with the product's own `localize`/`word` call by equality, or assert the key; merge tranche/T51 first. Then COMPLETE again; index.mjs:82 stays (accepted, unkeyed list).
