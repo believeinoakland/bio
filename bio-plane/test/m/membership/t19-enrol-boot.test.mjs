@@ -49,7 +49,7 @@ test("R95 a setter that throws or answers ok:false is ENROL_NOT_RECORDED, C-96.1
     assert.equal(r.check, MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED.check);
     assert.equal(r.translation, MEMBERSHIP_CHECKS.ENROL_NOT_RECORDED.translation);
     assert.equal(JSON.stringify(w.rows(`SELECT * FROM members ORDER BY member_id`)), before, "nothing written");
-    assert.equal((await w.m.inviteLook({ invite })).ok, true, "the invitation is still live");
+    assert.equal((await w.m.inviteLook({ invite })).ok, true, "invite still live");
     set(async (a) => ({ ok: true, role: a.role }));
     assert.equal((await w.m.enroll({ invite, handle: "ann", password: "ann-passphrase-x" })).ok, true, "and works after");
   }

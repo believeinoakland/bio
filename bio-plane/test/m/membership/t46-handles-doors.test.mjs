@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { world, V, realWorld } from "./fixture.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { Membership, MEMBERSHIP_CHECKS, notAnAdmin, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_PROJECT_TABLES }
   from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../../../src/record-grammar/index.mjs";
@@ -32,7 +33,7 @@ async function group() {
 
 /* ---------------------------------------------------------------- R130 --------------------------------------------- */
 
-const ACT = "reading the team's website key and join link";
+const ACT = localize("member-roster.index.reading_the_teams_website_key_and", "reading the team's website key and join link");
 const NONE = { live: false, current: null, history: [], limit: 200, truncated: false };
 
 /* ---------------------------------------------------------------- R131 --------------------------------------------- */

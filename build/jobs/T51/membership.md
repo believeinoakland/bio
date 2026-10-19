@@ -1,6 +1,6 @@
 # membership (T51)
 
-**Status** · session_018652bxpkEPx4gMoCSpbHne · depth 2 · COMPLETE · handled B3
+**Status** · session_018652bxpkEPx4gMoCSpbHne · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -84,3 +84,9 @@ Size (session_018652bxpkEPx4gMoCSpbHne): test runs 14, module lines 1626
 ## J4 · REPORT
 
 **Addendum.** `bio-plane/test/system/` after CR-4: `fleetbundles` fails (bundles stale from deleting `membership/order.mjs`, red on the tranche before this job too), and `row-census` fails with "CENSUS MOVED: changed with no record" for the moved rows (C-102.11 and the others whose `where` now names `src/member-roster/index.mjs`), plus its `newgroup/dist/newgroup.bundled.mjs` file note. Both are the stamp and regeneration BOB/promotion's CR-5 owns; nothing further in membership.
+
+## J5 · COMPLETE
+
+**COMPLETE** again, for B4 (CHANGE, K3980). `tranche/T51` merged (no conflict). The six test copies now compare with `localize` by id (`t35-words` three, plus the hosting-access act; `t46-handles-doors` the doors act) or carry a non-sentence message (`t19-enrol-boot`). `checks/words.mjs /home/user/bio membership`: 0 failures. `membership` suites 172 pass, 0 fail. Coverage 49 of 49, architecture and ownership 0 failures. No source change; module lines 1626.
+
+Size (session_018652bxpkEPx4gMoCSpbHne): test runs 3, module lines 1626
