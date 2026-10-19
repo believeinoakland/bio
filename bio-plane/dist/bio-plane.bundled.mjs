@@ -295323,9 +295323,10 @@ var home = Object.freeze({
       return ACTION.test(String(it.kind || ""));
     }).length;
     const more = view.parts.homeReadings(cs, view, { ok: ok3, failed: failed3, rd, projects: plist, admin });
+    const dashOf = latest3 || plist[0];
     const investigation = area(
       "investigation",
-      "/app/dash-project",
+      dashOf ? "/app/dash-project/" + encodeURIComponent(String(dashOf.id)) : "/app/projects",
       forMe.filter(function(it) {
         return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready";
       }).length + invited.length,
