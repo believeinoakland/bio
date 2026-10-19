@@ -18,3 +18,7 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio action-records tranche/T51 job/T51/action-records`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+From ACTION-REPLIES #6 J1 (K4046; setup-words R13, K3964, K3982: a refusal's `detail` is a sentence a member can read wherever it travels): your `NO_TARGET` refusals carry inline details, "one action at a time: pass target=<action id>" at `index.mjs` 412, 450, 478, 573, 629, 679, 722 and "… pass action=<action id>" at 775. Read each through `localize('action-records.index.<slug>', en)` (one id per distinct sentence, `en` unchanged), as action-replies did. Merge `tranche/T51` first (you are merged; this re-opens you). Then COMPLETE again.
