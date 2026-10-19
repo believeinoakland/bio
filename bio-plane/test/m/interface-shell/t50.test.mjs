@@ -9,7 +9,7 @@ import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS } from "../../../sr
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
 import { OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, httpError, ndjson, pending, settle, MEMBER, ADMIN, SESSION, STORE_KEY, served, scriptOf } from "./harness.mjs";
 import { ALL, HOME, HELD, DOORBELL, PUBLISHED } from "./screens.fixture.mjs";
 
@@ -442,14 +442,15 @@ test("R82 explanations read the design's keys: the To-do count by shell.queue.wa
 /* ---------- R83 ---------- */
 
 test("R83 a refusal is drawn in its own words and shell.unread is for no refusal: a coded refusal with no key and no translation is refusal.uncatalogued, its code and the reference; with a key its word alone; with a translation that alone; a 500 with no body draws shell.unread; control: the form keeps what was typed", async () => {
+  assert.equal(hasWord("refusal.UNHELD_CODE"), false, "the code is one no row holds, so the uncatalogued path is proved");
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(await words(refused("NO_AMOUNT", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " NO_AMOUNT " + word("refusal.reference", { ref: "01234567" }));
-  assert.equal(await words(refused("NO_AMOUNT")), word("refusal.uncatalogued") + " NO_AMOUNT");
+  assert.equal(await words(refused("UNHELD_CODE", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " UNHELD_CODE " + word("refusal.reference", { ref: "01234567" }));
+  assert.equal(await words(refused("UNHELD_CODE")), word("refusal.uncatalogued") + " UNHELD_CODE");
   assert.equal(await words(refused("NOT_AN_ADMIN", "ignored")), word("refusal.NOT_AN_ADMIN"));
-  assert.equal(await words(refused("NO_AMOUNT", "Its own words.")), "Its own words.");
+  assert.equal(await words(refused("UNHELD_CODE", "Its own words.")), "Its own words.");
   assert.equal(await words(httpError(500)), word("shell.unread"));
   assert.equal(await words({ status: 200, json: { ok: false, reason: "ZZ_REASON" } }), word("refusal.uncatalogued") + " ZZ_REASON", "a reason as well as a code");
-  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("NO_AMOUNT", null, 400) } });
+  const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("UNHELD_CODE", null, 400) } });
   p.doc.getElementById("home-title").value = "Typed";
   await p.click(btn(p, "promote"));
   const reason = p.root().querySelector('[data-slot="m:0"] textarea');
