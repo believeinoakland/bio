@@ -39,3 +39,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. Your Size line counts only your module's own code (K2513).
 Before any test run: every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code (K4113).
+
+## B5 · CHANGE
+
+CHANGE (K4127; SCREENS-INQUIRY #13 J8 (1)). Your R78 is written on the tranche (merge it first): `readingFor`'s answer also states `format`, the reading's own `capture_format` (a format-registry id; your `readings` table holds it), absent when null, and withheld with the bundle as `bytes` is. Test and control as R78 says; then post COMPLETE again. screens-inquiry draws the file card's kind from it after you merge.
