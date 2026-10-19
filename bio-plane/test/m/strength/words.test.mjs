@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { recomputePair } from "../../../src/strength/index.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const REF = `imported:${"a".repeat(64)}/INQ-2026-0500-a`;
@@ -15,12 +16,10 @@ test("DEC-149 (R33, R26): another group's finding with no accepted work held, or
   const w = world();
   w.aw.mode = "absent";
   const absent = whyOf(w.s.candidatePair({ legs: [{ target: REF, target_edition: 2 }] }).pair.capture, REF);
-  assert.equal(absent, "this leg rests on another team's finding, and your team's Civicsmith holds no accepted work to read it "
-    + "from, so what it rests on is unknown here");
+  assert.equal(absent, word("strength.stopped.leg_rests_group_finding"));
   const n = world();
   const missing = whyOf(n.s.candidatePair({ legs: [{ target: REF, target_edition: 3 }] }).pair.capture, REF);
-  assert.equal(missing, "this leg rests on another team's finding that your team's Civicsmith does not hold at edition 3, "
-    + "so what it rests on is unknown here");
+  assert.equal(missing, word("strength.stopped.leg_rests_group_finding_group", { edition: 3 }));
   for (const s of [absent, missing]) assert.doesNotMatch(s, OLD);
 });
 
@@ -28,9 +27,9 @@ test("DEC-149 (R36, R38): a calculation or an obligation not held says \"your gr
   const w = world();
   const calc = "CALC-2026-aaaaaaaaaaaaaaaa", occ = "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111";
   const p = w.s.candidatePair({ legs: [{ target: calc }, { target: occ }] }).pair;
-  assert.equal(whyOf(p.capture, calc), `${calc} is not a calculation your team's Civicsmith holds, so what this leg rests on is unknown`);
-  assert.equal(whyOf(p.capture, occ), `${occ}: DUT-2026-0009 is not an obligation your team's Civicsmith holds, so what this leg `
-    + "rests on is unknown");
+  assert.equal(whyOf(p.capture, calc), word("strength.stopped.calculation_group_civicsmith", { id: calc }));
+  assert.equal(whyOf(p.capture, occ), word("strength.stopped.leg_rests_unknown",
+    { ref: occ, why: word("strength.unknown.obligation_group_civicsmith", { duty: "DUT-2026-0009" }) }));
   for (const m of p.capture.undetermined_at) assert.doesNotMatch(m.why, OLD);
 });
 
@@ -40,10 +39,11 @@ test("DEC-149 (R11, R32): the two-subjects refusal and the unknown method versio
   w.version(INQ, "v1", "accepted", []);
   const two = w.s.partitionIndependence({ id: INQ, version: "v1", partition: [[0]], viewer: MACHINE });
   assert.equal(two.code, "PARTITION_INDEPENDENCE_TWO_SUBJECTS");
-  assert.equal(two.detail, "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not "
-    + "both: this answers for one of them, and does not guess which one was meant.");
+  assert.equal(two.detail, localize("strength.index.name_either_a_written_reading_or_a_proposed_grouping",
+    "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not both: this answers for one of them, and does not guess which one was meant."));
   const r = recomputePair({ version: "bio-grading/99", legs: [] });
   assert.equal(r.reason, "UNKNOWN_METHOD_VERSION");
-  assert.equal(r.detail, "this grading method version is not one that has been published, so the grade cannot be recomputed by it");
+  assert.equal(r.detail, localize("strength.method.this_grading_method_version_is_not",
+    "this grading method version is not one that has been published, so the grade cannot be recomputed by it"));
   for (const s of [two.detail, r.detail]) assert.doesNotMatch(s, OLD);
 });

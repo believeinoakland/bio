@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { world, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { GRADING_METHOD_VERSION, GRADING_METHOD_VERSIONS, gradingMethodText, recomputePair, STRENGTH_AXES,
          DEPTH_BOUND, PRODUCT_NAME } from "../../../src/strength/index.mjs";
 
@@ -203,7 +204,7 @@ test("R32, R33: a leg on another group's finding recomputes from the accepted_wo
   const none = recomputePair({ version: V, legs: [{ target: ref, kind: "imported" }] });
   for (const a of STRENGTH_AXES) {
     assert.equal(none[a].state, "undetermined");
-    assert.match(none[a].undetermined_at[0].why, /case file states no answer/);
+    assert.equal(none[a].undetermined_at[0].why, word("strength.stopped.case_file_states"));
   }
   /* The same as the live pair over the same leg. */
   const w = world();
@@ -237,7 +238,7 @@ test("R32, R29, R34: given levels, recomputePair judges anonymous legs from the 
   const lv3 = { knock: "project" };
   const alone = recomputePair({ version: V, levels: lv3, legs: [knock] });
   assert.equal(alone.connection.state, "unrated");
-  assert.match(alone.connection.not_load_bearing[0].why, /attests anonymously/);
+  assert.equal(alone.connection.not_load_bearing[0].why, word("strength.uncorroborated_evidence_why"));
   assert.equal(recomputePair({ version: V, levels: lv3, legs: [knock, doc] }).connection.grade, "B");
   assert.deepEqual(recomputePair({ version: V, levels: lv3, legs: [knock] }).levels, lv3);
 });

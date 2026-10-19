@@ -95,7 +95,7 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
       if (!earned || earned.mode !== "ceiling") return null;
       if (earned.grade == null) return { grade: null, why: earned.why ?? "undetermined ceiling" };
       if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;
-      return { grade: earned.grade, why: `the record can support no more than ${earned.grade} for ${targetId}` };
+      return { grade: earned.grade, why: `ceiling ${earned.grade} for ${targetId}` };
     },
     subjectEntityOf: (id) => subjects.get(id) ?? null,
     /* leg-earning R4: the legs naming a target, from the basis the test holds. */

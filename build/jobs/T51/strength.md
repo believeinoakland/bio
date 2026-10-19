@@ -1,6 +1,6 @@
 # strength (T51)
 
-**Status** · session_01VzUCjGbAYLcqyufLSZVAQD · depth 2 · COMPLETE · handled B1
+**Status** · session_01VDy17VXpJGNDxKUojKpxFw · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -28,3 +28,39 @@ Tests and checks:
 - `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 24 failures, all in other modules, none in strength.
 
 Size (session_01VzUCjGbAYLcqyufLSZVAQD): test runs 3, module lines 2934.
+
+## J3 · QUESTION
+
+T51-221, pinned method words (method.mjs V1_LINES / V2_LEGS, the findings at method.mjs:281-329, about 15 of the 213). These are the plain-words text of the three PUBLISHED grading methods (bio-grading/1, /2, /3). gradingMethodText returns them, a case's signed method text is verified by SHA-256, and method.test.mjs pins each version's bytes. If they go through localize, the list always wins (setup-words R14): a design row edit would silently change a published, signed method without a new version (K1333). My best reading: leave these three texts as code, not keyed, and list them in a REPORT as 'signed/pinned versions, not hidden' for the design's unkeyed list (K3944); convert everything else in the module (arithmetic details, refusal rows, details, whys, the bar's note, filter sentence, the per-leg whys in method.mjs, the not-yet-pinned strings). Alternative: key them too (byte-identical en) and accept the drift risk. I carry on with everything else on my best reading and will convert them only if you say so.
+
+## J4 · REPORT
+
+T51-221 progress report (all of the module's words work is done and tested; 161/161 pass). Four things need BOB:
+
+1. `build/modules.json`: strength's `uses` lacks `setup-words` (164 other modules declare it). `checks/architecture.mjs strength` reports 17 failures, all "imports setup-words, which strength does not declare in uses" (8 src imports, 9 test imports). Please add it on `tranche/T51` (and to the requirements' Uses list); I will merge it and re-run. Nothing else is red in architecture.
+
+2. Requirement vs design row, R40 (C-107.4 `PROJECT_BAR_NO_REASON`): R40 says the translation says "a project's standard of evidence is set with a reason in the member's own words, at most 2,000 characters, kept with it, and nothing was changed". The design's row `refusal.PROJECT_BAR_NO_REASON` (read by key now, as for all 23 of this module's translations) says "Setting this project's bar needs your reason, kept on the record with the change. Nothing was changed." It has no 2,000-character bound. The list wins, so I made the test compare with the row and did not weaken any other assertion. Either R40's wording is yours to amend (wording only), or the design should restore the bound. Likewise `refusal.VERSION_STRENGTH_UNKNOWN_STATE` now reads "recognizes" (US spelling) where the code had "recognises"; no requirement is affected.
+
+3. Stale generated artifact (mechanics §14): `bio-plane/src/case-checker/program.mjs` (owner case-checker; embeds strength's method). `test/m/case-checker`: R13 (stale) and R25 fail on the committed file. I ran its build into the working tree, case-checker's 88 tests passed 0 fail, and I restored the file untouched. Regenerate with `node bio-plane/src/case-checker/build-program.mjs`. The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale too (by the build). Other dependents (action-plans, filings, answer-envelope) show the same failures as before my change (checked with my changes stashed).
+
+4. Strings I did NOT key (for the design's unkeyed list, K3944):
+ - `method.mjs` V1_LINES / V2_LEGS (the findings at method.mjs:279-326): the three published, signed grading-method texts (bio-grading/1, /2, /3), pinned bytes (B3's answer to J3).
+ - `index.mjs` `appendSessionLog`: the literal `## Session Log` heading marker the module searches for in a project's document (wire grammar, not a sentence).
+ - Short non-sentence glue left as code: the `### Session <at> | Set / Withdrew the project's bar | <who>` header of a project's Session Log entry, "no bar" in a log line, the type words ("record") and the `capture A` axis/grade pairs, ids and the `undetermined:`/`issuer:` origin keys.
+
+Design rows I used (all existing in words.json): `refusal.<CODE>` for the 23 translations; `strength.*` for the whys, stops, filter, note and out-of-view sentence. New `localize` ids (no row existed): `strength.arithmetic.*` (11), `strength.index.*` (about 60), `strength.method.*` (3), `strength.origins.*` (1). One flaw fixed in my own module: a graded leg that states no axis was named "the leg's grade is on the null axis"; it is now named with the existing `strength.inert.leg_states_axis` sentence (R9: no axis, inert). Not run yet: `checks/run.mjs`, `setup-words/build.mjs --check`.
+
+## J5 · COMPLETE
+
+T51-221 applied (commit edc5083d5c on job/T51/strength, tranche/T51 merged after B4).
+
+Entries applied: every words finding of build/plan/words-pass/strength.md except the accepted unkeyed ones. word(key) for the 23 refusal translations (refusal.<CODE>) and every sentence with a strength.* row; localize for the rest (strength.arithmetic/index/method/origins ids); the 12 plain findings judged and keyed; the 2 K3962 and all other test copies converted to word/localize equality. Flaw fixed: a graded leg with no axis was named "on the null axis"; now strength.inert.leg_states_axis (R9).
+Unkeyed, accepted in B4: method.mjs V1_LINES/V2_LEGS (signed versions) and index.mjs "## Session Log" marker (16 words-check lines).
+Deferred: nothing.
+Found outside: program.mjs and plane bundle stale (BOB regenerates at R6 close); case-checker R13/R25 red until then.
+Tests: node --test test/m/strength/: 161 pass, 0 fail. Checks: format 0; architecture 0; coverage strength 40 of 40; ownership 0; run.mjs: words findings in strength only the 16 unkeyed lines; setup-words --check: stale-rows note only.
+Size (session_01VDy17VXpJGNDxKUojKpxFw): test runs 12, module lines 2932
+
+## J6 · COMPLETE
+
+B5 done: pulled process main (d424c32), merged tranche/T51, ran checks/words.mjs strength: 15 findings, all and only the accepted unkeyed set (method.mjs published-version texts V1_LINES/V2_LEGS incl. chains judged per sentence; index.mjs '## Session Log' marker), no other file. Nothing new to fix. Strength tests 161 pass. Unkeyed for the design list: as in J4/J5.

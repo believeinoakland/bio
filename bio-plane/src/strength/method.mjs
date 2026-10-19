@@ -9,6 +9,7 @@
  * EVERY `why` BELOW IS MEMBER-FACING (R28, D-269): no word of DEC-32 clause 1's family. */
 
 import { TESTIMONY_GRADE } from "../record-grammar/grades.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, axisResult } from "./arithmetic.mjs";
 import { DERIVED_KINDS, CAPTURE_ONLY_KINDS } from "./legs.mjs";
 
@@ -30,14 +31,11 @@ export const ANONYMOUS_LEVELS = Object.freeze(["group", "project"]);
 export const NAMED_LEVELS = Object.freeze(["cover", "name"]);
 
 /* R5: the sentence a hunch leg is named with, on every path. */
-export const HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
+export const HUNCH_WHY = word("strength.hunch_why");
 /* R29: the sentence an anonymous observation nothing independent stands beside is named with. It names no author. */
-export const UNCORROBORATED_WHY = "this leg is a member's observation credited anonymously, and nothing independent in what "
-  + "this rests on bears it out, so it is visible here and does not count as evidence";
+export const UNCORROBORATED_WHY = word("strength.uncorroborated_why");
 /* R34: the same for a document whose off-the-record capture a member attests anonymously. It names no member. */
-export const UNCORROBORATED_EVIDENCE_WHY = "this leg rests on material from an unnamed source that a member attests "
-  + "anonymously, and nothing independent in what this rests on bears it out, so it is visible here and does not count "
-  + "as evidence";
+export const UNCORROBORATED_EVIDENCE_WHY = word("strength.uncorroborated_evidence_why");
 
 /** R29, R34: the levels a caller gave, as a frozen map of observation id or capture SHA-256 → level, keeping only the
  *  entries naming a level of `CREDIT_LEVELS`; null when none was given (not an object), which is today's answer. */
@@ -113,28 +111,21 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
       const resolved = axis === "capture" && stated != null ? capCapture(leg, stated)
         : axis === "testimony" && stated != null && stated !== TESTIMONY_GRADE
         ? { grade: TESTIMONY_GRADE,
-            why: `this leg carries testimony at ${stated}, and a member's firsthand observation is graded `
-               + `${TESTIMONY_GRADE} on the testimony axis and at no other value, so it is read at `
-               + `${TESTIMONY_GRADE} here` }
+            why: word("strength.why.leg_carries_testimony", { stated, testimony_grade: TESTIMONY_GRADE }) }
         : null;
       members[axis].push({ ...site, via: "leg",
         grade: resolved ? resolved.grade : stated,
         why: noReferent
-          ? (kind === "imported"
-              ? `the target is another team's finding, not a document, so a ${axis} grade on this leg has no referent`
-              : `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent`)
-          : leg.grade == null ? `the leg carries no grade`
+          ? word(kind === "imported" ? "strength.why.target_group_finding" : "strength.why.target_inquiry_document", { axis })
+          : leg.grade == null ? word("strength.why.leg_carries_grade")
           : resolved && resolved.why ? resolved.why
           : onAxis ? null
-          : axis === "capture" && leg.grade_axis === "testimony"
-          ? `this leg rests on a member's own firsthand observation, graded as testimony: the capture `
-            + `grade measures how the record read a document in, and these words are the member's own, `
-            + `so it does not apply here`
-          : `the leg's grade is on the ${leg.grade_axis} axis` });
+          : axis === "capture" && leg.grade_axis === "testimony" ? word("strength.why.leg_rests_member")
+          : gradeAxisWhy(leg) });
     }
     if (!inherits || hunch) continue;
     /* R2, R33: the target's own answer, per axis, never crossed. The weakest leg it names travels up with it. */
-    const got = inherit(leg) || { stopped: "nothing here establishes what this leg rests on", unknown: true };
+    const got = inherit(leg) || { stopped: word("strength.stopped.establishes_leg_rests"), unknown: true };
     if (got.stopped) {
       for (const axis of STRENGTH_AXES)
         exhausted[axis].push({ ...site, via: "inherited", grade: null, why: got.stopped,
@@ -151,8 +142,8 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
         exhausted[axis].push({ ...site, via, grade: null,
           ...(got.another_groups ? { another_groups: got.another_groups } : {}),
           why: got.another_groups
-            ? `${anotherGroupsWords(got.another_groups)}, and that edition publishes ${axis} as undetermined`
-            : `${from} is undetermined on ${axis}: ${s.detail ?? "what lies below it is unknown"}`,
+            ? word("strength.why.edition_publishes_undetermined", { another_groups: anotherGroupsWords(got.another_groups), axis })
+            : word("strength.why.undetermined", { from, axis, unknown: s.detail ?? word("strength.why.lies_unknown") }),
           ...(got.another_groups || allUnknown ? { unknown: true } : {}) });
         continue;
       }
@@ -164,15 +155,19 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
         through: got.another_groups ? null : (s.weakest ? (s.weakest.through || s.weakest.target_id) : null),
         why: got.another_groups
           ? (s.grade == null
-              ? `${anotherGroupsWords(got.another_groups)}, and that edition publishes no grade on ${axis}, so it is `
-                + `not load-bearing here`
-              : `${anotherGroupsWords(got.another_groups)}, counted at the grade that accepted edition publishes and `
-                + `never above it`)
-          : s.grade == null ? `${from} is UNRATED on ${axis}, so it is not load-bearing here` : null });
+              ? word("strength.why.edition_publishes_grade", { another_groups: anotherGroupsWords(got.another_groups), axis })
+              : word("strength.why.counted_grade_accepted", { another_groups: anotherGroupsWords(got.another_groups) }))
+          : s.grade == null ? word("strength.why.unrated_load_bearing", { from, axis }) : null });
     }
   }
   return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
 }
+
+/* The sentence for a graded leg that counts on another axis than the one asked about; a leg that states no axis at all
+   (a grade with no axis) is named for that, which R9 says is inert, rather than for an axis called "null". */
+const gradeAxisWhy = (leg) => leg.grade_axis
+  ? word("strength.why.leg_grade_axis", { grade_axis: leg.grade_axis })
+  : word("strength.inert.leg_states_axis");
 
 /* R36–R38: one capture-only leg's members. A calculation or an occurrence carries no grade of its own: the walk
    derives it (`derive`), or names why it cannot (undetermined, unknown rather than low). A held standard's stated capture
@@ -185,12 +180,12 @@ function captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, ex
     if (axis !== "capture") {
       members[axis].push({ ...site, via: derived ? "derived" : "leg", grade: null,
         why: !derived && leg.grade_axis === axis && leg.grade != null
-          ? `the target is a held standard, so a ${axis} grade on this leg has no referent`
-          : `this leg counts on the capture axis only` });
+          ? word("strength.why.target_held_standard", { axis })
+          : word("strength.why.leg_counts_capture") });
       continue;
     }
     if (derived) {
-      const d = derive(leg) || { stopped: "nothing here establishes what this leg rests on" };
+      const d = derive(leg) || { stopped: word("strength.stopped.establishes_leg_rests") };
       if (d.stopped) exhausted.capture.push({ ...site, via: "derived", grade: null, why: d.stopped, unknown: true });
       else members.capture.push({ ...site, via: "derived", grade: d.grade ?? null, why: d.why ?? null });
       continue;
@@ -198,7 +193,7 @@ function captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, ex
     const stated = leg.grade_axis === "capture" ? (leg.grade ?? null) : null;
     if (stated == null) {
       members.capture.push({ ...site, via: "leg", grade: null,
-        why: leg.grade == null ? `the leg carries no grade` : `the leg's grade is on the ${leg.grade_axis} axis` });
+        why: leg.grade == null ? word("strength.why.leg_carries_grade") : gradeAxisWhy(leg) });
       continue;
     }
     const capped = capCapture(leg, stated);
@@ -212,8 +207,10 @@ function captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, ex
    gives them, this plain sentence. The finding's own id, which is that group's and looks like one of this record's, is
    carried in `another_groups.finding` and never in the sentence, so R6's sweep of record ids cannot mistake it. */
 export function anotherGroupsWords(g) {
-  return `this leg rests on another team's finding, in that team's case ${g.case ?? "(not stated)"} at edition `
-    + `${g.edition ?? "(not stated)"}, published by ${g.group ?? "that team"}`;
+  return word("strength.text.leg_rests_group", {
+    stated: g.case ?? localize("strength.method.not_stated", "(not stated)"),
+    stated2: g.edition ?? localize("strength.method.not_stated", "(not stated)"),
+    group: g.group ?? localize("strength.method.that_team", "that team") });
 }
 
 /** R29, R30, R34 (DEC-102 items 1, 2; DEC-119 (3)): for each leg of ONE basis credited anonymously, keyed by its
@@ -381,7 +378,8 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
   if (!GRADING_METHOD_VERSIONS.includes(version))
     return { ok: false, reason: "UNKNOWN_METHOD_VERSION", version: typeof version === "string" ? version.slice(0, 80) : null,
              versions: [...GRADING_METHOD_VERSIONS],
-             detail: "this grading method version is not one that has been published, so the grade cannot be recomputed by it" };
+             detail: localize("strength.method.this_grading_method_version_is_not",
+                              "this grading method version is not one that has been published, so the grade cannot be recomputed by it") };
   try {
     const kinds = version === V1 ? LEG_KINDS_V1 : LEG_KINDS;
     const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => factLeg(l, k, kinds));
@@ -399,12 +397,12 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
       kindOf: (l) => l.kind,
       inherit: (l) => (l.answer
         ? { pair: l.answer, from: l.target_id, ...(l.kind === "imported" ? { another_groups: l.another_groups || {} } : {}) }
-        : { stopped: "the case file states no answer for what this leg rests on, so it is unknown here", unknown: true }),
+        : { stopped: word("strength.stopped.case_file_states"), unknown: true }),
       /* R36–R38: a calculation's or an occurrence's capture grade as the case file states it, or why it is unknown;
          a standard's stated grade is already its ceiling's, and a stated reason is its unknown text (R37). */
       derive: (l) => (l.undetermined ? { stopped: l.undetermined }
-        : l.grade ? { grade: l.grade, why: "the capture strength the case file states for what this leg rests on" }
-        : { stopped: "the case file states no capture strength for what this leg rests on, so it is unknown here" }),
+        : l.grade ? { grade: l.grade, why: word("strength.why.capture_strength_case") }
+        : { stopped: word("strength.stopped.case_file_states_capture") }),
       capCapture: (l) => (l.kind === "standard" && l.undetermined ? { grade: null, why: l.undetermined } : null),
       anonymous });
     return { ok: true, version, depth_bound: DEPTH_BOUND,

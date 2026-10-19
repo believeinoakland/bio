@@ -12,6 +12,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { strengthOf, strengthOps, STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
 import { storage } from "./fixture.mjs";
+import { word, localize } from "../../../src/setup-words/index.mjs";
 
 const NOW = "2026-10-13T12:00:00.000Z";
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -125,7 +126,8 @@ test("R40: a joined member sets the project's bar: required_strength and last_up
   assert.equal(entries.length, 1, "one Session Log entry");
   const log = text.slice(text.indexOf("## Session Log"));
   assert.match(log, new RegExp(`### Session ${NOW} \\| Set the project's bar \\| bob\\n`));
-  assert.match(log, /from no bar to capture B, connection C\./);
+  assert.ok(log.includes(localize("strength.index.changes_the_projects_standard_of_evidence_from",
+    "Changes: the project's standard of evidence from {before} to {after}.", { before: "no bar", after: "capture B, connection C" })));
   assert.ok(log.includes(`Reason: ${WHY}`));
   assert.equal(w.record.readFile(w.P, "notes/plan.md").text, "Kept as it is.\n", "the project's other files are kept");
 
@@ -148,7 +150,7 @@ test("R40: a second act names the first bar as previous and adds its own entry (
   assert.equal(second.reason, "Raised for the audit.", "the reason judged trimmed and recorded as judged");
   assert.equal(second.bar.capture, "A");
   assert.equal(second.bar.connection, null);
-  assert.match(second.bar.detail, /no bar set on the connection axis/);
+  assert.ok(second.bar.detail.includes(word("strength.map.bar_set_axis", { axis: "connection" })));
   assert.deepEqual(parseFrontmatter(w.doc(w.P)).data.required_strength, { capture: "A", connection: null });
 
   w.clock.now = "2026-10-13T14:00:00.000Z";
@@ -159,7 +161,9 @@ test("R40: a second act names the first bar as previous and adds its own entry (
   assert.equal(gone.bar.source, "none");
   assert.equal(gone.bar.capture, null);
   assert.equal(gone.bar.connection, null);
-  assert.match(gone.bar.detail, /An absent bar is not a bar of zero/);
+  assert.equal(gone.bar.detail, localize("strength.index.declares_no_required_evidentiary_strength",
+    "{project} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.",
+    { project: w.P }));
   const text = w.doc(w.P);
   assert.deepEqual(parseFrontmatter(text).data.required_strength, { capture: null, connection: null });
   assert.equal(parseFrontmatter(text).data.last_updated, "2026-10-13T14:00:00.000Z");
@@ -168,7 +172,8 @@ test("R40: a second act names the first bar as previous and adds its own entry (
   assert.deepEqual(entries, [`### Session ${NOW} | Set the project's bar | bob`,
                              "### Session 2026-10-13T13:00:00.000Z | Set the project's bar | bob",
                              "### Session 2026-10-13T14:00:00.000Z | Withdrew the project's bar | bob"]);
-  assert.match(text, /from capture A, no bar set on the connection axis to no bar\./);
+  assert.ok(text.includes(localize("strength.index.changes_the_projects_standard_of_evidence_from",
+    "Changes: the project's standard of evidence from {before} to {after}.", { before: `capture A, ${word("strength.map.bar_set_axis", { axis: "connection" })}`, after: "no bar" })));
   assert.equal(w.st.sql.exec(`SELECT COUNT(*) AS n FROM manifest WHERE bundle_id=?`, w.P)[0].n, 4, "creation and three acts");
 });
 
@@ -279,8 +284,10 @@ test("R40, R15 (K231): MACHINE_CANNOT_DECLARE and BAD_GRADE are each one row ans
   const p = w.s.projectBarSet(byBob(w, { author: "class:ai" }));
   for (const k of ["ok", "reason", "code", "check", "translation"]) assert.deepEqual(p[k], g[k], k);
   assert.equal(p.check, "C-32.9");
-  assert.match(g.detail, /TEAM's declaration/);
-  assert.match(p.detail, /PROJECT's declaration/);
+  assert.equal(g.detail, localize("strength.index.the_required_evidentiary_strength_team",
+    "the required evidentiary strength is the TEAM's declaration about its own work. A machine credential may not make it. Sign in as a member."));
+  assert.equal(p.detail, localize("strength.index.the_required_evidentiary_strength_project",
+    "the required evidentiary strength is the PROJECT's declaration about its own work. A machine credential may not make it. Sign in as a member."));
   const gb = w.s.strengthBarSet({ capture: "Q", reason: WHY, author: "ann" });
   const pb = w.s.projectBarSet(byBob(w, { capture: "Q" }));
   for (const k of ["ok", "reason", "code", "check", "translation", "axis", "detail"]) assert.deepEqual(pb[k], gb[k], k);
@@ -288,19 +295,15 @@ test("R40, R15 (K231): MACHINE_CANNOT_DECLARE and BAD_GRADE are each one row ans
   const machine = STRENGTH_BAR_CHECKS.MACHINE_CANNOT_DECLARE, grade = STRENGTH_BAR_CHECKS.BAD_GRADE;
   assert.equal(machine.where, "src/strength/index.mjs machineCannotDeclare > is-machine-strength-bar");
   assert.equal(grade.where, "src/strength/index.mjs badGrade > is-strength-bar-grade");
-  assert.match(machine.translation, /^How much evidence this team requires of itself/);
-  assert.match(grade.translation, /^A standard of evidence is stated in the grades the record uses/);
+  assert.equal(machine.translation, word("refusal.MACHINE_CANNOT_DECLARE"));
+  assert.equal(grade.translation, word("refusal.BAD_GRADE"));
 });
 
-test("C-107.4, R24, R28: PROJECT_BAR_NO_REASON is this module's row, the next after C-107.3, its where naming the project's act, its translation the member's words, at most 2,000 characters, kept, and nothing changed", () => {
+test("C-107.4, R24, R28: PROJECT_BAR_NO_REASON is this module's row, the next after C-107.3, its where naming the project's act, its translation the list's row for the code", () => {
   const row = STRENGTH_BAR_CHECKS.PROJECT_BAR_NO_REASON;
   assert.equal(row.check, "C-107.4");
   assert.equal(row.where, "src/strength/index.mjs projectBarSet > is-project-bar-reason");
-  assert.match(row.translation, /project's standard of evidence is set with a reason/);
-  assert.match(row.translation, /in your own words/);
-  assert.match(row.translation, /2,000 characters/);
-  assert.match(row.translation, /kept with it/);
-  assert.match(row.translation, /Nothing was changed\.$/);
+  assert.equal(row.translation, word("refusal.PROJECT_BAR_NO_REASON"));
   assert.doesNotMatch(row.translation, /\b(AND|OR|ground|grounds|partition|conjunct|branch|disjunction)\b|independently sufficient/i);
 });
 
@@ -324,7 +327,9 @@ test("R14: a declared bar's detail states each axis once, in words for one not d
   assert.ok(bar.detail.includes(": capture B, no bar set on the connection axis."), bar.detail);
   assert.doesNotMatch(bar.detail, /capture capture/);
   const none = w.s.projectBar(w.Q);
-  assert.match(none.detail, /A project declares its bar by its own act, written into the project's document/);
+  assert.equal(none.detail, localize("strength.index.declares_no_required_evidentiary_strength",
+    "{project} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.",
+    { project: w.Q }));
   assert.doesNotMatch(none.detail, /bundle\.md/);
 });
 
@@ -339,7 +344,8 @@ test("R40: a bar a member wrote by a full revision is replaced in place, read as
   const text = w.doc(P);
   assert.equal((text.match(/^required_strength:/gm) || []).length, 1);
   assert.deepEqual(parseFrontmatter(text).data.required_strength, { capture: "A", connection: null });
-  assert.match(text, /from capture D, connection C to capture A, no bar set on the connection axis\./);
+  assert.ok(text.includes(localize("strength.index.changes_the_projects_standard_of_evidence_from",
+    "Changes: the project's standard of evidence from {before} to {after}.", { before: "capture D, connection C", after: `capture A, ${word("strength.map.bar_set_axis", { axis: "connection" })}` })));
 });
 
 test("R40: the act promotes at the project's current state, whatever it is (here closed as resolved), and moves no state", () => {

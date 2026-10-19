@@ -10,6 +10,7 @@
  * SB-OUTPUT §5.1 it names the opposite behaviour. */
 
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /** The axes, named once so no site spells one and none can drift. MK-2 appended `testimony` (MEMBER-KNOWLEDGE-DESIGN
  *  §3): a member's authored observation is graded on the member's trust, which is not how a document was read in. */
@@ -77,8 +78,8 @@ function groundResult(ground, members, exhausted) {
 function stoppedAt(exhausted, depthBound) {
   const ids = (ms) => ms.map((e) => e.target_id).join(", ");
   const bound = exhausted.filter((e) => !e.unknown), unknown = exhausted.filter((e) => e.unknown);
-  return [bound.length ? `the basis walk reached its depth bound of ${depthBound} at ${ids(bound)}` : null,
-          unknown.length ? `nothing here establishes what ${ids(unknown)} rests on` : null]
+  return [bound.length ? word("strength.text.basis_walk_reached", { depth_bound: depthBound, bound: ids(bound) }) : null,
+          unknown.length ? word("strength.text.establishes_rests", { unknown: ids(unknown) }) : null]
     .filter(Boolean).join(", and ");
 }
 
@@ -132,21 +133,24 @@ export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
   const label = (g) => `"${g.ground}"`;
 
   /* A necessary part is unknown: the implicit legs, or every branch. */
+  const undeterminedDetail = () => {
+    const vars = { axis, count: branches.length, stopped: stoppedAt(allExhausted, depthBound) };
+    return structured && branches.length && !implicit
+      ? localize("strength.arithmetic.no_computed_strength_every_set",
+          "this {axis} axis has NO computed strength: EVERY one of the {count} sets of reasons it rests on is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.", vars)
+      : structured
+      ? localize("strength.arithmetic.no_computed_strength_a_leg",
+          "this {axis} axis has NO computed strength: a leg every one of those sets needs is undetermined, and {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.", vars)
+      : localize("strength.arithmetic.no_computed_strength_stopped",
+          "this {axis} axis has NO computed strength: {stopped}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.", vars);
+  };
   if (parts.some((p) => p.state === "undetermined")) {
     return withGrounds({ axis, state: "undetermined", grade: null, determined: false,
              weakest: null, load_bearing: loadBearing, population,
              not_load_bearing: inert,
              depth_bound: depthBound,
              undetermined_at: allExhausted,
-             detail: `this ${axis} axis has NO computed strength: `
-                   + (structured && branches.length && !implicit
-                       ? `EVERY one of the ${branches.length} sets of reasons it rests on is undetermined, and `
-                       : structured
-                       ? `a leg every one of those sets needs is undetermined, and `
-                       : ``)
-                   + stoppedAt(allExhausted, depthBound)
-                   + `, so what lies below is `
-                   + `unknown rather than absent. This is what we do not know, not a low score.` });
+             detail: undeterminedDetail() });
   }
   /* Nothing established anywhere. An unrated ground is inert exactly as an ungraded leg is (DEC-18). */
   const gradedParts = parts.filter((p) => p.state === "graded");
@@ -154,34 +158,48 @@ export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
     return withGrounds({ axis, state: "unrated", grade: null, determined: false,
              weakest: null, load_bearing: 0, population,
              not_load_bearing: inert, depth_bound: depthBound,
-             detail: population
-               ? `UNRATED on ${axis}: no leg on this axis carries an established grade`
-               + (structured ? ` on any of the ${branches.length} sets of reasons` : ``)
-               + `, so this conclusion rests on nothing established here. Not load-bearing: `
-               + `${nlb}.`
-               : `UNRATED on ${axis}: this inquiry rests on nothing on this axis.` });
+             detail: !population
+               ? localize("strength.arithmetic.unrated_this_inquiry_rests_on_nothing",
+                   "UNRATED on {axis}: this inquiry rests on nothing on this axis.", { axis })
+               : structured
+               ? localize("strength.arithmetic.unrated_no_leg_on_any_set",
+                   "UNRATED on {axis}: no leg on this axis carries an established grade on any of the {count} sets of reasons, so this conclusion rests on nothing established here. Not load-bearing: {legs}.",
+                   { axis, count: branches.length, legs: nlb })
+               : localize("strength.arithmetic.unrated_no_leg_on_this_axis",
+                   "UNRATED on {axis}: no leg on this axis carries an established grade, so this conclusion rests on nothing established here. Not load-bearing: {legs}.",
+                   { axis, legs: nlb }) });
   }
   /* The minimum of the necessary parts. With no labelled ground there is one part: the weakest leg, as REC-12 had it. */
   const setter = gradedParts.reduce((a, p) => GRADE_RANK[p.grade] < GRADE_RANK[a.grade] ? p : a);
   const w = setter.weakest;
   const orSets = orPart && setter === orPart;
+  const gradedDetail = () => {
+    const via = w.through ? ` ${localize("strength.arithmetic.through", "(through {through})", { through: w.through })}` : "";
+    const head = orSets
+      ? localize("strength.arithmetic.strongest_of_the_sets_of_reasons",
+          "{axis} {grade} — the STRONGEST of the {count} sets of reasons that each carry this conclusion on their own, which is {set}, and no stronger than the weakest {axis} WITHIN that set, which is {leg}{via}.",
+          { axis, grade: setter.grade, count: branches.length, set: label(best), leg: w.target_id, via })
+      : localize("strength.arithmetic.no_stronger_than_the_weakest",
+          "{axis} {grade} — no stronger than the weakest {axis} it rests on, which is {leg}{via}.",
+          { axis, grade: setter.grade, leg: w.target_id, via });
+    const open = !openBranches.length ? null : openBranches.length === 1
+      ? localize("strength.arithmetic.one_further_set_is_undetermined",
+          "{count} further set is UNDETERMINED and could only be stronger, never weaker: {sets}.",
+          { count: openBranches.length, sets: openBranches.map(label).join(", ") })
+      : localize("strength.arithmetic.further_sets_are_undetermined",
+          "{count} further sets are UNDETERMINED and could only be stronger, never weaker: {sets}.",
+          { count: openBranches.length, sets: openBranches.map(label).join(", ") });
+    return [head,
+            ...(structured && !orSets && implicit
+                ? [localize("strength.arithmetic.that_leg_is_needed_by_every",
+                    "That leg is needed by every one of those sets, so no set can be stronger than it.")] : []),
+            ...(openBranches.length ? [open] : []),
+            ...(inert.length ? [localize("strength.arithmetic.present_and_not_yet_load_bearing",
+                                 "Present and not yet load-bearing: {legs}.", { legs: nlb })] : [])].join(" ");
+  };
   return withGrounds({ axis, state: "graded", grade: setter.grade, determined: true,
            weakest: w, load_bearing: loadBearing,
            population, not_load_bearing: inert,
            depth_bound: depthBound,
-           detail: (orSets
-               ? `${axis} ${setter.grade} — the STRONGEST of the ${branches.length} sets of reasons `
-               + `that each carry this conclusion on their own, which is ${label(best)}, and no stronger `
-               + `than the weakest ${axis} WITHIN that set, which is ${w.target_id}`
-               : `${axis} ${setter.grade} — no stronger than the weakest ${axis} it rests on, `
-               + `which is ${w.target_id}`)
-                 + (w.through ? ` (through ${w.through})` : "")
-                 + `.`
-                 + (structured && !orSets && implicit
-                     ? ` That leg is needed by every one of those sets, so no set can be stronger than it.` : ``)
-                 + (openBranches.length
-                     ? ` ${openBranches.length} further set${openBranches.length === 1 ? " is" : "s are"} `
-                     + `UNDETERMINED and could only be stronger, never weaker: `
-                     + `${openBranches.map(label).join(", ")}.` : ``)
-                 + ` ${inert.length ? `Present and not yet load-bearing: ${nlb}.` : ""}`.trimEnd() });
+           detail: gradedDetail() });
 }

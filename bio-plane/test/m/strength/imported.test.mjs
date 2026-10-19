@@ -9,6 +9,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+
+const OTHER = (axis) => word("strength.text.leg_rests_group", { stated: "CASE-1", stated2: 2, group: "other-group" });
 
 const INQ = "INQ-2026-0001-a";
 const REF = `imported:${"a".repeat(64)}/INQ-2026-0500-a`;
@@ -38,9 +41,10 @@ test("R33: a leg on an accepted finding contributes, per axis, the grade that ed
     assert.equal(m.inherited_from, REF);
     assert.deepEqual(m.another_groups, { group: "other-group", case: "CASE-1", edition: 2, finding: "INQ-2026-0500-a" });
     assert.ok(!("through" in m), "nothing past another group's finding is walked");
-    assert.match(m.why, /another team's finding, in that team's case CASE-1 at edition 2, published by other-group/);
+    assert.equal(m.why, word("strength.why.counted_grade_accepted", { another_groups: OTHER() }));
   }
-  assert.match(memberOn(p.testimony, REF).why, /publishes no grade on testimony, so it is not load-bearing/);
+  assert.equal(memberOn(p.testimony, REF).why,
+    word("strength.why.edition_publishes_grade", { another_groups: OTHER(), axis: "testimony" }));
   /* The edition read is the one the leg names, from the inquiry's authored basis (the projection does not hold it). */
   assert.deepEqual(w.aw.reads.at(-1), { ref: REF, edition: 2, viewer: null });
 });
@@ -63,10 +67,10 @@ test("R33: never stronger than the frozen grade: beside a weaker leg the weakest
 
 test("R33: absent, unreadable, null, another edition, or no edition named: the leg is undetermined on every axis, named with why", () => {
   const cases = [
-    ["nothing registered", (w) => { w.aw.mode = "absent"; }, 2, /holds no accepted work to read it from/],
-    ["the read throws", (w) => { w.aw.mode = "throw"; }, 2, /could not be read just now/],
-    ["not held at that edition", () => {}, 3, /does not hold at edition 3/],
-    ["no edition named", () => {}, null, /without saying which edition/],
+    ["nothing registered", (w) => { w.aw.mode = "absent"; }, 2, word("strength.stopped.leg_rests_group_finding")],
+    ["the read throws", (w) => { w.aw.mode = "throw"; }, 2, word("strength.stopped.leg_rests_group_finding_read")],
+    ["not held at that edition", () => {}, 3, word("strength.stopped.leg_rests_group_finding_group", { edition: 3 })],
+    ["no edition named", () => {}, null, word("strength.stopped.leg_rests_group")],
   ];
   for (const [name, set, edition, why] of cases) {
     const w = accepted();
@@ -76,10 +80,11 @@ test("R33: absent, unreadable, null, another edition, or no edition named: the l
     for (const axis of STRENGTH_AXES) {
       assert.equal(p[axis].state, "undetermined", `${name} ${axis}`);
       const m = p[axis].undetermined_at.find((x) => x.target_id === REF);
-      assert.match(m.why, why, name);
+      assert.equal(m.why, why, name);
       assert.equal(m.unknown, true);
-      assert.match(p[axis].detail, new RegExp(`nothing here establishes what ${REF.replace(/[/]/g, "\\/")} rests on`), name);
-      assert.doesNotMatch(p[axis].detail, /depth bound/, `${name}: not the depth bound`);
+      assert.ok(p[axis].detail.includes(word("strength.text.establishes_rests", { unknown: REF })), name);
+      assert.ok(!p[axis].detail.includes(word("strength.text.basis_walk_reached", { depth_bound: 6, bound: "" })),
+        `${name}: not the depth bound`);
     }
   }
   /* An edition that publishes an axis as undetermined leaves it undetermined here. */
@@ -87,7 +92,8 @@ test("R33: absent, unreadable, null, another edition, or no edition named: the l
   u.inquiry(INQ, [{ target: REF, edition: 2 }]);
   const up = u.s.strengthOf(INQ);
   assert.equal(up.capture.state, "undetermined");
-  assert.match(up.capture.undetermined_at[0].why, /publishes capture as undetermined/);
+  assert.equal(up.capture.undetermined_at[0].why,
+    word("strength.why.edition_publishes_undetermined", { another_groups: OTHER(), axis: "capture" }));
   assert.equal(up.connection.grade, "B");
 });
 
@@ -123,7 +129,7 @@ test("R33: a capture or testimony grade written on a leg to another group's find
   w.inquiry(INQ, [{ target: REF, edition: 2, grade: "A", axis: "capture", source: "capture" }]);
   const p = w.s.strengthOf(INQ);
   const m = p.capture.not_load_bearing.find((x) => x.target_id === REF && x.via === "leg");
-  assert.match(m.why, /another team's finding, not a document/);
+  assert.equal(m.why, word("strength.why.target_group_finding", { axis: "capture" }));
   assert.equal(p.capture.state, "unrated");
 });
 
@@ -155,12 +161,12 @@ test("R33: versionStrength counts a version's leg on an accepted finding at its 
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.equal(r.pair.capture.grade, "B");
   assert.equal(r.pair.connection.grade, "C");
-  assert.match(r.ungraded.find((x) => x.ord === 0).why, /another team's finding and carries no grade of its own/);
+  assert.equal(r.ungraded.find((x) => x.ord === 0).why, word("strength.inert.leg_rests_group"));
   /* A version leg with no edition stored: undetermined, with why. */
   w.version(INQ, "v2", "accepted", [{ target: REF, ground: "" }]);
   const v2 = w.s.versionStrength({ id: INQ, version: "v2", viewer: MACHINE });
   assert.equal(v2.pair.connection.state, "undetermined");
-  assert.match(v2.pair.connection.undetermined_at[0].why, /without saying which edition/);
+  assert.equal(v2.pair.connection.undetermined_at[0].why, word("strength.stopped.leg_rests_group"));
 });
 
 test("R33: candidatePair reads a candidate leg's own target_edition", () => {
@@ -180,5 +186,5 @@ test("R33, R29: a leg on another group's finding never bears out an anonymous ob
                   { target: REF, edition: 2 }]);
   const p = w.s.strengthOf(INQ, { levels: { "INFO-2026-0001-observation": "group" } });
   assert.equal(p.testimony.state, "unrated");
-  assert.match(p.testimony.not_load_bearing[0].why, /credited anonymously/);
+  assert.equal(p.testimony.not_load_bearing[0].why, word("strength.uncorroborated_why"));
 });
