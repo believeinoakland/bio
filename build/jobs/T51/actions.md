@@ -38,3 +38,7 @@ T51-89 actions complete on job/T51/actions (a8663cb94e). R108 met (minutes on a 
 Tests: `node --test bio-plane/test/m/actions/` 142 pass, 0 fail. words (actions and the 13-module run) 0 findings; format, architecture, coverage (75/75) 0 failures; setup-words check: stale-rows note only.
 
 Size (session_01TXuP7EMXudAZjVe2WhZZQT): test runs 14, module lines 3510
+
+## J2 · COMPLETE
+
+B2 applied on job/T51/actions: R108's passage is minted as content by the author (content.mint) and minutes.passage keeps content_id; t51 tests the id and that a second reply at the same extent finds the same row. t34:101 already compares with localize (no finding). Module tests 142/142; words, format, architecture, coverage, ownership 0 failures.
