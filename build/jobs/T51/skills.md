@@ -50,3 +50,22 @@ T51-135 complete, no code change; details in my record. Checks: format, architec
 - **Tests:** `node --test bio-plane/test/m/skills/*.test.mjs`: 130 pass, 0 fail (130 pass before the change).
 
 Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 3, module lines 2919
+
+## J3 · COMPLETE
+
+T51-219 · skills complete (commit c092cbc8c8, pushed to job/T51/skills).
+
+Words pass, as the live check reads it (23 failures at start: 6 inline, 2 plain, 15 test copies): all fixed; words check for skills 0 failures.
+- skilldoctrine.mjs: 29 literal chains converted to localize(id, en); en byte-identical; exports unchanged except two added (STATUS_REPORT_LOAD_WHEN, DEC27_LIMIT), checked by dump before/after.
+- 15 test copies in bio-plane/test/m/skills/ now refer to product values or key-level checks.
+
+Deferred for you (BOB), in the record:
+1. R45's absent_because and R25's C-22.7 translation have no words.json row, so their tests cannot assert a key; they are checked by named acts and by verbatim presence in run-rules' source. A keyed row for each would let the tests assert the key.
+2. STATUS_REPORT_LOAD_WHEN: AI-instruction constant, not flagged, left plain (now exported).
+
+Found in other modules: none.
+Checks: format 0; architecture (skills) 0; coverage (skills) 51/51; ownership 0 (10 files, all skills' own paths and record); channels 0; setup-words --check: rows.mjs stale as expected (you regenerate at layer close). Full words check: 3346 failures in other modules, none in skills. Full coverage: failures in other modules only.
+Tests: 130/130 skills tests pass (130 before).
+Size (session_0134uPdGVVH9yPojtvVd8szX): test runs 3, module lines 2919.
+
+Note for the record of this job: I started on a stale local job branch by mistake and fast-forwarded it to tranche/T51 (no commits lost; origin/job/T51/skills is an ancestor of the result).
