@@ -24,6 +24,8 @@ const QUEUE_KINDS = ["question-find", "step-later-found", "step-date-due", "step
   "litigation-hold.docket", "project-invitation", "project-request"];
 // DEC-227's order of the kinds of places `elsewhere` lists (R15).
 const ELSEWHERE_KINDS = ["legalaid", "selfhelp", "service", "agency", "representative", "tipline"];
+// R55: the item states the table draws a chip for (the design's sixteen).
+const ITEM_STATES = ["review", "reviewed", "retired", "open", "concluded", "published", "waiting", "flagged", "watched", "deferred", "dismissed", "divided", "planned", "active", "resolved", "abandoned"];
 const MARKS = (kinds) => kinds.flatMap((k) => [`mark.${k}.name`, `mark.${k}.means`]);
 const ACTS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 const KEYED_QUEUE = [...QUEUE_KINDS.flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`]), "queue.project-invitation.summary.unnamed"];
@@ -118,6 +120,23 @@ const WORDS_OF = {
     "act.owed_watchitem.label.finder", "act.owed_watchitem.does", "act.owed_secondlook.label.finder", "act.owed_secondlook.does",
     "act.secondlookclear.label.finder", "act.secondlookclear.does", "act.watchitem.off.does",
     "refusal.MARK_NO_ITEM", "refusal.MARK_NO_SUCH_ITEM", "refusal.MACHINE_CANNOT_MARK", "refusal.SECOND_LOOK_NO_NOTE", "refusal.SECOND_LOOK_NOT_OPEN",
+    // R54 to R57: the words field and choices, the table, the scope and the three routes, what was covered, and citing the held set.
+    "find.query.help", "list.fresh", "screen.finder.showas", "screen.finder.showas.list", "screen.finder.showas.table", "screen.finder.table.view.help",
+    "screen.finder.table.intro", "screen.finder.table.count.one", "screen.finder.table.count.other", "screen.finder.table.sorting", "shell.sort",
+    ...["item", "kind", "state", "updated"].flatMap((c) => [`column.finder.${c}.name`, `column.finder.${c}.shows`]),
+    ...ITEM_STATES.flatMap((k) => [`state.item.${k}.name`, `state.item.${k}.means`, `state.item.${k}.can`]), ...ITEM_STATES.filter((k) => !["waiting", "flagged", "watched", "planned", "active"].includes(k)).map((k) => `state.item.${k}.cannot`),
+    ...["open", "paused", "closed"].flatMap((k) => [`screen.plan.state.${k}`, `state.plan.${k}.means`, `state.plan.${k}.can`]),
+    "screen.find-in.lookin", "screen.finder.scope.help", "screen.finder.scope.everything", "screen.finder.scope.cases",
+    "screen.finder.route.fields", "screen.finder.route.fields.holds.one", "screen.finder.route.fields.holds.other", "screen.finder.route.passages",
+    "screen.finder.route.passages.holds.one", "screen.finder.route.passages.holds.other", "screen.finder.route.subjects.holds.one", "screen.finder.route.subjects.holds.other",
+    "screen.finder.subjects.heading", "screen.finder.subjects.help", "screen.finder.named.nodoc", "screen.finder.named.nodoc.one", "screen.finder.route.apart",
+    "screen.finder.route.cross", "screen.finder.route.cross.heading", ...["source", "office", "ordinance", "parcel", "contract", "fund", "program", "place", "proceeding"].map((k) => `find.row.kind.${k}`),
+    "screen.finder.covered.heading", "screen.finder.covered.levels", "screen.finder.covered.rests", "screen.finder.covered.read", "screen.finder.covered.read.says.one",
+    "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
+    "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
+    "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
+      "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",
+      "cites_every_document_you_hold_together_i", "you_choose_the_question_and_how_they_bea", "cites_every_document_you_hold_together_i.2", "one_already_cited_is_left_as_it_was_and_"].map((k) => `screen.finder.a17.${k}`),
     // R43: the Theme filter.
     "theme.filter", "theme.filter.any", "theme.filter.help", "act.themeread.label.finder", "act.themeread.does", "theme.placed", "theme.hunches", "theme.hunch.note"],
   "find-in": [...SHARED, "screen.find-in.name", "screen.find-in.purpose", "mark.origin.search.name", "mark.origin.search.means", "mark.origin.accepted.name", "mark.origin.accepted.means",
