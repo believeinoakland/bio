@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, said, textOf, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, env, securityTable, CATALOGUE_ENTRY } from "./fixtures.mjs";
+import { ADMIN, MEMBER, env, securityTable, CATALOGUE_ENTRY, OWN_ENTRY } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 
@@ -75,6 +75,20 @@ test("R15 securitytooltest and securitytoolremove from the tool's row panel; a r
   const t = await open("security", { me: ADMIN, table: securityTable({ securitytooltest: env({ ok: false, reason: "SOME_NEW_CODE", code: "SOME_NEW_CODE", translation: "file-safety's words" }) }) });
   await t.press("securitytooltest", { data: { tool: "T1" } });
   assert.equal(t.refused.text, "file-safety's words", "else its translation");
+});
+
+test("R62 security reads whose server from data: handling.on_own, never the recipient's words", async () => {
+  // a tool the organization runs itself, named in another language: own, by its flag
+  const foreign = { ...OWN_ENTRY, provider_id: "lan-scan", handling: { ...OWN_ENTRY.handling, on_own: true, recipient: "el servidor propio de la organización" } };
+  // a tool named in English as the organization's own server, but flagged not own: not own
+  const claimed = { ...OWN_ENTRY, provider_id: "fake-own", handling: { ...OWN_ENTRY.handling, on_own: false, recipient: "the organization (its own hosting)" } };
+  const a = await open("security", { me: ADMIN, table: securityTable({ securitytoolcatalogue: env({ ok: true, offered: [CATALOGUE_ENTRY, foreign, claimed], refused: [], held: [] }) }) });
+  assert.equal(all(panelOf(a.tree, "lan-scan"), (e) => e.attrs.id === "sa-lan-scan-every").length, 1, "on_own true draws every file, whatever the language");
+  const r = await a.press("securitytooladd", { data: { provider: "lan-scan" }, values: { "sa-lan-scan-every": true } });
+  assert.equal(r.sent[0].body.use, "routine");
+  assert.equal(all(panelOf(a.tree, "fake-own"), (e) => e.attrs.id === "sa-fake-own-every").length, 0, "on_own false draws no every-file box, whatever its recipient reads");
+  const c = await a.press("securitytooladd", { data: { provider: "fake-own" }, values: { "sa-fake-own-every": true } });
+  assert.equal(c.sent[0].body.use, "on_request");
 });
 
 /* R43 (T50; U3; DEC-291; N1194): Security leads with how things stand, and a period may end today */

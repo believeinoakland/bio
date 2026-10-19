@@ -53,7 +53,6 @@ export const security = {
     }
     const ui = view.ui || {};
     const KINDS = ["signin", "credential", "rate", "handover", "through"];
-    const onOwn = (r) => typeof r === "string" && (/^the organization\b/i.test(r.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(r.trim()));
 
     // how things stand, first (R43 (1)): the mark, then one sentence; the counts fold below it. A period is named by its first and last
     // day, both included (R43 (2)). Counts only: nothing names an address, country, role or member.
@@ -126,7 +125,7 @@ export const security = {
         for (const c of Array.isArray(t.config) ? t.config : []) if (c && c.name) f += cs.field(`${p}-c-${c.name}`, c.required ? S + "field" : S + "field.optional", { fills: { label: c.label || c.name }, autocomplete: "off" });
         for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += cs.field(`${p}-k-${k}`, S + "field", { type: "password", fills: { label: k }, autocomplete: "off" });
         if (h.sample_sharing === "vendor_internal_research") f += `<input type="checkbox" id="${p}-keep"><label for="${p}-keep">${W(S + "keep")}</label>`;
-        if (onOwn(h.recipient)) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
+        if (h.on_own === true) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
         return f + add + "</div>";
       },
     }), { empty: S + "catalogue.none" }))}</details>`);
@@ -164,7 +163,7 @@ export const security = {
           credentials[k] = v;
         }
         const h = t.handling || {};
-        const own = typeof h.recipient === "string" && (/^the organization\b/i.test(h.recipient.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(h.recipient.trim()));
+        const own = h.on_own === true;
         const body = { providerId: t.provider_id, config, credentials, handlingDigest: t.handling_digest, confirmRetention: cs.value(p + "-keep") === true, use: own && cs.value(p + "-every") === true ? "routine" : "on_request" };
         if (t.template) { const host = String(cs.value(p + "-host") || "").trim(); if (!host) return { refuse: "screen.security.config.missing", fills: { field: "host" } }; body.template = { host }; }
         return { body };
