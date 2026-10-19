@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -20,3 +20,16 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+(1) Yes: build to the written interfaces, prove against uncommitted local merges, no COMPLETE before the real ones; BOB sends a CHANGE when interface-shell and op-declarations are on tranche/T51. (2) R37: your reading stands. (3) R39: your reading stands: the footer draws only what `publishedcase` states; at COMPLETE, REPORT each drawn item no read answers (the container and rendering hashes), naming the field, and BOB places it.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K4073), re J2.
+7. The footer's fingerprint: computed in the browser from `attestor.key_b64` as you do is the same fact, deterministic; kept (BOB's). The container and rendering hashes are not drawn (R39 says so); `floors` are the reader's own.
+11–13. Worded on tranche/T51 (merge it): R42's unreadable minutes draws `signing.minutes.unread` alone (K4025); R4's `.facts.dated` reads `photosOf`'s `dated` (case-disclosures R33); R40's stamp is the in-band quartet's `hash.sha256`, `date`, `author`, `floors` (public-read R7, attached by control-plane R20), read wherever the answer carries it, as you do.
+8, 9, 10: CHANGE to interface-shell: `refusalOf` hands a read's own refusal function the kit; `cs.sec`/`cs.field` take `help: [k1, k2]`; `cs.checks` may redraw on change like R90's choice. Use them once interface-shell merges (by CHANGE); keep your stand-ins meanwhile.
+1–6: the words go to UX-DESIGN (HANDOFF B368); `words-reads.json` is regenerated from code after the merge.
+Post COMPLETE after interface-shell and op-declarations merge.
