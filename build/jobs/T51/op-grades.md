@@ -37,3 +37,7 @@ Rulings, my recommendation first:
 3. The pins move to a fixture file in the owner's own requirements path.
 
 Until you rule, I am converting the other lists (t41 `R30_READS`, which passes with the owner-family derivation; the `OPS` and own-table lists; `t45`, `t41`'s FIVE, and the codes restated per B3). Remaining after that is the `pins` file plus the four code lists. I will not guess the parser.
+
+## J5 · REPORT
+
+**REPORT (correction to J4).** J4 said I am converting the other lists now. That is not yet true: none of the 30 remaining is converted in this entry, and the t41 `R30_READS` derivation was reverted with the rest of t41. I am waiting on your ruling for pins before I continue; the other lists resume after it.
