@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01KEmRQzhT6pHFHNAtagKobP · depth 2 · WORKING · handled B5
+**Status** · session_01KEmRQzhT6pHFHNAtagKobP · depth 2 · WAITING ON BOB (J4) · handled B5
 
 ## Completion record (JOURNEY-CHECK #7)
 
