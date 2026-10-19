@@ -1,6 +1,6 @@
 # duties (T51)
 
-**Status** · session_015fij5CNkGX79gtEuBYtYeY · depth 2 · WAITING ON BOB (J4) · handled B1
+**Status** · session_015fij5CNkGX79gtEuBYtYeY · depth 2 · WAITING ON BOB (J4) · handled B3
 
 ## J1 · REPORT
 
