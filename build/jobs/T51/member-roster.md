@@ -63,3 +63,17 @@ member-roster T51-145 is complete: R1–R75 met, `membership` untouched. Record:
 Tests: bio-plane/test/m/member-roster/, 26 files, 164 tests, 0 fail. Checks: format 0 failures; architecture member-roster 0; coverage 75 of 75 ids named; words check 0 findings in member-roster; `setup-words build.mjs --check` shows the expected stale-rows note (new localize ids; setup-words R10, R16, R17 stay red until you regenerate; R13/R2 and fleetbundles are red on tranche/T51 already). Ownership: 1 finding, `build/modules.json`, which is the row your START note 2 told me to set (paths ["bio-plane/src/member-roster/"], tests ["bio-plane/test/m/member-roster/"], uses ["setup-words","record-grammar"]); drop it if you would rather fill it yourself. Everything else is the module's or its record.
 
 For you at the merge: (a) setup-words/build.mjs GENERATED_FILES gains bio-plane/src/member-roster/order.mjs; (b) rows.mjs and words-unreviewed.json to regenerate; (c) op `adminremovalsopen` (R75) for op-declarations/plane; (d) CR-4 must export the three *_CHECKS tables from membership as the union with this module's MEMBER_ROSTER_ROWS: answer-envelope's families test reaches every exported *_CHECKS table of every module, so checks.mjs exports none under that name (one code, one site).
+
+## J2 · COMPLETE
+
+member-roster, words round RW (B2) complete. Record: build/jobs/T51/member-roster.md, section "Completion (MEMBER-ROSTER #2)" on job/T51/member-roster at ffc56dba41.
+
+Applied: the four sentences the words check counted inline are now localize ids with the English unchanged: member-roster.index.this_member_has_not_declared, .a_handle_is_chosen_when_a, .an_administrator_is_removed_by, .choose_the_name_the_team_will. words.mjs member-roster: 0 failures.
+
+Tests changed (mine): t50-words R70 now reads member-roster's own reads entry in words-reads.json (DEC-345 gave it one; R70 says "the reads list for it"); split.test.mjs R75 fixture waits 2 ms between admins (flaky: activeAdmins ties broken by member id). Module suite: 164 pass.
+
+Checks: format 0; architecture 0; ownership 0 (4 files); words 0 in member-roster; run.mjs coverage 22 and words 1626, none in member-roster; setup-words build --check shows only the expected stale-rows note for the four new ids.
+
+Merged tranche/T51 (fa2770b9f6) into the job branch. It changed nothing in this module.
+
+For BOB: (1) R13 scope: unkeyed member-facing strings the checker does not count (capabilities is an array; op-naming details of TARGET_NOT_AN_ADMIN and EXPERTISE_IS_NOT_ASSIGNED; ~15 short act phrases to notAnAdmin). I left them as words-reads marks them; please rule. (2) rows.mjs and words-unreviewed.json to regenerate at the layer close. (3) MEMBER-ROSTER #1's open items stand (GENERATED_FILES line for order.mjs; CR-4 exports; op adminremovalsopen).
