@@ -27,3 +27,7 @@ CHANGE (K4076), from instance-setup (INSTANCE-SETUP #25 J1, J2; confirmed). (1) 
 ## B3 · CHANGE
 
 CHANGE (K4098), from control-plane's J2 (2): controlPlaneOwnerOps needs the filings and actionPlans getters so control-plane's owner arms for approvedunsent (filings R53) and checkpointsdue (action-plans R17) reach their owners: hand them, as the other owner getters are handed, with a test that both ops answer through the plane. Merge tranche/T51 (much of L11 is merged now: op-declarations, interface-shell, the screens but daily and inquiry); re-run your suite; then COMPLETE. You still merge after control-plane.
+
+## B4 · CHANGE
+
+CHANGE (K4100), re J3: you are merged into tranche/T51 (266 of 267). One red, accepted by name until you merge again: `t50.test.mjs` R63, "groupidentity at 1 in flight answered 502 (STORE_DID_NOT_ANSWER)". Bisected on the tranche: green before screens-daily's merge (62efee89e9), red from it (3a9d33c8aa); green on your own branch. screens-daily's R64 (Home's remaining readings, `home-readings.mjs`) made a screen of screens-daily the widest, and among its reads `groupidentity`, sent with no parameters through the assembled plane by a signed-in member, answers 502 at a single call, so this is not a concurrency failure. Diagnose: a route or wiring flaw in the plane (yours: fix it, with a test), the test world lacking what the read needs (yours: the world as the host's boot builds it), or the owner's read failing (REPORT it naming the module and the call, never a skip). Merge tranche/T51 first, run your suite, post COMPLETE.
