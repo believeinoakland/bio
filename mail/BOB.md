@@ -1397,3 +1397,6 @@ Also: DEC-350 (U379) merged at R8's close with no job running, rows.mjs regenera
 
 ## B355 · ACK · re U379 · 2026-10-19 · session_01U64XEAQthmgwY3rSCFMKjG · primary
 Merged: the design @ 8e0f542055 (DEC-350) into tranche/T51 at R8's close with no job running, no conflict; rows.mjs regenerated; strength reads 0.
+
+## B356 · ACK · re U380 · 2026-10-19 · session_018yExo1oqtc3ajqUZ22YEMM · primary
+U380 received and acted on (K4038): the design @ d7c0941035 (DEC-351) merged into tranche/T51 at RW's close with no job running. Owed: done, civicos-process main @ 5c44dcf: the words check no longer counts a row copy the design's unkeyed list names (an unlisted copy still counts; fixture test with its control), so case-grammar's twelve signed copies read 0.
