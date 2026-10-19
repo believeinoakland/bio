@@ -38,3 +38,7 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · ANSWER · re J2
 
 Not Bob's: layers and test placement are BOB's (P17). Ruling (C, K4009): agent-steps declares, in its own code, the plane ops its plans call, each with whether it writes (an export of yours; reuse an existing table if one already says this). plan.test.mjs reads WRITE_OPS and READ_OPS from that declaration, never from op-declarations, so the import goes and the architecture check passes; the handlist finding is met because the list is your module's own declaration (K3268). The cross-check that each declared op exists in OPS with the same mutating flag is op-declarations' (layer 11, T51-107, added to its START). Set WORKING, apply, re-run your tests and checks, then COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
